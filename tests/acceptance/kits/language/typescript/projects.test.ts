@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
+import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 

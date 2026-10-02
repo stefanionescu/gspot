@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { checkInput } from '#tests/support/cli/input.ts';
+import { checkInput } from '#tests/harness/cli/input.ts';
 import { readmeShape } from '#cli/checks/general/docs/readme.ts';
 import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 

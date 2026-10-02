@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { installPrivateTools } from '#tests/harness/tools/install.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test(
     'Stylelint applies nested settings through each generated configuration and editor pointer',

@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 
 tester().run('no-trivial-functions', noTrivialFunctions, {

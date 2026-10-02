@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 
 tester().run('no-trivial-files', noTrivialFiles, {

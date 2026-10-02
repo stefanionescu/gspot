@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { statSync, chmodSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { writeSwiftlint } from '#tests/support/cli/swift.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { writeSwiftlint } from '#tests/harness/cli/swift.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';
+import { onPosix, keptMode } from '#tests/harness/cli/platforms.ts';
 import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {

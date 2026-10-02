@@ -1,13 +1,13 @@
 // Planted repositories for the react and react-native configurations: each ESLint addition fires on a small component.
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
+import { installSandbox } from '#tests/harness/planted/sandbox.ts';
+import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
 import { LIBRARIES_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 import {

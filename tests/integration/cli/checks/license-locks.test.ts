@@ -2,13 +2,13 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { run as runCli } from '#tests/support/cli/command.ts';
+import { run as runCli } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
-import { rejection, containing, textContaining } from '#tests/support/expectations.ts';
+import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 const LOCKS: [string, string][] = [
     [

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';

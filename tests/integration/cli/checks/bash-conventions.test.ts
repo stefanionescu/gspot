@@ -4,7 +4,7 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 
 const SCRIPT =
     '#!/usr/bin/env bash\nset -euo pipefail\n\n# main: deploys the release.\nmain() {\n    echo "$1"\n}\n\nrun_step() {\n    echo "$1"\n}\n\nrun_remote "$1" "\n    cd /srv\n    ./restart\n"\n\nmain "$@"\n';

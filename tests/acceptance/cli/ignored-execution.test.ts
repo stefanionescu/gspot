@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { parseProfile } from '#cli/policy/profiles/parse.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 

@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import * as tools from '#cli/execution/tool/runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, type Mock } from 'bun:test';
-import { rejection } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 

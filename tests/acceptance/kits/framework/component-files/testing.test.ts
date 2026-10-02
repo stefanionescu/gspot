@@ -2,13 +2,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 
 const LIBRARIES = [
     { framework: 'vue', library: '@testing-library/vue', dependencies: { vue: vueManifest.version } },

@@ -1,8 +1,8 @@
 // A clean NestJS module passes every check, and the NestJS plugin reports a route parameter its decorator does not name.
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 
 import {
     GREETER,

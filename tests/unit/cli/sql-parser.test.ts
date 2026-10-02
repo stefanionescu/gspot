@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/support/spelling.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';

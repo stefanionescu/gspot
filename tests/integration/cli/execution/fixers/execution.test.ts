@@ -7,9 +7,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { waitForExit } from '#tests/support/cli/process.ts';
+import { waitForExit } from '#tests/harness/cli/process.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
+import { CORRECTION_POLICY, plannedCorrection } from '#tests/harness/cli/correction.ts';
 
 test('Correction environment paths expand against the execution root', async () => {
     await using sandbox = await testdir();

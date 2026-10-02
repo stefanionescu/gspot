@@ -198,7 +198,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                     "**/types/**"
                 ],
                 "harness": [
-                    "tests/support/**"
+                    "tests/harness/**"
                 ],
                 "tests": [
                     "tests/**",
@@ -207,7 +207,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                 "config": [],
                 "env": [
                     "packages/cli/src/platform/environment.ts",
-                    "tests/support/environment.ts"
+                    "tests/harness/environment.ts"
                 ],
                 "runtime": [
                     "src/**"
@@ -230,7 +230,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
         {
             "owners": [
                 "packages/cli/src/platform/environment.ts",
-                "tests/support/environment.ts"
+                "tests/harness/environment.ts"
             ]
         }
     ],
@@ -797,7 +797,7 @@ const scopeRules = [
                             "**/types/**"
                         ],
                         "harness": [
-                            "tests/support/**"
+                            "tests/harness/**"
                         ],
                         "tests": [
                             "tests/**",
@@ -806,7 +806,7 @@ const scopeRules = [
                         "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
-                            "tests/support/environment.ts"
+                            "tests/harness/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -851,7 +851,7 @@ const scopeRules = [
                             "**/types/**"
                         ],
                         "harness": [
-                            "tests/support/**"
+                            "tests/harness/**"
                         ],
                         "tests": [
                             "tests/**",
@@ -860,7 +860,7 @@ const scopeRules = [
                         "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
-                            "tests/support/environment.ts"
+                            "tests/harness/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -904,7 +904,7 @@ const scopeRules = [
                             "**/types/**"
                         ],
                         "harness": [
-                            "tests/support/**"
+                            "tests/harness/**"
                         ],
                         "tests": [
                             "tests/**",
@@ -913,7 +913,7 @@ const scopeRules = [
                         "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
-                            "tests/support/environment.ts"
+                            "tests/harness/environment.ts"
                         ],
                         "runtime": [
                             "src/**"

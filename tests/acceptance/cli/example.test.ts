@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import example from '#docs/src/components/home/example.json';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { git, commitAll, gitOutput } from '#tests/support/cli/git.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/cli/git.ts';
+import { installPrivateTools } from '#tests/harness/tools/install.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
 // The fields a recorded finding holds, in one order, so a run compares with the record whatever order it reports in.

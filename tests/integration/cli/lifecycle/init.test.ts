@@ -2,15 +2,15 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
-import { TYPO } from '#tests/support/spelling.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { PRETTIER_TOOLING } from '#tests/harness/cli/tooling.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
-import { rejection, containingAll } from '#tests/support/expectations.ts';
+import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

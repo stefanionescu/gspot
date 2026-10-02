@@ -1,6 +1,6 @@
 // Planted repository for the library kits: each ESLint addition fires on a small component, and the two file checks fire on theirs.
 import type { FindingCase } from '#tests/types/cli.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { LIBRARIES_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/inputs/acceptance/source/cli/cli.ts';
 

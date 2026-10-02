@@ -4,9 +4,9 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
-import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
+import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same version script at a different speed.
 const versionScript = (slow: boolean): string => `#!${process.execPath}

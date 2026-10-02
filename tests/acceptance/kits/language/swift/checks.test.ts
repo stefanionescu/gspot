@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { STRUCTURAL } from '#tests/inputs/acceptance/source/kits/swift.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';

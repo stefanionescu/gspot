@@ -1,16 +1,16 @@
 // Replace at init: the plan names hand-written hooks, deletes the files of the selected tools, and lists the lint folder.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { PLAN_INIT } from '#tests/inputs/acceptance/source/cli/init-replace.ts';
 

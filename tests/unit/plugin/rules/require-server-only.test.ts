@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 
 tester().run('require-server-only', requireServerOnly, {

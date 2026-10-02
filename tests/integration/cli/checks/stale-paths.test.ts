@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { checkInput } from '#tests/support/cli/input.ts';
+import { checkInput } from '#tests/harness/cli/input.ts';
 import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
 
 test('wildcard examples stay intact while emphasized literal paths remain checked', async () => {

@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 
 tester().run('no-index-imports', noIndexImports, {

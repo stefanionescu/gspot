@@ -4,12 +4,12 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
-import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each([PACKAGE_PROJECTS[0]])(
     '%s from %s with %s refuses lifecycle scripts before contacting the registry',

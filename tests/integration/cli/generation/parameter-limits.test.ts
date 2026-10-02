@@ -5,8 +5,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
 for (const language of ['javascript', 'typescript']) {
     test.each([7, 8])(`${language} counts declared parameters with maximum %i`, async (maximum) => {

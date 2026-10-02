@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { envAccessOwner as environmentAccessOwner } from '#plugin/rules/env-access-owner.ts';
 
 const OWNERS: [{ owners: string[] }] = [{ owners: ['src/env/**', 'config/**'] }];

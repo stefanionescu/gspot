@@ -6,9 +6,36 @@ import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { writeJestReports } from '#tests/support/cli/jest.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import type { JestReportInputs } from '#tests/types/integration/cli/checks.ts';
+
+async function writeJestReports(
+    root: string,
+    output: string,
+    coverageDirectory: string,
+    scenario: JestReportInputs,
+): Promise<void> {
+    const report = {
+        success: true,
+        numTotalTests: scenario.testCount,
+        numRuntimeErrorTestSuites: scenario.runtimeFailures,
+        testResults: [
+            {
+                name: join(root, 'sample.js'),
+                assertionResults: [{ fullName: 'checks the sample', status: scenario.status, failureMessages: [] }],
+            },
+        ],
+    };
+    if (scenario.tests !== 'missing')
+        await Bun.write(output, scenario.tests === 'malformed' ? '{}' : JSON.stringify(report));
+    if (scenario.coverage !== undefined) {
+        const total = Object.fromEntries(
+            ['lines', 'branches', 'functions', 'statements'].map((name) => [name, { pct: scenario.coverage }]),
+        );
+        await Bun.write(join(coverageDirectory, 'coverage-summary.json'), JSON.stringify({ total }));
+    }
+}
 
 const VALID = {
     tests: 'valid' as const,

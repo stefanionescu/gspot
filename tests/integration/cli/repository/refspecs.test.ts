@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { rejection } from '#tests/support/expectations.ts';
-import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 
 test('a fetch mapping with two wildcards is refused before substitution and a corrected mapping is accepted', async () => {

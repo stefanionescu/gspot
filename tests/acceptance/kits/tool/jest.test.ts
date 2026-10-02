@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 const source =
     'function total(values) { let sum = 0; for (const value of values) { if (value > 0) sum += value; } return sum; }\nfunction triple(value) { return value * 3; }\nmodule.exports = { total, triple };\n';

@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { containingAll } from '#tests/support/expectations.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];

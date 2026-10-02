@@ -2,16 +2,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { containing } from '#tests/support/expectations.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/harness/cli/typescript.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
+import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 
 test(
     'javascript/eslint lints a project that has no TypeScript',

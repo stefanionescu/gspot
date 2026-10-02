@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
+import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
 import { GUIDE, README, LICENSE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 // What each check accepts in place of its planted document; the guide for the rest.

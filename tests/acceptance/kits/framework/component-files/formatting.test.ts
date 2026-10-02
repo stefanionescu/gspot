@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 import { FORMATTED } from '#tests/inputs/acceptance/source/kits/component-files.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 

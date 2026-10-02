@@ -3,17 +3,17 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { containing } from '#tests/support/expectations.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { createPythonRegistry } from '#tests/support/registry/python.ts';
-import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
+import { createPythonRegistry } from '#tests/harness/registry/python.ts';
+import { preparePythonInstallation } from '#tests/harness/tools/python.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the install tests stay POSIX-only.
 

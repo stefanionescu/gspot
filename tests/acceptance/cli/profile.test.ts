@@ -2,14 +2,14 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/support/spelling.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { treeContents } from '#tests/support/cli/preservation.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 // Export retains a pathless rule allowance and reports the repository-specific omission.

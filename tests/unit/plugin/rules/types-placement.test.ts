@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 
 tester().run('types-placement', typesPlacement, {

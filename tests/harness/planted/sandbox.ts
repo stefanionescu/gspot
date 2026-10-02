@@ -3,11 +3,11 @@ import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/inputs/cli.ts';
 import type { Sandbox } from '#tests/types/cli.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
+import { install, toolsPath } from '#tests/harness/tools/install.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
 // The manifest a fixture with dependencies starts from.
 function manifestOf(dependencies: Record<string, string> | undefined): Record<string, string> {

@@ -1,4 +1,4 @@
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 // The literal values integration/cli/generation/generation reads: names, patterns, limits, and tables.
 
 export const SHARED_SETTINGS_PACKAGE = '{"private":true,"type":"module"}\n';

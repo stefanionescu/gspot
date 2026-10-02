@@ -5,7 +5,7 @@ import { HtmlValidate } from 'html-validate';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 test.each([

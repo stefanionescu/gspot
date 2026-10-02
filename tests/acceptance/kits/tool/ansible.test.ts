@@ -1,13 +1,13 @@
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 import { ANSIBLE_INIT, ANSIBLE_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n`;

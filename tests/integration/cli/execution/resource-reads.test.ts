@@ -5,8 +5,37 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { storageSession } from '#tests/support/cli/storage.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { Stage } from '#cli/types/execution/planning.ts';
+
+async function storageSession(root: string, status: number, stage: Stage = 'commit'): Promise<Session> {
+    const session = await openSession(root);
+    const manifest = session.manifests.get('typescript')!;
+    const script = status === 0 ? 'process.exitCode = 0' : "console.log('Retained finding'); process.exitCode = 1";
+    session.scopes[0]!.selected = [
+        {
+            ...manifest,
+            tools: [],
+            checks: [
+                {
+                    level: 'recommended',
+                    runs: 'per-scope',
+                    summary: 'Reports the planted storage finding.',
+                    why: 'Storage failures preserve the check result.',
+                    help: 'Fix the planted finding.',
+                    owners: manifest.owners,
+                    name: 'sandbox/storage',
+                    stage,
+                    cwd: 'root',
+                    command: [process.execPath, '-e', script],
+                    output: { format: 'lines' },
+                },
+            ],
+        },
+    ];
+    return session;
+}
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],

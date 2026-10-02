@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { rejection } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
-import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import type { Finding } from '#cli/types/execution/execution.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 

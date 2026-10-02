@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containingAll } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();

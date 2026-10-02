@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { privateBeforePublic } from '#plugin/rules/private-before-public.ts';
 
 tester().run('private-before-public', privateBeforePublic, {

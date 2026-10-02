@@ -3,8 +3,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { parseManifest } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 async function generatedGuides(level: string, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();

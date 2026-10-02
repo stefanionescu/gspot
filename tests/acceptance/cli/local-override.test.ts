@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('a leftover local file cannot hide ShellCheck while an explicit skip applies only to that run', async () => {

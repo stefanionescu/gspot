@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve, relative, isAbsolute } from 'node:path';
-import { runSourceCommand } from '#tests/support/registry/plugin.ts';
+import { runSourceCommand } from '#tests/harness/registry/plugin.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TESTS = join(ROOT, 'tests');

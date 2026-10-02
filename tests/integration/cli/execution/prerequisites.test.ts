@@ -5,10 +5,10 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 
 test('a disabled setting skips its check and enabling the setting runs it', async () => {
     const policy = policyOf(['xcode'], '', 'all');

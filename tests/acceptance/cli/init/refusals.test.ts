@@ -3,13 +3,13 @@ import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { treeContents } from '#tests/support/cli/preservation.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
 import { INIT_REFUSALS_QUIET } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test(

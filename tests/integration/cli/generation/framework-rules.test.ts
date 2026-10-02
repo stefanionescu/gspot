@@ -6,8 +6,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { generatedEslint } from '#tests/harness/cli/generated.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();

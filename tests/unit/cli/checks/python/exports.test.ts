@@ -1,6 +1,6 @@
 // The Python export analyses: private prefixes, declaration order, the place and order of __all__, and its size.
 import { test, expect } from 'bun:test';
-import { freeModules, pythonModulesOf } from '#tests/support/cli/python/modules.ts';
+import { freeModules, pythonModulesOf } from '#tests/harness/cli/python.ts';
 
 import {
     exportOrder,

@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
-import { install } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
+import { install } from '#tests/harness/tools/install.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { SVG, BUILD, STATIC_SITE_HEADERS } from '#tests/inputs/acceptance/source/kits/kits.ts';
 

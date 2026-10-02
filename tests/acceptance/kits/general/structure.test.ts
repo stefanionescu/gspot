@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/harness/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { script, plantedCases } from '#tests/support/cli/planted.ts';
+import { script, plantedCases } from '#tests/harness/planted/cases.ts';
 import { KILOBYTE, OVER_LIMIT_KB } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');

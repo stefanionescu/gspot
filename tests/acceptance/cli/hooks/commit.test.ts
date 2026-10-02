@@ -2,12 +2,12 @@
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { script } from '#tests/support/cli/planted.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { run, gspot } from '#tests/support/cli/command.ts';
-import { leaveOut, toolsPath } from '#tests/support/cli/tools.ts';
+import { run, gspot } from '#tests/harness/cli/command.ts';
+import { leaveOut, toolsPath } from '#tests/harness/tools/install.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {

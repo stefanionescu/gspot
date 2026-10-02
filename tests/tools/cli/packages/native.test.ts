@@ -6,9 +6,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { gspot as CLI } from '#tests/support/cli/command.ts';
+import { gspot as CLI } from '#tests/harness/cli/command.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test('CLI installation records the npm tools as one install with the native wrapper binary, and reports a usable tool', async () => {
     await using fixture = await createPackageProject('npm', 'package.json', 'none');

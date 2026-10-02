@@ -1,14 +1,65 @@
+import executables from 'which';
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
+import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import type { PrepareSupabaseCheckResult } from '#tests/types/results.ts';
 import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
-import { rejection, textContaining } from '#tests/support/expectations.ts';
-import { prepareSupabaseCheck } from '#tests/support/cli/supabase/check.ts';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
+
+async function prepareSupabaseCheck(
+    root: string,
+    scope: string,
+    outcome: Awaited<ReturnType<typeof processes.run>>,
+): Promise<PrepareSupabaseCheckResult> {
+    const prefix = scope === '' ? '' : `${scope}/`;
+    const policy =
+        scope === '' ? '[tools.supabase]' : `[[scope]]\npath = "${scope}"\nkits = ["supabase"]\n[scope.tools.supabase]`;
+    await createFileTree(root, {
+        'gspot.toml': policyOf(['supabase'], `${policy}\ntypes_file = "database.ts"\n`),
+        [`${prefix}supabase/config.toml`]: 'project_id = "types-fixture"\n',
+    });
+    const execute = async () => {
+        const session = await openSession(root);
+        const plans = planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+        const planned = plans.find((check) => check.scope.scope.path === scope)!;
+        return await runEngineCheck(session, typesFresh, planned);
+    };
+    const requests: { args: string[]; cwd: string }[] = [];
+    const blocking = processes.runBlocking;
+    const version = spyOn(processes, 'runBlocking').mockImplementation((argv, options) =>
+        argv[0] === '/fixture/supabase'
+            ? { code: 0, stdout: '2.75.0\n', stderr: '', missing: false, duration: 1 }
+            : blocking(argv, options),
+    );
+    const findExecutable = executables.sync;
+    const which = spyOn(executables, 'sync').mockImplementation(((name: string) =>
+        name === 'supabase'
+            ? '/fixture/supabase'
+            : findExecutable(name, { nothrow: true })) as typeof executables.sync);
+    const executeProcess = processes.run;
+    const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        if (argv[0] !== '/fixture/supabase') return executeProcess(argv, options);
+        requests.push({ args: argv.slice(1), cwd: options.cwd });
+        return outcome;
+    });
+    return {
+        prefix,
+        execute,
+        requests,
+        [Symbol.dispose]() {
+            run.mockRestore();
+            which.mockRestore();
+            version.mockRestore();
+        },
+    };
+}
 
 const generated = 'export type Database = { public: { Tables: {} } };\n';
 

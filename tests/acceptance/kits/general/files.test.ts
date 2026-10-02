@@ -3,14 +3,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { git, commitAll } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/harness/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { script, plantedCases } from '#tests/support/cli/planted.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { script, plantedCases } from '#tests/harness/planted/cases.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
-import { install, toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import { install, toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 import { CONFIGS_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 plantedCases(

@@ -4,12 +4,12 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { preparePythonProject } from '#cli/tools/python.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { setEnvironmentVariable } from '#tests/support/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { PreparePythonInstallationResult } from '#tests/types/results.ts';
 

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { keptMode } from '#tests/support/cli/platforms.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 

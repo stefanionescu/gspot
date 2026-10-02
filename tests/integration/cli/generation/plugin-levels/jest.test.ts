@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { textContaining } from '#tests/support/expectations.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
+import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 const APP_JEST = policyOf(
     ['javascript'],

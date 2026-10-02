@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { onMac } from '#tests/support/cli/platforms.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { onMac } from '#tests/harness/cli/platforms.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
-import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { swiftInput, removeBuildFolders } from '#tests/harness/cli/swift.ts';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
 import { statSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 

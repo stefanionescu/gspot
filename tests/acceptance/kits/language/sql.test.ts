@@ -1,6 +1,6 @@
 // Planted repository for the sql configuration: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
-import { run } from '#tests/support/cli/command.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { PSQL, SQL_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 plantedCases(

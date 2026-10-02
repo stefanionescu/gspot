@@ -1,6 +1,6 @@
 // Planted repository for the postgres configuration: a locking migration, a repeated version, an edited migration, and a schema with holes.
-import { commitAll } from '#tests/support/cli/git.ts';
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { FIRST, TEAMS, FOLDER } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 plantedCases(

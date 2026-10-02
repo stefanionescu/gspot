@@ -4,11 +4,11 @@ import { run } from '#cli/platform/spawn.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
-import { onMac } from '#tests/support/cli/platforms.ts';
+import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
 
 describe.if(onMac)('native property lists', () => {

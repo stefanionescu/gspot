@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { TABLE, TYPED_TABLES_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 describe('gspot set', () => {

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { checkInput } from '#tests/support/cli/input.ts';
+import { checkInput } from '#tests/harness/cli/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';

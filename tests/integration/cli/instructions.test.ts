@@ -3,8 +3,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { managedBlock } from '#cli/rules/instructions.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 describe('the managed block', () => {
     test('with no check selected it says nothing about gspot check', async () => {

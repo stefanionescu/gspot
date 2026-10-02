@@ -2,14 +2,14 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { CHECKS } from '#cli/checks/registry.ts';
-import { TYPO } from '#tests/support/spelling.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 

@@ -5,7 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { configureOutput } from '#cli/output/messages.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { setEnvironmentVariable } from '#tests/support/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 
 const report: RunReport = {
     version: '0.1.0',

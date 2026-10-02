@@ -5,9 +5,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { existsSync, writeFileSync } from 'node:fs';
 import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { copiedBlocks } from '#cli/checks/general/duplication.ts';
 
 const VALID = {

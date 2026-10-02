@@ -1,6 +1,6 @@
 // The literal values support/cli reads: names, patterns, limits, and tables.
 
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 /** The Next.js configuration enabling Strict Mode. */
 export const NEXT_CONFIG =
     '// The framework kit.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';

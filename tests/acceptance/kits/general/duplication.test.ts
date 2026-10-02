@@ -2,12 +2,12 @@
 import { join, delimiter } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 import { DUPLICATION_INIT, DUPLICATION_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');

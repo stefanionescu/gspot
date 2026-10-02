@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();

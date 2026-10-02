@@ -3,13 +3,13 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { waitForExit } from '#tests/support/cli/process.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { waitForExit } from '#tests/harness/cli/process.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { createConsumer } from '#tests/support/package/consumer.ts';
-import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
+import { createConsumer } from '#tests/harness/package/consumer.ts';
+import { initializeConsumer, getPublishedRelease } from '#tests/harness/package/published.ts';
 
 const release = getPublishedRelease();
 

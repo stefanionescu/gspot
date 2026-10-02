@@ -1,8 +1,8 @@
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { plantedCases } from '#tests/support/cli/planted.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
+import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT, NEXT_TRANSLATIONS } from '#tests/inputs/cli.ts';
 
 const ROUTE =

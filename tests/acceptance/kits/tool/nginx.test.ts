@@ -2,15 +2,15 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 import { NGINX_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;

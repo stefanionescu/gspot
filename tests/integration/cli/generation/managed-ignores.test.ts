@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { applyBlock } from '#cli/generation/markers.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 import { MANAGED_IGNORES_CONFIGURATION } from '#tests/inputs/integration/cli/generation/generation.ts';
 

@@ -1,7 +1,7 @@
 import { selectKits } from '#cli/kits/select.ts';
 import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { testManifest } from '#tests/support/cli/tooling.ts';
+import { testManifest } from '#tests/harness/cli/tooling.ts';
 
 describe('selectKits', () => {
     test('pulls required kits in, dependencies first, in order of first mention', () => {

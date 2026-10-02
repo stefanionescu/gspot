@@ -8,10 +8,10 @@ import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { setEnvironmentVariable } from '#tests/support/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
-import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s preserves authored and locked inputs and restores edited tool files',

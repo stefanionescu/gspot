@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 
 const aliases = { '@/': 'src/', '@config/': 'config/', '@tests/': 'tests/' };

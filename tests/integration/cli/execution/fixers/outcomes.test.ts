@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
+import { CORRECTION_POLICY, plannedCorrection } from '#tests/harness/cli/correction.ts';
 
 test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', async (code) => {
     await using sandbox = await testdir();

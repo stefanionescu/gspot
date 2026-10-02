@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {
     const parser = await parserFor('javascript');

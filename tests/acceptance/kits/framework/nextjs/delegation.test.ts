@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { installedNextProject } from '#tests/support/cli/nextjs.ts';
+import { installedNextProject } from '#tests/harness/cli/nextjs.ts';
 import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { OWNER_WRITES } from '#tests/inputs/acceptance/source/kits/nextjs.ts';
 
 test(

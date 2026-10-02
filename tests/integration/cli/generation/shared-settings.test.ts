@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containingAll } from '#tests/support/expectations.ts';
-import { generatedFile } from '#tests/support/cli/generated/files.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
+import { generatedFile } from '#tests/harness/cli/generated.ts';
 
 import {
     PYTHON,

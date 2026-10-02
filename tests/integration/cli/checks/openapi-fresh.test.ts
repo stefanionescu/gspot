@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { openapiFresh } from '#cli/checks/tool/openapi.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { OPENAPI_FRESH_POLICY, OPENAPI_FRESH_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';

@@ -2,11 +2,11 @@
 import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { containing } from '#tests/support/expectations.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/inputs/integration/tools/checks.ts';
 

@@ -2,8 +2,8 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('file and folder arguments intersect check lists and respect -C', async () => {

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {

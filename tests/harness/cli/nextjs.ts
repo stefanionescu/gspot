@@ -5,19 +5,19 @@ import { randomUUID } from 'node:crypto';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { install, toolsPath } from '#tests/harness/tools/install.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/inputs/cli.ts';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
+import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
 const NEXT_INIT = initArgs(['nextjs']); /**

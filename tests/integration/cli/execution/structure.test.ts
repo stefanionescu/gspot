@@ -3,11 +3,11 @@ import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { PAGE } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {

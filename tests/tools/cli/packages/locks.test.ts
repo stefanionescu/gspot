@@ -6,14 +6,14 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { gspot as CLI } from '#tests/support/cli/command.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { gspot as CLI } from '#tests/harness/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { LOCKS, PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
-import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s refuses stale locks without changing ownership and reports drift',

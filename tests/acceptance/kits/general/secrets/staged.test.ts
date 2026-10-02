@@ -2,13 +2,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/harness/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
-import { PLANTED_KEY_ID, PLANTED_SETTINGS, prepareStagedSecrets } from '#tests/support/cli/secrets.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { PLANTED_KEY_ID, PLANTED_SETTINGS, prepareStagedSecrets } from '#tests/harness/planted/secrets.ts';
 
 const BASELINE = JSON.stringify([
     { Fingerprint: 'old.py:aws-access-token:1', File: 'old.py', RuleID: 'aws-access-token' },

@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/support/spelling.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/tool/formats.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { isToolBroken, checkedFindings } from '#cli/execution/tool/findings.ts';
 
 test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {

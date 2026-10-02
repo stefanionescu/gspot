@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import example from '#tests/inputs/unit/plugin/client-environment.json';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
 

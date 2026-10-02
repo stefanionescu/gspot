@@ -5,8 +5,8 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {
     await using sandbox = await testdir();

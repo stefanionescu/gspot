@@ -7,10 +7,10 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
 

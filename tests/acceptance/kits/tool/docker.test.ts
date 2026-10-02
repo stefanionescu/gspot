@@ -1,6 +1,6 @@
 // Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
-import { plantedCases } from '#tests/support/cli/planted.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { IGNORES, CARELESS, DOCKER_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 plantedCases(

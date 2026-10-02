@@ -1,5 +1,5 @@
 // Planted repository for the express configuration: an OpenAPI document with a hole, a stale document, and a route with no test.
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 
 import {
     HEALTH,

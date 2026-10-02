@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 

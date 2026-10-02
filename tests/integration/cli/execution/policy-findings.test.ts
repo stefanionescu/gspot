@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection, textContaining } from '#tests/support/expectations.ts';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('a wrong entry in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {

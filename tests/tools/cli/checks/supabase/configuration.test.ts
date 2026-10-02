@@ -5,8 +5,8 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
 import { denoLint } from '#cli/checks/platform/supabase/deno.ts';
 
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {

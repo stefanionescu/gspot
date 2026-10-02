@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, afterEach } from 'bun:test';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
-import { rejection, textContaining } from '#tests/support/expectations.ts';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { swiftInput, removeBuildFolders } from '#tests/harness/cli/swift.ts';
 import { swiftBuild, swiftAnalyze } from '#cli/checks/language/swift/build.ts';
 
 // The build checks inspect the Swift toolchain before their mocked runs.

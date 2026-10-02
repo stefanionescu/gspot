@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { preparePushRepository } from '#tests/support/cli/push.ts';
+import { preparePushRepository } from '#tests/harness/planted/push.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 test(

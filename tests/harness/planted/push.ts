@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
-import { gitOutput } from '#tests/support/cli/git.ts';
-import { gspot } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
+import { gspot } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 
 /** Creates reviewed and broken commits beneath conflicting working-tree bytes for push selection. */
 export async function preparePushRepository(

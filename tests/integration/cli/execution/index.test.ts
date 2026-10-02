@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...args: string[]): void {

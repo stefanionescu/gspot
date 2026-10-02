@@ -3,14 +3,14 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
+import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 
 test.each(['none', 'index-only'])(
     'Next.js entry files preserve the re-export policy in %s mode',

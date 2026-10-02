@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { rejection } from '#tests/support/expectations.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { SQL_SOURCE } from '#tests/inputs/unit/cli/checks/naming.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 

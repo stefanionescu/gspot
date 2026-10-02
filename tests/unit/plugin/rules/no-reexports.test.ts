@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 
 tester().run('no-reexports', noReexports, {

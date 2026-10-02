@@ -4,9 +4,9 @@ import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { checkInput } from '#tests/support/cli/input.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { checkInput } from '#tests/harness/cli/input.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 
 test('a fenced block that does not parse in its language is a finding', async () => {

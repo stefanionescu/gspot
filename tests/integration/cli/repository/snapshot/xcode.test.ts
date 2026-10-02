@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { orphanSources, projectSymlinks } from '#cli/checks/tool/xcode/project.ts';
 

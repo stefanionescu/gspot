@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { installSemgrep } from '#tests/support/cli/tools.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
+import { installSemgrep } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 const APP_SEMGREP =
     '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';

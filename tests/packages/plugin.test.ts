@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import pluginPackage from '#plugin-package' with { type: 'json' };
-import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { startRegistry } from '#tests/harness/registry/lifecycle.ts';
 import { CONSUMER, DECLARATIONS } from '#tests/inputs/acceptance/package.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 

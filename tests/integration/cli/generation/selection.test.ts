@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 

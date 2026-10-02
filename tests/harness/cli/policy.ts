@@ -1,6 +1,13 @@
-// The problems a policy text raises, for tests that plant a defect and its correction.
+// The policy text a sandbox starts from, with the level, the kits, and the tables a test adds, and the problems a policy
+// text raises.
 import { GspotError } from '#cli/platform/errors.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
+
+export function policyOf(kits: string[], extra = '', level?: string): string {
+    const selected = kits.map((kit) => JSON.stringify(kit)).join(', ');
+    const chosen = level === undefined ? '' : `level = "${level}"\n`;
+    return `${chosen}kits = [${selected}]\n${extra}`;
+}
 
 /**
  * Parses a policy text and returns its problems, or none when it parses.

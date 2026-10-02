@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
 
 tester().run('import-layout', importLayout, {

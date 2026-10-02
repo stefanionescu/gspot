@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { sessionInput } from '#tests/support/cli/input.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { sessionInput } from '#tests/harness/cli/input.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { tsconfigOptions } from '#cli/checks/language/typescript.ts';
 import { TSCONFIG_OPTIONS_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 

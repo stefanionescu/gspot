@@ -2,14 +2,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { run, gspot } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { run, gspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { preparePushRepository } from '#tests/support/cli/push.ts';
+import { preparePushRepository } from '#tests/harness/planted/push.ts';
 
 test(
     'pre-push checks exact supplied objects despite conflicting working-tree repairs',

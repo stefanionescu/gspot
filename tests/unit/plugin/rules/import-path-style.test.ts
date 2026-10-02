@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { importPathStyle } from '#plugin/rules/import-path-style.ts';
 
 tester().run('import-path-style', importPathStyle, {

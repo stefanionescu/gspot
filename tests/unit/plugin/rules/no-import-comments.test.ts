@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noImportComments } from '#plugin/rules/no-import-comments.ts';
 
 tester().run('no-import-comments', noImportComments, {

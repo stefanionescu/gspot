@@ -1,4 +1,4 @@
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 // The literal values integration/cli/execution/execution reads: names, patterns, limits, and tables.
 
 export const PAGE = '<script>\n    let count = 0;\n</script>\n<p>{count}</p>\n';

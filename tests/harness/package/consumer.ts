@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { environment } from '#tests/support/package/packages.ts';
+import { environment } from '#tests/harness/package/packages.ts';
 import type { CreateConsumerResult } from '#tests/types/results.ts';
 import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/inputs/package.ts';
 

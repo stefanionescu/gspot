@@ -1,5 +1,5 @@
 // Planted repository for the vitest configuration: a function no test calls, and a focused test.
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { TEST, UNTESTED, VITEST_SOURCE, VITEST_PACKAGE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const TRIPLED =

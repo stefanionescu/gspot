@@ -1,14 +1,14 @@
 // Planted repository for the pytest configuration: coverage under the floor.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { runPlanted } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { MATH, FASTAPI_TESTS } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const PROJECT = `[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;

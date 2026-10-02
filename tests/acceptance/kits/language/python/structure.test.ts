@@ -1,5 +1,5 @@
 // Planted repository for the Python structure checks: one module shaped wrong for each check.
-import { plantedCases } from '#tests/support/cli/planted.ts';
+import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { STRUCTURE_CLEAN, STRUCTURE_PROJECT } from '#tests/inputs/acceptance/source/kits/python.ts';
 
 const LONG_BODY = Array.from({ length: 61 }, (_, index) => `    step_${String(index)} = ${String(index)}`).join('\n');

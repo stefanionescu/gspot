@@ -2,14 +2,14 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { RegistryPackage } from '#tests/types/registry.ts';
 import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PackageClient } from '#tests/types/integration/tools.ts';
-import { setEnvironmentVariable } from '#tests/support/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { createPackageRegistry } from '#tests/support/registry/packages.ts';
+import { createPackageRegistry } from '#tests/harness/registry/packages.ts';
 import type { ReadPackageInputsResult, CreatePackageProjectResult } from '#tests/types/results.ts';
 
 const QUIET_GUIDES = '[guides]\ninstall = false\n';

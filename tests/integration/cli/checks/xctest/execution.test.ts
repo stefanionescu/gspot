@@ -3,7 +3,7 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
-import { onMac } from '#tests/support/cli/platforms.ts';
+import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, expect, describe, afterEach } from 'bun:test';
 import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';

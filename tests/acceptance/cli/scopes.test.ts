@@ -3,18 +3,18 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { treeContents } from '#tests/support/cli/preservation.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { SCOPES_SOURCE } from '#tests/inputs/acceptance/source/cli/cli.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
 test(
     'typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none',

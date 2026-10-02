@@ -1,4 +1,4 @@
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 // The literal values integration/cli/checks reads: names, patterns, limits, and tables.
 
 export const DEPENDENCIES_POLICY = policyOf(['dependencies']);

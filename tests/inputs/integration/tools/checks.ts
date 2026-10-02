@@ -1,4 +1,4 @@
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 // The literal values integration/tools/checks reads: names, patterns, limits, and tables.
 
 export const XCTEST_COVERAGE_SOURCE =

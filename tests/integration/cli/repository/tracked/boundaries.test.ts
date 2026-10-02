@@ -8,10 +8,10 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { head, readSource } from '#cli/repository/sources.ts';
 
 test('opening a session reads less than one megabyte with a two-megabyte source', async () => {

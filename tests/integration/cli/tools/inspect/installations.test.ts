@@ -5,12 +5,12 @@ import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { failure } from '#tests/support/expectations.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { failure } from '#tests/harness/expectations.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import * as environment from '#cli/platform/environment.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
-import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
+import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 

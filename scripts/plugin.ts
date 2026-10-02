@@ -3,7 +3,7 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { runSourceCommand } from '#tests/support/registry/plugin.ts';
+import { runSourceCommand } from '#tests/harness/registry/plugin.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);

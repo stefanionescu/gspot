@@ -9,7 +9,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
 import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
 

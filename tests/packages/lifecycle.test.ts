@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { chmodSync, readdirSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { root } from '#tests/support/package/packages.ts';
+import { root } from '#tests/harness/package/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { waitForFile, captureChild } from '#tests/support/cli/process.ts';
+import { waitForFile, captureChild } from '#tests/harness/cli/process.ts';
 
 test.each(['refusal', 'SIGTERM'] as const)(
     'release acceptance removes its registry after publication %s',

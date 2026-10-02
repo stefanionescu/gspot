@@ -2,18 +2,18 @@
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { join, delimiter } from 'node:path';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { script } from '#tests/support/cli/planted.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { run, gspot } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { run, gspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { COMMITS_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
-import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {

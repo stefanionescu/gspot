@@ -1,7 +1,7 @@
 // The types of support/package in this package.
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
-import type { createConsumer } from '#tests/support/package/consumer.ts';
+import type { createConsumer } from '#tests/harness/package/consumer.ts';
 
 /** The registry holding the published release, its version, and the npmrc private tool installs read. */
 export type PublishedRelease = {

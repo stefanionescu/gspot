@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
-import { venvExecutable } from '#tests/support/cli/platforms.ts';
-import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
+import { venvExecutable } from '#tests/harness/cli/platforms.ts';
+import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
 test('managed executable discovery refuses an external link before inspecting and accepts an internal replacement', async () => {

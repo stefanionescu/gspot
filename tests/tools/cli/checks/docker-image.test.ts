@@ -5,9 +5,9 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
-import { textContaining } from '#tests/support/expectations.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
 
 // Imports the payload of the sandbox as each tag in turn; the second import gets a payload without credentials.

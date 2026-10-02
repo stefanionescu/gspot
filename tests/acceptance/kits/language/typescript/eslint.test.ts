@@ -3,13 +3,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { installPrivateTools } from '#tests/harness/tools/install.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
 test(
     'generated TypeScript configuration reports an interface once through the pinned replacement rule',

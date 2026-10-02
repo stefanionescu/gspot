@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { currentBlock } from '#cli/generation/markers.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { rmSync, statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
 

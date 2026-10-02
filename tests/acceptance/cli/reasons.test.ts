@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
-import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
+import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',

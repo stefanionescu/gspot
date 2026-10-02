@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);

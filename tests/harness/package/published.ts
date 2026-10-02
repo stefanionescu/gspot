@@ -7,7 +7,7 @@ import type { Registry } from '#tests/types/registry.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { root, environment } from '#tests/support/package/packages.ts';
+import { root, environment } from '#tests/harness/package/packages.ts';
 import type { PublishedRelease, InstalledConsumer, ConsumerInitialization } from '#tests/types/package.ts';
 
 /**

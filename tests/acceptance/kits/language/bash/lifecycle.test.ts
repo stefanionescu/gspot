@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
-import { script } from '#tests/support/cli/planted.ts';
+import { script } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { containing } from '#tests/support/expectations.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 

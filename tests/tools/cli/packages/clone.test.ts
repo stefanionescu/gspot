@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'package.json', 'mise'] as const))(
     '%s clone installs immutable inputs twice and leaves its formatter ready',

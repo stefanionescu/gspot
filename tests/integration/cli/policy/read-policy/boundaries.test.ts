@@ -3,8 +3,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { policyProblems } from '#tests/support/cli/policy/problems.ts';
+import { policyOf, policyProblems } from '#tests/harness/cli/policy.ts';
 
 describe('configuration directory boundaries', () => {
     test.each([

@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { registryInstanceOnly } from '#plugin/rules/registry-instance-only.ts';
 
 tester().run('registry-instance-only', registryInstanceOnly, {

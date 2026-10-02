@@ -1,10 +1,10 @@
 // Source CLI journeys: every check of the typescript configuration reports its planted defect and accepts the correction.
 import { test, expect } from 'bun:test';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/harness/cli/typescript.ts';
+import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
 
 import {
     TOTAL,

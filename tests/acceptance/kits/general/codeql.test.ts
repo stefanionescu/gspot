@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
+import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const python = {

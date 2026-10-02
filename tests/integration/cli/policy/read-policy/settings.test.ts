@@ -3,8 +3,8 @@ import { mkdirSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { MINIMAL_POLICY } from '#tests/inputs/cli.ts';
+import { policyProblems } from '#tests/harness/cli/policy.ts';
 import { readPolicy, parsePolicyText } from '#cli/policy/read.ts';
-import { policyProblems } from '#tests/support/cli/policy/problems.ts';
 
 test('parsePolicyText > normalizes reasoned limits into value and reason', () => {
     const policy = parsePolicyText(

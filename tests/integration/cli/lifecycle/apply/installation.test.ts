@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {

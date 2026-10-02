@@ -135,7 +135,7 @@ reason = "The site links are root-relative and resolve once Starlight builds it;
 [tools.typos]
 
 [[tools.typos.exclude]]
-paths = ["tests/support/spelling.ts"]
+paths = ["tests/harness/spelling.ts"]
 reason = "The deliberate misspellings the spelling tests plant; every other test file stays checked."
 
 [[tools.typos.exclude]]
@@ -483,9 +483,9 @@ to = ["platform"]
 
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
-harness = "tests/support"
+harness = "tests/harness"
 runtime = ["src/**"]
-env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]
+env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts"]
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
@@ -601,7 +601,6 @@ paths = [
     "tests/acceptance/kits/language/swift",
     "tests/acceptance/kits/language/typescript",
     "tests/integration/cli/checks/swift",
-    "tests/support/cli/python",
     "tests/unit/cli/checks/python",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
@@ -709,7 +708,7 @@ paths = [
     "tests/integration/cli/checks/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/resource-reads.test.ts",
     "tests/tools/cli/packages/project.test.ts",
-    "tests/support/cli/preservation.ts",
+    "tests/harness/planted/preservation.ts",
 ]
 reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
 

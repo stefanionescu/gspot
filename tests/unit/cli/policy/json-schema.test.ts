@@ -2,8 +2,8 @@ import { stringify } from 'smol-toml';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { test, expect, describe } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
-import { failure } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { failure } from '#tests/harness/expectations.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 

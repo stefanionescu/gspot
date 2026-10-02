@@ -4,10 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { valeFindings } from '#cli/checks/general/prose/vale.ts';
 
 const DIAGNOSTIC = { Line: 1, Span: [3, 5], Check: 'gspot.Example', Message: 'Use a concrete example.' };

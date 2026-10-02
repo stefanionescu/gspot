@@ -1,6 +1,6 @@
 // The Python import analyses: module singletons and comments between imports.
 import { test, expect } from 'bun:test';
-import { freeModules, pythonModulesOf } from '#tests/support/cli/python/modules.ts';
+import { freeModules, pythonModulesOf } from '#tests/harness/cli/python.ts';
 import { singletons, importComments } from '#cli/checks/language/python/imports.ts';
 
 const HEAD = '"""A planted module."""\n\n\n';

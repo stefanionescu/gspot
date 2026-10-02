@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/support/cli/command.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import { run } from '#tests/harness/cli/command.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { script } from '#tests/harness/planted/cases.ts';
+import { initArgs } from '#tests/harness/planted/init.ts';
+import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import type { CreateSecretVerifierResult } from '#tests/types/results.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
 // A planted credential for the secrets tests, built from halves so no scanner of this repository reads a key here.
 export const PLANTED_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');

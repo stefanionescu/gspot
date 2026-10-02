@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 test.each([
     ['$/', 'called.yml'],

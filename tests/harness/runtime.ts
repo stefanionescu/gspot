@@ -1,4 +1,4 @@
-import { setEnvironmentVariable } from '#tests/support/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import workspacePackage from '#workspace-package' with { type: 'json' };
 
 if (Bun.version !== workspacePackage.engines.bun)

@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { siteInput } from '#tests/support/cli/site.ts';
+import { siteInput } from '#tests/harness/cli/site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { siteBuild } from '#cli/checks/general/static-site/build.ts';
 import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';

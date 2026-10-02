@@ -1,13 +1,13 @@
 // One installed repository per table, and each planted defect as an edit that is restored: the check fails with the
 // expected finding, then the corrected repository passes.
 import { testdir } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
+import { run } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { plant } from '#tests/support/cli/preservation.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { installSandbox } from '#tests/support/cli/sandbox.ts';
-import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { plant } from '#tests/harness/planted/preservation.ts';
+import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepository } from '#tests/types/cli.ts';
 

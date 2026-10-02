@@ -6,8 +6,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import type { InstalledConsumer } from '#tests/types/package.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { createConsumer } from '#tests/support/package/consumer.ts';
-import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
+import { createConsumer } from '#tests/harness/package/consumer.ts';
+import { initializeConsumer, getPublishedRelease } from '#tests/harness/package/published.ts';
 
 const release = getPublishedRelease();
 

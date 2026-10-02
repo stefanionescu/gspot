@@ -3,20 +3,20 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
-import { git } from '#tests/support/cli/git.ts';
+import { git } from '#tests/harness/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
-import { gspot } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
+import { gspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 import {
     PLANTED_KEY_ID,
     PLANTED_SETTINGS,
     createSecretVerifier,
     prepareSecretHistory,
-} from '#tests/support/cli/secrets.ts';
+} from '#tests/harness/planted/secrets.ts';
 
 test(
     'pushed secret history includes removed secrets and excludes unrelated refs despite identical final trees',
