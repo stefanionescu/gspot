@@ -8,10 +8,10 @@ export type ErrorCode =
     | 'manifest'
     | 'selection'
     | 'installation'
-    | 'missing-tool'
-    | 'tool-output'
-    | 'skipped'
-    | 'version-pin'
+    | 'tool'
+    | 'output'
+    | 'skip'
+    | 'pin'
     | 'profile'
     | 'prompt';
 

@@ -80,14 +80,11 @@ function isOnDisk(file: string, roots: string[]): boolean {
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
     if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
-        throw new GspotError(
-            'tool-output',
-            `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`,
-        );
+        throw new GspotError('output', `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
     const findings = parseOutput(spec, result.stdout, result.stderr, root);
     if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
         throw new GspotError(
-            'tool-output',
+            'output',
             'TruffleHog reported findings without valid structured data; raw output was withheld.',
         );
     return findings;
@@ -102,7 +99,7 @@ function parsedFindings(spec: CheckSpec, result: SpawnResult, roots: [string, st
 function outputFailure(planned: PlannedCheck, result: SpawnResult): never {
     const name = planned.tool?.name ?? planned.spec.name;
     const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
-    throw new GspotError('tool-output', `${name} broke: exit ${String(result.code)}\n${detail}`);
+    throw new GspotError('output', `${name} broke: exit ${String(result.code)}\n${detail}`);
 }
 
 /**

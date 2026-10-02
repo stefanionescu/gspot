@@ -50,8 +50,8 @@ function engineResult(
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
-    if (error instanceof GspotError && error.code === 'skipped') return { status: 'skipped', note: error.message };
-    if (error instanceof GspotError && error.code === 'missing-tool') return { status: 'missing', note: error.message };
+    if (error instanceof GspotError && error.code === 'skip') return { status: 'skipped', note: error.message };
+    if (error instanceof GspotError && error.code === 'tool') return { status: 'missing', note: error.message };
     return { status: 'error', note: `the ${name} check failed: ${(error as Error).message}` };
 }
 

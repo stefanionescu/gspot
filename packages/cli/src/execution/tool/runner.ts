@@ -79,7 +79,7 @@ function parsedFindings(
     try {
         return { findings: checkedFindings(planned, result, roots) };
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'tool-output') return { note: error.message };
+        if (error instanceof GspotError && error.code === 'output') return { note: error.message };
         throw error;
     }
 }
@@ -127,7 +127,7 @@ function adapterTool(
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
     if (inspection.state === 'error') throw new Error(inspection.note ?? `${name} version inspection failed.`);
     if (inspection.state === 'missing' || inspection.state === 'outdated' || inspection.path === undefined) {
-        throw new GspotError('missing-tool', missingNote(tool, inspection, inspection.state));
+        throw new GspotError('tool', missingNote(tool, inspection, inspection.state));
     }
     return { path: inspection.path, env };
 }
@@ -296,7 +296,7 @@ export async function runCheckCommand(
         input.cancelSignal,
     );
     const failure = executionFailure(result, name, Number(input.view.settings['timeout'] ?? TOOL_DEADLINE.default));
-    if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
+    if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     // Tools on Windows end their lines with CRLF; every reader of check output splits on LF.
     return {

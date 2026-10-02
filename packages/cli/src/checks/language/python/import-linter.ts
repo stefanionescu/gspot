@@ -22,10 +22,10 @@ const importConfiguration = z.object({
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
-        throw new GspotError('skipped', 'This scope has no pyproject.toml import contracts.');
+        throw new GspotError('skip', 'This scope has no pyproject.toml import contracts.');
     const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
     if (project.tool?.importlinter === undefined)
-        throw new GspotError('skipped', 'This scope has no tool.importlinter configuration.');
+        throw new GspotError('skip', 'This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
         cwd: join(input.root, input.scope),
     });

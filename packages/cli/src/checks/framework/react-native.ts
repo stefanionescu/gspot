@@ -56,11 +56,11 @@ export async function expoDoctor(input: EngineInput): Promise<Finding[]> {
     const path = input.scope === '' ? 'package.json' : `${input.scope}/package.json`;
     const manifest = readPackageManifest(input.root, path);
     if ({ ...manifest.devDependencies, ...manifest.dependencies }['expo'] === undefined)
-        throw new GspotError('skipped', 'This scope does not depend on expo, and Expo Doctor reads an Expo project.');
+        throw new GspotError('skip', 'This scope does not depend on expo, and Expo Doctor reads an Expo project.');
     // Doctor exits 0 without reading a project whose expo package is absent, so the project is checked first.
     if (!hasInstalledExpo(input.scopeRoot))
         throw new GspotError(
-            'missing-tool',
+            'tool',
             'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
         );
     const result = await runCheckCommand(input, ['expo-doctor'], { cwd: input.scopeRoot });

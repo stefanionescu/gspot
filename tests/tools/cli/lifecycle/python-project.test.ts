@@ -69,8 +69,10 @@ if (onPosix)
                 },
             );
             expect(command.code, command.stdout + command.stderr).toBe(2);
-            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('installed locked Python tools');
+            expect((JSON.parse(command.stdout) as InstallJson).message).toContain(
+                'Run: gspot apply, then gspot install',
+            );
+            expect((JSON.parse(command.stdout) as InstallJson).message).toContain('installed locked Python tools');
             expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
             expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
                 'keep the project environment',

@@ -145,13 +145,9 @@ export function markdownlintFindings(
             return markdownlintFinding(check, help, entry, file, lines);
         });
     } catch (error) {
-        throw new GspotError(
-            'tool-output',
-            'Markdownlint returned invalid structured findings or unavailable source.',
-            {
-                cause: error,
-            },
-        );
+        throw new GspotError('output', 'Markdownlint returned invalid structured findings or unavailable source.', {
+            cause: error,
+        });
     }
 }
 
@@ -177,13 +173,9 @@ export function typosFindings(check: string, stdout: string, help: string, root:
                 return typoFinding(check, help, entry, path, typoPosition(root, path, entry, linesByPath));
             });
     } catch (error) {
-        throw new GspotError(
-            'tool-output',
-            'The typos output holds invalid structured findings or an unavailable source.',
-            {
-                cause: error,
-            },
-        );
+        throw new GspotError('output', 'The typos output holds invalid structured findings or an unavailable source.', {
+            cause: error,
+        });
     }
 }
 
@@ -209,10 +201,7 @@ export function trufflehogFindings(check: string, stdout: string, help: string):
                 fixable: false,
             });
         } catch {
-            throw new GspotError(
-                'tool-output',
-                'TruffleHog returned invalid structured findings; raw output was withheld.',
-            );
+            throw new GspotError('output', 'TruffleHog returned invalid structured findings; raw output was withheld.');
         }
     }
     return findings;

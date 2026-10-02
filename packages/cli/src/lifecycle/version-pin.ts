@@ -45,5 +45,5 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
 export function assertPinMatches(root: string): void {
     const pinned = pinnedVersion(root);
     if (pinned !== undefined && pinned !== GSPOT_VERSION)
-        throw new GspotError('version-pin', messages.versionMismatch(pinned, GSPOT_VERSION));
+        throw new GspotError('pin', messages.versionMismatch(pinned, GSPOT_VERSION));
 }

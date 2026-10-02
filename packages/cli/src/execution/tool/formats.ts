@@ -131,7 +131,7 @@ function parseEslintJson(check: string, text: string, help: string, root: string
     try {
         files = eslintFiles.parse(JSON.parse(text));
     } catch (error) {
-        throw new GspotError('tool-output', 'ESLint returned invalid structured findings.', { cause: error });
+        throw new GspotError('output', 'ESLint returned invalid structured findings.', { cause: error });
     }
     const prefix = `${toolPath(root).replace(/\/$/u, '')}/`;
     return files.flatMap((file) => {
@@ -146,7 +146,7 @@ function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
     } catch (error) {
-        throw new GspotError('tool-output', 'The tool returned an invalid JSON report.', { cause: error });
+        throw new GspotError('output', 'The tool returned an invalid JSON report.', { cause: error });
     }
 }
 

@@ -78,7 +78,7 @@ export function siteBuild(input: EngineInput): Promise<SiteBuild> {
  */
 export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
     const build = await siteBuild(input);
-    if (!build.isBuilt) throw new GspotError('skipped', 'The site did not build.');
+    if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
     return build;
 }
 

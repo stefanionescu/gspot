@@ -41,7 +41,7 @@ test.each(PACKAGE_PROJECTS)(
             cwd: root,
         });
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect((JSON.parse(refused.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
+        expect((JSON.parse(refused.stdout) as InstallJson).message).toContain('Run: gspot apply, then gspot install');
         expect(
             await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
         ).toContain('Run: gspot apply, then gspot install');

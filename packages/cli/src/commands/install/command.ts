@@ -109,6 +109,10 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         };
     } catch (error) {
         const text = error instanceof Error ? error.message : 'Tool installation failed.';
-        return { text: `${text}\n`, json: { installed: false, error: text } satisfies InstallJson, exitCode: 2 };
+        return {
+            text: `${text}\n`,
+            json: { installed: false, error: 'installation', message: text } satisfies InstallJson,
+            exitCode: 2,
+        };
     }
 }

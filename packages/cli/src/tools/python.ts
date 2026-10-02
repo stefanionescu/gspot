@@ -141,7 +141,7 @@ async function uv(root: string, owner: ToolOwner, work: string, args: string[], 
             env: { UV_PROJECT_ENVIRONMENT: join(work, '.venv'), UV_VENV_RELOCATABLE: 'true', UV_LINK_MODE: 'copy' },
         },
     );
-    if (result.missing) throw new GspotError('missing-tool', `Install uv, then run: gspot install. ${SETUP}`);
+    if (result.missing) throw new GspotError('tool', `Install uv, then run: gspot install. ${SETUP}`);
     if (result.code !== 0) {
         const text = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
         if (args[0] === 'sync') throw new GspotError('installation', text);

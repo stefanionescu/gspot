@@ -79,7 +79,7 @@ async function assertPackageToolVersion(execution: PackageExecution): Promise<vo
     const version = await runToolCommand(undefined, [client.name, '--version'], { cwd: work, env });
     if (version.code !== 0 || version.stdout.trim() !== client.version)
         throw new GspotError(
-            'missing-tool',
+            'tool',
             `The tool project requires ${client.name}@${client.version}. Install that package manager version first.`,
         );
 }

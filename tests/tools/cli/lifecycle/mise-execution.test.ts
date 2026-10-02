@@ -53,7 +53,7 @@ if (onPosix)
             env: { ...env, PATH: `${join(state.path, 'old')}${delimiter}${env.PATH}` },
         });
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect((JSON.parse(refused.stdout) as InstallJson).error).toContain(MISE_MIN_VERSION);
+        expect((JSON.parse(refused.stdout) as InstallJson).message).toContain(MISE_MIN_VERSION);
         expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
         expect(await run(['mise', 'link', `npm:@gspothq/cli@${GSPOT_VERSION}`, state.path], options)).toMatchObject({
             code: 0,

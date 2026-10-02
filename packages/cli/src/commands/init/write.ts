@@ -67,7 +67,7 @@ function generatedPaths(session: Session): Set<string> {
 function isRepairable(error: unknown): error is AggregateError {
     if (!(error instanceof AggregateError)) return false;
     return error.errors.every(
-        (failure: unknown) => failure instanceof GspotError && ['missing-tool', 'installation'].includes(failure.code),
+        (failure: unknown) => failure instanceof GspotError && ['tool', 'installation'].includes(failure.code),
     );
 }
 

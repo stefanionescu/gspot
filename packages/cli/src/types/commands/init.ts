@@ -58,7 +58,8 @@ export type InitJson = {
     dryRun?: boolean;
     written?: boolean;
     error?: string;
-    install?: string;
+    /** What the tool installation said, when it did not finish. */
+    note?: string;
 };
 export type InitResult = { text: string; json: InitJson; exitCode: number };
 

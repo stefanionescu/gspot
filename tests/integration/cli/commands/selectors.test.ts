@@ -119,7 +119,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('version-pin');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('pin');
     expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
     const accepted = await runGspot(directory.path, args);

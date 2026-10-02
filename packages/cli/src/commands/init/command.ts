@@ -47,7 +47,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     if (plan.unread.length === 0) return undefined;
     return {
         text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
-        json: { root, plan, error: 'unread-configuration', written: false },
+        json: { root, plan, error: 'unreadable-config', written: false },
         exitCode: EXIT_ERROR,
     };
 }
@@ -59,7 +59,8 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
  */
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
-    if (hasPolicy(root)) return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: EXIT_ERROR };
+    if (hasPolicy(root))
+        return { text: ALREADY_INSTALLED, json: { error: 'already-initialized' }, exitCode: EXIT_ERROR };
     const profile = options.from === undefined ? undefined : await readProfile(options.from, options.cwd);
     const effective = profile === undefined ? options : { ...profileAnswers(profile), ...options, profile };
     const prepared = await prepare(root, effective);
@@ -77,7 +78,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
             root,
             plan,
             policy: policyText,
-            install: written.installNote,
+            note: written.installNote,
         },
         exitCode: written.exitCode,
     };
