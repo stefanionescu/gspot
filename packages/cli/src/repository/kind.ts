@@ -1,7 +1,8 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
+import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
 
 import {
@@ -58,7 +59,7 @@ function attributeKind(attributes: string[]): Verdict | undefined {
 // A license text: its name is a license name, and no code language claims its extension, so license-locks.test.ts
 // stays source.
 function isLicenseFile(path: string): boolean {
-    const name = baseName(path);
+    const name = posix.basename(path);
     const tags = EXTENSION_TAGS[extensionOf(name)] ?? [];
     return LICENSE_FILE.test(name) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
@@ -136,5 +137,5 @@ export function readAttributes(root: string): Attribute[] {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The env check and the staged selection find machine environment files by this one rule.
 export function isEnvironmentFile(path: string): boolean {
-    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(baseName(path));
+    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(posix.basename(path));
 }

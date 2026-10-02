@@ -1,6 +1,5 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { baseName } from '#cli/platform/paths.ts';
+import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
@@ -20,7 +19,7 @@ function parsed(input: EngineInput, path: string): { value: unknown; error: stri
 
 function setName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
-    const name = baseName(folder);
+    const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
 }
 

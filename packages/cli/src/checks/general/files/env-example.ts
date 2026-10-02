@@ -1,4 +1,4 @@
-import { baseName } from '#cli/platform/paths.ts';
+import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
@@ -23,7 +23,7 @@ export function envExample(input: EngineInput): Finding[] {
     const names = Array.isArray(listed) ? listed.map(String) : ENV_TEMPLATE_NAMES;
     // The owned files are configuration; the reads are in code, so the whole scope is searched.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope));
-    const templates = inScope.filter((file) => names.includes(baseName(file.path)));
+    const templates = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (templates.length === 0) return [];
     const known = new Set(
         templates.flatMap((file) => {

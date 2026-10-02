@@ -1,11 +1,10 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore from 'ignore';
 import type { Dirent } from 'node:fs';
-import { baseName } from '#cli/platform/paths.ts';
-import { join, dirname, resolve } from 'node:path';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { join, posix, dirname, resolve } from 'node:path';
 import { statSync, lstatSync, readdirSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
@@ -51,7 +50,7 @@ function entryFor(root: string, path: string, executables: ReadonlySet<string> |
         return undefined;
     }
     if (stat.isSymbolicLink()) {
-        if (DEPENDENCY_FOLDERS.includes(baseName(path))) return undefined;
+        if (DEPENDENCY_FOLDERS.includes(posix.basename(path))) return undefined;
         // Inventory installed links without reading their dependency targets outside this root.
         if (
             path

@@ -1,8 +1,9 @@
 // Which selected kit owners which file, per scope.
+import { posix } from 'node:path';
 import { GLOB_CHARS } from '#cli/config/kits.ts';
 import { sourceKits } from '#cli/kits/select.ts';
+import { extensionOf } from '#cli/platform/paths.ts';
 import type { Owners, Manifest } from '#cli/types/kits.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
@@ -30,7 +31,7 @@ function effectiveOwners(owners: Owners, selected: Manifest[]): Owners {
  */
 export function isOwned(owners: Owners, file: TrackedFile): boolean {
     if (owners.extensions.includes(extensionOf(file.path))) return true;
-    if (isFilenameClaimed(owners, baseName(file.path))) return true;
+    if (isFilenameClaimed(owners, posix.basename(file.path))) return true;
     if (owners.tags.some((tag) => file.tags.includes(tag))) return true;
     return owners.paths.length > 0 && pathMatcher(owners.paths)(file.path);
 }

@@ -1,10 +1,10 @@
 // Reading each package manager's lock: whether it pins the generated dependencies, and how registry routing is removed.
 import { z } from 'zod';
 import semver from 'semver';
+import { posix } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
-import { baseName } from '#cli/platform/paths.ts';
 import { modify, applyEdits } from 'jsonc-parser';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/config/tools/packages.ts';
@@ -66,7 +66,7 @@ function isStandardTarball(entry: BunPackage, env: Record<string, string>): bool
     const registry = registryFor(name, env);
     if (registry === undefined) return false;
     const base = registry.endsWith('/') ? registry : `${registry}/`;
-    const filename = baseName(name);
+    const filename = posix.basename(name);
     return resolved === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 

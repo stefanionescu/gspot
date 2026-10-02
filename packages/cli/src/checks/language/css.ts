@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { parse } from 'postcss';
 import { posix } from 'node:path';
-import { baseName } from '#cli/platform/paths.ts';
 import selectorParser from 'postcss-selector-parser';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
@@ -90,7 +89,7 @@ function bindingReads(checker: ts.TypeChecker, symbol: ts.Symbol, source: ts.Nod
 }
 
 function sheetFindings(input: EngineInput, sheet: string, defined: string[], importers: Importer[]): Finding[] {
-    const name = baseName(sheet);
+    const name = posix.basename(sheet);
     if (importers.length === 0) return [];
     const known = new Set(
         defined.flatMap((entry) => [

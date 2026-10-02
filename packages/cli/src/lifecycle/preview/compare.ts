@@ -1,11 +1,12 @@
+import { posix } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
+import { extensionOf } from '#cli/platform/paths.ts';
 import { jsoncValue } from '#cli/repository/jsonc.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import { gixyRules } from '#cli/lifecycle/preview/gixy.ts';
 import { valeRules } from '#cli/lifecycle/preview/vale.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { sqlfluffRules } from '#cli/lifecycle/preview/sqlfluff.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { javascriptRules } from '#cli/lifecycle/preview/javascript.ts';
@@ -38,7 +39,7 @@ const FORMAT_READERS: Record<string, (text: string) => unknown> = {
 };
 
 function document(path: string, text: string): unknown {
-    const named = NAMED_READERS[baseName(path)];
+    const named = NAMED_READERS[posix.basename(path)];
     if (named !== undefined) return named(text);
     const extension = extensionOf(path);
     if (['.js', '.mjs', '.cjs'].includes(extension)) return javascriptRules(path, text);

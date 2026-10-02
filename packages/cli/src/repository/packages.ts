@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { baseName } from '#cli/platform/paths.ts';
 import { decodedText } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { GSPOT_FOLDER, SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
@@ -137,7 +137,7 @@ function swift(root: string, path: string): Fields {
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
         const url = match[1] ?? '';
-        const last = baseName(url);
+        const last = posix.basename(url);
         dependencies[last.endsWith('.git') ? last.slice(0, -'.git'.length) : last] = url;
     }
     return {
@@ -247,7 +247,7 @@ export function readManifests(root: string, files: TrackedFile[]): Fields[] {
                 !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER || part === 'node_modules'),
         )
         .flatMap((file) => {
-            const base = baseName(file.path);
+            const base = posix.basename(file.path);
             const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirements : READERS[base];
             if (reader === undefined) return [];
             try {

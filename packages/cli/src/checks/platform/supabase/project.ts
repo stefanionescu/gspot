@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { baseName } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
@@ -50,7 +49,7 @@ export function functionFolders(input: EngineInput): string[] {
         .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
         .map((path) => path.slice(0, path.lastIndexOf('/')))
         .filter((folder) => folder.split('/').length === base.split('/').length + 1)
-        .filter((folder) => !baseName(folder).startsWith(SHARED_PREFIX));
+        .filter((folder) => !posix.basename(folder).startsWith(SHARED_PREFIX));
     return [...new Set(folders)];
 }
 
@@ -64,7 +63,7 @@ export function projectValid(input: EngineInput): Finding[] {
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
     if (typeof config === 'string') return [findingAt(input, at, 'parse', config)];
-    const folders = new Set(functionFolders(input).map((folder) => baseName(folder)));
+    const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return missing.map((name) =>
         findingAt(

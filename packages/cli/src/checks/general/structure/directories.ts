@@ -1,4 +1,5 @@
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general/structure.ts';
 
@@ -19,7 +20,7 @@ export function directoryOf(path: string): string {
  * @returns the stem
  */
 export function stemOf(path: string): string {
-    const base = baseName(path);
+    const base = posix.basename(path);
     const extension = extensionOf(base);
     return base.slice(0, base.length - extension.length);
 }

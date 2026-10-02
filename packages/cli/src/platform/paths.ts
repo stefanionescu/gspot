@@ -1,8 +1,8 @@
 // Path handling: forward slashes in selectors, the platform form for tools.
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
-import { sep, join, isAbsolute } from 'node:path';
 import { contentDigest } from '#cli/platform/text.ts';
+import { sep, join, posix, isAbsolute } from 'node:path';
 import { cacheDirectory } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
@@ -128,23 +128,12 @@ export function isInside(local: string): boolean {
 }
 
 /**
- * The last segment of a posix path.
- * @param path a posix path
- * @returns the base name
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Detection and the checks take the last segment of a repository path, which has forward slashes on every platform.
-export function baseName(path: string): string {
-    const index = path.lastIndexOf('/');
-    return index === -1 ? path : path.slice(index + 1);
-}
-
-/**
  * The extension including the dot, lowercased; '.d.ts' and similar double extensions kept.
  * @param path a posix path
  * @returns the extension, '' when there is none
  */
 export function extensionOf(path: string): string {
-    const base = baseName(path);
+    const base = posix.basename(path);
     const declaration = DECLARATION_EXTENSIONS.find((extension) => base.endsWith(extension));
     if (declaration !== undefined) return declaration;
     const index = base.lastIndexOf('.');

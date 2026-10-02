@@ -1,4 +1,4 @@
-import { baseName } from '#cli/platform/paths.ts';
+import { posix } from 'node:path';
 import type { Identifier } from '#cli/types/checks/general/naming.ts';
 import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
 
@@ -23,7 +23,7 @@ function unwrapped(segment: string): { name: string; category: string } {
  * @returns the identifier
  */
 export function fileIdentifier(path: string, language: string): Identifier {
-    const base = baseName(path);
+    const base = posix.basename(path);
     const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
     const named = name.startsWith('[') ? unwrapped(name) : { name, category: 'files' };
     return {

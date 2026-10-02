@@ -1,14 +1,15 @@
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { z } from 'zod';
 import picomatch from 'picomatch';
+import { posix } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { packageManifestSchema } from '#cli/repository/packages.ts';
-import { toPosix, baseName, globPaths } from '#cli/platform/paths.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
 import { GSPOT_FOLDER, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
@@ -17,7 +18,7 @@ import { GSPOT_FOLDER, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
     return {
-        name: baseName(trimmed),
+        name: posix.basename(trimmed),
         path: trimmed,
         kits: [],
         source,

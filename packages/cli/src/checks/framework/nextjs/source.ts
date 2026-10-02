@@ -1,4 +1,4 @@
-import { baseName } from '#cli/platform/paths.ts';
+import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -15,7 +15,7 @@ function paths(input: EngineInput): string[] {
 export function routeSegments(input: EngineInput): Finding[] {
     const kinds = new Map<string, Map<string, string>>();
     for (const path of paths(input)) {
-        const groups = SEGMENT_NAME.exec(baseName(path))?.groups;
+        const groups = SEGMENT_NAME.exec(posix.basename(path))?.groups;
         if (groups === undefined || !`/${path}`.includes('/app/')) continue;
         const folder = path.slice(0, path.lastIndexOf('/'));
         const held = kinds.get(folder) ?? new Map<string, string>();
