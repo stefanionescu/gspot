@@ -240,7 +240,7 @@ export async function useRevision<Result>(
     const directory = relative(realpathSync(gitRoot), realpathSync(root));
     const entries = await gitEntries(gitRoot, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
-    const revisionRoot = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-revision-')));
+    const revisionRoot = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-revision-')));
     try {
         await gitOutput(
             gitRoot,
