@@ -53,7 +53,7 @@ async function expectInstalledSql(installation: InstalledConsumer): Promise<void
     expect(sqlReport.checks[0]).toMatchObject({
         check: 'sql/syntax',
         status: 'passed',
-        files: 1,
+        fileCount: 1,
         findings: [],
     });
 }

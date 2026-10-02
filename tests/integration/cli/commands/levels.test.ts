@@ -21,7 +21,7 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     expect((JSON.parse(invalid.stdout) as RunReport).checks[0]).toMatchObject({
         check: 'bash/syntax',
         status: 'failed',
-        files: 1,
+        fileCount: 1,
     });
     await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
 }

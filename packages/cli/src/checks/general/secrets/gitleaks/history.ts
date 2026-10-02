@@ -16,7 +16,7 @@ export async function checkSecretHistory(session: Session, planned: PlannedCheck
         check: planned.check,
         scope: planned.scope.scope.path,
         status: 'passed',
-        files: 0,
+        fileCount: 0,
         findings: [],
         duration: 0,
     };

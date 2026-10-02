@@ -58,7 +58,7 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
         check: planned.check,
         scope: planned.scope.scope.path,
         status: 'passed',
-        files: planned.files.length,
+        fileCount: planned.files.length,
         duration: 0,
         findings: [],
     };

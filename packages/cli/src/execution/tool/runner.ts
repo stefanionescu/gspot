@@ -260,7 +260,7 @@ export async function runToolCheck(
         check: spec.name,
         scope: scope.scope.path,
         status: 'passed',
-        files: planned.files.length,
+        fileCount: planned.files.length,
         duration: 0,
         findings: [],
     };

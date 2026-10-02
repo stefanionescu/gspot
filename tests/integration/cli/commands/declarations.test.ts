@@ -24,7 +24,7 @@ test('generated and vendored settings classify directories and removal returns f
     const before = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', files: 1, findings: [] },
+        { check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] },
     ]);
     const removed = await runGspot(directory.path, ['set', 'generated', 'output types', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
@@ -32,7 +32,7 @@ test('generated and vendored settings classify directories and removal returns f
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
-    expect(checked?.files).toBe(2);
+    expect(checked?.fileCount).toBe(2);
     expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
         'output types/broken.sh',
         'output types/broken.sh',
@@ -41,7 +41,7 @@ test('generated and vendored settings classify directories and removal returns f
     const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', files: 2, findings: [] },
+        { check: 'bash/syntax', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });
 
@@ -83,7 +83,7 @@ test('excluded directories stay out of checks until the policy removes their exc
     const before = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', files: 1, findings: [] },
+        { check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] },
     ]);
     const changed = await runGspot(directory.path, ['set', 'exclude', 'legacy scripts', '--remove']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
@@ -91,7 +91,7 @@ test('excluded directories stay out of checks until the policy removes their exc
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
-    expect(checked?.files).toBe(2);
+    expect(checked?.fileCount).toBe(2);
     expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
         'legacy scripts/broken.sh',
         'legacy scripts/broken.sh',
@@ -100,6 +100,6 @@ test('excluded directories stay out of checks until the policy removes their exc
     const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', files: 2, findings: [] },
+        { check: 'bash/syntax', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });

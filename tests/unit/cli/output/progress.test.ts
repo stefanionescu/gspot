@@ -11,7 +11,7 @@ test('terminal progress includes passed and skipped checks while log output keep
         check: 'example/check',
         scope: 'app',
         status: 'passed',
-        files: 1,
+        fileCount: 1,
         duration: 0,
         findings: [],
     };
@@ -40,7 +40,7 @@ test('quiet terminal progress hides successful checks but retains execution erro
         check: 'example/check',
         scope: '',
         status: 'passed',
-        files: 1,
+        fileCount: 1,
         duration: 0,
         findings: [],
     };

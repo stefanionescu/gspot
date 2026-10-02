@@ -65,8 +65,10 @@ if (hasLinuxDocker)
             const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const report = JSON.parse(corrected.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'nginx/test', scope: 'proxy', status: 'passed', files: 3 }]);
-            expect(report.checks[0]!.checkedFiles?.toSorted()).toStrictEqual([
+            expect(report.checks).toMatchObject([
+                { check: 'nginx/test', scope: 'proxy', status: 'passed', fileCount: 3 },
+            ]);
+            expect(report.checks[0]!.files?.toSorted()).toStrictEqual([
                 'proxy/conf.d/server.conf',
                 'proxy/nginx.conf',
                 'proxy/tls#local.conf',

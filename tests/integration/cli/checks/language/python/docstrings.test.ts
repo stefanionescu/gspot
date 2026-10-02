@@ -31,7 +31,7 @@ test.each([
             check: check.spec.name,
             scope: check.scope.scope.path,
             status: 'passed',
-            files: 0,
+            fileCount: 0,
             duration: 0,
             findings: [],
             ...(argv === undefined ? {} : { command: argv }),

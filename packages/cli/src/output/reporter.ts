@@ -64,7 +64,7 @@ function findingLines(finding: Finding, colors: Colors, next?: Finding): string[
 
 function checkTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    return `${counted(check.files, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
+    return `${counted(check.fileCount, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
 }
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {

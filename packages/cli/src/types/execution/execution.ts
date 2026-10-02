@@ -18,7 +18,7 @@ type RunReportOptions = PlanOptions & {
 
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 
-export type EngineOutcome = { findings: Finding[]; checkedFiles: string[] };
+export type EngineOutcome = { findings: Finding[]; files: string[] };
 export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
 
 export type Finding = Defined<z.infer<typeof findingSchema>>;

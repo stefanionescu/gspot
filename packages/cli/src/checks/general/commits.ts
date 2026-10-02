@@ -30,7 +30,7 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
         check: planned.check,
         scope: planned.scope.scope.path,
         status: 'passed',
-        files: 0,
+        fileCount: 0,
         findings: [],
         duration: 0,
     };

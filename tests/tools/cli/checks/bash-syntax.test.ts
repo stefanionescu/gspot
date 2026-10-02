@@ -42,9 +42,9 @@ test.each([
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const clean = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        const report = JSON.parse(clean.stdout) as { checks: { files: number; status: string }[] };
+        const report = JSON.parse(clean.stdout) as { checks: { fileCount: number; status: string }[] };
         expect(report.checks[0]?.status).toBe('passed');
-        expect(report.checks[0]?.files).toBe(entry.files);
+        expect(report.checks[0]?.fileCount).toBe(entry.files);
         const path = join(sandbox.path, entry.path);
         const original = readFileSync(path);
         try {
@@ -66,7 +66,7 @@ test.each([
         const corrected = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: entry.check, status: 'passed', files: entry.files, findings: [] },
+            { check: entry.check, status: 'passed', fileCount: entry.files, findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

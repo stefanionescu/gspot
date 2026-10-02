@@ -24,7 +24,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
-        expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
         expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(
             0,
         );
@@ -161,7 +161,7 @@ test(
         const firstReport = first[0]!.report;
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
         expect(firstReport.checks[0]?.status).toBe('passed');
-        expect(firstReport.checks[0]?.files).toBe(1);
+        expect(firstReport.checks[0]?.fileCount).toBe(1);
         const failing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
@@ -242,7 +242,7 @@ test(
             stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n`,
         });
         expect(forced.code, forced.stdout + forced.stderr).toBe(0);
-        expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
         expectWorkingTreeKept(sandbox.path, broken);
     },
     PLANTED_TIMEOUT_MS,

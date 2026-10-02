@@ -28,7 +28,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
         check: 'javascript/tsc',
         scope: 'site',
         status: 'passed',
-        files: 0,
+        fileCount: 0,
         findings: [],
     });
 });

@@ -51,7 +51,7 @@ function configurationFailure(
     const file = configurations.get(target)?.path ?? path;
     return {
         findings: [{ check, file, line: Number(line), rule: 'syntax', message: said, fixable: false }],
-        checkedFiles: configurations.has(target) ? [file] : [],
+        files: configurations.has(target) ? [file] : [],
     };
 }
 
@@ -72,7 +72,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
             throw new Error('The nginx run produced no configuration dump confirming the tested source.');
         return {
             findings: [],
-            checkedFiles: parsed.flatMap((target) => {
+            files: parsed.flatMap((target) => {
                 const configuration = configurations.get(target);
                 return configuration === undefined ? [] : [configuration.path];
             }),
@@ -98,7 +98,7 @@ export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
             (path) =>
                 (path === MAIN_FILE || path.endsWith(`/${MAIN_FILE}`)) && scopeOf(path, scopes).path === input.scope,
         );
-    if (paths.length === 0) return { findings: [], checkedFiles: [] };
+    if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = scratchFolder('gspot-nginx-');
     const work = workFolder.path;
     const made = await runCheckCommand(
@@ -108,11 +108,11 @@ export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
     );
     if (made.code !== 0) throw new Error('The openssl command could not write the throwaway certificate.');
     const findings: Finding[] = [];
-    const checkedFiles = new Set<string>();
+    const checked = new Set<string>();
     for (const path of paths) {
         const outcome = await tested(input, path, work, image);
         findings.push(...outcome.findings);
-        for (const file of outcome.checkedFiles) checkedFiles.add(file);
+        for (const file of outcome.files) checked.add(file);
     }
-    return { findings, checkedFiles: [...checkedFiles] };
+    return { findings, files: [...checked] };
 }

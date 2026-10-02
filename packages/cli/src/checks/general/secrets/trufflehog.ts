@@ -111,7 +111,7 @@ export async function checkVerifiedSecrets(session: Session, planned: PlannedChe
         check: planned.check,
         scope: planned.scope.scope.path,
         status: 'passed',
-        files: 0,
+        fileCount: 0,
         findings: [],
         duration: 0,
     };

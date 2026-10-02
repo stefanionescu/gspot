@@ -116,7 +116,7 @@ fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "c
     const options = runOptions({ stage: 'commit', fix: true });
     const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]!.files).toBe(2);
+    expect(outcome.report.checks[0]!.fileCount).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
 });
 

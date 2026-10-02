@@ -93,16 +93,16 @@ test('engine inputs expose selected files and reserve the repository inventory f
     ).toStrictEqual(['apps/web/fixture.bin', 'apps/web/jest.config.json', 'apps/web/value.test.js']);
     const leaked = await runEngineCheck(
         session,
-        () => Promise.resolve({ findings: [], checkedFiles: ['unrelated/private.txt'] }),
+        () => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] }),
         project,
     );
     expect(leaked.status).toBe('error');
     const owned = await runEngineCheck(
         session,
-        () => Promise.resolve({ findings: [], checkedFiles: ['apps/web/value.test.js'] }),
+        () => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] }),
         project,
     );
-    expect(owned).toMatchObject({ status: 'passed', checkedFiles: ['apps/web/value.test.js'] });
+    expect(owned).toMatchObject({ status: 'passed', files: ['apps/web/value.test.js'] });
     using copy = await scratchCopy(
         scopeInput.root,
         scopeInput.files.map((file) => file.path),

@@ -58,7 +58,7 @@ test(
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'javascript/eslint', status: 'passed', files: 1, findings: [] },
+            { check: 'javascript/eslint', status: 'passed', fileCount: 1, findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 2,

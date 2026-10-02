@@ -15,7 +15,7 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
         message: problemText(problem),
         fixable: false,
     }));
-    return { check: POLICY_CHECK, scope: '', status: 'failed', files: 1, duration: 0, findings };
+    return { check: POLICY_CHECK, scope: '', status: 'failed', fileCount: 1, duration: 0, findings };
 }
 
 // Name each failed or unavailable check and failed fixer once.
