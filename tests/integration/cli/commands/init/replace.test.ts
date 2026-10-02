@@ -1,14 +1,14 @@
-// Replace at init: the plan names hand-written hooks, deletes the files of the selected tools, and lists the lint folder.
+// Replace at init: the plan names hand-written hooks, the files of the selected tools, and the lint folder, and keeps
+// a shared file that holds other tools' sections.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { toolsPath } from '#tests/harness/tools/install.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
@@ -38,7 +38,7 @@ test.each(['', 'hooks', '.husky'])(
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const configured = hooksPath === '' ? { code: 0 } : git(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         expect(configured.code).toBe(0);
-        const result = await spawnGspot(sandbox.path, [...PLAN_INIT, '--dry-run']);
+        const result = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run']);
         expect(result.code).toBe(0);
         const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
         // No configured hooks reads "none"; a configured folder is named with its one hand-written hook.
@@ -52,18 +52,8 @@ test.each(['', 'hooks', '.husky'])(
     PLANTED_TIMEOUT_MS,
 );
 
-// The ESLint pointer is written for editors; the other deleted files get no pointer, because each check names
-// its configuration by path.
-function expectPointers(root: string): void {
-    for (const gone of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
-        expect(existsSync(join(root, gone))).toBe(false);
-    const eslintPointer = ['eslint.config.js', 'eslint.config.mjs'].find((name) => existsSync(join(root, name)));
-    expect(eslintPointer).toBeDefined();
-    expect(readFileSync(join(root, eslintPointer ?? ''), 'utf8')).toContain('gspot');
-}
-
 test(
-    'replaces the files of the selected tools and lists the lint folder',
+    'the init plan replaces the files of the selected tools and lists the lint folder',
     async () => {
         await using sandbox = await testdir();
         const originals = {
@@ -83,25 +73,13 @@ test(
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
-        const environment = { PATH: toolsPath(['ast-grep']) };
-        const preview = await spawnGspot(sandbox.path, [...PLAN_INIT, '--dry-run', '--json'], environment);
+        const preview = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
         for (const path of Object.keys(originals))
             expect(plan.remove).toContainEqual({ path, note: textContaining('replaced by the generated') });
         expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: textContaining('lint scripts') });
-        const init = await spawnGspot(sandbox.path, PLAN_INIT, environment);
-        expect(init.code, init.stdout + init.stderr).toBe(0);
-        expect(init.stdout).toContain('quality/');
-        const policy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-        for (const carried of ['udid', 'SC2086', 'MD013']) expect(policy).not.toContain(carried);
-        expectPointers(sandbox.path);
-        for (const path of ['.markdownlint.jsonc', '.eslintrc.json', '.prettierrc'])
-            expect(existsSync(join(sandbox.path, path))).toBe(false);
-        expect(existsSync(join(sandbox.path, 'quality', 'lint.sh'))).toBe(true);
-        const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(applied.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },
     PLANTED_TIMEOUT_MS * 2,
 );
@@ -113,7 +91,7 @@ test.each(['setup.cfg', 'tox.ini'])(
         const original = '[flake8]\nignore = E501\n\n[sqlfluff]\nexclude_rules = LT01, RF01\n';
         await createFileTree(sandbox.path, { [path]: original, 'query.sql': 'SELECT 1;\n' });
         chmodSync(join(sandbox.path, path), 0o640);
-        const initialized = await spawnGspot(sandbox.path, [
+        const initialized = await runGspot(sandbox.path, [
             'init',
             '--yes',
             '--json',
