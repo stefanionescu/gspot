@@ -21,6 +21,8 @@ kits = [
     "security",
 ]
 runner = "mise"
+# The root scripts run the test suites and the local plugin, so they take the test overrides.
+tests = ["**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}", "**/tests/**", "**/__tests__/**", "scripts/**"]
 naming.banned = [
     "catalog",
     "catalogue",
@@ -483,8 +485,6 @@ env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
-# The root scripts run the test suites and the local plugin, so they take the test overrides.
-test_files = ["**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}", "**/tests/**", "**/__tests__/**", "scripts/**"]
 script_files = [
     "scripts/**",
     "packages/cli/scripts/**",

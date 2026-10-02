@@ -300,4 +300,13 @@ export const SHEBANG_TAGS: Record<string, string[]> = {
 };
 
 /** Where a test file lives: in a test folder, or named for a test runner. */
-export const TEST_FILE_GLOBS = ['**/test/**', '**/tests/**', '**/__tests__/**', '**/*.test.*', '**/*.spec.*'];
+export const TEST_FILE_GLOBS = [
+    '**/test/**',
+    '**/tests/**',
+    '**/__tests__/**',
+    '**/*.test.*',
+    '**/*.spec.*',
+    '**/test_*.py',
+    '**/*_test.py',
+    '**/conftest.py',
+];

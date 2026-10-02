@@ -278,13 +278,6 @@ default = {"**/*" = "js"}
 summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
 [[settings]]
-name = "tools.eslint.test_files"
-kind = "list"
-direction = "neutral"
-default = ["**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}", "**/tests/**", "**/__tests__/**"]
-summary = "The globs that count as test files for the test overrides."
-
-[[settings]]
 name = "tools.eslint.script_files"
 kind = "list"
 direction = "neutral"

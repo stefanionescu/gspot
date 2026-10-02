@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { outputSchema } from '#cli/kits/output.ts';
 import { toolsSchema } from '#cli/policy/tools.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
+import { TEST_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/config/policy/policy.ts';
 
@@ -243,6 +244,7 @@ export const integrationSettingSchemas = Object.fromEntries(
 export const scopeSchema = z.strictObject({
     path: relativeDirectory,
     kits: textList.optional(),
+    tests: textList.optional(),
     ...scopeBody,
 });
 
@@ -260,6 +262,11 @@ export const rootSettingSchemas = {
         .enum(['mise', 'npm', 'bun', 'pnpm', 'yarn'])
         .optional()
         .describe('The runner that installs and runs gspot.'),
+    tests: textList
+        .default(TEST_FILE_GLOBS)
+        .describe(
+            'The test files: ESLint and Ruff relax their test rules there, and Express counts route tests there.',
+        ),
     exclude: textList.default([]).describe('Paths and directory patterns excluded before reading source content.'),
     generated: z.array(generatedSchema).default([]).describe('Generated files excluded from source checks.'),
     vendored: z.array(vendoredSchema).default([]).describe('Upstream files excluded from source checks.'),

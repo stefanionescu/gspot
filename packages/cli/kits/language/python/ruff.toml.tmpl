@@ -44,7 +44,7 @@ max-public-methods = <%= at('public_methods', 12) %>
 max-returns = <%= at('returns', 4) %>
 max-statements = <%= at('statements', 30) %>
 max-nested-blocks = <%= at('nesting', 3) %>
-<% const testRules = settings['tools.ruff.test_ignores']; const testFiles = testRules.length > 0 ? settings['tools.ruff.test_files'] : []; if (perFile.length > 0 || testFiles.length > 0) { -%>
+<% const testRules = settings['tools.ruff.test_ignores']; const testFiles = testRules.length > 0 ? settings['tests'] : []; if (perFile.length > 0 || testFiles.length > 0) { -%>
 
 [lint.per-file-ignores]
 <% const byPath = new Map(testFiles.map((path) => [path, testRules])); for (const entry of perFile) for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]); -%>

@@ -92,6 +92,7 @@ export type Policy = {
     prose: { vocabulary: string[] };
     tools: Record<string, ToolTable>;
     install: Record<string, unknown>;
+    tests: string[];
     timeout?: NonNullable<RawPolicy['timeout']>;
     ignores: IgnoreEntry[];
     declarations: FileDeclaration[];

@@ -38,6 +38,7 @@ function normalizeScopeTables(raw: RawScope): Partial<Policy> {
     const table: Partial<Policy> = compact({
         tools: raw.tools as Policy['tools'] | undefined,
         install: raw.install,
+        tests: raw.tests,
         timeout: raw.timeout,
     });
     if (raw.limits) table.limits = normalizeLimits(raw.limits);
@@ -160,6 +161,7 @@ export function normalize(raw: RawPolicy): Policy {
         prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [] }),
         tools: { ...raw.tools } as Policy['tools'],
         install: { ...raw.install },
+        tests: raw.tests,
         ...compact({ timeout: raw.timeout }),
         ignores: (raw.ignore ?? []).map((entry) => compact(entry)),
         declarations: [

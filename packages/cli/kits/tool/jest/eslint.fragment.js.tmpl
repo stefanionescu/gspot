@@ -1,6 +1,6 @@
 <% for (const selected of kitScopes('jest')) { const inScope = selected.path === '' ? '**/*' : `${selected.path}/**/*`; %>
     {
-        files: <%= json(selected.settings['tools.eslint.test_files'].map((pattern) => [inScope, pattern])) %>,
+        files: <%= json(selected.settings['tests'].map((pattern) => [inScope, pattern])) %>,
         plugins: { jest },
         languageOptions: { globals: jest.environments.globals.globals },
         settings: { jest: { globalPackage: <%= json(selected.settings['tools.jest.test_module']) %> } },

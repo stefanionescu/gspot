@@ -42,7 +42,6 @@ summary = "The smallest share of lines the tests cover, out of 100."
 
 [defaults]
 "tools.ruff.select" = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
-"tools.ruff.test_files" = ["**/tests/**", "**/test_*.py", "**/*_test.py", "**/conftest.py"]
 "tools.ruff.test_ignores" = ["S101", "PLR2004"]
 [defaults_all]
 "tools.ruff.select" = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019", "PT020", "PT021", "PT022", "PT023", "PT024", "PT025", "PT026", "PT027", "PT028", "PT030", "PT031", "PTH100", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120", "PTH121", "PTH122", "PTH123", "PTH124", "PTH201", "PTH202", "PTH203", "PTH204", "PTH205", "PTH206", "PTH207", "PTH208", "PTH210", "PTH211"]
