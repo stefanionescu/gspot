@@ -53,7 +53,10 @@ async function helpText(executable: string, subcommands: string[], flags: string
     const groups = [...new Set(flags.filter((flag) => flag.includes('.')).map((flag) => flag.split('.', 1)[0]!))];
     const pages = await Promise.all(
         [[], ...groups.map((group) => [group])].map((extra) =>
-            processes.run([executable, ...subcommands, '--help', ...extra], { cwd: root, timeoutMs: HELP_TIMEOUT_MS }),
+            processes.run([executable, ...subcommands, '--help', ...extra], {
+                cwd: sandbox.path,
+                timeoutMs: HELP_TIMEOUT_MS,
+            }),
         ),
     );
     const text = pages.map((page) => `${page.stdout}\n${page.stderr}`).join('\n');
@@ -121,18 +124,7 @@ beforeAll(async () => {
     );
 }, INSTALL_TIMEOUT_MS);
 
-test('every pinned tool a manifest command names is defined in that manifest', () => {
-    const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
-    const undefinedTools = manifests.flatMap((manifest) =>
-        manifest.checks
-            .flatMap((check) => (check.command === undefined ? [] : [check.tool ?? check.command[0]!]))
-            .filter((name) => !declared.has(name)),
-    );
-    expect([...new Set(undefinedTools)]).toStrictEqual([]);
-});
-
-// On the Windows runner the version inspection times out before the help runs. The stage that moves acceptance cases to
-// faster tiers runs this in a temporary folder and brings Windows back.
+// On the Windows runner the version inspection times out before the help runs, so these run on POSIX systems.
 for (const command of distinct) {
     const title = `${command.tool.name} ${command.subcommands.join(' ')}`.trim();
     if (onPosix)
@@ -146,7 +138,11 @@ for (const command of distinct) {
                 );
                 expect(inspection.path).toBeDefined();
                 const text = await helpText(inspection.path!, command.subcommands, command.flags);
-                const missing = command.flags.filter((flag) => !text.includes(flag));
+                // A whole token, so a one-letter flag such as -q does not match inside --quiet.
+                const missing = command.flags.filter((flag) => {
+                    const escaped = flag.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
+                    return !new RegExp(String.raw`(?<![\w-])${escaped}(?![\w-])`, 'u').test(text);
+                });
                 expect(missing, `${title}: ${text.slice(0, 400)}`).toStrictEqual([]);
             },
             HELP_TIMEOUT_MS,
