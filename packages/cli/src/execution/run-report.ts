@@ -1,7 +1,7 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
 import { problemText } from '#cli/policy/read.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 import { POLICY_CHECK, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/execution.ts';
 
@@ -34,8 +34,8 @@ function isUnable(session: Session, results: CheckResult[], fixes: FixReport | u
 
 // Return 2 for an incomplete run, 1 for findings, and 0 for a successful run.
 function exitCode(unable: boolean, failed: string[]): number {
-    if (unable) return ERROR_EXIT;
-    return failed.length > 0 ? 1 : 0;
+    if (unable) return EXIT_ERROR;
+    return failed.length > 0 ? EXIT_FINDINGS : 0;
 }
 
 /**

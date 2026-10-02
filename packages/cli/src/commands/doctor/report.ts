@@ -8,6 +8,7 @@ import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
+import { EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -117,7 +118,7 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
             running: session.version,
             ...(pinned === undefined ? {} : { pinned }),
         },
-        exitCode: isBroken ? 1 : 0,
+        exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }
 

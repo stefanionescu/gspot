@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { HOOK_FILES } from '#cli/config/generation/generation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
-import { ERROR_EXIT, MS_PER_SECOND } from '#cli/config/platform/platform.ts';
+import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/platform.ts';
 import type { Finding, RunReport, CheckResult } from '#cli/types/execution/execution.ts';
 
 import {
@@ -130,7 +130,7 @@ function summaryLine(report: RunReport, colors: Colors): string {
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
     const findings = report.checks.reduce((count, check) => count + check.findings.length, 0);
     const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
-    if (report.exitCode === ERROR_EXIT) return colors.red(`${summary} (incomplete)`);
+    if (report.exitCode === EXIT_ERROR) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 

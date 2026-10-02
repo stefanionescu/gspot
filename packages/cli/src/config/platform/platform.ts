@@ -61,8 +61,11 @@ export const TYPO_FRACTION = 3;
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
 
+/** The exit of a command that found something to fix: a finding, a broken tool for doctor. */
+export const EXIT_FINDINGS = 1;
+
 /** The exit of a command that did not finish: an error, a refusal, an unreadable input, or a cancellation. */
-export const ERROR_EXIT = 2;
+export const EXIT_ERROR = 2;
 
 /** Milliseconds in a second, for durations shown in seconds. */
 export const MS_PER_SECOND = 1000;

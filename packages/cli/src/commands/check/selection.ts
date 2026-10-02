@@ -6,12 +6,12 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/changes.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
+import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 
 function isReadable(path: string): boolean {
     try {
@@ -48,13 +48,13 @@ export function refusalFor(
         return {
             text: `An environment file is staged: ${environmentStaged.join(', ')}. Unstage it (git restore --staged <file>); only templates like .env.example belong in git.\n`,
             json: { failed: ['secrets/env-files'], files: environmentStaged },
-            exitCode: 1,
+            exitCode: EXIT_FINDINGS,
         };
     if (stage === 'message' && options.messageFile !== undefined && !isReadable(options.messageFile))
         return {
             text: `The commit message file ${options.messageFile} cannot be read.\n`,
             json: { error: 'message-file' },
-            exitCode: ERROR_EXIT,
+            exitCode: EXIT_ERROR,
         };
     return undefined;
 }
@@ -91,7 +91,7 @@ export function unknownSelection(session: Session, only: string[] | undefined): 
     return {
         text: `No selected kit runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
         json: { error: 'unknown-check' },
-        exitCode: ERROR_EXIT,
+        exitCode: EXIT_ERROR,
     };
 }
 

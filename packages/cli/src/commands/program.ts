@@ -9,7 +9,7 @@ import { registerRemove } from '#cli/commands/remove.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { registerInit } from '#cli/commands/init/command.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
 import { HELP_CODES } from '#cli/config/commands/commands.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
@@ -62,10 +62,10 @@ function verbosityOf(options: GlobalFlags): OutputOptions['verbosity'] {
 }
 
 function exitCodeFor(error: unknown): number {
-    if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : ERROR_EXIT;
+    if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : EXIT_ERROR;
     if (error instanceof GspotError && error.code === 'prompt') fail(error.message);
     else fail(`gspot did not run: ${error instanceof Error ? error.message : String(error)}`);
-    return ERROR_EXIT;
+    return EXIT_ERROR;
 }
 
 /**

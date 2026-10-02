@@ -5,7 +5,7 @@ import { progress } from '#cli/output/reporter.ts';
 import { HOOKS } from '#cli/config/commands/check.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import type { Program, GlobalFlags, CommandResult } from '#cli/types/commands/commands.ts';
@@ -64,8 +64,8 @@ async function checkedCommand(
         if (!signal.aborted) throw error;
         return {
             text: 'Check canceled before all selected content was checked.\n',
-            json: { error: 'canceled', exitCode: ERROR_EXIT },
-            exitCode: ERROR_EXIT,
+            json: { error: 'canceled', exitCode: EXIT_ERROR },
+            exitCode: EXIT_ERROR,
         };
     }
 }
