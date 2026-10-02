@@ -136,7 +136,9 @@ test('index snapshots preserve binary bytes and executable modes without applyin
         import { statSync } from 'node:fs';
         const bytes = Buffer.from(await Bun.file('payload.dat').arrayBuffer());
         await Bun.write('created.txt', 'snapshot output');
-        process.exit(bytes.equals(Buffer.from([255, 10, 0])) && (statSync('task.sh').mode & 0o111) !== 0 ? 0 : 1);
+        // Windows file systems keep no executable bit to compare.
+        const isExecutable = process.platform === 'win32' || (statSync('task.sh').mode & 0o111) !== 0;
+        process.exit(bytes.equals(Buffer.from([255, 10, 0])) && isExecutable ? 0 : 1);
     `,
     ];
     await createFileTree(directory.path, {
