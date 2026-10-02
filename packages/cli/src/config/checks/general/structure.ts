@@ -1,17 +1,17 @@
 // The literal values checks/general/structure reads: names, patterns, limits, and tables.
 import { TOML_STRINGS } from '#cli/config/checks/checks.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
+import { EXTENSION_TAGS } from '#cli/config/repository/repository.ts';
 
 export const POLICY_FILE = 'gspot.toml';
-export const LANGUAGE_BY_EXTENSION: Record<string, string> = {
-    '.ts': 'typescript',
-    '.tsx': 'typescript',
-    '.mts': 'typescript',
-    '.cts': 'typescript',
-    '.js': 'javascript',
-    '.mjs': 'javascript',
-    '.cjs': 'javascript',
-};
+/** The script language of each extension the tags call TypeScript or JavaScript. */
+export const LANGUAGE_BY_EXTENSION: Record<string, string> = Object.fromEntries(
+    Object.entries(EXTENSION_TAGS).flatMap(([extension, tags]) =>
+        ['typescript', 'javascript']
+            .filter((language) => tags.includes(language))
+            .map((language) => [extension, language]),
+    ),
+);
 export const CONFIG_STATEMENTS = new Set([
     'import_statement',
     'export_statement',
