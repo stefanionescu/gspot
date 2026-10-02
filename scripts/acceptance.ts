@@ -20,7 +20,6 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['cli/clone.test.ts', 'checkout line endings change the adopted bytes'],
     ['cli/profile.test.ts', 'checkout line endings change the exported bytes'],
     ['cli/scopes.test.ts', 'times out on the Windows runner'],
-    ['cli/selectors.test.ts', 'the index snapshot reads checkout line endings'],
     ['kits/framework/astro.test.ts', 'astro check times out on the Windows runner'],
     ['kits/language/bash/checks.test.ts', 'the strict-mode cases need a POSIX Bash'],
     ['kits/language/bash/lifecycle.test.ts', 'the sandbox reads checkout line endings'],

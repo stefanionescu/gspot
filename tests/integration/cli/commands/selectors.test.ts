@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
@@ -16,7 +16,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 async function expectIndexReport(root: string, args: string[], report: RunReport): Promise<void> {
     expect(report.comparison?.content).toBe('index');
     expect(report.checks[0]?.reproduce).toContain('--staged');
-    const text = await spawnGspot(
+    const text = await runGspot(
         root,
         args.filter((argument) => argument !== '--json'),
     );
@@ -36,7 +36,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
     });
-    const ignored = await spawnGspot(directory.path, [
+    const ignored = await runGspot(directory.path, [
         'ignore',
         'bash/syntax',
         '--paths',
@@ -45,7 +45,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const command = ['check', '--only', 'bash/syntax', '--json'];
-    const checked = await spawnGspot(directory.path, command);
+    const checked = await runGspot(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
@@ -54,9 +54,9 @@ test('an ignored folder includes descendants while a negated file remains enforc
     ]);
     expect(report.ignores[0]?.matched).toBe(0);
     writeFileSync(join(directory.path, 'legacy scripts/required.sh'), 'echo corrected\n');
-    const corrected = await spawnGspot(directory.path, command);
+    const corrected = await runGspot(directory.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const removed = await spawnGspot(directory.path, [
+    const removed = await runGspot(directory.path, [
         'ignore',
         'bash/syntax',
         '--paths',
@@ -65,7 +65,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
         '--remove',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await spawnGspot(directory.path, command);
+    const restored = await runGspot(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     expect((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
         'legacy scripts/nested/example.sh',
@@ -83,7 +83,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     writeFileSync(join(directory.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     writeFileSync(join(directory.path, 'gspot.toml'), 'invalid working policy');
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
-    const failed = await spawnGspot(directory.path, args);
+    const failed = await runGspot(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = JSON.parse(failed.stdout) as RunReport;
     await expectIndexReport(directory.path, args, failedReport);
@@ -95,14 +95,14 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     writeFileSync(join(directory.path, 'gspot.toml'), policy);
     expect(git(directory.path, ['add', 'gspot.toml', 'script with spaces.sh']).code).toBe(0);
     writeFileSync(join(directory.path, 'script with spaces.sh'), 'if then\n');
-    const passed = await spawnGspot(directory.path, args);
+    const passed = await runGspot(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     const passedReport = JSON.parse(passed.stdout) as RunReport;
     expect(passedReport.checks[0]?.status).toBe('ok');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
     unlinkSync(join(directory.path, 'script with spaces.sh'));
-    const ran = await spawnGspot(directory.path, args);
+    const ran = await runGspot(directory.path, args);
     expect(ran.code).toBe(0);
 });
 
@@ -117,12 +117,12 @@ test('staged checks validate the index version pin instead of the working pin', 
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), `${GSPOT_VERSION}\n`);
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
-    const refused = await spawnGspot(directory.path, args);
+    const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('version-pin');
     expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
-    const accepted = await spawnGspot(directory.path, args);
+    const accepted = await runGspot(directory.path, args);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8')).toBe('0.0.0\n');
 });
@@ -156,7 +156,7 @@ stage = "commit"
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
     writeFileSync(join(directory.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     chmodSync(join(directory.path, 'task.sh'), 0o644);
-    const result = await spawnGspot(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
+    const result = await runGspot(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('ok');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
@@ -201,19 +201,19 @@ stage = "commit"
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
     const args = ['check', '--staged', '--only', 'project/dependencies', '--json'];
-    const first = await spawnGspot(directory.path, args);
+    const first = await runGspot(directory.path, args);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
         'authored dependency data',
     );
     writeFileSync(join(directory.path, 'package-lock.json'), lock + '\n');
-    const refused = await spawnGspot(directory.path, args);
+    const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
         'do not match the revision manifests and locks',
     );
     writeFileSync(join(directory.path, 'package-lock.json'), lock);
-    const corrected = await spawnGspot(directory.path, args);
+    const corrected = await runGspot(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
         'authored dependency data',
