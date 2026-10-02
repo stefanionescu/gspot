@@ -301,5 +301,10 @@ export async function runCheckCommand(
     const failure = executionFailure(result, name, toolDeadlineSeconds(input.view));
     if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
-    return result;
+    // Tools on Windows end their lines with CRLF; every reader of check output splits on LF.
+    return {
+        ...result,
+        stdout: result.stdout.replaceAll('\r\n', '\n'),
+        stderr: result.stderr.replaceAll('\r\n', '\n'),
+    };
 }
