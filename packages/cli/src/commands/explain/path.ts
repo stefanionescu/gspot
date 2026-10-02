@@ -26,7 +26,7 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
     const unchecked = uncheckedNote(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.kind === 'source') {
-        report.unchecked = 'no enabled check owners this file';
+        report.unchecked = 'no enabled check owns this file';
         report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <kit>';
     }
     return report;

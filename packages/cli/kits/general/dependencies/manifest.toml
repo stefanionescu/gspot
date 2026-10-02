@@ -8,7 +8,7 @@ description = "Dependency health: known advisories, one version for each depende
 [detect]
 filenames = ["package.json", "pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
 
-[owners]
+[files]
 filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]
 kinds = ["source", "generated"]
 
@@ -85,7 +85,7 @@ stage = "push"
 runs = "once"
 command = ["syncpack", "lint", "--config", "{config:syncpack}"]
 tool = "syncpack"
-owners = {filenames = ["package.json"]}
+files = {filenames = ["package.json"]}
 output = {format = "lines"}
 summary = "Checks that every workspace package resolves each dependency to one version."
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
@@ -98,7 +98,7 @@ example = "A dependency declared with a range such as `^1.2.3` reports an unpinn
 level = "all"
 stage = "commit"
 runs = "once"
-owners = {filenames = ["package.json"]}
+files = {filenames = ["package.json"]}
 summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
 why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
 help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
@@ -121,7 +121,7 @@ example = "A Bun project without the required `[install] minimumReleaseAge` repo
 level = "all"
 stage = "commit"
 runs = "once"
-owners = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
+files = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
 summary = "Checks that the install configuration waits out a minimum release age, and names the security scanner the policy asks for."
 why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."
 help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."

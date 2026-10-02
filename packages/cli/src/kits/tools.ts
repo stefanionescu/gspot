@@ -73,7 +73,7 @@ export const toolSchema = z.strictObject({
     prettier: z
         .strictObject({
             entry: z.string().min(1),
-            // The file types the plugin formats; a kit whose owners take plugins owns them while this tool is selected.
+            // The file types the plugin formats; a kit whose files take plugins owns them while this tool is selected.
             extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).default([]),
             overrides: z
                 .array(z.strictObject({ files: z.string().min(1), options: z.record(z.string(), z.unknown()) }))

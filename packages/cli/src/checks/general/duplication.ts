@@ -29,7 +29,7 @@ export const cloneReportSchema = z.object({
  * @param shape.check the check id.
  * @param shape.root the repository root.
  * @param shape.ceiling the largest duplicated share accepted, out of 100.
- * @param shape.owned the paths the check owners.
+ * @param shape.owned the paths the check owns.
  * @returns the findings.
  */
 export function cloneFindings(

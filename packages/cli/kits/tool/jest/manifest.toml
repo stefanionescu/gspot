@@ -9,7 +9,7 @@ description = "Jest test rules and coverage floors for repository-owned test sui
 dependencies = ["jest"]
 filenames = ["jest.config.*"]
 
-[owners]
+[files]
 paths = ["**/*.{test,spec}.{ts,tsx,js,jsx}", "**/tests/**", "**/__tests__/**", "**/jest.config.*"]
 kinds = ["source"]
 
@@ -37,7 +37,7 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 cwd = "scope"
-owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
+files = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
 tool = "jest"
 summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
 why = "Coverage floors expose untested source without changing working-tree build or report files."

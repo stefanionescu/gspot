@@ -205,7 +205,7 @@ export function configuredChecks(session: Session): PlannedCheck[] {
  * @returns the files the check's owners select
  */
 export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
-    const owners = check.spec.owners ?? check.manifest?.owners;
+    const owners = check.spec.files ?? check.manifest?.files;
     const children = check.spec.runs === 'scope' ? childScopes(session, check.scope) : [];
     const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);

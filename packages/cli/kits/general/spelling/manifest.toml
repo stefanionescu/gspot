@@ -5,7 +5,7 @@ title = "Spelling"
 auto = true
 description = "typos over every text file, with the words this repository allows and the reason for each."
 
-[owners]
+[files]
 paths = ["**"]
 kinds = ["source"]
 

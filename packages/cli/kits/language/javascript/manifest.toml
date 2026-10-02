@@ -14,7 +14,7 @@ extensions = [".js", ".jsx", ".mjs", ".cjs"]
 project_files = ["package.json"]
 shebangs = ["node"]
 
-[owners]
+[files]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 tags = ["shebang:node"]
 
@@ -214,7 +214,7 @@ runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
-owners = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"]}
+files = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"]}
 output = {format = "eslint"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file and every package.json."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
@@ -229,7 +229,7 @@ stage = "push"
 runs = "scope"
 cwd = "scope"
 tool = "tsc"
-owners = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
+files = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."

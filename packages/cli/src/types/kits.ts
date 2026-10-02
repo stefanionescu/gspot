@@ -31,7 +31,7 @@ export type PolicyScope = { path: string; kits: string[] };
 
 export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
 
-export type Owners = RawManifest['owners'];
+export type Owners = RawManifest['files'];
 export type ConfigurationTarget = RawManifest['configs'][number];
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */

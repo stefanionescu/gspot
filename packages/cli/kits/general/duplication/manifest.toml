@@ -5,7 +5,7 @@ title = "Duplication"
 proposed = true
 description = "Copy-paste detection across every language a selected kit claims, with a ceiling for the share of duplicated lines."
 
-[owners]
+[files]
 languages = true
 
 [[tools]]

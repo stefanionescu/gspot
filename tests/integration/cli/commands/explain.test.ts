@@ -77,7 +77,7 @@ stage = "manual"
     expect(ignored.code).toBe(0);
     expect(JSON.parse(ignored.stdout)).toMatchObject({
         checks: [],
-        unchecked: 'no enabled check owners this file',
+        unchecked: 'no enabled check owns this file',
         ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);

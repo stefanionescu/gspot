@@ -9,7 +9,7 @@ description = "A Next.js app: the framework and hooks rules of ESLint, and serve
 [detect]
 dependencies = ["next"]
 
-[owners]
+[files]
 paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
 kinds = ["source"]
 

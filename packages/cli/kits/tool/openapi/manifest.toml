@@ -33,7 +33,7 @@ level = "recommended"
 stage = "commit"
 runs = "once"
 tool = "spectral"
-owners = {extensions = [".yaml", ".yml", ".json"]}
+files = {extensions = [".yaml", ".yml", ".json"]}
 summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
 why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."
 help = "Change the document the way the rule says, or the code that writes it."

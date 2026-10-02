@@ -10,7 +10,7 @@ description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax 
 extensions = [".sh", ".bash", ".zsh", ".bats"]
 shebangs = ["shell"]
 
-[owners]
+[files]
 extensions = [".sh", ".bash", ".zsh", ".bats"]
 tags = ["shebang:shell"]
 
@@ -74,7 +74,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["bash", "-n", "{file}"]
-owners = {tags = ["bash"]}
+files = {tags = ["bash"]}
 output = {format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$"}
 summary = "Checks that Bash scripts parse before running them."
 why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
@@ -88,7 +88,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["zsh", "-n", "{file}"]
-owners = {tags = ["zsh"]}
+files = {tags = ["zsh"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$"}
 summary = "Checks Zsh syntax with the Zsh interpreter."
 why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
@@ -104,7 +104,7 @@ runs = "files"
 command = ["bats", "--count", "{file}"]
 # Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
 requires_tools = ["bash"]
-owners = {tags = ["bats"]}
+files = {tags = ["bats"]}
 output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Parses Bats test files while counting their test cases."
 why = "Bats test declarations need the Bats parser before Bash can read them."
@@ -117,7 +117,7 @@ example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the
 level = "recommended"
 stage = "commit"
 runs = "files"
-owners = {tags = ["bash", "bats"]}
+files = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 exit_codes = [1]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
@@ -132,7 +132,7 @@ example = "In a script, `if true;then echo hello;fi` differs from shfmt output. 
 level = "recommended"
 stage = "commit"
 runs = "files"
-owners = {tags = ["bash", "bats"]}
+files = {tags = ["bash", "bats"]}
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 output = {format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it."}

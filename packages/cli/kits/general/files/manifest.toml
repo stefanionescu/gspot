@@ -7,7 +7,7 @@ requires = ["formatting"]
 recommends = ["spelling"]
 description = "Checks JSON, YAML, TOML, workflows, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
 
-[owners]
+[files]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".properties", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib", ".webmanifest"]
 filenames = [".nvmrc", ".node-version", ".python-version", "_headers", "_redirects", ".env", ".dev.vars"]
 paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]
@@ -113,7 +113,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
-owners = {extensions = [".toml"]}
+files = {extensions = [".toml"]}
 output = {format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
 summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
 why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
@@ -128,7 +128,7 @@ stage = "commit"
 runs = "files"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
-owners = {extensions = [".toml"]}
+files = {extensions = [".toml"]}
 output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
 summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
@@ -142,7 +142,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
-owners = {extensions = [".yaml", ".yml"]}
+files = {extensions = [".yaml", ".yml"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
 summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
 why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
@@ -158,7 +158,7 @@ runs = "files"
 requires = "network"
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = {V8R_CONFIG_FILE = "{config:v8r}"}
-owners = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
+files = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
 output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
 summary = "Validates every kit file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
 why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
@@ -173,7 +173,7 @@ stage = "commit"
 runs = "files"
 tool = "actionlint"
 exit_codes = [1]
-owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+files = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$"}
 summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
 why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
@@ -188,7 +188,7 @@ stage = "push"
 runs = "files"
 requires = "network"
 command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
-owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+files = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 output = {format = "lines"}
 summary = "Verifies GitHub action commits and version comments without changing workflow files."
 why = "A nonexistent action commit prevents the workflow from starting."
@@ -203,7 +203,7 @@ stage = "commit"
 runs = "files"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
 exit_codes = [11, 12, 13, 14]
-owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+files = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 output = {format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$"}
 summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
 why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
@@ -218,7 +218,7 @@ stage = "commit"
 runs = "files"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
 fix = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
-owners = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
+files = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+) (?<rule>[A-Za-z]+): (?<message>.*)$"}
 summary = "Checks every tracked environment file: key format, duplicates, quoting, ordering, and trailing spaces."
 why = "A tracked environment file is a template other people copy; a malformed line there is copied into every machine."
@@ -244,7 +244,7 @@ stage = "commit"
 runs = "files"
 platforms = ["macos"]
 command = ["plutil", "-lint", "{files}"]
-owners = {extensions = [".plist", ".entitlements"]}
+files = {extensions = [".plist", ".entitlements"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$"}
 summary = "Parses every property list and entitlements file with plutil."
 why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
@@ -258,7 +258,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["xmllint", "--noout", "{files}"]
-owners = {extensions = [".xml", ".storyboard", ".xib"]}
+files = {extensions = [".xml", ".storyboard", ".xib"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
 summary = "Parses every XML file, storyboard, and xib with xmllint."
 why = "Malformed XML is refused by the reader at the worst moment."

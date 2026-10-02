@@ -18,7 +18,7 @@ title = "Prose"
 requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
 
-[owners]
+[files]
 extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".css", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
 tags = ["shebang:shell"]
 

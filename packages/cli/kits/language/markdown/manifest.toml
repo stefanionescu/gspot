@@ -9,7 +9,7 @@ description = "Markdown files: markdownlint, Prettier, every fenced block parsin
 [detect]
 extensions = [".md", ".mdx"]
 
-[owners]
+[files]
 extensions = [".md", ".mdx"]
 kinds = ["source"]
 

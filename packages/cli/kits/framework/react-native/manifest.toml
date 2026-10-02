@@ -9,7 +9,7 @@ description = "A React Native or Expo app: the React Native and Expo rules, list
 [detect]
 dependencies = ["react-native", "expo"]
 
-[owners]
+[files]
 filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "eas.json"]
 kinds = ["source"]
 

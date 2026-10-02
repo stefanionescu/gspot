@@ -9,7 +9,7 @@ description = "HTML files: html-validate for structure and accessibility, no inl
 [detect]
 extensions = [".html", ".htm"]
 
-[owners]
+[files]
 extensions = [".html", ".htm"]
 kinds = ["source"]
 

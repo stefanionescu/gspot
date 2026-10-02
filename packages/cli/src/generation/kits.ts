@@ -45,7 +45,7 @@ function directoryPointers(context: EmitInputs, configuration: ConfigurationTarg
     if (pointer?.directories === undefined) return [];
     const scope = selection.scope.path;
     const matches = pathMatcher(pointer.directories);
-    const owned = ownedBy(manifest.owners, selection.selected, files, scope).filter(
+    const owned = ownedBy(manifest.files, selection.selected, files, scope).filter(
         (file) => !isInChildScope(context, file),
     );
     const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));

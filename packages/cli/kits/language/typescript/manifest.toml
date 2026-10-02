@@ -11,7 +11,7 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 filenames = ["tsconfig.json"]
 dependencies = ["typescript"]
 
-[owners]
+[files]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
@@ -70,7 +70,7 @@ runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
-owners = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
+files = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 output = {format = "eslint"}
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."

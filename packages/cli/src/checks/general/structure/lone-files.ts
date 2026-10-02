@@ -19,7 +19,7 @@ function isSkipped(directory: string, isAllowed: (path: string) => boolean): boo
 export const singleFileFolder: Analysis = (context) => {
     const { input } = context;
     const selection = input.selection;
-    const extensions = sourceKits(selection.selected).flatMap((manifest) => manifest.owners.extensions);
+    const extensions = sourceKits(selection.selected).flatMap((manifest) => manifest.files.extensions);
     // The merged setting: what the repository allows and what a selected framework allows for its own layout.
     const allowed = (input.selection.view.settings['structure.lone_files_allowed'] ?? []) as {
         paths: string[];

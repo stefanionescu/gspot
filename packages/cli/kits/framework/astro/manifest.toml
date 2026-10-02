@@ -10,7 +10,7 @@ description = "Astro components: ESLint reads the frontmatter, the markup, and t
 dependencies = ["astro"]
 extensions = [".astro"]
 
-[owners]
+[files]
 extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
 kinds = ["source"]
@@ -65,7 +65,7 @@ command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{c
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 tool = "eslint"
-owners = {extensions = [".astro"]}
+files = {extensions = [".astro"]}
 output = {format = "eslint"}
 summary = "Runs ESLint with the Astro plugin over every .astro file. It reads the frontmatter, the markup, and the scripts together."
 why = "A component file is frontmatter, markup, and scripts in one, and a plain JavaScript parser reads none of it."
@@ -81,7 +81,7 @@ runs = "scope"
 cwd = "scope"
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 exit_codes = [1]
-owners = {extensions = [".astro"]}
+files = {extensions = [".astro"]}
 output = {format = "regex", pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"}
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."

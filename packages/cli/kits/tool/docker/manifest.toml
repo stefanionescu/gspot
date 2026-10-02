@@ -9,7 +9,7 @@ description = "Dockerfiles and Compose files: hadolint, a Compose file that pars
 [detect]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]
 
-[owners]
+[files]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore"]
 kinds = ["source"]
 
@@ -73,7 +73,7 @@ example = "The instruction `FROM node:latest` reports DL3007 because the tag cha
 level = "recommended"
 stage = "commit"
 command = ["hadolint", "--no-color", "--config", "{config:hadolint}", "{files}"]
-owners = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
+files = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$"}
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
@@ -88,7 +88,7 @@ stage = "push"
 requires = "docker"
 tool = "docker"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
-owners = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
+files = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
 output = {format = "lines"}
 summary = "Asks Docker Compose to parse every Compose file, which needs no running daemon."
 why = "A Compose file that is valid YAML can still name a key Compose refuses, and the first person to learn that is deploying."

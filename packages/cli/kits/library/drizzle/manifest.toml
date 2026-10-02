@@ -37,7 +37,7 @@ title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
 level = "all"
 stage = "commit"
-owners = {extensions = [".ts"]}
+files = {extensions = [".ts"]}
 summary = "Checks that every table with a reference has a relations entry."
 why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
 help = "Add a relations call for the table."
@@ -50,7 +50,7 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 tool = "drizzle-kit"
-owners = {extensions = [".ts", ".sql"]}
+files = {extensions = [".ts", ".sql"]}
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."

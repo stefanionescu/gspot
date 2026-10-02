@@ -10,7 +10,7 @@ description = "Cloudflare Pages and Workers: a wrangler configuration that parse
 paths = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "**/wrangler.toml", "**/wrangler.jsonc", "functions/_middleware.js", "functions/_worker.js"]
 dependencies = ["wrangler", "@opennextjs/cloudflare"]
 
-[owners]
+[files]
 filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_redirects"]
 kinds = ["source"]
 

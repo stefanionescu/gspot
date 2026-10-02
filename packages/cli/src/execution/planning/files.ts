@@ -1,4 +1,4 @@
-// Which files a planned check runs over: what it owners, less excluded and child-scope paths, narrowed to a selection.
+// Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { ownedBy } from '#cli/kits/owners.ts';
 import { kitName } from '#cli/kits/targets.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
@@ -15,14 +15,14 @@ function projectFiles(context: PlanInputs, scopeForFiles: string): TrackedFile[]
     return context.session.repository.files.filter((file) => file.path.startsWith(prefix));
 }
 
-// The files a project-wide check runs over: the scope's tree, when its owners select anything in it.
+// The files a project-wide check runs over: the scope's tree, when its files select anything in it.
 function projectOwned(context: PlanInputs, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
     const { session, scope, children } = context;
     const isPerScope = spec.runs === 'scope';
     const selectedFiles =
-        spec.owners === undefined
+        spec.files === undefined
             ? undefined
-            : ownedBy(spec.owners, scope.selected, session.repository.files, scopeForFiles);
+            : ownedBy(spec.files, scope.selected, session.repository.files, scopeForFiles);
     const owned = isPerScope
         ? selectedFiles?.filter((file) => children.every((child) => !isInScope(file.path, child)))
         : selectedFiles;
@@ -32,16 +32,16 @@ function projectOwned(context: PlanInputs, spec: CheckSpec, scopeForFiles: strin
     return files.filter((file) => file.kind !== 'binary');
 }
 
-// The files a per-file check runs over: its own owners, its manifest's, or the paths a policy check names.
+// The files a per-file check runs over: its own files, its manifest's, or the paths a policy check names.
 function listOwned(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
-    if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.owners?.paths ?? [])(file.path));
-    const owners = spec.owners ?? manifest.owners;
+    if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.files?.paths ?? [])(file.path));
+    const owners = spec.files ?? manifest.files;
     return ownedBy(owners, scope.selected, session.repository.files, scopeForFiles);
 }
 
-// The files the check owners in the scope.
+// The files the check owns in the scope.
 function ownedFor(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     if (entry.spec.runs !== 'files') return projectOwned(context, entry.spec, scopeForFiles);
     return listOwned(context, entry, scopeForFiles);
@@ -57,7 +57,7 @@ function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSele
     return files.filter((file) => !isExcluded(file.path));
 }
 
-// The policy changed, so the check runs over everything it owners, with the check's own owners kept.
+// The policy changed, so the check runs over everything it owns, with the check's own files kept.
 function allOwned(context: PlanInputs, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
     const files = ownedFor(context, entry, scope.scope.path);
@@ -105,7 +105,7 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
  * @returns true when the check runs once for the repository
  */
 export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.kit.kind !== 'general' || manifest.owners.languages || spec.runs === 'scope') return false;
+    if (manifest.kit.kind !== 'general' || manifest.files.languages || spec.runs === 'scope') return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>

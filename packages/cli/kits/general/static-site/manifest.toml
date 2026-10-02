@@ -8,7 +8,7 @@ description = "A site built to a folder and served as files: the build, its outp
 [detect]
 paths = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml"]
 
-[owners]
+[files]
 filenames = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml", "robots.txt"]
 extensions = [".svg"]
 kinds = ["source"]
@@ -135,7 +135,7 @@ example = "An image in the output directory that no built page or stylesheet ref
 level = "recommended"
 stage = "push"
 runs = "scope"
-owners = {paths = ["**/*"], kinds = ["source", "binary"]}
+files = {paths = ["**/*"], kinds = ["source", "binary"]}
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
 why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
 help = "Delete the file."
@@ -147,7 +147,7 @@ example = "An SVG containing removable editor metadata differs from optimized ou
 level = "recommended"
 stage = "commit"
 runs = "files"
-owners = {extensions = [".svg"]}
+files = {extensions = [".svg"]}
 fix = ["svgo", "--quiet", "{files}"]
 summary = "Reports SVG byte reductions over 10 percent at recommended, and any reduction at all."
 why = "An SVG straight from an editor carries metadata and precision a browser never needs."

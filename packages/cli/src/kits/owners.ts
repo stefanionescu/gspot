@@ -1,4 +1,4 @@
-// Which selected kit owners which file, per scope.
+// Which selected kit owns which file, per scope.
 import { posix } from 'node:path';
 import { GLOB_CHARS } from '#cli/config/kits.ts';
 import { sourceKits } from '#cli/kits/select.ts';
@@ -50,7 +50,7 @@ export function ownedBy(table: Owners, selected: Manifest[], files: TrackedFile[
     if (owners.languages) {
         const languages = sourceKits(selected);
         return candidates.filter(
-            (file) => isOwned(owners, file) || languages.some((language) => isOwned(language.owners, file)),
+            (file) => isOwned(owners, file) || languages.some((language) => isOwned(language.files, file)),
         );
     }
     return candidates.filter((file) => isOwned(owners, file));
@@ -65,9 +65,9 @@ export function ownedBy(table: Owners, selected: Manifest[], files: TrackedFile[
 export function ownerOf(file: TrackedFile, selected: Manifest[]): Manifest[] {
     const languages = sourceKits(selected);
     return selected.filter((manifest) => {
-        const owners = effectiveOwners(manifest.owners, selected);
+        const owners = effectiveOwners(manifest.files, selected);
         if (owners.languages)
-            return isOwned(owners, file) || languages.some((language) => isOwned(language.owners, file));
+            return isOwned(owners, file) || languages.some((language) => isOwned(language.files, file));
         return isOwned(owners, file);
     });
 }

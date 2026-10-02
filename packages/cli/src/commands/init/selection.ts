@@ -86,7 +86,7 @@ function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scop
         (file) =>
             file.kind === 'source' &&
             scopes.every((scope) => scope.path === '' || !isInScope(file.path, scope.path)) &&
-            manifest.owners.extensions.some((extension) => file.path.endsWith(extension)),
+            manifest.files.extensions.some((extension) => file.path.endsWith(extension)),
     );
 }
 

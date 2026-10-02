@@ -30,10 +30,10 @@ function installerPins(raw: RawTool): ToolPin['installers'] {
 }
 
 function toCheck(raw: RawCheck): CheckSpec {
-    const { owners, ...rest } = raw;
+    const { files, ...rest } = raw;
     const check = compact(rest) as CheckSpec;
-    if (owners) {
-        check.owners = { ...owners };
+    if (files) {
+        check.files = { ...files };
     }
     return check;
 }
@@ -93,7 +93,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         kit: raw.kit,
         ignored: raw.ignored,
         detect: raw.detect,
-        owners: raw.owners,
+        files: raw.files,
         tools: raw.tools.map((tool) => {
             const declared = OPTIONAL_TOOL_KEYS.filter((key) => tool[key] !== undefined).map(
                 (key) => [key, tool[key]] as const,

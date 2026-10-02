@@ -39,7 +39,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         auto: manifest.kit.auto,
         proposed: manifest.kit.proposed,
     };
-    const { detect, owners } = manifest;
+    const { detect, files } = manifest;
     const lines = [
         `${row.title} (${row.kind} kit)`,
         '',
@@ -50,9 +50,9 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
             ...detect.filenames,
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
-        ...listLine('Owners', [...owners.extensions, ...owners.filenames, ...owners.paths]),
-        ...(owners.languages ? ['Owners: every file a language kit owners'] : []),
-        ...(owners.prettier_plugins ? ['Owners: the file types of the selected Prettier plugins'] : []),
+        ...listLine('Files', [...files.extensions, ...files.filenames, ...files.paths]),
+        ...(files.languages ? ['Files: every file a language kit owns'] : []),
+        ...(files.prettier_plugins ? ['Files: the file types of the selected Prettier plugins'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>

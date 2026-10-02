@@ -5,7 +5,7 @@ title = "Docs"
 auto = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
 
-[owners]
+[files]
 extensions = [".md", ".mdx"]
 filenames = ["CLAUDE.md", "AGENTS.md", "README.md"]
 

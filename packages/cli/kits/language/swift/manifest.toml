@@ -11,7 +11,7 @@ extensions = [".swift"]
 filenames = ["Package.swift"]
 project_files = ["Package.swift"]
 
-[owners]
+[files]
 extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved"]
 kinds = ["source"]
@@ -100,7 +100,7 @@ tool = "swiftlint"
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
 summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
 why = "A force unwrap, a retain cycle through a delegate, or a function nobody can hold in their head is cheapest to stop at the commit."
@@ -115,7 +115,7 @@ stage = "commit"
 command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
 exit_codes = [1]
 fix = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
 summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
 why = "One layout everywhere keeps a diff about the change and not about where a brace went."
@@ -170,7 +170,7 @@ example = "A Swift function containing only `return 1` reports a trivial-functio
 level = "all"
 stage = "commit"
 runs = "scope"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-function --paths <file> --reason <why>`."
@@ -182,7 +182,7 @@ example = "Two Swift functions with the same executable body report duplication.
 level = "all"
 stage = "commit"
 runs = "scope"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 summary = "Finds functions whose bodies match line for line."
 why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
 help = "Keep one of the functions and call it from both places."
@@ -194,7 +194,7 @@ example = "A file-local private declaration below a public declaration reports a
 level = "all"
 stage = "commit"
 runs = "scope"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
 why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
 help = "Move the file-local declarations above the first internal, public, or open one."
@@ -206,7 +206,7 @@ example = "A comment written between two imports reports an import comment. Move
 level = "all"
 stage = "commit"
 runs = "scope"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 summary = "Finds a comment written inside an import block, between its first and last import."
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
 help = "Move the comment above the block or next to the code it explains."
@@ -218,7 +218,7 @@ example = "A read of `ProcessInfo.processInfo.environment` outside the configure
 level = "all"
 stage = "commit"
 runs = "scope"
-owners = {extensions = [".swift"]}
+files = {extensions = [".swift"]}
 summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
 help = "Read the environment in the file that architecture.roles.env names, and pass the values in."

@@ -11,7 +11,7 @@ filenames = ["supabase/config.toml"]
 paths = ["supabase/config.toml", "**/supabase/config.toml"]
 project_files = ["supabase/config.toml"]
 
-[owners]
+[files]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
 kinds = ["source"]
 

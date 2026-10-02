@@ -7,7 +7,7 @@ import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 
 const stringList = z.array(z.string()).default([]);
 
-const ownersSchema = z.strictObject({
+const filesSchema = z.strictObject({
     extensions: stringList,
     filenames: stringList,
     tags: stringList,
@@ -100,7 +100,7 @@ const checkFields = z.strictObject({
     waits_for: z.string().optional(),
     platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     tool: z.string().optional(),
-    owners: ownersSchema.optional(),
+    files: filesSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
     nested_config: z
@@ -192,7 +192,7 @@ export const manifestSchema = z.strictObject({
         description: sentence,
     }),
     detect: detectionSchema,
-    owners: ownersSchema.default({
+    files: filesSchema.default({
         extensions: [],
         filenames: [],
         tags: [],
