@@ -1,10 +1,11 @@
 // A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
-import { sep, relative, isAbsolute } from 'node:path';
+import { tmpdir } from 'node:os';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
+import { sep, join, relative, isAbsolute } from 'node:path';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
-import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform/platform.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
+import type { Read, Root, Bounds, PathFormat, ScratchFolder } from '#cli/types/platform/platform.ts';
 
 import {
     rmSync,
@@ -15,6 +16,7 @@ import {
     renameSync,
     type Stats,
     unlinkSync,
+    mkdtempSync,
     readdirSync,
     realpathSync,
 } from 'node:fs';
@@ -136,6 +138,22 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         },
         [Symbol.dispose]: () => {
             releaseLocks(bounds);
+        },
+    };
+}
+
+/**
+ * Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
+ * Its path is the native real path, which on Windows expands short folder names, as the paths tools report do.
+ * @param prefix the start of the folder name
+ * @returns the folder, which the caller disposes, as `using` does
+ */
+export function scratchFolder(prefix: string): ScratchFolder {
+    const path = realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
+    return {
+        path,
+        [Symbol.dispose]: () => {
+            rmSync(path, { recursive: true, force: true });
         },
     };
 }

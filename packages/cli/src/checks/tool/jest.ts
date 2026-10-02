@@ -1,15 +1,12 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { z } from 'zod';
-import { tmpdir } from 'node:os';
-import { mkdtempSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { jestPercentage, jestCoverageSettings } from '#cli/policy/tools.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { Suite, JestRun, TestReport } from '#cli/types/checks/tool/jest.ts';
@@ -149,19 +146,12 @@ export const reportSchema = z.object({
  */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));
-    const work = mkdtempSync(join(tmpdir(), 'gspot-jest-'));
-    let source: string | undefined;
-    const reports = openRoot(work);
-    try {
-        source = await scratchCopy(
-            input.root,
-            input.files.map((file) => file.path),
-            input.scopeEntries.map((scope) => scope.path),
-        );
-        return await runJest({ input, source, work }, reports, settings);
-    } finally {
-        reports.close();
-        if (source !== undefined) await rm(source, { recursive: true, force: true });
-        await rm(work, { recursive: true, force: true });
-    }
+    using work = scratchFolder('gspot-jest-');
+    using reports = openRoot(work.path);
+    using source = await scratchCopy(
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
+    );
+    return await runJest({ input, source: source.path, work: work.path }, reports, settings);
 }

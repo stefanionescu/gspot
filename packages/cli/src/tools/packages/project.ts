@@ -2,18 +2,17 @@
 import { z } from 'zod';
 import semver from 'semver';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
 import { SETUP } from '#cli/config/tools/tools.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { ToolPin, GeneratedFile } from '#cli/types/kits.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
-import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
@@ -58,19 +57,16 @@ async function prepareLock(
     manifest: string,
     recorded: string | undefined,
 ): Promise<string> {
-    const work = mkdtempSync(join(tmpdir(), 'gspot-lock-'));
-    try {
-        writeProject(work, manifest, files.find((file) => file.path === YARN_SETTINGS)?.content);
-        if (recorded !== undefined && lockMatches(project.client.name, recorded, project.dependencies))
-            writeFileSync(join(work, project.lock), recorded);
-        await packageCommand(root, work, project.client, false);
-        const content = readFileSync(join(work, project.lock), 'utf8');
-        if (!lockMatches(project.client.name, content, project.dependencies))
-            throw new Error(`${project.client.name} produced a mismatched tool lock. Existing files were preserved.`);
-        return content;
-    } finally {
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-lock-');
+    const work = workFolder.path;
+    writeProject(work, manifest, files.find((file) => file.path === YARN_SETTINGS)?.content);
+    if (recorded !== undefined && lockMatches(project.client.name, recorded, project.dependencies))
+        writeFileSync(join(work, project.lock), recorded);
+    await packageCommand(root, work, project.client, false);
+    const content = readFileSync(join(work, project.lock), 'utf8');
+    if (!lockMatches(project.client.name, content, project.dependencies))
+        throw new Error(`${project.client.name} produced a mismatched tool lock. Existing files were preserved.`);
+    return content;
 }
 
 // Refuses an installation whose inputs the manager rewrote or another writer changed meanwhile.
@@ -93,17 +89,14 @@ async function installFromInputs(
     inputs: Inputs,
     tools: Iterable<ToolPin>,
 ): Promise<void> {
-    const work = mkdtempSync(join(tmpdir(), 'gspot-install-'));
-    try {
-        writeProject(work, inputs.project.bytes.toString('utf8'), inputs.yarn?.bytes.toString('utf8'));
-        writeFileSync(join(work, project.lock), inputs.recorded.bytes);
-        await packageCommand(root, work, project.client, true);
-        await prepareNativeWrappers(work, project.dependencies, tools);
-        assertInputsUnchanged(owner, work, project, inputs);
-        owner.installTree('npm', installedOutputs(join(work, 'node_modules'), 'npm'));
-    } finally {
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-install-');
+    const work = workFolder.path;
+    writeProject(work, inputs.project.bytes.toString('utf8'), inputs.yarn?.bytes.toString('utf8'));
+    writeFileSync(join(work, project.lock), inputs.recorded.bytes);
+    await packageCommand(root, work, project.client, true);
+    await prepareNativeWrappers(work, project.dependencies, tools);
+    assertInputsUnchanged(owner, work, project, inputs);
+    owner.installTree('npm', installedOutputs(join(work, 'node_modules'), 'npm'));
 }
 
 /**

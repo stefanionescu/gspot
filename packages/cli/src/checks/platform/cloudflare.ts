@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rm } from 'node:fs/promises';
 import { parse as parseToml } from 'smol-toml';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
@@ -177,28 +176,25 @@ export function headersSyntax(input: EngineInput): Finding[] {
 export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
     const paths = named(input, TYPES_FILE);
     if (paths.length === 0) return [];
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
+    const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    try {
-        const findings: Finding[] = [];
-        for (const path of paths)
-            if (await isTypesFileStale(isolated, path))
-                findings.push(
-                    findingAt(
-                        input,
-                        { file: path, line: 1 },
-                        'stale-types',
-                        'wrangler types writes this file differently. Run it and commit the result.',
-                    ),
-                );
-        return findings;
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const findings: Finding[] = [];
+    for (const path of paths)
+        if (await isTypesFileStale(isolated, path))
+            findings.push(
+                findingAt(
+                    input,
+                    { file: path, line: 1 },
+                    'stale-types',
+                    'wrangler types writes this file differently. Run it and commit the result.',
+                ),
+            );
+    return findings;
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */

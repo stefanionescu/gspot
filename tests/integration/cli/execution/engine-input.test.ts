@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rmSync, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -103,19 +103,16 @@ test('engine inputs expose selected files and reserve the repository inventory f
         project,
     );
     expect(owned).toMatchObject({ status: 'ok', checkedFiles: ['apps/web/value.test.js'] });
-    const scratch = await scratchCopy(
+    using copy = await scratchCopy(
         scopeInput.root,
         scopeInput.files.map((file) => file.path),
         ['apps/web'],
     );
-    try {
-        expect(existsSync(join(scratch, 'apps/web/fixture.bin'))).toBe(true);
-        expect(existsSync(join(scratch, 'apps/web/jest.config.json'))).toBe(true);
-        expect(existsSync(join(scratch, 'unrelated/private.txt'))).toBe(false);
-        expect(existsSync(join(scratch, 'README.md'))).toBe(false);
-    } finally {
-        rmSync(scratch, { recursive: true, force: true });
-    }
+    const scratch = copy.path;
+    expect(existsSync(join(scratch, 'apps/web/fixture.bin'))).toBe(true);
+    expect(existsSync(join(scratch, 'apps/web/jest.config.json'))).toBe(true);
+    expect(existsSync(join(scratch, 'unrelated/private.txt'))).toBe(false);
+    expect(existsSync(join(scratch, 'README.md'))).toBe(false);
 });
 
 // Windows file names cannot hold a newline or a quote.

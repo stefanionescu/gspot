@@ -1,5 +1,4 @@
 // Corrections run in passes until they settle; dry runs use a scratch copy and return diffs.
-import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -218,34 +217,30 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
-    const scratch = isDryRun
+    using scratch = isDryRun
         ? await scratchCopy(
               session.root,
               [...paths, ...session.repository.files.map((file) => file.path)],
               session.repository.scopes.map((scope) => scope.path),
           )
         : undefined;
-    const root = scratch ?? session.root;
-    try {
-        const before = contentsOf(root, paths);
-        const results = await fixerPasses(session, checks, root, paths);
-        const after = contentsOf(root, paths);
-        const changed = changedPaths(before, after);
-        const diffs = isDryRun
-            ? changed.map((path) =>
-                  createTwoFilesPatch(
-                      `a/${path}`,
-                      `b/${path}`,
-                      before.get(path)?.toString('utf8') ?? '',
-                      after.get(path)?.toString('utf8') ?? '',
-                      '',
-                      '',
-                      { context: FIX_DIFF_CONTEXT },
-                  ),
-              )
-            : [];
-        return { results, changed, diffs };
-    } finally {
-        if (scratch !== undefined) await rm(scratch, { recursive: true, force: true });
-    }
+    const root = scratch?.path ?? session.root;
+    const before = contentsOf(root, paths);
+    const results = await fixerPasses(session, checks, root, paths);
+    const after = contentsOf(root, paths);
+    const changed = changedPaths(before, after);
+    const diffs = isDryRun
+        ? changed.map((path) =>
+              createTwoFilesPatch(
+                  `a/${path}`,
+                  `b/${path}`,
+                  before.get(path)?.toString('utf8') ?? '',
+                  after.get(path)?.toString('utf8') ?? '',
+                  '',
+                  '',
+                  { context: FIX_DIFF_CONTEXT },
+              ),
+          )
+        : [];
+    return { results, changed, diffs };
 }

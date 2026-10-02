@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { rm } from 'node:fs/promises';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
@@ -85,21 +84,18 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     const command = references
         ? ['tsc', '-b', '--pretty', 'false']
         : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         session.root,
         [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
         session.repository.scopes.map((scope) => scope.path),
     );
-    try {
-        if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-        else appendBuildMetadata(command, config, scratch, 'tsconfig.check.tsbuildinfo');
-        const result = await runToolCheck(session, planned, command, scratch);
-        if (result.command !== undefined)
-            result.command = result.command.map((part) => part.replace(scratch, () => session.root));
-        return result;
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const scratch = scratchFolder.path;
+    if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
+    else appendBuildMetadata(command, config, scratch, 'tsconfig.check.tsbuildinfo');
+    const result = await runToolCheck(session, planned, command, scratch);
+    if (result.command !== undefined)
+        result.command = result.command.map((part) => part.replace(scratch, () => session.root));
+    return result;
 }
 
 /**
@@ -113,26 +109,23 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
     const jsconfig = planned.manifest?.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json');
     if (jsconfig === undefined) throw new Error('The typescript configuration declares no jsconfig target.');
     const target = targetInScope(scope, jsconfig);
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         session.root,
         [...session.repository.files.map((file) => file.path), target],
         session.repository.scopes.map((entry) => entry.path),
     );
-    try {
-        const directory = join(scratch, scope);
-        const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
-        // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
-        if (writeScopeProject(session, scratch, scope, target) === 0)
-            return { check: planned.check, scope, status: 'ok', files: 0, findings: [], duration: 0 };
-        const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
-        const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
-        if (roots !== undefined) command.push('--typeRoots', roots.join(','));
-        appendBuildMetadata(command, config, scratch, 'jsconfig.check.tsbuildinfo');
-        const result = await runToolCheck(session, planned, command, scratch);
-        if (result.command !== undefined)
-            result.command = result.command.map((part) => part.replaceAll(scratch, () => session.root));
-        return result;
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const scratch = scratchFolder.path;
+    const directory = join(scratch, scope);
+    const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
+    // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
+    if (writeScopeProject(session, scratch, scope, target) === 0)
+        return { check: planned.check, scope, status: 'ok', files: 0, findings: [], duration: 0 };
+    const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
+    const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
+    if (roots !== undefined) command.push('--typeRoots', roots.join(','));
+    appendBuildMetadata(command, config, scratch, 'jsconfig.check.tsbuildinfo');
+    const result = await runToolCheck(session, planned, command, scratch);
+    if (result.command !== undefined)
+        result.command = result.command.map((part) => part.replaceAll(scratch, () => session.root));
+    return result;
 }

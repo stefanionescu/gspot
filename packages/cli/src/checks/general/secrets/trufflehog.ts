@@ -1,17 +1,17 @@
 // Verified secret scanning over pushed history: each changed blob and each commit message handed to TruffleHog.
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import { writeFileSync, appendFileSync } from 'node:fs';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { gitBlobs } from '#cli/execution/checkout/revision.ts';
 import { pushBase } from '#cli/repository/revisions/changes.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
 import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
-import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA } from '#cli/config/checks/general/secrets.ts';
 
@@ -91,27 +91,24 @@ async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
 
 // Writes the enumerator input for every commit, then runs TruffleHog over it.
 async function scanCommits(session: Session, planned: PlannedCheck, commits: string[]): Promise<CheckResult> {
-    const scratch = mkdtempSync(join(tmpdir(), 'gspot-verified-secrets-'));
-    try {
-        const scan: SecretScan = { session, planned, input: join(scratch, 'commits.jsonl') };
-        writeFileSync(scan.input, '', { mode: PRIVATE_FILE });
-        for (const commit of commits) {
-            await appendBlobs(scan, commit);
-            await appendMetadata(scan, commit);
-        }
-        return await runToolCheck(session, planned, [
-            'trufflehog',
-            'json-enumerator',
-            scan.input,
-            '--results=verified',
-            '--json',
-            '--fail',
-            '--fail-on-scan-errors',
-            '--no-update',
-        ]);
-    } finally {
-        rmSync(scratch, { recursive: true, force: true });
+    using folder = scratchFolder('gspot-verified-secrets-');
+    const scratch = folder.path;
+    const scan: SecretScan = { session, planned, input: join(scratch, 'commits.jsonl') };
+    writeFileSync(scan.input, '', { mode: PRIVATE_FILE });
+    for (const commit of commits) {
+        await appendBlobs(scan, commit);
+        await appendMetadata(scan, commit);
     }
+    return await runToolCheck(session, planned, [
+        'trufflehog',
+        'json-enumerator',
+        scan.input,
+        '--results=verified',
+        '--json',
+        '--fail',
+        '--fail-on-scan-errors',
+        '--no-update',
+    ]);
 }
 
 /**

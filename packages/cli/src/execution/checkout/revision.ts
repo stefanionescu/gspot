@@ -1,10 +1,9 @@
-import { tmpdir } from 'node:os';
+import { realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
-import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
 import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
@@ -240,35 +239,32 @@ export async function useRevision<Result>(
     const directory = relative(realpathSync(gitRoot), realpathSync(root));
     const entries = await gitEntries(gitRoot, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
-    const revisionRoot = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-revision-')));
-    try {
-        await gitOutput(
-            gitRoot,
-            ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
-            cancelSignal,
-        );
-        // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
-        if (source.kind === 'commit')
-            await gitOutput(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
-        await gitOutput(revisionRoot, ['read-tree', '--empty'], cancelSignal);
-        await gitOutput(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
-        const tree = await gitOutput(revisionRoot, ['write-tree'], cancelSignal);
-        const objects = await gitBlobs(
-            revisionRoot,
-            entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
-            cancelSignal,
-        );
-        await populateRevision(revisionRoot, entries, objects, cancelSignal);
-        copyProsePackages(
-            gitRoot,
-            revisionRoot,
-            entries.map((entry) => entry.path),
-        );
-        await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
-        await setImmediate();
-        cancelSignal?.throwIfAborted();
-        return await action(join(revisionRoot, directory), tree.trim());
-    } finally {
-        rmSync(revisionRoot, { recursive: true, force: true });
-    }
+    using revisionRootFolder = scratchFolder('gspot-revision-');
+    const revisionRoot = revisionRootFolder.path;
+    await gitOutput(
+        gitRoot,
+        ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
+        cancelSignal,
+    );
+    // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
+    if (source.kind === 'commit')
+        await gitOutput(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
+    await gitOutput(revisionRoot, ['read-tree', '--empty'], cancelSignal);
+    await gitOutput(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
+    const tree = await gitOutput(revisionRoot, ['write-tree'], cancelSignal);
+    const objects = await gitBlobs(
+        revisionRoot,
+        entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
+        cancelSignal,
+    );
+    await populateRevision(revisionRoot, entries, objects, cancelSignal);
+    copyProsePackages(
+        gitRoot,
+        revisionRoot,
+        entries.map((entry) => entry.path),
+    );
+    await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
+    await setImmediate();
+    cancelSignal?.throwIfAborted();
+    return await action(join(revisionRoot, directory), tree.trim());
 }

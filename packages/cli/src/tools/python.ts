@@ -1,30 +1,18 @@
 import { z } from 'zod';
-import { tmpdir } from 'node:os';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { join, resolve, isAbsolute } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
-
-import {
-    rmSync,
-    chmodSync,
-    lstatSync,
-    unlinkSync,
-    mkdtempSync,
-    copyFileSync,
-    readFileSync,
-    realpathSync,
-    writeFileSync,
-} from 'node:fs';
+import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 const projectSchema = z.strictObject({
     project: z.strictObject({
@@ -202,16 +190,13 @@ export async function preparePythonProject(root: string, files: GeneratedFile[],
     const original = owner.read(LOCK);
     let content = original?.bytes.toString('utf8');
     if (content === undefined || !matches(project.content, content)) {
-        const work = mkdtempSync(join(tmpdir(), 'gspot-python-lock-'));
-        try {
-            writeFileSync(join(work, 'pyproject.toml'), project.content);
-            await uv(root, owner, work, ['lock']);
-            content = readFileSync(join(work, 'uv.lock'), 'utf8');
-            if (!matches(project.content, content))
-                throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
-        } finally {
-            rmSync(work, { recursive: true, force: true });
-        }
+        using workFolder = scratchFolder('gspot-python-lock-');
+        const work = workFolder.path;
+        writeFileSync(join(work, 'pyproject.toml'), project.content);
+        await uv(root, owner, work, ['lock']);
+        content = readFileSync(join(work, 'uv.lock'), 'utf8');
+        if (!matches(project.content, content))
+            throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
     }
     files.push({
         path: LOCK,
@@ -270,11 +255,8 @@ export async function installPythonProject(root: string, owner: ToolOwner, execu
     const lock = owner.read(LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
-    const work = mkdtempSync(join(tmpdir(), 'gspot-python-install-'));
-    try {
-        await installInWork(root, owner, work, { project, lock }, executable);
-        return 'installed locked Python tools under .gspot/.venv';
-    } finally {
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-python-install-');
+    const work = workFolder.path;
+    await installInWork(root, owner, work, { project, lock }, executable);
+    return 'installed locked Python tools under .gspot/.venv';
 }

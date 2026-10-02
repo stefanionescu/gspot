@@ -1,6 +1,6 @@
+import { statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
-import { rmSync, statSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findingAt } from '#cli/execution/finding.ts';
@@ -22,14 +22,13 @@ async function built(input: EngineInput): Promise<SiteBuild> {
         typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : DEFAULT_BUILD_OUTPUT;
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
-    const scratch = await scratchCopy(
+    const folder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
-    input.resources.defer(() => {
-        rmSync(scratch, { recursive: true, force: true });
-    });
+    // The run keeps the build for the checks that read it after this one.
+    const scratch = input.resources.use(folder).path;
     const cwd = join(scratch, input.scope);
     const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rm } from 'node:fs/promises';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
@@ -55,28 +54,25 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const command = typeof producer === 'string' ? producer : '';
     if (document === '' || command === '') return [];
     const before = readSource(input.root, document, input.reads);
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         [...input.files.map((file) => file.path), document],
         input.scopeEntries.map((scope) => scope.path),
     );
-    try {
-        const result = await runCheckCommand(input, commandArguments(command), { cwd: scratch });
-        if (result.code !== 0)
-            throw new Error(
-                `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
-            );
-        const after = readSource(scratch, document);
-        if (before.equals(after)) return [];
-        return [
-            findingAt(
-                input,
-                { file: document, line: 1 },
-                'stale',
-                `Running ${command} changes this document; commit what it writes.`,
-            ),
-        ];
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const scratch = scratchFolder.path;
+    const result = await runCheckCommand(input, commandArguments(command), { cwd: scratch });
+    if (result.code !== 0)
+        throw new Error(
+            `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+        );
+    const after = readSource(scratch, document);
+    if (before.equals(after)) return [];
+    return [
+        findingAt(
+            input,
+            { file: document, line: 1 },
+            'stale',
+            `Running ${command} changes this document; commit what it writes.`,
+        ),
+    ];
 }

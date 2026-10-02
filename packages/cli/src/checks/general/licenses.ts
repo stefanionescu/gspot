@@ -1,15 +1,14 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
 import { targetInScope } from '#cli/kits/targets.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import { rmSync, statSync, mkdtempSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { LicenseException } from '#cli/types/checks/general/general.ts';
 import type { LicensedPackage } from '#cli/types/checks/general/licenses.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -90,26 +89,23 @@ async function javascriptLicenses(input: EngineInput, start: string): Promise<Li
 // Run outside the project so project-owned scanner settings cannot hide installed dependencies.
 async function pythonLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
     const installed = installedDirectory(start, '.venv');
-    const isolated = mkdtempSync(join(tmpdir(), 'gspot-licenses-'));
-    try {
-        const report = await licenseReport(
-            input,
-            [
-                'pip-licenses',
-                '--format=json',
-                '--with-system',
-                '--from=mixed',
-                '--python',
-                join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
-            ],
-            isolated,
-        );
-        return pythonReportSchema
-            .parse(report)
-            .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
-    } finally {
-        rmSync(isolated, { recursive: true, force: true });
-    }
+    using isolatedFolder = scratchFolder('gspot-licenses-');
+    const isolated = isolatedFolder.path;
+    const report = await licenseReport(
+        input,
+        [
+            'pip-licenses',
+            '--format=json',
+            '--with-system',
+            '--from=mixed',
+            '--python',
+            join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
+        ],
+        isolated,
+    );
+    return pythonReportSchema
+        .parse(report)
+        .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
 }
 
 const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<LicensedPackage[]>>([

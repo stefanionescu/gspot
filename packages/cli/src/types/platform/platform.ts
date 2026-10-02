@@ -95,6 +95,9 @@ export type Root = {
     [Symbol.dispose](): void;
 };
 
+/** A temporary folder that removes itself when disposed. */
+export type ScratchFolder = Disposable & { path: string };
+
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 
 /** Source bytes read during one run, files to its original repository root. */

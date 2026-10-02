@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { SHOWN_LINES } from '#cli/config/checks/checks.ts';
@@ -59,24 +58,21 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  * @returns one finding for each type error
  */
 export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
+    const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    try {
-        await writeNextjsTypes(isolated);
-        const cwd = join(scratch, input.scope);
-        const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
-        const result = await runCheckCommand(isolated, command, { cwd });
-        const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
-        const said = `${result.stdout}\n${result.stderr}`;
-        if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(said)}`);
-        return found;
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    await writeNextjsTypes(isolated);
+    const cwd = join(scratch, input.scope);
+    const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
+    const result = await runCheckCommand(isolated, command, { cwd });
+    const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
+    const said = `${result.stdout}\n${result.stderr}`;
+    if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(said)}`);
+    return found;
 }
 
 /**
@@ -85,28 +81,25 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
+    const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    try {
-        const cwd = join(scratch, input.scope);
-        const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];
-        const command = ['next', 'build', ...flags];
-        const result = await runCheckCommand(isolated, command, { cwd, env: { CI: '1' } });
-        if (result.code === 0) return [];
-        const said = lastLines(`${result.stdout}${result.stderr}`);
-        return [
-            findingAt(
-                input,
-                { file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`, line: 1 },
-                'build',
-                `next build failed: ${said}`,
-            ),
-        ];
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const cwd = join(scratch, input.scope);
+    const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];
+    const command = ['next', 'build', ...flags];
+    const result = await runCheckCommand(isolated, command, { cwd, env: { CI: '1' } });
+    if (result.code === 0) return [];
+    const said = lastLines(`${result.stdout}${result.stderr}`);
+    return [
+        findingAt(
+            input,
+            { file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`, line: 1 },
+            'build',
+            `next build failed: ${said}`,
+        ),
+    ];
 }

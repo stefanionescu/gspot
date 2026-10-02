@@ -1,10 +1,10 @@
-import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/repository/sources.ts';
+import { scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Mount } from '#cli/types/checks/tool/nginx.ts';
-import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/tool/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
@@ -99,30 +99,20 @@ export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
                 (path === MAIN_FILE || path.endsWith(`/${MAIN_FILE}`)) && scopeOf(path, scopes).path === input.scope,
         );
     if (paths.length === 0) return { findings: [], checkedFiles: [] };
-    const work = mkdtempSync(join(tmpdir(), 'gspot-nginx-'));
-    try {
-        const made = await runCheckCommand(
-            input,
-            [
-                'openssl',
-                ...CERTIFICATE_ARGUMENTS,
-                '-keyout',
-                join(work, 'key.pem'),
-                '-out',
-                join(work, 'certificate.pem'),
-            ],
-            { cwd: work },
-        );
-        if (made.code !== 0) throw new Error('The openssl command could not write the throwaway certificate.');
-        const findings: Finding[] = [];
-        const checkedFiles = new Set<string>();
-        for (const path of paths) {
-            const outcome = await tested(input, path, work, image);
-            findings.push(...outcome.findings);
-            for (const file of outcome.checkedFiles) checkedFiles.add(file);
-        }
-        return { findings, checkedFiles: [...checkedFiles] };
-    } finally {
-        rmSync(work, { recursive: true, force: true });
+    using workFolder = scratchFolder('gspot-nginx-');
+    const work = workFolder.path;
+    const made = await runCheckCommand(
+        input,
+        ['openssl', ...CERTIFICATE_ARGUMENTS, '-keyout', join(work, 'key.pem'), '-out', join(work, 'certificate.pem')],
+        { cwd: work },
+    );
+    if (made.code !== 0) throw new Error('The openssl command could not write the throwaway certificate.');
+    const findings: Finding[] = [];
+    const checkedFiles = new Set<string>();
+    for (const path of paths) {
+        const outcome = await tested(input, path, work, image);
+        findings.push(...outcome.findings);
+        for (const file of outcome.checkedFiles) checkedFiles.add(file);
     }
+    return { findings, checkedFiles: [...checkedFiles] };
 }
