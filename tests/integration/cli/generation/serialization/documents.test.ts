@@ -65,7 +65,7 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     expect(yaml.get('.gspot/config/yamllint.yml')).toMatchObject({
         rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } },
     });
-    expect(yaml.get('.gspot/config/trivy.yaml')).toMatchObject({ timeout: '10m', severity: ['HIGH', 'CRITICAL'] });
+    expect(yaml.get('.gspot/config/trivy.yaml')).toMatchObject({ timeout: '600s', severity: ['HIGH', 'CRITICAL'] });
 });
 
 test('shared output readers reject external links without changing their targets', async () => {

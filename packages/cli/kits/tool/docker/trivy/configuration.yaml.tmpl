@@ -1,4 +1,4 @@
-timeout: <%= json(settings['tools.trivy.timeout'] ?? '10m', 0) %>
+timeout: <%= json(`${String(settings['timeout'] ?? 600)}s`, 0) %>
 severity:
 <% for (const level of String(settings['tools.trivy.severity'] ?? 'HIGH,CRITICAL').split(',')) { %>    - <%= json(level.trim(), 0) %>
 <% } %>scan:

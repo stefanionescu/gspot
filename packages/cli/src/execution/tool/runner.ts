@@ -96,7 +96,7 @@ async function runCommands(
     const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const invocation of prepared.commands) {
-        const seconds = planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default;
+        const seconds = Number(planned.scope.view.settings['timeout'] ?? TOOL_DEADLINE.default);
         const result = await runToolCommand(planned.scope.view, invocation.argv, prepared, session.cancelSignal);
         const failure = executionFailure(result, tool.name, seconds);
         if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
@@ -295,7 +295,7 @@ export async function runCheckCommand(
         { ...options, env },
         input.cancelSignal,
     );
-    const failure = executionFailure(result, name, input.view.limit('tool_seconds') ?? TOOL_DEADLINE.default);
+    const failure = executionFailure(result, name, Number(input.view.settings['timeout'] ?? TOOL_DEADLINE.default));
     if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     // Tools on Windows end their lines with CRLF; every reader of check output splits on LF.

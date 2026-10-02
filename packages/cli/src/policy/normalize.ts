@@ -34,14 +34,17 @@ function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable 
 }
 
 function normalizeScopeTables(raw: RawScope): Partial<Policy> {
-    const table: Partial<Policy> = {};
+    // The tables a scope holds as written.
+    const table: Partial<Policy> = compact({
+        tools: raw.tools as Policy['tools'] | undefined,
+        install: raw.install,
+        timeout: raw.timeout,
+    });
     if (raw.limits) table.limits = normalizeLimits(raw.limits);
     if (raw.naming) table.naming = normalizeNaming(raw.naming);
     if (raw.architecture) table.architecture = normalizeArchitecture(raw.architecture);
     if (raw.structure) table.structure = defaulted<Policy['structure']>(raw.structure, STRUCTURE_DEFAULTS);
-    if (raw.tools) table.tools = raw.tools as Policy['tools'];
     if (raw.format) table.format = compact(raw.format);
-    if (raw.install) table.install = raw.install;
     return table;
 }
 
@@ -157,6 +160,7 @@ export function normalize(raw: RawPolicy): Policy {
         prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [] }),
         tools: { ...raw.tools } as Policy['tools'],
         install: { ...raw.install },
+        ...compact({ timeout: raw.timeout }),
         ignores: (raw.ignore ?? []).map((entry) => compact(entry)),
         declarations: [
             ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),

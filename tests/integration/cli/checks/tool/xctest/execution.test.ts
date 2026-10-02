@@ -27,7 +27,7 @@ afterEach(() => {
 
 const SHEBANG = `#!${process.execPath}\n`;
 // A one-second tool limit, for the run whose fake xcodebuild sleeps past it.
-const SLOW_POLICY = XCTEST_EXECUTION_POLICY.replace('[tools.xcode]', '[limits]\ntool_seconds = 1\n[tools.xcode]');
+const SLOW_POLICY = `timeout = 1\n${XCTEST_EXECUTION_POLICY}`;
 
 const CASES = [
     {

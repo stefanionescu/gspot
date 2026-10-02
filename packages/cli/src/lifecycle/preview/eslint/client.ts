@@ -16,7 +16,7 @@ import type { configurationRequest } from '#cli/lifecycle/preview/eslint/protoco
  */
 export async function runConfiguration(
     request: z.infer<typeof configurationRequest>,
-    view?: Pick<MergedView, 'limit'>,
+    view?: Pick<MergedView, 'settings'>,
     cancelSignal?: AbortSignal,
 ): Promise<unknown> {
     // The program is the TypeScript module in the source tree, or its build beside the bundle.

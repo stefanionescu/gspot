@@ -19,7 +19,7 @@ test.each(['outdated', 'deadline', 'cancellation'])(
         const path = 'sample.md';
         const source = '# Example text\n';
         await createFileTree(directory.path, {
-            'gspot.toml': policyOf(['prose', 'bash', 'markdown'], '[limits]\ntool_seconds = 1\n'),
+            'gspot.toml': policyOf(['prose', 'bash', 'markdown'], 'timeout = 1\n'),
             '.gspot/config/vale.ini': 'Packages =\n',
             [path]: source,
         });

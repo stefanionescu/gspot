@@ -155,12 +155,5 @@ direction = "loosening"
 default = []
 summary = "Trivy ids accepted: the id and the reason."
 
-[[settings]]
-name = "tools.trivy.timeout"
-kind = "string"
-direction = "neutral"
-default = "10m"
-summary = "How long one Trivy scan may take."
-
 [guides]
 tool = [{path = "tool/docker/DOCKER.md"}]

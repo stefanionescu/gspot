@@ -25,7 +25,7 @@ if (toolShipsHere('ansible-lint'))
             await using sandbox = await testdir();
             const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
             await createFileTree(sandbox.path, {
-                'gspot.toml': policyOf(['ansible', 'structure'], '[limits]\ntool_seconds = 1\n', 'all'),
+                'gspot.toml': policyOf(['ansible', 'structure'], 'timeout = 1\n', 'all'),
                 'deploy/ansible.cfg': '[defaults]\n',
                 'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
                 '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0', true),

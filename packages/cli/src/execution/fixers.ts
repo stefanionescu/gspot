@@ -52,7 +52,7 @@ function correctionFailure(planned: PlannedCheck, result: SpawnResult): string |
     const failure = executionFailure(
         result,
         planned.check,
-        planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default,
+        Number(planned.scope.view.settings['timeout'] ?? TOOL_DEADLINE.default),
     );
     if (failure !== undefined) return failure.note;
     // A code the check declares for findings means findings remain after the correction.

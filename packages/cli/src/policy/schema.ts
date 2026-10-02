@@ -205,6 +205,7 @@ const scopeBody = {
     tools: toolsSchema.optional(),
     format: formatSchema.optional(),
     install: installSchema.optional(),
+    timeout: reasonedNumber.optional(),
 };
 
 /** Primitive value shapes declared by manifest settings, before reason wrappers. */
