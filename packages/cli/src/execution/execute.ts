@@ -3,14 +3,14 @@ import pLimit from 'p-limit';
 import { cpus } from 'node:os';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
-import { applyIgnores } from '#cli/execution/ignores.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
+import type { Finding, CheckResult } from '#cli/types/checks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 
@@ -158,6 +158,12 @@ async function planCorrections(
     return { executables: planExecutables(session, options), fixes };
 }
 
+function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    if (entry.check !== finding.check) return false;
+    if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
+    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
+}
+
 /**
  * Runs the checks and returns the report.
  * @param opened the session
@@ -196,4 +202,21 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };
+}
+
+/**
+ * Splits findings into kept and ignored, counting how many each entry matched.
+ * @param findings the findings of one check
+ * @param entries the [[ignore]] entries for that check
+ * @returns the findings kept and the match count per entry
+ */
+export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kept: Finding[]; uses: IgnoreUse[] } {
+    const uses: IgnoreUse[] = entries.map((entry) => ({ entry, matched: 0 }));
+    const kept: Finding[] = [];
+    for (const finding of findings) {
+        const use = uses.find((candidate) => isEntryMatch(candidate.entry, finding));
+        if (use) use.matched += 1;
+        else kept.push(finding);
+    }
+    return { kept, uses };
 }

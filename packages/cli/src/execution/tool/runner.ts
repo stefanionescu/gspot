@@ -3,23 +3,22 @@ import { join } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import { fileBatches } from '#cli/execution/files/batches.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/execution/execution.ts';
-import { collect, missingNote } from '#cli/execution/tool/findings.ts';
+import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
-import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
-import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
+import { collect, missingNote, checkedFindings, executionFailure } from '#cli/execution/tool/findings.ts';
 
 import {
     substitute,
     perFileCommands,
     substituteValue,
     commandConfigurations,
-} from '#cli/execution/command-expansion.ts';
+} from '#cli/execution/tool/placeholders.ts';
 import type {
     Session,
     ToolRun,

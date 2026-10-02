@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { commandSchema } from '#cli/kits/command-schema.ts';
+import { commandSchema } from '#cli/kits/command.ts';
 import { MAX_EXIT_CODE, TOOL_PLATFORMS } from '#cli/config/kits.ts';
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });

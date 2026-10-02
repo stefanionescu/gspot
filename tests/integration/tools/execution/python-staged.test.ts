@@ -9,8 +9,8 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { installPythonProject } from '#cli/tools/python.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { installPythonProject } from '#cli/tools/python-project.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { relative, isAbsolute } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { assetPath } from '#cli/platform/assets.ts';
-import { fileBatches } from '#cli/execution/files/batches.ts';
+import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, AstGrepMatch } from '#cli/types/checks.ts';
 

@@ -1,4 +1,4 @@
-import { similar } from '#cli/policy/similar.ts';
+import { similar } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';

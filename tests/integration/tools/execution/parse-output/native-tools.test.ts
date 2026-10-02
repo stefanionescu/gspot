@@ -8,10 +8,10 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { parseOutput } from '#cli/execution/output/parse.ts';
+import { parseOutput } from '#cli/execution/tool/formats.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
+import { isToolBroken, checkedFindings } from '#cli/execution/tool/findings.ts';
 
 test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
     await using sandbox = await testdir();

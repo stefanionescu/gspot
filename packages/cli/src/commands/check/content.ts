@@ -1,10 +1,10 @@
 // Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
 import { runText } from '#cli/output/reporter.ts';
 import { compact } from '#cli/policy/normalize.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';

@@ -14,7 +14,7 @@ import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
-import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
+import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/packages/project.ts';
 import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 

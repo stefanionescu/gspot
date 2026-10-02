@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { validateManifests } from '#cli/kits/problems.ts';
 import { PINNED_HEADER } from '#tests/inputs/unit/cli/kits.ts';
-import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
 test('every shipped manifest passes the checks across manifests', () => {

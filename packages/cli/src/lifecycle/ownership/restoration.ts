@@ -5,8 +5,8 @@ import type { Read } from '#cli/types/platform.ts';
 import { blockSpan } from '#cli/generation/markers.ts';
 import { matches } from '#cli/lifecycle/ownership/log.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
-import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
-import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';
+import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
+import { pruneConfigurationParents } from '#cli/lifecycle/merge/plan.ts';
 
 import type {
     Log,

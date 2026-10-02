@@ -1,5 +1,5 @@
 // Select the guides for the selection and render them under [guides] directory, keeping the layer folders.
-import { similar } from '#cli/policy/similar.ts';
+import { similar } from '#cli/platform/text.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
 import { detectConditions } from '#cli/kits/detect.ts';

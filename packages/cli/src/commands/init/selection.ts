@@ -1,6 +1,6 @@
+import { similar } from '#cli/platform/text.ts';
 import { detectKits } from '#cli/kits/detect.ts';
 import { selectKits } from '#cli/kits/select.ts';
-import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';

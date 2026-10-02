@@ -8,8 +8,8 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { commandArguments } from '#cli/platform/quoting.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { Finding, SiteBuild, EngineInput } from '#cli/types/checks.ts';
 import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/platforms.ts';
 

@@ -11,7 +11,7 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import { DEFECT, CORRECT } from '#tests/inputs/integration/tools/generation.ts';
 
 // Configuration edits change the findings, and missing inputs fail explicitly.

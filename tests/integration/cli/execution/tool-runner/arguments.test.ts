@@ -8,7 +8,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { fileBatches } from '#cli/execution/files/batches.ts';
+import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { runToolCheck, prepareCommand } from '#cli/execution/tool/runner.ts';
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {

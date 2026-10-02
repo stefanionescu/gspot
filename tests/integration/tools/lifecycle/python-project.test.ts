@@ -15,13 +15,7 @@ import { onPosix, venvExecutable } from '#tests/support/cli/platforms.ts';
 import { PYTHON_PROJECTS } from '#tests/inputs/integration/tools/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-
-import {
-    pythonLockDrift,
-    pythonInstallSteps,
-    installPythonProject,
-    preparePythonProject,
-} from '#cli/tools/python-project.ts';
+import { pythonLockDrift, pythonInstallSteps, installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the windows-launcher tests cover it.
 

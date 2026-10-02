@@ -1,4 +1,4 @@
-import { similar } from '#cli/policy/similar.ts';
+import { similar } from '#cli/platform/text.ts';
 import { selectForScope } from '#cli/kits/select.ts';
 import { unknownKit } from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';

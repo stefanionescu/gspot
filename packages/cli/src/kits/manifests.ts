@@ -6,7 +6,7 @@ import { manifestSchema } from '#cli/kits/schema.ts';
 import { PRIVATE_PATHS } from '#cli/config/platform.ts';
 import { OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
-import { manifestError, manifestProblems } from '#cli/kits/manifest-problems.ts';
+import { manifestError, manifestProblems } from '#cli/kits/problems.ts';
 import type { RawTool, ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/kits.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };

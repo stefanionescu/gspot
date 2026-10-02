@@ -1,7 +1,7 @@
 // The generated CI files: one check and one manual job per platform, and Swift on macOS.
 import { test, expect } from 'bun:test';
 import type { WorkflowShape } from '#cli/types/generation.ts';
-import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
+import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 
 const SHAPE: WorkflowShape = { version: '1.2.3', platforms: ['ubuntu'], swiftScope: undefined, isMise: true };
 

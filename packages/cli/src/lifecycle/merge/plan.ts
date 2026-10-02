@@ -2,8 +2,8 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import { configurationFieldsSchema } from '#cli/lifecycle/log.ts';
-import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
+import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
+import { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 
 import type {
     Field,

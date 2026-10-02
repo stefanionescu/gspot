@@ -5,9 +5,9 @@ import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/swift.ts';
-import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import type { CheckResult, InlineDocumentation } from '#cli/types/checks.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 

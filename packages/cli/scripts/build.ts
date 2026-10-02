@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { GRAMMAR_FILES } from '#cli/config/platform.ts';
+import { validateManifests } from '#cli/kits/problems.ts';
 import packageManifest from '#package' with { type: 'json' };
-import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { rmSync, chmodSync, existsSync, copyFileSync } from 'node:fs';
 
 // The mode of the command file: read and run by everyone, written by its owner.

@@ -1,7 +1,7 @@
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { setKey, proposePolicy } from '#cli/policy/write.ts';
+import { setKey, proposePolicy } from '#cli/policy/mutations.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 
 const WORDS = Array.from(

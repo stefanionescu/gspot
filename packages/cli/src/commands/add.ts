@@ -1,11 +1,11 @@
 // gspot add: append kits to the root selection or to one scope, apply, and install what they need.
 import type { Command } from 'commander';
-import { similar } from '#cli/policy/similar.ts';
-import { scopeHolder } from '#cli/policy/write.ts';
+import { similar } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { scopeHolder } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { textEntry, directoryOf } from '#cli/commands/flags.ts';

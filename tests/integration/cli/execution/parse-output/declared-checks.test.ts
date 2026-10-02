@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { checkedFindings } from '#cli/execution/broken-tool.ts';
+import { checkedFindings } from '#cli/execution/tool/findings.ts';
 
 test('pin verification treats a rate limit as an execution error and accepts a completed read', async () => {
     const failure = '429 Too Many Requests';

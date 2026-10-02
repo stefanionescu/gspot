@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { findingAt } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/config/checks/platforms.ts';
 

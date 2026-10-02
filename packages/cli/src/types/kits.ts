@@ -1,9 +1,9 @@
 // The types of configurations in this package.
 import type { z } from 'zod';
+import type { outputSchema } from '#cli/kits/output.ts';
 import type { TOOL_PLATFORMS } from '#cli/config/kits.ts';
 import type { manifestSchema } from '#cli/kits/schema.ts';
 import type { Defined } from '#cli/types/policy/policy.ts';
-import type { outputSchema } from '#cli/kits/output-format.ts';
 
 type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;

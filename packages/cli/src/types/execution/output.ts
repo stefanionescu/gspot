@@ -1,7 +1,7 @@
 // The types of execution/output in this package.
 import type { z } from 'zod';
+import type { typosEntry } from '#cli/execution/tool/reports.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
-import type { typosEntry } from '#cli/execution/output/tool-formats.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern, and the help text. */
 export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };

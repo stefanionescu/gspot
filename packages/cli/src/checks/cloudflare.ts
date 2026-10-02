@@ -4,8 +4,8 @@ import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
 

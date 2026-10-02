@@ -5,7 +5,7 @@ import type { SpawnResult } from '#cli/types/platform.ts';
 import { SHOWN_LINES } from '#cli/config/checks/platforms.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/repository.ts';
 
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.

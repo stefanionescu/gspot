@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { readProfile } from '#cli/policy/profiles/read.ts';
+import { readProfile } from '#cli/policy/profiles/parse.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';

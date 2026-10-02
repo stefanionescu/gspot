@@ -10,9 +10,9 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.

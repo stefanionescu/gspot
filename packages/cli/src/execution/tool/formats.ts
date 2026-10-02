@@ -5,12 +5,12 @@ import { realpathSync } from 'node:fs';
 import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { parseJson } from '#cli/execution/output/json.ts';
+import { parseJson } from '#cli/execution/tool/json.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
-import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/execution/output/tool-formats.ts';
+import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/execution/tool/reports.ts';
 
 import {
     DEFAULT_PATTERN,

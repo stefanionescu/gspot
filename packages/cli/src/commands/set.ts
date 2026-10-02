@@ -14,11 +14,11 @@ import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
+import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { SetOptions, CommandResult } from '#cli/types/commands.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/write.ts';
+import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/mutations.ts';
 import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/config/commands/commands.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.

@@ -2,15 +2,15 @@ import { realpathSync } from 'node:fs';
 import type { Read } from '#cli/types/platform.ts';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { openLog } from '#cli/lifecycle/ownership/log.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/apply.ts';
 import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import type { Log, Owner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, STATE_DIRECTORY, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import { installTree, removeInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installs.ts';
+import { installTree, removeInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
 
 import {
     proposeBlock,

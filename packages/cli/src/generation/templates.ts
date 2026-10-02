@@ -1,3 +1,4 @@
+// The shared instances of the generation module.
 import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
@@ -133,6 +134,7 @@ function markdownlintRules(view: MergedView, isAll = false): Record<string, unkn
         ...Object.fromEntries(view.rulesOff('markdown/markdownlint').map((rule) => [rule, false])),
     };
 }
+
 /**
  * The inputs every template sees.
  * @param root the repository root.

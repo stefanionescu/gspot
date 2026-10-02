@@ -6,7 +6,7 @@ import { readSource } from '#cli/repository/sources.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { SCRIPT_GRAMMAR } from '#cli/config/checks/docs.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/structure.ts';
-import { fileBatches } from '#cli/execution/files/batches.ts';
+import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';

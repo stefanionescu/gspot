@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { symlinkSync, readFileSync, readlinkSync } from 'node:fs';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');

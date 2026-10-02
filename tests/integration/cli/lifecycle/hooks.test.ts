@@ -6,7 +6,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
+import { hookStatus, installHooks } from '#cli/lifecycle/hooks-path.ts';
 
 // The policy and repository of a session: what install and doctor both read.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every case reads the hooks state again after a change, through a new session like a new gspot run.

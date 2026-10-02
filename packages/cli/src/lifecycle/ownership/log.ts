@@ -1,9 +1,9 @@
 // The durable ownership log an owner works from: its records and its recovery of an interrupted mutation.
 import { createHash } from 'node:crypto';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import type { Read, Root } from '#cli/types/platform.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 
 import type {

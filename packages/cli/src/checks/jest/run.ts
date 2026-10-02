@@ -8,8 +8,8 @@ import type { Root } from '#cli/types/platform.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { jestPercentage, jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 import type { Suite, Finding, JestRun, TestReport, EngineInput } from '#cli/types/checks.ts';
 

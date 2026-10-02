@@ -4,7 +4,7 @@ import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { isReasonAccepted } from '#cli/policy/weaker.ts';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';

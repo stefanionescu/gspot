@@ -9,7 +9,7 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
-import { readProfile } from '#cli/policy/profiles/read.ts';
+import { readProfile } from '#cli/policy/profiles/parse.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';

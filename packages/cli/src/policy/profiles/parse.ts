@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { parse as parseToml } from 'smol-toml';
-import { similar } from '#cli/policy/similar.ts';
+import { similar } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';

@@ -8,7 +8,7 @@ import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
+import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
 import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/config/checks/platforms.ts';
 
 // The Trivy JSON report version this reader understands.

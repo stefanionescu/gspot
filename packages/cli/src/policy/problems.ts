@@ -1,6 +1,8 @@
+// The problems a policy has beyond its schema: missing or placeholder reasons, and scope paths that do not exist.
 import * as messages from '#cli/policy/messages.ts';
-import { isReasonAccepted } from '#cli/policy/weaker.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Policy, Reasoned, ToolTable, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
@@ -114,6 +116,31 @@ function toolProblems(tool: string, table: ToolTable, requireReasons: boolean, p
     return [...located([...path, 'extra', 'reason'], extra), ...(tool === 'stylelint' ? [] : disabled)];
 }
 
+// The problems a reader finds, or the error it threw, attributed to the policy value being read.
+function guarded(location: PathSegment[], read: () => PolicyProblem[]): PolicyProblem[] {
+    try {
+        return read();
+    } catch (error) {
+        return [{ path: location, message: String(error) }];
+    }
+}
+
+// Duplicate scope declarations after case and Unicode normalization.
+function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
+    const seen = new Set<string>();
+    const problems: PolicyProblem[] = [];
+    for (const [index, path] of paths.entries()) {
+        const key = path.normalize('NFC').toLowerCase();
+        if (seen.has(key))
+            problems.push({
+                path: ['scope', index, 'path'],
+                message: `Scope path is declared more than once: ${path}.`,
+            });
+        seen.add(key);
+    }
+    return problems;
+}
+
 /**
  * The root policy and each scope table, with where each one sits in the document.
  * @param policy the normalized policy
@@ -151,4 +178,28 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
             return [{ path: ['check', index, 'paths'], message: messages.checkEntryIncomplete(entry.name, 'paths') }];
         }),
     ];
+}
+
+/**
+ * Validate that every scope names a directory of the repository, once.
+ * @param root the repository root
+ * @param policy the normalized policy
+ * @returns the problems in plain English
+ */
+export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
+    const paths = policy.scopes.map((scope) => scope.path);
+    const files = openRoot(root);
+    try {
+        const missing = paths.flatMap((path, index) => {
+            const location: PathSegment[] = ['scope', index, 'path'];
+            return guarded(location, () =>
+                files.stat(path)?.isDirectory() === true
+                    ? []
+                    : [{ path: location, message: messages.scopeMissing(path) }],
+            );
+        });
+        return [...missing, ...duplicateScopeProblems(paths)];
+    } finally {
+        files.close();
+    }
 }

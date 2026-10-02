@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { Read, Root } from '#cli/types/platform.ts';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { identitySchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
+import type { identitySchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 export type ConfigurationWriteRequest = {

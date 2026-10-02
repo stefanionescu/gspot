@@ -1,16 +1,16 @@
 import type { Command } from 'commander';
+import { similar } from '#cli/platform/text.ts';
 import { allChecks } from '#cli/kits/listing.ts';
 import { readPolicy } from '#cli/policy/read.ts';
-import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
+import { appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
 import { listFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { CommandResult, IgnoreOptions } from '#cli/types/commands.ts';
 

@@ -9,7 +9,7 @@ import { symlinkSync, readFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
+import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
 
 test('JSON option keys and YAML values keep their literal structure', async () => {
     const key = 'custom"key\\name\ncafé';
