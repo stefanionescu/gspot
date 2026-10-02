@@ -45,7 +45,7 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    if (planned.spec.requires === 'docker' && inspectTool(session, DOCKER).state === 'missing')
+    if (planned.spec.needs?.includes('docker') === true && inspectTool(session, DOCKER).state === 'missing')
         return { ...base, status: 'missing', note: 'this check needs a Docker daemon and docker is not installed' };
     return undefined;
 }

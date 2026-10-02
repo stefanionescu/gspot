@@ -77,7 +77,7 @@ level = "recommended"
 when = {setting = "tools.xctest.coverage"}
 stage = "push"
 runs = "scope"
-requires = "build"
+needs = ["build"]
 platforms = ["macos"]
 files = {extensions = [".swift"]}
 summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."

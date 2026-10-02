@@ -46,7 +46,7 @@ example = "A documentation link returning HTTP 404 reports a broken external des
 level = "recommended"
 stage = "manual"
 runs = "files"
-requires = "network"
+needs = ["network"]
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks every external link over the network."

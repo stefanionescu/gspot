@@ -152,7 +152,7 @@ example = "A governed JSON file with a string where its selected schema requires
 level = "recommended"
 stage = "push"
 runs = "files"
-requires = "network"
+needs = ["network"]
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = {V8R_CONFIG_FILE = "{config:v8r}"}
 files = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
@@ -183,7 +183,7 @@ example = "An action reference such as `actions/checkout@v4` without a full comm
 level = "recommended"
 stage = "push"
 runs = "files"
-requires = "network"
+needs = ["network"]
 command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
 files = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 output = {format = "lines"}

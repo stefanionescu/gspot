@@ -102,7 +102,7 @@ stage = "commit"
 runs = "files"
 command = ["bats", "--count", "{file}"]
 # Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
-requires_tools = ["bash"]
+tool = ["bats", "bash"]
 files = {tags = ["bats"]}
 output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Parses Bats test files while counting their test cases."

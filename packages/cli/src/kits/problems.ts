@@ -29,13 +29,14 @@ const CHECK_RULES: CheckRule[] = [
             `check ${check.name} isolates files and requires runs = "files" with {files} or runs = "scope" with {root}.`,
     },
     {
-        applies: (check) => check.requires !== undefined && check.stage === 'commit',
-        problem: (check) => `check ${check.name} requires ${check.requires ?? ''} and cannot run at the commit stage.`,
+        applies: (check) => check.needs !== undefined && check.stage === 'commit',
+        problem: (check) =>
+            `check ${check.name} needs ${check.needs?.join(', ') ?? ''} and cannot run at the commit stage.`,
     },
     {
         applies: (check) =>
             check.stage === 'manual' &&
-            check.requires === undefined &&
+            check.needs === undefined &&
             check.runs === 'files' &&
             check.command === undefined,
         problem: (check) => `check ${check.name} is manual with nothing that makes it slow.`,

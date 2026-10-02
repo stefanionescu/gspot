@@ -43,7 +43,7 @@ function checkEnvironment(check: CheckSpec): string[] {
     const attributes: [string, string | undefined][] = [
         ['Tool', tool],
         ['Platform selection', check.platforms?.join(', ')],
-        ['Prerequisite', check.requires],
+        ['Prerequisite', check.needs?.join(', ')],
         [
             'Required setting',
             check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until configured.`,

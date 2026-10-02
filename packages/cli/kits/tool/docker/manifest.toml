@@ -83,7 +83,7 @@ title = "Validate Docker Compose files"
 example = "A Compose service with an unknown key such as `bogus` fails configuration validation. Remove the key or replace it with the supported setting for the intended behavior."
 level = "recommended"
 stage = "push"
-requires = "docker"
+needs = ["docker"]
 tool = "docker"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
 files = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
@@ -126,7 +126,7 @@ example = "A configured image containing a package with a known advisory reports
 level = "recommended"
 stage = "manual"
 runs = "scope"
-requires = "docker"
+needs = ["docker"]
 tool = "trivy"
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."
 why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."

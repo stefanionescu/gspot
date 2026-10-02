@@ -51,7 +51,7 @@ example = "The line `invalid_directive on;` fails the native configuration test 
 level = "recommended"
 stage = "push"
 runs = "scope"
-requires = "docker"
+needs = ["docker"]
 tool = "docker"
 files = {filenames = ["nginx.conf"]}
 summary = "Validates each main configuration inside the nginx image and records the files nginx parsed. It mounts a throwaway certificate and resolves upstream names."

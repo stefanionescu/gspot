@@ -107,11 +107,12 @@ const checkFields = z.strictObject({
     limit: z.string().optional(),
     count_pattern: z.string().optional(),
     crash_pattern: z.string().optional(),
-    requires: z.enum(['build', 'docker', 'network']).optional(),
-    // Tools the command starts through another name, such as the bash that runs Bats; each must be usable too.
-    requires_tools: z.array(z.string().min(1)).optional(),
+    needs: z
+        .array(z.enum(['build', 'docker', 'network']))
+        .min(1)
+        .optional(),
     platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
-    tool: z.string().optional(),
+    tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
     files: filesSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
@@ -126,8 +127,16 @@ const checkFields = z.strictObject({
     searched: z.array(z.string()).optional(),
 });
 
-// A check runs its command, or gspot runs it itself when the check registry names its ID.
-const checkSchema = checkFields.extend({ command: commandSchema.optional() });
+// A check runs its command, or gspot runs it itself when the check registry names its ID. A list of tools names the
+// tool the check runs, then the tools its command starts, such as the bash that runs Bats; each must be usable.
+const checkSchema = checkFields.extend({ command: commandSchema.optional() }).transform(({ tool, ...check }) => {
+    const [first, ...others] = typeof tool === 'string' ? [tool] : (tool ?? []);
+    return {
+        ...check,
+        ...(first === undefined ? {} : { tool: first }),
+        ...(others.length === 0 ? {} : { other_tools: others }),
+    };
+});
 
 // A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]].
 const manifestNamingRule = z.strictObject({

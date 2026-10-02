@@ -49,7 +49,7 @@ level = "recommended"
 when = {setting = "tools.next.build_on_push"}
 stage = "push"
 runs = "scope"
-requires = "build"
+needs = ["build"]
 summary = "Builds the app with next build, for a repository that set tools.next.build_on_push."
 why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
 help = "Run next build and read the first error it prints."

@@ -166,7 +166,10 @@ const checkSchema = z.strictObject({
         .describe(
             'A multiline Unicode regular expression matching fatal tool diagnostics in stdout or stderr, for both checks and corrections.',
         ),
-    requires: z.enum(['build', 'docker', 'network']).optional(),
+    needs: z
+        .array(z.enum(['build', 'docker', 'network']))
+        .min(1)
+        .optional(),
     platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     summary: text.optional(),
     output: outputSchema.optional(),

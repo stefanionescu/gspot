@@ -176,7 +176,7 @@ function unrunnableResult(
     if (tool === undefined) return undefined;
     const own = missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, inspection);
     if (own !== undefined) return own;
-    for (const name of planned.spec.requires_tools ?? []) {
+    for (const name of planned.spec.other_tools ?? []) {
         const required = toolPin(session.manifests.values(), name);
         const unavailable = unavailableTool(base, required, inspectTool(session, required));
         if (unavailable !== undefined) return unavailable;
