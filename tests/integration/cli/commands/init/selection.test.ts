@@ -1,12 +1,16 @@
-// A recommended kit joins the selection only when the repository holds what it detects.
+// What init selects: a recommended kit only when the repository holds what it detects, and the proposed scopes.
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { QUIET_INIT } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
 
 const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json'];
 
@@ -96,3 +100,31 @@ test.each([
         expect(plan.kits.some(({ kit }) => kit === 'i18n')).toBe(isSelected);
     },
 );
+
+test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"private":true,"workspaces":["packages/*"]}',
+        'packages/api/package.json': '{"name":"api"}',
+        'packages/api/source.js': 'export const port = 8080;\n',
+    });
+    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
+    const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
+    expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
+    const plan = JSON.parse(proposed.stdout) as { policy: string };
+    const policy = parsePolicyText(plan.policy, 'gspot.toml');
+    expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
+    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
+    const before = treeContents(sandbox.path);
+    const refused = await runGspot(sandbox.path, command);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(treeContents(sandbox.path)).toStrictEqual(before);
+    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
+    const corrected = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(
+        parsePolicyText((JSON.parse(corrected.stdout) as InitJson).policy!, 'gspot.toml').scopes.map(
+            (scope) => scope.path,
+        ),
+    ).toStrictEqual(['packages/api']);
+});

@@ -2,11 +2,11 @@
 // a shared file that holds other tools' sections.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/harness/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
+import { git, commitAll } from '#tests/harness/cli/git.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -116,4 +116,36 @@ test.each(['setup.cfg', 'tox.ini'])(
         expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(keptMode(0o640));
     },
     PLANTED_TIMEOUT_MS,
+);
+
+test(
+    'an ignore file inside a scope is replaced at init, and the scoped check runs',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'README.md': '# planted\n',
+            'db/accounts.sql': 'SELECT 1;\n',
+            'db/.sqlfluffignore': '# Templates\ntemplates/\n',
+        });
+        commitAll(sandbox.path);
+        const argv = [
+            'init',
+            '--yes',
+            '--scope',
+            'db=sql',
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-guides',
+            '--no-install',
+        ];
+        const initialized = await runGspot(sandbox.path, argv);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+        expect(policy).not.toContain('templates');
+        expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+        const syntax = await runGspot(sandbox.path, ['check', '--only', 'sql/syntax']);
+        expect(syntax.code).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS * 3,
 );

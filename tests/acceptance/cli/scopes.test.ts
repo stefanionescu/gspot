@@ -2,20 +2,14 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { existsSync, writeFileSync } from 'node:fs';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { parsePolicyText } from '#cli/policy/read.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
-import { treeContents } from '#tests/harness/planted/preservation.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-
-// The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
 
 const SCOPES_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
@@ -74,63 +68,3 @@ test(
     },
     PLANTED_TIMEOUT_MS * 4,
 );
-
-test(
-    'typescript in a scope > an ignore file inside a scope is replaced at init, and the scoped check runs',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'README.md': '# planted\n',
-            'db/accounts.sql': 'SELECT 1;\n',
-            'db/.sqlfluffignore': '# Templates\ntemplates/\n',
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-        const argv = [
-            'init',
-            '--yes',
-            '--scope',
-            'db=sql',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-guides',
-            '--no-install',
-        ];
-        await installAtLevel(sandbox.path, argv, environment);
-        const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-        expect(policy).not.toContain('templates');
-        expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
-        const syntax = await spawnGspot(sandbox.path, ['check', '--only', 'sql/syntax'], environment);
-        expect(syntax.code).toBe(0);
-    },
-    PLANTED_TIMEOUT_MS * 3,
-);
-
-test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'package.json': '{"private":true,"workspaces":["packages/*"]}',
-        'packages/api/package.json': '{"name":"api"}',
-        'packages/api/source.js': 'export const port = 8080;\n',
-    });
-    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
-    const proposed = await spawnGspot(sandbox.path, [...command, '--dry-run', '--json']);
-    expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
-    const plan = JSON.parse(proposed.stdout) as { policy: string };
-    const policy = parsePolicyText(plan.policy, 'gspot.toml');
-    expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
-    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
-    const before = treeContents(sandbox.path);
-    const refused = await spawnGspot(sandbox.path, command);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(treeContents(sandbox.path)).toStrictEqual(before);
-    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
-    const corrected = await spawnGspot(sandbox.path, [...command, '--dry-run', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        parsePolicyText((JSON.parse(corrected.stdout) as InitJson).policy!, 'gspot.toml').scopes.map(
-            (scope) => scope.path,
-        ),
-    ).toStrictEqual(['packages/api']);
-});
