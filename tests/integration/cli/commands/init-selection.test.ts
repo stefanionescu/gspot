@@ -5,7 +5,7 @@ import { test, expect } from 'bun:test';
 import { QUIET_INIT } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json'];
@@ -13,7 +13,7 @@ const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json'];
 const COMPONENT = '<script setup>\nconst name = 1;\n</script>\n<template><p>{{ name }}</p></template>\n';
 
 async function selected(root: string): Promise<string[]> {
-    const result = await spawnGspot(root, [...SELECTION_INIT, ...QUIET_INIT]);
+    const result = await runGspot(root, [...SELECTION_INIT, ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as { plan: { kits: { kit: string }[] } };
     return plan.plan.kits.map((entry) => entry.kit);
@@ -62,7 +62,7 @@ test(
             'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
         });
         commitAll(sandbox.path);
-        const result = await spawnGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
+        const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as { policy: string; plan: { noLongerRuns: { path: string }[] } };
         const proposed = parse(output.policy) as { scope?: { path: string; kits: string[] }[] };

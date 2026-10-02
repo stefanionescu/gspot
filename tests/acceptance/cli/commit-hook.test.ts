@@ -63,7 +63,7 @@ test(
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
         git(sandbox.path, ['add', '-A']);
         const environment = {
-            PATH: `${join(import.meta.dir, '../../../../scripts')}${delimiter}${toolsPath([])}`,
+            PATH: `${join(import.meta.dir, '../../../scripts')}${delimiter}${toolsPath([])}`,
             NO_COLOR: '1',
         };
         const commit = git(sandbox.path, ['commit', '-qm', 'bad'], environment);

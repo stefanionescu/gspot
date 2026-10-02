@@ -3,8 +3,8 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { runGspot, spawnGspot } from '#tests/harness/cli/command.ts';
 
 // A sandbox with three commit checks that report every file they receive.
 async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -33,7 +33,7 @@ async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> 
 
 test('file and folder arguments intersect check lists, and --skip leaves the other checks', async () => {
     await using sandbox = await selectionSandbox();
-    const selected = await spawnGspot(sandbox.path, [
+    const selected = await runGspot(sandbox.path, [
         'check',
         'src/selected.ts',
         'docs',
@@ -49,7 +49,7 @@ test('file and folder arguments intersect check lists, and --skip leaves the oth
         expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
-    const skipped = await spawnGspot(sandbox.path, [
+    const skipped = await runGspot(sandbox.path, [
         'check',
         'src/selected.ts',
         '--skip',
@@ -99,7 +99,7 @@ stage = "${name}"
         'gspot.toml': policyOf([], definitions.join('\n')),
         'source.txt': 'input',
     });
-    const checked = await spawnGspot(sandbox.path, ['check', '--stage', stage, '--json']);
+    const checked = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'ok']]);
@@ -120,13 +120,13 @@ kits = ["javascript", "naming"]
         'api/port.js': 'export const helperCommand = 1;\n',
         'web/port.js': 'export const helperCommand = 2;\n',
     });
-    const selected = await spawnGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
+    const selected = await runGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
     expect(report.checks.map((check) => check.scope)).toStrictEqual(['api']);
     const command = report.checks[0]?.reproduce;
     expect(command).toBeDefined();
-    const repeated = await spawnGspot(sandbox.path, [...command!.split(' ').slice(1), '--json']);
+    const repeated = await runGspot(sandbox.path, [...command!.split(' ').slice(1), '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
     expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(

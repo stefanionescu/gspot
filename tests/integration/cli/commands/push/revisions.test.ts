@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
+import { gspot, runGspot } from '#tests/harness/cli/command.ts';
 import { preparePushRepository } from '#tests/harness/planted/push.ts';
 
 test(
@@ -143,7 +143,7 @@ test(
         await using sandbox = await testdir();
         const { broken, command } = await preparePushRepository(sandbox.path);
         writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash'], '[hooks]\n[guides]\ninstall = false\n'));
-        const configured = await spawnGspot(sandbox.path, ['set', 'hooks.push', 'all']);
+        const configured = await runGspot(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
         expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);
         expect(git(sandbox.path, ['commit', '-qm', 'full pushed tree']).code).toBe(0);

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('a linked .gspot folder is refused without changing outside bytes', async () => {
@@ -18,7 +18,7 @@ test('a linked .gspot folder is refused without changing outside bytes', async (
     });
     writeFileSync(join(outside.path, 'sentinel'), 'authored outside\n');
     symlinkSync(outside.path, join(sandbox.path, '.gspot'));
-    const result = await spawnGspot(sandbox.path, ['check', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toContain('Unsafe lifecycle parent');
     expect(readFileSync(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
