@@ -6,6 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { initOptions } from '#tests/harness/planted/init.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {
@@ -40,19 +41,17 @@ test('init refuses an unsafe output ancestor before attempting installation', as
     await createFileTree(sandbox.path, { 'typos.toml': '[default.extend-words]\nAuthored = "Authored"\n' });
     symlinkSync(outside.path, join(sandbox.path, '.mise'));
     await rejection(
-        initCommand({
-            cwd: sandbox.path,
-            yes: true,
-            isDryRun: false,
-            json: true,
-            kits: ['spelling'],
-            isListExact: true,
-            hooks: 'none',
-            ci: 'none',
-            runner: 'mise',
-            rules: 'no',
-            install: true,
-        }),
+        initCommand(
+            initOptions(sandbox.path, {
+                kits: ['spelling'],
+                isListExact: true,
+                hooks: 'none',
+                ci: 'none',
+                runner: 'mise',
+                rules: 'no',
+                install: true,
+            }),
+        ),
     );
     expect(readFileSync(join(outside.path, 'authored.toml'), 'utf8')).toBe('untouched = true\n');
     expect(existsSync(join(outside.path, 'conf.d/gspot-tools.toml'))).toBe(false);
@@ -68,19 +67,16 @@ test('init retains old configuration when a conflicting replacement cannot be pu
     await createFileTree(sandbox.path, { 'typos.toml': authored, '.gspot/config/typos.toml': conflict });
     expect(
         await rejection(
-            initCommand({
-                cwd: sandbox.path,
-                yes: true,
-                isDryRun: false,
-                json: true,
-                kits: ['spelling'],
-                isListExact: true,
-                hooks: 'none',
-                ci: 'none',
-                runner: 'none',
-                rules: 'no',
-                install: false,
-            }),
+            initCommand(
+                initOptions(sandbox.path, {
+                    kits: ['spelling'],
+                    isListExact: true,
+                    hooks: 'none',
+                    ci: 'none',
+                    runner: 'none',
+                    rules: 'no',
+                }),
+            ),
         ),
     ).toContain('Setup preserved conflicting outputs');
     expect(readFileSync(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);

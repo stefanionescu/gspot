@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { initOptions } from '#tests/harness/planted/init.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
@@ -52,18 +53,16 @@ test('profile spelling values use the same TOML emission path', async () => {
             tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
         }),
     });
-    const plan = await initCommand({
-        cwd: sandbox.path,
-        from: 'house.profile.toml',
-        yes: true,
-        isDryRun: true,
-        json: true,
-        install: false,
-        hooks: 'none',
-        ci: 'none',
-        runner: 'none',
-        rules: 'no',
-    });
+    const plan = await initCommand(
+        initOptions(sandbox.path, {
+            from: 'house.profile.toml',
+            isDryRun: true,
+            hooks: 'none',
+            ci: 'none',
+            runner: 'none',
+            rules: 'no',
+        }),
+    );
     expect(plan.exitCode).toBe(0);
     const policy = plan.json['policy'];
     if (typeof policy !== 'string') throw new Error('The initialization plan has no policy text.');
