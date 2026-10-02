@@ -1,6 +1,6 @@
 ---
 layer: tool
-kit: configs
+kit: files
 title: Task Runner
 ---
 
