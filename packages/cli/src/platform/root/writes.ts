@@ -97,13 +97,15 @@ function lockHolder(current: Read | undefined, path: string): number {
     return pid;
 }
 
-// Whether a process is still running.
+// Whether a process is still running. A process of another user refuses the signal, and runs too.
 function isAlive(pid: number): boolean {
     try {
         process.kill(pid, 0);
         return true;
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+        const { code } = error as NodeJS.ErrnoException;
+        if (code === 'EPERM') return true;
+        if (code !== 'ESRCH') throw error;
         return false;
     }
 }
@@ -168,8 +170,12 @@ export function acquireLock(bounds: Bounds, path: string): void {
             return;
         }
         const current = readEntry(bounds, path, false);
-        if (isAlive(lockHolder(current, path)))
-            throw new Error('Another lifecycle writer holds this repository. Retry after it finishes.');
+        const pid = lockHolder(current, path);
+        // A crash can leave a lock whose process ID a later, unrelated process took, so the message names the lock.
+        if (isAlive(pid))
+            throw new Error(
+                `Another lifecycle writer, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
+            );
         if (isDeepStrictEqual(current, readEntry(bounds, path, false))) unlinkSync(target);
     }
 }

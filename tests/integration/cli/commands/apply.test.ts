@@ -74,3 +74,22 @@ test('malformed authored blocks refuse apply before generated files change', asy
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
 });
+
+// A lock that a crash left behind, and one a live process holds: apply stops and names the lock to delete.
+test.each([
+    ['empty', () => ''],
+    ['held by a live process', (pid: number) => `${String(pid)}:held`],
+    ...(process.platform === 'win32' ? [] : [['held by process 1', () => '1:held'] as const]),
+] as const)('apply refuses a writer lock %s and names it', async (_, holder) => {
+    await using directory = await testdir();
+    // A process that outlives the run stands for the holder; disposing it kills it.
+    await using sleeper = Bun.spawn([process.execPath, '-e', 'await Bun.sleep(60_000)']);
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
+        '.gspot/state/writer.lock': holder(sleeper.pid),
+    });
+    const refused = await runGspot(directory.path, ['apply']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('.gspot/state/writer.lock');
+    expect(readFileSync(join(directory.path, '.gspot/state/writer.lock'), 'utf8')).toBe(holder(sleeper.pid));
+});
