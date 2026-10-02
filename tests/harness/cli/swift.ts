@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { scopeInput } from '#tests/harness/cli/input.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
+import { sessionInput } from '#tests/harness/cli/input.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 
 const folders = new Set<string>();
@@ -15,12 +15,10 @@ const folders = new Set<string>();
  * @param check the check name
  * @returns the engine input
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every Swift build case registers its build folder for removal as it opens the input.
 export async function swiftInput(root: string, check: string): Promise<EngineInput> {
     folders.add(buildFolder(root));
-    const session = await openSession(root);
-    const selection = session.scopes[0]!;
-    const spec = selection.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === check)!;
-    return scopeInput(session, spec);
+    return sessionInput(root, check);
 }
 
 /**
