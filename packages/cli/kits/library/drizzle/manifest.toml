@@ -57,7 +57,7 @@ help = "Run drizzle-kit generate and commit the migration."
 
 [[settings]]
 name = "tools.drizzle.raw_sql_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths that may hold raw SQL templates, each with a reason."

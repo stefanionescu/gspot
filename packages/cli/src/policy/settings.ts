@@ -166,9 +166,9 @@ const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown>
  * @returns the merged value
  */
 export function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
-    if (spec.kind === 'list' && Array.isArray(current) && Array.isArray(found))
+    if (spec.type === 'list' && Array.isArray(current) && Array.isArray(found))
         return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
-    if (spec.kind === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
+    if (spec.type === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
     return found;
 }
 

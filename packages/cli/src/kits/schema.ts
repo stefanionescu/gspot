@@ -134,7 +134,7 @@ const manifestNamingRule = z.strictObject({
 
 const settingSchema = z.strictObject({
     name: z.string(),
-    kind: z.enum(['number', 'string', 'boolean', 'list', 'table']),
+    type: z.enum(['number', 'string', 'boolean', 'list', 'table']),
     direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'neutral', 'per-rule']),
     default: z.unknown().optional(),
     default_all: z.unknown().optional(),

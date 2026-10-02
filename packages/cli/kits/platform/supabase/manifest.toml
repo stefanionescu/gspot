@@ -121,21 +121,21 @@ help = "Run supabase gen types typescript --local and write the output to the fi
 
 [[settings]]
 name = "tools.supabase.types_file"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = ""
 summary = "The committed database types file, relative to the scope; empty turns the comparison off."
 
 [[settings]]
 name = "tools.supabase.functions_directory"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."
 
 [[settings]]
 name = "tools.supabase.admin_key_files"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]
 summary = "Paths relative to the scope that may name the service role key."

@@ -42,49 +42,49 @@ help = "Remove the entry that matches nothing, or fix its name or path."
 
 [[settings]]
 name = "naming.banned"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Words this repository bans in identifiers, beyond the shipped groups."
 
 [[settings]]
 name = "naming.allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Exact identifiers allowed despite the policy, each with a reason."
 
 [[settings]]
 name = "naming.external"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Names a platform or framework fixes, matched whole, and never checked."
 
 [[settings]]
 name = "naming.reserved"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Terms banned except in the named uses."
 
 [[settings]]
 name = "naming.dropped_groups"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Removable term groups this repository drops, each with a reason. The marketing, defensive, and terminology groups never drop."
 
 [[settings]]
 name = "naming.protocol_keys"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Property keys a protocol or format fixes, exempt in one named file."
 
 [[settings]]
 name = "naming.max_chars"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 35
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
@@ -93,7 +93,7 @@ summary = "The most characters one identifier may have."
 
 [[settings]]
 name = "naming.max_words"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 4
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
@@ -102,7 +102,7 @@ summary = "The most words one identifier may have."
 
 [[settings]]
 name = "naming.case"
-kind = "list"
+type = "list"
 direction = "loosening"
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
@@ -110,28 +110,28 @@ summary = "The case patterns one identifier category accepts: camel, pascal, keb
 
 [[settings]]
 name = "naming.swift.max_chars"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 40
 summary = "The most characters one Swift identifier may have."
 
 [[settings]]
 name = "naming.swift.max_words"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 5
 summary = "The most words one Swift identifier may have."
 
 [[settings]]
 name = "naming.sql.max_chars"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 55
 summary = "The most characters one SQL identifier may have."
 
 [[settings]]
 name = "naming.sql.max_words"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 7
 summary = "The most words one SQL identifier may have."

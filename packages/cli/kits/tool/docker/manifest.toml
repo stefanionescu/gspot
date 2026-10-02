@@ -136,21 +136,21 @@ help = "Move to a newer tag of the image. Accept one advisory with a reason unde
 
 [[settings]]
 name = "tools.hadolint.trusted_registries"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The registries a base image may come from; empty allows any."
 
 [[settings]]
 name = "tools.trivy.severity"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "HIGH,CRITICAL"
 summary = "The severities Trivy reports, as a comma-separated list."
 
 [[settings]]
 name = "tools.trivy.ignore"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Trivy ids accepted: the id and the reason."

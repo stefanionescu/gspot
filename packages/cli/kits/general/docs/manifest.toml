@@ -99,42 +99,42 @@ help = "Add the missing piece; use a tracked check exception with a reason when 
 
 [[settings]]
 name = "tools.lychee.exclude_paths"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
 
 [[settings]]
 name = "tools.docs.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths the stale-paths check skips, each with a reason."
 
 [[settings]]
 name = "tools.docs.banned_headings"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Headings this repository bans beyond the shipped list."
 
 [[settings]]
 name = "tools.docs.license"
-kind = "boolean"
+type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether the root must carry a LICENSE file."
 
 [[settings]]
 name = "limits.docs.contents_headings"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 6
 summary = "How many H2 headings a README may have before it needs a Contents list."
 
 [[settings]]
 name = "tools.lychee.exclude_urls"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."

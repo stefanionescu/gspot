@@ -20,7 +20,7 @@ message = "Pass a selector to the store hook, so the component renders when its 
 
 [[settings]]
 name = "tools.zustand.store_files"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["**/store.ts", "**/stores/*.ts", "**/store/*.ts", "**/*.store.ts"]
 summary = "The files that may create a store."

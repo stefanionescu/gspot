@@ -103,42 +103,42 @@ help = "Change the code the result names. Record a false positive under tools.co
 
 [[settings]]
 name = "tools.codeql.languages"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The CodeQL languages to scan, such as javascript-typescript, python, or swift."
 
 [[settings]]
 name = "tools.codeql.suite"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "security-extended"
 summary = "The CodeQL query suite: security-extended, or security-and-quality."
 
 [[settings]]
 name = "tools.codeql.ignore"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "CodeQL results accepted as false positives: the rule id, the paths, and the reason."
 
 [[settings]]
 name = "tools.semgrep.configs"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Rule files or folders of the repository that Semgrep runs beside the shipped packs."
 
 [[settings]]
 name = "tools.semgrep.registry"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = ["p/owasp-top-ten", "p/secrets"]
 summary = "The registry packs the manual registry check runs."
 
 [[settings]]
 name = "tools.semgrep.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths Semgrep never scans, each with a reason; they are written into .semgrepignore."

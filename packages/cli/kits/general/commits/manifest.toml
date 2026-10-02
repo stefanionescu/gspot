@@ -79,21 +79,21 @@ help = "Reword the commits that fail with git rebase -i, or change the rule with
 
 [[settings]]
 name = "tools.commitlint.types"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["feat", "fix", "refactor", "perf", "docs", "test", "build", "ci", "chore"]
 summary = "The commit types the type-enum rule allows."
 
 [[settings]]
 name = "tools.commitlint.scopes"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum."
 
 [[settings]]
 name = "tools.commitlint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
 

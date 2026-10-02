@@ -226,21 +226,21 @@ help = "Read the environment in the file that architecture.roles.env names, and 
 
 [[settings]]
 name = "limits.swift.duplicate_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 4
 summary = "The fewest lines two Swift functions must share before they count as duplicates."
 
 [[settings]]
 name = "tools.swiftlint.keep_imports"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["CoreGraphics"]
 summary = "Imports the analyzer keeps although it sees no use of them."
 
 [[settings]]
 name = "tools.swiftformat.swift_version"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "5.9"
 summary = "The Swift version SwiftFormat formats for."

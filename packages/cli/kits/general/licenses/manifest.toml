@@ -48,7 +48,7 @@ help = "Replace the package, or add an entry to tools.licenses.exceptions with g
 
 [[settings]]
 name = "tools.licenses.allowed"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 default_all = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
@@ -56,7 +56,7 @@ summary = "The SPDX license ids a dependency may report."
 
 [[settings]]
 name = "tools.licenses.exceptions"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Packages accepted under a license outside the list: name@version, the license it reports, and the reason."

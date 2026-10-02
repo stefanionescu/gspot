@@ -33,7 +33,7 @@ help = "Correct the message, or add the missing key to the locale."
 
 [[settings]]
 name = "tools.i18n.locales"
-kind = "table"
+type = "table"
 direction = "neutral"
 summary = "Where the message files live and which locale is the base: directory and base."
 

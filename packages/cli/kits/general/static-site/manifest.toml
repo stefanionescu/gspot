@@ -177,42 +177,42 @@ help = "Add the header to the block for every path."
 
 [[settings]]
 name = "tools.site.build"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "npm run build"
 summary = "The command that builds the site."
 
 [[settings]]
 name = "tools.site.output"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "dist"
 summary = "The folder the build writes."
 
 [[settings]]
 name = "tools.site.sizes"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
 
 [[settings]]
 name = "tools.site.sitemap_exclude"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["404.html"]
 summary = "Built pages the sitemap leaves out on purpose."
 
 [[settings]]
 name = "tools.purgecss.safelist"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Class names a script adds at run time: the names and the reason."
 
 [[settings]]
 name = "tools.linkinator.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Links the crawl leaves out: a pattern and the reason."

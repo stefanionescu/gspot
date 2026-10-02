@@ -251,77 +251,77 @@ help = "Delete what knip names, or add a knip entry point with gspot set tools.k
 
 [[settings]]
 name = "tools.eslint.component_languages"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "The languages a component script block declares; empty means plain JavaScript."
 
 [[settings]]
 name = "tools.eslint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 default = {}
 summary = "Rule options and rules turned on, by ESLint rule id; a rule turned off is a gspot ignore --rule."
 
 [[settings]]
 name = "tools.eslint.overrides"
-kind = "list"
+type = "list"
 direction = "per-rule"
 default = []
 summary = "Ordered enabled rule settings for config-root paths, bounded by the scope declaring them. Explicit ignores apply last."
 
 [[settings]]
 name = "tools.eslint.import_style"
-kind = "table"
+type = "table"
 direction = "neutral"
 default = {"**/*" = "js"}
 summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
 [[settings]]
 name = "tools.eslint.script_files"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}", ".mise/tasks/**"]
 summary = "The globs that count as scripts: no-process-exit off, every unused argument reported."
 
 [[settings]]
 name = "tools.eslint.runtimes"
-kind = "table"
+type = "table"
 direction = "neutral"
 default = {}
 summary = "The runtime per file class when the tree does not say: a glob to node, browser, worker, or commonjs."
 
 [[settings]]
 name = "tools.eslint.node_version"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = ">=22.0.0"
 summary = "The Node version the n plugin checks builtins against; detected from engines at init."
 
 [[settings]]
 name = "tools.eslint.restricted_imports"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Imports this repository refuses, each with a name, and a message."
 
 [[settings]]
 name = "tools.knip.entry"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "Entry points knip starts from beyond the ones the framework kit declares."
 
 [[settings]]
 name = "tools.knip.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Files knip leaves out, each with a reason."
 
 [[settings]]
 name = "tools.knip.ignore_dependencies"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."

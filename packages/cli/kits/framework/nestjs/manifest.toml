@@ -51,7 +51,7 @@ files = ["**/*.controller.ts"]
 
 [[settings]]
 name = "tools.nestjs.swagger"
-kind = "boolean"
+type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."

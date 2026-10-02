@@ -18,7 +18,7 @@ function isScalarConflict(previous: { value: unknown; kit: string }, manifest: M
 function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingSpec): void {
     if (spec.default === undefined) return;
     const previous = surface.defaults.get(spec.name);
-    const isList = surface.specs.get(spec.name)?.kind === 'list';
+    const isList = surface.specs.get(spec.name)?.type === 'list';
     if (!isList && previous !== undefined && isScalarConflict(previous, manifest, spec)) {
         surface.problems.push({
             key: spec.name,
@@ -54,7 +54,7 @@ function addOverride(surface: ExposedSettings, manifest: Manifest, name: string,
 }
 
 // The kind of a setting from the shape of its default.
-function kindOf(value: unknown): SettingSpec['kind'] {
+function typeOf(value: unknown): SettingSpec['type'] {
     if (Array.isArray(value)) return 'list';
     return typeof value === 'boolean' ? 'boolean' : 'string';
 }
@@ -74,7 +74,7 @@ export function exposedSettings(selected: Manifest[], level: 'recommended' | 'al
                 const value = schema.parse(undefined);
                 return {
                     name,
-                    kind: kindOf(value),
+                    type: typeOf(value),
                     direction: 'neutral',
                     default: value,
                     summary: schema.description ?? '',

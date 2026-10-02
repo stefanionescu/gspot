@@ -96,14 +96,14 @@ help = "Delete the class nobody reads, or define the class the code reads."
 
 [[settings]]
 name = "tools.stylelint.ignore_at_rules"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
 
 [[settings]]
 name = "tools.stylelint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 default = {}
 summary = "Enabled Stylelint rules and their native options. Disable a rule with gspot ignore css/stylelint --rule."

@@ -125,9 +125,9 @@ function keyProblems(
     if (!match) return [{ path: key.split('.'), message: unknownKeyProblem(surface, key) }];
     const written = policyValue(table, key);
     if (!written) return [];
-    if (!settingValueSchemas[match.spec.kind].safeParse(written.value).success)
-        return [{ path: key.split('.'), message: `The setting ${key} requires a ${match.spec.kind} value.` }];
-    if (match.spec.kind === 'list') return listProblems(key, written, match, requireReasons);
+    if (!settingValueSchemas[match.spec.type].safeParse(written.value).success)
+        return [{ path: key.split('.'), message: `The setting ${key} requires a ${match.spec.type} value.` }];
+    if (match.spec.type === 'list') return listProblems(key, written, match, requireReasons);
     return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
 }
 

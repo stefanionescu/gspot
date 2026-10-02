@@ -389,55 +389,55 @@ help = "Build the object where the program starts, and pass it in. Allow a name 
 
 [[settings]]
 name = "structure.python.singletons_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Module variables that may hold an object built at import time: the paths, the names, and the reason."
 
 [[settings]]
 name = "limits.python.package_exports"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 20
 summary = "The most names a package may list in its export list."
 
 [[settings]]
 name = "tools.pip.installs_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths that may run pip install, such as an image that installs one build tool, each with a reason."
 
 [[settings]]
 name = "tools.ruff.docstring_convention"
-kind = "string"
+type = "string"
 direction = "neutral"
 summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
 
 [[settings]]
 name = "tools.ruff.select"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
 
 [[settings]]
 name = "tools.ruff.test_ignores"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Ruff rules and families the test files leave off, such as the assert rule."
 
 [[settings]]
 name = "tools.basedpyright.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths basedpyright leaves out, such as files that need another dependency set, each with a reason."
 
 [[settings]]
 name = "tools.vulture.ignore_names"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Names vulture treats as used, such as functions a framework calls."
@@ -447,7 +447,7 @@ language = [{path = "language/PYTHON.md"}, {path = "language/python/TYPING.md"},
 
 [[settings]]
 name = "tools.vulture.min_confidence"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 100
 default_all = 80

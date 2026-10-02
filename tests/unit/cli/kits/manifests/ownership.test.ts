@@ -15,7 +15,7 @@ test('two kits that declare one setting must give it one meaning and may differ 
     const manifests = new Map(kitManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
     const setting = manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.generate')!;
-    fastapi.settings.push({ ...setting, kind: 'boolean' });
+    fastapi.settings.push({ ...setting, type: 'boolean' });
     manifests.set('fastapi', fastapi);
     expect(() => {
         validateManifests(manifests);
@@ -151,7 +151,7 @@ test.each([
 const header =
     '[kit]\nname = "waiting"\nkind = "tool"\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
 const setting =
-    '[[settings]]\nname = "tools.waiting.target"\nkind = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
+    '[[settings]]\nname = "tools.waiting.target"\ntype = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
 function waitingManifest(waits: string): void {
     const check = `[[checks]]\nexample = "A wrong target is corrected before the tool runs again."\nname = "waiting/run"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${waits}summary = "Runs the tool."\nwhy = "The target matters."\nhelp = "Set the target."\n`;
     const manifest = parseManifest(`${header}${setting}${check}`, 'configurations/waiting');

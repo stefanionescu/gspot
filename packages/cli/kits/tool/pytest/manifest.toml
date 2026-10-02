@@ -34,7 +34,7 @@ help = "Fix the failing test, or add tests for the code the report shows uncover
 
 [[settings]]
 name = "tools.pytest.coverage.lines"
-kind = "number"
+type = "number"
 direction = "floor"
 default = 0
 default_all = 80

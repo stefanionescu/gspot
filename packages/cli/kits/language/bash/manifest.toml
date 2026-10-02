@@ -354,55 +354,55 @@ help = "Handle the failure, check the cd, and move the delete or kill into a scr
 
 [[settings]]
 name = "tools.bash.doc_style"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "colon"
 summary = "How a shell function announces itself: colon means a header line like `# name: what it does`."
 
 [[settings]]
 name = "tools.bash.config_owners"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "The scripts allowed to read environment variables with defaults; every other script reads them through these."
 
 [[settings]]
 name = "tools.bash.boundary_roots"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "The directories whose scripts carry a Boundary header and source annotations."
 
 [[settings]]
 name = "tools.bash.safety_owners"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "The scripts allowed to delete recursively or kill processes; everything else is refused."
 
 [[settings]]
 name = "tools.bash.defaults_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Variable defaults of the form name:-value that appear outside the configuration owners."
 
 [[settings]]
 name = "tools.bash.platforms"
-kind = "string"
+type = "string"
 direction = "neutral"
 summary = "The platforms the fourth header line of every script names. Unset, a script needs no four-line header and declares no Bash version."
 
 [[settings]]
 name = "tools.bash.remote_functions"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The functions that run a quoted block on another host, such as a run_ssh wrapper; a multi-line block one runs sits inside a named function."
 
 [[settings]]
 name = "tools.bash.entry_functions"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "The functions besides main that a script may define without calling or documenting them, such as a step runner other scripts call by name."

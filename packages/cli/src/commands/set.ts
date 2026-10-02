@@ -79,7 +79,7 @@ function reasonsFilled(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.kind !== 'list') return isWeaker(spec, value, shipped);
+    if (spec.type !== 'list') return isWeaker(spec, value, shipped);
     if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items: unknown[] = Array.isArray(value) ? value : [];
@@ -176,7 +176,7 @@ function writeValue(
 ): Promise<CommandResult> {
     if (o.items.length === 0)
         throw new GspotError('policy', [`The setting ${o.key} needs a value; pass one, or --default to remove yours.`]);
-    const isList = spec.kind === 'list';
+    const isList = spec.type === 'list';
     const parsed = shaped(
         o.items.map((item) => parseValue(item)),
         isList,

@@ -152,7 +152,7 @@ export const RUFF_PREVIEW_RULES = new Set([
 /** The execution deadline applies independently of selected language kits. */
 export const TOOL_DEADLINE = {
     name: 'timeout',
-    kind: 'number',
+    type: 'number',
     direction: 'ceiling',
     default: 600,
     summary: 'The longest one tool run can take, in seconds. gspot stops a longer run and reports an error.',

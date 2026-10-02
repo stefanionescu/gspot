@@ -61,7 +61,7 @@ help = "Read the line nginx names. Set tools.nginx.image to the image the deploy
 
 [[settings]]
 name = "tools.nginx.image"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "nginx:stable-alpine"
 summary = "The image nginx -t runs in; name the one the deployment uses."

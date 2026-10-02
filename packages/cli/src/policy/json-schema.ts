@@ -25,7 +25,7 @@ function toolSettings(schema: SchemaNode): void {
     const declared = settings.flatMap((spec) => {
         const [root, tool, ...segments] = spec.name.split('.');
         if (root !== 'tools' || tool === undefined) return [];
-        const value = settingValueSchemas[spec.kind];
+        const value = settingValueSchemas[spec.type];
         const leaf = z.toJSONSchema(z.union([value, z.strictObject({ value, reason: z.string().optional() })]));
         return [{ tool, segments, leaf }];
     });

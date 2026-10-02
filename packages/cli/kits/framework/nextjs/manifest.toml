@@ -89,14 +89,14 @@ help = "Move both packages to the same version."
 
 [[settings]]
 name = "tools.next.build_on_push"
-kind = "boolean"
+type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the push stage builds the app with next build."
 
 [[settings]]
 name = "tools.next.build_flags"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."

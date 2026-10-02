@@ -135,7 +135,7 @@ help = "Run git rm -r --cached <folder>, and write the folder name with no leadi
 
 [[settings]]
 name = "limits.file_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 300
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
@@ -143,7 +143,7 @@ summary = "The most lines a file may have. Bash counts code lines; the other lan
 
 [[settings]]
 name = "limits.function_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 60
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
@@ -151,7 +151,7 @@ summary = "The most lines one function may have."
 
 [[settings]]
 name = "limits.function_parameters"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 7
 languages = ["typescript", "javascript", "python", "swift", "sql"]
@@ -159,7 +159,7 @@ summary = "The most parameters one function may take."
 
 [[settings]]
 name = "limits.cognitive_complexity"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 languages = ["typescript", "javascript"]
@@ -167,7 +167,7 @@ summary = "How hard a function is to follow, by the sonarjs cognitive score."
 
 [[settings]]
 name = "limits.cyclomatic_complexity"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 languages = ["typescript", "javascript", "python", "swift", "bash"]
@@ -175,7 +175,7 @@ summary = "How many paths run through one function."
 
 [[settings]]
 name = "limits.nesting"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 3
 languages = ["typescript", "javascript", "python"]
@@ -183,14 +183,14 @@ summary = "How deep blocks may nest inside one function."
 
 [[settings]]
 name = "limits.positional_arguments"
-kind = "number"
+type = "number"
 direction = "ceiling"
 languages = ["python"]
 summary = "The most positional arguments one Python function may take. Defaults to function_parameters when unset."
 
 [[settings]]
 name = "limits.branches"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 languages = ["python"]
@@ -198,7 +198,7 @@ summary = "The most branches one function may have."
 
 [[settings]]
 name = "limits.returns"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 4
 languages = ["python"]
@@ -206,7 +206,7 @@ summary = "The most return statements one function may have."
 
 [[settings]]
 name = "limits.statements"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 30
 languages = ["typescript", "javascript", "python"]
@@ -214,7 +214,7 @@ summary = "The most statements one function may have."
 
 [[settings]]
 name = "limits.locals"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 10
 languages = ["python"]
@@ -222,7 +222,7 @@ summary = "The most local variables one function may declare."
 
 [[settings]]
 name = "limits.boolean_operators"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 4
 languages = ["python"]
@@ -230,7 +230,7 @@ summary = "The most boolean operators in one condition."
 
 [[settings]]
 name = "limits.public_methods"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 12
 languages = ["python"]
@@ -238,7 +238,7 @@ summary = "The most public methods one class may have."
 
 [[settings]]
 name = "limits.callback_nesting"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 3
 languages = ["typescript", "javascript"]
@@ -246,7 +246,7 @@ summary = "How deep callbacks may nest."
 
 [[settings]]
 name = "limits.duplicate_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 3
 languages = ["typescript", "javascript", "bash", "swift"]
@@ -254,7 +254,7 @@ summary = "The fewest lines two function bodies must share before they count as 
 
 [[settings]]
 name = "limits.barrel_reexports"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 20
 languages = ["typescript", "javascript", "python"]
@@ -262,14 +262,14 @@ summary = "The most re-exports one index file may hold."
 
 [[settings]]
 name = "limits.prefix_collisions"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 2
 summary = "How many sibling files may share a name prefix before it is a finding."
 
 [[settings]]
 name = "limits.trivial_statements"
-kind = "number"
+type = "number"
 direction = "floor"
 default = 2
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
@@ -277,151 +277,151 @@ summary = "Functions with this many statements or fewer are reported. Any whole 
 
 [[settings]]
 name = "limits.file_kb"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default_all = 1024
 summary = "The largest tracked file, in kilobytes, outside LFS, or a declaration."
 
 [[settings]]
 name = "limits.bash.file_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 140
 summary = "The most code lines a shell script may have."
 
 [[settings]]
 name = "limits.bash.function_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 40
 summary = "The most code lines one shell function may have."
 
 [[settings]]
 name = "limits.bash.branches"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 summary = "The most branches one shell function may have."
 
 [[settings]]
 name = "limits.bash.nesting"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 3
 summary = "How deep blocks may nest in one shell function."
 
 [[settings]]
 name = "limits.bash.assignments"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 summary = "The most variable assignments one shell function may make."
 
 [[settings]]
 name = "limits.bash.duplicate_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 3
 summary = "The fewest lines two shell functions must share before they count as duplicates."
 
 [[settings]]
 name = "limits.sql.function_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 60
 summary = "The most lines one SQL function body may have."
 
 [[settings]]
 name = "limits.swift.type_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 300
 summary = "The most lines one Swift type body may have."
 
 [[settings]]
 name = "limits.swift.closure_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 60
 summary = "The most lines one Swift closure may have."
 
 [[settings]]
 name = "limits.docs.sentence_words"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 30
 summary = "The most words one sentence of documentation may have."
 
 [[settings]]
 name = "limits.docs.list_item_words"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 45
 summary = "The most words one list item may have."
 
 [[settings]]
 name = "limits.docs.paragraph_sentences"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 6
 summary = "The most sentences one paragraph may have."
 
 [[settings]]
 name = "structure.reexports"
-kind = "string"
+type = "string"
 direction = "tightening"
 default = "none"
 summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
 
 [[settings]]
 name = "structure.lone_files_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Folders allowed to hold one file, by path, each with a reason."
 
 [[settings]]
 name = "structure.prefix_collisions_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Folders where sibling files may share a prefix, by path, each with a reason."
 
 [[settings]]
 name = "structure.folder_names_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Folder names from the banned list that this repository keeps, by path, each with a reason."
 
 [[settings]]
 name = "architecture.types_directory"
-kind = "string"
+type = "string"
 direction = "neutral"
 summary = "The directory every type alias lives under; turns on the types placement rules."
 
 [[settings]]
 name = "architecture.config_directory"
-kind = "string"
+type = "string"
 direction = "neutral"
 summary = "The directory every literal constant lives under; its files are the registries the instance rule accepts."
 
 [[settings]]
 name = "architecture.roles"
-kind = "table"
+type = "table"
 direction = "tightening"
 summary = "Which elements or paths play the types, tests, harness, config, env, and runtime roles for the import direction rules. No role has a default."
 
 [[settings]]
 name = "architecture.elements"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The named parts of the code and the paths each covers."
 
 [[settings]]
 name = "architecture.edges_allowed"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Which element may import which; an element imports only itself unless a row says otherwise."

@@ -141,74 +141,74 @@ help = "Fix the line the checker names; most editors apply .editorconfig on save
 
 [[settings]]
 name = "format.indent_style"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "space"
 summary = "What one indent level is made of: space or tab."
 
 [[settings]]
 name = "format.indent_width"
-kind = "number"
+type = "number"
 direction = "neutral"
 default = 4
 summary = "Spaces per indent level."
 
 [[settings]]
 name = "format.print_width"
-kind = "number"
+type = "number"
 direction = "neutral"
 default = 120
 summary = "The line width formatters wrap at."
 
 [[settings]]
 name = "format.line_ending"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "lf"
 summary = "The line ending every file uses: lf or crlf."
 
 [[settings]]
 name = "format.final_newline"
-kind = "boolean"
+type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether every file ends with a newline."
 
 [[settings]]
 name = "format.quotes"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "single"
 summary = "single or double, for the languages where a formatter chooses."
 
 [[settings]]
 name = "format.trailing_commas"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "all"
 summary = "Where trailing commas go: all, es5, or none."
 
 [[settings]]
 name = "format.semicolons"
-kind = "boolean"
+type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether JavaScript and TypeScript statements end with semicolons."
 
 [[settings]]
 name = "tools.editorconfig.extra"
-kind = "table"
+type = "table"
 direction = "neutral"
 summary = "A section gspot does not render, added verbatim to .editorconfig with a reason."
 
 [[settings]]
 name = "format.overrides"
-kind = "list"
+type = "list"
 direction = "neutral"
 summary = "Ordered formatting options for config-root paths, bounded by their declaring scope. Apply preserves selectors for current and future files."
 
 [[settings]]
 name = "tools.prettier.exclude"
-kind = "list"
+type = "list"
 direction = "neutral"
 summary = "Ordered Prettier ignore lines, including negations, written to .prettierignore."

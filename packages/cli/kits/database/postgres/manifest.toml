@@ -124,42 +124,42 @@ help = "Write the header, put each statement under its section, and label tables
 
 [[settings]]
 name = "tools.squawk.assume_in_transaction"
-kind = "boolean"
+type = "boolean"
 direction = "neutral"
 default = false
 summary = "Whether the migration runner wraps every migration in a transaction; the supabase configuration turns it on."
 
 [[settings]]
 name = "tools.squawk.frozen_through"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "none"
 summary = "The version through which migrations have run everywhere: none, all, or a version. Squawk skips them, and they may not change."
 
 [[settings]]
 name = "tools.postgres.migrations_directory"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = ""
 summary = "The migrations folder relative to the scope; empty searches supabase/migrations, db/migrations, and migrations within that scope."
 
 [[settings]]
 name = "tools.postgres.client_schemas"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = ["public"]
 summary = "The schemas clients reach, where every table needs row level security."
 
 [[settings]]
 name = "tools.postgres.docs"
-kind = "boolean"
+type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether migrations follow the documented layout."
 
 [[settings]]
 name = "tools.postgres.doc_sections"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions", "Row Level Security", "Grants"]
 summary = "The section names a documented migration may box."

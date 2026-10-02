@@ -51,14 +51,14 @@ help = "Run the command and commit the document it writes."
 
 [[settings]]
 name = "tools.openapi.document"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = ""
 summary = "The committed OpenAPI document; empty turns both OpenAPI checks off."
 
 [[settings]]
 name = "tools.openapi.generate"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = ""
 summary = "The command that writes the OpenAPI document from the code."

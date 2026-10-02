@@ -75,14 +75,14 @@ help = "Replace the text with a placeholder and put the words in the content fil
 
 [[settings]]
 name = "tools.html.templates"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The HTML files that are templates filled from content; empty turns the copy check off."
 
 [[settings]]
 name = "tools.html.literals_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Template paths that may hold literal text, each with a reason."

@@ -94,21 +94,21 @@ help = "Split the file by the object it changes, or raise limits.sql.file_lines 
 
 [[settings]]
 name = "tools.sqlfluff.dialect"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "ansi"
 summary = "The sqlfluff dialect; a database kit sets it."
 
 [[settings]]
 name = "tools.sqlfluff.exclude"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason."
 
 [[settings]]
 name = "limits.sql.file_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 400
 summary = "The most code lines a SQL file may have."

@@ -134,7 +134,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
             const all = setting.default_all ?? recommended;
             return [
                 `\`${setting.name}\``,
-                setting.kind,
+                setting.type,
                 setting.direction,
                 `recommended: \`${recommended === undefined ? 'unset' : cell(JSON.stringify(recommended))}\`; all: \`${all === undefined ? 'unset' : cell(JSON.stringify(all))}\``,
                 cell(setting.summary),
@@ -143,7 +143,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
         });
     return referencePage(
         'Settings',
-        'Settings exposed by gspot set, with their kinds, directions, defaults, and owners.',
-        `${SETTINGS_INTRO}${table(['Key', 'Kind', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
+        'Settings exposed by gspot set, with their types, directions, defaults, and owners.',
+        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
     );
 }

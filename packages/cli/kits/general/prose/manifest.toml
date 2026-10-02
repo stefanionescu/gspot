@@ -67,7 +67,7 @@ help = "Delete the directive and change the text, or disable the rule with a rea
 
 [[settings]]
 name = "prose.vocabulary"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Names Vale accepts as written: products, tools, people."

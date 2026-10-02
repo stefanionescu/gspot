@@ -29,7 +29,7 @@ help = "Add a test that imports and exercises the route."
 
 [[settings]]
 name = "tools.express.route_files"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "The route files that each need a test; empty turns the check off."

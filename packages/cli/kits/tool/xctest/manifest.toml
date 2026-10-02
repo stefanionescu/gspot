@@ -86,21 +86,21 @@ help = "Add tests for the target, or lower its floor with a reason."
 
 [[settings]]
 name = "tools.xctest.coverage"
-kind = "list"
+type = "list"
 direction = "floor"
 default = []
 summary = "Coverage floors: a target and the share of lines out of 100. Empty turns the check off."
 
 [[settings]]
 name = "tools.xctest.sleep_allowed"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Test paths that may sleep, each with a reason."
 
 [[settings]]
 name = "tools.xctest.reference_layout"
-kind = "string"
+type = "string"
 direction = "neutral"
 default = "__Snapshots__/{file}/{test}.*"
 summary = "Snapshot paths relative to the test file directory, with {file} as its stem, {test} as the test name, and * as a wildcard."

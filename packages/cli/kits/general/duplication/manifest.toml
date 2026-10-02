@@ -37,28 +37,28 @@ help = "Move the shared block into one function both callers use, or raise limit
 
 [[settings]]
 name = "limits.duplication.min_lines"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 8
 summary = "The fewest lines a copied block has before it counts."
 
 [[settings]]
 name = "limits.duplication.min_tokens"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 40
 summary = "The fewest tokens a copied block has before it counts."
 
 [[settings]]
 name = "limits.duplication.percent"
-kind = "number"
+type = "number"
 direction = "ceiling"
 default = 4
 summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
 
 [[settings]]
 name = "tools.jscpd.ignore"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Paths the duplication check skips, each with a reason."

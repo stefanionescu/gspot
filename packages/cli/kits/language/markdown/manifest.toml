@@ -87,6 +87,6 @@ help = "Fix the code in the block, or tag the block text when it is not code."
 
 [[settings]]
 name = "tools.markdownlint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
