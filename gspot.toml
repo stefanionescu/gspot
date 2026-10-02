@@ -504,6 +504,16 @@ node_version = ">=24.2.0"
 [tools.commitlint]
 scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 
+[[tools.osv.ignore]]
+id = "GHSA-vfj7-8cjw-p6xm"
+reason = "braces 3.0.3 is the newest release, and no release fixes it. micromatch pulls it into the development tools of this workspace, which expand only the patterns this repository writes."
+review_by = "2026-10-17"
+
+[[tools.osv.ignore]]
+id = "GHSA-ch52-4w7c-c8xp"
+reason = "http-cache-semantics 4.2.0 is the newest release, and no release fixes it. Astro and the npm fetch client use it in the development tools; the static docs build shares no cached response between users."
+review_by = "2026-10-17"
+
 [tools.knip]
 entry = [
     "**/build.ts",
