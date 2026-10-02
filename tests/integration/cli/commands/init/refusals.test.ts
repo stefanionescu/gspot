@@ -1,7 +1,7 @@
 // What init refuses before it writes, and what a preview proposes without writing.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
@@ -113,5 +113,18 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
     const result = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET]);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'already-initialized' });
+    expect(treeContents(sandbox.path)).toStrictEqual(before);
+});
+
+test('init from a profile address that answers 404 exits 2 and writes nothing', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'scripts/a.sh': script });
+    commitAll(sandbox.path);
+    const before = treeContents(sandbox.path);
+    using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--from', 'github:acme/missing', ...QUIET]);
+    expect(fetched).toHaveBeenCalledTimes(1);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stderr).toContain('answered 404');
     expect(treeContents(sandbox.path)).toStrictEqual(before);
 });
