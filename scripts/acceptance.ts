@@ -19,7 +19,6 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['cli/example.test.ts', 'the sandbox install fails on Windows'],
     ['cli/format-overrides.test.ts', 'times out on the Windows runner'],
     ['cli/commit-hook.test.ts', 'checkout writes CRLF, which ShellCheck reports'],
-    ['cli/ignored-execution.test.ts', 'findings carry backslash paths'],
     ['cli/clone.test.ts', 'checkout line endings change the adopted bytes'],
     ['cli/profile.test.ts', 'checkout line endings change the exported bytes'],
     ['cli/scopes.test.ts', 'times out on the Windows runner'],
