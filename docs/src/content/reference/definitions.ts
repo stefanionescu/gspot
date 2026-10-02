@@ -1,13 +1,17 @@
+import { posix } from 'node:path';
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
+import { kitFiles } from '@gspothq/cli/src/rules/assemble.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import type { Manifest, CheckSpec } from '@gspothq/cli/src/types/kits.ts';
 
 // The indentation of the JSON blocks a reference page shows.
 const JSON_INDENT = 2;
 
-function guideSelection(file: Manifest['guides'][string][number]): string {
-    if (file.when === undefined) return `\`${file.path}\``;
+// A rule file of the kit, with the condition that installs it when it has one.
+function ruleSelection(manifest: Manifest, path: string): string {
+    const condition = manifest.rules[posix.basename(path)];
+    if (condition === undefined) return `\`${path}\``;
     const labels = {
         extensions: 'file extension',
         filenames: 'filename',
@@ -17,10 +21,10 @@ function guideSelection(file: Manifest['guides'][string][number]): string {
         paths: 'file path',
         project_files: 'project file',
     };
-    const conditions = Object.entries(file.when).flatMap(([kind, patterns]) =>
+    const conditions = Object.entries(condition).flatMap(([kind, patterns]) =>
         patterns.map((pattern) => `${labels[kind as keyof typeof labels]} \`${pattern}\``),
     );
-    return `\`${file.path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+    return `\`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
 }
 
 function ruleExclusions(manifest: Manifest): string {
@@ -103,7 +107,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
             ? `\`${config.target}\``
             : `\`${config.target}\` when the [${config.when.kit} configuration](/reference/kits/${config.when.kit}/) is selected`,
     );
-    const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
+    const rules = kitFiles(manifest).map((file) => ruleSelection(manifest, file.path));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const defaults = [
         ...Object.entries(manifest.defaults).map(([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``),

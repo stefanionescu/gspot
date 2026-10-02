@@ -66,8 +66,5 @@ summary = "Type-checks every Vue component and TypeScript file of the scope with
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
 help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
 
-[guides]
-framework = [{path = "framework/vue/VUE.md"}]
-
 [required_rules]
 vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]

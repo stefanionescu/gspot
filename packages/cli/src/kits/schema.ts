@@ -237,20 +237,15 @@ export const manifestSchema = z
         naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
         // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
         entry: stringList,
-        guides: z
+        // The files of the kit's rules folder that install only when their condition holds, by file name. Every other
+        // file there installs with the kit. The detection reads a condition as it reads a kit's, the other lists empty.
+        rules: z
             .record(
-                z.string(),
-                z.array(
-                    z.strictObject({
-                        path: z.string().min(1),
-                        // The detection reads a guide condition as it reads a kit's, with the other lists empty.
-                        when: conditionSchema
-                            .pick({ dependencies: true, filenames: true, tags: true })
-                            .partial()
-                            .transform((condition) => detectionSchema.parse(condition))
-                            .optional(),
-                    }),
-                ),
+                z.string().regex(/^[A-Z0-9-]+\.md$/u),
+                conditionSchema
+                    .pick({ dependencies: true, filenames: true, tags: true })
+                    .partial()
+                    .transform((condition) => detectionSchema.parse(condition)),
             )
             .default({}),
         required_rules: stringListTable.default({}),

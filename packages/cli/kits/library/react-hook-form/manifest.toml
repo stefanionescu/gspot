@@ -19,6 +19,3 @@ message = "Give useForm a resolver, so the schema that types the form also valid
 level = "all"
 selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])"
 message = "A registered field is uncontrolled. Drop the value attribute, or use a Controller."
-
-[guides]
-library = [{path = "library/react-hook-form/REACTHOOKFORM.md"}]

@@ -93,6 +93,3 @@ name = "tools.commitlint.rules"
 type = "table"
 direction = "per-rule"
 summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
-
-[guides]
-tool = [{path = "tool/commitlint/COMMITLINT.md"}]

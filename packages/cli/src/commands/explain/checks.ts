@@ -1,5 +1,6 @@
 // Explain a check, or one rule of the tool a check runs.
 import { allChecks } from '#cli/kits/listing.ts';
+import { kitFiles } from '#cli/rules/assemble.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -58,15 +59,13 @@ function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }
 
-// The settings that change the check, and the guides and crash pattern it carries.
+// The settings that change the check, and the rules and crash pattern its kit carries.
 function checkFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
     const settings = (kit?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(kit?.guides ?? {})
-        .flat()
-        .map((entry) => entry.path);
+    const rules = kit === undefined ? [] : kitFiles(kit).map((file) => file.path);
     const crashPattern = check.crash_pattern ?? pinNamed(toolOf(check))?.crash_pattern;
     return { settings, rules, crashPattern };
 }

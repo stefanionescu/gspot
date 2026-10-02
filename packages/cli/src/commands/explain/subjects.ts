@@ -1,6 +1,7 @@
 // Explain a check, tool rule, kit, setting, or file path.
 import { similar } from '#cli/platform/text.ts';
 import { allChecks } from '#cli/kits/listing.ts';
+import { kitFiles } from '#cli/rules/assemble.ts';
 import { unknownKit } from '#cli/kits/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
@@ -33,9 +34,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
-        rules: Object.values(manifest.guides)
-            .flat()
-            .map((entry) => entry.path),
+        rules: kitFiles(manifest).map((file) => file.path),
         auto: manifest.kit.auto,
         proposed: manifest.kit.proposed,
     };

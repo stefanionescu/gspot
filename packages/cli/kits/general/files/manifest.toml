@@ -223,7 +223,3 @@ type = "string"
 direction = "neutral"
 default = ""
 summary = "The name of the function the code reads environment variables through, on top of process.env and os.environ; empty means those two alone."
-
-[guides]
-language = [{path = "language/YAML.md"}]
-tool = [{path = "tool/tasks/TASKS.md"}]

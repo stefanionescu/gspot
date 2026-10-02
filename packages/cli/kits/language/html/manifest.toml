@@ -82,6 +82,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Template paths that may hold literal text, each with a reason."
-
-[guides]
-language = [{path = "language/HTML.md"}, {path = "language/naming/HTML.md"}]

@@ -108,9 +108,6 @@ direction = "ceiling"
 default = 400
 summary = "The most code lines a SQL file may have."
 
-[guides]
-language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
-
 [[check]]
 name = "functions"
 title = "Check SQL function size and parameters"

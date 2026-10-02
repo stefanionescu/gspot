@@ -273,7 +273,6 @@ summary = "Reports functions at or below limits.trivial_statements and files con
 why = "Unnecessary functions add names and indirection without substantial behavior."
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-functions --paths <file> --reason <why>`."
 
-
 [[check]]
 name = "placeholder-docstrings"
 title = "Replace placeholder docstrings"
@@ -382,7 +381,6 @@ summary = "Finds objects built at import time and kept in a module variable."
 why = "Every importer shares the one instance, and no test gets a fresh one."
 help = "Build the object where the program starts, and pass it in. Allow a name under structure.python.singletons_allowed with a reason."
 
-
 [[setting]]
 name = "structure.python.singletons_allowed"
 type = "list"
@@ -437,9 +435,6 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Names vulture treats as used, such as functions a framework calls."
-
-[guides]
-language = [{path = "language/PYTHON.md"}, {path = "language/python/TYPING.md"}, {path = "language/python/DESIGN.md"}, {path = "language/python/FLOW.md"}, {path = "language/python/PACKAGING.md"}, {path = "language/naming/PYTHON.md"}]
 
 [[setting]]
 name = "tools.vulture.min_confidence"

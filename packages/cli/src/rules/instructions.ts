@@ -19,7 +19,7 @@ function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
     const projectRow: [string, string[]][] =
         project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
     return [
-        `Read \`${directory}/general/agent/WORKING.md\` and \`${directory}/general/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
+        `Read \`${directory}/agent/WORKING.md\` and \`${directory}/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
         '',
         ...[...guideGroups(files), ...projectRow].flatMap(([area, guides]) => [
             `${area}:`,

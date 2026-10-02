@@ -92,8 +92,8 @@ paths = ["acceptance/kits/language/css.test.ts"]
 reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/kits/language/css.test.ts."
 
 [[tools.docs.exclude]]
-paths = ["packages/cli/guides/**"]
-reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
+paths = ["packages/cli/rules/**", "packages/cli/kits/*/*/rules/**"]
+reason = "The rules are generic text installed into other repositories; they name nothing in this one."
 
 [[tools.docs.exclude]]
 paths = [".gitlab/ci/gspot.yml"]
@@ -118,7 +118,7 @@ paths = [
     "supabase/config.toml",
     "src/app.ts",
 ]
-reason = "The guides explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
+reason = "The rules explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
 
 [tools.lychee]
 

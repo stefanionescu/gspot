@@ -72,9 +72,6 @@ summary = "Runs Expo Doctor in a scope that depends on expo, and reports each ch
 why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
 help = "Read the issues and advice Expo Doctor prints for the failed check, then run npx expo install --check."
 
-[guides]
-framework = [{path = "framework/react-native/REACT-NATIVE.md"}]
-
 [required_rules]
 tsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 jsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]

@@ -138,9 +138,5 @@ direction = "loosening"
 default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]
 summary = "Paths relative to the scope that may name the service role key."
 
-[guides]
-platform = [{path = "platform/supabase/SUPABASE.md"}]
-runtime = [{path = "runtime/deno/DENO.md"}]
-
 [defaults]
 "tools.squawk.assume_in_transaction" = true

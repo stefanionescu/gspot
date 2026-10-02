@@ -1,4 +1,4 @@
-// Where the gspot data lives: the kits, guides, and grammars beside the code. The source tree and the package
+// Where the gspot data lives: the kits, rules, and grammars beside the code. The source tree and the package
 // share that layout.
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';

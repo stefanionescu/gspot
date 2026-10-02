@@ -33,6 +33,3 @@ type = "list"
 direction = "neutral"
 default = ["**/server/**"]
 summary = "Server file globs used when architecture.elements has no server element. An explicit server element owns the boundary."
-
-[guides]
-library = [{path = "library/trpc/TRPC.md"}]

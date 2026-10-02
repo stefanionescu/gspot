@@ -102,6 +102,3 @@ type = "string"
 direction = "neutral"
 default = "__Snapshots__/{file}/{test}.*"
 summary = "Snapshot paths relative to the test file directory, with {file} as its stem, {test} as the test name, and * as a wildcard."
-
-[guides]
-tool = [{path = "tool/xctest/XCTEST.md"}]

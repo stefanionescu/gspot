@@ -1,81 +1,98 @@
-// Select the guides for the selection and render them under [guides] directory, keeping the layer folders.
+// Select the rules for the selection and write them under the rules folder: the base rules, then each kit's own.
+import { posix } from 'node:path';
 import { similar } from '#cli/platform/text.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { detectConditions } from '#cli/kits/detect.ts';
 import { selectedSections } from '#cli/rules/sections.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import type { Level, RuleFile, RuleSettings } from '#cli/types/rules.ts';
-import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/config/rules.ts';
+import { TITLE, BASE_RULES, FIRST_READ, RULES_FOLDER } from '#cli/config/rules.ts';
+import type { Level, RuleFile, RuleSource, RuleSettings } from '#cli/types/rules.ts';
 
-function declaredGuides(manifests: Manifest[], repository: Repository): Pick<RuleFile, 'source' | 'layer' | 'kit'>[] {
-    const conditions = manifests.flatMap((manifest) =>
-        Object.values(manifest.guides)
-            .flat()
-            .flatMap((entry) => (entry.when === undefined ? [] : [entry.when])),
+// Whether an exclude entry names the file or a folder above it, both relative to the rules folder.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The selection and the exclude problems test an entry the same way; one owner keeps the folder rule.
+function isExcluded(entry: string, path: string): boolean {
+    return path === entry || path.startsWith(`${entry.replace(/\/$/u, '')}/`);
+}
+
+// The base rules every repository gets, in their three folders.
+function baseRules(): RuleSource[] {
+    return BASE_RULES.flatMap((layer) =>
+        listAssets(`${RULES_FOLDER}/${layer}/`).map((source) => ({
+            source,
+            path: source.slice(RULES_FOLDER.length + 1),
+            layer,
+            kit: RULES_FOLDER,
+        })),
     );
-    const dependencies = manifests.some((manifest) =>
-        Object.values(manifest.guides)
-            .flat()
-            .some((entry) => entry.when !== undefined && entry.when.dependencies.length > 0),
+}
+
+// The rules of the selected kits; a file with a condition installs only when the repository meets it.
+function kitRules(manifests: Manifest[], repository: Repository): RuleSource[] {
+    const conditions = manifests.flatMap((manifest) => Object.values(manifest.rules));
+    const isRead = conditions.some((condition) => condition.dependencies.length > 0);
+    const matched = detectConditions(
+        conditions,
+        repository.files,
+        isRead ? readManifests(repository.root, repository.files) : [],
     );
-    const fields = dependencies ? readManifests(repository.root, repository.files) : [];
-    const matched = detectConditions(conditions, repository.files, fields);
     return manifests.flatMap((manifest) =>
-        Object.entries(manifest.guides).flatMap(([layer, paths]) =>
-            paths
-                .filter((entry) => entry.when === undefined || matched.has(entry.when))
-                .map(({ path: source }) => ({ source, layer, kit: manifest.kit.name })),
-        ),
+        kitFiles(manifest).filter((file) => {
+            const condition = manifest.rules[posix.basename(file.source)];
+            return condition === undefined || matched.has(condition);
+        }),
     );
 }
 
 /**
- * The guides the selection installs, in layer order, deduplicated.
+ * The files of a kit's rules folder. Each installs under the kit's category and name, as language/bash/BASH.md.
+ * @param manifest the kit
+ * @returns each file with its path inside the rules folder
+ */
+export function kitFiles(manifest: Manifest): RuleSource[] {
+    const { kind, name } = manifest.kit;
+    const sources = listAssets(`${manifest.dir}/${RULES_FOLDER}/`);
+    for (const file of Object.keys(manifest.rules))
+        if (!sources.includes(`${manifest.dir}/${RULES_FOLDER}/${file}`))
+            throw new Error(`The rule ${file} of the ${name} kit does not exist.`);
+    return sources.map((source) => ({
+        source,
+        path: `${kind}/${name}/${posix.basename(source)}`,
+        layer: kind,
+        kit: name,
+    }));
+}
+
+/**
+ * The rules the selection installs: the base rules, then the files of each selected kit, without the excluded ones.
  * @param rules the rule policy
  * @param manifests the selected kits
- * @param repository the source inventory for conditional guide selection.
- * @returns the guides with their targets and titles
+ * @param repository the source inventory for the conditional rules.
+ * @returns the rules with their targets and titles
  */
 export function selectRuleFiles(rules: RuleSettings, manifests: Manifest[], repository: Repository): RuleFile[] {
-    const available = new Set(listAssets(RULES_PREFIX));
-    const { exclude } = rules;
     const files = new Map<string, RuleFile>();
-    for (const { source, layer, kit } of [
-        ...[...AGENT_LAYERS].flatMap((layer) =>
-            listAssets(`${RULES_PREFIX}${layer}/`).map((path) => ({
-                source: path.slice(RULES_PREFIX.length),
-                layer: layer.slice(layer.indexOf('/') + 1),
-                kit: 'rules',
-            })),
-        ),
-        ...declaredGuides(manifests, repository),
-    ]) {
-        const path = `${RULES_PREFIX}${source}`;
-        if (!available.has(path)) throw new Error(`The selected rule guide does not exist: ${source}`);
-        if (
-            files.has(source) ||
-            exclude.some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`))
-        )
-            continue;
-        files.set(source, {
+    for (const { source, path, layer, kit } of [...baseRules(), ...kitRules(manifests, repository)]) {
+        if (files.has(path) || rules.exclude.some((entry) => isExcluded(entry, path))) continue;
+        files.set(path, {
             source,
-            target: `${rules.directory}/${source}`,
+            target: `${rules.directory}/${path}`,
             layer,
             kit,
-            title: TITLE.exec(readAsset(path))?.groups?.['title'] ?? '',
+            title: TITLE.exec(readAsset(source))?.groups?.['title'] ?? '',
         });
     }
     return files.values().toArray();
 }
 
 /**
- * The selected guides with sections filtered to the enforcement level.
+ * The selected rules with sections filtered to the enforcement level.
  * @param rules the rule policy
  * @param manifests the selected kits
  * @param level the selected enforcement level.
- * @param repository the source inventory for conditional guide selection.
+ * @param repository the source inventory for the conditional rules.
  * @returns the files to write under the rules directory
  */
 export function assembleRules(
@@ -87,7 +104,7 @@ export function assembleRules(
     if (!rules.install) return [];
     return selectRuleFiles(rules, manifests, repository).map((file) => ({
         path: file.target,
-        content: selectedSections(readAsset(`${RULES_PREFIX}${file.source}`), level),
+        content: selectedSections(readAsset(file.source), level),
         readOnly: true,
         kind: 'rules',
         kit: file.kit,
@@ -95,30 +112,23 @@ export function assembleRules(
 }
 
 /**
- * The problems of [guides] exclude: an entry that matches no guide, and an entry that hides a file the reader opens first.
- * @param exclude the entries as written
+ * The problems of [guides] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
+ * @param exclude the entries as written, relative to the rules folder
  * @returns the problems in plain English
  */
 export function excludeProblems(exclude: string[]): string[] {
-    const sources = listAssets(RULES_PREFIX).map((path) => path.slice(RULES_PREFIX.length));
+    const paths = [...baseRules(), ...[...kitManifests().values()].flatMap((manifest) => kitFiles(manifest))].map(
+        (file) => file.path,
+    );
     return exclude.flatMap((entry) => {
-        if (
-            FIRST_READ.some((file) =>
-                [entry].some((entry) => file === entry || file.startsWith(`${entry.replace(/\/$/u, '')}/`)),
-            )
-        )
+        if (FIRST_READ.some((file) => isExcluded(entry, file)))
             return [
                 `[guides] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
             ];
-        if (
-            sources.some((source) =>
-                [entry].some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`)),
-            )
-        )
-            return [];
-        const near = similar(entry, sources);
+        if (paths.some((path) => isExcluded(entry, path))) return [];
+        const near = similar(entry, paths);
         const names = near.map((name) => `\`${name}\``).join(', ');
         const hint = near.length > 0 ? ` Did you mean ${names}?` : '';
-        return [`[guides] exclude names \`${entry}\`, which matches no guide.${hint}`];
+        return [`[guides] exclude names \`${entry}\`, which matches no rule.${hint}`];
     });
 }

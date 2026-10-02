@@ -62,6 +62,3 @@ type = "string"
 direction = "neutral"
 default = "nginx:stable-alpine"
 summary = "The image nginx -t runs in; name the one the deployment uses."
-
-[guides]
-tool = [{path = "tool/nginx/NGINX.md"}]

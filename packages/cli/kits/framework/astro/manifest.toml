@@ -69,9 +69,6 @@ summary = "Runs astro check over the scope: the type errors and warnings of ever
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."
 help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
 
-[guides]
-framework = [{path = "framework/astro/ASTRO.md"}]
-
 [required_rules]
 astro = ["astro/valid-compile", "astro/no-set-html-directive", "astro/jsx-a11y/alt-text"]
 

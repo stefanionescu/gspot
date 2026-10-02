@@ -38,8 +38,3 @@ languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
-
-[guides]
-framework = [{path = "framework/express/EXPRESS.md"}, {path = "framework/express/API.md"}, {path = "framework/express/OPENAPI.md"}]
-shared = [{path = "shared/http/HTTP.md"}]
-runtime = [{path = "runtime/node/NODE.md"}]

@@ -61,12 +61,8 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[guides]
-framework = [{path = "framework/nestjs/NESTJS.md"}]
-
 [required_rules]
 ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]
-
 
 [[rules_off]]
 tool = "eslint"

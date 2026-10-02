@@ -157,7 +157,6 @@ summary = "Scans the built project for declarations nothing uses."
 why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
 
-
 [[check]]
 name = "trivial-functions"
 title = "Find trivial functions"
@@ -218,7 +217,6 @@ summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
 help = "Read the environment in the file that architecture.roles.env names, and pass the values in."
 
-
 [[setting]]
 name = "limits.swift.duplicate_lines"
 type = "number"
@@ -240,6 +238,6 @@ direction = "neutral"
 default = "5.9"
 summary = "The Swift version SwiftFormat formats for."
 
-[guides]
-language = [{path = "language/SWIFT.md"}, {path = "language/naming/SWIFT.md"}]
-framework = [{path = "framework/swiftui/SWIFTUI.md", when = {tags = ["swift-import:SwiftUI"]}}, {path = "framework/uikit/UIKIT.md", when = {tags = ["swift-import:UIKit"]}}]
+[rules]
+"SWIFTUI.md" = {tags = ["swift-import:SwiftUI"]}
+"UIKIT.md" = {tags = ["swift-import:UIKit"]}

@@ -214,7 +214,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Links the crawl leaves out: a pattern and the reason."
-
-[guides]
-repository = [{path = "repository/static-site/STATIC-SITE.md"}]
-runtime = [{path = "runtime/browser/BROWSER.md"}]

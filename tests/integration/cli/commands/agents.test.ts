@@ -28,7 +28,7 @@ test('agent instructions reach AGENTS.md and configured files, and other agent f
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), 'markdown');
-    expect(instructions).toContain('general/agent/WORKING.md');
+    expect(instructions).toContain('agent/WORKING.md');
     expect(currentBlock(readFileSync(join(sandbox.path, 'TEAM.md'), 'utf8'), 'markdown')).toBe(instructions);
     expect(readFileSync(gemini, 'utf8')).toBe(original);
     expect(statSync(gemini).mode).toBe(mode);
@@ -118,7 +118,7 @@ test('generated attributes preserve LF through autocrlf checkout', async () => {
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/guides/general/agent/WORKING.md';
+    const path = '.gspot/guides/agent/WORKING.md';
     const bytes = readFileSync(join(sandbox.path, path));
     expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
     const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);

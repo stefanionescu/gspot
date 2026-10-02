@@ -332,9 +332,8 @@ summary = "Checks that the configuration ESLint resolves for a file still turns 
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
 
-[guides]
-language = [{path = "language/JAVASCRIPT.md"}, {path = "language/naming/JAVASCRIPT.md"}]
-runtime = [{path = "runtime/node/NODE.md"}, {path = "runtime/bun/BUN.md", when = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}}]
+[rules]
+"BUN.md" = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}
 
 [required_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public"]

@@ -22,6 +22,3 @@ type = "list"
 direction = "neutral"
 default = ["**/store.ts", "**/stores/*.ts", "**/store/*.ts", "**/*.store.ts"]
 summary = "The files that may create a store."
-
-[guides]
-library = [{path = "library/zustand/ZUSTAND.md"}]

@@ -24,7 +24,7 @@ async function generatedGuides(level: string, files: Record<string, string>): Pr
 test('recommended guides omit marked sections and retain the next heading', async () => {
     const recommended = await generatedGuides('recommended', {});
     const all = await generatedGuides('all', {});
-    const path = '.gspot/guides/language/TYPESCRIPT.md';
+    const path = '.gspot/guides/language/typescript/TYPESCRIPT.md';
     expect(recommended.get(path)).not.toContain('## Declaration order');
     expect(all.get(path)).toContain('## Declaration order');
     expect(recommended.get(path)).toContain('## Rules not adopted');
@@ -36,29 +36,29 @@ test('conditional guides follow lockfile and dependency evidence', async () => {
         'bunfig.toml': '[test]\nroot = "tests"\n',
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
-    for (const path of ['runtime/bun/BUN.md', 'tool/tailwind/TAILWIND.md', 'tool/playwright/PLAYWRIGHT.md']) {
+    for (const path of ['language/javascript/BUN.md', 'language/css/TAILWIND.md', 'tool/vitest/PLAYWRIGHT.md']) {
         expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
         expect(present.has(`.gspot/guides/${path}`)).toBe(true);
     }
 });
 
-test('a selected manifest cannot silently omit a missing guide asset', async () => {
+test('a kit cannot install a conditional rule its rules folder does not hold', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
     const session = await openSession(sandbox.path);
     const manifest = parseManifest(
-        '[kit]\ntitle = "Example"\ndescription = "Example guide selection for this test."\n[guides]\ncode = [{path = "missing.md"}]\n',
+        '[kit]\ntitle = "Example"\ndescription = "Example rule selection for this test."\n[rules]\n"MISSING.md" = {dependencies = ["example"]}\n',
         'kits/general/example',
     );
     expect(() => selectRuleFiles(session.policyFiles.policy.guides, [manifest], session.repository)).toThrow(
-        'does not exist: missing.md',
+        'The rule MISSING.md of the example kit does not exist.',
     );
 });
 
 test('Swift guides require parsed imports and ignore comments and strings', async () => {
     const absent = await generatedGuides('all', { 'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n' });
     const present = await generatedGuides('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
-    for (const path of ['framework/swiftui/SWIFTUI.md', 'framework/uikit/UIKIT.md']) {
+    for (const path of ['language/swift/SWIFTUI.md', 'language/swift/UIKIT.md']) {
         expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
         expect(present.has(`.gspot/guides/${path}`)).toBe(true);
     }

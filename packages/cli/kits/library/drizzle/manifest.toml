@@ -59,6 +59,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Paths that may hold raw SQL templates, each with a reason."
-
-[guides]
-library = [{path = "library/drizzle/DRIZZLE.md"}]

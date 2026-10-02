@@ -105,6 +105,5 @@ direction = "per-rule"
 default = {}
 summary = "Enabled Stylelint rules and their native options. Disable a rule with gspot ignore css/stylelint --rule."
 
-[guides]
-tool = [{path = "tool/tailwind/TAILWIND.md", when = {dependencies = ["tailwindcss"]}}]
-language = [{path = "language/CSS.md"}, {path = "language/naming/CSS.md"}]
+[rules]
+"TAILWIND.md" = {dependencies = ["tailwindcss"]}

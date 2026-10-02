@@ -17,7 +17,7 @@ describe('the managed block', () => {
             session.policyFiles.policy.level,
             session.repository,
         );
-        expect(block).toContain('general/agent/WORKING.md');
+        expect(block).toContain('agent/WORKING.md');
         expect(block).not.toContain('gspot check');
         expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
     });
@@ -25,7 +25,7 @@ describe('the managed block', () => {
     test('with a check selected it names the command, and an excluded file leaves the index', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['spelling'], '\n[guides]\nexclude = ["general/code/ACCESSIBILITY.md"]\n'),
+            'gspot.toml': policyOf(['spelling'], '\n[guides]\nexclude = ["code/ACCESSIBILITY.md"]\n'),
         });
         const session = await openSession(sandbox.path);
         const block = managedBlock(
@@ -36,7 +36,7 @@ describe('the managed block', () => {
         );
         expect(block).toContain('Run `gspot check --staged` before committing');
         expect(block).not.toContain('ACCESSIBILITY.md');
-        expect(block).toContain('general/code/NAMING.md');
+        expect(block).toContain('code/NAMING.md');
         expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
     });
 });

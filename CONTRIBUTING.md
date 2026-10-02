@@ -44,7 +44,7 @@ mise run build:plugin
 
 `build` writes the `gspot` package to `packages/cli/dist/`: `gspot.js`, the command, and
 `configuration.js`, which evaluates ESLint configuration in its own process. The package also
-ships `packages/cli/kits/`, `packages/cli/guides/`, and `packages/cli/grammars/`.
+ships `packages/cli/kits/`, `packages/cli/rules/`, and `packages/cli/grammars/`.
 `build:plugin` writes the ESLint plugin to `packages/eslint-plugin/dist/`. The two builds do
 not depend on each other. To run the build under Node:
 

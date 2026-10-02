@@ -148,6 +148,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Trivy ids accepted: the id and the reason."
-
-[guides]
-tool = [{path = "tool/docker/DOCKER.md"}]

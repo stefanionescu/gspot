@@ -249,7 +249,6 @@ summary = "Reports functions at or below limits.trivial_statements and files con
 why = "Unnecessary functions add names and indirection without substantial behavior."
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore bash/trivial-functions --paths <file> --reason <why>`."
 
-
 [[check]]
 name = "limits"
 title = "Keep shell scripts within the size limits"
@@ -403,6 +402,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "The functions besides main that a script may define without calling or documenting them, such as a step runner other scripts call by name."
-
-[guides]
-language = [{path = "language/BASH.md"}, {path = "language/bash/LANGUAGE.md"}, {path = "language/bash/SAFETY.md"}, {path = "language/bash/OPERATIONS.md"}, {path = "language/naming/BASH.md"}]

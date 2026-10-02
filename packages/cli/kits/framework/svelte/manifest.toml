@@ -64,9 +64,6 @@ summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
-[guides]
-framework = [{path = "framework/svelte/SVELTE.md"}]
-
 [required_rules]
 svelte = ["svelte/no-at-html-tags", "svelte/require-each-key", "svelte/no-target-blank"]
 

@@ -139,6 +139,3 @@ type = "list"
 direction = "tightening"
 default = []
 summary = "The entitlements the app may hold; empty turns the check off."
-
-[guides]
-tool = [{path = "tool/xcode/XCODE.md"}]
