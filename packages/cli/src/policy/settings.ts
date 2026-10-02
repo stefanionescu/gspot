@@ -155,7 +155,7 @@ const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown>
     generated: (policy) => declarationsOf(policy, 'generated'),
     vendored: (policy) => declarationsOf(policy, 'vendored'),
     require_reasons: (policy) => policy.requireReasons,
-    extra_checks: (policy) => policy.extraChecks,
+    enable: (policy) => policy.extraChecks,
 };
 
 /**

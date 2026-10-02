@@ -20,6 +20,7 @@ kits = [
     "duplication",
     "security",
 ]
+runner = "mise"
 naming.banned_terms = [
     "catalog",
     "catalogue",
@@ -60,9 +61,6 @@ kits = ["typescript", "css", "astro"]
 [guides]
 install = true
 directory = ".gspot/guides"
-
-[runner]
-tool = "mise"
 
 [tools]
 
@@ -221,11 +219,6 @@ reason = "libpg-query AST tags spell these keys."
 file = "packages/cli/src/types/checks/tool/xcode.ts"
 names = ["shouldTranslate"]
 reason = "Xcode string files spell this key."
-
-[[naming.contract_properties]]
-file = "packages/cli/src/types/repository/repository.ts"
-names = ["produced_by"]
-reason = "The gspot.toml key of a generated file entry."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/parsers/sql.ts"

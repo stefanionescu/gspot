@@ -15,7 +15,7 @@ export type ExistingTool = {
 
 /** A generated or vendored file entry of gspot.toml, with its kind. */
 export type FileDeclaration =
-    | { kind: 'generated'; paths: string[]; produced_by?: string | undefined; reason?: string | undefined }
+    | { kind: 'generated'; paths: string[]; generator?: string | undefined; reason?: string | undefined }
     | { kind: 'vendored'; paths: string[]; reason?: string | undefined };
 
 export type ScopeEntry = {

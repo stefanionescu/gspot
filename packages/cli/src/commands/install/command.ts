@@ -32,7 +32,7 @@ function preparation(session: Session): { steps: string[][]; failures: string[];
                 return [];
             }
         });
-    const runner = session.policyFiles.policy.runner?.tool;
+    const runner = session.policyFiles.policy.runner;
     if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
     const hooks =
         session.repository.hasGit && session.policyFiles.policy.hooks !== undefined ? HOOKS_DIRECTORY : undefined;

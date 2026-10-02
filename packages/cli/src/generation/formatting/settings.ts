@@ -80,7 +80,7 @@ function prettierOptions(format: Partial<FormatSettings>): Record<string, unknow
         ...(format.indent_style === undefined ? {} : { useTabs: format.indent_style === 'tab' }),
         ...(format.print_width === undefined ? {} : { printWidth: format.print_width }),
         ...(format.quotes === undefined ? {} : { singleQuote: format.quotes === 'single' }),
-        ...(format.trailing_comma === undefined ? {} : { trailingComma: format.trailing_comma }),
+        ...(format.trailing_commas === undefined ? {} : { trailingComma: format.trailing_commas }),
         ...(format.semicolons === undefined ? {} : { semi: format.semicolons }),
         ...(format.line_ending === undefined ? {} : { endOfLine: format.line_ending }),
     };
@@ -133,7 +133,7 @@ export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
             ...(format.indent_style === undefined ? {} : { indent_style: format.indent_style }),
             ...(format.indent_width === undefined ? {} : { indent_size: format.indent_width }),
             ...(format.line_ending === undefined ? {} : { end_of_line: format.line_ending }),
-            ...(format.newline_at_end === undefined ? {} : { insert_final_newline: format.newline_at_end }),
+            ...(format.final_newline === undefined ? {} : { insert_final_newline: format.final_newline }),
         };
         if (Object.keys(options).length === 0) return [];
         return expandedPaths(paths).map((pattern) => ({ path: `/${editorconfigSelector(pattern, scope)}`, options }));

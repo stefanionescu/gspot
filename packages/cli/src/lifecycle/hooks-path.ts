@@ -48,7 +48,7 @@ export function installHooks({
     if (policy.hooks === undefined || !repository.hasGit) return '';
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0) {
-        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.runner?.tool)}`);
+        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.runner)}`);
         return `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
     }
     const path = ownHooksPath(repository.root);

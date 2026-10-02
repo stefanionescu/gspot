@@ -79,7 +79,7 @@ test(
         await expectNamingAllowance(sandbox.path, command);
         const reset = await runGspot(sandbox.path, ['set', 'level', '--default']);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-        const extra = await runGspot(sandbox.path, ['set', 'extra_checks', 'naming/identifiers']);
+        const extra = await runGspot(sandbox.path, ['set', 'enable', 'naming/identifiers']);
         expect(extra.code, extra.stdout + extra.stderr).toBe(0);
         const optedIn = await runGspot(sandbox.path, command);
         expect(optedIn.code, optedIn.stdout + optedIn.stderr).toBe(1);
@@ -97,11 +97,11 @@ test(
 
 test.each([
     ['level', 'strict'],
-    ['extra_checks', 'unknown/check'],
+    ['enable', 'unknown/check'],
 ])('invalid %s value %s preserves the policy', async (key, value) => {
     await using sandbox = await testdir();
     const policyPath = join(sandbox.path, 'gspot.toml');
-    const policy = policyOf(['bash', 'naming'], 'extra_checks = ["naming/identifiers"]\n');
+    const policy = policyOf(['bash', 'naming'], 'enable = ["naming/identifiers"]\n');
     await Bun.write(policyPath, policy);
     const refused = await runGspot(sandbox.path, ['set', key, value]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

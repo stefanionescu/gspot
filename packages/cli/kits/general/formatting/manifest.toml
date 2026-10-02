@@ -168,7 +168,7 @@ default = "lf"
 summary = "The line ending every file uses: lf or crlf."
 
 [[settings]]
-name = "format.newline_at_end"
+name = "format.final_newline"
 kind = "boolean"
 direction = "neutral"
 default = true
@@ -182,7 +182,7 @@ default = "single"
 summary = "single or double, for the languages where a formatter chooses."
 
 [[settings]]
-name = "format.trailing_comma"
+name = "format.trailing_commas"
 kind = "string"
 direction = "neutral"
 default = "all"

@@ -39,7 +39,7 @@ test(
         expect((JSON.parse(check.stdout) as RunReport).checks).toStrictEqual([
             containing({ check: 'bash/shellcheck', status: 'ok' }),
         ]);
-        const selected = await spawnGspot(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
+        const selected = await spawnGspot(sandbox.path, ['set', 'enable', 'bash/shfmt']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const json = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shfmt', '--json']);
         const record = JSON.parse(json.stdout) as { checks: { check: string; status: string }[]; exitCode: number };

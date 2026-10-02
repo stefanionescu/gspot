@@ -43,7 +43,7 @@ export type InitOptions = {
     hooks?: 'gspot' | 'none';
     ci?: NonNullable<Policy['ci']>['provider'] | 'none';
     rules?: 'yes' | 'no';
-    runner?: NonNullable<Policy['runner']>['tool'] | 'none';
+    runner?: NonNullable<Policy['runner']> | 'none';
     from?: string;
     profile?: Profile;
     isListExact?: boolean;
@@ -77,7 +77,7 @@ export type InitAnswers = {
     hooks: 'gspot' | 'none';
     ci: NonNullable<Policy['ci']>['provider'] | 'none';
     isRules: boolean;
-    runner: NonNullable<Policy['runner']>['tool'] | 'none';
+    runner: NonNullable<Policy['runner']> | 'none';
 };
 
 /** Everything init computes before it asks to continue. */
@@ -115,7 +115,7 @@ export type InitPlan = {
     hooks: 'gspot' | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
-    runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
+    runner: NonNullable<RawPolicy['runner']> | 'none';
     commitScopes?: string[];
 };
 export type Written = { lines: string[]; installNote: string; exitCode: number };

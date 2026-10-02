@@ -30,7 +30,7 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
             run: policy.ci.run,
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
-            isMise: policy.runner?.tool === 'mise',
+            isMise: policy.runner === 'mise',
         }),
     );
 }
@@ -124,10 +124,10 @@ export function emitAll(
     out.configurations.push(...bunConfiguration(root, scopes));
     out.files.push(
         ...hookFiles(root, policy, version),
-        ...toolPackages(manifests, packageClient, policy.runner?.tool),
+        ...toolPackages(manifests, packageClient, policy.runner),
         ...toolEnvironment(manifests),
     );
-    if (policy.runner?.tool === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
+    if (policy.runner === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
     workflowOutput(policy, scopes, version, out);
     out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));
     if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))

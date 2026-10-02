@@ -67,7 +67,7 @@ test('initialization keeps the profile runner while honoring disabled integratio
         profileTables: {
             hooks: { push: 'all' },
             ci: { provider: 'github' },
-            runner: { tool: 'mise' },
+            runner: 'mise',
             coverage: { strict: true },
         },
         hooks: 'none',
@@ -77,7 +77,7 @@ test('initialization keeps the profile runner while honoring disabled integratio
     });
     const document = parse(text);
     expect(document).toMatchObject({
-        runner: { tool: 'mise' },
+        runner: 'mise',
         coverage: { strict: true },
         guides: { directory: '.gspot/guides', install: false },
     });

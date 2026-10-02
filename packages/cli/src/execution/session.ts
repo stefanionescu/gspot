@@ -42,7 +42,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         policyFiles.policy.exclude,
     );
     const scopes = scopeSelections(policyFiles.policy, repo.scopes, manifests);
-    const runner = policyFiles.policy.runner?.tool;
+    const runner = policyFiles.policy.runner;
     const needsPackages =
         Object.keys(
             npmPins(

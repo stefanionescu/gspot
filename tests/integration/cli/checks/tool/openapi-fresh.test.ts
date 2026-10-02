@@ -14,7 +14,7 @@ import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'no
 
 const OPENAPI_FRESH_POLICY = policyOf(
     ['express'],
-    '[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n',
+    '[tools.openapi]\ndocument = "openapi.json"\ngenerate = "bun generate.ts \\"\\" \\"two words\\""\n',
 );
 
 const OPENAPI_FRESH_GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';

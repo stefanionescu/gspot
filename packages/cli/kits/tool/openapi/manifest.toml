@@ -45,7 +45,7 @@ example = "A committed OpenAPI document that differs from the configured generat
 level = "recommended"
 stage = "push"
 runs = "once"
-summary = "Runs the command in tools.openapi.produced_by and fails when it changes the document."
+summary = "Runs the command in tools.openapi.generate and fails when it changes the document."
 why = "A committed document that lags the routes describes a service that does not exist."
 help = "Run the command and commit the document it writes."
 
@@ -57,7 +57,7 @@ default = ""
 summary = "The committed OpenAPI document; empty turns both OpenAPI checks off."
 
 [[settings]]
-name = "tools.openapi.produced_by"
+name = "tools.openapi.generate"
 kind = "string"
 direction = "neutral"
 default = ""

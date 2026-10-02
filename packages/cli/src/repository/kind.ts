@@ -39,7 +39,7 @@ function declaredKind(path: string, declarations: FileDeclaration[]): Verdict | 
         return {
             kind: entry.kind,
             source: entry.kind,
-            ...(entry.kind === 'generated' && entry.produced_by !== undefined ? { producedBy: entry.produced_by } : {}),
+            ...(entry.kind === 'generated' && entry.generator !== undefined ? { producedBy: entry.generator } : {}),
         };
     }
     return undefined;

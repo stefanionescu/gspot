@@ -103,8 +103,8 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
     for (const [index, name] of policy.extraChecks.entries())
         if (!selectedNames.has(name))
             problems.push({
-                path: ['extra_checks', index],
-                message: `extra_checks names an unselected or unknown check: ${name}.`,
+                path: ['enable', index],
+                message: `enable names an unselected or unknown check: ${name}.`,
             });
     problems.push(
         ...policy.guides.exclude.flatMap((entry, index) =>

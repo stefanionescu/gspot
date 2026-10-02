@@ -109,9 +109,9 @@ const formatFields = z.strictObject({
     indent_width: z.number().int().min(1).max(INDENT_MAX).optional(),
     print_width: z.number().int().min(PRINT_WIDTH_MIN).max(PRINT_WIDTH_MAX).optional(),
     line_ending: z.enum(['lf', 'crlf']).optional(),
-    newline_at_end: flag.optional(),
+    final_newline: flag.optional(),
     quotes: z.enum(['single', 'double']).optional(),
-    trailing_comma: z.enum(['all', 'es5', 'none']).optional(),
+    trailing_commas: z.enum(['all', 'es5', 'none']).optional(),
     semicolons: flag.optional(),
 });
 
@@ -135,7 +135,7 @@ const ignoreSchema = z.strictObject({
 
 const generatedSchema = z.strictObject({
     paths: textListNonEmpty,
-    produced_by: text.optional(),
+    generator: text.optional(),
     reason: text.optional(),
 });
 
@@ -166,10 +166,6 @@ const checkSchema = z.strictObject({
 });
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
-
-const runnerSchema = z.strictObject({
-    tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'yarn']).describe('The runner that installs and runs gspot.'),
-});
 
 const hooksSchema = z.strictObject({
     push: z
@@ -224,15 +220,14 @@ export const ciSchema = z.strictObject({
 
 /** Integration settings use the same fields, defaults, and descriptions as policy validation. */
 export const integrationSettingSchemas = Object.fromEntries(
-    Object.entries({ hooks: hooksSchema, ci: ciSchema, runner: runnerSchema, guides: guidesSchema }).flatMap(
-        ([section, schema]) =>
-            Object.entries(schema.shape as Record<string, z.ZodType>).map(
-                ([key, field]) =>
-                    [
-                        `${section}.${key}`,
-                        field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
-                    ] as const,
-            ),
+    Object.entries({ hooks: hooksSchema, ci: ciSchema, guides: guidesSchema }).flatMap(([section, schema]) =>
+        Object.entries(schema.shape as Record<string, z.ZodType>).map(
+            ([key, field]) =>
+                [
+                    `${section}.${key}`,
+                    field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
+                ] as const,
+        ),
     ),
 );
 
@@ -252,7 +247,11 @@ export const rootSettingSchemas = {
             'Recommended includes correctness, security, accessibility, type safety, routine formatting, and declared contracts. All adds stable conventions. Neither enables experimental rules.',
         ),
     require_reasons: flag.default(false).describe('Require a reason for ignores and loosened settings.'),
-    extra_checks: textList.default([]).describe('Checks at level all to run individually at level recommended.'),
+    enable: textList.default([]).describe('Checks at level all to run individually at level recommended.'),
+    runner: z
+        .enum(['mise', 'npm', 'bun', 'pnpm', 'yarn'])
+        .optional()
+        .describe('The runner that installs and runs gspot.'),
     exclude: textList.default([]).describe('Paths and directory patterns excluded before reading source content.'),
     generated: z.array(generatedSchema).default([]).describe('Generated files excluded from source checks.'),
     vendored: z.array(vendoredSchema).default([]).describe('Upstream files excluded from source checks.'),
@@ -270,5 +269,4 @@ export const policySchema = z.strictObject({
     hooks: hooksSchema.optional(),
     ci: ciSchema.optional(),
     guides: guidesSchema.optional(),
-    runner: runnerSchema.optional(),
 });

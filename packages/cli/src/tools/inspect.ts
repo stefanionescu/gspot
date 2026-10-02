@@ -181,7 +181,7 @@ export function toolVersionState(found: string, want: string, floor: string): To
  * @returns the first path found
  */
 export function locateTool(root: string, name: string, pending?: string[]): string | undefined {
-    const runner = hasPolicy(root) ? readPolicy(root).policy.runner?.tool : undefined;
+    const runner = hasPolicy(root) ? readPolicy(root).policy.runner : undefined;
     const tool = toolPin(kitManifests().values(), name);
     if (isInstallationPending({ root, installations: () => pending }, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
@@ -198,7 +198,7 @@ export function locateTool(root: string, name: string, pending?: string[]): stri
  */
 export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
-    const runner = context.policyFiles?.policy.runner?.tool;
+    const runner = context.policyFiles?.policy.runner;
     if (isInstallationPending(context, tool, runner))
         return {
             name: tool.name,

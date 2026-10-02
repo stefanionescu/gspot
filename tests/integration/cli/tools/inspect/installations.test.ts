@@ -177,7 +177,7 @@ test.each(['mise', 'npm'])(
     async (runner) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf([], `[runner]\ntool = "${runner}"\n`),
+            'gspot.toml': policyOf([], `runner = "${runner}"\n`),
             'node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
             'node_modules/.bin/ec': '#!/bin/sh\necho 3.4.0\n',
             '.gspot/node_modules/.bin/teller': `#!/bin/sh\necho ${runner === 'mise' ? '1.0.0' : '3.8.1'}\n`,

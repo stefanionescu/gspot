@@ -24,7 +24,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
 test('an npm runner preserves the authored scripts and adds no task of its own', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[runner]\ntool = "bun"\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], 'runner = "bun"\n[guides]\ninstall = false\n'),
         'package.json': '{"private":true,"scripts":{"prepare":"build-app"}}\n',
     });
     await writeOutputs(await openSession(sandbox.path));

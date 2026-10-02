@@ -14,7 +14,7 @@ const release = getPublishedRelease();
 // Explicit naming selection runs in the installed consumer and preserves authored files.
 async function expectInstalledNaming(installation: InstalledConsumer): Promise<void> {
     const { consumer, command, options } = installation;
-    const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
+    const optIn = await run([...command, 'set', 'enable', 'naming/identifiers'], options);
     expect(optIn.code, optIn.stdout + optIn.stderr).toBe(0);
     writeFileSync(join(consumer, 'broken.sh'), 'command=example\n');
     const renamed = await run([...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--json'], options);

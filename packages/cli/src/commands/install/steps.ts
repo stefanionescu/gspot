@@ -21,7 +21,7 @@ const installations: InstallationStep[] = [
     {
         failure: 'Native tool installation failed.',
         run: async (session) => {
-            if (session.policyFiles.policy.runner?.tool !== 'mise') return '';
+            if (session.policyFiles.policy.runner !== 'mise') return '';
             const read = await runToolCommand(undefined, ['mise', '--version'], { cwd: session.root });
             const version = semver.coerce(read.stdout);
             if (read.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
@@ -53,7 +53,7 @@ const installations: InstallationStep[] = [
         run: async (session, manifests) => {
             if (pythonPins(manifests).length === 0) return '';
             let executable = 'uv';
-            if (session.policyFiles.policy.runner?.tool === 'mise') {
+            if (session.policyFiles.policy.runner === 'mise') {
                 const located = await runToolCommand(
                     undefined,
                     ['mise', 'which', 'uv', '--tool', `${UV_INSTALLER.name}@${UV_INSTALLER.version}`],

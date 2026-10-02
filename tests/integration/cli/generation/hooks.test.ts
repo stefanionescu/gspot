@@ -14,7 +14,7 @@ test.each([undefined, 'npm', 'mise'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'kits = []\n' });
         gitOutput(sandbox.path, ['init', '-q']);
-        const tables = runner === undefined ? '[hooks]\n' : `[hooks]\n[runner]\ntool = "${runner}"\n`;
+        const tables = runner === undefined ? '[hooks]\n' : `runner = "${runner}"\n[hooks]\n`;
         const policy = parsePolicyText(policyOf([], tables), 'gspot.toml');
         const files = hookFiles(join(sandbox.path, "app's dir"), policy, '1.2.3');
         expect(files.map((file) => file.path)).toStrictEqual([

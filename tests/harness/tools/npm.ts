@@ -39,7 +39,7 @@ const PACKAGES: Record<'mise' | 'none', RegistryPackage[]> = {
     ],
 };
 
-const RUNNER_POLICY = { mise: '[runner]\ntool = "mise"\n', none: '' };
+const RUNNER_POLICY = { mise: 'runner = "mise"\n', none: '' };
 
 /** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
 export function readPackageInputs(

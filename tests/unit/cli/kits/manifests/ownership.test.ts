@@ -14,12 +14,12 @@ test('every shipped manifest passes the checks across manifests', () => {
 test('two kits that declare one setting must give it one meaning and may differ only in its default', () => {
     const manifests = new Map(kitManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
-    const setting = manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
+    const setting = manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.generate')!;
     fastapi.settings.push({ ...setting, kind: 'boolean' });
     manifests.set('fastapi', fastapi);
     expect(() => {
         validateManifests(manifests);
-    }).toThrow('setting tools.openapi.produced_by differs from its declaration in');
+    }).toThrow('setting tools.openapi.generate differs from its declaration in');
     fastapi.settings[fastapi.settings.length - 1] = { ...setting, default: 'fastapi' };
     expect(() => {
         validateManifests(manifests);

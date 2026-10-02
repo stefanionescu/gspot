@@ -17,7 +17,7 @@ test(
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 ['css'],
-                '[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.stylelint.rules]\ncolor-named = "never"\nselector-max-id = 0\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.stylelint.rules]\ncolor-named = "always-where-possible"\n',
+                'runner = "mise"\n[guides]\ninstall = false\n[tools.stylelint.rules]\ncolor-named = "never"\nselector-max-id = 0\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.stylelint.rules]\ncolor-named = "always-where-possible"\n',
                 'all',
             ),
             'package.json': '{"private":true}\n',

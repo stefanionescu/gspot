@@ -44,12 +44,12 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * Runs tools.openapi.produced_by and reports the document when the run changed it.
+ * Runs tools.openapi.generate and reports the document when the run changed it.
  * @param input the engine input
  * @returns the findings
  */
 export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
-    const { document: named, produced_by: producer } = input.view.tool('openapi');
+    const { document: named, generate: producer } = input.view.tool('openapi');
     const document = typeof named === 'string' ? named : '';
     const command = typeof producer === 'string' ? producer : '';
     if (document === '' || command === '') return [];

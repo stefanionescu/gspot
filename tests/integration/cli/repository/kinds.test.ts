@@ -16,7 +16,7 @@ describe('kinds', () => {
             'assets/a.bin': 'x',
             'src/a.ts': 'export const a = 1;\n',
         });
-        const declarations = [{ paths: ['src/a.ts'], produced_by: 'gen', kind: 'generated' as const }];
+        const declarations = [{ paths: ['src/a.ts'], generator: 'gen', kind: 'generated' as const }];
         const declared = await readRepository(sandbox.path, declarations, [], []);
         expect(declared.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
             kind: 'generated',

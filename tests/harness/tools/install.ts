@@ -44,7 +44,7 @@ export function toolsPath(names: string[]): string {
     const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
+        if (privateToolInstallation(tool, context.policyFiles.policy.runner) !== undefined) return [];
         // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
         if (!toolShipsHere(tool.name)) return [];
         const found = inspectTool(context, tool);

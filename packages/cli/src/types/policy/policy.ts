@@ -97,7 +97,7 @@ export type Policy = {
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
     guides: RuleSettings;
-    runner?: Defined<NonNullable<RawPolicy['runner']>>;
+    runner?: NonNullable<RawPolicy['runner']>;
     scopeTables: Record<string, Partial<Policy>>;
 };
 

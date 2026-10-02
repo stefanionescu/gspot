@@ -59,7 +59,7 @@ test('declarations retain producer metadata and reasons while removing individua
     const accepted = await runGspot(directory.path, [
         'set',
         'generated',
-        '{"paths":["a.sh","b.sh"],"produced_by":"bun generate.ts"}',
+        '{"paths":["a.sh","b.sh"],"generator":"bun generate.ts"}',
         '--reason',
         'Build output retained for consumers',
     ]);
@@ -70,9 +70,7 @@ test('declarations retain producer metadata and reasons while removing individua
         (Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')) as Record<string, unknown>)[
             'generated'
         ],
-    ).toStrictEqual([
-        { paths: ['b.sh'], produced_by: 'bun generate.ts', reason: 'Build output retained for consumers' },
-    ]);
+    ).toStrictEqual([{ paths: ['b.sh'], generator: 'bun generate.ts', reason: 'Build output retained for consumers' }]);
 });
 
 test('excluded directories stay out of checks until the policy removes their exclusion', async () => {

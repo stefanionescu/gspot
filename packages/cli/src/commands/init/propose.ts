@@ -56,7 +56,7 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     else document['ci'] = { ...asRecord(document['ci']), provider: plan.ci };
     document['guides'] = { directory: '.gspot/guides', ...asRecord(document['guides']), install: plan.rules };
     if (plan.runner === 'none') delete document['runner'];
-    else document['runner'] = { tool: plan.runner };
+    else document['runner'] = plan.runner;
 }
 
 // The policy body, with arrays in the layout the TOML formatter keeps, so the first format check of the policy passes.

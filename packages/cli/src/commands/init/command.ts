@@ -32,7 +32,7 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
         kits: configurations.length === 0 ? ['none'] : configurations,
         hooks: tables.hooks === undefined ? 'none' : 'gspot',
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
-        runner: tables.runner === undefined ? 'none' : tables.runner.tool,
+        runner: tables.runner ?? 'none',
         rules: ruleAnswer(install),
     });
 }

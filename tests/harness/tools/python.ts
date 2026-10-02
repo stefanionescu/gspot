@@ -29,7 +29,7 @@ export async function preparePythonInstallation(
     runner: string,
     url: string,
 ): Promise<PreparePythonInstallationResult> {
-    const runnerTable = runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`;
+    const runnerTable = runner === 'none' ? '' : `runner = "${runner}"\n`;
     await createFileTree(root, {
         '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
         'gspot.toml': policyOf(['python'], `${runnerTable}[guides]\ninstall = false\n`, 'recommended'),

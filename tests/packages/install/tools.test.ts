@@ -79,7 +79,7 @@ async function prepareFormatterConsumer(
     };
     const toolInit = await run([...command, ...FORMATTER_INIT], toolOptions);
     if (toolInit.code !== 0) throw new Error(`Formatter fixture init failed: ${toolInit.stdout}${toolInit.stderr}`);
-    const selectedFormatter = await run([...command, 'set', 'extra_checks', 'formatting/prettier'], toolOptions);
+    const selectedFormatter = await run([...command, 'set', 'enable', 'formatting/prettier'], toolOptions);
     if (selectedFormatter.code !== 0)
         throw new Error(`Formatter fixture selection failed: ${selectedFormatter.stdout}${selectedFormatter.stderr}`);
     return { toolConsumer, toolOptions, authoredPackage };
