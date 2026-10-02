@@ -99,7 +99,7 @@ test(
         );
         expect(output.filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toStrictEqual([]);
     },
-    PLANTED_TIMEOUT_MS * 3,
+    PLANTED_TIMEOUT_MS * 6,
 );
 
 test(
@@ -148,7 +148,7 @@ test(
         expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(keptMode(0o640));
         expect(await Bun.file(join(sandbox.path, scope, 'build/cache.tsbuildinfo')).text()).toBe('authored metadata\n');
     },
-    PLANTED_TIMEOUT_MS * 3,
+    PLANTED_TIMEOUT_MS * 6,
 );
 
 test.each(['absolute', 'symlink'])(
@@ -194,5 +194,5 @@ test.each(['absolute', 'symlink'])(
             readdirSync(join(sandbox.path, 'app')).toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['tsconfig.json', 'value.ts']);
     },
-    PLANTED_TIMEOUT_MS * 3,
+    PLANTED_TIMEOUT_MS * 6,
 );

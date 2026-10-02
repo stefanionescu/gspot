@@ -46,7 +46,13 @@ const MANIFEST = {
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function checked(planted: InstalledRepository, checks: string[], code: number): Promise<RunReport> {
-    const outcome = await spawnGspot(planted.root, ['check', '--only', ...checks, '--json'], planted.environment);
+    // The Next.js type check runs the type generation and then the compiler, which is slow on Windows.
+    const outcome = await spawnGspot(
+        planted.root,
+        ['check', '--only', ...checks, '--json'],
+        planted.environment,
+        PLANTED_TIMEOUT_MS * 4,
+    );
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(code);
     return JSON.parse(outcome.stdout) as RunReport;
 }
@@ -160,18 +166,18 @@ plantedCases(
         test(
             'the framework rules reject a disabled requirement',
             () => requiredRules(installed()),
-            PLANTED_TIMEOUT_MS * 2,
+            PLANTED_TIMEOUT_MS * 8,
         );
         test(
             'type checking delegates to the Next.js check only when it runs',
             () => delegation(installed()),
-            PLANTED_TIMEOUT_MS * 2,
+            PLANTED_TIMEOUT_MS * 8,
         );
         test(
             'the TypeScript check finds defects when the Next.js check is skipped',
             () => skippedReplacement(installed()),
-            PLANTED_TIMEOUT_MS * 2,
+            PLANTED_TIMEOUT_MS * 8,
         );
-        test('the i18n rules reject literal markup', () => literalMarkup(installed()), PLANTED_TIMEOUT_MS * 2);
+        test('the i18n rules reject literal markup', () => literalMarkup(installed()), PLANTED_TIMEOUT_MS * 8);
     },
 );

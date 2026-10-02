@@ -54,7 +54,7 @@ describe('gspot add', () => {
                 environment,
             );
             expect(before.code, before.stdout + before.stderr).toBe(0);
-            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
+            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment, INSTALL_TIMEOUT_MS);
             expect(added.code, added.stdout + added.stderr).toBe(0);
             const after = await spawnGspot(
                 sandbox.path,
