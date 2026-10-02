@@ -78,10 +78,10 @@ test.each([
             checks: { scope: string; status: string; findings: { file: string; line: number; rule: string }[] }[];
         };
         expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-            { scope: '', status: 'ok' },
-            { scope: 'app', status: 'ok' },
-            { scope: 'app/child', status: 'fail' },
-            { scope: 'sibling', status: 'ok' },
+            { scope: '', status: 'passed' },
+            { scope: 'app', status: 'passed' },
+            { scope: 'app/child', status: 'failed' },
+            { scope: 'sibling', status: 'passed' },
         ]);
         expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
             { file: `app/child/${path}`, line: 1, rule },

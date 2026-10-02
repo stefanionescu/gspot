@@ -20,7 +20,7 @@ test('CSS module imports and literal access bind to the selected stylesheet, and
     });
     const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
     expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'ok', findings: [] }]);
+    expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
     await Bun.write(
         join(sandbox.path, 'panel.tsx'),
         "import styles from './styles.module.css';\nexport const panel = styles.missing;\n",
@@ -46,7 +46,7 @@ test.each([
     });
     const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
     expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'ok', findings: [] }]);
+    expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
 });
 
 test('identically named stylesheets keep their own bindings and correct exact findings', async () => {
@@ -63,7 +63,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
     expect(failed.report.checks).toMatchObject([
         {
             check: 'css/module-classes',
-            status: 'fail',
+            status: 'failed',
             findings: [
                 { check: 'css/module-classes', file: 'left/styles.module.css', rule: 'unused-class', line: 1 },
                 { check: 'css/module-classes', file: 'left/view.ts', rule: 'undefined-class', line: 1 },
@@ -76,7 +76,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
     );
     const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('ignored importers cannot satisfy a selected stylesheet class', async () => {
@@ -94,7 +94,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
     expect(failed.report.checks).toMatchObject([
         {
             check: 'css/module-classes',
-            status: 'fail',
+            status: 'failed',
             findings: [
                 {
                     file: 'styles.module.css',
@@ -108,7 +108,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
     await Bun.write(join(sandbox.path, 'styles.module.css'), '.card { color: red; }\n');
     const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
 });
 
 test.each([

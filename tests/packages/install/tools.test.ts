@@ -149,7 +149,7 @@ async function expectInstalledCheck(
     const [checked] = (JSON.parse(failed.stdout) as RunReport).checks;
     expect(checked).toMatchObject({
         check: check.only,
-        status: 'fail',
+        status: 'failed',
         findings: [{ file: check.path, ...check.finding }],
     });
     const executable = toPosix(relative(realpathSync(consumer), checked!.command![0]!));
@@ -185,7 +185,7 @@ test(
         const invalid = await run(formatter, toolOptions);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'format/prettier', status: 'fail', findings: [{ file: 'source.js' }] },
+            { check: 'format/prettier', status: 'failed', findings: [{ file: 'source.js' }] },
         ]);
         const fixed = await run([...formatter, '--fix'], toolOptions);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);

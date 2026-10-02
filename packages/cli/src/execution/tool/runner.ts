@@ -66,7 +66,7 @@ function finished(
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
-    const status = state.isFailed || findings.length > 0 ? 'fail' : 'ok';
+    const status = state.isFailed || findings.length > 0 ? 'failed' : 'passed';
     return { ...base, status, duration: performance.now() - started, findings, command: argv };
 }
 
@@ -259,7 +259,7 @@ export async function runToolCheck(
     const base: CheckResult = {
         check: spec.name,
         scope: scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: planned.files.length,
         duration: 0,
         findings: [],

@@ -35,7 +35,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
     );
     const enabled = await executeRun(await openSession(sandbox.path), options);
     expect(enabled.report.exitCode).toBe(1);
-    expect(enabled.report.checks[0]?.status).toBe('fail');
+    expect(enabled.report.checks[0]?.status).toBe('failed');
     expect(enabled.report.checks[0]?.findings[0]?.message).toContain('aps-environment is not an allowed entitlement');
 });
 
@@ -86,7 +86,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         outcomes.toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     ).toMatchObject(
         [
-            { check: 'site/build', status: 'fail', message: textContaining('Planted build failure') },
+            { check: 'site/build', status: 'failed', message: textContaining('Planted build failure') },
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
         ].toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     );
@@ -98,5 +98,5 @@ test('a failed site build skips every output consumer and a new session rebuilds
     next.resources = resources;
     const [build] = planRun(next, { stage: 'push', skips: [], only: ['site/build'] });
     const rebuilt = await checkExecution(build!.spec, CHECKS)(next, build!);
-    expect(rebuilt.status).toBe('ok');
+    expect(rebuilt.status).toBe('passed');
 });

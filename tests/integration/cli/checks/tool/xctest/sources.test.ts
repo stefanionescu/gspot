@@ -28,7 +28,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/sleep', status: 'ok', findings: [] },
+        { check: 'xctest/sleep', status: 'passed', findings: [] },
     ]);
 });
 
@@ -56,7 +56,7 @@ test.each([
     const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['xctest/disabled'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(missing ? 1 : 0);
-    expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'fail' : 'ok' }]);
+    expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'failed' : 'passed' }]);
     expect(findings).toMatchObject(missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : []);
 });
 
@@ -99,7 +99,7 @@ test.each([
     });
     const result = await executeRun(await openSession(sandbox.path), runOptions({ only: [check] }));
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
-    expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
+    expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'failed' : 'passed' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
     // A reported body is corrected and inspected again; a clean body already stands as the corrected run.
     if (count > 0)
@@ -110,7 +110,7 @@ test.each([
     const corrected =
         count > 0 ? await executeRun(await openSession(sandbox.path), runOptions({ only: [check] })) : result;
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check, status: 'passed', findings: [] }]);
 });
 
 test('snapshot layouts match semantic owners by path and respect nested scopes', async () => {
@@ -170,6 +170,6 @@ test.each([
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/references', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/references', status: 'ok', findings: [] },
+        { check: 'xctest/references', status: 'passed', findings: [] },
     ]);
 });

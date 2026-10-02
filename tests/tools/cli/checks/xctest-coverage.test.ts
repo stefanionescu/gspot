@@ -60,7 +60,7 @@ if (onMac)
             expect(failed.report.checks).toMatchObject([
                 {
                     check: 'xctest/coverage',
-                    status: 'fail',
+                    status: 'failed',
                     findings: [{ rule: 'coverage', line: 1, message: textContaining('under the floor of 100') }],
                 },
             ]);
@@ -76,7 +76,9 @@ if (onMac)
                 runOptions({ stage: 'push', only: ['xctest/coverage'], isDryRun: true }),
             );
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-            expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);
+            expect(corrected.report.checks).toMatchObject([
+                { check: 'xctest/coverage', status: 'passed', findings: [] },
+            ]);
             expect(readFileSync(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
             expect(readFileSync(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
                 XCTEST_COVERAGE_PROJECT,

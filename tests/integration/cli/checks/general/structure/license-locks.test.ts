@@ -104,7 +104,7 @@ test.each(['root', 'nested', 'combined'])(
         expect(result.report.checks).toMatchObject([
             {
                 check: 'structure/stale-allowlists',
-                status: 'fail',
+                status: 'failed',
                 findings: [{ file: 'gspot.toml', line: 1, rule: 'unlocked-package' }],
             },
         ]);
@@ -114,7 +114,7 @@ test.each(['root', 'nested', 'combined'])(
         const corrected = await executeRun(await openSession(root), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks).toMatchObject([
-            { check: 'structure/stale-allowlists', status: 'ok', findings: [] },
+            { check: 'structure/stale-allowlists', status: 'passed', findings: [] },
         ]);
     },
 );

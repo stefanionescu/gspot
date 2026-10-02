@@ -43,7 +43,7 @@ test(
         );
         expect(outcome.code, outcome.stdout).toBe(1);
         const failed = JSON.parse(outcome.stdout) as RunReport;
-        expect(failed.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
+        expect(failed.checks).toMatchObject([{ check: 'javascript/eslint', status: 'failed' }]);
         expect(failed.checks[0]!.findings).toContainEqual(
             containing({ rule: 'no-debugger', file: 'src/paused.js', line: 9 }),
         );
@@ -58,7 +58,7 @@ test(
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'javascript/eslint', status: 'ok', files: 1, findings: [] },
+            { check: 'javascript/eslint', status: 'passed', files: 1, findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 2,

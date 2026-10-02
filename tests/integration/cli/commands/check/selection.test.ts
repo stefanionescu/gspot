@@ -62,7 +62,7 @@ test('file and folder arguments intersect check lists, and --skip leaves the oth
     expect(skippedReport.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/one', 'skipped'],
         ['sandbox/two', 'skipped'],
-        ['sandbox/three', 'fail'],
+        ['sandbox/three', 'failed'],
     ]);
 });
 
@@ -124,7 +124,7 @@ stage = "${name}"
     const checked = await runGspot(sandbox.path, ['check', '--hook', stage, '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'ok']]);
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'passed']]);
 });
 
 test('a manual check runs only when --only names it', async () => {
@@ -141,7 +141,7 @@ stage = "manual"
     expect((JSON.parse(plain.stdout) as RunReport).checks).toStrictEqual([]);
     const named = await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']);
     const report = JSON.parse(named.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/manual', 'ok']]);
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/manual', 'passed']]);
 });
 
 test('a scope path selects its checks and its reproduction command repeats the same findings', async () => {

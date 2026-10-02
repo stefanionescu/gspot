@@ -37,7 +37,7 @@ test(
         expect(report.revisions).toHaveLength(1);
         expect(report.revisions[0]?.commits).toContain(leaked);
         expect(report.revisions[0]?.report.checks).toMatchObject([
-            { check: 'secrets/gitleaks-history', status: 'fail' },
+            { check: 'secrets/gitleaks-history', status: 'failed' },
         ]);
         expect(report.revisions[0]?.report.checks[0]?.findings).toContainEqual(
             containing({ rule: 'aws-access-token', file: 'settings.py', line: 1 }),
@@ -49,7 +49,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
         const alreadyRemote = await processes.run(command, {
             ...options,
             stdin: `refs/heads/removed ${removed} refs/heads/removed ${leaked}\n`,
@@ -95,7 +95,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
         expect(requests).toStrictEqual([]);
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
     },
@@ -131,7 +131,7 @@ test.each(['malformed', 'crashed'])(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
         expect(requests).toStrictEqual([]);
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
     },

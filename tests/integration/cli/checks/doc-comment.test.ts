@@ -24,6 +24,6 @@ test.each(['colon', 'dash'])(
         await Bun.write(`${sandbox.path}/show.sh`, summary + '# Arguments:\n# Returns:\n' + body);
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
+        expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
     },
 );

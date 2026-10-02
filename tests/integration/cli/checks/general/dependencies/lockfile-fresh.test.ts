@@ -60,7 +60,7 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
             expect(copies.every((path) => !existsSync(path))).toBe(true);
             spawn.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
             const fresh = await runEngineCheck(session, lockfileFresh, planned!);
-            expect(fresh.status).toBe('ok');
+            expect(fresh.status).toBe('passed');
         } finally {
             spawn.mockRestore();
         }

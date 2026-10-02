@@ -4,9 +4,9 @@ const TYPOS_FINDINGS = 2;
 
 export const FIX_PASSES = 3;
 export const FIX_DIFF_CONTEXT = 3;
-export const RAN_STATUSES = new Set(['ok', 'fail']);
+export const RAN_STATUSES = new Set(['passed', 'failed']);
 
-export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
+export const FAILED_STATUSES = new Set(['failed', 'missing', 'error']);
 export const DOCKER = { name: 'docker', host: true, installers: {} };
 
 export const POLICY_CHECK = 'gspot/policy';

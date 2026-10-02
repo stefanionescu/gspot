@@ -90,9 +90,9 @@ async function delegation(planted: InstalledRepository): Promise<void> {
         { check: 'nextjs/build', status: 'skipped', note: textContaining('tools.next.build_on_push') },
     ]);
     const direct = await checked(planted, ['typescript/tsc'], 0);
-    expect(direct.checks).toMatchObject([{ check: 'typescript/tsc', status: 'ok' }]);
+    expect(direct.checks).toMatchObject([{ check: 'typescript/tsc', status: 'passed' }]);
     const delegated = await checked(planted, ['typescript/tsc', 'nextjs/tsc'], 0);
-    expect(delegated.checks.find(({ check }) => check === 'nextjs/tsc')?.status).toBe('ok');
+    expect(delegated.checks.find(({ check }) => check === 'nextjs/tsc')?.status).toBe('passed');
     expect(delegated.checks.find(({ check }) => check === 'typescript/tsc')).toMatchObject({
         status: 'skipped',
         note: 'nextjs/tsc runs it here',
@@ -107,7 +107,7 @@ async function skippedReplacement(planted: InstalledRepository): Promise<void> {
     try {
         const failed = await checked(planted, checks, 1);
         expect(failed.checks.find(({ check }) => check === 'typescript/tsc')).toMatchObject({
-            status: 'fail',
+            status: 'failed',
             findings: [{ check: 'typescript/tsc', file: 'app/count.ts', rule: 'TS2322', line: 4 }],
         });
         expect(failed.skips.some(({ check, source }) => check === 'nextjs/tsc' && source === 'flag')).toBe(true);

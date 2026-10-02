@@ -115,7 +115,7 @@ export async function runEngineCheck(
     const base: CheckResult = {
         check: spec.name,
         scope: scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: planned.files.length,
         duration: 0,
         findings: [],
@@ -129,7 +129,7 @@ export async function runEngineCheck(
         return {
             ...base,
             ...result,
-            status: result.findings.length > 0 ? 'fail' : 'ok',
+            status: result.findings.length > 0 ? 'failed' : 'passed',
             duration: performance.now() - started,
         };
     } catch (error) {

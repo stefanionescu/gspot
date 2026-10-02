@@ -160,7 +160,7 @@ test(
         expect(first).toHaveLength(1);
         const firstReport = first[0]!.report;
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
-        expect(firstReport.checks[0]?.status).toBe('ok');
+        expect(firstReport.checks[0]?.status).toBe('passed');
         expect(firstReport.checks[0]?.files).toBe(1);
         const failing = await processes.run(command, {
             cwd: sandbox.path,

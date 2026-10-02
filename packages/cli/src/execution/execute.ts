@@ -57,7 +57,7 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
     const base: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: planned.files.length,
         duration: 0,
         findings: [],
@@ -91,14 +91,14 @@ function applyIgnoresTo(
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
 ): void {
-    const countedFailure = check.spec.count_pattern !== undefined && result.status === 'fail';
+    const countedFailure = check.spec.count_pattern !== undefined && result.status === 'failed';
     const ignored = applyIgnores(
         result.findings,
         ignores.filter((entry) => entry.check === check.check),
     );
     mergeUses(uses, ignored.uses);
     result.findings = ignored.kept;
-    result.status = countedFailure || result.findings.length > 0 ? 'fail' : 'ok';
+    result.status = countedFailure || result.findings.length > 0 ? 'failed' : 'passed';
 }
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.

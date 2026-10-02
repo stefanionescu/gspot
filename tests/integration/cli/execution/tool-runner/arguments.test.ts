@@ -90,7 +90,7 @@ test('a repository command receives a declared empty argument without changing i
     });
     const result = await executeRun(await openSession(sandbox.path), runOptions({ isDryRun: true }));
     expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'ok' }]);
+    expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'passed' }]);
 });
 
 test('per-file failures name the selected file when expanded arguments follow it', async () => {
@@ -124,11 +124,11 @@ test('per-file failures name the selected file when expanded arguments follow it
     const planned = plans[0]!;
     planned.tool = { name: process.execPath, installers: {} };
     const failed = await runToolCheck(session, planned);
-    expect(failed.status).toBe('fail');
+    expect(failed.status).toBe('failed');
     expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
     writeFileSync(join(sandbox.path, 'inputs/café source.txt'), 'valid');
     const corrected = await runToolCheck(session, planned);
-    expect(corrected.status).toBe('ok');
+    expect(corrected.status).toBe('passed');
     expect(corrected.findings).toStrictEqual([]);
 });
 
@@ -159,5 +159,5 @@ if (onPosix)
         expect(failed.findings).toStrictEqual([]);
         planned.spec.command![2] = 'process.exitCode = 0';
         const result = await runToolCheck(session, planned);
-        expect(result.status).toBe('ok');
+        expect(result.status).toBe('passed');
     });

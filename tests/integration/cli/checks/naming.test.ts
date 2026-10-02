@@ -82,7 +82,7 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
     const accepted = await runGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
-        { check: 'naming/paths', status: 'ok', findings: [] },
+        { check: 'naming/paths', status: 'passed', findings: [] },
     ]);
 });
 
@@ -99,7 +99,7 @@ test('naming policy validates inherited and scoped declarations against the comp
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     const complete = JSON.parse(accepted.stdout) as RunReport;
     expect(complete.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
-        { check: 'naming/policy', scope: '', status: 'ok' },
+        { check: 'naming/policy', scope: '', status: 'passed' },
     ]);
     const narrowed = await runGspot(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy', '--json']);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
@@ -130,7 +130,7 @@ test('naming policy validates inherited and scoped declarations against the comp
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'naming/policy', status: 'ok', findings: [] },
+        { check: 'naming/policy', status: 'passed', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'worker/source.py')).text()).toBe('remote_record = 1\n');
 });
@@ -151,7 +151,7 @@ test.each(['constructor', 'toString', '__proto__'])(
         const failed = await runGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail', 'fail']);
+        expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed', 'failed']);
         expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
@@ -180,8 +180,8 @@ test('the selected naming configuration rejects banned terms in declarations and
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['naming/identifiers', 'fail'],
-        ['naming/paths', 'fail'],
+        ['naming/identifiers', 'failed'],
+        ['naming/paths', 'failed'],
     ]);
     expect(report.checks[0]!.findings).toContainEqual(
         containing({ rule: 'banned-term', file: 'helper.js', line: 1, column: 14 }),
@@ -193,8 +193,8 @@ test('the selected naming configuration rejects banned terms in declarations and
     const accepted = await runGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
-        { check: 'naming/identifiers', status: 'ok', findings: [] },
-        { check: 'naming/paths', status: 'ok', findings: [] },
+        { check: 'naming/identifiers', status: 'passed', findings: [] },
+        { check: 'naming/paths', status: 'passed', findings: [] },
     ]);
 });
 
@@ -208,7 +208,7 @@ test('ordinary service and generation names pass the naming checks in code and p
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['naming/identifiers', 'ok'],
-        ['naming/paths', 'ok'],
+        ['naming/identifiers', 'passed'],
+        ['naming/paths', 'passed'],
     ]);
 });

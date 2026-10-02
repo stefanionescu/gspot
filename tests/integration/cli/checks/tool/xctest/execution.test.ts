@@ -72,7 +72,7 @@ const CASES = [
         build: '',
         coverage: 0.5,
         code: 1,
-        status: 'fail',
+        status: 'failed',
         produced: true,
     },
 ] as const;
@@ -112,7 +112,9 @@ describe.if(onMac)('with the macOS toolchain', () => {
                 checks: CHECKS,
             });
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-            expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);
+            expect(corrected.report.checks).toMatchObject([
+                { check: 'xctest/coverage', status: 'passed', findings: [] },
+            ]);
         },
     );
 });

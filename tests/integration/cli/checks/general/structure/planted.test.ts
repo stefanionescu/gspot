@@ -108,7 +108,7 @@ plantedCases(
                 expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
                     {
                         check: 'structure/tracked-dependencies',
-                        status: 'fail',
+                        status: 'failed',
                         findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
                     },
                 ]);
@@ -116,7 +116,7 @@ plantedCases(
                 const corrected = await runGspot(root, command, environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                    { check: 'structure/tracked-dependencies', status: 'ok', findings: [] },
+                    { check: 'structure/tracked-dependencies', status: 'passed', findings: [] },
                 ]);
             },
             PLANTED_TIMEOUT_MS,

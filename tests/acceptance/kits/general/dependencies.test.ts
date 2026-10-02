@@ -50,7 +50,7 @@ test(
         expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'dependencies/lockfile-fresh',
-                status: 'fail',
+                status: 'failed',
                 findings: [
                     containing({
                         file: 'bun.lock',
@@ -70,7 +70,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'dependencies/lockfile-fresh', status: 'ok', findings: [] },
+            { check: 'dependencies/lockfile-fresh', status: 'passed', findings: [] },
         ]);
         const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'commit', '--json'], environment);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);

@@ -27,7 +27,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     expect(await checkJavascript(reopened, site)).toMatchObject({
         check: 'javascript/tsc',
         scope: 'site',
-        status: 'ok',
+        status: 'passed',
         files: 0,
         findings: [],
     });

@@ -32,8 +32,8 @@ test(
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const failedReport = JSON.parse(failed.stdout) as RunReport;
         expect(failedReport.checks).toMatchObject([
-            { check: 'css/stylelint', scope: '', status: 'fail' },
-            { check: 'css/stylelint', scope: 'app', status: 'fail' },
+            { check: 'css/stylelint', scope: '', status: 'failed' },
+            { check: 'css/stylelint', scope: 'app', status: 'failed' },
         ]);
         expect(failedReport.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             containingAll([
@@ -47,7 +47,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toContainEqual(
-            containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
+            containing({ check: 'css/stylelint', status: 'passed', findings: [] }),
         );
         for (const folder of ['', 'app']) {
             const native = await processes.run([join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'site.css'], {

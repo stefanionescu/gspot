@@ -36,7 +36,7 @@ async function documentationFindings(root: string, code: 0 | 1) {
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const [checked] = (JSON.parse(result.stdout) as RunReport).checks;
     if (checked === undefined) throw new Error('The report holds no check.');
-    expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'ok' : 'fail' });
+    expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'passed' : 'failed' });
     return checked.findings.filter((finding) => finding.rule === 'doc_comment_style');
 }
 

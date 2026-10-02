@@ -100,7 +100,7 @@ if (runsDatabase)
         expect(stale.report.checks).toMatchObject([
             {
                 check: 'supabase/types-fresh',
-                status: 'fail',
+                status: 'failed',
                 findings: [{ file: 'database.ts', rule: 'stale', line: 1 }],
             },
         ]);
@@ -114,6 +114,6 @@ if (runsDatabase)
             runOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true }),
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
+        expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
         expect(readFileSync(configPath)).toStrictEqual(authored);
     }, 600_000);

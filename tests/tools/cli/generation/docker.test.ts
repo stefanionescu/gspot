@@ -36,10 +36,10 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
             files: check.findings.map((finding) => finding.file),
         })),
     ).toStrictEqual([
-        { scope: '', status: 'fail', files: ['Dockerfile'] },
-        { scope: 'app', status: 'ok', files: [] },
-        { scope: 'app/child', status: 'ok', files: [] },
-        { scope: 'sibling', status: 'fail', files: ['sibling/Dockerfile'] },
+        { scope: '', status: 'failed', files: ['Dockerfile'] },
+        { scope: 'app', status: 'passed', files: [] },
+        { scope: 'app/child', status: 'passed', files: [] },
+        { scope: 'sibling', status: 'failed', files: ['sibling/Dockerfile'] },
     ]);
     for (const path of ['Dockerfile', 'sibling/Dockerfile'])
         await Bun.write(join(sandbox.path, path), source.replace('USER root', 'USER node'));

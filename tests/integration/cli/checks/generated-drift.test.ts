@@ -23,7 +23,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     });
     await writeOutputs(await openSession(sandbox.path));
     const clean = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
-    expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'ok', findings: [] }]);
+    expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'passed', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');
     // Generated files are read-only; the edits below stand for a developer who forced one through.
     chmodSync(join(sandbox.path, GENERATED), 0o644);
@@ -51,5 +51,5 @@ test('an edited generated file and one holding merge markers are drift findings,
     ]);
     await writeOutputs(await openSession(sandbox.path));
     const repaired = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
-    expect(repaired.report.checks[0]).toMatchObject({ status: 'ok', findings: [] });
+    expect(repaired.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
 });

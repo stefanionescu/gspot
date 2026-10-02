@@ -60,10 +60,10 @@ test('a loosening without a reason is a finding of gspot/policy, and the rest of
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as { checks: { check: string; status: string; findings: unknown[] }[] };
     expect(report.checks).toMatchObject([
-        { check: 'bash/syntax', status: 'ok' },
+        { check: 'bash/syntax', status: 'passed' },
         {
             check: 'gspot/policy',
-            status: 'fail',
+            status: 'failed',
             findings: [{ file: 'gspot.toml', message: textContaining('limits.file_lines: ') }],
         },
     ]);

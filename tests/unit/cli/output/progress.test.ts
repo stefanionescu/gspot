@@ -10,24 +10,24 @@ test('terminal progress includes passed and skipped checks while log output keep
     const result: CheckResult = {
         check: 'example/check',
         scope: 'app',
-        status: 'ok',
+        status: 'passed',
         files: 1,
         duration: 0,
         findings: [],
     };
-    for (const status of ['ok', 'skipped', 'fail', 'missing', 'error'] as const) {
+    for (const status of ['passed', 'skipped', 'failed', 'missing', 'error'] as const) {
         interactive({ ...result, status });
         redirected({ ...result, status });
     }
     expect(terminal).toStrictEqual([
-        'app  example/check  ok\n',
+        'app  example/check  passed\n',
         'app  example/check  skipped\n',
-        'app  example/check  fail\n',
+        'app  example/check  failed\n',
         'app  example/check  missing\n',
         'app  example/check  error\n',
     ]);
     expect(log).toStrictEqual([
-        'app  example/check  fail\n',
+        'app  example/check  failed\n',
         'app  example/check  missing\n',
         'app  example/check  error\n',
     ]);
@@ -39,7 +39,7 @@ test('quiet terminal progress hides successful checks but retains execution erro
     const result: CheckResult = {
         check: 'example/check',
         scope: '',
-        status: 'ok',
+        status: 'passed',
         files: 1,
         duration: 0,
         findings: [],

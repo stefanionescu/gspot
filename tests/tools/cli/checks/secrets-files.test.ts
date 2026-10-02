@@ -32,7 +32,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     expect(withoutGit).toContainEqual(
         containing({
             check: 'secrets/gitleaks-files',
-            status: 'fail',
+            status: 'failed',
             findings: [containing({ file: 'src/config.js' })],
         }),
     );
@@ -40,5 +40,5 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     commitAll(sandbox.path);
     const isGitRepository = await secretChecks(sandbox.path);
     expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
-    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('ok');
+    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('passed');
 });

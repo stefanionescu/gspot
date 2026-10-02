@@ -16,7 +16,7 @@ export const findingSchema = z.strictObject({
 export const checkResultSchema = z.strictObject({
     check: z.string(),
     scope: z.string(),
-    status: z.enum(['ok', 'fail', 'missing', 'skipped', 'error']),
+    status: z.enum(['passed', 'failed', 'missing', 'skipped', 'error']),
     files: z.number().int(),
     checkedFiles: z
         .array(z.string())

@@ -70,7 +70,9 @@ test.each([
     writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([{ check: 'bash/contract', status: 'fail' }]);
+    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
+        { check: 'bash/contract', status: 'failed' },
+    ]);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
@@ -78,6 +80,6 @@ test.each([
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/contract', status: 'ok', findings: [] },
+        { check: 'bash/contract', status: 'passed', findings: [] },
     ]);
 });

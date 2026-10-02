@@ -30,7 +30,7 @@ test.each([
         Promise.resolve({
             check: check.spec.name,
             scope: check.scope.scope.path,
-            status: 'ok',
+            status: 'passed',
             files: 0,
             duration: 0,
             findings: [],

@@ -69,7 +69,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const corrected = await runGspot(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const report = JSON.parse(corrected.stdout) as RunReport;
-    expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
+    expect(report.checks[0]).toMatchObject({ status: 'passed', files: 2, findings: [] });
     // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt'])
         for (const line of readFileSync(join(directory.path, log), 'utf8').trim().split('\n'))

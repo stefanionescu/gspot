@@ -72,7 +72,7 @@ function expectCompleteHistory(output: string, commits: string[]): void {
     const report = JSON.parse(output) as PushReport;
     expect(report.revisions[0]?.historyComplete).toBe(true);
     expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set(commits));
-    expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
+    expect(report.revisions[0]?.report.checks[0]?.status).toBe('passed');
 }
 
 test(
@@ -152,7 +152,7 @@ test(
         expect(content.code, content.stdout + content.stderr).toBe(0);
         expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
             historyComplete: false,
-            report: { checks: [{ status: 'ok' }] },
+            report: { checks: [{ status: 'passed' }] },
         });
         const refused = await processes.run([...command, 'commits/commitlint-range'], options);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);

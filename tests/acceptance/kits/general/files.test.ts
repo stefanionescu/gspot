@@ -119,13 +119,13 @@ test.each([
         const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
+        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'failed' }]);
         expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
         await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: scenario.check, status: 'ok', findings: [] },
+            { check: scenario.check, status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -164,7 +164,7 @@ test(
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'files/v8r',
-                status: 'fail',
+                status: 'failed',
                 findings: [
                     containing({
                         file: 'settings/café.json',
@@ -178,7 +178,7 @@ test(
         const valid = await spawnGspot(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/v8r', status: 'ok', findings: [] },
+            { check: 'files/v8r', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

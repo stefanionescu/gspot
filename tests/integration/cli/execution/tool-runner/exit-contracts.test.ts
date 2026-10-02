@@ -40,7 +40,7 @@ test.each(['{file}', '{files}'])(
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {} };
         const finding = await runToolCheck(session, planned);
-        expect(finding.status).toBe('fail');
+        expect(finding.status).toBe('failed');
         expect(finding.findings).toStrictEqual([
             containing({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
@@ -52,7 +52,7 @@ test.each(['{file}', '{files}'])(
         expect(await Bun.file(join(sandbox.path, source)).text()).toBe('7');
         writeFileSync(join(sandbox.path, source), '0');
         const corrected = await runToolCheck(session, planned);
-        expect(corrected.status).toBe('ok');
+        expect(corrected.status).toBe('passed');
         expect(corrected.findings).toStrictEqual([]);
     },
 );
@@ -76,7 +76,7 @@ test.each([0, 1, 3] as const)(
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
         const result = await checkExecution(planned.spec, CHECKS)(session, planned);
-        expect(result.status, JSON.stringify(result)).toBe(({ 0: 'ok', 1: 'fail', 3: 'error' } as const)[code]);
+        expect(result.status, JSON.stringify(result)).toBe(({ 0: 'passed', 1: 'failed', 3: 'error' } as const)[code]);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);
         expect(existsSync(workspace)).toBe(false);

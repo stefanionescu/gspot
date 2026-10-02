@@ -120,7 +120,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
     const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
     // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
     if (writeScopeProject(session, scratch, scope, target) === 0)
-        return { check: planned.check, scope, status: 'ok', files: 0, findings: [], duration: 0 };
+        return { check: planned.check, scope, status: 'passed', files: 0, findings: [], duration: 0 };
     const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
     const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
     if (roots !== undefined) command.push('--typeRoots', roots.join(','));

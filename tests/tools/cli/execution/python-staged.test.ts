@@ -46,7 +46,7 @@ if (onPosix)
         expect(report.checks).toMatchObject([
             {
                 check: 'python/ruff',
-                status: 'fail',
+                status: 'failed',
                 findings: [
                     containing({ file: 'source.py', line: 1, rule: 'F401' }),
                     containing({ file: 'source.py', line: 2, rule: 'F401' }),
@@ -56,6 +56,6 @@ if (onPosix)
         const working = await spawnGspot(repository.path, command);
         expect(working.code, working.stdout + working.stderr).toBe(0);
         expect((JSON.parse(working.stdout) as RunReport).checks).toMatchObject([
-            { check: 'python/ruff', status: 'ok' },
+            { check: 'python/ruff', status: 'passed' },
         ]);
     }, 180_000);

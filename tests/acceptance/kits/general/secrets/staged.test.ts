@@ -24,7 +24,7 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
         {
             check: 'secrets/gitleaks-staged',
-            status: 'fail',
+            status: 'failed',
             findings: [containing({ file: 'settings.py', rule: 'aws-access-token', line: 1 })],
         },
     ]);
@@ -39,7 +39,7 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     );
     expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
     expect((JSON.parse(correctedSecret.stdout) as RunReport).checks).toMatchObject([
-        { check: 'secrets/gitleaks-staged', status: 'ok', findings: [] },
+        { check: 'secrets/gitleaks-staged', status: 'passed', findings: [] },
     ]);
 }
 
@@ -58,7 +58,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     expect(baselineReport.checks).toMatchObject([
         {
             check: 'secrets/gitleaks-baseline',
-            status: 'fail',
+            status: 'failed',
             findings: [
                 {
                     file: '.gspot/gitleaks-baseline.json',
@@ -95,7 +95,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     );
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const accepted = JSON.parse(explained.stdout) as RunReport;
-    expect(accepted.checks).toMatchObject([{ check: 'secrets/gitleaks-baseline', status: 'ok', findings: [] }]);
+    expect(accepted.checks).toMatchObject([{ check: 'secrets/gitleaks-baseline', status: 'passed', findings: [] }]);
     const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
     const network = JSON.parse(checked.stdout) as RunReport;
     expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');

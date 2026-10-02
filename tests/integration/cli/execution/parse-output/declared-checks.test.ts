@@ -160,18 +160,18 @@ stage = "commit"
     });
     const failed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failed.code).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
     const passed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(passed.code).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'passed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
     const failedAgain = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failedAgain.code).toBe(1);
     expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/state', status: 'fail' },
+        { check: 'notes/state', status: 'failed' },
     ]);
 });
 
@@ -183,7 +183,7 @@ test('a [[check]] entry > runs the command of the repository and reports file an
     expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
         {
             check: 'notes/no-pending',
-            status: 'fail',
+            status: 'failed',
             findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
         },
     ]);
@@ -191,7 +191,7 @@ test('a [[check]] entry > runs the command of the repository and reports file an
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/no-pending', status: 'ok', findings: [] },
+        { check: 'notes/no-pending', status: 'passed', findings: [] },
     ]);
 });
 
@@ -231,7 +231,7 @@ message = "text"
     const result = await runGspot(sandbox.path, ['check', '--json']);
     expect(result.code).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
-    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
+    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'failed' }]);
     expect(report.checks[0]?.findings).toMatchObject([
         {
             check: 'sandbox/json',
@@ -246,6 +246,6 @@ message = "text"
     const corrected = await runGspot(sandbox.path, ['check', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'sandbox/json', status: 'ok', findings: [] },
+        { check: 'sandbox/json', status: 'passed', findings: [] },
     ]);
 });

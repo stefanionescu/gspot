@@ -67,7 +67,7 @@ process.exit(2);
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo-format', status: 'ok', findings: [] },
+            { check: 'files/taplo-format', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -107,7 +107,7 @@ test(
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'actions/pinact', status: 'ok', findings: [] },
+            { check: 'actions/pinact', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

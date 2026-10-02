@@ -23,7 +23,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['sql/functions'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(1);
-    expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
+    expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'failed' }]);
     expect(
         findings
             .filter((finding) => finding.rule === 'trivial-function')
@@ -41,7 +41,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['sql'], '[limits.sql]\nfunction_parameters = 8\n', 'all'));
     const overridden = await executeRun(await openSession(sandbox.path), runOptions({ only: ['sql/functions'] }));
     expect(overridden.report.exitCode).toBe(1);
-    expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
+    expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'failed' }]);
     expect(
         overridden.report.checks
             .flatMap((check) => check.findings)

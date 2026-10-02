@@ -91,7 +91,7 @@ plantedCases(
                 expect(checked.code, checked.stdout + checked.stderr).toBe(0);
                 const report = JSON.parse(checked.stdout) as RunReport;
                 expect(report.checks.map(({ check }) => check)).not.toContain('site/linkinator-external');
-                expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'ok' }));
+                expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'passed' }));
             },
             PLANTED_TIMEOUT_MS * 5,
         );
@@ -120,7 +120,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     const corrected = await spawnGspot(root, COMMAND);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'site/svgo', status: 'ok', files: 1, findings: [] },
+        { check: 'site/svgo', status: 'passed', files: 1, findings: [] },
     ]);
 }
 
@@ -140,7 +140,7 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     const repaired = await spawnGspot(root, COMMAND);
     expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
     expect((JSON.parse(repaired.stdout) as RunReport).checks).toMatchObject([
-        { check: 'site/svgo', status: 'ok', files: 2, findings: [] },
+        { check: 'site/svgo', status: 'passed', files: 2, findings: [] },
     ]);
 }
 

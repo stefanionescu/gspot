@@ -35,7 +35,7 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
     expect(read.code, read.stdout + read.stderr).toBe(1);
     const { checks } = JSON.parse(read.stdout) as RunReport;
     expect(checks.find(({ check }) => check === 'gspot/policy')).toMatchObject({
-        status: 'fail',
+        status: 'failed',
         findings: [
             {
                 file: 'gspot.toml',

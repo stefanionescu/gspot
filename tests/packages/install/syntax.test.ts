@@ -24,7 +24,7 @@ async function expectInstalledNaming(installation: InstalledConsumer): Promise<v
     expect(acceptedName.checks).toHaveLength(1);
     expect(acceptedName.checks[0]).toMatchObject({
         check: 'naming/identifiers',
-        status: 'ok',
+        status: 'passed',
         files: 1,
         findings: [],
     });
@@ -44,7 +44,7 @@ test(
         expect(report.exitCode).toBe(1);
         expect(report.skips).toStrictEqual([]);
         expect(report.checks).toHaveLength(1);
-        expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'fail', files: 1 });
+        expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'failed', files: 1 });
         expect(
             report.checks[0]!.findings.map(({ check, file, line, message: text }) => ({
                 check,
@@ -68,7 +68,7 @@ test(
         expect(clean.exitCode).toBe(0);
         expect(clean.skips).toStrictEqual([]);
         expect(clean.checks).toHaveLength(1);
-        expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });
+        expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'passed', files: 1, findings: [] });
         await expectInstalledNaming(installation);
     },
     RELEASE_TIMEOUT_MS,

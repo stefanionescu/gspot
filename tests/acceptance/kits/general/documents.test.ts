@@ -107,7 +107,7 @@ plantedCases(
                 const corrected = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                    { check: 'prose/vale', status: 'ok', findings: [] },
+                    { check: 'prose/vale', status: 'passed', findings: [] },
                 ]);
                 const checked = await spawnGspot(sandbox, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);

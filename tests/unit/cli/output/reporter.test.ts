@@ -16,7 +16,7 @@ const report: RunReport = {
         {
             check: 'bash/shellcheck',
             scope: '',
-            status: 'fail',
+            status: 'failed',
             files: 3,
             duration: 120,
             reproduce: 'gspot check --only bash/shellcheck',
@@ -33,7 +33,7 @@ const report: RunReport = {
                 },
             ],
         },
-        { check: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, findings: [] },
+        { check: 'bash/shfmt', scope: '', status: 'passed', files: 3, duration: 20, findings: [] },
         {
             check: 'format/prettier',
             scope: 'api',
@@ -77,13 +77,13 @@ describe('the reporter', () => {
         expect(runText({ ...skipped, checks: [], exitCode: 2 }, { quiet: true, verbose: false })).toEndWith(
             '(incomplete)\n',
         );
-        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'ok' }] };
+        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'passed' }] };
         const text = runText(corrected, { quiet: false, verbose: false });
         expect(text).toEndWith('1 check passed, 0 checks failed, 0 checks skipped, 0 findings, 0.0s\n');
     });
     test('prints one line per check, findings file first with a help line, reproduce lines and the summary', () => {
         const text = runText(report, { quiet: false, verbose: false });
-        expect(text).toContain('root  bash/shellcheck  fail       3 files     0.1s');
+        expect(text).toContain('root  bash/shellcheck  failed     3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
         expect(text).toContain('  reproduce: gspot check --only bash/shellcheck');

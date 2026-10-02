@@ -53,6 +53,6 @@ test('completion callbacks publish filtered results before the remaining check f
     );
     expect(result.report.exitCode).toBe(0);
     expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
-    expect(completed[0]).toMatchObject({ status: 'ok', findings: [] });
+    expect(completed[0]).toMatchObject({ status: 'passed', findings: [] });
     expect(result.report.ignores[0]?.matched).toBe(1);
 });

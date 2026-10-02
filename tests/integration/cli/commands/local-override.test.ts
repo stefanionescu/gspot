@@ -27,7 +27,7 @@ test('a leftover local file cannot hide a check while an explicit skip applies o
     const checked = await runGspot(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
-        { check: 'project/entry', status: 'fail' },
+        { check: 'project/entry', status: 'failed' },
     ]);
     const skipped = await runGspot(directory.path, [...command, '--skip', 'project/entry']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);

@@ -15,7 +15,7 @@ export async function checkSecretHistory(session: Session, planned: PlannedCheck
     const result: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: 0,
         findings: [],
         duration: 0,
@@ -51,7 +51,7 @@ export async function checkSecretHistory(session: Session, planned: PlannedCheck
         result.findings.push(...current.findings);
         if (current.status === 'missing' || current.status === 'error')
             return { ...current, findings: result.findings, duration: performance.now() - started };
-        if (current.status === 'fail') result.status = 'fail';
+        if (current.status === 'failed') result.status = 'failed';
     }
     return { ...result, duration: performance.now() - started };
 }

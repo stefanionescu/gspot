@@ -6,4 +6,4 @@ export const STATUS_WIDTH = 9;
 export const FILES_WIDTH = 11;
 export const FINDINGS_SHOWN = 200;
 export const NOTE_STATUSES = new Set(['missing', 'error', 'skipped']);
-export const QUIET_HIDES = new Set(['ok']);
+export const QUIET_HIDES = new Set(['passed']);

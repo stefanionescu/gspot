@@ -64,8 +64,8 @@ test('nested scopes inherit parent configurations and settings and check each fi
     const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', 'sql/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', scope: 'api', status: 'ok', findings: [] },
-        { check: 'bash/syntax', scope: 'api/worker', status: 'ok', findings: [] },
-        { check: 'sql/syntax', scope: 'api/worker', status: 'ok', findings: [] },
+        { check: 'bash/syntax', scope: 'api', status: 'passed', findings: [] },
+        { check: 'bash/syntax', scope: 'api/worker', status: 'passed', findings: [] },
+        { check: 'sql/syntax', scope: 'api/worker', status: 'passed', findings: [] },
     ]);
 });

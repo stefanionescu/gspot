@@ -65,7 +65,7 @@ if (hasLinuxDocker)
             const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const report = JSON.parse(corrected.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'nginx/test', scope: 'proxy', status: 'ok', files: 3 }]);
+            expect(report.checks).toMatchObject([{ check: 'nginx/test', scope: 'proxy', status: 'passed', files: 3 }]);
             expect(report.checks[0]!.checkedFiles?.toSorted()).toStrictEqual([
                 'proxy/conf.d/server.conf',
                 'proxy/nginx.conf',
@@ -112,12 +112,12 @@ describe('the nginx configuration', () => {
             expect(failed.checks).toMatchObject([
                 isWindows
                     ? { check: 'nginx/gixy', status: 'skipped' }
-                    : { check: 'nginx/gixy', status: 'fail', findings: [forged] },
+                    : { check: 'nginx/gixy', status: 'failed', findings: [forged] },
             ]);
             const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },
+                { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'passed', findings: [] },
             ]);
             const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {

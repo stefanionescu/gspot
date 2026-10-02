@@ -133,7 +133,7 @@ test('fails the run when a correction exits nonzero even though its check passes
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, runOptions({ fix: true }));
-    expect(outcome.report.checks[0]?.status).toBe('ok');
+    expect(outcome.report.checks[0]?.status).toBe('passed');
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/correction');
     expect(outcome.fixes?.results[0]?.status).toBe('failed');

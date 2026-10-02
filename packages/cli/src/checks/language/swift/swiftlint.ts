@@ -68,7 +68,7 @@ function restoreInlineFindings(result: CheckResult, checked: CheckResult, candid
 export async function checkSwiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result = await runToolCheck(session, planned, SWIFTLINT_COMMAND);
-    if (!['ok', 'fail'].includes(result.status) || planned.scope.view.rulesOff(planned.check).includes(DOC_RULE))
+    if (!['passed', 'failed'].includes(result.status) || planned.scope.view.rulesOff(planned.check).includes(DOC_RULE))
         return result;
     const sources = await swiftSources({ ...session, files: planned.files });
     try {
@@ -96,7 +96,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
             writeFileSync(path, commentSource(source.text, comments));
         }
         const checked = await runToolCheck({ ...session, root: workspace.root }, planned, SWIFTLINT_COMMAND);
-        if (!['ok', 'fail'].includes(checked.status))
+        if (!['passed', 'failed'].includes(checked.status))
             return {
                 ...result,
                 status: checked.status,
@@ -104,7 +104,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
                 duration: performance.now() - started,
             };
         restoreInlineFindings(result, checked, candidates);
-        if (result.findings.length > 0) result.status = 'fail';
+        if (result.findings.length > 0) result.status = 'failed';
         result.duration = performance.now() - started;
         return result;
     } finally {

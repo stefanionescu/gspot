@@ -32,7 +32,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
     expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: 'locked/requirements.txt', rule: 'requirements-file' },
     ]);
-    expect(report.checks.filter((check) => check.status === 'fail').map((check) => check.scope)).toStrictEqual([
+    expect(report.checks.filter((check) => check.status === 'failed').map((check) => check.scope)).toStrictEqual([
         'locked',
     ]);
     rmSync(join(sandbox.path, 'locked/requirements.txt'));

@@ -70,7 +70,7 @@ plantedCases(
                 const corrected = await runGspot(root, ['check', '--only', invalid.check, '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                    { check: invalid.check, status: 'ok', findings: [] },
+                    { check: invalid.check, status: 'passed', findings: [] },
                 ]);
             },
         );

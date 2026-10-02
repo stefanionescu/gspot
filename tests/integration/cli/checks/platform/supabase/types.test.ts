@@ -83,7 +83,7 @@ test.each(['', 'apps/api'])(
         const missing = await execute();
         expect(missing).toMatchObject({
             check: 'supabase/types-fresh',
-            status: 'fail',
+            status: 'failed',
             findings: [
                 { file: `${prefix}database.ts`, line: 1, rule: 'stale', message: 'The types file does not exist.' },
             ],
@@ -92,13 +92,13 @@ test.each(['', 'apps/api'])(
         chmodSync(join(sandbox.path, prefix, 'database.ts'), 0o640);
         const stale = await execute();
         expect(stale).toMatchObject({
-            status: 'fail',
+            status: 'failed',
             findings: [{ check: 'supabase/types-fresh', file: `${prefix}database.ts`, rule: 'stale', line: 1 }],
         });
         expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
         expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(keptMode(0o640));
         await Bun.write(join(sandbox.path, prefix, 'database.ts'), generated);
-        expect(await execute()).toMatchObject({ status: 'ok', findings: [] });
+        expect(await execute()).toMatchObject({ status: 'passed', findings: [] });
         expect(fixture.requests).toStrictEqual([
             { args: ['gen', 'types', 'typescript', '--local'], cwd: join(sandbox.path, scope) },
             { args: ['gen', 'types', 'typescript', '--local'], cwd: join(sandbox.path, scope) },

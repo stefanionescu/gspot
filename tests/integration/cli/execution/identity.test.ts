@@ -43,7 +43,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     const options = runOptions();
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
-    expect(failed.report.checks[0]).toMatchObject({ status: 'fail', findings: [] });
+    expect(failed.report.checks[0]).toMatchObject({ status: 'failed', findings: [] });
     await Bun.write(join(sandbox.path, '.gspot/version'), GSPOT_VERSION + '\n');
     const cli = Bun.spawnSync(
         [

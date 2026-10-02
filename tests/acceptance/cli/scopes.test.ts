@@ -54,7 +54,7 @@ test(
         const report = JSON.parse(lint.stdout) as RunReport;
         // The root lints its package.json; the api scope lints TypeScript through the same configuration.
         const api = report.checks.find((check) => check.scope === 'api');
-        expect(api).toMatchObject({ check: 'javascript/eslint', status: 'fail' });
+        expect(api).toMatchObject({ check: 'javascript/eslint', status: 'failed' });
         expect(api?.findings).toContainEqual(
             containing({
                 check: 'javascript/eslint',
@@ -67,8 +67,8 @@ test(
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'javascript/eslint', scope: '', status: 'ok', findings: [] },
-            { check: 'javascript/eslint', scope: 'api', status: 'ok', findings: [] },
+            { check: 'javascript/eslint', scope: '', status: 'passed', findings: [] },
+            { check: 'javascript/eslint', scope: 'api', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 4,

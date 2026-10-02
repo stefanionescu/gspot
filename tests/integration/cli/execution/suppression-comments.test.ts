@@ -74,7 +74,9 @@ test.each([
             await openSession(sandbox.path),
             runOptions({ stage: 'commit', only: ['structure/suppressions'], isDryRun: true }),
         );
-        expect(result.report.checks.map(({ status }) => status)).toStrictEqual([lines.length === 0 ? 'ok' : 'fail']);
+        expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
+            lines.length === 0 ? 'passed' : 'failed',
+        ]);
         expect(result.report.checks.flatMap(({ findings }) => findings.map(({ line }) => line))).toStrictEqual([
             ...lines,
         ]);

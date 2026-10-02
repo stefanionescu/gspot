@@ -38,7 +38,7 @@ test(
         const uncovered = await spawnGspot(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         const report = JSON.parse(uncovered.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'fail' }]);
+        expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'failed' }]);
         expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
             containing({ rule: 'coverage-functions', message: textContaining('100% floor') }),
         );
@@ -46,7 +46,7 @@ test(
         const passing = await spawnGspot(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
         expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
-            { check: 'jest/coverage', scope: 'app', status: 'ok', findings: [] },
+            { check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] },
         ]);
         expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         expect(readFileSync(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
@@ -86,7 +86,7 @@ test(
         const passing = await spawnGspot(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
         expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
-            { check: 'jest/coverage', status: 'ok', findings: [] },
+            { check: 'jest/coverage', status: 'passed', findings: [] },
         ]);
         expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected.replace('toBe(6)', 'toBe(7)'));
@@ -105,7 +105,7 @@ test(
         const recovered = await spawnGspot(sandbox.path, command, environment);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
         expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
-            { check: 'jest/coverage', status: 'ok', findings: [] },
+            { check: 'jest/coverage', status: 'passed', findings: [] },
         ]);
         expect(readFileSync(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
         expect(readFileSync(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');

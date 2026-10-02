@@ -110,7 +110,7 @@ export async function checkVerifiedSecrets(session: Session, planned: PlannedChe
     const base: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: 0,
         findings: [],
         duration: 0,

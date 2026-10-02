@@ -30,8 +30,8 @@ test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other ch
     const broken = await executeRun(await openSession(sandbox.path), { ...POLICY_FINDINGS_OPTIONS, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['swift/trivial-functions', 'fail'],
-        ['gspot/policy', 'fail'],
+        ['swift/trivial-functions', 'failed'],
+        ['gspot/policy', 'failed'],
     ]);
     expect(broken.report.checks[1]!.findings).toMatchObject([
         { file: 'gspot.toml', message: textContaining('ignore.0.reason: [[ignore]] entry 1') },

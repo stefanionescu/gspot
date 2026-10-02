@@ -63,7 +63,7 @@ describe('gspot add', () => {
             );
             expect(after.code, after.stdout + after.stderr).toBe(1);
             const report = JSON.parse(after.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
+            expect(report.checks).toMatchObject([{ check: 'javascript/eslint', status: 'failed' }]);
             expect(report.checks[0]?.findings).toContainEqual(
                 containing({
                     check: 'javascript/eslint',
@@ -80,7 +80,7 @@ describe('gspot add', () => {
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
-                { check: 'javascript/eslint', status: 'ok', findings: [] },
+                { check: 'javascript/eslint', status: 'passed', findings: [] },
             ]);
         },
         // Init and add each install the private tools.

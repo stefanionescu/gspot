@@ -98,7 +98,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const passed = await runGspot(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     const passedReport = JSON.parse(passed.stdout) as RunReport;
-    expect(passedReport.checks[0]?.status).toBe('ok');
+    expect(passedReport.checks[0]?.status).toBe('passed');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
     unlinkSync(join(directory.path, 'script with spaces.sh'));
@@ -160,7 +160,7 @@ stage = "commit"
     chmodSync(join(directory.path, 'task.sh'), 0o644);
     const result = await runGspot(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('ok');
+    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('passed');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(keptMode(0o644));
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);

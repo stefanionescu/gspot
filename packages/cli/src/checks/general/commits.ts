@@ -29,7 +29,7 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     const result: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
+        status: 'passed',
         files: 0,
         findings: [],
         duration: 0,
@@ -74,7 +74,7 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     }
     return {
         ...result,
-        status: statuses.has('fail') ? 'fail' : 'ok',
+        status: statuses.has('failed') ? 'failed' : 'passed',
         duration: performance.now() - started,
         note: `Checked ${String(checked)} commit messages.`,
     };

@@ -53,7 +53,7 @@ test.each([
         const options = runOptions({ only: ['naming/identifiers', structural], isDryRun: true });
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
-        expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
+        expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['failed', 'failed']);
         for (const check of failed.report.checks)
             expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
@@ -61,8 +61,8 @@ test.each([
         const accepted = await executeRun(session, options);
         expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
         expect(accepted.report.checks).toMatchObject([
-            { status: 'ok', findings: [] },
-            { status: 'ok', findings: [] },
+            { status: 'passed', findings: [] },
+            { status: 'passed', findings: [] },
         ]);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(corrected);
     },
@@ -102,7 +102,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
         () => Promise.resolve({ findings: [], checkedFiles: ['apps/web/value.test.js'] }),
         project,
     );
-    expect(owned).toMatchObject({ status: 'ok', checkedFiles: ['apps/web/value.test.js'] });
+    expect(owned).toMatchObject({ status: 'passed', checkedFiles: ['apps/web/value.test.js'] });
     using copy = await scratchCopy(
         scopeInput.root,
         scopeInput.files.map((file) => file.path),
@@ -243,8 +243,8 @@ format = "none"
     const corrected = await executeRun(session, { ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
-        { check: 'sql/syntax', status: 'ok', findings: [] },
-        { check: 'project/correct-sql', status: 'ok', findings: [] },
+        { check: 'sql/syntax', status: 'passed', findings: [] },
+        { check: 'project/correct-sql', status: 'passed', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('select 1;\n');
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);

@@ -13,14 +13,14 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     const report = JSON.parse(recommended.stdout) as RunReport;
     expect(report.skips).toStrictEqual([]);
     expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'bash/syntax', status: 'ok' },
+        { check: 'bash/syntax', status: 'passed' },
     ]);
     await Bun.write(join(root, 'entry.sh'), 'if then\n');
     const invalid = await runGspot(root, command);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     expect((JSON.parse(invalid.stdout) as RunReport).checks[0]).toMatchObject({
         check: 'bash/syntax',
-        status: 'fail',
+        status: 'failed',
         files: 1,
     });
     await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
@@ -66,8 +66,8 @@ test(
         const strictReport = JSON.parse(strict.stdout) as RunReport;
         expect(strictReport.skips).toStrictEqual([]);
         expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-            { check: 'bash/syntax', status: 'ok' },
-            { check: 'naming/identifiers', status: 'fail' },
+            { check: 'bash/syntax', status: 'passed' },
+            { check: 'naming/identifiers', status: 'failed' },
         ]);
         expect(strictReport.checks[1]!.findings).toHaveLength(1);
         expect(strictReport.checks[1]!.findings[0]).toMatchObject({
@@ -83,13 +83,13 @@ test(
         expect(extra.code, extra.stdout + extra.stderr).toBe(0);
         const optedIn = await runGspot(sandbox.path, command);
         expect(optedIn.code, optedIn.stdout + optedIn.stderr).toBe(1);
-        expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('fail');
+        expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('failed');
         await Bun.write(join(sandbox.path, 'entry.sh'), 'command=example\n');
         const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'bash/syntax', status: 'ok', findings: [] },
-            { check: 'naming/identifiers', status: 'ok', findings: [] },
+            { check: 'bash/syntax', status: 'passed', findings: [] },
+            { check: 'naming/identifiers', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

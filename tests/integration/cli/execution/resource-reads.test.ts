@@ -124,7 +124,7 @@ test('a dry run creates no files', async () => {
         runOptions({ stage: 'commit', isDryRun: true }),
     );
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]!.status).toBe('ok');
+    expect(outcome.report.checks[0]!.status).toBe('passed');
     expect(fs.readdirSync(sandbox.path, { recursive: true })).toStrictEqual(before);
     expect(fs.readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
 });

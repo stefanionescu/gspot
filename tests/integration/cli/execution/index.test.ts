@@ -36,7 +36,7 @@ test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
         const options = runOptions({ only: [check], isDryRun: true });
         const found = await executeRun(session, options);
         expect(found.report.exitCode).toBe(1);
-        expect(found.report.checks[0]!.status).toBe('fail');
+        expect(found.report.checks[0]!.status).toBe('failed');
         expect(found.report.checks[0]!.findings).toHaveLength(1);
         writeFileSync(join(sandbox.path, '.git/index'), 'corrupt index');
         const failed = await executeRun(session, options);

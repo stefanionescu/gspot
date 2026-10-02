@@ -16,7 +16,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
     const options = runOptions({ only: ['bash/private-prefix'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
-    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'fail' }]);
+    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'failed' }]);
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
@@ -30,7 +30,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
     });
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'passed', findings: [] }]);
 });
 
 test('shell declaration order resets between files and requires main last', async () => {
@@ -45,7 +45,7 @@ test('shell declaration order resets between files and requires main last', asyn
     const options = runOptions({ only: ['bash/private-before-public'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
-    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-before-public', status: 'fail' }]);
+    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-before-public', status: 'failed' }]);
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
@@ -59,7 +59,7 @@ test('shell declaration order resets between files and requires main last', asyn
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([
-        { check: 'bash/private-before-public', status: 'ok', findings: [] },
+        { check: 'bash/private-before-public', status: 'passed', findings: [] },
     ]);
 });
 
@@ -93,5 +93,5 @@ test('Swift declaration order identifies private types and extensions and accept
     await Bun.write(`${sandbox.path}/Declarations.swift`, hidden + shared);
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
