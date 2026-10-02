@@ -91,7 +91,7 @@ export function parseManifest(text: string, dir: string): Manifest {
     if (problems.length > 0) throw manifestError(raw.kit.name, problems);
     return {
         kit: raw.kit,
-        untracked: raw.untracked,
+        ignored: raw.ignored,
         detect: raw.detect,
         owners: raw.owners,
         tools: raw.tools.map((tool) => {
@@ -135,10 +135,10 @@ export function kitManifests(): Map<string, Manifest> {
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.
- * @param manifests the manifests whose untracked paths count, every one by default
+ * @param manifests the manifests whose ignored paths count, every one by default
  * @returns the block body
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and apply write the same .gitignore block of the untracked gspot paths.
-export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = kitManifests().values()): string {
-    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and apply write the same .gitignore block of the ignored gspot paths.
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'ignored'>> = kitManifests().values()): string {
+    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
 }

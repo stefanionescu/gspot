@@ -123,8 +123,8 @@ export function kitPage(manifest: Manifest): ReferencePage {
         section('Tools', tools.map((item) => `- ${item}`).join('\n')),
         section('Generated tool files', targets.map((item) => `- ${item}`).join('\n')),
         section(
-            'Untracked tool files',
-            manifest.untracked
+            'Ignored tool files',
+            manifest.ignored
                 .map((path) => `\`${path}\``)
                 .map((item) => `- ${item}`)
                 .join('\n'),

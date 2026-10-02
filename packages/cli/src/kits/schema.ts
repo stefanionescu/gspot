@@ -145,8 +145,8 @@ const settingSchema = z.strictObject({
 
 // The shape of a kit manifest.toml after validation.
 
-// An untracked path: .gspot, then one or more names, and at most a trailing slash; no . or .. segment.
-function isUntrackedPath(path: string): boolean {
+// An ignored path: .gspot, then one or more names, and at most a trailing slash; no . or .. segment.
+function isIgnoredPath(path: string): boolean {
     const [root, ...names] = (path.endsWith('/') ? path.slice(0, -1) : path).split('/');
     return (
         root === GSPOT_FOLDER &&
@@ -177,7 +177,7 @@ const detectionSchema = z
     });
 
 export const manifestSchema = z.strictObject({
-    untracked: z.array(z.string().refine(isUntrackedPath, 'Untracked paths must stay inside .gspot.')).default([]),
+    ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
     kit: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),
         kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),

@@ -1,4 +1,4 @@
-untracked = [
+ignored = [
     ".gspot/config/vale/styles/Google/",
     ".gspot/config/vale/styles/Microsoft/",
     ".gspot/config/vale/styles/write-good/",

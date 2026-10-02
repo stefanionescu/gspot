@@ -39,7 +39,7 @@ test.each([true, false])(
 test('manifest-owned tool directories are ignored while generated rules and authored sources remain visible', async () => {
     await using repository = await testdir();
     const manifest = parseManifest(
-        'untracked = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
+        'ignored = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
         'configurations/local',
     );
     const block = gitignoreBlock([...kitManifests().values(), manifest, manifest]);
@@ -77,15 +77,12 @@ test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downlo
     (path) => {
         expect(() =>
             parseManifest(
-                `untracked = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
+                `ignored = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
                 'configurations/local',
             ),
         ).toThrow();
         expect(() =>
-            parseManifest(
-                'untracked = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
-                'configurations/local',
-            ),
+            parseManifest('ignored = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'configurations/local'),
         ).not.toThrow();
     },
 );
