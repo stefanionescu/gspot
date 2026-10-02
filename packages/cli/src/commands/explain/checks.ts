@@ -104,7 +104,7 @@ function checkText(
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
         `What to do: ${check.help}`,
-        ...(check.waits_for === undefined ? [] : [`Required setting: ${check.waits_for}`]),
+        ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
         '',
         `Turn it off for some paths: gspot ignore ${quoteArgument(checkName)} --paths "<glob>" --reason "..."`,
         ...(check.command
@@ -142,7 +142,7 @@ function buildCheckExplanation(
             summary: check.summary,
             why: check.why,
             help: check.help,
-            waits_for: check.waits_for,
+            when: check.when,
             ...(fields.crashPattern === undefined ? {} : { crash_pattern: fields.crashPattern }),
             ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
             ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),

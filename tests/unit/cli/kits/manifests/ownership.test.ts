@@ -163,9 +163,9 @@ test('a check that reads an empty setting must wait for it, and a wait must name
         waitingManifest('');
     }).toThrow('must wait for it');
     expect(() => {
-        waitingManifest('waits_for = "tools.waiting.other"\n');
+        waitingManifest('when = {setting = "tools.waiting.other"}\n');
     }).toThrow('which no configuration declares');
     expect(() => {
-        waitingManifest('waits_for = "tools.waiting.target"\n');
+        waitingManifest('when = {setting = "tools.waiting.target"}\n');
     }).not.toThrow();
 });

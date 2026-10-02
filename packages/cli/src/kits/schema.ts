@@ -53,6 +53,19 @@ const selectorSchema = z.strictObject({
     allowed: z.string().min(1).optional(),
 });
 
+// The one way a manifest limits where something applies. It names a selected kit, a setting with a value, detected
+// files, tags, or dependencies, or a git checkout. `git = false` means a folder with no .git. Each table takes the
+// conditions it can test.
+const conditionSchema = z.strictObject({
+    kit: z.string().min(1),
+    setting: z.string().min(1),
+    value: z.union([z.string(), z.number(), z.boolean()]),
+    git: z.boolean(),
+    dependencies: z.array(z.string().min(1)).min(1),
+    filenames: z.array(z.string().min(1)).min(1),
+    tags: z.array(z.string().min(1)).min(1),
+});
+
 const configSchema = z
     .strictObject({
         template: z.string().optional(),
@@ -63,7 +76,7 @@ const configSchema = z
         fragment: z.boolean().default(false),
         scoped: z.boolean().default(false),
         header: z.boolean().default(true),
-        needs: z.string().optional(),
+        when: conditionSchema.pick({ kit: true }).optional(),
         components: z.array(z.string().min(1)).default([]),
         selectors: z.array(selectorSchema).default([]),
     })
@@ -90,16 +103,13 @@ const checkFields = z.strictObject({
     fix: commandSchema.optional(),
     exit_codes: findingExitCodesSchema.optional(),
     replaces: z.string().optional(),
-    needs: z.string().optional(),
+    when: conditionSchema.pick({ kit: true, setting: true, git: true }).partial().optional(),
     limit: z.string().optional(),
     count_pattern: z.string().optional(),
     crash_pattern: z.string().optional(),
-    // true: the check reads git and is skipped in a folder with no .git; false: it stands in for one and runs only there.
-    needs_git: z.boolean().optional(),
     requires: z.enum(['build', 'docker', 'network']).optional(),
     // Tools the command starts through another name, such as the bash that runs Bats; each must be usable too.
     requires_tools: z.array(z.string().min(1)).optional(),
-    waits_for: z.string().optional(),
     platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     tool: z.string().optional(),
     files: filesSchema.optional(),
@@ -189,8 +199,8 @@ export const manifestSchema = z
             recommends: stringList,
             auto: z.boolean().default(false),
             proposed: z.boolean().default(false),
-            // A configuration whose checks all read git is not proposed in a folder with no .git.
-            needs_git: z.boolean().default(false),
+            // A kit whose checks all read git is not proposed in a folder with no .git.
+            when: conditionSchema.pick({ git: true }).optional(),
             description: sentence,
         }),
         detect: detectionSchema,
@@ -220,7 +230,12 @@ export const manifestSchema = z
                 z.array(
                     z.strictObject({
                         path: z.string().min(1),
-                        when: detectionSchema.unwrap().optional(),
+                        // The detection reads a guide condition as it reads a kit's, with the other lists empty.
+                        when: conditionSchema
+                            .pick({ dependencies: true, filenames: true, tags: true })
+                            .partial()
+                            .transform((condition) => detectionSchema.parse(condition))
+                            .optional(),
                     }),
                 ),
             )
@@ -233,12 +248,7 @@ export const manifestSchema = z
                     rules: z.array(z.string().min(1)).min(1),
                     reason: sentence,
                     files: z.array(z.string().min(1)).min(1).optional(),
-                    when: z
-                        .strictObject({
-                            setting: z.string().min(1),
-                            value: z.union([z.string(), z.number(), z.boolean()]),
-                        })
-                        .optional(),
+                    when: conditionSchema.pick({ setting: true, value: true }).optional(),
                 }),
             )
             .default([]),

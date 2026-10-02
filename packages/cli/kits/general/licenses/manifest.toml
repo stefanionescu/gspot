@@ -39,7 +39,7 @@ example = "A locked package whose declared license is outside the allowed licens
 level = "recommended"
 stage = "push"
 runs = "scope"
-waits_for = "tools.licenses.allowed"
+when = {setting = "tools.licenses.allowed"}
 files = {filenames = ["package.json", "pyproject.toml"]}
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."

@@ -105,8 +105,8 @@ function pointerFor(
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], selection: ScopeSelection): boolean {
-    if (configuration.needs === undefined) return true;
-    const wanted = configuration.needs;
+    const wanted = configuration.when?.kit;
+    if (wanted === undefined) return true;
     const selectedScopes = configuration.scoped ? [selection] : scopes;
     return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.kit.name === wanted));
 }

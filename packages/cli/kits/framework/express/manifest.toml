@@ -14,7 +14,7 @@ template = "semgrep-express.yml.tmpl"
 target = ".gspot/config/semgrep/express.yml"
 rules_path = ["rules"]
 scoped = true
-needs = "security"
+when = {kit = "security"}
 
 [[check]]
 name = "express/routes-tested"

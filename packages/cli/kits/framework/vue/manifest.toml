@@ -77,7 +77,7 @@ runs = "scope"
 cwd = "scope"
 tool = "vue-tsc"
 replaces = "typescript/tsc"
-needs = "typescript"
+when = {kit = "typescript"}
 files = {extensions = [".vue"]}
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."

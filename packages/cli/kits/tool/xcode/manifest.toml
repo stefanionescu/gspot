@@ -94,7 +94,7 @@ name = "xcode/entitlements-policy"
 title = "Entitlements policy"
 example = "An entitlement enabled in an `.entitlements` file but absent from `tools.xcode.entitlements_allowed` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
 level = "recommended"
-waits_for = "tools.xcode.entitlements_allowed"
+when = {setting = "tools.xcode.entitlements_allowed"}
 stage = "commit"
 runs = "scope"
 files = {extensions = [".entitlements"]}

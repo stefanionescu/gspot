@@ -74,7 +74,7 @@ name = "xctest/coverage"
 title = "Check Swift test coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.xctest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
-waits_for = "tools.xctest.coverage"
+when = {setting = "tools.xctest.coverage"}
 stage = "push"
 runs = "scope"
 requires = "build"

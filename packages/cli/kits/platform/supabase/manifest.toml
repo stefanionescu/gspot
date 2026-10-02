@@ -37,7 +37,7 @@ template = "semgrep-supabase.yml.tmpl"
 target = ".gspot/config/semgrep/supabase.yml"
 rules_path = ["rules"]
 scoped = true
-needs = "security"
+when = {kit = "security"}
 
 [[check]]
 name = "supabase/config"

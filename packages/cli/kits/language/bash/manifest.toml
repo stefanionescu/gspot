@@ -58,7 +58,7 @@ host = true
 template = "semgrep/hooks.yml"
 target = ".gspot/config/semgrep/bash.yml"
 rules_path = ["rules"]
-needs = "security"
+when = {kit = "security"}
 scoped = true
 
 [[config]]

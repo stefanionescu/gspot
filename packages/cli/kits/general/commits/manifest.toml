@@ -3,7 +3,7 @@ name = "commits"
 kind = "general"
 title = "Commits"
 auto = true
-needs_git = true
+when = {git = true}
 description = "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
 
 [files]

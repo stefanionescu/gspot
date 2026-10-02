@@ -46,7 +46,7 @@ function checkEnvironment(check: CheckSpec): string[] {
         ['Prerequisite', check.requires],
         [
             'Required setting',
-            check.waits_for === undefined ? undefined : `\`${check.waits_for}\`; skipped until configured.`,
+            check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until configured.`,
         ],
     ];
     return [
@@ -99,9 +99,9 @@ export function kitPage(manifest: Manifest): ReferencePage {
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
     const targets = manifest.configs.map((config) =>
-        config.needs === undefined
+        config.when === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.needs} configuration](/reference/kits/${config.needs}/) is selected`,
+            : `\`${config.target}\` when the [${config.when.kit} configuration](/reference/kits/${config.when.kit}/) is selected`,
     );
     const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);

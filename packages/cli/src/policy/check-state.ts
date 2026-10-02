@@ -28,7 +28,7 @@ export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpe
  * @returns the setting the check waits for, or undefined when it can run
  */
 export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
-    const setting = spec.waits_for;
+    const setting = spec.when?.setting;
     if (setting === undefined) return undefined;
     const value = scope.view.settings[setting];
     const isEmpty =

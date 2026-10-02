@@ -108,7 +108,7 @@ name = "static-site/size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
-waits_for = "tools.site.sizes"
+when = {setting = "tools.site.sizes"}
 stage = "push"
 runs = "scope"
 requires = "build"

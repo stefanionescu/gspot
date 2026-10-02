@@ -43,7 +43,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
 function getCandidate(context: InitDetection, configuration: string): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
     if (!manifest) return undefined;
-    if (manifest.kit.needs_git && !context.hasGit) return undefined;
+    if (manifest.kit.when?.git === true && !context.hasGit) return undefined;
     if (manifest.kit.proposed && !context.options.yes) return undefined;
     return manifest;
 }

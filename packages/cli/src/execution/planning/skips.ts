@@ -9,15 +9,15 @@ import type { Host, Skip, RuleSkip, PlanOptions } from '#cli/types/execution/pla
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
 const RULE_SKIPS: RuleSkip[] = [
     {
-        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.kits.includes(spec.needs),
-        note: (spec) => `needs the ${spec.needs ?? ''} configuration, which this scope does not select`,
+        applies: (spec, check) => spec.when?.kit !== undefined && !check.scope.view.kits.includes(spec.when.kit),
+        note: (spec) => `needs the ${spec.when?.kit ?? ''} configuration, which this scope does not select`,
     },
     {
-        applies: (spec, _check, hasGit) => spec.needs_git === true && !hasGit,
+        applies: (spec, _check, hasGit) => spec.when?.git === true && !hasGit,
         note: () => 'this folder is no git repository, so the check has nothing to read',
     },
     {
-        applies: (spec, _check, hasGit) => spec.needs_git === false && hasGit,
+        applies: (spec, _check, hasGit) => spec.when?.git === false && hasGit,
         note: () => 'this folder is a git repository, so the git check covers it',
     },
 ];

@@ -170,12 +170,13 @@ function settingsRead(check: Manifest['checks'][number]): string[] {
 
 // Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
 function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number], settings: Settings): void {
-    if (check.waits_for !== undefined && !settings.has(check.waits_for))
+    const awaited = check.when?.setting;
+    if (awaited !== undefined && !settings.has(awaited))
         throw manifestError(manifest.kit.name, [
-            `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
+            `check ${check.name} waits for ${awaited}, which no configuration declares.`,
         ]);
     const missing = settingsRead(check).filter((name) => {
-        if (name === check.waits_for) return false;
+        if (name === awaited) return false;
         const spec = settings.get(name);
         if (spec === undefined) return false;
         const value = spec.default;
@@ -212,7 +213,7 @@ export function manifestProblems(raw: RawManifest): string[] {
     if (hasBuiltInCheck) return checks;
     // A config that needs another kit is read by that kit's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
-        .filter((config) => !config.fragment && config.pointer === undefined && config.needs === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined && config.when === undefined)
         .filter((config) => {
             const name = kitName(config.target);
             const isReadByTemplate = raw.configs.some(

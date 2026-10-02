@@ -40,7 +40,7 @@ test('a generated configuration needs a reader in its manifest or the kit it nee
     const source =
         '[kit]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[config]]\ntemplate = "x.yml.tmpl"\ntarget = ".gspot/config/semgrep/x.yml"\n';
     expect(() => parseManifest(source, 'configurations/x')).toThrow('has no check that reads it');
-    expect(() => parseManifest(`${source}needs = "security"\n`, 'configurations/x')).not.toThrow();
+    expect(() => parseManifest(`${source}when = {kit = "security"}\n`, 'configurations/x')).not.toThrow();
 });
 
 test('every pinned tool a manifest command names is defined in that manifest', () => {

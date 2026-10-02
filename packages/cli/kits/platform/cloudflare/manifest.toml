@@ -24,7 +24,7 @@ template = "semgrep-workers.yml.tmpl"
 target = ".gspot/config/semgrep/workers.yml"
 rules_path = ["rules"]
 scoped = true
-needs = "security"
+when = {kit = "security"}
 
 [[check]]
 name = "cloudflare/wrangler-config"

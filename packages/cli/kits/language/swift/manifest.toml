@@ -69,7 +69,7 @@ host = true
 template = "semgrep/ios.yml.tmpl"
 target = ".gspot/config/semgrep/ios.yml"
 rules_path = ["rules"]
-needs = "security"
+when = {kit = "security"}
 scoped = true
 
 [[config]]

@@ -46,7 +46,7 @@ name = "nextjs/build"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
 level = "recommended"
-waits_for = "tools.next.build_on_push"
+when = {setting = "tools.next.build_on_push"}
 stage = "push"
 runs = "scope"
 requires = "build"
