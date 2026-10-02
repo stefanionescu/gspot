@@ -85,20 +85,16 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
     const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
     const plan = swiftBuildPlan(input, 'coverage');
     const bundle = join(plan.folder, 'coverage.xcresult');
-    const files = openBuildCache(plan.folder);
-    try {
-        const source = prepareBuildSources(
-            input.root,
-            input.files.map((file) => file.path),
-            plan.folder,
-            files,
-        );
-        const cwd = join(source, input.scope);
-        removePreviousBundle(files);
-        const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
-        const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
-        return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
-    } finally {
-        files.close();
-    }
+    using files = openBuildCache(plan.folder);
+    const source = prepareBuildSources(
+        input.root,
+        input.files.map((file) => file.path),
+        plan.folder,
+        files,
+    );
+    const cwd = join(source, input.scope);
+    removePreviousBundle(files);
+    const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
+    const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
+    return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
 }

@@ -14,14 +14,10 @@ function importTarget(target: unknown): string | undefined {
 
 function packageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const files = openRoot(root);
+    using files = openRoot(root);
     const path = `${prefix}package.json`;
-    let imports: [string, unknown][];
-    try {
-        imports = files.stat(path) === undefined ? [] : Object.entries(readPackageManifest(root, path).imports ?? {});
-    } finally {
-        files.close();
-    }
+    const imports: [string, unknown][] =
+        files.stat(path) === undefined ? [] : Object.entries(readPackageManifest(root, path).imports ?? {});
     for (const [pattern, target] of imports) {
         const found = importTarget(target);
         if (found === undefined) continue;

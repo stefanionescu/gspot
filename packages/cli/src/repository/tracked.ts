@@ -13,15 +13,13 @@ import type { RawEntry, PathIgnore } from '#cli/types/repository/repository.ts';
 import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS, NOT_REPOSITORY_CODE } from '#cli/config/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
-    const files = openRoot(root, 'native');
+    using files = openRoot(root, 'native');
     try {
         const target = statSync(files.source(path));
         return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
     } catch (error) {
         if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
         return { path, size: 0, executable: false, symlink: true };
-    } finally {
-        files.close();
     }
 }
 

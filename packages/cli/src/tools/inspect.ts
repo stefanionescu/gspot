@@ -64,18 +64,14 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
 
 // Read library versions from the private installation used by generated configurations.
 function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
-    const files = openRoot(root);
+    using files = openRoot(root);
     const hint = installHint(tool);
     const name = tool.installers['npm']?.name ?? tool.name;
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
-    try {
-        const file = files.read(path);
-        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
-        if (parsed?.version === undefined) return missingInspection(tool, hint);
-        return libraryInspection(root, tool, path, parsed.version, hint);
-    } finally {
-        files.close();
-    }
+    const file = files.read(path);
+    const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
+    if (parsed?.version === undefined) return missingInspection(tool, hint);
+    return libraryInspection(root, tool, path, parsed.version, hint);
 }
 
 // The inspection of a tool that is not installed anywhere gspot looks.

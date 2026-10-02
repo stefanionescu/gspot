@@ -30,15 +30,11 @@ function assertNoLinks(folder: string, files: Root): void {
 
 // The sources to build, each as the snapshot it must have under source/ in the compiler directory.
 function desiredSources(root: string, paths: string[]): Map<string, Read> {
-    const source = openRoot(root, 'native');
+    using source = openRoot(root, 'native');
     const desired = new Map<string, Read>();
-    try {
-        for (const file of paths) {
-            const mode = statSync(source.source(file)).mode & MODE_BITS;
-            desired.set(`source/${file}`, { bytes: readSource(root, file), mode });
-        }
-    } finally {
-        source.close();
+    for (const file of paths) {
+        const mode = statSync(source.source(file)).mode & MODE_BITS;
+        desired.set(`source/${file}`, { bytes: readSource(root, file), mode });
     }
     return desired;
 }

@@ -48,22 +48,18 @@ async function built(input: EngineInput): Promise<SiteBuild> {
  */
 export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    const files = openRoot(folder, 'native');
+    using files = openRoot(folder, 'native');
     const found: string[] = [];
     const directories = [''];
-    try {
-        for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
-            const entries = files.list(directory === '' ? undefined : directory).map((entry) => {
-                const path = directory === '' ? entry : `${directory}/${entry}`;
-                return { path, stat: statSync(files.source(path)) };
-            });
-            directories.push(...entries.filter(({ stat }) => stat.isDirectory()).map(({ path }) => path));
-            found.push(...entries.filter(({ stat }) => stat.isFile()).map(({ path }) => path));
-        }
-        return found.toSorted((left, right) => left.localeCompare(right));
-    } finally {
-        files.close();
+    for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
+        const entries = files.list(directory === '' ? undefined : directory).map((entry) => {
+            const path = directory === '' ? entry : `${directory}/${entry}`;
+            return { path, stat: statSync(files.source(path)) };
+        });
+        directories.push(...entries.filter(({ stat }) => stat.isDirectory()).map(({ path }) => path));
+        found.push(...entries.filter(({ stat }) => stat.isFile()).map(({ path }) => path));
     }
+    return found.toSorted((left, right) => left.localeCompare(right));
 }
 
 /**
