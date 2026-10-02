@@ -107,7 +107,7 @@ test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit type
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['typescript'],
-            '[architecture]\ntypes_directory = "contracts"\n[guides]\ninstall = false\n',
+            '[architecture]\ntypes_directory = "contracts"\n[rules]\ninstall = false\n',
             level,
         ),
         'package.json': '{"private":true,"type":"module"}\n',

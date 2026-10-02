@@ -52,7 +52,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'])(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -100,7 +100,7 @@ test.skipIf(isWindows)(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo first\n',
         });
         for (const args of [
@@ -157,7 +157,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -199,7 +199,7 @@ test.skipIf(isWindows)(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             '.gitignore': 'node_modules/\n',
             'package.json': '{"name":"snapshot-consumer","private":true}\n',
             'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',

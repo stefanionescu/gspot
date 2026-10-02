@@ -32,7 +32,7 @@ export async function preparePythonInstallation(
     const runnerTable = runner === 'none' ? '' : `runner = "${runner}"\n`;
     await createFileTree(root, {
         '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
-        'gspot.toml': policyOf(['python'], `${runnerTable}[guides]\ninstall = false\n`, 'recommended'),
+        'gspot.toml': policyOf(['python'], `${runnerTable}[rules]\ninstall = false\n`, 'recommended'),
         ...AUTHORED_FILES,
     });
     const session = await openSession(root);

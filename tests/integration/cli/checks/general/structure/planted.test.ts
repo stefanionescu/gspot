@@ -19,7 +19,7 @@ plantedCases(
         kits: ['bash', 'javascript'],
         modules: false,
         without: [],
-        init: ['--no-ci', '--no-guides', '--no-install'],
+        init: ['--no-ci', '--no-rules', '--no-install'],
         installs: false,
         // The npm lock makes npm the runner init takes.
         files: {

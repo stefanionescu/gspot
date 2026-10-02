@@ -12,7 +12,7 @@ describe('the managed block', () => {
         await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
         const session = await openSession(sandbox.path);
         const block = managedBlock(
-            session.policyFiles.policy.guides,
+            session.policyFiles.policy.rules,
             everyManifest(session.scopes),
             session.policyFiles.policy.level,
             session.repository,
@@ -25,11 +25,11 @@ describe('the managed block', () => {
     test('with a check selected it names the command, and an excluded file leaves the index', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['spelling'], '\n[guides]\nexclude = ["code/ACCESSIBILITY.md"]\n'),
+            'gspot.toml': policyOf(['spelling'], '\n[rules]\nexclude = ["code/ACCESSIBILITY.md"]\n'),
         });
         const session = await openSession(sandbox.path);
         const block = managedBlock(
-            session.policyFiles.policy.guides,
+            session.policyFiles.policy.rules,
             everyManifest(session.scopes),
             session.policyFiles.policy.level,
             session.repository,

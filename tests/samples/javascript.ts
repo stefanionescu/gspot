@@ -1,7 +1,7 @@
 // A JavaScript policy with ESLint rules and overrides at the root, in a nested scope, and in a scope inside it.
 /** Rule settings and overrides that the generated configuration and an exported profile both read. */
 export const ESLINT_OVERRIDE_POLICY = `kits = ["javascript"]
-[guides]
+[rules]
 install = false
 [tools.eslint.rules]
 eqeqeq = ["error", "smart"]

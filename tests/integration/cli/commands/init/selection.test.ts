@@ -108,7 +108,7 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
     });
-    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
+    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-rules', '--no-install'];
     const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as { policy: string };

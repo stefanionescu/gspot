@@ -13,7 +13,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 
 test('apply previews changed pins, preserves policy, and writes the pin only after successful generation', async () => {
     await using sandbox = await testdir();
-    const policy = policyOf([], '[guides]\ninstall = true\n');
+    const policy = policyOf([], '[rules]\ninstall = true\n');
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.json).toMatchObject({ isDryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
@@ -36,7 +36,7 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
 
 test('a writable checkout of a read-only output is no edit: apply keeps it, and a prune removes it', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[guides]\ninstall = true\n') });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[rules]\ninstall = true\n') });
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     const written = (applied.json as { written: string[] }).written;
 
@@ -47,7 +47,7 @@ test('a writable checkout of a read-only output is no edit: apply keeps it, and 
     const reapplied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(reapplied.exitCode).toBe(0);
     expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe(bytes);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([], '[guides]\ninstall = false\n'));
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([], '[rules]\ninstall = false\n'));
     const pruned = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(pruned.exitCode).toBe(0);
     expect(existsSync(join(sandbox.path, output))).toBe(false);
@@ -113,7 +113,7 @@ test.each(['gspot.toml', '.gspot/version'])(
 test('apply validates obsolete output parents before publishing new configuration', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'project/gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         'outside/old.txt': 'outside bytes\n',
     });
     const root = join(directory.path, 'project');

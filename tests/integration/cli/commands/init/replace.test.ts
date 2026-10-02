@@ -23,7 +23,7 @@ const PLAN_INIT = [
     'markdown',
     '--no-runner',
     '--no-ci',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -100,7 +100,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -136,7 +136,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ];
         const initialized = await runGspot(sandbox.path, argv);

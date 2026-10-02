@@ -54,7 +54,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash', 'naming'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash', 'naming'], '[rules]\ninstall = false\n'),
             'entry.sh': 'helper_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--json'];

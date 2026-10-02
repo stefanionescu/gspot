@@ -61,9 +61,9 @@ kits = ["typescript", "css", "astro"]
 
 [hooks]
 
-[guides]
+[rules]
 install = true
-directory = ".gspot/guides"
+path = ".gspot/rules"
 
 [tools]
 

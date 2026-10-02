@@ -2,7 +2,7 @@ import { FIRST_READ } from '#cli/config/rules.ts';
 import { test, expect, describe } from 'bun:test';
 import { excludeProblems } from '#cli/rules/assemble.ts';
 
-describe('[guides] exclude', () => {
+describe('[rules] exclude', () => {
     test('a file path and a category folder are accepted', () => {
         expect(excludeProblems(['code/ACCESSIBILITY.md', 'library'])).toStrictEqual([]);
     });

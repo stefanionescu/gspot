@@ -16,7 +16,7 @@ describe('configuration directory boundaries', () => {
         'api\n/../../outside',
         '',
     ])('refuses escaping directory %j before filesystem discovery', (path) => {
-        for (const settings of [{ scope: [{ path }] }, { guides: { directory: path } }]) {
+        for (const settings of [{ scope: [{ path }] }, { rules: { path } }]) {
             expect(() => parsePolicyText(stringify({ ...settings }), 'gspot.toml')).toThrow(GspotError);
         }
     });
@@ -26,12 +26,12 @@ describe('configuration directory boundaries', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
         const policy = parsePolicyText(
-            stringify({ scope: [{ path }], guides: { directory: 'agent rules/café 100%' } }),
+            stringify({ scope: [{ path }], rules: { path: 'agent rules/café 100%' } }),
             'gspot.toml',
             sandbox.path,
         );
         expect(policy.scopes[0]?.path).toBe(path);
-        expect(policy.guides.directory).toBe('agent rules/café 100%');
+        expect(policy.rules.path).toBe('agent rules/café 100%');
     });
 });
 

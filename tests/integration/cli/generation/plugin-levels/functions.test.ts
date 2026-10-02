@@ -67,7 +67,7 @@ test('generated lint accepts JavaScript method node shapes', async () => {
 test('generated lint preserves required class method contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'gspot.toml': policyOf(['typescript'], '[rules]\ninstall = false\n', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'methods.ts': [
@@ -91,7 +91,7 @@ test('generated lint preserves required class method contracts', async () => {
 test('generated lint reports named small functions and keeps inline callbacks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'gspot.toml': policyOf(['typescript'], '[rules]\ninstall = false\n', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'callbacks.ts': CALLBACK_SOURCE,
@@ -125,7 +125,7 @@ test('generated lint reports named small functions and keeps inline callbacks', 
 test('generated file ownership keeps constructor state and rejects small calculations and forwarding', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'gspot.toml': policyOf(['typescript'], '[rules]\ninstall = false\n', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'area.ts': 'export function area(width: number, height: number) { return width * height; }\n',
@@ -165,7 +165,7 @@ test('generated file ownership keeps constructor state and rejects small calcula
 test('generated all lint keeps callbacks written as object properties', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'gspot.toml': policyOf(['typescript'], '[rules]\ninstall = false\n', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'options.ts': [

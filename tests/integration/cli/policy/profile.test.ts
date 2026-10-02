@@ -53,7 +53,7 @@ test('profiles retain runner coverage settings and omit the architecture roles, 
 test('profile publication is idempotent, preserves edits, and survives apply', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
     });
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     const path = join(directory.path, 'shared.profile.toml');
@@ -95,7 +95,7 @@ test.each([
 test('profile export preserves an unowned destination and refuses the managed repository policy', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         'occupied.toml': 'original bytes',
     });
     const occupied = join(directory.path, 'occupied.toml');

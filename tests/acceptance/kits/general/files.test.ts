@@ -10,7 +10,7 @@ import { script, plantedCases } from '#tests/harness/planted/cases.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { install, toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
-const CONFIGS_INIT = ['init', '--yes', '--kits', 'files', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const CONFIGS_INIT = ['init', '--yes', '--kits', 'files', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 plantedCases(
     'the configs configuration',
@@ -18,7 +18,7 @@ plantedCases(
         kits: ['files'],
         modules: false,
         without: [],
-        init: ['--no-runner', '--no-ci', '--no-guides', '--no-install', '--no-hooks'],
+        init: ['--no-runner', '--no-ci', '--no-rules', '--no-install', '--no-hooks'],
         tools: ['taplo', 'yamllint', 'dotenv-linter'],
         files: { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' },
     },

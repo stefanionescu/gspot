@@ -20,7 +20,7 @@ const FORMATTER_INIT = [
     'format',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -108,7 +108,7 @@ async function prepareNativeConsumer(installation: InstalledConsumer): Promise<{
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
             '--json',
         ],

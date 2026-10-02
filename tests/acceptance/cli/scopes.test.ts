@@ -43,7 +43,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ];
         // The root kits init selects in every repository install tools the ESLint check never runs.

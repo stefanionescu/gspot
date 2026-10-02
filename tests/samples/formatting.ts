@@ -2,7 +2,7 @@
 /** A policy with formatter overrides at the root, for a path, and in nested scopes. */
 export const FORMAT_OVERRIDES_POLICY = `level = "all"
 kits = ["format"]
-[guides]
+[rules]
 install = false
 [format]
 indent_width = 2

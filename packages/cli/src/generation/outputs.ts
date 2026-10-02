@@ -65,9 +65,9 @@ function blockOutputs(repository: Repository, policy: Policy, manifests: Manifes
     out.blocks.push({ path: '.gitattributes', block: attributesBlock(out.files), style: 'hash' });
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         out.notes.push('CLAUDE.md goes; its own text moves to the end of AGENTS.md');
-    if (!policy.guides.install) return;
-    const block = managedBlock(policy.guides, manifests, policy.level, repository);
-    for (const path of new Set(['AGENTS.md', ...(policy.guides.agents ?? [])]))
+    if (!policy.rules.install) return;
+    const block = managedBlock(policy.rules, manifests, policy.level, repository);
+    for (const path of new Set(['AGENTS.md', ...(policy.rules.instructions ?? [])]))
         out.blocks.push({ path, block, style: 'markdown' });
 }
 
@@ -129,7 +129,7 @@ export function emitAll(
     );
     if (policy.runner === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
     workflowOutput(policy, scopes, version, out);
-    out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));
+    out.files.push(...assembleRules(policy.rules, manifests, policy.level, repository));
     if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))
         out.files.push(...styleFiles(policy, rootView(scopes)));
     blockOutputs(repository, policy, manifests, out);

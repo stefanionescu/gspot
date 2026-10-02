@@ -11,7 +11,7 @@ import { emitted, generatedEslint } from '#tests/harness/cli/generated.ts';
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `level = "all"\n${policy}\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\n${policy}\n[rules]\ninstall = false\n`,
         'package.json': '{"name":"planted","private":true,"type":"module","dependencies":{"react":"19.1.1"}}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
@@ -76,7 +76,7 @@ check = "javascript/eslint"
 rule = "package-json/require-exports"
 paths = ["cli/package.json"]
 reason = "The command package exposes no module API."
-[guides]
+[rules]
 install = false
 `,
         'package.json': JSON.stringify({ ...manifest, private: true }),
@@ -108,7 +108,7 @@ test.each([
     async (framework, library, version) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "all"\nkits = ["javascript", "${framework}"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': `level = "all"\nkits = ["javascript", "${framework}"]\n[rules]\ninstall = false\n`,
             'package.json': JSON.stringify({
                 name: 'planted',
                 private: true,

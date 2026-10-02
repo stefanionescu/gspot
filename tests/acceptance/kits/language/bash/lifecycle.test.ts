@@ -24,7 +24,7 @@ test(
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         expect(init.code, init.stdout + init.stderr).toBe(0);
@@ -81,7 +81,7 @@ test(
         };
         const initialized = await spawnGspot(
             sandbox.path,
-            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
             environment,
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -118,7 +118,7 @@ test(
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         const originalVersion = readFileSync(join(sandbox.path, '.gspot', 'version'));

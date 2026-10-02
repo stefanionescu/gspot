@@ -47,7 +47,7 @@ if (toolShipsHere('swiftlint'))
         const prefix = scope === '' ? '' : `${scope}/`;
         const scopeTable = scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nkits = ["xctest"]\n`;
         await createFileTree(root, {
-            'gspot.toml': `level = "all"\nkits = ${scope === '' ? '["xctest"]' : '[]'}\n[guides]\ninstall = false\n${scopeTable}`,
+            'gspot.toml': `level = "all"\nkits = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scopeTable}`,
             [`${prefix}Sources/Value.swift`]: DEFECT,
             [`${prefix}AppTests/Value.swift`]: DEFECT,
             [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,

@@ -79,7 +79,7 @@ test('initialization keeps the profile runner while honoring disabled integratio
     expect(document).toMatchObject({
         runner: 'mise',
         coverage: { strict: true },
-        guides: { directory: '.gspot/guides', install: false },
+        rules: { path: '.gspot/rules', install: false },
     });
     expect(document).not.toHaveProperty('hooks');
     expect(document).not.toHaveProperty('ci');

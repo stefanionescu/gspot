@@ -14,7 +14,7 @@ import type { Generated } from '#cli/types/generation/generation.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;
+    if (path.startsWith(`${policy.rules.path}/`) && !policy.rules.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
     return !NEVER_STRAY.has(path);
 }

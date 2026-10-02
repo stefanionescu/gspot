@@ -78,7 +78,7 @@ export function selectRuleFiles(rules: RuleSettings, manifests: Manifest[], repo
         if (files.has(path) || rules.exclude.some((entry) => isExcluded(entry, path))) continue;
         files.set(path, {
             source,
-            target: `${rules.directory}/${path}`,
+            target: `${rules.path}/${path}`,
             layer,
             kit,
             title: TITLE.exec(readAsset(source))?.groups?.['title'] ?? '',
@@ -112,7 +112,7 @@ export function assembleRules(
 }
 
 /**
- * The problems of [guides] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
+ * The problems of [rules] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
  * @param exclude the entries as written, relative to the rules folder
  * @returns the problems in plain English
  */
@@ -123,12 +123,12 @@ export function excludeProblems(exclude: string[]): string[] {
     return exclude.flatMap((entry) => {
         if (FIRST_READ.some((file) => isExcluded(entry, file)))
             return [
-                `[guides] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
+                `[rules] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
             ];
         if (paths.some((path) => isExcluded(entry, path))) return [];
         const near = similar(entry, paths);
         const names = near.map((name) => `\`${name}\``).join(', ');
         const hint = near.length > 0 ? ` Did you mean ${names}?` : '';
-        return [`[guides] exclude names \`${entry}\`, which matches no rule.${hint}`];
+        return [`[rules] exclude names \`${entry}\`, which matches no rule.${hint}`];
     });
 }

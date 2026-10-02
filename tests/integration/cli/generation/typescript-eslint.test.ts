@@ -28,7 +28,7 @@ test('generated TypeScript configuration reports an interface once through the p
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...PROJECT,
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'gspot.toml': policyOf(['typescript'], '[rules]\ninstall = false\n', 'all'),
         'src/order.ts': 'export interface Order { total: number }\n',
     });
     const reported = await messagesOf(sandbox.path);
@@ -54,7 +54,7 @@ test.each([
         ...PROJECT,
         'gspot.toml': policyOf(
             ['typescript'],
-            '[guides]\ninstall = false\n[structure]\nreexports = "index-only"\n',
+            '[rules]\ninstall = false\n[structure]\nreexports = "index-only"\n',
             'all',
         ),
         'src/first.ts': 'export const shared = 1;\n',

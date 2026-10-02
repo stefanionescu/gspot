@@ -4,73 +4,73 @@
 
 Selected level: `all`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.
 
-Guide requirements about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.
+Rules about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.
 
-Read `.gspot/guides/agent/WORKING.md` and `.gspot/guides/prose/WRITING.md` first. Then read the guides for the files you change. A more specific layer wins over a general one.
+Read `.gspot/rules/agent/WORKING.md` and `.gspot/rules/prose/WRITING.md` first. Then read the rules for the files you change. A more specific rule wins over a general one.
 
 How to work here:
 
-- `.gspot/guides/agent/GIT.md`
-- `.gspot/guides/agent/PLANNING.md`
-- `.gspot/guides/agent/SUPPRESSIONS.md`
-- `.gspot/guides/agent/TALKING.md`
-- `.gspot/guides/agent/WORKING.md`
+- `.gspot/rules/agent/GIT.md`
+- `.gspot/rules/agent/PLANNING.md`
+- `.gspot/rules/agent/SUPPRESSIONS.md`
+- `.gspot/rules/agent/TALKING.md`
+- `.gspot/rules/agent/WORKING.md`
 
 Code, everywhere:
 
-- `.gspot/guides/code/ACCESSIBILITY.md`
-- `.gspot/guides/code/CLI.md`
-- `.gspot/guides/code/COMMENTS.md`
-- `.gspot/guides/code/CONFIGURATION.md`
-- `.gspot/guides/code/DEPENDENCIES.md`
-- `.gspot/guides/code/ERRORS.md`
-- `.gspot/guides/code/GENERATED.md`
-- `.gspot/guides/code/LOGGING.md`
-- `.gspot/guides/code/NAMING-FILES.md`
-- `.gspot/guides/code/NAMING.md`
-- `.gspot/guides/code/SECRETS.md`
-- `.gspot/guides/code/SECURITY.md`
-- `.gspot/guides/code/TESTING.md`
+- `.gspot/rules/code/ACCESSIBILITY.md`
+- `.gspot/rules/code/CLI.md`
+- `.gspot/rules/code/COMMENTS.md`
+- `.gspot/rules/code/CONFIGURATION.md`
+- `.gspot/rules/code/DEPENDENCIES.md`
+- `.gspot/rules/code/ERRORS.md`
+- `.gspot/rules/code/GENERATED.md`
+- `.gspot/rules/code/LOGGING.md`
+- `.gspot/rules/code/NAMING-FILES.md`
+- `.gspot/rules/code/NAMING.md`
+- `.gspot/rules/code/SECRETS.md`
+- `.gspot/rules/code/SECURITY.md`
+- `.gspot/rules/code/TESTING.md`
 
 Documentation:
 
-- `.gspot/guides/prose/DOCS-CONTENT.md`
-- `.gspot/guides/prose/DOCS-FORMAT.md`
-- `.gspot/guides/prose/DOCS-MEDIA.md`
-- `.gspot/guides/prose/DOCS-REVIEW.md`
-- `.gspot/guides/prose/DOCS-SURFACES.md`
-- `.gspot/guides/prose/DOCS.md`
-- `.gspot/guides/prose/WRITING.md`
+- `.gspot/rules/prose/DOCS-CONTENT.md`
+- `.gspot/rules/prose/DOCS-FORMAT.md`
+- `.gspot/rules/prose/DOCS-MEDIA.md`
+- `.gspot/rules/prose/DOCS-REVIEW.md`
+- `.gspot/rules/prose/DOCS-SURFACES.md`
+- `.gspot/rules/prose/DOCS.md`
+- `.gspot/rules/prose/WRITING.md`
 
 Languages:
 
-- `.gspot/guides/language/bash/BASH.md`
-- `.gspot/guides/language/bash/LANGUAGE.md`
-- `.gspot/guides/language/bash/NAMING.md`
-- `.gspot/guides/language/bash/OPERATIONS.md`
-- `.gspot/guides/language/bash/SAFETY.md`
-- `.gspot/guides/language/javascript/BUN.md`
-- `.gspot/guides/language/javascript/JAVASCRIPT.md`
-- `.gspot/guides/language/javascript/NAMING.md`
-- `.gspot/guides/language/javascript/NODE.md`
-- `.gspot/guides/language/typescript/NAMING.md`
-- `.gspot/guides/language/typescript/TYPESCRIPT.md`
-- `.gspot/guides/language/css/CSS.md`
-- `.gspot/guides/language/css/NAMING.md`
+- `.gspot/rules/language/bash/BASH.md`
+- `.gspot/rules/language/bash/LANGUAGE.md`
+- `.gspot/rules/language/bash/NAMING.md`
+- `.gspot/rules/language/bash/OPERATIONS.md`
+- `.gspot/rules/language/bash/SAFETY.md`
+- `.gspot/rules/language/javascript/BUN.md`
+- `.gspot/rules/language/javascript/JAVASCRIPT.md`
+- `.gspot/rules/language/javascript/NAMING.md`
+- `.gspot/rules/language/javascript/NODE.md`
+- `.gspot/rules/language/typescript/NAMING.md`
+- `.gspot/rules/language/typescript/TYPESCRIPT.md`
+- `.gspot/rules/language/css/CSS.md`
+- `.gspot/rules/language/css/NAMING.md`
 
 Repository:
 
-- `.gspot/guides/general/commits/COMMITLINT.md`
-- `.gspot/guides/general/files/TASKS.md`
-- `.gspot/guides/general/files/YAML.md`
+- `.gspot/rules/general/commits/COMMITLINT.md`
+- `.gspot/rules/general/files/TASKS.md`
+- `.gspot/rules/general/files/YAML.md`
 
 Tools:
 
-- `.gspot/guides/tool/actions/GITHUB-ACTIONS.md`
+- `.gspot/rules/tool/actions/GITHUB-ACTIONS.md`
 
 Frameworks:
 
-- `.gspot/guides/framework/astro/ASTRO.md`
+- `.gspot/rules/framework/astro/ASTRO.md`
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.
 

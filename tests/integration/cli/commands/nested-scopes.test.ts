@@ -10,7 +10,7 @@ const NESTED_SCOPES_POLICY = `kits = ["format"]
 file_lines = 250
 [format]
 indent_width = 4
-[guides]
+[rules]
 install = false
 [[scope]]
 path = "api"

@@ -171,7 +171,7 @@ export function normalize(raw: RawPolicy): Policy {
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
         ...compact({ hooks: raw.hooks, ci: raw.ci }),
-        guides: defaulted<Policy['guides']>(raw.guides, { install: true, directory: '.gspot/guides', exclude: [] }),
+        rules: defaulted<Policy['rules']>(raw.rules, { install: true, path: '.gspot/rules', exclude: [] }),
         ...(raw.runner === undefined ? {} : { runner: raw.runner }),
         scopeTables,
     };

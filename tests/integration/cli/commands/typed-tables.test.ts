@@ -15,7 +15,7 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'README.md': '# planted\n',
-        'gspot.toml': policyOf(['docs', 'spelling'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['docs', 'spelling'], '[rules]\ninstall = false\n'),
     });
     commitAll(sandbox.path);
     const written = await runGspot(sandbox.path, ['set', 'tools.docs.exclude', TABLE]);

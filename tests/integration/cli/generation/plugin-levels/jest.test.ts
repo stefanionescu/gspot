@@ -6,7 +6,7 @@ import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 const APP_JEST = policyOf(
     ['javascript'],
-    '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\nharness = "tests/fixtures"\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ntest_module = "bun:test"\n',
+    '[rules]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\nharness = "tests/fixtures"\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ntest_module = "bun:test"\n',
     'all',
 );
 
@@ -47,7 +47,7 @@ test.each(['@jest/globals', 'bun:test'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 ['jest'],
-                `[guides]\ninstall = false\n[tools.jest]\ntest_module = "${globalPackage}"\n`,
+                `[rules]\ninstall = false\n[tools.jest]\ntest_module = "${globalPackage}"\n`,
                 'all',
             ),
             'package.json': '{"private":true,"type":"module"}\n',

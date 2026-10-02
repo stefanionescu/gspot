@@ -22,7 +22,7 @@ if (onPosix)
     test('mise executes the pinned CLI with its arguments, and install rejects an old runner before corrected setup succeeds', async () => {
         await using repository = await testdir();
         await using state = await testdir();
-        const policy = policyOf([], 'runner = "mise"\n[guides]\ninstall = false\n', 'recommended');
+        const policy = policyOf([], 'runner = "mise"\n[rules]\ninstall = false\n', 'recommended');
         await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
         await createFileTree(state.path, {
             'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',

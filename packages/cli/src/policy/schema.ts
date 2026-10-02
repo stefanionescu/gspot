@@ -184,14 +184,14 @@ const hooksSchema = z.strictObject({
         .describe('Check affected paths or the full tree of each pushed revision.'),
 });
 
-const guidesSchema = z.strictObject({
-    install: flag.default(true).describe('Install guide files and agent instructions.'),
-    directory: relativeDirectory
-        .default('.gspot/guides')
-        .describe('Repository-relative destination for installed guides.'),
-    project: text.optional().describe('Repository-relative project rule layer linked from agent instructions.'),
-    exclude: textList.default([]).describe('Guide patterns excluded from the installed selection.'),
-    agents: z
+const rulesSchema = z.strictObject({
+    install: flag.default(true).describe('Install the rules for coding agents and the agent instructions.'),
+    path: relativeDirectory.default('.gspot/rules').describe('Repository-relative folder the rules install into.'),
+    local: text
+        .optional()
+        .describe("Repository-relative folder of the repository's own rules, linked from the instructions."),
+    exclude: textList.default([]).describe('Rule files and folders left out of the installed selection.'),
+    instructions: z
         .array(relativeDirectory)
         .default([])
         .describe(
@@ -232,7 +232,7 @@ export const ciSchema = z.strictObject({
 
 /** Integration settings use the same fields, defaults, and descriptions as policy validation. */
 export const integrationSettingSchemas = Object.fromEntries(
-    Object.entries({ hooks: hooksSchema, ci: ciSchema, guides: guidesSchema }).flatMap(([section, schema]) =>
+    Object.entries({ hooks: hooksSchema, ci: ciSchema, rules: rulesSchema }).flatMap(([section, schema]) =>
         Object.entries(schema.shape as Record<string, z.ZodType>).map(
             ([key, field]) =>
                 [
@@ -286,5 +286,5 @@ export const policySchema = z.strictObject({
     check: z.array(checkSchema).optional(),
     hooks: hooksSchema.optional(),
     ci: ciSchema.optional(),
-    guides: guidesSchema.optional(),
+    rules: rulesSchema.optional(),
 });

@@ -112,7 +112,7 @@ test('init does not report success when required Python lock resolution cannot r
 test('a repository that already runs hooks keeps them, gets the gspot lines, and the other installers still run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], 'runner = "mise"\n[hooks]\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], 'runner = "mise"\n[hooks]\n[rules]\ninstall = false\n'),
         '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
     });
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
@@ -151,7 +151,7 @@ if (onPosix) {
         async (condition) => {
             await using repository = await testdir();
             await createFileTree(repository.path, {
-                'gspot.toml': policyOf([], '[hooks]\n[guides]\ninstall = false\n'),
+                'gspot.toml': policyOf([], '[hooks]\n[rules]\ninstall = false\n'),
                 'bin/gspot': '#!/bin/sh\nexit 0\n',
             });
             const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });

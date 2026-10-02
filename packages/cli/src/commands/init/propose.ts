@@ -54,7 +54,7 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     else document['hooks'] = { ...asRecord(document['hooks']) };
     if (plan.ci === 'none') delete document['ci'];
     else document['ci'] = { ...asRecord(document['ci']), provider: plan.ci };
-    document['guides'] = { directory: '.gspot/guides', ...asRecord(document['guides']), install: plan.rules };
+    document['rules'] = { path: '.gspot/rules', ...asRecord(document['rules']), install: plan.rules };
     if (plan.runner === 'none') delete document['runner'];
     else document['runner'] = plan.runner;
 }

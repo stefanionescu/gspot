@@ -29,7 +29,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);

@@ -9,7 +9,7 @@ import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
 
-const QUIET = ['--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 const PREVIEW = ['init', '--yes', '--no-hooks', ...QUIET, '--dry-run', '--json'];
 
 test('a preview writes nothing and prints parseable JSON', async () => {

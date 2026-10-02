@@ -17,7 +17,7 @@ const GENERATED = '.gspot/config/shellcheckrc';
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
         '.gitignore': '.gspot/state/\n',
     });

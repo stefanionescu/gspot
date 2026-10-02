@@ -23,7 +23,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         '.gspot/authored.json': original,
     });
     await writeOutputs(await openSession(sandbox.path));
@@ -53,7 +53,7 @@ test('doctor excludes private tool manifests from language detection and detects
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         '.gspot/pyproject.toml': python,
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });

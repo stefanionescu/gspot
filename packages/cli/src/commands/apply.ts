@@ -75,10 +75,10 @@ export function registerApply(program: Program): void {
     program
         .command('apply')
         .summary('Write the configuration from gspot.toml')
-        .description('Regenerate the tool configuration, guides, and hooks from gspot.toml')
+        .description('Regenerate the tool configuration, rules, and hooks from gspot.toml')
         .addHelpText(
             'after',
-            '\nEffects:\nReads gspot.toml and writes the tool configuration, the guides for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
+            '\nEffects:\nReads gspot.toml and writes the tool configuration, the rules for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
         )
         .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags, command) => {

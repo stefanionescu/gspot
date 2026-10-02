@@ -107,7 +107,7 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
                 message: `enable names an unselected or unknown check: ${name}.`,
             });
     problems.push(
-        ...policy.guides.exclude.flatMap((entry, index) =>
+        ...policy.rules.exclude.flatMap((entry, index) =>
             excludeProblems([entry]).map((text) => ({ path: ['rules', 'exclude', index], message: text })),
         ),
         ...validateAgainstSurface(exposedSettings(rootSelected, policy.level), policy, scopeSurfaces),

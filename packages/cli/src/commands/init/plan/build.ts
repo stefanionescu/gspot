@@ -58,10 +58,10 @@ function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): strin
 }
 
 // The agent instruction files init writes, when any agent is configured.
-function agentRows(agents: string[]): ReplacePlan['write'] {
+function agentRows(agents: string[], rules: string): ReplacePlan['write'] {
     if (agents.length === 0) return [];
     const files = agents.map((path) => ({ path, note: 'managed instruction block' }));
-    return [...files, { path: '.gspot/guides/', note: 'agent guides' }];
+    return [...files, { path: `${rules}/`, note: 'agent rules' }];
 }
 
 // The CI workflow init writes for the chosen host.
@@ -125,7 +125,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                   selection: options.profile.tables.selection,
                   detected: selection.rootPlans.map((plan) => plan.kit).filter((id) => !selection.selectedIds.has(id)),
               };
-    const agents = policy.guides.install ? [...new Set(['AGENTS.md', ...(policy.guides.agents ?? [])])] : [];
+    const agents = policy.rules.install ? [...new Set(['AGENTS.md', ...(policy.rules.instructions ?? [])])] : [];
     const policyLines = policyText.split('\n').length;
     const lintJobs = ciLintJobs(root, tooling.ci);
     return {
@@ -144,7 +144,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                 .map((config) => config.pointer?.path)
                 .filter((path) => path !== undefined)
                 .map((path) => ({ path, note: 'pointer' })),
-            ...agentRows(agents),
+            ...agentRows(agents, policy.rules.path),
             ...ciRows(answers.ci),
         ],
         remove: [

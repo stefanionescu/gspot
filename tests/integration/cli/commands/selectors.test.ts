@@ -31,7 +31,7 @@ async function expectIndexReport(root: string, args: string[], report: RunReport
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
@@ -75,7 +75,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
+    const policy = policyOf(['bash'], '[rules]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -109,7 +109,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });

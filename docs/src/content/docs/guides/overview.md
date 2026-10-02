@@ -19,7 +19,7 @@ that only pass their arguments on, folders that hold one file, names such as `ut
 copied between files. gspot has its own checks for these, next to the rules of the standard
 tools.
 
-**Guides for coding agents.** gspot installs Markdown guides under `.gspot/guides/` and links
+**Guides for coding agents.** gspot installs Markdown guides under `.gspot/rules/` and links
 them from `AGENTS.md`. The guides tell the agent how to write code in this repository, and they
 match the checks.
 

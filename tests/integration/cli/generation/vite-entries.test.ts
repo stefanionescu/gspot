@@ -7,7 +7,7 @@ import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 const VITE_POLICY = `level = "all"
 kits = ["javascript"]
-[guides]
+[rules]
 install = false
 [tools.knip]
 entry = []

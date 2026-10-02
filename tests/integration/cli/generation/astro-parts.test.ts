@@ -21,7 +21,7 @@ const COMPONENT = [
 test('the frontmatter, the markup, and a script of an Astro component each reach their rules', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'level = "all"\nkits = ["typescript", "astro"]\n[guides]\ninstall = false\n',
+        'gspot.toml': 'level = "all"\nkits = ["typescript", "astro"]\n[rules]\ninstall = false\n',
         'package.json': '{"name":"planted","version":"1.0.0","private":true,"type":"module"}\n',
         'tsconfig.json':
             '{"compilerOptions":{"strict":true,"module":"ESNext","moduleResolution":"Bundler"},"include":["src"]}\n',

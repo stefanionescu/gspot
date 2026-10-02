@@ -10,7 +10,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
 
-const ACTIONS_INIT = ['init', '--yes', '--kits', 'actions', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const ACTIONS_INIT = ['init', '--yes', '--kits', 'actions', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 plantedCases(
     'the actions kit',
@@ -18,7 +18,7 @@ plantedCases(
         kits: ['actions'],
         modules: false,
         without: [],
-        init: ['--no-runner', '--no-ci', '--no-guides', '--no-install', '--no-hooks'],
+        init: ['--no-runner', '--no-ci', '--no-rules', '--no-install', '--no-hooks'],
         tools: ['actionlint', 'zizmor'],
         files: {},
     },

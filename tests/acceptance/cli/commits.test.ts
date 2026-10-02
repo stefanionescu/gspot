@@ -15,7 +15,7 @@ import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
-const COMMITS_INIT = ['init', '--yes', '--kits', 'commits', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const COMMITS_INIT = ['init', '--yes', '--kits', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {
@@ -127,7 +127,7 @@ test(
         await using sandbox = await testdir();
         const source = join(sandbox.path, 'source');
         await createFileTree(source, {
-            'gspot.toml': policyOf(['bash', 'commits'], '[guides]\ninstall = false\n', 'all'),
+            'gspot.toml': policyOf(['bash', 'commits'], '[rules]\ninstall = false\n', 'all'),
             'source.sh': 'echo base\n',
         });
         expect(git(source, ['init', '-q']).code).toBe(0);

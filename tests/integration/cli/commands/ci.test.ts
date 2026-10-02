@@ -35,7 +35,7 @@ async function prepareCiProject(
             ? 'stages: [test]\napplication:\n  script: echo authored-job\n'
             : 'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo authored-job\n';
     const policy = `kits = []
-[guides]
+[rules]
 install = false
 [ci]
 provider = "${provider}"
@@ -275,7 +275,7 @@ test.each([
             'none',
             '--no-runner',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);

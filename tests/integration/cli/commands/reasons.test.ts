@@ -11,7 +11,7 @@ test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
     async (required) => {
         await using directory = await testdir();
-        const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
+        const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
         const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
@@ -38,7 +38,7 @@ test.each([false, true])(
     async (required) => {
         {
             await using directory = await testdir();
-            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
+            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[rules]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
             const entry = '{"name":"helper_command"}';
             const allowed = await runGspot(directory.path, ['set', 'naming.allowed', entry]);
@@ -75,7 +75,7 @@ test.each([false, true])(
 test.each([false, true])('inline suppression reasons follow require_reasons=%s', async (required) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`,
         'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
     });
     const command = ['check', '--only', 'structure/suppressions', '--json'];
@@ -105,7 +105,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'level = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[guides]\ninstall = false\n',
+            'level = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[rules]\ninstall = false\n',
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
@@ -126,7 +126,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
         const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
@@ -163,7 +163,7 @@ test.each([
     const policy = [
         'require_reasons = true',
         'kits = ["bash", "naming"]',
-        '[guides]',
+        '[rules]',
         'install = false',
         '[naming]',
         'banned = ["original"]',

@@ -24,7 +24,7 @@ async function generatedGuides(level: string, files: Record<string, string>): Pr
 test('recommended guides omit marked sections and retain the next heading', async () => {
     const recommended = await generatedGuides('recommended', {});
     const all = await generatedGuides('all', {});
-    const path = '.gspot/guides/language/typescript/TYPESCRIPT.md';
+    const path = '.gspot/rules/language/typescript/TYPESCRIPT.md';
     expect(recommended.get(path)).not.toContain('## Declaration order');
     expect(all.get(path)).toContain('## Declaration order');
     expect(recommended.get(path)).toContain('## Rules not adopted');
@@ -37,8 +37,8 @@ test('conditional guides follow lockfile and dependency evidence', async () => {
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
     for (const path of ['language/javascript/BUN.md', 'language/css/TAILWIND.md', 'tool/vitest/PLAYWRIGHT.md']) {
-        expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
-        expect(present.has(`.gspot/guides/${path}`)).toBe(true);
+        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
+        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
     }
 });
 
@@ -50,7 +50,7 @@ test('a kit cannot install a conditional rule its rules folder does not hold', a
         '[kit]\ntitle = "Example"\ndescription = "Example rule selection for this test."\n[rules]\n"MISSING.md" = {dependencies = ["example"]}\n',
         'kits/general/example',
     );
-    expect(() => selectRuleFiles(session.policyFiles.policy.guides, [manifest], session.repository)).toThrow(
+    expect(() => selectRuleFiles(session.policyFiles.policy.rules, [manifest], session.repository)).toThrow(
         'The rule MISSING.md of the example kit does not exist.',
     );
 });
@@ -59,7 +59,7 @@ test('Swift guides require parsed imports and ignore comments and strings', asyn
     const absent = await generatedGuides('all', { 'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n' });
     const present = await generatedGuides('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
     for (const path of ['language/swift/SWIFTUI.md', 'language/swift/UIKIT.md']) {
-        expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
-        expect(present.has(`.gspot/guides/${path}`)).toBe(true);
+        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
+        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
     }
 });

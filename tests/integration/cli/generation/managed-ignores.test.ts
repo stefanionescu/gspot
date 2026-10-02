@@ -18,7 +18,7 @@ test.each([true, false])(
         await using repository = await testdir();
         const original = '# Authored entries\nprivate.tmp\n';
         await createFileTree(repository.path, {
-            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
             ...(authored ? { '.gitignore': original } : {}),
         });
         await writeOutputs(await openSession(repository.path));

@@ -19,7 +19,7 @@ const PLAN_INIT = [
     'markdown',
     '--no-runner',
     '--no-ci',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 

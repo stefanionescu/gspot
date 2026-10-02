@@ -21,7 +21,7 @@ Install it once with `npm install --global @gspothq/cli`, then run `gspot init` 
 
 - the checks for your languages and frameworks
 - the linter configuration it writes under `.gspot/`
-- the guides for coding agents, linked from `AGENTS.md`
+- the rules for coding agents, linked from `AGENTS.md`
 - the Git hooks that run the checks
 
 Accept the plan, and gspot writes the files and installs the tools.

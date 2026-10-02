@@ -34,7 +34,7 @@ test.each([
 test('a nested unknown setting is a finding at its key path, and its correction clears it', async () => {
     const policy = policyOf(
         ['bash'],
-        '[guides]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+        '[rules]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
@@ -52,7 +52,7 @@ test('a nested unknown setting is a finding at its key path, and its correction 
 test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
     const policy = policyOf(
         ['bash'],
-        'require_reasons = true\n[guides]\ninstall = false\n[limits]\nfile_lines = 1000\n',
+        'require_reasons = true\n[rules]\ninstall = false\n[limits]\nfile_lines = 1000\n',
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });

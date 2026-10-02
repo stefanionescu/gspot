@@ -12,7 +12,7 @@ test('a global ignore stops a repository check and its correction command until 
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
     const policy = policyOf(
         [],
-        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
+        `[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
     );
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--json'];
@@ -57,7 +57,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     await using directory = await testdir();
     const policy = policyOf(
         [],
-        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
+        `[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
     );
     await createFileTree(directory.path, {
         'gspot.toml': policy,

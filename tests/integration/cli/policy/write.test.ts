@@ -238,7 +238,7 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    writeFileSync(path, policyOf([], '[guides]\ninstall = false\n'));
+    writeFileSync(path, policyOf([], '[rules]\ninstall = false\n'));
     let evaluations = 0;
     const result = await commitPolicy(
         sandbox.path,

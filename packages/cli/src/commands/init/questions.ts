@@ -49,7 +49,7 @@ async function askCi(root: string, options: InitOptions, tooling: ExistingToolin
 
 async function askRuleFiles(options: InitOptions): Promise<boolean> {
     if (options.rules !== undefined) return options.rules === 'yes';
-    return askConfirmation('Install agent guides?', '--no-guides', true, options.yes);
+    return askConfirmation('Install the agent rules?', '--no-rules', true, options.yes);
 }
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
@@ -85,7 +85,7 @@ export async function askKits(
 }
 
 /**
- * Asks the init questions that flags left open: hooks, CI, guides, and the task runner.
+ * Asks the init questions that flags left open: hooks, CI, rules, and the task runner.
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found

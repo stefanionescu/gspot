@@ -12,7 +12,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['javascript'],
-            '[guides]\ninstall = false\n[[scope]]\npath = "site"\nkits = ["javascript"]\n',
+            '[rules]\ninstall = false\n[[scope]]\npath = "site"\nkits = ["javascript"]\n',
         ),
         'source/main.js': 'export const value = 1;\n',
         'site/README.md': '# No script here\n',

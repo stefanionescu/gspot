@@ -10,10 +10,7 @@ import { ESLINT_OVERRIDE_POLICY } from '#tests/samples/javascript.ts';
 
 test('generated ESLint applies explicit ignores after enabled rule settings', async () => {
     await using directory = await testdir();
-    const policy = policyOf(
-        ['javascript'],
-        '[guides]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n',
-    );
+    const policy = policyOf(['javascript'], '[rules]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n');
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'package.json': '{"private":true,"type":"module"}\n',

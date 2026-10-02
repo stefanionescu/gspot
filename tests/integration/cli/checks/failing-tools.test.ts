@@ -10,7 +10,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-const TOOL_FAILURES_POLICY = policyOf(['files', 'actions'], 'runner = "mise"\n[guides]\ninstall = false\n', 'all');
+const TOOL_FAILURES_POLICY = policyOf(['files', 'actions'], 'runner = "mise"\n[rules]\ninstall = false\n', 'all');
 
 const PINACT_STUB = `#!/usr/bin/env bun
 const args = process.argv.slice(2);

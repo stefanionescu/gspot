@@ -20,7 +20,7 @@ const NGINX_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 

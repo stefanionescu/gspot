@@ -23,11 +23,11 @@ function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
     return install ? 'yes' : 'no';
 }
 
-// A profile answers the questions a flag did not: its kits, hooks, workflow, runner, and guides.
+// A profile answers the questions a flag did not: its kits, hooks, workflow, runner, and rules.
 function profileAnswers(profile: Profile): Partial<InitOptions> {
     const { tables } = profile;
     const configurations = tables.kits ?? [];
-    const install = tables.guides?.install;
+    const install = tables.rules?.install;
     return compact({
         kits: configurations.length === 0 ? ['none'] : configurations,
         hooks: tables.hooks === undefined ? 'none' : 'gspot',
@@ -94,7 +94,7 @@ export function registerInit(program: Program): void {
         .description('Read the repository, show a plan, and write it when you accept')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and shows a plan: the policy file, the tool configuration, the guides for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools; Git keeps the replaced files. init runs no check. --dry-run writes nothing.\n\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
+            '\nEffects:\nReads the repository and shows a plan: the policy file, the tool configuration, the rules for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools; Git keeps the replaced files. init runs no check. --dry-run writes nothing.\n\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
         )
         .option('--yes', 'Accept the plan without asking')
         .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')
@@ -108,7 +108,7 @@ export function registerInit(program: Program): void {
         )
         .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
-        .option('--no-guides', 'Install no guides for coding agents')
+        .option('--no-rules', 'Install no rules for coding agents')
         .option('--no-runner', 'Add gspot to no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags, command) => {
@@ -128,7 +128,7 @@ export function registerInit(program: Program): void {
                             hooks: flags.hooks ? undefined : ('none' as const),
                             ci: flags.ci === false ? ('none' as const) : flags.ci,
                             runner: flags.runner ? undefined : ('none' as const),
-                            rules: flags.guides ? undefined : ('no' as const),
+                            rules: flags.rules ? undefined : ('no' as const),
                         }),
                     }),
                 global,

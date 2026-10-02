@@ -99,7 +99,7 @@ export type Policy = {
     checks: RepositoryCheck[];
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
-    guides: RuleSettings;
+    rules: RuleSettings;
     runner?: NonNullable<RawPolicy['runner']>;
     scopeTables: Record<string, Partial<Policy>>;
 };

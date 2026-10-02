@@ -9,7 +9,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         'entry.sh': 'echo example\n',
         'output types/broken.sh': 'if then\n',
         'upstream/broken.sh': 'if then\n',
@@ -48,7 +48,7 @@ test('generated and vendored settings classify directories and removal returns f
 test('declarations retain producer metadata and reasons while removing individual paths', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], 'require_reasons = true\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], 'require_reasons = true\n[rules]\ninstall = false\n'),
         'a.sh': 'if then\n',
         'b.sh': 'if then\n',
     });
@@ -76,7 +76,7 @@ test('declarations retain producer metadata and reasons while removing individua
 test('excluded directories stay out of checks until the policy removes their exclusion', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], 'exclude = ["legacy scripts"]\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], 'exclude = ["legacy scripts"]\n[rules]\ninstall = false\n'),
         'entry.sh': 'echo example\n',
         'legacy scripts/broken.sh': 'if then\n',
     });
