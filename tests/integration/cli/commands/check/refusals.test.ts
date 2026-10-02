@@ -87,3 +87,14 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sn
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');
     expect(snapshotFolders()).toStrictEqual(before);
 });
+
+test.each([
+    ['a path outside the repository', ['check', '../elsewhere.txt'], 'is outside this repository'],
+    ['a path that matches nothing', ['check', 'missing'], 'matches no repository files'],
+    ['a message file that does not exist', ['check', '--message-file', 'missing-message.txt'], 'cannot be read'],
+])('check with %s exits 2 and names the problem', async (_, argv, expected) => {
+    await using sandbox = await fixableSandbox();
+    const refused = await runGspot(sandbox.path, argv);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain(expected);
+});
