@@ -66,3 +66,15 @@ tester().run('no-cross-folder-imports', noCrossFolderImports, {
         },
     ],
 });
+
+// A Windows checkout names the file with backslashes and may spell the drive letter of the root in another case.
+tester(String.raw`c:\repo`).run('no-cross-folder-imports on Windows paths', noCrossFolderImports, {
+    valid: [{ code: "import { b } from '../cart/b';", filename: String.raw`C:\repo\features\cart\a.ts` }],
+    invalid: [
+        {
+            code: "import { b } from '../user/b';",
+            filename: String.raw`C:\repo\features\cart\a.ts`,
+            errors: [{ messageId: 'escape', data: { source: '../user/b', folder: 'cart' } }],
+        },
+    ],
+});
