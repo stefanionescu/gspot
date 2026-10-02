@@ -1,18 +1,11 @@
 import { test, expect, describe } from 'bun:test';
-import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/types/checks/database.ts';
+import { migration } from '#tests/harness/cli/migrations.ts';
 import { DOC_SEPARATOR } from '#cli/config/checks/database.ts';
 import { docProblems } from '#cli/checks/database/postgres/migration-docs.ts';
 
 const SECTIONS = ['Schema', 'Tables', 'Indexes', 'Functions', 'Triggers', 'Extensions'];
 
 const NAME = '20240101000000_create_teams.sql';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse a migration fixture; one owner keeps its shape.
-async function migration(text: string): Promise<Migration> {
-    const parsed = await sqlFile(text);
-    return { path: `migrations/${NAME}`, name: NAME, version: '20240101000000', text, statements: parsed.statements };
-}
 
 const DOCUMENTED = [
     DOC_SEPARATOR,
@@ -41,7 +34,7 @@ const DOCUMENTED = [
 
 describe('docProblems', () => {
     test('a documented migration has no problem', async () => {
-        expect(docProblems(await migration(DOCUMENTED), SECTIONS)).toStrictEqual([]);
+        expect(docProblems(await migration(NAME, DOCUMENTED, '20240101000000'), SECTIONS)).toStrictEqual([]);
     });
 
     test('a table under the wrong section with no label has two problems at its line', async () => {
@@ -49,7 +42,7 @@ describe('docProblems', () => {
             '-- Tables',
             '-- Indexes',
         );
-        const problems = docProblems(await migration(moved), SECTIONS);
+        const problems = docProblems(await migration(NAME, moved, '20240101000000'), SECTIONS);
         expect(problems.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([
             { rule: 'placement', line: 13 },
             { rule: 'label', line: 13 },

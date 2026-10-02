@@ -2,15 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
-import { gitOutput } from '#tests/harness/cli/git.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
+import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five commits in these journeys stage and commit the same way.
-function commit(root: string): void {
-    gitOutput(root, ['add', '.']);
-    gitOutput(root, ['-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Update']);
-}
 
 const policy = `kits = []
 [[check]]
@@ -31,11 +25,11 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
         'web/source.txt': 'before',
     });
     gitOutput(sandbox.path, ['init', '-b', 'main']);
-    commit(sandbox.path);
+    commitAll(sandbox.path);
     gitOutput(sandbox.path, ['branch', 'base']);
     gitOutput(sandbox.path, ['branch', '--set-upstream-to=base']);
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'committed change');
-    commit(sandbox.path);
+    commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
     const selected = await runGspot(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
@@ -65,7 +59,7 @@ test('changed selection resolves the remote default and refuses absent upstream 
         'api/source.txt': 'before',
     });
     gitOutput(sandbox.path, ['init', '-b', 'topic']);
-    commit(sandbox.path);
+    commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(absent.code).toBe(2);
     expect((JSON.parse(absent.stdout) as { message: string }).message).toContain('use --changed=<ref>');
@@ -96,10 +90,10 @@ test('a shallow comparison failure explains how to fetch the missing history', a
     await createFileTree(sandbox.path, { 'source/gspot.toml': policy, 'source/api/source.txt': 'before' });
     const source = join(sandbox.path, 'source');
     gitOutput(source, ['init', '-b', 'main']);
-    commit(source);
+    commitAll(source);
     const base = gitOutput(source, ['rev-parse', 'HEAD']);
     await Bun.write(join(source, 'api/source.txt'), 'after');
-    commit(source);
+    commitAll(source);
     gitOutput(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']);
     const result = await runGspot(join(sandbox.path, 'checkout'), ['check', `--changed=${base}`, '--json']);
     expect(result.code).toBe(2);
