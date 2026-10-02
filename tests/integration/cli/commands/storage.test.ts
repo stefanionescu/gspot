@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('a linked .gspot folder is refused without changing outside bytes', async () => {
@@ -20,7 +21,7 @@ test('a linked .gspot folder is refused without changing outside bytes', async (
     symlinkSync(outside.path, join(sandbox.path, '.gspot'));
     const result = await runGspot(sandbox.path, ['check', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toContain('Unsafe lifecycle parent');
+    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('Unsafe lifecycle parent');
     expect(readFileSync(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(readdirSync(outside.path)).toStrictEqual(['sentinel']);
 });

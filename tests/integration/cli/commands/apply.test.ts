@@ -7,6 +7,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
@@ -92,4 +93,26 @@ test.each([
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toContain('.gspot/state/writer.lock');
     expect(readFileSync(join(directory.path, '.gspot/state/writer.lock'), 'utf8')).toBe(holder(sleeper.pid));
+});
+
+test('apply --json prints one error object when it refuses an edited generated file', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
+        'entry.sh': 'echo example\n',
+    });
+    const applied = await runGspot(directory.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const generated = join(directory.path, '.gspot/config/shellcheckrc');
+    chmodSync(generated, 0o644);
+    writeFileSync(generated, `${readFileSync(generated, 'utf8')}# Edited.\n`);
+    writeFileSync(
+        join(directory.path, 'gspot.toml'),
+        policyOf(['bash'], '[rules]\ninstall = false\n[limits]\nfile_lines = 100\n'),
+    );
+    const refused = await runGspot(directory.path, ['apply', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    const failure = JSON.parse(refused.stdout) as CommandFailureJson;
+    expect(Object.keys(failure)).toStrictEqual(['error', 'message']);
+    expect(failure.message).toContain('shellcheckrc');
 });
