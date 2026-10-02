@@ -25,7 +25,7 @@ approved it on October 1, 2026.
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
 - Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
   flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
-- Stages 29 to 31 are done on that branch. The next stage to start is stage 32.
+- Stages 29 to 32 are done on that branch. The next stage to start is stage 33.
 
 ### Stages
 
@@ -64,7 +64,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | in the batch     |
 | 30    | Rename the kit manifest fields                         | A.4                                                                                                     | in the batch     |
 | 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | in the batch     |
-| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | not started      |
+| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | in the batch     |
 | 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | not started      |
 | 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | not started      |
 | 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | not started      |
@@ -361,6 +361,19 @@ The owner and the work settled these while implementing:
       the four `*/eslint` checks.
     - The finding rules name what they found, and every check title is a short imperative.
     - `xcode/plist` and the `analysis` field were already gone.
+- Stage 32 renamed guides to rules (B.3):
+    - The base rules live in `packages/cli/rules/agent`, `code`, and `prose`. Each kit keeps its rules in a `rules`
+      folder beside its manifest and installs every file there. Its `[rules]` table names only the five files with a
+      condition: Tailwind, Bun, SwiftUI, UIKit, and Playwright.
+    - The installed copies sit in `.gspot/rules/agent`, `code`, and `prose`, and in `.gspot/rules/<category>/<kit>`.
+      The front matter keeps only the title.
+    - `gspot.toml` has `[rules]` with `install`, `path`, `local`, `instructions`, and `exclude`; init takes
+      `--no-rules`.
+    - The kit templates take the name of the file they write, so most configs drop their `template` line. The Semgrep
+      packs sit under `semgrep/` in each kit, and the bash ast-grep folder is `ast-grep`.
+    - The shipped rule against subagents is gone, as decided. This repository's own `AGENTS.md` keeps its line.
+    - The `.gspot/guides` copies that a clone had adopted stayed behind after the move, because apply hands back an
+      adopted file instead of deleting it. They were deleted by hand.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
