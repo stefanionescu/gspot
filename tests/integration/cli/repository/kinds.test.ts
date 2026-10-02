@@ -32,6 +32,19 @@ describe('kinds', () => {
         expect(files.get('src/a.ts')?.kind).toBe('source');
     });
 
+    test('a license text is vendored, and a source file named like one stays source', async () => {
+        await using sandbox = await testdir();
+        const licenses = ['LICENSE', 'LICENSE.md', 'LICENSE-MIT', 'COPYING.txt', 'NOTICE'];
+        const sources = ['license-locks.test.ts', 'license.ts', 'licenses.json', 'notice.py'];
+        await createFileTree(sandbox.path, Object.fromEntries([...licenses, ...sources].map((path) => [path, 'x\n'])));
+        const repository = await readRepository(sandbox.path, [], [], []);
+        const kinds = Object.fromEntries(repository.files.map((file) => [file.path, file.kind]));
+        expect(kinds).toStrictEqual({
+            ...Object.fromEntries(licenses.map((path) => [path, 'vendored'])),
+            ...Object.fromEntries(sources.map((path) => [path, 'source'])),
+        });
+    });
+
     test('readRepository lists files without git through the gitignore walk', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

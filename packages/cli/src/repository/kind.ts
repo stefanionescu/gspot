@@ -1,13 +1,15 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
-import { baseName } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
 
 import {
     BANNER_BYTES,
     GSPOT_FOLDER,
     LICENSE_FILE,
+    LICENSE_TAGS,
+    EXTENSION_TAGS,
     BINARY_ATTRIBUTES,
     ENV_FILE_PATTERNS,
     GENERATED_BANNERS,
@@ -53,9 +55,17 @@ function attributeKind(attributes: string[]): Verdict | undefined {
     return isBinary ? { kind: 'binary', source: '.gitattributes' } : undefined;
 }
 
+// A license text: its name is a license name, and no code language claims its extension, so license-locks.test.ts
+// stays source.
+function isLicenseFile(path: string): boolean {
+    const name = baseName(path);
+    const tags = EXTENSION_TAGS[extensionOf(name)] ?? [];
+    return LICENSE_FILE.test(name) && tags.every((tag) => LICENSE_TAGS.has(tag));
+}
+
 // gspot writes everything under its folder; the Vale packages it fetches there are another party's text.
 function managedKind(path: string): Verdict | undefined {
-    if (LICENSE_FILE.test(baseName(path))) return { kind: 'vendored', source: 'license' };
+    if (isLicenseFile(path)) return { kind: 'vendored', source: 'license' };
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
     return path.startsWith(`${GSPOT_FOLDER}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
 }

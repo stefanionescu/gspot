@@ -161,8 +161,11 @@ export const LINT_TOOL_PACKAGE_PREFIXES = [
 export const AGENT_FILE_NAMES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'];
 export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
 
-/** License and notice files are another party's text, kept as written. */
+/** License and notice files are another party's text, kept as written: the name alone or with a suffix such as -MIT. */
 export const LICENSE_FILE = /^(?:LICENSE|LICENCE|COPYING|NOTICE)(?:$|[.-])/iu;
+
+/** The tags of an extension a license text may carry; one a code language claims makes the file source. */
+export const LICENSE_TAGS = new Set(['text', 'markdown']);
 
 /** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
 export const VALE_STYLES_PREFIX = '.gspot/config/vale/styles/';
