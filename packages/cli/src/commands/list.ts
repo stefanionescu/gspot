@@ -51,7 +51,7 @@ function settingsText(session: Session): CommandResult {
 function kitsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
     const names = new Set(selected.map((manifest) => manifest.kit.name));
-    const installed = selected.map((manifest) => ({
+    const selectedKits = selected.map((manifest) => ({
         name: manifest.kit.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
@@ -77,8 +77,8 @@ function kitsResult(session: Session): CommandResult {
         .filter((manifest) => !names.has(manifest.kit.name) && !detectedNames.has(manifest.kit.name))
         .map((manifest) => ({ name: manifest.kit.name, description: manifest.kit.description }))
         .toArray();
-    const lines = ['installed'];
-    for (const configuration of installed) {
+    const lines = ['selected'];
+    for (const configuration of selectedKits) {
         lines.push(`  ${configuration.name}`);
         for (const check of configuration.checks)
             lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
@@ -88,7 +88,7 @@ function kitsResult(session: Session): CommandResult {
         lines.push(`  ${configuration.name}  ${configuration.evidence}\n    ${configuration.command}`);
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
-    return { text: `${lines.join('\n')}\n`, json: { installed, detected, available }, exitCode: 0 };
+    return { text: `${lines.join('\n')}\n`, json: { selectedKits, detected, available }, exitCode: 0 };
 }
 
 /**

@@ -117,14 +117,14 @@ test(
         expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
         const skipped = JSON.parse(deleted.stdout) as PushReport;
         expect(skipped.revisions).toStrictEqual([]);
-        expect(skipped.notApplicable[0]!.reason).toBe('deleted ref');
+        expect(skipped.skipped[0]!.reason).toBe('deleted ref');
         const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
         const nonCommit = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n`,
         });
         expect(nonCommit.code, nonCommit.stdout + nonCommit.stderr).toBe(0);
-        expect((JSON.parse(nonCommit.stdout) as PushReport).notApplicable[0]!.reason).toBe('non-commit object');
+        expect((JSON.parse(nonCommit.stdout) as PushReport).skipped[0]!.reason).toBe('non-commit object');
         expectWorkingTreeKept(sandbox.path, broken);
     },
     PLANTED_TIMEOUT_MS,

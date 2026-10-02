@@ -13,8 +13,9 @@ export type Explanation = {
 export type PathExplanation = {
     path: string;
     scope: string;
-    file: string;
-    fileSource?: string;
+    /** The kind of the file: source, generated, vendored, or binary. The explanation's own kind is path. */
+    fileKind: string;
+    fileKindSource?: string;
     tags: string[];
     kits: string[];
     checks: { check: string; stage: string; kit?: string }[];

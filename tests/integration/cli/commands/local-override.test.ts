@@ -35,9 +35,9 @@ test('a leftover local file cannot hide a check while an explicit skip applies o
     const doctor = await runGspot(directory.path, ['doctor', '--json']);
     expect(doctor.code, doctor.stdout + doctor.stderr).not.toBe(2);
     const report = JSON.parse(doctor.stdout) as {
-        changes: { configurationNotOwned: { path: string; note: string }[] };
+        changes: { unowned: { path: string; note: string }[] };
     };
-    expect(report.changes.configurationNotOwned.filter(({ path }) => path === 'gspot.local.toml')).toStrictEqual([
+    expect(report.changes.unowned.filter(({ path }) => path === 'gspot.local.toml')).toStrictEqual([
         containing({ path: 'gspot.local.toml', note: 'No command reads this file. Use --skip for one run.' }),
     ]);
     expect(readFileSync(join(directory.path, 'gspot.local.toml'), 'utf8')).toBe(local);

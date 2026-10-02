@@ -47,7 +47,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
     const report: PathExplanation = {
         path,
         scope: scope.path === '' ? 'root' : scope.path,
-        file: file.kind,
+        fileKind: file.kind,
         tags: file.tags,
         kits: owners.map((manifest) => manifest.kit.name),
         checks: configuredChecks(session)
@@ -65,7 +65,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
                 ...(entry.reason === undefined ? {} : { reason: entry.reason }),
             })),
     };
-    if (file.kindSource !== undefined) report.fileSource = file.kindSource;
+    if (file.kindSource !== undefined) report.fileKindSource = file.kindSource;
     return annotated(report, file);
 }
 
@@ -75,13 +75,13 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
  * @returns the text for stdout
  */
 function pathText(report: PathExplanation): string {
-    const by = report.fileSource === undefined ? '' : ` by ${report.fileSource}`;
+    const by = report.fileKindSource === undefined ? '' : ` by ${report.fileKindSource}`;
     const checks = report.checks.map(
         (check) => `  ${check.check}  ${check.stage}  (${check.kit ?? 'repository command'})`,
     );
     const ignores = report.ignores.map((entry) => ignoreLine(entry));
     const lines = [
-        `${report.path}  (scope ${report.scope}, ${report.file}${by})`,
+        `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
         ...(report.kits.length === 0 ? [] : [`owned by: ${report.kits.join(', ')}`]),

@@ -104,12 +104,12 @@ function recordRevision(result: PushSelection, revision: PushRevision): void {
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
 async function selectLine(context: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
-        result.notApplicable.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
+        result.skipped.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
         return;
     }
     const gitHash = await commitOf(context, line.localHash);
     if (gitHash === undefined) {
-        result.notApplicable.push({ ref: line.localRef, object: line.localHash, reason: 'non-commit object' });
+        result.skipped.push({ ref: line.localRef, object: line.localHash, reason: 'non-commit object' });
         return;
     }
     recordRevision(result, await revisionOf(context, line, gitHash));
@@ -139,7 +139,7 @@ export async function pushedRevisions(
         boundaries: shallow ? await shallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     context.fetched = await fetchedCommits(context, remote);
-    const result: PushSelection = { revisions: [], notApplicable: [] };
+    const result: PushSelection = { revisions: [], skipped: [] };
     for (const line of input.split('\n').filter((row) => row.trim() !== ''))
         await selectLine(context, result, parsePushLine(line));
     return result;

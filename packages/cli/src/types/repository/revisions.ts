@@ -4,7 +4,7 @@ type RefMapping = { source: string; destination: string };
 
 export type PushSelection = {
     revisions: PushRevision[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
 };
 
 export type ChangedSet = { reference: string; paths: string[]; commits?: string[] };

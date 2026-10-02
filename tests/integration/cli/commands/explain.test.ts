@@ -131,7 +131,7 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
         subject: 'api/build.sh',
         path: 'api/build.sh',
         scope: 'api',
-        file: 'source',
+        fileKind: 'source',
         kits: containingAll(['bash']),
         checks: containingAll([{ check: 'bash/shellcheck', stage: 'commit', kit: 'bash' }]),
         ignores: [

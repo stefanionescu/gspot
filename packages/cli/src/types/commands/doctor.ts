@@ -2,10 +2,10 @@
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 
 export type ChangeReport = {
-    detectedNotSelected: { kit: string; evidence: string; command: string }[];
-    recommendedNotSelected: { kit: string; evidence: string; command: string }[];
-    configurationNotOwned: { path: string; note: string; command: string }[];
-    changedOutsideGspot: { path: string; note: string; command: string }[];
+    detected: { kit: string; evidence: string; command: string }[];
+    recommended: { kit: string; evidence: string; command: string }[];
+    unowned: { path: string; note: string; command: string }[];
+    authored: { path: string; note: string; command: string }[];
     pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
 };
 export type DoctorReport = {

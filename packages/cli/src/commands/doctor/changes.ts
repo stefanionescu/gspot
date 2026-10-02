@@ -17,8 +17,8 @@ import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
-function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
-    const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
+function recommendedKits(session: Session, selected: Set<string>): ChangeReport['recommended'] {
+    const rows = new Map<string, ChangeReport['recommended'][number]>();
     for (const manifest of everyManifest(session.scopes))
         for (const id of manifest.kit.recommends)
             if (!selected.has(id) && !rows.has(id))
@@ -47,7 +47,7 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     };
 }
 
-function configurationNotOwned(
+function unownedConfigs(
     session: Session,
     tooling: ExistingTooling,
     selected: Set<string>,
@@ -87,7 +87,7 @@ export function changeReport(session: Session): ChangeReport {
     });
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detectedNotSelected: detectKits(session.repository.files, session.manifests, fields)
+        detected: detectKits(session.repository.files, session.manifests, fields)
             .filter((plan) => !selected.has(plan.kit))
             .filter((plan) => {
                 const manifest = session.manifests.get(plan.kit);
@@ -98,9 +98,9 @@ export function changeReport(session: Session): ChangeReport {
                 evidence: plan.evidence,
                 command: `gspot add ${plan.kit}`,
             })),
-        recommendedNotSelected: recommendedNotSelected(session, selected),
-        configurationNotOwned: [
-            ...configurationNotOwned(session, tooling, selected, rendered.files),
+        recommended: recommendedKits(session, selected),
+        unowned: [
+            ...unownedConfigs(session, tooling, selected, rendered.files),
             ...unownedGeneratedFiles(session),
             ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) === undefined
                 ? []
@@ -112,7 +112,7 @@ export function changeReport(session: Session): ChangeReport {
                       },
                   ]),
         ],
-        changedOutsideGspot: [
+        authored: [
             ...ciLintJobs(
                 session.root,
                 tooling.ci.filter((path) => !generated.has(path)),

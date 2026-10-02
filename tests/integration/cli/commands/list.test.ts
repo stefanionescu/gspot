@@ -19,11 +19,11 @@ test('list shows selected policy states, detected kits, and setting values witho
     const listed = await runGspot(directory.path, ['list', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as {
-        installed: { name: string; checks: { name: string; scope: string; state: string }[] }[];
+        selectedKits: { name: string; checks: { name: string; scope: string; state: string }[] }[];
         detected: { name: string; command: string }[];
         available: { name: string }[];
     };
-    const checks = result.installed.flatMap((configuration) => configuration.checks);
+    const checks = result.selectedKits.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'bash/syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });

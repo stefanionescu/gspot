@@ -69,8 +69,4 @@ export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
 /** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
 export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason?: string } }>;
 
-export type ChangeKey =
-    | 'detectedNotSelected'
-    | 'recommendedNotSelected'
-    | 'configurationNotOwned'
-    | 'changedOutsideGspot';
+export type ChangeKey = 'detected' | 'recommended' | 'unowned' | 'authored';

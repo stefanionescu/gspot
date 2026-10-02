@@ -57,6 +57,6 @@ export type CheckCommandResult = CommandResult & { report?: RunReport };
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
     exitCode: number;
 };

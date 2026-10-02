@@ -29,7 +29,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     await writeOutputs(await openSession(sandbox.path));
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.json).toMatchObject({
-        changes: { configurationNotOwned: [containing({ path: '.gspot/authored.json' })] },
+        changes: { unowned: [containing({ path: '.gspot/authored.json' })] },
     });
     expect(result.text).toContain('not recorded as owned');
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
@@ -58,12 +58,12 @@ test('doctor excludes private tool manifests from language detection and detects
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });
     const privateOnly = await doctorCommand({ cwd: sandbox.path });
-    expect(privateOnly.json).toMatchObject({ changes: { detectedNotSelected: [] } });
+    expect(privateOnly.json).toMatchObject({ changes: { detected: [] } });
     writeFileSync(join(sandbox.path, 'pyproject.toml'), python);
     const authored = await doctorCommand({ cwd: sandbox.path });
     expect(authored.json).toMatchObject({
         changes: {
-            detectedNotSelected: containingAll([containing({ kit: 'python', evidence: 'pyproject.toml' })]),
+            detected: containingAll([containing({ kit: 'python', evidence: 'pyproject.toml' })]),
         },
     });
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);

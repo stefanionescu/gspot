@@ -66,7 +66,7 @@ function pushReport(selected: PushSelection, revisions: Checked[], signal: Abort
     );
     return {
         revisions,
-        notApplicable: selected.notApplicable,
+        skipped: selected.skipped,
         exitCode,
         ...(signal.aborted ? { canceled: { pendingRefs } } : {}),
     };
@@ -110,6 +110,6 @@ export async function checkPushed(
         rendered.push(
             `Push checks canceled. References not checked: ${report.canceled.pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
         );
-    const skipped = selected.notApplicable.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`);
+    const skipped = selected.skipped.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`);
     return { text: [...rendered, ...skipped].join(''), json: report, exitCode: report.exitCode };
 }
