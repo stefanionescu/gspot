@@ -1,6 +1,7 @@
 // A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
 import { tmpdir } from 'node:os';
+import { decodedText } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
@@ -156,4 +157,20 @@ export function scratchFolder(prefix: string): ScratchFolder {
             rmSync(path, { recursive: true, force: true });
         },
     };
+}
+
+/**
+ * Reads one file under a directory as UTF-8 text.
+ * @param root the directory the path is relative to
+ * @param path the file, with forward slashes
+ * @returns the text, or undefined when the file does not exist
+ * @throws when the file is not UTF-8 text
+ */
+export function readText(root: string, path: string): string | undefined {
+    using files = openRoot(root);
+    const read = files.read(path);
+    if (read === undefined) return undefined;
+    const text = decodedText(read.bytes);
+    if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
+    return text;
 }

@@ -1,4 +1,5 @@
 // Text and object helpers every layer shares.
+import { isUtf8 } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { codePoints } from '#cli/platform/code-points.ts';
 import type { Defined } from '#cli/types/platform/platform.ts';
@@ -98,4 +99,14 @@ export function valueAt(value: unknown, keys: readonly (string | number)[]): unk
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Ownership records, profiles, build comparisons, and state folders name content by one digest.
 export function contentDigest(content: string | Uint8Array): string {
     return createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Bytes as text, when they are UTF-8.
+ * @param bytes the bytes
+ * @returns the text, or undefined when the bytes are not UTF-8
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers of files, Git listings, and manifests refuse bytes that are not UTF-8 by this one test.
+export function decodedText(bytes: Uint8Array): string | undefined {
+    return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }

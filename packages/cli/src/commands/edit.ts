@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import * as messages from '#cli/policy/messages.ts';
+import { decodedText } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
@@ -21,11 +22,11 @@ import type { CommandResult, PreparedPolicy } from '#cli/types/commands/commands
  * @returns the validated plan with the original file
  */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
-    const original = openRoot(root).read('gspot.toml');
+    using files = openRoot(root);
+    const original = files.read('gspot.toml');
     if (original === undefined) throw new GspotError('policy', [messages.fileMissing('gspot.toml')]);
-    const text = original.bytes.toString('utf8');
-    if (!Buffer.from(text).equals(original.bytes))
-        throw new Error('The policy file gspot.toml must contain valid UTF-8 text.');
+    const text = decodedText(original.bytes);
+    if (text === undefined) throw new Error('The policy file gspot.toml must contain valid UTF-8 text.');
     return { ...proposePolicy(root, text, mutate), original };
 }
 

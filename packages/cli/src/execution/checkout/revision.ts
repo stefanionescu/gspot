@@ -1,5 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { decodedText } from '#cli/platform/text.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
@@ -121,9 +122,8 @@ async function readEntries(root: string, source: RevisionSource, cancelSignal?: 
         throw new GspotError('selection', [
             'Cannot read the Git index. Resolve Git errors before checking staged content.',
         ]);
-    const bytes = Buffer.from(read.stdout);
-    const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
+    const text = decodedText(read.stdout);
+    if (text === undefined) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
     if (text !== '' && !text.endsWith('\0')) throw new GspotError('selection', ['The Git entry stream is incomplete.']);
     return text
         .split('\0')

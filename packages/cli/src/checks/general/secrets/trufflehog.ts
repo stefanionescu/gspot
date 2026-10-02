@@ -1,6 +1,7 @@
 // Verified secret scanning over pushed history: each changed blob and each commit message handed to TruffleHog.
 import { join } from 'node:path';
 import { runBinary } from '#cli/platform/spawn.ts';
+import { decodedText } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { writeFileSync, appendFileSync } from 'node:fs';
@@ -40,9 +41,8 @@ async function changeFields(session: Session, commit: string): Promise<string[]>
     });
     if (read.code !== 0)
         throw new GspotError('selection', ['Cannot read the changed objects for verified secret scanning.']);
-    const bytes = Buffer.from(read.stdout);
-    const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['History paths must be valid UTF-8.']);
+    const text = decodedText(read.stdout);
+    if (text === undefined) throw new GspotError('selection', ['History paths must be valid UTF-8.']);
     const fields = text.split('\0');
     if (fields.pop() !== '') throw new GspotError('selection', ['Git returned an incomplete history change list.']);
     return fields;

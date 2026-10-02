@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
+import { decodedText } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
@@ -8,8 +9,8 @@ function manifestText(root: string, path: string): string {
     using files = openRoot(root, 'native');
     const content = files.read(path);
     if (content === undefined) throw new Error(`Manifest is missing: ${path}`);
-    const text = content.bytes.toString('utf8');
-    if (!Buffer.from(text).equals(content.bytes)) throw new Error(`Manifest is not UTF-8 text: ${path}`);
+    const text = decodedText(content.bytes);
+    if (text === undefined) throw new Error(`Manifest is not UTF-8 text: ${path}`);
     return text;
 }
 

@@ -1,5 +1,6 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
+import { decodedText } from '#cli/platform/text.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
 import { planConfiguration } from '#cli/lifecycle/merge/plan.ts';
@@ -49,9 +50,9 @@ function changedReplacement(
 
 // The text of a managed block's file, refused when the file is not UTF-8 text.
 function blockText(path: string, current: Read | undefined): string {
-    const text = current?.bytes.toString('utf8') ?? '';
-    if (current !== undefined && !Buffer.from(text).equals(current.bytes))
-        throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
+    if (current === undefined) return '';
+    const text = decodedText(current.bytes);
+    if (text === undefined) throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
     return text;
 }
 

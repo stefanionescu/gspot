@@ -1,6 +1,7 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { decodedText } from '#cli/platform/text.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
@@ -18,9 +19,9 @@ function isEmptyContainer(value: unknown): boolean {
 // The file text, which must be UTF-8, or the empty document of the format for a file that does not exist.
 function sourceText(request: ConfigurationWriteRequest): string {
     const { current, format, path } = request;
-    const text = current?.bytes.toString('utf8') ?? (format === 'toml' ? '' : '{}\n');
-    if (current !== undefined && !Buffer.from(text).equals(current.bytes))
-        throw new Error(`Shared configuration is not UTF-8 text: ${path}`);
+    if (current === undefined) return format === 'toml' ? '' : '{}\n';
+    const text = decodedText(current.bytes);
+    if (text === undefined) throw new Error(`Shared configuration is not UTF-8 text: ${path}`);
     return text;
 }
 
