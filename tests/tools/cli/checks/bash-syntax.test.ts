@@ -13,14 +13,18 @@ import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 test.each([
     { check: 'bash/syntax', path: 'script.sh', files: 2, broken: 'if then\n' },
-    // Windows has no zsh to install; the Linux runners install it and macOS ships it.
-    ...(onPosix ? [{ check: 'bash/zsh-syntax', path: 'script.zsh', files: 2, broken: 'if then\n' }] : []),
-    {
-        check: 'bash/bats-syntax',
-        path: 'script.bats',
-        files: 1,
-        broken: '@test "broken" {\n    if then\n}\n',
-    },
+    // Windows has no zsh to install, and it runs no Bats, a Bash script, from PATH; Linux and macOS have both.
+    ...(onPosix
+        ? [
+              { check: 'bash/zsh-syntax', path: 'script.zsh', files: 2, broken: 'if then\n' },
+              {
+                  check: 'bash/bats-syntax',
+                  path: 'script.bats',
+                  files: 1,
+                  broken: '@test "broken" {\n    if then\n}\n',
+              },
+          ]
+        : []),
 ])(
     '$check reports syntax in $path and accepts its correction',
     async (entry) => {
@@ -33,7 +37,7 @@ test.each([
             zlauncher: '#!/usr/bin/env -S zsh -f\nrepeat 2 do print example; done\n',
             'script.bats': '@test "example" {\n    true\n}\n',
         });
-        const environment = { PATH: toolsPath(['bats']) };
+        const environment = { PATH: toolsPath(onPosix ? ['bats'] : []) };
         const applied = await spawnGspot(sandbox.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const clean = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
