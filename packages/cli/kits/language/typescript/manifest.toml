@@ -15,13 +15,13 @@ dependencies = ["typescript"]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
-[[tools]]
+[[tool]]
 name = "tsc"
 suppression = {marker = "@ts-(?:ignore|expect-error)\\b", reason = "@ts-(?:ignore|expect-error):?\\s+(?<reason>\\S.*)"}
 host = true
 version_command = ["--version"]
 
-[[tools]]
+[[tool]]
 name = "typescript-eslint"
 rule_url = "https://typescript-eslint.io/rules/{rule}"
 kind = "library"
@@ -29,24 +29,24 @@ version = "8.70.0"
 npm = "typescript-eslint"
 floor = "8.29.0"
 
-[[tools]]
+[[tool]]
 name = "eslint-import-resolver-typescript"
 kind = "library"
 version = "4.4.5"
 npm = "eslint-import-resolver-typescript"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[configs]]
+[[config]]
 template = "tsconfig.check.json.tmpl"
 target = ".gspot/config/tsconfig.check.json"
 scoped = true
 
-[[checks]]
+[[check]]
 name = "typescript/tsc"
 title = "TypeScript"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
@@ -60,7 +60,7 @@ summary = "Checks that every TypeScript file type-checks with the strict compile
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
-[[checks]]
+[[check]]
 name = "typescript/eslint"
 title = "ESLint"
 example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
@@ -76,7 +76,7 @@ summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
-[[checks]]
+[[check]]
 name = "integrity/tsconfig-options"
 title = "Keep strict TypeScript options"
 example = "An authored TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the resulting type errors rather than disabling the integrity check."

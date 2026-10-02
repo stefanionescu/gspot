@@ -10,48 +10,48 @@ description = "commitlint over every commit message: conventional types, the rep
 paths = ["**"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "commitlint"
 version = "21.2.2"
 npm = "@commitlint/cli"
 mise = "npm:@commitlint/cli"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.mjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.ts"
 
-[[configs]]
+[[config]]
 template = "commitlint.config.cjs.tmpl"
 target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
 
-[[checks]]
+[[check]]
 name = "commits/commitlint"
 title = "Commitlint"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
@@ -64,7 +64,7 @@ summary = "Checks the commit message being written: a conventional type, a known
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
 help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
 
-[[checks]]
+[[check]]
 name = "commits/range"
 title = "Check pushed commit messages"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
@@ -77,21 +77,21 @@ summary = "Checks messages in the supplied pushed commit sets, or the local rang
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.types"
 type = "list"
 direction = "neutral"
 default = ["feat", "fix", "refactor", "perf", "docs", "test", "build", "ci", "chore"]
 summary = "The commit types the type-enum rule allows."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.scopes"
 type = "list"
 direction = "neutral"
 default = []
 summary = "The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.rules"
 type = "table"
 direction = "per-rule"

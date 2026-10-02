@@ -8,13 +8,13 @@ description = "Zod schemas: the schema rules of ESLint, so a schema says what it
 [detect]
 dependencies = ["zod"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-zod"
 kind = "library"
 version = "4.12.0"
 npm = "eslint-plugin-zod"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"

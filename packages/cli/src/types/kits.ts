@@ -40,10 +40,10 @@ export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string 
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;
 
-/** One [[tools]] entry as written. */
+/** One [[tool]] entry as written. */
 export type RawTool = RawManifest['tools'][number];
 
-/** One [[checks]] entry as written. */
+/** One [[check]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
 export type SelectionWalk = {
     manifests: Map<string, Manifest>;

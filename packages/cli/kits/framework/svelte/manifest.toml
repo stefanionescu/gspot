@@ -15,44 +15,44 @@ extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-svelte"
 kind = "library"
 version = "3.23.0"
 npm = "eslint-plugin-svelte"
 
-[[tools]]
+[[tool]]
 name = "svelte-eslint-parser"
 kind = "library"
 version = "1.8.1"
 npm = "svelte-eslint-parser"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-testing-library"
 kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
-[[tools]]
+[[tool]]
 name = "svelte-check"
 version = "4.7.6"
 npm = "svelte-check"
 
-[[tools]]
+[[tool]]
 name = "prettier-plugin-svelte"
 kind = "library"
 version = "4.1.1"
 npm = "prettier-plugin-svelte"
 prettier = {entry = "plugin.js", extensions = [".svelte"], overrides = [{files = "*.svelte", options = {embeddedLanguageFormatting = "auto"}}]}
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 components = ["**/*.svelte"]
 
-[[checks]]
+[[check]]
 name = "svelte/eslint"
 title = "ESLint"
 example = "A Svelte template containing `<div>{@html html}</div>` reports `svelte/no-at-html-tags`. Render text with interpolation, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
@@ -69,7 +69,7 @@ summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads 
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
-[[checks]]
+[[check]]
 name = "svelte/check"
 title = "Check Svelte components"
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."

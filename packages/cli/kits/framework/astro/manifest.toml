@@ -15,33 +15,33 @@ extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-astro"
 kind = "library"
 version = "1.7.0"
 npm = "eslint-plugin-astro"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-jsx-a11y"
 kind = "library"
 version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
 
 # The astro-check binary drops the first two words it is given, so every command passes "astro check" first.
-[[tools]]
+[[tool]]
 name = "astro-check"
 version = "0.9.10"
 npm = "@astrojs/check"
 version_command = ["astro", "check", "--version"]
 
-[[tools]]
+[[tool]]
 name = "prettier-plugin-astro"
 kind = "library"
 version = "1.0.1"
 npm = "prettier-plugin-astro"
 prettier = {entry = "dist/index.js", extensions = [".astro"], overrides = [{files = "*.astro", options = {parser = "astro"}}]}
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
@@ -54,7 +54,7 @@ rules = ["gspot/no-trivial-files", "gspot/types-placement"]
 files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
 
-[[checks]]
+[[check]]
 name = "astro/eslint"
 title = "ESLint"
 example = "A component containing `<div set:html={html} />` reports `astro/no-set-html-directive`. Render text with an expression, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
@@ -71,7 +71,7 @@ summary = "Runs ESLint with the Astro plugin over every .astro file. It reads th
 why = "A component file is frontmatter, markup, and scripts in one, and a plain JavaScript parser reads none of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
-[[checks]]
+[[check]]
 name = "astro/check"
 title = "Check Astro components"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."

@@ -13,25 +13,25 @@ filenames = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml", "robot
 extensions = [".svg"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "linkinator"
 version = "8.1.0"
 npm = "linkinator"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "linkinator.config.json"
 
-[[tools]]
+[[tool]]
 name = "svgo"
 version = "4.1.0"
 npm = "svgo"
 
-[[tools]]
+[[tool]]
 name = "purgecss"
 version = "7.0.2"
 npm = "purgecss"
 
-[[checks]]
+[[check]]
 name = "static-site/build"
 title = "Build the site"
 example = "If the configured site build imports a missing template, the build check reports the command failure. Correct the template import or restore the template, then rerun the same configured build."
@@ -43,7 +43,7 @@ summary = "Runs the build command of the site and fails when it fails or writes 
 why = "Every other output check reads what the build wrote, so a broken build hides all of them."
 help = "Run the build command by hand and fix what it prints. Name the command under tools.site.build."
 
-[[checks]]
+[[check]]
 name = "static-site/build-reproducible"
 title = "Check reproducible site builds"
 example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from generated output or derive it from a stable declared input, then rerun the reproducibility check."
@@ -55,7 +55,7 @@ summary = "Builds the site twice and compares the two outputs file by file."
 why = "A build that differs from run to run cannot be cached, compared, or trusted to hold what was reviewed."
 help = "Take the timestamp, the random value, or the unordered list out of the build."
 
-[[checks]]
+[[check]]
 name = "static-site/html-validate-built"
 title = "Validate built HTML"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
@@ -67,7 +67,7 @@ summary = "Validates every built page with html-validate."
 why = "Templates can each be valid and still join into a page with two main elements or a missing label."
 help = "Fix the template or the content that writes the markup the rule names."
 
-[[checks]]
+[[check]]
 name = "css/dead-selectors"
 title = "Dead selectors"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
@@ -79,7 +79,7 @@ summary = "Finds selectors of the built stylesheets that no built page or script
 why = "A selector nobody uses is downloaded by every visitor and read by every maintainer."
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
 
-[[checks]]
+[[check]]
 name = "static-site/links-internal"
 title = "Check internal site links"
 example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
@@ -91,7 +91,7 @@ summary = "Serves the built site and follows every link between its pages, style
 why = "A broken internal link is a dead end a visitor finds before the author does."
 help = "Fix the link, or the page it points at."
 
-[[checks]]
+[[check]]
 name = "static-site/links-external"
 title = "Check external site links"
 example = "A built link to an external URL that responds with HTTP 404 reports a link failure. Replace it with the verified destination or remove the obsolete link, then rerun with network access."
@@ -103,7 +103,7 @@ summary = "Follows every link of the built site, the ones that leave it included
 why = "Other sites move their pages, and a link nobody rechecks rots."
 help = "Update the link. Skip a host that refuses crawlers under tools.linkinator.exclude with a reason."
 
-[[checks]]
+[[check]]
 name = "static-site/size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
@@ -116,7 +116,7 @@ summary = "Sums the compressed weight of the output paths each ceiling in tools.
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
-[[checks]]
+[[check]]
 name = "static-site/sitemap"
 title = "Sitemap"
 example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
@@ -128,7 +128,7 @@ summary = "Compares the sitemap with the output: every listed route is a built p
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
 help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_exclude."
 
-[[checks]]
+[[check]]
 name = "static-site/dead-assets"
 title = "Dead assets"
 example = "An image in the output directory that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
@@ -140,7 +140,7 @@ summary = "Finds files under an assets folder that no page, stylesheet, or scrip
 why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
 help = "Delete the file."
 
-[[checks]]
+[[check]]
 name = "static-site/svg-optimized"
 title = "Optimize SVG assets"
 example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
@@ -153,7 +153,7 @@ summary = "Reports SVG byte reductions over 10 percent at recommended, and any r
 why = "An SVG straight from an editor carries metadata and precision a browser never needs."
 help = "Run svgo over the file."
 
-[[checks]]
+[[check]]
 name = "static-site/webmanifest"
 title = "Validate the web app manifest"
 example = "A web manifest referencing `icon-192.png` reports a missing icon when that output file is absent. Add the icon to the build or correct the manifest path, then rebuild."
@@ -164,7 +164,7 @@ summary = "Checks that the web manifest parses, names the app, and lists icons t
 why = "A manifest with a missing icon installs an app with a blank tile."
 help = "Correct the manifest, or add the icon."
 
-[[checks]]
+[[check]]
 name = "integrity/security-headers"
 title = "Security headers"
 example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
@@ -175,42 +175,42 @@ summary = "Checks that the headers file sets the content type, referrer, and fra
 why = "A site of files has no server code, so the headers file is the only place these protections can live."
 help = "Add the header to the block for every path."
 
-[[settings]]
+[[setting]]
 name = "tools.site.build"
 type = "string"
 direction = "neutral"
 default = "npm run build"
 summary = "The command that builds the site."
 
-[[settings]]
+[[setting]]
 name = "tools.site.output"
 type = "string"
 direction = "neutral"
 default = "dist"
 summary = "The folder the build writes."
 
-[[settings]]
+[[setting]]
 name = "tools.site.sizes"
 type = "list"
 direction = "tightening"
 default = []
 summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
 
-[[settings]]
+[[setting]]
 name = "tools.site.sitemap_exclude"
 type = "list"
 direction = "neutral"
 default = ["404.html"]
 summary = "Built pages the sitemap leaves out on purpose."
 
-[[settings]]
+[[setting]]
 name = "tools.purgecss.safelist"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Class names a script adds at run time: the names and the reason."
 
-[[settings]]
+[[setting]]
 name = "tools.linkinator.exclude"
 type = "list"
 direction = "loosening"

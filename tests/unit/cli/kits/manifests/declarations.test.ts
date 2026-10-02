@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { parseManifest } from '#cli/kits/manifests.ts';
 
 test('a template pointer rejects a conflicting emission mode', () => {
-    const source = `[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
+    const source = `[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[config]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[config.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
     expect(() => parseManifest(`${source}copy = true\n`, 'configurations/example')).toThrow(
         'A template pointer cannot also specify body, merge, or copy.',
     );
@@ -10,7 +10,7 @@ test('a template pointer rejects a conflicting emission mode', () => {
 });
 
 const SELECTOR_MANIFEST =
-    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "Configuration replacement for the example language."\n[[tools]]\nname = "example"\nversion = "1.0.0"\n[[tools.replace]]\nfile = "package.json"\n';
+    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "Configuration replacement for the example language."\n[[tool]]\nname = "example"\nversion = "1.0.0"\n[[tool.replace]]\nfile = "package.json"\n';
 
 test('shared replace selectors cannot authorize retiring the containing file', () => {
     for (const selection of [
@@ -25,7 +25,7 @@ test('shared replace selectors cannot authorize retiring the containing file', (
 });
 
 const SECURITY_MANIFEST =
-    '[kit]\nname = "security"\nkind = "general"\ntitle = "Security"\ndescription = "Pinned query packs used by security analysis."\n[[tools]]\nname = "codeql"\nversion = "2.24.3"\n';
+    '[kit]\nname = "security"\nkind = "general"\ntitle = "Security"\ndescription = "Pinned query packs used by security analysis."\n[[tool]]\nname = "codeql"\nversion = "2.24.3"\n';
 
 test('query-pack metadata refuses a version range and accepts an exact release', () => {
     expect(() =>
@@ -37,7 +37,7 @@ test('query-pack metadata refuses a version range and accepts an exact release',
 });
 
 const TOOL_MANIFEST =
-    '[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\n';
+    '[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tool]]\nname = "example"\nversion = "1.0.0"\n';
 
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseManifest(
@@ -63,7 +63,7 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
 });
 
 const SUPPRESSION_MANIFEST =
-    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "A configuration for directive placement."\n[[tools]]\nname = "example"\n[tools.suppression]\nmarker = "# file-disable"\nreason = "reason: (?<reason>.+)"\n';
+    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "A configuration for directive placement."\n[[tool]]\nname = "example"\n[tool.suppression]\nmarker = "# file-disable"\nreason = "reason: (?<reason>.+)"\n';
 
 test('tool suppression metadata validates an inline pattern without requiring it', () => {
     expect(() => parseManifest(`${SUPPRESSION_MANIFEST}inline_marker = "("\n`, 'configurations/example')).toThrow(

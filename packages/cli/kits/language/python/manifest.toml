@@ -17,7 +17,7 @@ extensions = [".py", ".pyi"]
 filenames = ["pyproject.toml"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "ruff"
 suppression = {inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 version = "0.16.8"
@@ -26,18 +26,18 @@ mise = "ruff"
 pypi = "ruff"
 brew = "ruff"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "ruff.toml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".ruff.toml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "pyproject.toml"
 table = "tool.ruff"
 shared = true
 
-[[tools]]
+[[tool]]
 name = "basedpyright"
 suppression = {marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 version = "1.40.1"
@@ -45,30 +45,30 @@ floor = "1.20.0"
 mise = "pipx:basedpyright"
 pypi = "basedpyright"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "pyrightconfig.json"
 
-[[tools]]
+[[tool]]
 name = "lint-imports"
 version = "2.15"
 mise = "pipx:import-linter"
 pypi = "import-linter"
 version_pattern = "v?(\\d+\\.\\d+(?:\\.\\d+)?)"
 
-[[tools]]
+[[tool]]
 name = "pydoclint"
 version = "0.9.1"
 mise = "pipx:pydoclint"
 pypi = "pydoclint"
 
-[[tools]]
+[[tool]]
 name = "deptry"
 version = "0.25.1"
 floor = "0.20.0"
 mise = "pipx:deptry"
 pypi = "deptry"
 
-[[tools]]
+[[tool]]
 name = "vulture"
 crash_pattern = '^(?:Error:|.+: invalid source code |.+:None: |.+:[0-9]+: .+ at ")'
 version = "2.16"
@@ -77,27 +77,27 @@ mise = "pipx:vulture"
 pypi = "vulture"
 version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
-[[tools]]
+[[tool]]
 name = "validate-pyproject"
 version = "0.26"
 mise = "pipx:validate-pyproject"
 pypi = "validate-pyproject"
 version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
-[[configs]]
+[[config]]
 template = "ruff.toml.tmpl"
 target = ".gspot/config/ruff.toml"
 scoped = true
 rules_path = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
-[[configs]]
+[[config]]
 template = "basedpyrightconfig.json.tmpl"
 target = ".gspot/config/basedpyrightconfig.json"
 pointer = {path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}"}
 scoped = true
 header = false
 
-[[checks]]
+[[check]]
 name = "python/ruff"
 title = "Ruff"
 example = "The expression `eval(user_input)` reports S307 when that rule is selected. Replace dynamic evaluation with parsing and explicit operations appropriate to the input contract."
@@ -112,7 +112,7 @@ summary = "Lints every Python file with the shipped Ruff families, the security 
 why = "Ruff holds the rules of a dozen older tools in one pass fast enough to run at every commit."
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason, and add --paths to limit it."
 
-[[checks]]
+[[check]]
 name = "python/ruff-format"
 title = "Ruff format"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
@@ -127,7 +127,7 @@ summary = "Checks the layout of every Python file against the Ruff formatter."
 why = "One layout everywhere keeps a diff about the change."
 help = "Run gspot check --fix."
 
-[[checks]]
+[[check]]
 name = "python/basedpyright"
 title = "Check Python types"
 example = "The annotated assignment `count: int = \"one\"` reports an incompatible value type. Use `count: int = 1` when the value is a number, or correct the annotation if the contract requires text."
@@ -143,7 +143,7 @@ summary = "Type checks the project with stable diagnostics and adds annotation c
 why = "A type error found here is a crash that never reaches a user."
 help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
-[[checks]]
+[[check]]
 name = "python/import-linter"
 title = "Import linter"
 example = "A module importing from a layer forbidden by the configured import contract reports that dependency. Move the shared behavior to an allowed owner and update the import, then rerun against the same contract."
@@ -157,7 +157,7 @@ summary = "Runs the import contracts of the project, when pyproject.toml holds a
 why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
 help = "Move the import to the side the contract allows, or change the contract with a reason in its name."
 
-[[checks]]
+[[check]]
 name = "python/pydoclint"
 title = "Pydoclint"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
@@ -172,7 +172,7 @@ summary = "Checks that every docstring names the arguments, the return, and the 
 why = "A docstring that disagrees with the signature is worse than none, because people trust it."
 help = "Bring the docstring in line with the signature. An explicit [tool.pydoclint] style wins. Otherwise, gspot carries a Google or NumPy convention from [tool.ruff.lint.pydocstyle], or keeps the native default."
 
-[[checks]]
+[[check]]
 name = "python/deptry"
 title = "Deptry"
 example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare and lock that dependency with the project package manager, or remove the unused import."
@@ -187,7 +187,7 @@ summary = "Compares the imports of the project with the dependencies it declares
 why = "An import that works through somebody else's dependency breaks the day they drop it."
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason."
 
-[[checks]]
+[[check]]
 name = "python/vulture"
 title = "Vulture"
 example = "An unused `import colorsys` reports `unused import 'colorsys'`. Remove the unused import and rerun. Dynamically used names need exact entries in the configured allowlist."
@@ -203,7 +203,7 @@ summary = "Finds functions, classes, and variables nothing uses."
 why = "Dead code is read and maintained by people who cannot tell it is dead."
 help = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
 
-[[checks]]
+[[check]]
 name = "python/pyproject"
 title = "Validate Python project metadata"
 example = "The project metadata `version = 7` in `pyproject.toml` reports an invalid version value. Use a valid version string, such as `version = \"1.0.0\"`, and rerun before updating the lockfile."
@@ -218,7 +218,7 @@ summary = "Validates every pyproject.toml against the packaging schemas."
 why = "A key the build backend does not know is ignored without a word."
 help = "Correct the key the message names."
 
-[[checks]]
+[[check]]
 name = "integrity/dependency-ownership"
 title = "Dependency ownership"
 example = "An authored `requirements.txt` beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
@@ -230,7 +230,7 @@ summary = "Checks that pyproject.toml owns every dependency: no hand-kept requir
 why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
 help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.pip.installs_allowed with a reason."
 
-[[checks]]
+[[check]]
 name = "integrity/typecheck-membership"
 title = "Type checking membership"
 example = "An entry `missing/**` under `tools.basedpyright.exclude` reports a stale exclusion when no selected file matches it. Remove the obsolete entry or correct its path. This check verifies exclusion membership; it does not ban every exclusion."
@@ -241,7 +241,7 @@ summary = "Checks that every path the type check leaves out still matches a trac
 why = "An exclusion that outlives its file hides the next file that takes the name."
 help = "Remove the entry from tools.basedpyright.exclude."
 
-[[checks]]
+[[check]]
 name = "python/file-length"
 title = "File length"
 example = "A Python module whose code-line count exceeds the configured file ceiling reports its count and limit. Move an independent responsibility to its owner and update imports, then verify both modules fit the limit."
@@ -253,7 +253,7 @@ summary = "Checks that no Python file has more code lines than the ceiling."
 why = "A long module holds more than one job, and the second job is the one nobody finds."
 help = "Split the module by the job, or raise limits.file_lines for python with a reason."
 
-[[checks]]
+[[check]]
 name = "python/function-length"
 title = "Function length"
 example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
@@ -265,7 +265,7 @@ summary = "Checks that no Python function has more code lines than the ceiling."
 why = "A function that fills a screen does several things, and a reader has to hold all of them."
 help = "Move one job of the function into a function of its own."
 
-[[checks]]
+[[check]]
 name = "python/trivial-function"
 title = "Trivial function"
 example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
@@ -278,7 +278,7 @@ why = "Unnecessary functions add names and indirection without substantial behav
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-function --paths <file> --reason <why>`."
 
 
-[[checks]]
+[[check]]
 name = "python/placeholder-docstring"
 title = "Replace placeholder docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
@@ -290,7 +290,7 @@ summary = "Finds docstrings that hold a placeholder word, or the name of the fun
 why = "A docstring that says nothing passes the docstring rule and wastes the line."
 help = "Say what the function does that its name does not, or for whom it exists."
 
-[[checks]]
+[[check]]
 name = "python/private-prefix"
 title = "Private prefix"
 example = "A file-local function with no leading underscore and no public export reports a naming finding. Add the underscore and update its local callers, or declare the actual public contract in the export list."
@@ -302,7 +302,7 @@ summary = "In a module with an export list, checks that every other definition s
 why = "A name that is public by accident gets imported, and then it cannot change."
 help = "Add the underscore, or list the name in the export list."
 
-[[checks]]
+[[check]]
 name = "python/private-before-public"
 title = "Private before public"
 example = "A private `_parse` function below an exported public function reports declaration order. Move `_parse` before the public function without changing either body."
@@ -314,7 +314,7 @@ summary = "Checks that private functions sit above the public functions of a mod
 why = "A reader who meets the parts first understands what is built from them."
 help = "Move the private functions above the first public one."
 
-[[checks]]
+[[check]]
 name = "python/exports-at-bottom"
 title = "Exports at bottom"
 example = "A module with `__all__` before later declarations reports an export-list position finding. Move the export list after those declarations."
@@ -326,7 +326,7 @@ summary = "Checks that the export list is the last statement of its module."
 why = "A reader looks for the public surface in one place."
 help = "Move the export list to the end of the module."
 
-[[checks]]
+[[check]]
 name = "python/no-lazy-exports"
 title = "No lazy exports"
 example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
@@ -338,7 +338,7 @@ summary = "Refuses a module-level attribute hook that makes names appear at run 
 why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
 help = "Import the names and list them."
 
-[[checks]]
+[[check]]
 name = "python/package-exports"
 title = "Package exports"
 example = "A package export list larger than its configured limit reports the export count. Split unrelated public responsibilities into separate packages or remove unnecessary exports and update consumers."
@@ -350,7 +350,7 @@ summary = "Checks that a package exports no more names than the ceiling."
 why = "A package that exports everything has no surface, so every change to it is a breaking one."
 help = "Split the package, or export fewer names."
 
-[[checks]]
+[[check]]
 name = "python/import-comments"
 title = "No comments among imports"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `# noqa` or `# type:` directive stays."
@@ -362,7 +362,7 @@ summary = "Finds a comment written inside an import block, between its first and
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry."
 help = "Move the comment above the block or next to the code it explains."
 
-[[checks]]
+[[check]]
 name = "python/export-order"
 title = "Export order"
 example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
@@ -374,7 +374,7 @@ summary = "Checks that the names in the export list go shortest first, alphabeti
 why = "One order for every export list means a reader never searches it."
 help = "Reorder the names shortest first."
 
-[[checks]]
+[[check]]
 name = "python/no-singletons"
 title = "No singletons"
 example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."
@@ -387,55 +387,55 @@ why = "Every importer shares the one instance, and no test gets a fresh one."
 help = "Build the object where the program starts, and pass it in. Allow a name under structure.python.singletons_allowed with a reason."
 
 
-[[settings]]
+[[setting]]
 name = "structure.python.singletons_allowed"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Module variables that may hold an object built at import time: the paths, the names, and the reason."
 
-[[settings]]
+[[setting]]
 name = "limits.python.package_exports"
 type = "number"
 direction = "ceiling"
 default = 20
 summary = "The most names a package may list in its export list."
 
-[[settings]]
+[[setting]]
 name = "tools.pip.installs_allowed"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Paths that may run pip install, such as an image that installs one build tool, each with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.ruff.docstring_convention"
 type = "string"
 direction = "neutral"
 summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
 
-[[settings]]
+[[setting]]
 name = "tools.ruff.select"
 type = "list"
 direction = "tightening"
 default = []
 summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
 
-[[settings]]
+[[setting]]
 name = "tools.ruff.test_ignores"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Ruff rules and families the test files leave off, such as the assert rule."
 
-[[settings]]
+[[setting]]
 name = "tools.basedpyright.exclude"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Paths basedpyright leaves out, such as files that need another dependency set, each with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.vulture.ignore_names"
 type = "list"
 direction = "loosening"
@@ -445,7 +445,7 @@ summary = "Names vulture treats as used, such as functions a framework calls."
 [guides]
 language = [{path = "language/PYTHON.md"}, {path = "language/python/TYPING.md"}, {path = "language/python/DESIGN.md"}, {path = "language/python/FLOW.md"}, {path = "language/python/PACKAGING.md"}, {path = "language/naming/PYTHON.md"}]
 
-[[settings]]
+[[setting]]
 name = "tools.vulture.min_confidence"
 type = "number"
 direction = "ceiling"

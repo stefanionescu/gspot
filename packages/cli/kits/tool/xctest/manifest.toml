@@ -14,14 +14,14 @@ paths = ["**/*Tests/**/*.swift", "**/__Snapshots__/**"]
 filenames = ["*.xctestplan"]
 kinds = ["source", "binary"]
 
-[[configs]]
+[[config]]
 template = "swiftlint.yml.tmpl"
 target = ".gspot/config/swiftlint.yml"
 scoped = true
 fragment = true
 pointer = {path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n"}
 
-[[checks]]
+[[check]]
 name = "xctest/disabled"
 title = "Explain skipped and disabled tests"
 example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore the test, or supply a nonempty reason such as `throw XCTSkip(\"Requires the hardware test device\")`. The check requires a reason; it does not validate when the test will be enabled."
@@ -33,7 +33,7 @@ summary = "Checks that skip calls and disabled traits name a nonempty reason, an
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
 help = "Say why the test is off and what turns it back on, or delete the test."
 
-[[checks]]
+[[check]]
 name = "xctest/no-sleep"
 title = "Avoid sleeps in tests"
 example = "A test using a fixed sleep to wait for asynchronous work reports a timing finding. Wait for the actual completion expectation or poll the required condition with a bounded timeout."
@@ -45,7 +45,7 @@ summary = "Refuses sleep calls in test files outside tools.xctest.sleep_allowed.
 why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
 help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
 
-[[checks]]
+[[check]]
 name = "xctest/recording"
 title = "Disable snapshot recording"
 example = "A snapshot test left in recording mode reports a recording finding. Inspect and retain the intended reference images, remove the recording flag, and rerun in comparison mode."
@@ -57,7 +57,7 @@ summary = "Refuses a snapshot test left in a recording mode."
 why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
 help = "Take the recording flag out, and commit the references it wrote after looking at them."
 
-[[checks]]
+[[check]]
 name = "xctest/reference-images"
 title = "Validate snapshot references"
 example = "A snapshot reference folder whose corresponding test file no longer exists reports unused references. Delete the unused references, or rename the folder to match the renamed test file."
@@ -69,7 +69,7 @@ summary = "Checks that snapshot references match tools.xctest.reference_layout a
 why = "References of a deleted test stay in the repository, and every clone pays for them."
 help = "Delete the references of the test that is gone, or rename the folder after the test file."
 
-[[checks]]
+[[check]]
 name = "xctest/coverage"
 title = "Check Swift test coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.xctest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
@@ -84,21 +84,21 @@ summary = "Runs the tests with coverage and holds each target named in tools.xct
 why = "A floor keeps new code from arriving untested."
 help = "Add tests for the target, or lower its floor with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.xctest.coverage"
 type = "list"
 direction = "floor"
 default = []
 summary = "Coverage floors: a target and the share of lines out of 100. Empty turns the check off."
 
-[[settings]]
+[[setting]]
 name = "tools.xctest.sleep_allowed"
 type = "list"
 direction = "loosening"
 default = []
 summary = "Test paths that may sleep, each with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.xctest.reference_layout"
 type = "string"
 direction = "neutral"

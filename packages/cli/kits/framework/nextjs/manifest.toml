@@ -13,23 +13,23 @@ dependencies = ["next"]
 paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "next"
 host = true
 
-[[tools]]
+[[tool]]
 name = "@next/eslint-plugin-next"
 kind = "library"
 version = "16.3.5"
 npm = "@next/eslint-plugin-next"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[checks]]
+[[check]]
 name = "nextjs/typecheck"
 title = "Check Next.js types"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
@@ -41,7 +41,7 @@ summary = "Has Next.js write its types, then type-checks the app with the strict
 why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
-[[checks]]
+[[check]]
 name = "nextjs/build"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
@@ -54,7 +54,7 @@ summary = "Builds the app with next build, for a repository that set tools.next.
 why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
 help = "Run next build and read the first error it prints."
 
-[[checks]]
+[[check]]
 name = "integrity/route-segments"
 title = "Route segments"
 example = "A Next.js segment containing both `page.tsx` and `route.ts` reports conflicting route ownership. Move the route handler into a separate segment, such as `api`, and update its callers."
@@ -65,7 +65,7 @@ summary = "Checks that no route segment holds both a page and a route handler."
 why = "One address is served by one file, and the framework refuses the build when a segment holds two."
 help = "Move the route handler into a segment of its own, such as an api folder."
 
-[[checks]]
+[[check]]
 name = "integrity/next-config"
 title = "Check Next.js configuration"
 example = "Setting `typescript.ignoreBuildErrors` to `true` in Next.js configuration reports a disabled type gate. Remove the switch and correct the type errors before building."
@@ -76,7 +76,7 @@ summary = "Checks that the framework kit turns no build check off and puts no se
 why = "A build that ignores lint and type errors ships them, and a key under env is readable by every visitor."
 help = "Remove the switch, and read the secret on the server."
 
-[[checks]]
+[[check]]
 name = "integrity/dependency-alignment"
 title = "Dependency alignment"
 example = "Different declared versions of `react` and `react-dom` report an alignment finding. Select the same compatible version for both and update the lockfile with the package manager."
@@ -87,14 +87,14 @@ summary = "Checks that packages that ship together sit on one version: the frame
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
 
-[[settings]]
+[[setting]]
 name = "tools.next.build_on_push"
 type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the push stage builds the app with next build."
 
-[[settings]]
+[[setting]]
 name = "tools.next.build_flags"
 type = "list"
 direction = "neutral"

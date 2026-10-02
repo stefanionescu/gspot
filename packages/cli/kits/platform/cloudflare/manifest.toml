@@ -14,19 +14,19 @@ dependencies = ["wrangler", "@opennextjs/cloudflare"]
 filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_redirects"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "wrangler"
 floor = "3.0.0"
 npm = "wrangler"
 
-[[configs]]
+[[config]]
 template = "semgrep-workers.yml.tmpl"
 target = ".gspot/config/semgrep/workers.yml"
 rules_path = ["rules"]
 scoped = true
 needs = "security"
 
-[[checks]]
+[[check]]
 name = "cloudflare/wrangler-config"
 title = "Validate Wrangler configuration"
 example = "A Wrangler configuration without `compatibility_date` reports the missing date. Add a reviewed date in `YYYY-MM-DD` form, such as `2025-01-31`, and test the Worker against that runtime behavior."
@@ -37,7 +37,7 @@ summary = "Checks that every wrangler configuration parses, names the worker, an
 why = "Without a pinned date the runtime changes behavior under a deployed worker."
 help = "Add the name and a compatibility_date in the form 2025-01-31."
 
-[[checks]]
+[[check]]
 name = "cloudflare/headers-syntax"
 title = "Headers syntax"
 example = "An indented `X-Frame-Options: DENY` line before any path in `_headers` reports that the header sits under no path. Put the intended path, such as `/*`, on the preceding unindented line."
@@ -48,7 +48,7 @@ summary = "Checks that the headers file is blocks of a path line and indented he
 why = "Cloudflare skips a line it cannot read, so a typo silently drops a security header."
 help = "Write each block as a path, then indented lines of a name, a colon, and a value."
 
-[[checks]]
+[[check]]
 name = "cloudflare/redirects-syntax"
 title = "Redirects syntax"
 example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For an intended permanent redirect, change it to `/old /new 301`."
@@ -59,7 +59,7 @@ summary = "Checks that every redirect is a source, a destination, and an optiona
 why = "A redirect Cloudflare cannot read is dropped, and the old address starts to answer 404."
 help = "Write the rule as source, destination, status."
 
-[[checks]]
+[[check]]
 name = "cloudflare/env-types-fresh"
 title = "Keep Worker environment types current"
 example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."

@@ -9,7 +9,7 @@ description = "Static analysis for security patterns with Semgrep over every fil
 languages = true
 extensions = [".plist"]
 
-[[tools]]
+[[tool]]
 name = "semgrep"
 suppression = {marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true}
 version = "1.178.0"
@@ -19,16 +19,16 @@ mise = "pipx:semgrep"
 brew = "semgrep"
 platforms = ["macos", "linux"]
 
-[[tools.replace]]
+[[tool.replace]]
 file = "bearer.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "bearer.ignore"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".semgrepignore"
 
-[[tools]]
+[[tool]]
 name = "codeql"
 version = "2.24.3"
 brew = "codeql"
@@ -38,24 +38,24 @@ platforms = ["macos", "linux-x64", "windows"]
 # Query versions paired with github/codeql tag codeql-cli/v2.24.3.
 query_packs = {actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7", java = "1.10.8", javascript = "2.3.3", python = "1.7.8", ruby = "1.5.8", rust = "0.1.28", swift = "1.2.17"}
 
-[[configs]]
+[[config]]
 template = "semgrep/node.yml.tmpl"
 target = ".gspot/config/semgrep/node.yml"
 rules_path = ["rules"]
 scoped = true
 
-[[configs]]
+[[config]]
 template = "semgrep/secrets.yml.tmpl"
 target = ".gspot/config/semgrep/secrets.yml"
 rules_path = ["rules"]
 scoped = true
 
-[[configs]]
+[[config]]
 template = "semgrepignore.tmpl"
 target = ".semgrepignore"
 scoped = true
 
-[[checks]]
+[[check]]
 name = "security/semgrep"
 title = "Semgrep"
 example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
@@ -71,7 +71,7 @@ summary = "Runs the Semgrep rule packs of the selected kits, and the repository'
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
 help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason."
 
-[[checks]]
+[[check]]
 name = "security/semgrep-registry"
 title = "Semgrep registry"
 example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
@@ -89,7 +89,7 @@ summary = "Runs the public Semgrep registry packs named in tools.semgrep.registr
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."
 help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule <id> --reason."
 
-[[checks]]
+[[check]]
 name = "security/codeql"
 title = "CodeQL"
 example = "A query constructed by concatenating request input into SQL reports a SQL-injection finding when the selected language query pack detects the flow. Use a parameterized database query and rerun with the language build prerequisites satisfied."
@@ -101,42 +101,42 @@ summary = "Builds a CodeQL database for every language in tools.codeql.languages
 why = "Data-flow analysis follows a value from a request to a query across files, which a pattern rule cannot."
 help = "Change the code the result names. Record a false positive under tools.codeql.ignore with its rule, its paths, and a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.codeql.languages"
 type = "list"
 direction = "tightening"
 default = []
 summary = "The CodeQL languages to scan, such as javascript-typescript, python, or swift."
 
-[[settings]]
+[[setting]]
 name = "tools.codeql.suite"
 type = "string"
 direction = "neutral"
 default = "security-extended"
 summary = "The CodeQL query suite: security-extended, or security-and-quality."
 
-[[settings]]
+[[setting]]
 name = "tools.codeql.ignore"
 type = "list"
 direction = "loosening"
 default = []
 summary = "CodeQL results accepted as false positives: the rule id, the paths, and the reason."
 
-[[settings]]
+[[setting]]
 name = "tools.semgrep.configs"
 type = "list"
 direction = "tightening"
 default = []
 summary = "Rule files or folders of the repository that Semgrep runs beside the shipped packs."
 
-[[settings]]
+[[setting]]
 name = "tools.semgrep.registry"
 type = "list"
 direction = "tightening"
 default = ["p/owasp-top-ten", "p/secrets"]
 summary = "The registry packs the manual registry check runs."
 
-[[settings]]
+[[setting]]
 name = "tools.semgrep.exclude"
 type = "list"
 direction = "loosening"

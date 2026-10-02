@@ -13,7 +13,7 @@ paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compo
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "hadolint"
 version = "2.14.0"
 mise = "hadolint"
@@ -21,52 +21,52 @@ brew = "hadolint"
 github = {name = "hadolint/hadolint", version = "v2.14.0"}
 scoop = "hadolint"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".hadolint.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".hadolint.yml"
 
-[[tools]]
+[[tool]]
 name = "trivy"
 version = "0.69.3"
 mise = "trivy"
 brew = "trivy"
 github = {name = "aquasecurity/trivy", version = "v0.69.3"}
 
-[[tools.replace]]
+[[tool.replace]]
 file = "trivy.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".trivyignore"
 
-[[tools]]
+[[tool]]
 name = "docker"
 host = true
 
-[[configs]]
+[[config]]
 template = "hadolint.yaml.tmpl"
 target = ".gspot/config/hadolint.yaml"
 scoped = true
 rules_path = ["ignored"]
 
-[[configs]]
+[[config]]
 template = "trivy/configuration.yaml.tmpl"
 target = ".gspot/config/trivy.yaml"
 scoped = true
 
-[[configs]]
+[[config]]
 template = "trivyignore.tmpl"
 target = ".gspot/config/trivyignore"
 scoped = true
 
-[[configs]]
+[[config]]
 template = "trivy/findings.tpl.tmpl"
 target = ".gspot/config/trivy-findings.tpl"
 scoped = true
 header = false
 
-[[checks]]
+[[check]]
 name = "docker/hadolint"
 title = "Dockerfile lint"
 example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
@@ -79,7 +79,7 @@ summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
 help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason."
 
-[[checks]]
+[[check]]
 name = "docker/compose-config"
 title = "Validate Docker Compose files"
 example = "A Compose service with an unknown key such as `bogus` fails configuration validation. Remove the key or replace it with the supported setting for the intended behavior."
@@ -94,7 +94,7 @@ summary = "Asks Docker Compose to parse every Compose file, which needs no runni
 why = "A Compose file that is valid YAML can still name a key Compose refuses, and the first person to learn that is deploying."
 help = "Read the message Compose prints; it names the key and the service."
 
-[[checks]]
+[[check]]
 name = "docker/dockerignore"
 title = "Exclude private files from Docker builds"
 example = "A Dockerfile without a neighboring `.dockerignore` reports the missing context exclusions. Add `.dockerignore` with the required entries named in the finding, such as `.git` and dependency directories."
@@ -105,7 +105,7 @@ summary = "Checks that an ignore file sits beside every Dockerfile and keeps the
 why = "Without it the whole folder goes to the daemon, and copying the folder puts the history and the secrets into the image."
 help = "Add a .dockerignore beside the Dockerfile with the entries the message names."
 
-[[checks]]
+[[check]]
 name = "docker/trivy-config"
 title = "Audit container configuration"
 example = "A Dockerfile whose final application stage runs as root can report a container-security finding. Create an unprivileged user, grant it only required file access, and select it with `USER` before running the application."
@@ -121,7 +121,7 @@ summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user
 why = "A container that runs as root turns any bug in the service into control of the container."
 help = "Change the file the way the message says. Accept one id with a reason under tools.trivy.ignore."
 
-[[checks]]
+[[check]]
 name = "docker/trivy-image"
 title = "Scan container images"
 example = "A configured image containing a package with a known advisory reports that advisory. Move to a reviewed image version containing the package fix, then rerun the image scan. Results depend on the advisory database and available image."
@@ -134,21 +134,21 @@ summary = "Scans every image a Compose file names for known vulnerabilities in i
 why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."
 help = "Move to a newer tag of the image. Accept one advisory with a reason under tools.trivy.ignore."
 
-[[settings]]
+[[setting]]
 name = "tools.hadolint.trusted_registries"
 type = "list"
 direction = "tightening"
 default = []
 summary = "The registries a base image may come from; empty allows any."
 
-[[settings]]
+[[setting]]
 name = "tools.trivy.severity"
 type = "string"
 direction = "neutral"
 default = "HIGH,CRITICAL"
 summary = "The severities Trivy reports, as a comma-separated list."
 
-[[settings]]
+[[setting]]
 name = "tools.trivy.ignore"
 type = "list"
 direction = "loosening"

@@ -12,7 +12,7 @@ paths = ["ansible.cfg", "**/ansible.cfg"]
 paths = ["ansible.cfg", "**/ansible.cfg"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "ansible-lint"
 version = "26.8.0"
 floor = "24.0.0"
@@ -21,7 +21,7 @@ mise = "pipx:ansible-lint"
 brew = "ansible-lint"
 platforms = ["macos", "linux"]
 
-[[checks]]
+[[check]]
 name = "ansible/lint"
 title = "Lint Ansible projects"
 example = "A task using `ansible.builtin.command: systemctl restart planted` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: planted` and `state: restarted` to express the intended service operation."

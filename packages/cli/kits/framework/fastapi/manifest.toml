@@ -9,7 +9,7 @@ description = "A FastAPI service: the FastAPI and async rules of Ruff, which rep
 [detect]
 dependencies = ["fastapi"]
 
-[[configs]]
+[[config]]
 template = "semgrep-fastapi.yml.tmpl"
 target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]

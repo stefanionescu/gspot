@@ -12,24 +12,24 @@ dependencies = ["vitest"]
 paths = ["**/vitest.config.*", "**/vitest.workspace.*"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "vitest"
 floor = "2.0.0"
 npm = "vitest"
 
-[[tools]]
+[[tool]]
 name = "@vitest/eslint-plugin"
 kind = "library"
 version = "1.3.4"
 npm = "@vitest/eslint-plugin"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[checks]]
+[[check]]
 name = "vitest/coverage"
 title = "Check Vitest coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.vitest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
@@ -44,14 +44,14 @@ summary = "Runs the test suite with coverage, and fails when lines, branches, fu
 why = "A floor keeps new code from arriving untested, which is when its behavior is cheapest to pin down."
 help = "Add tests for the code the coverage report shows uncovered, or lower one floor under tools.vitest with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.vitest.config"
 type = "string"
 direction = "neutral"
 default = ""
 summary = "The Vitest configuration the coverage run reads, relative to the scope, for a repository that keeps it somewhere Vitest does not look."
 
-[[settings]]
+[[setting]]
 name = "tools.vitest.coverage.lines"
 type = "number"
 direction = "floor"
@@ -59,7 +59,7 @@ default = 0
 default_all = 80
 summary = "The smallest share of lines the tests cover, out of 100."
 
-[[settings]]
+[[setting]]
 name = "tools.vitest.coverage.branches"
 type = "number"
 direction = "floor"
@@ -67,7 +67,7 @@ default = 0
 default_all = 80
 summary = "The smallest share of branches the tests cover, out of 100."
 
-[[settings]]
+[[setting]]
 name = "tools.vitest.coverage.functions"
 type = "number"
 direction = "floor"
@@ -75,7 +75,7 @@ default = 0
 default_all = 80
 summary = "The smallest share of functions the tests cover, out of 100."
 
-[[settings]]
+[[setting]]
 name = "tools.vitest.coverage.statements"
 type = "number"
 direction = "floor"

@@ -12,28 +12,28 @@ filenames = ["package.json", "pyproject.toml"]
 [files]
 filenames = ["package.json", "pyproject.toml"]
 
-[[tools]]
+[[tool]]
 name = "license-checker-rseidelsohn"
 version = "5.0.1"
 npm = "license-checker-rseidelsohn"
 version_exit_code = 1
 mise = "npm:license-checker-rseidelsohn"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".license-checker.json"
 
-[[tools]]
+[[tool]]
 name = "pip-licenses"
 version = "5.5.5"
 pypi = "pip-licenses"
 mise = "pipx:pip-licenses"
 
-[[configs]]
+[[config]]
 template = "licenses.json.tmpl"
 target = ".gspot/config/licenses.json"
 scoped = true
 
-[[checks]]
+[[check]]
 name = "licenses/packages"
 title = "Check dependency licenses"
 example = "A locked package whose declared license is outside the allowed license policy reports a finding for that exact package version. Replace the dependency with an acceptable one or record a reviewed package-and-license exception with a reason. An exception for another version does not apply."
@@ -46,7 +46,7 @@ summary = "Compares the license every installed npm or Python package reports wi
 why = "A license the project cannot accept arrives silently with a transitive dependency."
 help = "Replace the package, or add an entry to tools.licenses.exceptions with gspot set. Include package (name@version), license, and reason. An exception holds only while the package reports that license."
 
-[[settings]]
+[[setting]]
 name = "tools.licenses.allowed"
 type = "list"
 direction = "neutral"
@@ -54,7 +54,7 @@ default = []
 default_all = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 summary = "The SPDX license ids a dependency may report."
 
-[[settings]]
+[[setting]]
 name = "tools.licenses.exceptions"
 type = "list"
 direction = "loosening"

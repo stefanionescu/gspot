@@ -13,53 +13,53 @@ extensions = [".css"]
 extensions = [".css"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "stylelint"
 suppression = {marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S.*)"}
 version = "16.23.1"
 floor = "16.0.0"
 npm = "stylelint"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.mjs"
 
-[[tools]]
+[[tool]]
 name = "stylelint-config-standard"
 kind = "library"
 version = "39.0.0"
 npm = "stylelint-config-standard"
 
-[[tools]]
+[[tool]]
 name = "postcss-html"
 kind = "library"
 version = "2.0.0"
 npm = "postcss-html"
 
-[[configs]]
+[[config]]
 template = "stylelint.json.tmpl"
 target = ".gspot/config/stylelint.json"
 rules_path = ["rules"]
@@ -67,7 +67,7 @@ scoped = true
 header = false
 pointer = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n"}
 
-[[checks]]
+[[check]]
 name = "css/stylelint"
 title = "Stylelint"
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
@@ -82,7 +82,7 @@ summary = "Lints every stylesheet with the standard stylelint rules: unknown pro
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
 
-[[checks]]
+[[check]]
 name = "integrity/css-usage"
 title = "CSS usage"
 example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
@@ -94,14 +94,14 @@ summary = "For every CSS module, checks that the code uses each class it defines
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
 help = "Delete the class nobody reads, or define the class the code reads."
 
-[[settings]]
+[[setting]]
 name = "tools.stylelint.ignore_at_rules"
 type = "list"
 direction = "loosening"
 default = []
 summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
 
-[[settings]]
+[[setting]]
 name = "tools.stylelint.rules"
 type = "table"
 direction = "per-rule"

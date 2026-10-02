@@ -9,37 +9,37 @@ description = "React components: the recommended React, hooks, and accessibility
 [detect]
 dependencies = ["react"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-react-hooks"
 kind = "library"
 version = "7.1.1"
 npm = "eslint-plugin-react-hooks"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-react"
 kind = "library"
 version = "7.37.5"
 npm = "eslint-plugin-react"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-jsx-a11y"
 kind = "library"
 version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-react-refresh"
 kind = "library"
 version = "0.5.7"
 npm = "eslint-plugin-react-refresh"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-testing-library"
 kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"

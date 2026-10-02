@@ -13,7 +13,7 @@ extensions = [".md", ".mdx"]
 extensions = [".md", ".mdx"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "markdownlint-cli2"
 rule_url = "https://github.com/DavidAnson/markdownlint/blob/main/doc/{rule}.md"
 suppression = {marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S.*)"}
@@ -24,42 +24,42 @@ version_command = ["--help"]
 version_exit_code = 2
 version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint-cli2.jsonc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint-cli2.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint-cli2.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint-cli2.mjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint.jsonc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".markdownlint.yml"
 
-[[configs]]
+[[config]]
 template = "configuration.jsonc.tmpl"
 target = ".gspot/config/markdownlint.jsonc"
 scoped = true
 rules_path = [""]
 
-[[configs]]
+[[config]]
 template = "runner.mjs.tmpl"
 target = ".gspot/config/markdownlint-cli2.mjs"
 scoped = true
 
-[[checks]]
+[[check]]
 name = "markdown/markdownlint"
 title = "Markdownlint"
 example = "A Markdown document with two top-level headings can report MD025. Keep one document title and change the later section heading to level two."
@@ -75,7 +75,7 @@ summary = "Checks every Markdown file against markdownlint with the shipped rule
 why = "Markdown that lints the same everywhere renders the same everywhere."
 help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
-[[checks]]
+[[check]]
 name = "markdown/fences"
 title = "Check code block syntax"
 example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
@@ -85,7 +85,7 @@ summary = "Checks that every fenced code block with a language tag parses in tha
 why = "A code block that does not parse is documentation that lies about the code."
 help = "Fix the code in the block, or tag the block text when it is not code."
 
-[[settings]]
+[[setting]]
 name = "tools.markdownlint.rules"
 type = "table"
 direction = "per-rule"

@@ -8,19 +8,19 @@ description = "Translated interfaces: no literal text in components, and message
 [detect]
 dependencies = ["next-intl", "react-i18next", "i18next", "react-intl", "@lingui/core"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-i18next"
 kind = "library"
 version = "6.1.5"
 npm = "eslint-plugin-i18next"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[checks]]
+[[check]]
 name = "i18n/locales"
 title = "Locales"
 example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
@@ -31,7 +31,7 @@ summary = "Checks the message files under tools.i18n.locales: each message parse
 why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
 help = "Correct the message, or add the missing key to the locale."
 
-[[settings]]
+[[setting]]
 name = "tools.i18n.locales"
 type = "table"
 direction = "neutral"

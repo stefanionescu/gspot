@@ -12,7 +12,7 @@ paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql",
 paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "squawk"
 version = "2.64.0"
 floor = "2.0.0"
@@ -20,19 +20,19 @@ mise = "github:sbdchd/squawk"
 npm = "squawk-cli"
 github = {name = "sbdchd/squawk", version = "v2.64.0"}
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".squawk.toml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "squawk.toml"
 
-[[configs]]
+[[config]]
 template = "squawk.toml.tmpl"
 target = ".gspot/config/squawk.toml"
 scoped = true
 rules_path = ["excluded_rules"]
 
-[[checks]]
+[[check]]
 name = "postgres/squawk"
 title = "Squawk"
 example = "A migration adding a constraint that requires a disruptive table scan can report a migration-safety finding. Follow the reported rule to separate creation and validation or otherwise reduce the lock, then review the migration against the deployment database."
@@ -44,7 +44,7 @@ summary = "Reads every migration for the change that locks a table, rewrites it,
 why = "A migration that takes an exclusive lock on a large table stops the application for as long as it runs."
 help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason."
 
-[[checks]]
+[[check]]
 name = "postgres/migration-order"
 title = "Migration order"
 example = "A new migration numbered before the latest committed migration reports an ordering finding. Give the new migration a version later than the committed maximum without renaming already applied migrations."
@@ -55,7 +55,7 @@ summary = "Checks that every migration has a version, that no two share one, and
 why = "A migration that sorts before one already applied never runs on the databases that are ahead of it."
 help = "Rename the new migration with a version later than the newest committed one."
 
-[[checks]]
+[[check]]
 name = "postgres/migrations-frozen"
 title = "Preserve frozen migrations"
 example = "Editing an already committed migration reports a frozen-history finding. Preserve the intended change as a new migration, restore the original migration bytes, and rerun. Do not rewrite a migration already applied to shared databases."
@@ -66,7 +66,7 @@ summary = "Checks that no migration at or before tools.squawk.frozen_through dif
 why = "A migration that ran never runs again, so an edit to it changes new databases only and the environments drift apart."
 help = "Restore the file with git checkout, and write the change as a new migration."
 
-[[checks]]
+[[check]]
 name = "postgres/rls-present"
 title = "Require row level security"
 example = "A newly created table without row-level security reports a missing-RLS finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for the actual table and define its intended policies in the migration set."
@@ -77,7 +77,7 @@ summary = "Checks that every table in a client schema enables row level security
 why = "A table in an exposed schema with no row security is readable and writable by every client that holds the public key."
 help = "Enable row level security on the table, and add its policies in the same or a later migration."
 
-[[checks]]
+[[check]]
 name = "postgres/explicit-grants"
 title = "Explicit grants"
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
@@ -88,7 +88,7 @@ summary = "Refuses a grant of every privilege in a migration."
 why = "Granting everything includes truncating the table, adding triggers, and every privilege a later Postgres adds, which nobody meant to give."
 help = "Name the privileges the role needs, such as `SELECT` alone."
 
-[[checks]]
+[[check]]
 name = "postgres/security-definer-search-path"
 title = "Security definer search path"
 example = "A `SECURITY DEFINER` function without an explicit safe search path reports a finding. Add `SET search_path = ''` to the definition and schema-qualify the objects used in its body."
@@ -99,7 +99,7 @@ summary = "Checks that every SECURITY DEFINER function sets its search_path."
 why = "A definer function runs with its owner's rights, and a caller who controls the search path chooses the objects it touches."
 help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
 
-[[checks]]
+[[check]]
 name = "postgres/index-covers-foreign-key"
 title = "Index foreign key columns"
 example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
@@ -110,7 +110,7 @@ summary = "Checks that an index, a primary key, or a unique key leads with every
 why = "Deleting a parent row scans the whole child table when the foreign key has no index."
 help = "Create an index that starts with the foreign key column."
 
-[[checks]]
+[[check]]
 name = "postgres/migration-docs"
 title = "Document database migrations"
 example = "A migration without its required purpose header and statement sections reports documentation findings. Add a purpose-specific header and organize statements under the sections named by the diagnostic."
@@ -122,42 +122,42 @@ summary = "Checks the documented migration layout when tools.postgres.docs asks 
 why = "A migration is read years later by someone deciding whether a table can go, and the purpose line is what they look for."
 help = "Write the header, put each statement under its section, and label tables and functions with their purpose."
 
-[[settings]]
+[[setting]]
 name = "tools.squawk.assume_in_transaction"
 type = "boolean"
 direction = "neutral"
 default = false
 summary = "Whether the migration runner wraps every migration in a transaction; the supabase configuration turns it on."
 
-[[settings]]
+[[setting]]
 name = "tools.squawk.frozen_through"
 type = "string"
 direction = "neutral"
 default = "none"
 summary = "The version through which migrations have run everywhere: none, all, or a version. Squawk skips them, and they may not change."
 
-[[settings]]
+[[setting]]
 name = "tools.postgres.migrations_directory"
 type = "string"
 direction = "neutral"
 default = ""
 summary = "The migrations folder relative to the scope; empty searches supabase/migrations, db/migrations, and migrations within that scope."
 
-[[settings]]
+[[setting]]
 name = "tools.postgres.client_schemas"
 type = "list"
 direction = "tightening"
 default = ["public"]
 summary = "The schemas clients reach, where every table needs row level security."
 
-[[settings]]
+[[setting]]
 name = "tools.postgres.docs"
 type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether migrations follow the documented layout."
 
-[[settings]]
+[[setting]]
 name = "tools.postgres.doc_sections"
 type = "list"
 direction = "neutral"

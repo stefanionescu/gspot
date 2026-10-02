@@ -8,21 +8,21 @@ description = "Copy-paste detection across every language a selected kit claims,
 [files]
 languages = true
 
-[[tools]]
+[[tool]]
 name = "jscpd"
 version = "5.2.0"
 npm = "jscpd"
 mise = "npm:jscpd"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".jscpd.json"
 
-[[configs]]
+[[config]]
 template = "jscpd.json.tmpl"
 target = ".gspot/config/jscpd.json"
 header = false
 
-[[checks]]
+[[check]]
 name = "duplication/jscpd"
 title = "Duplicate code"
 example = "Two selected files containing the same substantial code block can exceed the configured duplication threshold. Move the shared behavior into its actual owner and call it from both locations, then rerun."
@@ -35,28 +35,28 @@ summary = "Finds blocks of code copied between files. While the duplicated share
 why = "A copied block is fixed in one place and stays broken in the other."
 help = "Move the shared block into one function both callers use, or raise limits.duplication.percent with a reason."
 
-[[settings]]
+[[setting]]
 name = "limits.duplication.min_lines"
 type = "number"
 direction = "ceiling"
 default = 8
 summary = "The fewest lines a copied block has before it counts."
 
-[[settings]]
+[[setting]]
 name = "limits.duplication.min_tokens"
 type = "number"
 direction = "ceiling"
 default = 40
 summary = "The fewest tokens a copied block has before it counts."
 
-[[settings]]
+[[setting]]
 name = "limits.duplication.percent"
 type = "number"
 direction = "ceiling"
 default = 4
 summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
 
-[[settings]]
+[[setting]]
 name = "tools.jscpd.ignore"
 type = "list"
 direction = "loosening"

@@ -13,7 +13,7 @@ extensions = [".sql", ".pgsql", ".psql"]
 extensions = [".sql", ".pgsql", ".psql"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "sqlfluff"
 crash_pattern = '^Traceback \(most recent call last\):$'
 suppression = {marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)"}
@@ -23,29 +23,29 @@ pypi = "sqlfluff"
 mise = "pipx:sqlfluff"
 brew = "sqlfluff"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".sqlfluff"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".sqlfluffignore"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "setup.cfg"
 table = "sqlfluff"
 shared = true
 
-[[tools.replace]]
+[[tool.replace]]
 file = "tox.ini"
 table = "sqlfluff"
 shared = true
 
-[[configs]]
+[[config]]
 template = "sqlfluff.cfg.tmpl"
 target = ".gspot/config/sqlfluff.cfg"
 scoped = true
 rules_path = ["sqlfluff.rules", "sqlfluff.exclude_rules", "sqlfluff:rules"]
 
-[[checks]]
+[[check]]
 name = "sql/sqlfluff"
 title = "SQLFluff"
 example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
@@ -60,7 +60,7 @@ summary = "Lints every SQL file for layout, capitalization, aliasing, and ambigu
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
 
-[[checks]]
+[[check]]
 name = "sql/syntax"
 title = "Check SQL syntax"
 example = "The statement `SELECT FROM;` lacks a valid select expression and reports a parser error. Replace it with the intended valid query, such as `SELECT 1;`."
@@ -71,7 +71,7 @@ summary = "Parses every SQL file with the parser Postgres itself uses, when the 
 why = "A migration that does not parse fails at deploy, halfway through a release."
 help = "Correct the statement at the line and column the message names."
 
-[[checks]]
+[[check]]
 name = "sql/block-comments"
 title = "Block comments"
 example = "The SQL comment `/* Explains the table. */` reports a block-comment finding. Replace it with `-- Explains the table.` on its own line."
@@ -81,7 +81,7 @@ summary = "Refuses block comments in SQL, so every comment is a line comment."
 why = "The prose and spelling checks read line comments, and a block comment hides text and dead code from them."
 help = "Rewrite the block as line comments that start with two dashes."
 
-[[checks]]
+[[check]]
 name = "sql/file-length"
 title = "File length"
 example = "A SQL file with 401 code lines exceeds a 400-line ceiling. Split independent database changes into appropriately ordered files and rerun with each file below the configured limit."
@@ -92,21 +92,21 @@ summary = "Checks that no SQL file has more code lines than the ceiling."
 why = "A long SQL file holds more than one change, and one change is what a reviewer can hold."
 help = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.sqlfluff.dialect"
 type = "string"
 direction = "neutral"
 default = "ansi"
 summary = "The sqlfluff dialect; a database kit sets it."
 
-[[settings]]
+[[setting]]
 name = "tools.sqlfluff.exclude"
 type = "list"
 direction = "loosening"
 default = []
 summary = "SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason."
 
-[[settings]]
+[[setting]]
 name = "limits.sql.file_lines"
 type = "number"
 direction = "ceiling"
@@ -116,7 +116,7 @@ summary = "The most code lines a SQL file may have."
 [guides]
 language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
 
-[[checks]]
+[[check]]
 name = "sql/functions"
 title = "Check SQL function size and parameters"
 example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, record that with `gspot ignore` and a reason."

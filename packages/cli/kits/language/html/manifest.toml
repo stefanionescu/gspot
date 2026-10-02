@@ -13,35 +13,35 @@ extensions = [".html", ".htm"]
 extensions = [".html", ".htm"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "html-validate"
 suppression = {marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S.*)"}
 version = "11.6.1"
 floor = "11.6.1"
 npm = "html-validate"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".htmlvalidate.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".htmlvalidate.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".htmlvalidate.cjs"
 
-[[configs]]
+[[config]]
 template = "templates.json.tmpl"
 target = ".gspot/config/html-validate-templates.json"
 rules_path = ["rules"]
 header = false
 
-[[configs]]
+[[config]]
 template = "built.json.tmpl"
 target = ".gspot/config/html-validate-built.json"
 rules_path = ["rules"]
 header = false
 
-[[checks]]
+[[check]]
 name = "html/html-validate"
 title = "Validate HTML"
 example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
@@ -53,7 +53,7 @@ summary = "Validates every HTML file: elements where they may sit, required attr
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
 help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
 
-[[checks]]
+[[check]]
 name = "html/scripts"
 title = "Keep executable scripts out of HTML"
 example = "A button using an inline `onclick` attribute reports embedded executable code. Remove the attribute and attach the event listener from a separate script file."
@@ -63,7 +63,7 @@ summary = "Refuses executable inline script, event handler attributes, and execu
 why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
-[[checks]]
+[[check]]
 name = "html/text"
 title = "Use placeholders in HTML templates"
 example = "Authored prose embedded in a governed HTML template reports copy outside the content owner. Move the words to the content file and reference that content from the template."
@@ -73,14 +73,14 @@ summary = "In the template files named by tools.html.templates, checks that text
 why = "Copy written into a template is copy no translator and no content file ever sees."
 help = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.literals_allowed with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.html.templates"
 type = "list"
 direction = "tightening"
 default = []
 summary = "The HTML files that are templates filled from content; empty turns the copy check off."
 
-[[settings]]
+[[setting]]
 name = "tools.html.literals_allowed"
 type = "list"
 direction = "loosening"

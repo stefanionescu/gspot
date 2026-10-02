@@ -8,80 +8,80 @@ description = "One [format] block every formatter reads, so indentation cannot d
 extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".graphql"]
 prettier_plugins = true
 
-[[tools]]
+[[tool]]
 name = "prettier"
 crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 version = "3.8.1"
 npm = "prettier"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.json5"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.ts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.ts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.mjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.mjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.mts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.mts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.cts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "prettier.config.cts"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierrc.toml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".prettierignore"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "package.json"
 key = "prettier"
 shared = true
 
-[[tools.replace]]
+[[tool.replace]]
 file = "package.yaml"
 key = "prettier"
 shared = true
 
-[[tools]]
+[[tool]]
 name = "ec"
 version = "3.4.0"
 env = {EC_VERSION = "v3.4.0"}
@@ -90,27 +90,27 @@ mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
 github = {name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0"}
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".editorconfig"
 
-[[configs]]
+[[config]]
 template = "editorconfig.tmpl"
 target = ".editorconfig"
 
-[[configs]]
+[[config]]
 template = "prettier.json.tmpl"
 target = ".gspot/config/prettier.json"
 header = false
 
-[configs.pointer]
+[config.pointer]
 path = ".prettierrc.json"
 template = "prettier.json.tmpl"
 
-[[configs]]
+[[config]]
 template = "prettierignore.tmpl"
 target = ".prettierignore"
 
-[[checks]]
+[[check]]
 name = "formatting/prettier"
 title = "Prettier"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
@@ -125,7 +125,7 @@ summary = "Checks that every file Prettier formats is already formatted that way
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
 help = "Run gspot check --fix to format every file, or prettier --write on one file."
 
-[[checks]]
+[[check]]
 name = "formatting/editorconfig-checker"
 title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
@@ -139,75 +139,75 @@ summary = "Checks line endings, final newlines and trailing whitespace in every 
 why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
 
-[[settings]]
+[[setting]]
 name = "format.indent_style"
 type = "string"
 direction = "neutral"
 default = "space"
 summary = "What one indent level is made of: space or tab."
 
-[[settings]]
+[[setting]]
 name = "format.indent_width"
 type = "number"
 direction = "neutral"
 default = 4
 summary = "Spaces per indent level."
 
-[[settings]]
+[[setting]]
 name = "format.print_width"
 type = "number"
 direction = "neutral"
 default = 120
 summary = "The line width formatters wrap at."
 
-[[settings]]
+[[setting]]
 name = "format.line_ending"
 type = "string"
 direction = "neutral"
 default = "lf"
 summary = "The line ending every file uses: lf or crlf."
 
-[[settings]]
+[[setting]]
 name = "format.final_newline"
 type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether every file ends with a newline."
 
-[[settings]]
+[[setting]]
 name = "format.quotes"
 type = "string"
 direction = "neutral"
 default = "single"
 summary = "single or double, for the languages where a formatter chooses."
 
-[[settings]]
+[[setting]]
 name = "format.trailing_commas"
 type = "string"
 direction = "neutral"
 default = "all"
 summary = "Where trailing commas go: all, es5, or none."
 
-[[settings]]
+[[setting]]
 name = "format.semicolons"
 type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether JavaScript and TypeScript statements end with semicolons."
 
-[[settings]]
+[[setting]]
 name = "tools.editorconfig.extra"
 type = "table"
 direction = "neutral"
 summary = "A section gspot does not render, added verbatim to .editorconfig with a reason."
 
-[[settings]]
+[[setting]]
 name = "format.overrides"
 type = "list"
 direction = "neutral"
 summary = "Ordered formatting options for config-root paths, bounded by their declaring scope. Apply preserves selectors for current and future files."
 
-[[settings]]
+[[setting]]
 name = "tools.prettier.exclude"
 type = "list"
 direction = "neutral"

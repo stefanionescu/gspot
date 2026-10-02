@@ -14,43 +14,43 @@ extensions = [".vue"]
 extensions = [".vue"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-vue"
 kind = "library"
 version = "10.11.0"
 npm = "eslint-plugin-vue"
 
-[[tools]]
+[[tool]]
 name = "vue-eslint-parser"
 kind = "library"
 version = "10.4.1"
 npm = "vue-eslint-parser"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-vuejs-accessibility"
 kind = "library"
 version = "2.6.0"
 npm = "eslint-plugin-vuejs-accessibility"
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-testing-library"
 kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
-[[tools]]
+[[tool]]
 name = "vue-tsc"
 version = "3.3.11"
 npm = "vue-tsc"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 components = ["**/*.vue"]
 
-[[checks]]
+[[check]]
 name = "vue/eslint"
 title = "ESLint"
 example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
@@ -67,7 +67,7 @@ summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the ma
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
-[[checks]]
+[[check]]
 name = "vue/typecheck"
 title = "Check Vue types"
 example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."

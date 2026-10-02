@@ -8,17 +8,17 @@ description = "tRPC routers: every procedure validates its input, and client cod
 [detect]
 dependencies = ["@trpc/server"]
 
-[[configs]]
+[[config]]
 target = ".gspot/config/eslint.config.mjs"
 fragment = true
 
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
 message = "Give the procedure an input schema before its resolver, even when the input is nothing."
 files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]
 
-[[checks]]
+[[check]]
 name = "trpc/router-boundaries"
 title = "Router boundaries"
 example = "A client module importing a server router as a runtime value reports a boundary finding. Import only the router type with `import type`, and make requests through the tRPC client."
@@ -29,7 +29,7 @@ summary = "Checks that code outside the server paths imports from them as a type
 why = "A value import of the router pulls the server, its secrets, and its database client into the client bundle."
 help = "Import the router type with import type, and call the server through the client."
 
-[[settings]]
+[[setting]]
 name = "tools.trpc.server_files"
 type = "list"
 direction = "neutral"

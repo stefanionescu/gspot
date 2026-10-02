@@ -176,65 +176,77 @@ const detectionSchema = z
         project_files: [],
     });
 
-export const manifestSchema = z.strictObject({
-    ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
-    kit: z.strictObject({
-        name: z.string().regex(/^[a-z0-9-]+$/),
-        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),
-        title: z.string(),
-        requires: stringList,
-        check_references: z.array(z.string().min(1)).default([]),
-        recommends: stringList,
-        auto: z.boolean().default(false),
-        proposed: z.boolean().default(false),
-        // A configuration whose checks all read git is not proposed in a folder with no .git.
-        needs_git: z.boolean().default(false),
-        description: sentence,
-    }),
-    detect: detectionSchema,
-    files: filesSchema.default({
-        extensions: [],
-        filenames: [],
-        tags: [],
-        paths: [],
-        languages: false,
-        prettier_plugins: false,
-        kinds: ['source'],
-    }),
-    tools: z.array(toolSchema).default([]),
-    configs: z.array(configSchema).default([]),
-    checks: z.array(checkSchema).default([]),
-    settings: z.array(settingSchema).default([]),
-    // Defaults this kit sets for settings another kit declares, by setting name; `defaults_all` applies at level all.
-    defaults: z.record(z.string().min(1), z.unknown()).default({}),
-    defaults_all: z.record(z.string().min(1), z.unknown()).default({}),
-    // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
-    naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
-    // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
-    entry: stringList,
-    guides: z
-        .record(
-            z.string(),
-            z.array(
+export const manifestSchema = z
+    .strictObject({
+        ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
+        kit: z.strictObject({
+            name: z.string().regex(/^[a-z0-9-]+$/),
+            kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),
+            title: z.string(),
+            requires: stringList,
+            check_references: z.array(z.string().min(1)).default([]),
+            recommends: stringList,
+            auto: z.boolean().default(false),
+            proposed: z.boolean().default(false),
+            // A configuration whose checks all read git is not proposed in a folder with no .git.
+            needs_git: z.boolean().default(false),
+            description: sentence,
+        }),
+        detect: detectionSchema,
+        files: filesSchema.default({
+            extensions: [],
+            filenames: [],
+            tags: [],
+            paths: [],
+            languages: false,
+            prettier_plugins: false,
+            kinds: ['source'],
+        }),
+        tool: z.array(toolSchema).default([]),
+        config: z.array(configSchema).default([]),
+        check: z.array(checkSchema).default([]),
+        setting: z.array(settingSchema).default([]),
+        // Defaults this kit sets for settings another kit declares, by setting name; `defaults_all` applies at level all.
+        defaults: z.record(z.string().min(1), z.unknown()).default({}),
+        defaults_all: z.record(z.string().min(1), z.unknown()).default({}),
+        // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
+        naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
+        // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
+        entry: stringList,
+        guides: z
+            .record(
+                z.string(),
+                z.array(
+                    z.strictObject({
+                        path: z.string().min(1),
+                        when: detectionSchema.unwrap().optional(),
+                    }),
+                ),
+            )
+            .default({}),
+        required_rules: stringListTable.default({}),
+        rules_off: z
+            .array(
                 z.strictObject({
-                    path: z.string().min(1),
-                    when: detectionSchema.unwrap().optional(),
+                    tool: z.literal('eslint'),
+                    rules: z.array(z.string().min(1)).min(1),
+                    reason: sentence,
+                    files: z.array(z.string().min(1)).min(1).optional(),
+                    when: z
+                        .strictObject({
+                            setting: z.string().min(1),
+                            value: z.union([z.string(), z.number(), z.boolean()]),
+                        })
+                        .optional(),
                 }),
-            ),
-        )
-        .default({}),
-    required_rules: stringListTable.default({}),
-    rules_off: z
-        .array(
-            z.strictObject({
-                tool: z.literal('eslint'),
-                rules: z.array(z.string().min(1)).min(1),
-                reason: sentence,
-                files: z.array(z.string().min(1)).min(1).optional(),
-                when: z
-                    .strictObject({ setting: z.string().min(1), value: z.union([z.string(), z.number(), z.boolean()]) })
-                    .optional(),
-            }),
-        )
-        .default([]),
-});
+            )
+            .default([]),
+    })
+    // A manifest writes one [[tool]], [[config]], [[check]], or [[setting]] table per entry; the code reads the lists.
+    .transform(({ tool, config, check, setting, ...rest }) => ({
+        ...rest,
+        tools: tool,
+        configs: config,
+        checks: check,
+        settings: setting,
+    }));
