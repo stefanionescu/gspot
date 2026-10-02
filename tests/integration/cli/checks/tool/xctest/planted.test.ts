@@ -16,8 +16,7 @@ plantedCases(
     {
         kits: ['xctest'],
         modules: false,
-        without: ['spelling', 'naming'],
-        tools: ['swiftlint', 'swiftformat'],
+        installs: false,
         files: {
             [XCTEST_TESTS]: CLEAN,
             'AppTests/__Snapshots__/HomeTests/testTitle.1.png': 'png',

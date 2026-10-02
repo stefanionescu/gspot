@@ -66,7 +66,6 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['kits/language/typescript/projects.test.ts', 'the sandbox install fails on Windows'],
     ['kits/framework/vite.test.ts', 'times out on the Windows runner'],
     ['kits/tool/vitest.test.ts', 'the sandbox install fails on Windows'],
-    ['kits/tool/xctest.test.ts', 'the setup hook times out on the Windows runner'],
 ]);
 
 function sourceAcceptancePath(argument: string): string {
