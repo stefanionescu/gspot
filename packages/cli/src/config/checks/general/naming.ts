@@ -13,7 +13,6 @@ export const TEST_GROUP = 'test group';
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
 export const SEPARATORS = /[^A-Za-z0-9]+/u;
 export const REACT_FILE = /\.[jt]sx$/u;
-export const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;
 export const LOWER_WORD = /^[a-z]+$/u;
 export const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
 export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;

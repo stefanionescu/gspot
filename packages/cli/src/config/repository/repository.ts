@@ -295,3 +295,6 @@ export const SHEBANG_TAGS: Record<string, string[]> = {
     python: ['python', 'executable', 'text'],
     node: ['javascript', 'node', 'executable', 'text'],
 };
+
+/** Where a test file lives: in a test folder, or named for a test runner. */
+export const TEST_FILE_GLOBS = ['**/test/**', '**/tests/**', '**/__tests__/**', '**/*.test.*', '**/*.spec.*'];
