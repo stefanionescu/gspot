@@ -122,6 +122,14 @@ test('Taplo reports one finding from a diff, a log entry, or both', async () => 
     }
 });
 
+test('a Taplo syntax error names its file by a Windows path with a drive letter', () => {
+    const spec = kitManifests()
+        .get('files')!
+        .checks.find((check) => check.name === 'files/toml')!;
+    const stdout = 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n';
+    expect(parseOutput(spec, stdout, '', 'C:/work')).toMatchObject([{ file: 'settings.toml', line: 2, column: 3 }]);
+});
+
 test('grouped output strips line endings and relativizes native absolute paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });

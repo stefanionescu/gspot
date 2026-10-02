@@ -114,7 +114,7 @@ stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
 owners = {extensions = [".toml"]}
-output = {format = "regex", pattern = "^\\s*┌─ (?<file>[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
+output = {format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
 summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
 why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
 help = "Fix the line taplo names."
