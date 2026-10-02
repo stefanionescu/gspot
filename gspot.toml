@@ -11,6 +11,7 @@ kits = [
     "prose",
     "commits",
     "files",
+    "actions",
     "naming",
     "format",
     "docs",
@@ -650,7 +651,7 @@ reason = "JSON.stringify emits whole literals into a standalone ESLint module, n
 
 [[tools.codeql.ignore]]
 rule = "js/incomplete-sanitization"
-paths = ["packages/cli/src/checks/general/files/actions.ts"]
+paths = ["packages/cli/src/checks/tool/actions.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 
 [[tools.codeql.ignore]]

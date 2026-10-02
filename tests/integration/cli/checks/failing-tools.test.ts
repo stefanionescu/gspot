@@ -3,14 +3,14 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { WORKFLOW_HEAD } from '#tests/samples/files.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
+import { WORKFLOW_HEAD } from '#tests/samples/actions.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-const TOOL_FAILURES_POLICY = policyOf(['files'], 'runner = "mise"\n[guides]\ninstall = false\n', 'all');
+const TOOL_FAILURES_POLICY = policyOf(['files', 'actions'], 'runner = "mise"\n[guides]\ninstall = false\n', 'all');
 
 const PINACT_STUB = `#!/usr/bin/env bun
 const args = process.argv.slice(2);
@@ -89,7 +89,7 @@ test(
         await Bun.write(path, workflow);
         const result = await runGspot(
             sandbox.path,
-            ['check', '--only', 'files/actions-pins', '--stage', 'push'],
+            ['check', '--only', 'actions/pinact', '--stage', 'push'],
             environment,
         );
         expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -98,12 +98,12 @@ test(
         await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
         const corrected = await runGspot(
             sandbox.path,
-            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--json'],
+            ['check', '--only', 'actions/pinact', '--stage', 'push', '--json'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/actions-pins', status: 'ok', findings: [] },
+            { check: 'actions/pinact', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

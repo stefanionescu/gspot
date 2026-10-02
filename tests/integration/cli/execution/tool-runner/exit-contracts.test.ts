@@ -65,14 +65,14 @@ test.each([0, 1, 3] as const)(
         const executable = join(sandbox.path, 'actionlint');
         const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['files']),
+            'gspot.toml': policyOf(['actions']),
             '.github/workflows/caller.yml': workflow,
             actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });
         chmodSync(executable, 0o755);
         chmodSync(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
+        const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
         const result = await checkExecution(planned.spec, CHECKS)(session, planned);

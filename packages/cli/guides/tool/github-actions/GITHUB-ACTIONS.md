@@ -1,6 +1,6 @@
 ---
 layer: tool
-kit: files
+kit: actions
 title: GitHub Actions
 ---
 

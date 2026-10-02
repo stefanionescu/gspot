@@ -2,9 +2,11 @@
 import { generatedDrift } from '#cli/checks/drift.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
+import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { localeFiles } from '#cli/checks/library/i18n.ts';
 import { SQL_ANALYSES } from '#cli/checks/language/sql.ts';
+import { checkActions } from '#cli/checks/tool/actions.ts';
 import { nginxTest } from '#cli/checks/tool/nginx/test.ts';
 import { HTML_ANALYSES } from '#cli/checks/language/html.ts';
 import { banned } from '#cli/checks/general/prose/hidden.ts';
@@ -23,7 +25,6 @@ import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { scriptInline } from '#cli/checks/language/bash/embeds.ts';
 import { scriptSafety } from '#cli/checks/language/bash/safety.ts';
 import { testCoverage } from '#cli/checks/tool/xctest/coverage.ts';
-import { checkActions } from '#cli/checks/general/files/actions.ts';
 import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
@@ -32,7 +33,6 @@ import { scriptPolicy } from '#cli/checks/language/bash/wrappers.ts';
 import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
 import { tsconfigOptions } from '#cli/checks/language/typescript.ts';
 import { adminKey } from '#cli/checks/platform/supabase/admin-key.ts';
-import { envExample } from '#cli/checks/general/files/env-example.ts';
 import { docComment } from '#cli/checks/language/bash/doc-comments.ts';
 import { dockerignore } from '#cli/checks/tool/docker/dockerignore.ts';
 import { envAccessOwner } from '#cli/checks/language/bash/env-owner.ts';
@@ -226,7 +226,7 @@ export const RUNNERS: Record<string, Executable['run']> = {
     'swift/swiftlint': checkSwiftlint,
     'python/pydoclint': checkDocstrings,
     'python/deptry': checkDependencies,
-    'files/actions': checkActions,
+    'actions/actionlint': checkActions,
 };
 
 /** The registry the check command hands to the run. */

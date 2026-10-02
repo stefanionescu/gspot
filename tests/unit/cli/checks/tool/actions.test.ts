@@ -1,7 +1,7 @@
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
 // offsets, and everything else stays as written.
 import { test, expect } from 'bun:test';
-import { actionlintSource } from '#cli/checks/general/files/actions.ts';
+import { actionlintSource } from '#cli/checks/tool/actions.ts';
 
 const PATH = '.github/workflows/called.yml';
 

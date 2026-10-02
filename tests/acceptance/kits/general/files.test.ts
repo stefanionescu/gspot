@@ -2,8 +2,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { WORKFLOW_HEAD } from '#tests/samples/files.ts';
 import { git, commitAll } from '#tests/harness/cli/git.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -21,7 +19,7 @@ plantedCases(
         modules: false,
         without: [],
         init: ['--no-runner', '--no-ci', '--no-guides', '--no-install', '--no-hooks'],
-        tools: ['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter'],
+        tools: ['taplo', 'yamllint', 'dotenv-linter'],
         files: { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' },
     },
     [
@@ -33,26 +31,6 @@ plantedCases(
                 message: 'The file is not formatted with the configured TOML settings.',
             },
             corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
-        },
-        {
-            check: 'files/actions',
-            files: {
-                '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n`,
-            },
-            expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
-            corrected: {
-                files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-            },
-        },
-        {
-            check: 'files/actions-security',
-            files: {
-                '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
-            },
-            expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
-            corrected: {
-                files: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-            },
         },
         {
             check: 'files/dotenv',
@@ -97,26 +75,6 @@ plantedCases(
             PLANTED_TIMEOUT_MS * 2,
         );
     },
-);
-
-test(
-    'the configs configuration: GitHub initialization writes a workflow accepted by actionlint',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['actionlint']) };
-        await install(sandbox.path, [...CONFIGS_INIT, '--ci', 'github', '--no-hooks'], environment);
-        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
-        const result = await processes.run(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
-            cwd: sandbox.path,
-            env: environment,
-        });
-        expect(result.code, result.stderr + result.stdout).toBe(0);
-    },
-    PLANTED_TIMEOUT_MS,
 );
 
 test.each([

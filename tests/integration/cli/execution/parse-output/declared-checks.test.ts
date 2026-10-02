@@ -16,11 +16,11 @@ test('pin verification treats a rate limit as an execution error and accepts a c
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['files']),
+        'gspot.toml': policyOf(['actions']),
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'push', skips: [], only: ['files/actions-pins'] });
+    const plans = planRun(session, { stage: 'push', skips: [], only: ['actions/pinact'] });
     const planned = plans[0]!;
     const result = {
         code: 1,
@@ -37,7 +37,7 @@ test('pin verification treats a rate limit as an execution error and accepts a c
         ]),
     ).toStrictEqual([
         containing({
-            check: 'files/actions-pins',
+            check: 'actions/pinact',
             message: 'invalid action pin: .github/workflows/check.yml:4',
         }),
     ]);

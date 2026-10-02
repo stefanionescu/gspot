@@ -7,7 +7,7 @@ import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import { ACTIONLINT_COMMAND } from '#cli/config/checks/general/files.ts';
+import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 function stepReferences(steps: unknown): unknown[] {
