@@ -12,7 +12,7 @@ import { readRepository } from '#cli/repository/tree.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
-import { head, readSource } from '#cli/repository/sources.ts';
+import { readPrefix, readSource } from '#cli/repository/sources.ts';
 
 test('opening a session reads less than one megabyte with a two-megabyte source', async () => {
     const megabyte = 1024 * 1024;
@@ -61,7 +61,7 @@ test('source discovery rejects external file and directory links before content 
         fs.symlinkSync(target, join(root, name));
         expect(processes.runBlocking(['git', 'add', '--', name], { cwd: root }).code).toBe(0);
         await rejects(readRepository(root, [], [], []), { message: /Source link leaves the repository/u });
-        expect(() => head(root, name)).toThrow('Source link leaves the repository');
+        expect(() => readPrefix(root, name, 64)).toThrow('Source link leaves the repository');
         fs.unlinkSync(join(root, name));
         expect(processes.runBlocking(['git', 'rm', '--cached', '--', name], { cwd: root }).code).toBe(0);
     }
@@ -70,7 +70,7 @@ test('source discovery rejects external file and directory links before content 
     expect(processes.runBlocking(['git', 'add', 'linked.ts'], { cwd: root }).code).toBe(0);
     const corrected = await readRepository(root, [], [], []);
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
-    expect(head(root, 'linked.ts')).toBe('export const local = true;\n');
+    expect(readPrefix(root, 'linked.ts', 64).toString('utf8')).toBe('export const local = true;\n');
 });
 
 test('source reads refuse an escape introduced after inventory and accept an internal replacement', async () => {

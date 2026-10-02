@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { head } from '#cli/repository/sources.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { readPrefix } from '#cli/repository/sources.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { failure, rejection } from '#tests/harness/expectations.ts';
 import { findRoot, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
@@ -49,9 +49,9 @@ test('repository file discovery > reads only the requested prefix and reports ab
     await createFileTree(sandbox.path, { 'large.txt': 'prefix' + 'x'.repeat(1024 * 1024) });
     const reads = spyOn(fs, 'readSync');
     try {
-        expect(head(sandbox.path, 'large.txt', 6)).toBe('prefix');
+        expect(readPrefix(sandbox.path, 'large.txt', 6).toString('utf8')).toBe('prefix');
         expect(reads.mock.calls[0]?.[2]).toMatchObject({ length: 6 });
-        expect(() => head(sandbox.path, 'missing.txt')).toThrow('ENOENT');
+        expect(() => readPrefix(sandbox.path, 'missing.txt', 6)).toThrow('ENOENT');
     } finally {
         reads.mockRestore();
     }

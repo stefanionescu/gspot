@@ -12,8 +12,8 @@ import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/static-site/output.ts';
 import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
-import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
 
 import {
     statSync,
@@ -37,7 +37,7 @@ const SITE_REPORTS: {
 }[] = [
     {
         name: 'links',
-        analyze: internalLinks,
+        analyze: (input) => brokenLinks(input, false),
         defect: () => ({
             links: [{ url: 'https://example.com/missing', parent: 'index.html', state: 'BROKEN', status: 404 }],
         }),

@@ -175,7 +175,6 @@ export const VALE_OWN_PREFIXES = [
     '.gspot/config/vale/styles/config/vocabularies/gspot/',
 ];
 
-export const NATURE_HEAD_BYTES = 2048;
 export const FOREIGN_HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
 export const EXECUTABLE_BITS = 0o111;
 export const NOT_REPOSITORY_CODE = 128;

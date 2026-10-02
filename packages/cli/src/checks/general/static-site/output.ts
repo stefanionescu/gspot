@@ -19,7 +19,20 @@ function relative(input: EngineInput, build: SiteBuild, absolute: string): strin
     return input.scope === '' ? path : `${input.scope}/${path}`;
 }
 
-async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
+function pageOf(url: string): string[] {
+    const path = decodeURIComponent(new URL(url, 'https://site.invalid').pathname).replace(/^\//u, '');
+    if (path === '' || path.endsWith('/')) return [`${path}index.html`];
+    return path.endsWith('.html') ? [path] : [`${path}.html`, `${path}/index.html`];
+}
+
+/**
+ * The broken links of the built site: between its pages, stylesheets, and fragments, or every link with the external
+ * ones included.
+ * @param input the engine input
+ * @param isExternal whether the links that leave the site count
+ * @returns one finding for each broken link
+ */
+export async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireSiteBuild(input);
     const skipped = ((input.view.tool('linkinator')['exclude'] as { pattern?: string }[] | undefined) ?? []).flatMap(
         (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
@@ -64,12 +77,6 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
                 `${link.url} answers ${String(link.status ?? 0)}.`,
             ),
         );
-}
-
-function pageOf(url: string): string[] {
-    const path = decodeURIComponent(new URL(url, 'https://site.invalid').pathname).replace(/^\//u, '');
-    if (path === '' || path.endsWith('/')) return [`${path}index.html`];
-    return path.endsWith('.html') ? [path] : [`${path}.html`, `${path}/index.html`];
 }
 
 /**
@@ -155,26 +162,6 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
             ),
         ),
     );
-}
-
-/**
- * The links between the built pages, their stylesheets, and their fragments.
- * @param input the engine input
- * @returns one finding for each broken link
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-internal check, which the analysis table and the tests name.
-export function internalLinks(input: EngineInput): Promise<Finding[]> {
-    return brokenLinks(input, false);
-}
-
-/**
- * Every link of the built pages, the ones that leave the site included.
- * @param input the engine input
- * @returns one finding for each broken link
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-external check, which the analysis table names.
-export function externalLinks(input: EngineInput): Promise<Finding[]> {
-    return brokenLinks(input, true);
 }
 
 /**

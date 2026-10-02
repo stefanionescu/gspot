@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { join } from 'node:path';
-import { scopeFile } from '#cli/kits/targets.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -64,7 +64,7 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
             'image',
             '--quiet',
             '--config',
-            join(input.root, scopeFile(input.scope, 'trivy.yaml')),
+            join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'trivy.yaml'),
             '--exit-code',
             String(FINDINGS_EXIT),
             '--format',

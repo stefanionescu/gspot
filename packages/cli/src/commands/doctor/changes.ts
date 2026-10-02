@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
-import { head } from '#cli/repository/sources.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { ciLintJobs } from '#cli/repository/survey.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
+import { readPrefix } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
@@ -57,7 +57,7 @@ function configurationNotOwned(
     const rendered = new Set(files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
-        .filter((config) => !hasHeader(head(session.root, config.path, CHANGE_HEAD_BYTES)))
+        .filter((config) => !hasHeader(readPrefix(session.root, config.path, CHANGE_HEAD_BYTES).toString('utf8')))
         .map((config) => configurationRow(session, config, selected));
 }
 

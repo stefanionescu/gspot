@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
 
@@ -11,19 +12,9 @@ const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
  */
 export function targetInScope(scope: string, config: ConfigurationTarget): string {
     if (scope === '' || !config.per_scope) return config.target;
-    if (config.target.startsWith(GSPOT_DIRECTORY)) return scopeFile(scope, config.target.slice(GSPOT_DIRECTORY.length));
+    if (config.target.startsWith(GSPOT_DIRECTORY))
+        return posix.join(GSPOT_DIRECTORY, scope, config.target.slice(GSPOT_DIRECTORY.length));
     return `${scope}/${config.target}`;
-}
-
-/**
- * The path of a generated file of a scope: the one place that spells where a scope's files sit.
- * @param scope the scope path, empty for the root
- * @param name the file's path under the configuration directory
- * @returns the repository-relative path
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The one place that spells where the generated files of a scope sit.
-export function scopeFile(scope: string, name: string): string {
-    return scope === '' ? `${GSPOT_DIRECTORY}${name}` : `${GSPOT_DIRECTORY}${scope}/${name}`;
 }
 
 /**

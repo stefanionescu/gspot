@@ -2,7 +2,6 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
-import { NATURE_HEAD_BYTES } from '#cli/config/repository/repository.ts';
 
 /**
  * Reads a bounded prefix, closing the descriptor even when reading fails.
@@ -27,19 +26,6 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
     } finally {
         closeSync(descriptor);
     }
-}
-
-/**
- * Required file prefixes decoded as text for shebang and banner checks.
- * @param root the repository root
- * @param path the file, relative to the root
- * @param bytes how many bytes to read
- * @returns the text
- * @throws when required content cannot be read
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the tracked-file tests read the opening bytes of a file as text through this.
-export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
-    return readPrefix(root, path, bytes).toString('utf8');
 }
 
 /**

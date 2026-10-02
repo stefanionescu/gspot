@@ -1,12 +1,12 @@
 import { isOwned } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { selectForScope } from '#cli/kits/select.ts';
 import { shippedPolicy } from '#cli/policy/audit.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { CASE_NAMES } from '#cli/checks/general/naming/cases.ts';
 import { REACT_FILE } from '#cli/config/checks/general/naming.ts';
-import { languageKits, selectForScope } from '#cli/kits/select.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
@@ -25,7 +25,7 @@ import type { Identifier, NamingInputs, EffectivePolicy } from '#cli/types/check
 const isTestPath = pathMatcher(TEST_FILE_GLOBS);
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
-    const languages = languageKits(input.selection.selected);
+    const languages = input.selection.selected.filter((manifest) => manifest.kit.kind === 'language');
     return input.files
         .filter((file) => file.kind === 'source')
         .map((file) => ({
@@ -84,7 +84,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
     const selections = new Map(
         input.scopeEntries.map((scope) => [
             scope.path,
-            languageKits(selectForScope(policy, scope.path, input.manifests)),
+            selectForScope(policy, scope.path, input.manifests).filter((manifest) => manifest.kit.kind === 'language'),
         ]),
     );
     const read: { path: string; names: string[] }[] = [];
