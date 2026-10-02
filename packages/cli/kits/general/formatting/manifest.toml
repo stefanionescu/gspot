@@ -208,7 +208,7 @@ direction = "neutral"
 summary = "Ordered formatting options for config-root paths, bounded by their declaring scope. Apply preserves selectors for current and future files."
 
 [[settings]]
-name = "tools.prettier.ignore_patterns"
+name = "tools.prettier.exclude"
 kind = "list"
 direction = "neutral"
 summary = "Ordered Prettier ignore lines, including negations, written to .prettierignore."

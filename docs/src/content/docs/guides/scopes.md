@@ -82,7 +82,7 @@ root or in a scope.
 
 Checks that read project files look inside the scope only. Supabase reads
 `supabase/config.toml` in each scope, and the settings `tools.supabase.functions_directory`,
-`tools.supabase.admin_key_files`, and `tools.i18n.translations.directory` are relative to the
+`tools.supabase.admin_key_files`, and `tools.i18n.locales.directory` are relative to the
 scope. Locale messages and static site files in a child scope do not count for the parent
 scope.
 

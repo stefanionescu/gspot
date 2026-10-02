@@ -50,9 +50,7 @@ test.each([
         input: {
             tools: {
                 licenses: {
-                    packages_allowed: [
-                        { package: '@example/scoped@1.2.3-beta.1', license: 'MIT', reason: 'Verified.' },
-                    ],
+                    exceptions: [{ package: '@example/scoped@1.2.3-beta.1', license: 'MIT', reason: 'Verified.' }],
                 },
             },
         },
@@ -63,7 +61,7 @@ test.each([
         input: {
             tools: {
                 licenses: {
-                    packages_allowed: [{ package: 'example@^1.2.3', license: 'MIT', reason: 'Version range' }],
+                    exceptions: [{ package: 'example@^1.2.3', license: 'MIT', reason: 'Version range' }],
                 },
             },
         },
@@ -97,13 +95,13 @@ test.each([
 
 test('manifest settings validate their kind in root and scope tables', () => {
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-    for (const [scoped, translations, valid] of [
+    for (const [scoped, locales, valid] of [
         [false, [], false],
         [true, [], false],
         [false, { directory: 'messages', base: 'en' }, true],
         [true, { directory: 'messages', base: 'en' }, true],
     ] as const) {
-        const tools = { i18n: { translations } };
+        const tools = { i18n: { locales } };
         const document = { kits: ['i18n'], ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }) };
         const text = stringify(document);
         const policy = parsePolicyText(text, 'gspot.toml');
@@ -115,8 +113,8 @@ test('manifest settings validate their kind in root and scope tables', () => {
     }
 });
 
-test('nested manifest settings preserve typed leaf values and reject unknown siblings', () => {
-    const source = policyOf(['bash'], '[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n');
+test('manifest settings preserve typed values and reject unknown siblings', () => {
+    const source = policyOf(['bash'], '[tools.bash]\nsafety_owners = ["scripts/cleanup.sh"]\n');
     const path = 'gspot.toml';
     const policy = parsePolicyText(source, path);
     expect(() => {
@@ -126,8 +124,8 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
     const invalidPolicy = parsePolicyText(invalid, path);
     expect(() => {
         assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
-    }).toThrow('gspot.toml: tools.bash.safety.unknown:');
+    }).toThrow('gspot.toml: tools.bash.unknown:');
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-    expect(validate({ kits: ['bash'], tools: { bash: { safety: { owners: ['scripts/cleanup.sh'] } } } })).toBe(true);
-    expect(validate({ kits: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(false);
+    expect(validate({ kits: ['bash'], tools: { bash: { safety_owners: ['scripts/cleanup.sh'] } } })).toBe(true);
+    expect(validate({ kits: ['bash'], tools: { bash: { unknown: true } } })).toBe(false);
 });

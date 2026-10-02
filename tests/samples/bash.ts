@@ -43,7 +43,7 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'structure/bash-interpreter',
         files: { 'scripts/headless.sh': '#!/usr/bin/env bash\nmain() {\n    echo hi\n}\n\nmain "$@"\n' },
-        policy: '[tools.bash]\nruntime_header = "macOS and Linux"\n',
+        policy: '[tools.bash]\nplatforms = "macOS and Linux"\n',
         expected: { file: 'scripts/headless.sh', rule: 'runtime-header', line: 4 },
         executable: ['scripts/headless.sh'],
     },
@@ -181,7 +181,7 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'structure/bash-boundaries',
         files: { 'deploy/step.sh': `${HEAD}${BASH_CASES_MAIN}` },
-        policy: '[tools.bash]\narchitecture_roots = ["deploy"]\n',
+        policy: '[tools.bash]\nboundary_roots = ["deploy"]\n',
         expected: { file: 'deploy/step.sh', rule: 'boundary-header', line: 1 },
         executable: ['deploy/step.sh'],
     },

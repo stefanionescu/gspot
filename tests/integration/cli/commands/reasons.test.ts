@@ -155,9 +155,9 @@ test.each([
     { key: 'naming.banned', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
     { key: 'naming.banned', flag: '--remove', item: 'original', expected: [], code: 2 },
     { key: 'naming.banned', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
-    { key: 'tools.bash.architecture_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
-    { key: 'tools.bash.architecture_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
-    { key: 'tools.bash.architecture_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
+    { key: 'tools.bash.boundary_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'tools.bash.boundary_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
+    { key: 'tools.bash.boundary_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
 ])('list edits preserve reason requirements for $key $flag', async ({ key, flag, item, expected, code }) => {
     await using directory = await testdir();
     const policy = [
@@ -168,7 +168,7 @@ test.each([
         '[naming]',
         'banned = ["original"]',
         '[tools.bash]',
-        'architecture_roots = ["original"]',
+        'boundary_roots = ["original"]',
     ].join('\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['set', key, item, ...[flag].filter((value) => value !== '')];

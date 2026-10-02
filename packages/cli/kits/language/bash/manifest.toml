@@ -143,13 +143,13 @@ help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 [[checks]]
 name = "structure/bash-interpreter"
 title = "Bash interpreter"
-example = "With tools.bash.runtime_header set to `macOS and Linux`, an executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
+example = "With tools.bash.platforms set to `macOS and Linux`, an executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
 level = "all"
 stage = "commit"
 searched = ["shellcheck", "shfmt", "bashate"]
-summary = "Checks the contract every Bash script keeps: the shebang, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files, and the four-line header when tools.bash.runtime_header is set."
+summary = "Checks the contract every Bash script keeps: the shebang, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files, and the four-line header when tools.bash.platforms is set."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
-help = "Open with the shebang and, when tools.bash.runtime_header is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
+help = "Open with the shebang and, when tools.bash.platforms is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
 
 [[checks]]
 name = "structure/doc-comment"
@@ -350,7 +350,7 @@ stage = "commit"
 searched = ["shellcheck", "semgrep"]
 summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
-help = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety.owners."
+help = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety_owners."
 
 [[settings]]
 name = "tools.bash.doc_style"
@@ -367,28 +367,28 @@ default = []
 summary = "The scripts allowed to read environment variables with defaults; every other script reads them through these."
 
 [[settings]]
-name = "tools.bash.architecture_roots"
+name = "tools.bash.boundary_roots"
 kind = "list"
 direction = "neutral"
 default = []
 summary = "The directories whose scripts carry a Boundary header and source annotations."
 
 [[settings]]
-name = "tools.bash.safety.owners"
+name = "tools.bash.safety_owners"
 kind = "list"
 direction = "loosening"
 default = []
 summary = "The scripts allowed to delete recursively or kill processes; everything else is refused."
 
 [[settings]]
-name = "tools.bash.default_fragments_allowed"
+name = "tools.bash.defaults_allowed"
 kind = "list"
 direction = "loosening"
 default = []
 summary = "Variable defaults of the form name:-value that appear outside the configuration owners."
 
 [[settings]]
-name = "tools.bash.runtime_header"
+name = "tools.bash.platforms"
 kind = "string"
 direction = "neutral"
 summary = "The platforms the fourth header line of every script names. Unset, a script needs no four-line header and declares no Bash version."

@@ -44,7 +44,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['static-site', 'supabase', 'i18n'],
-            '[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+            '[tools.i18n]\nlocales = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
         ),
         _headers: READERS_HEADERS,
         'messages/en.json': '{"title":"Home"}',
@@ -91,7 +91,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
     await using sandbox = await testdir();
     const policy = policyOf(
         ['bash'],
-        '[tools.bash.safety]\nowners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash.safety]\nowners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        '[tools.bash]\nsafety_owners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash]\nsafety_owners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
     );
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
     await createFileTree(sandbox.path, {
@@ -131,7 +131,7 @@ test.each([
         configuration: 'html',
         check: 'html/text',
         setting:
-            '[tools.html]\ntemplate_files = ["**/*.html"]\ncopy_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
+            '[tools.html]\ntemplates = ["**/*.html"]\nliterals_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
         path: 'trusted/page.html',
         source: '<p>Private template copy</p>\n',
         correction: '<p>{{ title }}</p>\n',

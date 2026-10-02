@@ -11,8 +11,7 @@ import { UNCHECKED_CD, SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config
  * @returns the findings
  */
 export const scriptSafety: Analysis = async (context, scripts) => {
-    const safety = context.bashSetting('safety') as { owners?: unknown } | undefined;
-    const owners = Array.isArray(safety?.owners) ? (safety.owners as string[]) : [];
+    const owners = context.bashList('safety_owners');
     const isOwner = pathMatcher(owners);
     const index = await scripts();
     return index.files.flatMap((file) =>

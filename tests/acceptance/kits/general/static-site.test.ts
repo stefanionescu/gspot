@@ -50,9 +50,9 @@ plantedCases(
         {
             check: 'static-site/size',
             files: {},
-            policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 0}]\n',
+            policy: '[tools.site]\nsizes = [{paths = ["**/*.html"], kb = 0}]\n',
             expected: { file: '**/*.html', rule: 'size', line: 1 },
-            corrected: { files: {}, policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 10}]\n' },
+            corrected: { files: {}, policy: '[tools.site]\nsizes = [{paths = ["**/*.html"], kb = 10}]\n' },
         },
         {
             check: 'static-site/sitemap',

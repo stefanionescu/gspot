@@ -76,7 +76,7 @@ default_all = 80
 summary = "The minimum percentage of source statements covered by tests."
 
 [[settings]]
-name = "tools.jest.global_package"
+name = "tools.jest.test_module"
 kind = "string"
 direction = "neutral"
 default = "@jest/globals"

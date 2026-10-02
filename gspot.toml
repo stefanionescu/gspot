@@ -263,7 +263,7 @@ reason = "The SwiftLint JSON diagnostic key."
 
 [[naming.protocol_keys]]
 file = "tests/integration/cli/generation/selection.test.ts"
-names = ["licenses_allowed", "packages_allowed"]
+names = ["allowed", "exceptions"]
 reason = "The license scanner policy keys."
 
 [[naming.protocol_keys]]
@@ -563,37 +563,37 @@ paths = ["docs/src"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
 [tools.licenses]
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "axe-core@4.13.0"
 license = "MPL-2.0"
 reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "@csstools/selector-specificity@5.0.0"
 license = "MIT-0"
 reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "@fontsource-variable/geist@5.3.0"
 license = "OFL-1.1"
 reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "@fontsource-variable/geist-mono@5.3.0"
 license = "OFL-1.1"
 reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "eslint-plugin-sonarjs@4.2.0"
 license = "LGPL-3.0-only"
 reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "lightningcss@1.33.0"
 license = "MPL-2.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
 
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "truncate-utf8-bytes@1.0.2"
 license = "WTFPL"
 reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."
@@ -630,7 +630,7 @@ vocabulary = ["Nx", "Turborepo", "Husky", "Lefthook", "EditorConfig Checker"]
 [tools.codeql]
 languages = ["javascript-typescript", "actions"]
 
-[[tools.codeql.false_positives]]
+[[tools.codeql.ignore]]
 rule = "js/file-system-race"
 paths = [
     "tests/integration/cli/commands/agents.test.ts",
@@ -643,22 +643,22 @@ paths = [
 ]
 reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
 
-[[tools.codeql.false_positives]]
+[[tools.codeql.ignore]]
 rule = "js/bad-code-sanitization"
 paths = ["packages/cli/src/generation/fragments.ts"]
 reason = "JSON.stringify emits whole literals into a standalone ESLint module, never into an HTML script element."
 
-[[tools.codeql.false_positives]]
+[[tools.codeql.ignore]]
 rule = "js/incomplete-sanitization"
 paths = ["packages/cli/src/checks/general/files/actions.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 
-[[tools.codeql.false_positives]]
+[[tools.codeql.ignore]]
 rule = "js/incomplete-sanitization"
 paths = ["packages/cli/src/repository/revisions/refspecs.ts"]
 reason = "git check-ref-format validates every refspec first and permits at most one wildcard, so one replacement is complete."
 
-[[tools.codeql.false_positives]]
+[[tools.codeql.ignore]]
 rule = "js/http-to-file-access"
 paths = ["packages/cli/scripts/inputs.ts"]
 reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."

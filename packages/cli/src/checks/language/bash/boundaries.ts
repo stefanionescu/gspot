@@ -63,13 +63,13 @@ function dependencyFindings(
 }
 
 /**
- * The boundary findings for scripts under [tools.bash] architecture_roots: the header, source annotations, barrels, and implicit dependencies.
+ * The boundary findings for scripts under [tools.bash] boundary_roots: the header, source annotations, barrels, and implicit dependencies.
  * @param context the check context
  * @param scripts the shell index
  * @returns the findings
  */
 export const scriptBoundaries: Analysis = async (context, scripts) => {
-    const roots = context.bashList('architecture_roots');
+    const roots = context.bashList('boundary_roots');
     if (roots.length === 0) return [];
     const isGoverned = pathMatcher(roots.map((root) => (root.includes('*') ? root : `${root.replace(/\/$/u, '')}/**`)));
     const index = await scripts();

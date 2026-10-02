@@ -271,7 +271,7 @@ direction = "per-rule"
 summary = "Options per yamllint rule, by rule name; turning a rule off is gspot ignore --rule."
 
 [[settings]]
-name = "tools.taplo.rules"
+name = "tools.taplo.formatting"
 kind = "table"
 direction = "per-rule"
 summary = "Formatting options taplo takes, by option name, on top of the shared [format] settings."

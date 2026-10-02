@@ -168,7 +168,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
     const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
     const importStyle = (tool['import_style'] ?? {}) as Record<string, string>;
-    const globals = (tool['globals'] ?? {}) as Record<string, string>;
+    const globals = (tool['runtimes'] ?? {}) as Record<string, string>;
     return {
         aliases,
         ...eslintSettings(view),

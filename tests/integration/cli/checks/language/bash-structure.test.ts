@@ -58,7 +58,7 @@ test.each([
     const inherited = 'shopt -s inherit_errexit\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['bash'], '[tools.bash]\nruntime_header = "macOS and Linux"\n', 'all'),
+        'gspot.toml': policyOf(['bash'], '[tools.bash]\nplatforms = "macOS and Linux"\n', 'all'),
         'greet.sh': base + (isInherited ? inherited : '') + MAIN,
     });
     const path = join(sandbox.path, 'greet.sh');

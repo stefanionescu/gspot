@@ -46,11 +46,11 @@ name = "nextjs/build"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
 level = "recommended"
-waits_for = "tools.next.build_in_gate"
+waits_for = "tools.next.build_on_push"
 stage = "push"
 runs = "per-scope"
 requires = "build"
-summary = "Builds the app with next build, for a repository that set tools.next.build_in_gate."
+summary = "Builds the app with next build, for a repository that set tools.next.build_on_push."
 why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
 help = "Run next build and read the first error it prints."
 
@@ -88,7 +88,7 @@ why = "A lint package a version behind flags what the framework allows and allow
 help = "Move both packages to the same version."
 
 [[settings]]
-name = "tools.next.build_in_gate"
+name = "tools.next.build_on_push"
 kind = "boolean"
 direction = "tightening"
 default = false

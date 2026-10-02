@@ -100,7 +100,7 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool(CODEQL_TOOL);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
     const suite = (tool['suite'] as string | undefined) ?? DEFAULT_SUITE;
-    const accepted = (tool['false_positives'] as AcceptedResult[] | undefined) ?? [];
+    const accepted = (tool['ignore'] as AcceptedResult[] | undefined) ?? [];
     for (const language of languages) {
         mutationTarget(language);
         mutationTarget(`${language}.sarif`);

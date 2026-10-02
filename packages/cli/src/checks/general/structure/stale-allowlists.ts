@@ -82,7 +82,7 @@ function licenseFindings(input: EngineInput): Finding[] {
     const locks = new Map<string, Set<string>>();
     const tables = [['', policy], ...Object.entries(policy.scopeTables)] as const;
     return tables.flatMap(([scope, table]) => {
-        const exceptions = (table.tools?.['licenses']?.['packages_allowed'] ?? []) as LicenseException[];
+        const exceptions = (table.tools?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
             if (path.split('/').includes(GSPOT_FOLDER)) return false;
@@ -111,7 +111,7 @@ function licenseFindings(input: EngineInput): Finding[] {
             }
             return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
         });
-        const where = scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`;
+        const where = scope === '' ? 'tools.licenses.exceptions' : `scope ${scope}`;
         return exceptions.flatMap((exception): Finding[] => {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];

@@ -228,7 +228,7 @@ runs = "per-scope"
 owners = {filenames = ["uv.lock", "poetry.lock", "pdm.lock"], kinds = ["source", "generated"]}
 summary = "Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths."
 why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
-help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.dependencies.pip_install_allowed with a reason."
+help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.pip.installs_allowed with a reason."
 
 [[checks]]
 name = "integrity/typecheck-membership"
@@ -402,7 +402,7 @@ default = 20
 summary = "The most names a package may list in its export list."
 
 [[settings]]
-name = "tools.dependencies.pip_install_allowed"
+name = "tools.pip.installs_allowed"
 kind = "list"
 direction = "loosening"
 default = []

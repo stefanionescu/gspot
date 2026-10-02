@@ -54,7 +54,7 @@ exclude_setting = "tools.lychee.exclude_paths"
 output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
-help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude."
+help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude_urls."
 
 [[checks]]
 name = "integrity/docs-headings"
@@ -119,7 +119,7 @@ default = []
 summary = "Headings this repository bans beyond the shipped list."
 
 [[settings]]
-name = "tools.docs.require_license"
+name = "tools.docs.license"
 kind = "boolean"
 direction = "neutral"
 default = true
@@ -133,7 +133,7 @@ default = 6
 summary = "How many H2 headings a README may have before it needs a Contents list."
 
 [[settings]]
-name = "tools.lychee.exclude"
+name = "tools.lychee.exclude_urls"
 kind = "list"
 direction = "loosening"
 default = []

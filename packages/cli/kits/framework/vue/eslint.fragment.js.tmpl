@@ -1,4 +1,4 @@
-<% const scriptLanguages = settings['tools.eslint.script_languages']; const typed = scriptLanguages.includes('ts'); -%>
+<% const scriptLanguages = settings['tools.eslint.component_languages']; const typed = scriptLanguages.includes('ts'); -%>
     // The plugin ships its recommended set as blocks with warnings in them.
     ...vuePlugin.configs['flat/recommended'].map((block) => ({
         ...block,

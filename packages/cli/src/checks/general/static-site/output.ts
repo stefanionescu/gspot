@@ -170,7 +170,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each ceiling passed
  */
 export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
-    const limits = input.view.tool('site')['size_limits'] as SizeLimit[];
+    const limits = input.view.tool('site')['sizes'] as SizeLimit[];
     const build = await requireSiteBuild(input);
     const files = filesUnder(build.output);
     return limits.flatMap((limit) => {
@@ -208,7 +208,7 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
         .filter((url) => url !== undefined)
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
+    const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_exclude'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>

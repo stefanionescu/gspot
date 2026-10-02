@@ -29,7 +29,7 @@ describe('profile file paths', () => {
 
 test('profiles retain runner coverage settings and omit the architecture roles, which name repository paths', async () => {
     await using directory = await testdir();
-    const tools = { jest: { coverage_lines: 90, global_package: 'bun:test' } };
+    const tools = { jest: { coverage_lines: 90, test_module: 'bun:test' } };
     const roles = { harness: 'tests/fixtures' };
     const exported = exportedProfile(
         stringify({ kits: ['jest'], tools, architecture: { roles } }),
@@ -151,8 +151,8 @@ test('profile publication preserves permissions when adopting identical existing
 test('profiles round-trip license allowances and exact-version exceptions', async () => {
     await using directory = await testdir();
     const licenses = {
-        licenses_allowed: ['MPL-2.0'],
-        packages_allowed: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
+        allowed: ['MPL-2.0'],
+        exceptions: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
     };
     const exported = exportedProfile(stringify({ kits: ['licenses'], tools: { licenses } }), 'licenses.profile.toml');
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });

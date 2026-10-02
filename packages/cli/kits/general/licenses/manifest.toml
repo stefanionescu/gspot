@@ -40,14 +40,14 @@ example = "A locked package whose declared license is outside the allowed licens
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-waits_for = "tools.licenses.licenses_allowed"
+waits_for = "tools.licenses.allowed"
 owners = {filenames = ["package.json", "pyproject.toml"]}
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."
-help = "Replace the package, or add an entry to tools.licenses.packages_allowed with gspot set. Include package (name@version), license, and reason. An exception holds only while the package reports that license."
+help = "Replace the package, or add an entry to tools.licenses.exceptions with gspot set. Include package (name@version), license, and reason. An exception holds only while the package reports that license."
 
 [[settings]]
-name = "tools.licenses.licenses_allowed"
+name = "tools.licenses.allowed"
 kind = "list"
 direction = "neutral"
 default = []
@@ -55,7 +55,7 @@ default_all = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD
 summary = "The SPDX license ids a dependency may report."
 
 [[settings]]
-name = "tools.licenses.packages_allowed"
+name = "tools.licenses.exceptions"
 kind = "list"
 direction = "loosening"
 default = []

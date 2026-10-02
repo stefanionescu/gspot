@@ -45,7 +45,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['static-site'],
-            '[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            '[tools.site]\nbuild = "bun build.js"\nsizes = [{paths = ["**/*"], kb = 100}]\n',
             'all',
         ),
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',

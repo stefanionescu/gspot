@@ -20,7 +20,7 @@ const LOCKS: [string, string][] = [
 
 const POLICY = policyOf(
     ['structure', 'licenses'],
-    '[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n',
+    '[[tools.licenses.exceptions]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n',
 );
 
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
@@ -54,7 +54,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     await createFileTree(root, {
         'gspot.toml': policyOf(
             ['structure', 'licenses'],
-            '[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
+            '[[scope]]\npath = "app"\n[[scope.tools.licenses.exceptions]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
         ),
         'app/source.py': 'selected = True\n',
         'sibling/uv.lock': lock,
@@ -79,7 +79,7 @@ test.each(['root', 'nested', 'combined'])(
         await using repository = await testdir();
         const root = repository.path;
         const exception =
-            '\n[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
+            '\n[[tools.licenses.exceptions]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
         const configurations = selection === 'combined' ? '"licenses", "structure"' : '"licenses"';
         const selected =
             selection === 'nested'

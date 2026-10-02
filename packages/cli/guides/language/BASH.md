@@ -85,7 +85,7 @@ source direct dependencies, and define functions. A file is exactly one of the t
 
 <!-- level: all -->
 
-The header declares the runtime contract, checked when `tools.bash.runtime_header` is set:
+The header declares the runtime contract, checked when `tools.bash.platforms` is set:
 
 ```bash
 #!/usr/bin/env bash

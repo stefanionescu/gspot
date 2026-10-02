@@ -250,8 +250,7 @@ export function settingValue(
     const shipped = surface.defaults.get(spec.name) ?? surface.defaults.get(key);
     const layers = policyTables(policy, scope);
     const declaredLicenses =
-        key === 'tools.licenses.licenses_allowed' &&
-        layers.some((layer) => policyValue(layer.table, key) !== undefined);
+        key === 'tools.licenses.allowed' && layers.some((layer) => policyValue(layer.table, key) !== undefined);
     const start: SettingState = {
         value: declaredLicenses ? [] : shipped?.value,
         source: shipped ? `kit ${shipped.kit}` : 'unset',

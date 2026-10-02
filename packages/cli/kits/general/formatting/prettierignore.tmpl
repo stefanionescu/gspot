@@ -1,5 +1,5 @@
 # Editors and gspot checks use the same ordered ignore patterns.
-<% const adopted = tool('prettier').ignore_patterns; if (adopted !== undefined) { %><%= adopted.join('\n') %>
+<% const adopted = tool('prettier').exclude; if (adopted !== undefined) { %><%= adopted.join('\n') %>
 <% } else { %>
 node_modules/
 dist/

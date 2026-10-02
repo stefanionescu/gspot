@@ -107,7 +107,7 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
 }
 
 /**
- * The layout findings of every migration, when tools.postgres.migration_docs asks for the layout.
+ * The layout findings of every migration, when tools.postgres.docs asks for the layout.
  * @param input the engine input
  * @returns the findings
  */

@@ -13,7 +13,7 @@ export const PATH_KEYS = new Set([
     'excludeFiles',
     'basePath',
     'ignores',
-    'ignore_patterns',
+    'exclude',
     'glob',
     'roles',
 ]);

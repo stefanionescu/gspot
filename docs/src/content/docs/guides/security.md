@@ -27,7 +27,7 @@ With the `security` kit, run the shipped rules and your own:
 gspot check --stage push --only security/semgrep
 ```
 
-Add your rule files with `tools.semgrep.rules`. To run public rule packs, list them in
+Add your rule files with `tools.semgrep.configs`. To run public rule packs, list them in
 `tools.semgrep.registry` and run:
 
 ```shell

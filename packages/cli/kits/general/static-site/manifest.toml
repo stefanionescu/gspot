@@ -108,11 +108,11 @@ name = "static-site/size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
-waits_for = "tools.site.size_limits"
+waits_for = "tools.site.sizes"
 stage = "push"
 runs = "per-scope"
 requires = "build"
-summary = "Sums the compressed weight of the output paths each ceiling in tools.site.size_limits names."
+summary = "Sums the compressed weight of the output paths each ceiling in tools.site.sizes names."
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
@@ -126,7 +126,7 @@ runs = "per-scope"
 requires = "build"
 summary = "Compares the sitemap with the output: every listed route is a built page, and every built page is listed."
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
-help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_allowed."
+help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_exclude."
 
 [[checks]]
 name = "static-site/dead-assets"
@@ -190,14 +190,14 @@ default = "dist"
 summary = "The folder the build writes."
 
 [[settings]]
-name = "tools.site.size_limits"
+name = "tools.site.sizes"
 kind = "list"
 direction = "tightening"
 default = []
 summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
 
 [[settings]]
-name = "tools.site.sitemap_allowed"
+name = "tools.site.sitemap_exclude"
 kind = "list"
 direction = "neutral"
 default = ["404.html"]

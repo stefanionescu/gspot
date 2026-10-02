@@ -86,7 +86,7 @@ async function requiredRules(planted: InstalledRepository): Promise<void> {
 async function delegation(planted: InstalledRepository): Promise<void> {
     const build = await checked(planted, ['nextjs/build'], 0);
     expect(build.checks).toMatchObject([
-        { check: 'nextjs/build', status: 'skipped', note: textContaining('tools.next.build_in_gate') },
+        { check: 'nextjs/build', status: 'skipped', note: textContaining('tools.next.build_on_push') },
     ]);
     const direct = await checked(planted, ['typescript/tsc'], 0);
     expect(direct.checks).toMatchObject([{ check: 'typescript/tsc', status: 'ok' }]);

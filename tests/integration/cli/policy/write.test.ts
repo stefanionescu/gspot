@@ -105,11 +105,11 @@ test('policy edits keep a trailing array comma and write inline tables without o
         paths: ['fixture.js'],
         reason: 'A deliberate fixture owns its temporary files.',
     };
-    const mutate = setKey('tools.codeql.false_positives', [entry]);
+    const mutate = setKey('tools.codeql.ignore', [entry]);
     const proposed = proposePolicy('.', original, mutate);
     expect(proposed.text).toContain('# Authored selection.');
     expect(proposed.text).not.toMatch(/,\s*\}/u);
-    expect(proposed.policy.tools['codeql']?.['false_positives']).toStrictEqual([entry]);
+    expect(proposed.policy.tools['codeql']?.['ignore']).toStrictEqual([entry]);
     const repeated = proposePolicy('.', proposed.text, mutate);
     expect(repeated.changed).toBe(false);
     expect(repeated.text).toBe(proposed.text);

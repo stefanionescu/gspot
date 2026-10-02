@@ -58,8 +58,8 @@ export const toolsSchema = z
         squawk: toolTable.extend({ assume_in_transaction: reasoned(flag).optional() }).optional(),
         licenses: toolTable
             .extend({
-                licenses_allowed: z.array(text.min(1)).optional(),
-                packages_allowed: z
+                allowed: z.array(text.min(1)).optional(),
+                exceptions: z
                     .array(
                         z.strictObject({
                             package: text.regex(
@@ -106,9 +106,9 @@ export const toolsSchema = z
                 coverage_branches: reasoned(jestCoverageSettings.shape.coverage_branches).optional(),
                 coverage_functions: reasoned(jestCoverageSettings.shape.coverage_functions).optional(),
                 coverage_statements: reasoned(jestCoverageSettings.shape.coverage_statements).optional(),
-                global_package: text.min(1).optional(),
+                test_module: text.min(1).optional(),
             })
             .optional(),
-        prettier: toolTable.extend({ ignore_patterns: z.array(z.string()).optional() }).optional(),
+        prettier: toolTable.extend({ exclude: z.array(z.string()).optional() }).optional(),
     })
     .catchall(toolTable);

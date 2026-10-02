@@ -61,7 +61,7 @@ function guardFindings(file: ScriptFile, seen: Map<string, string>, context: Str
  */
 export const scriptConfigDefaults: Analysis = async (context, scripts) => {
     const owners = new Set(context.bashSetting('config_owners') as string[] | undefined);
-    const fragments = context.bashList('default_fragments_allowed');
+    const fragments = context.bashList('defaults_allowed');
     const index = await scripts();
     return index.files.flatMap((file) => {
         if (owners.has(file.path)) return [];

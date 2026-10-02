@@ -69,16 +69,13 @@ test('license configuration retains scoped exceptions and inherited license allo
         'sibling/source.py': 'selected = True\n',
         'gspot.toml': policyOf(
             ['licenses'],
-            '[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+            '[tools.licenses]\nallowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.exceptions]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
         ),
     });
     const session = await openSession(sandbox.path);
     const configs = emitted(session).files.filter(({ path }) => path.endsWith('/licenses.json'));
     const parsed = new Map(
-        configs.map(({ path, content }) => [
-            path,
-            JSON.parse(content) as { licenses_allowed: string[]; packages_allowed: unknown[] },
-        ]),
+        configs.map(({ path, content }) => [path, JSON.parse(content) as { allowed: string[]; exceptions: unknown[] }]),
     );
     expect(parsed.size).toBe(4);
     for (const path of [
@@ -87,11 +84,11 @@ test('license configuration retains scoped exceptions and inherited license allo
         '.gspot/config/app/child/licenses.json',
         '.gspot/config/sibling/licenses.json',
     ])
-        expect(parsed.get(path)!.licenses_allowed).toContain('MPL-2.0');
+        expect(parsed.get(path)!.allowed).toContain('MPL-2.0');
     for (const path of ['.gspot/config/app/licenses.json', '.gspot/config/app/child/licenses.json'])
-        expect(parsed.get(path)!.packages_allowed).toStrictEqual([
+        expect(parsed.get(path)!.exceptions).toStrictEqual([
             { package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed installed metadata.' },
         ]);
     for (const path of ['.gspot/config/licenses.json', '.gspot/config/sibling/licenses.json'])
-        expect(parsed.get(path)!.packages_allowed).toStrictEqual([]);
+        expect(parsed.get(path)!.exceptions).toStrictEqual([]);
 });

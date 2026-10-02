@@ -94,4 +94,4 @@ ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-befo
 tsx = ["eqeqeq", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
 
 [defaults]
-"tools.eslint.script_languages" = ["ts"]
+"tools.eslint.component_languages" = ["ts"]

@@ -4,7 +4,7 @@ import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
 
 /** The i18n settings naming the message directory and base locale. */
-const NEXT_TRANSLATIONS = '[tools.i18n]\ntranslations = {directory = "messages", base = "en"}\n';
+const NEXT_TRANSLATIONS = '[tools.i18n]\nlocales = {directory = "messages", base = "en"}\n';
 
 const ROUTE =
     '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n';

@@ -26,7 +26,7 @@ test('remote functions, entry functions, and the runtime header apply only once 
     expect(await rules('')).toStrictEqual(['never-called']);
     expect(
         await rules(
-            '[tools.bash]\nremote_functions = ["run_remote"]\nentry_functions = ["run_step"]\nruntime_header = "Linux"\n',
+            '[tools.bash]\nremote_functions = ["run_remote"]\nentry_functions = ["run_step"]\nplatforms = "Linux"\n',
         ),
     ).toStrictEqual(['header', 'runtime-header', 'unnamed-block']);
 });

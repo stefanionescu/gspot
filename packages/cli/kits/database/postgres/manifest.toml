@@ -115,10 +115,10 @@ name = "postgres/migration-docs"
 title = "Document database migrations"
 example = "A migration without its required purpose header and statement sections reports documentation findings. Add a purpose-specific header and organize statements under the sections named by the diagnostic."
 level = "all"
-waits_for = "tools.postgres.migration_docs"
+waits_for = "tools.postgres.docs"
 stage = "commit"
 runs = "once"
-summary = "Checks the documented migration layout when tools.postgres.migration_docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function."
+summary = "Checks the documented migration layout when tools.postgres.docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function."
 why = "A migration is read years later by someone deciding whether a table can go, and the purpose line is what they look for."
 help = "Write the header, put each statement under its section, and label tables and functions with their purpose."
 
@@ -151,7 +151,7 @@ default = ["public"]
 summary = "The schemas clients reach, where every table needs row level security."
 
 [[settings]]
-name = "tools.postgres.migration_docs"
+name = "tools.postgres.docs"
 kind = "boolean"
 direction = "tightening"
 default = false

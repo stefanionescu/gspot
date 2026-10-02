@@ -28,7 +28,7 @@ test('list shows selected policy states, detected kits, and setting values witho
     expect(checks).toContainEqual({ name: 'bash/syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'structure/prefix-collisions', scope: '', state: 'off (level)' });
-    expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'waits for tools.next.build_in_gate' });
+    expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'waits for tools.next.build_on_push' });
     expect(result.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
     expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
     const settings = await runGspot(directory.path, ['list', 'settings', '--json']);

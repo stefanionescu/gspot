@@ -49,8 +49,8 @@ function readConfiguration(input: EngineInput): z.infer<typeof configurationSche
     const tool = input.view.tool('licenses');
     if (
         !isDeepStrictEqual(configuration, {
-            licenses_allowed: tool['licenses_allowed'],
-            packages_allowed: tool['packages_allowed'],
+            allowed: tool['allowed'],
+            exceptions: tool['exceptions'],
         })
     )
         throw new Error(
@@ -114,8 +114,8 @@ const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<
 ]);
 
 export const configurationSchema = z.object({
-    licenses_allowed: z.array(z.string().min(1)),
-    packages_allowed: z.array(
+    allowed: z.array(z.string().min(1)),
+    exceptions: z.array(
         z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
     ),
 });
@@ -126,7 +126,7 @@ export const configurationSchema = z.object({
  * @returns the findings
  */
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
-    if ((input.view.settings['tools.licenses.licenses_allowed'] as string[]).length === 0) return [];
+    if ((input.view.settings['tools.licenses.allowed'] as string[]).length === 0) return [];
     const configuration = readConfiguration(input);
     const start = join(input.root, input.scope);
     const scans: { manifest: string; packages: LicensedPackage[] }[] = [];
@@ -136,10 +136,10 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
         scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages });
     }
     if (scans.length === 0) throw new Error('No supported dependency manifest is available for license scanning.');
-    const allow = new Set(configuration.licenses_allowed);
-    const exceptions = new Map(configuration.packages_allowed.map((entry) => [entry.package, entry]));
+    const allow = new Set(configuration.allowed);
+    const exceptions = new Map(configuration.exceptions.map((entry) => [entry.package, entry]));
     const pythonExceptions = new Map(
-        configuration.packages_allowed.map((entry) => [
+        configuration.exceptions.map((entry) => [
             entry.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage),
             entry,
         ]),

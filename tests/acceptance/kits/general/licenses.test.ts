@@ -77,7 +77,7 @@ test(
                 policy,
                 exception === undefined
                     ? before
-                    : `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
+                    : `${before}\n[[tools.licenses.exceptions]]\npackage = "strict@1.0.0"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
             );
             const applied = await spawnGspot(root, ['apply'], environment);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);

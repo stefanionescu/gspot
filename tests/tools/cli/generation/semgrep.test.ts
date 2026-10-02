@@ -11,7 +11,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 const APP_SEMGREP =
-    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nexclude = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
 
 if (toolShipsHere('semgrep'))
     test('framework security packs stay within inherited scopes and preserve sibling input', async () => {

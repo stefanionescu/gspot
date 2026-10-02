@@ -86,9 +86,9 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allowed: [{ description: text, paths: [path], regexes: [text], reason }] },
-                osv: { ignore: [{ id: text, reason, review_by: '2026-09-20' }] },
-                taplo: { rules: { [option]: text, column_width: 88 } },
-                lychee: { exclude: [{ patterns: [text], reason }] },
+                osv: { ignore: [{ id: text, reason, until: '2026-09-20' }] },
+                taplo: { formatting: { [option]: text, column_width: 88 } },
+                lychee: { exclude_urls: [{ patterns: [text], reason }] },
                 squawk: { frozen_through: 'all' },
             },
             ignore: [{ check: 'python/ruff', rule: 'F401', paths: [path], reason }],
@@ -128,7 +128,7 @@ test('an OSV expiry cannot inject another TOML table', async () => {
                         {
                             id: 'GHSA-example',
                             reason: 'Reviewed upstream.',
-                            review_by: '2026-09-20\n[extra]\ninjected = true',
+                            until: '2026-09-20\n[extra]\ninjected = true',
                         },
                     ],
                 },

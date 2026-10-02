@@ -31,7 +31,7 @@ Add `--scope app` to set it for the scope `app` only. The
 [policy reference](/reference/configuration/) lists every coverage setting.
 
 The JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both
-levels. When your tests import from `bun:test`, set `tools.jest.global_package = "bun:test"`
+levels. When your tests import from `bun:test`, set `tools.jest.test_module = "bun:test"`
 so the lint rules recognize them. That setting changes linting only; the coverage check still
 runs Jest.
 
@@ -46,7 +46,7 @@ gspot check --stage push --only vitest/coverage
 
 Set the floors with `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`,
 and `coverage_statements`. When your Vitest configuration lives outside the usual paths, set
-`tools.vitest.coverage_file`. Paths are relative to the scope.
+`tools.vitest.config`. Paths are relative to the scope.
 
 ## Python
 

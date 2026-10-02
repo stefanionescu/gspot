@@ -62,7 +62,7 @@ test(
             "import { double } from './index.ts';\n\nexport const four = double(2);\n",
         );
         const policy = join(sandbox.path, 'gspot.toml');
-        await Bun.write(policy, `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`);
+        await Bun.write(policy, `${await Bun.file(policy).text()}\n[tools.semgrep]\nconfigs = ["security/own.yml"]\n`);
         commitAll(sandbox.path);
         const own = await spawnGspot(sandbox.path, command, environment);
         expect(own.code, own.stdout + own.stderr).toBe(isWindows ? 0 : 1);
