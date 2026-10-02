@@ -69,7 +69,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
-fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
+fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
 output = {format = "markdownlint-json"}
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."

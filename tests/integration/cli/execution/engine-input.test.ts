@@ -223,7 +223,7 @@ name = "project/correct-sql"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
 paths = ["query.sql"]
 stage = "commit"
-fix_command = [${JSON.stringify(process.execPath)}, "correct.cjs", "{files}"]
+fix = [${JSON.stringify(process.execPath)}, "correct.cjs", "{files}"]
 [check.output]
 format = "none"
 `;

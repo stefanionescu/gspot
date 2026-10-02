@@ -34,8 +34,8 @@ function ignoreSkip(check: PlannedCheck): Skip {
 
 // The skip the platform imposes: the check names other platforms, or its tool has no build for this host.
 function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): Skip {
-    if (spec.platform && !(spec.platform as readonly string[]).includes(host.platform))
-        return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${host.platform}` };
+    if (spec.platforms && !(spec.platforms as readonly string[]).includes(host.platform))
+        return { source: 'platform', note: `runs on ${spec.platforms.join(', ')} only; this is ${host.platform}` };
     const missing = tool === undefined ? undefined : missingBuild(tool, host.platform, host.arch);
     if (tool !== undefined && missing !== undefined)
         return { source: 'platform', note: `${tool.name} has no ${missing} build` };

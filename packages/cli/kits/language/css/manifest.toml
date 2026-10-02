@@ -74,8 +74,8 @@ example = "The declaration `color: #ggg` uses an invalid hexadecimal color and r
 level = "recommended"
 stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
-fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
-findings_exit_codes = [2]
+fix = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
+exit_codes = [2]
 owners = {extensions = [".css", ".vue", ".svelte"]}
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."

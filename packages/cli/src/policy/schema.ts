@@ -147,20 +147,20 @@ const checkSchema = z.strictObject({
     paths: textListNonEmpty,
     stage: z.enum(['commit', 'push', 'manual']),
     help: text.optional(),
-    fix_command: commandSchema.optional(),
-    findings_exit_codes: findingExitCodesSchema
+    fix: commandSchema.optional(),
+    exit_codes: findingExitCodesSchema
         .optional()
         .describe(
             'Native nonzero statuses that mean source findings, for the check and its correction. Other nonzero statuses mean execution failure.',
         ),
-    count_regex: text.optional(),
-    tool_errors: text
+    count_pattern: text.optional(),
+    crash_pattern: text
         .optional()
         .describe(
             'A multiline Unicode regular expression matching fatal tool diagnostics in stdout or stderr, for both checks and corrections.',
         ),
     requires: z.enum(['build', 'docker', 'network']).optional(),
-    platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
+    platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     summary: text.optional(),
     output: outputSchema.optional(),
 });

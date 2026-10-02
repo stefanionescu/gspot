@@ -198,7 +198,7 @@ export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, roo
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
-        fixable: spec.fix_command !== undefined && finding.fixable,
+        fixable: spec.fix !== undefined && finding.fixable,
         file: relativeTo(toolPath(root), toPosix(finding.file)),
     }));
 }

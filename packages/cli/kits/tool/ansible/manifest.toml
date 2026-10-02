@@ -28,7 +28,7 @@ example = "A task using `ansible.builtin.command: systemctl restart planted` rep
 level = "recommended"
 stage = "commit"
 runs = "once"
-platform = ["macos", "linux"]
+platforms = ["macos", "linux"]
 tool = "ansible-lint"
 owners = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
 summary = "Runs ansible-lint in every folder that holds an ansible.cfg."

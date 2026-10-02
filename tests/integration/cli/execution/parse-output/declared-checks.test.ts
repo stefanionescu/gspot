@@ -134,7 +134,7 @@ name = "notes/no-pending"
 command = ${JSON.stringify([process.execPath, '-e', PENDING, '{files}'])}
 paths = ["notes/**"]
 stage = "commit"
-count_regex = "PENDING"
+count_pattern = "PENDING"
 summary = "Finds pending notes left in the notes folder."
 
 [check.output]

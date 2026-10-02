@@ -78,7 +78,7 @@ waits_for = "tools.xctest.coverage"
 stage = "push"
 runs = "per-scope"
 requires = "build"
-platform = ["macos"]
+platforms = ["macos"]
 owners = {extensions = [".swift"]}
 summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
 why = "A floor keeps new code from arriving untested."

@@ -119,7 +119,7 @@ stage = "commit"
 runs = "per-file-list"
 owners = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
-findings_exit_codes = [1]
+exit_codes = [1]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
 summary = "Runs ShellCheck over shell scripts and sourced files, adding opt-in rules at level all."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
@@ -134,7 +134,7 @@ stage = "commit"
 runs = "per-file-list"
 owners = {tags = ["bash", "bats"]}
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
-fix_command = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
+fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 output = {format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it."}
 summary = "Checks that every shell script is formatted the way shfmt formats it."
 why = "One formatter means diffs show what changed, not how someone's editor indents."

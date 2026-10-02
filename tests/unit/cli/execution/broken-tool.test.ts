@@ -73,7 +73,7 @@ describe('hasToolError', () => {
     });
 
     test("a check's own pattern comes before the tool's", () => {
-        const spec = { ...base, tool_errors: '^Fatal:' } satisfies CheckSpec;
+        const spec = { ...base, crash_pattern: '^Fatal:' } satisfies CheckSpec;
         expect(hasToolError(spec, eslint, output)).toBe(false);
         expect(hasToolError(spec, eslint, { ...output, stderr: 'Fatal: cannot write\n' })).toBe(true);
     });

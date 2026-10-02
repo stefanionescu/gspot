@@ -42,7 +42,7 @@ function checkEnvironment(check: CheckSpec): string[] {
     const tool = check.tool ?? check.command?.[0];
     const attributes: [string, string | undefined][] = [
         ['Tool', tool],
-        ['Platform selection', check.platform?.join(', ')],
+        ['Platform selection', check.platforms?.join(', ')],
         ['Prerequisite', check.requires],
         [
             'Required setting',

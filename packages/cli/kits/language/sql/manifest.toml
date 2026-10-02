@@ -52,8 +52,8 @@ example = "The query `select id from user_accounts;` reports CP01 under the conf
 level = "recommended"
 stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
-findings_exit_codes = [1]
-fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+exit_codes = [1]
+fix = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database kit names."

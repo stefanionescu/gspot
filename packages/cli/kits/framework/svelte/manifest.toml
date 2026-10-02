@@ -60,8 +60,8 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-findings_exit_codes = [1]
+fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".svelte"]}
 output = {format = "eslint-json"}

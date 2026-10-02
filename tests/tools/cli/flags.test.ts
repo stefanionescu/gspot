@@ -74,7 +74,7 @@ function ownerOf(
 const commands: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }[] = [];
 const checks = manifests.flatMap((manifest) => manifest.checks.map((check) => ({ manifest, check })));
 for (const { manifest, check } of checks)
-    for (const argv of [check.command, check.fix_command]) {
+    for (const argv of [check.command, check.fix]) {
         if (argv === undefined) continue;
         const tool = manifest.tools.find((entry) => entry.name === (check.tool ?? argv[0]));
         if (tool === undefined || tool.provider === 'host') continue;

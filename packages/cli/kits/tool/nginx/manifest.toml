@@ -38,7 +38,7 @@ title = "Audit nginx security"
 example = "A location matching `/proxy/(.*)` with `proxy_pass http://$1` lets the request choose the destination and reports `ssrf`. Remove the request-controlled proxy destination and use the intended fixed upstream, or remove the proxy operation when the endpoint only needs to return a response."
 level = "recommended"
 stage = "commit"
-platform = ["macos", "linux"]
+platforms = ["macos", "linux"]
 command = ["gixy", "--config", "{config:gixy}", "--format", "json", "{file}"]
 output = {format = "json", fields = {file = "path", line = "line", rule = "plugin", message = "summary"}}
 summary = "Reads every nginx file for the mistakes that open a server: request forgery, path traversal through alias, header injection, a disclosed version."

@@ -41,7 +41,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
-fix_command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+fix = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
 exclude_setting = "tools.typos.exclude"
 output = {format = "typos-json"}
 summary = "Finds misspelled words in code, comments, and documentation."

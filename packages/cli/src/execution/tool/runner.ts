@@ -62,7 +62,7 @@ function finished(
     started: number,
 ): CheckResult {
     const isEveryFindingKept =
-        state.isFailed || spec.count_regex !== undefined || spec.output?.format === 'trufflehog-json';
+        state.isFailed || spec.count_pattern !== undefined || spec.output?.format === 'trufflehog-json';
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);

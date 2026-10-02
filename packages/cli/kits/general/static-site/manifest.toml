@@ -148,7 +148,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 owners = {extensions = [".svg"]}
-fix_command = ["svgo", "--quiet", "{files}"]
+fix = ["svgo", "--quiet", "{files}"]
 summary = "Reports SVG byte reductions over 10 percent at recommended, and any reduction at all."
 why = "An SVG straight from an editor carries metadata and precision a browser never needs."
 help = "Run svgo over the file."

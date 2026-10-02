@@ -115,7 +115,7 @@ runs = "per-scope"
 isolated_files = true
 command = ["trivy", "config", "--quiet", "--skip-check-update", "--config", "{config:trivy}", "--ignorefile", "{config:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{config:trivy-findings}", "{root}"]
 tool = "trivy"
-findings_exit_codes = [10]
+exit_codes = [10]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret."
 why = "A container that runs as root turns any bug in the service into control of the container."

@@ -56,7 +56,7 @@ function projectChecks(session: Session): void {
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
         owners: manifest.owners,
-        fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
+        fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
     const fileCheck = { ...spec, name: 'sandbox/files', runs: 'per-file-list' as const };
     for (const scope of session.scopes) {

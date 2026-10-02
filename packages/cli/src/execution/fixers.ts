@@ -42,7 +42,7 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
 }
 
 function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin | undefined {
-    const name = plannedCheck.spec.fix_command?.[0];
+    const name = plannedCheck.spec.fix?.[0];
     if (name === undefined) return undefined;
     if (plannedCheck.tool?.name === name) return plannedCheck.tool;
     return toolPin(session.manifests.values(), name);
@@ -57,7 +57,7 @@ function correctionFailure(planned: PlannedCheck, result: SpawnResult): string |
     if (failure !== undefined) return failure.note;
     // A code the check declares for findings means findings remain after the correction.
     const { spec } = planned;
-    const findingCodes = [spec.findings_exit_codes, FINDING_EXIT_CODES.get(spec.output?.format)].flat();
+    const findingCodes = [spec.exit_codes, FINDING_EXIT_CODES.get(spec.output?.format)].flat();
     if ((result.code === 0 || findingCodes.includes(result.code)) && !hasToolError(spec, planned.tool, result))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
@@ -197,13 +197,13 @@ export async function runFixer(
     const tool = correctionTool(session, plannedCheck);
     const check = plannedCheck.check;
     if (
-        spec.fix_command === undefined ||
+        spec.fix === undefined ||
         plannedCheck.skip !== undefined ||
         (plannedCheck.files.length === 0 && plannedCheck.triggerPaths.length === 0)
     )
         return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
-    return executeCorrection(session, plannedCheck, workingDirectory, spec.fix_command, tool);
+    return executeCorrection(session, plannedCheck, workingDirectory, spec.fix, tool);
 }
 
 /**
@@ -214,7 +214,7 @@ export async function runFixer(
  * @returns the correction results, changed paths, and dry-run diffs
  */
 export async function applyFixers(session: Session, planned: PlannedCheck[], isDryRun: boolean): Promise<FixReport> {
-    const checks = planned.filter((check) => check.spec.fix_command !== undefined);
+    const checks = planned.filter((check) => check.spec.fix !== undefined);
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));

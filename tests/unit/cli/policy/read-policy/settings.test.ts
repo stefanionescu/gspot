@@ -94,7 +94,7 @@ stage = "commit"
 `;
 
     test('refuses an empty correction command', () => {
-        expect(policyProblems(`${check}fix_command = []`)).not.toStrictEqual([]);
-        expect(policyProblems(`${check}fix_command = ["tool"]`)).toStrictEqual([]);
+        expect(policyProblems(`${check}fix = []`)).not.toStrictEqual([]);
+        expect(policyProblems(`${check}fix = ["tool"]`)).toStrictEqual([]);
     });
 });

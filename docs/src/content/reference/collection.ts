@@ -28,7 +28,7 @@ export function referencePages(): Map<string, ReferencePage> {
         ['framework', 'Frameworks'],
         ['tool', 'Tools'],
         ['library', 'Libraries'],
-        ['platform', 'Platforms'],
+        ['platforms', 'Platforms'],
         ['database', 'Databases'],
         ['general', 'Repository checks'],
     ];

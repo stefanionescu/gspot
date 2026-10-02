@@ -73,7 +73,7 @@ command once for each file, use `{file}` instead. Then a regex match without a `
 uses the file of that run.
 
 By default, any nonzero exit fails the check. When your tool uses one exit code for findings,
-set `findings_exit_codes = [1]`. Any other nonzero exit then counts as a failed run, exit code
+set `exit_codes = [1]`. Any other nonzero exit then counts as a failed run, exit code
 `2`, even when the tool printed findings first. An empty list makes every nonzero exit a failed
 run.
 
@@ -93,20 +93,20 @@ Malformed output counts as a failed run, exit code `2`. The
 
 ## Count failures in the output
 
-Some tools print a summary and always exit with `0`. For those, set `count_regex` on the check.
-With `count_regex = "FAILED"`, each match in stdout or stderr is a failure. Use it only for a
+Some tools print a summary and always exit with `0`. For those, set `count_pattern` on the check.
+With `count_pattern = "FAILED"`, each match in stdout or stderr is a failure. Use it only for a
 tool that works this way.
 
 ## Add a correction command
 
-To let `gspot check --fix` correct the findings, set `fix_command` to a list of arguments.
+To let `gspot check --fix` correct the findings, set `fix` to a list of arguments.
 `--fix` runs every correction, then runs them again on the files that changed, so a formatter
 sees what a codemod wrote. Then it runs the checks again. The corrections change your working
 tree, not the staging area.
 
-A correction that exits with one of the check's `findings_exit_codes` left findings in place.
+A correction that exits with one of the check's `exit_codes` left findings in place.
 Other nonzero exits count as a failed run.
 
-When a tool uses its findings exit code for crashes too, set `tool_errors` to a regular
+When a tool uses its findings exit code for crashes too, set `crash_pattern` to a regular
 expression that matches its crash messages. A match counts as a failed run, whatever the exit
 code.

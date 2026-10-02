@@ -62,8 +62,8 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-findings_exit_codes = [1]
+fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".astro"]}
 output = {format = "eslint-json"}
@@ -80,7 +80,7 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
-findings_exit_codes = [1]
+exit_codes = [1]
 owners = {extensions = [".astro"]}
 output = {format = "regex", pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"}
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."

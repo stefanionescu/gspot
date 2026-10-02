@@ -18,8 +18,8 @@ function prefixScope(findings: Finding[], scopePath: string): void {
 }
 
 function countMatches(spec: CheckSpec, result: SpawnResult): number {
-    if (spec.count_regex === undefined) return 0;
-    const pattern = new RegExp(spec.count_regex, 'gu');
+    if (spec.count_pattern === undefined) return 0;
+    const pattern = new RegExp(spec.count_pattern, 'gu');
     return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
 }
 
@@ -46,7 +46,7 @@ function markFailure(
     parsed: Finding[],
     state: ToolRunState,
 ): void {
-    if (spec.count_regex !== undefined) {
+    if (spec.count_pattern !== undefined) {
         if (countMatches(spec, result) > 0) state.isFailed = true;
         return;
     }
@@ -178,7 +178,7 @@ export function collect(
  * @returns true when the tool broke.
  */
 export function isToolBroken(spec: CheckSpec, parsed: Finding[], roots: string[]): boolean {
-    if (spec.count_regex !== undefined || !isFileNamed(spec.output)) return false;
+    if (spec.count_pattern !== undefined || !isFileNamed(spec.output)) return false;
     return parsed.every((finding) => !isOnDisk(finding.file, roots));
 }
 
@@ -212,7 +212,7 @@ export function executionFailure(
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and fixes decide that a tool crashed by the same declared pattern.
 export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
-    const pattern = spec.tool_errors ?? tool?.crash_pattern;
+    const pattern = spec.crash_pattern ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
 
@@ -239,7 +239,7 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
 export function checkedFindings(planned: PlannedCheck, result: SpawnResult, roots: [string, string]): Finding[] {
     const { spec } = planned;
     const specificCodes = FINDING_EXIT_CODES.get(spec.output?.format);
-    const accepted = [spec.findings_exit_codes, specificCodes];
+    const accepted = [spec.exit_codes, specificCodes];
     const broken =
         (result.code !== 0 && accepted.some((codes) => codes !== undefined && !codes.includes(result.code))) ||
         hasToolError(spec, planned.tool, result);

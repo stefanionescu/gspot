@@ -46,11 +46,7 @@ const CHECK_RULES: CheckRule[] = [
 function configurationReaders(checks: RawCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
-        for (const argument of [
-            ...(check.command ?? []),
-            ...(check.fix_command ?? []),
-            ...Object.values(check.env ?? {}),
-        ])
+        for (const argument of [...(check.command ?? []), ...(check.fix ?? []), ...Object.values(check.env ?? {})])
             for (const match of argument.matchAll(MANIFEST_CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
@@ -166,7 +162,7 @@ function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): voi
 
 // The settings a check's commands read through `{setting:...}` placeholders.
 function settingsRead(check: Manifest['checks'][number]): string[] {
-    const parts = [...(check.command ?? []), ...(check.fix_command ?? [])];
+    const parts = [...(check.command ?? []), ...(check.fix ?? [])];
     const names = parts.flatMap((part) =>
         [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? ''),
     );

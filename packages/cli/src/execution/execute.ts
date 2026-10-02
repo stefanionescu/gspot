@@ -91,7 +91,7 @@ function applyIgnoresTo(
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
 ): void {
-    const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
+    const countedFailure = check.spec.count_pattern !== undefined && result.status === 'fail';
     const ignored = applyIgnores(
         result.findings,
         ignores.filter((entry) => entry.check === check.check),

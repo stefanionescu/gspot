@@ -17,8 +17,8 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         session,
         `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`,
     );
-    planned.spec.findings_exit_codes = [3];
-    planned.spec.tool_errors = '^Fatal:';
+    planned.spec.exit_codes = [3];
+    planned.spec.crash_pattern = '^Fatal:';
     const failed = await runFixer(session, planned, sandbox.path);
     expect(failed).toMatchObject({
         status: 'failed',
@@ -26,7 +26,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         note: textContaining('Fatal: cannot write'),
     });
     const corrected = plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
-    corrected.spec.tool_errors = planned.spec.tool_errors;
+    corrected.spec.crash_pattern = planned.spec.crash_pattern;
     expect(await runFixer(session, corrected, sandbox.path)).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -45,7 +45,7 @@ test.each([
         session,
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
-    planned.spec.findings_exit_codes = [3];
+    planned.spec.exit_codes = [3];
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
@@ -106,7 +106,7 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     );
     const failed = await runFixer(
         session,
-        { ...planned, spec: { ...planned.spec, fix_command: [join(sandbox.path, 'absent-tool')] } },
+        { ...planned, spec: { ...planned.spec, fix: [join(sandbox.path, 'absent-tool')] } },
         sandbox.path,
     );
     expect(skipped.status).toBe('skipped');

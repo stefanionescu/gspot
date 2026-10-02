@@ -67,7 +67,7 @@ function checkFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
     const rules = Object.values(kit?.guides ?? {})
         .flat()
         .map((entry) => entry.path);
-    const crashPattern = check.tool_errors ?? pinNamed(toolOf(check))?.crash_pattern;
+    const crashPattern = check.crash_pattern ?? pinNamed(toolOf(check))?.crash_pattern;
     return { settings, rules, crashPattern };
 }
 
@@ -143,7 +143,7 @@ function buildCheckExplanation(
             why: check.why,
             help: check.help,
             waits_for: check.waits_for,
-            ...(fields.crashPattern === undefined ? {} : { tool_errors: fields.crashPattern }),
+            ...(fields.crashPattern === undefined ? {} : { crash_pattern: fields.crashPattern }),
             ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
             ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
             settings: fields.settings,

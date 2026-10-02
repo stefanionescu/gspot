@@ -23,15 +23,15 @@ describe('the JSON schema of gspot.toml', () => {
     test('the published schema accepts a check with and without its correction command', () => {
         const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
         expect(validate({ check: [check] })).toBe(true);
-        expect(validate({ check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(true);
+        expect(validate({ check: [{ ...check, fix: ['lint', '--fix'] }] })).toBe(true);
     });
 });
 
 test.each([
-    { name: 'finding code 2', input: { check: [{ ...check, findings_exit_codes: [2] }] }, valid: true },
-    { name: 'finding code 0', input: { check: [{ ...check, findings_exit_codes: [0] }] }, valid: false },
-    { name: 'finding code 256', input: { check: [{ ...check, findings_exit_codes: [256] }] }, valid: false },
-    { name: 'a text finding code', input: { check: [{ ...check, findings_exit_codes: ['2'] }] }, valid: false },
+    { name: 'finding code 2', input: { check: [{ ...check, exit_codes: [2] }] }, valid: true },
+    { name: 'finding code 0', input: { check: [{ ...check, exit_codes: [0] }] }, valid: false },
+    { name: 'finding code 256', input: { check: [{ ...check, exit_codes: [256] }] }, valid: false },
+    { name: 'a text finding code', input: { check: [{ ...check, exit_codes: ['2'] }] }, valid: false },
     { name: 'an empty command', input: { check: [{ ...check, command: [] }] }, valid: false },
     { name: 'an empty program', input: { check: [{ ...check, command: [''] }] }, valid: false },
     { name: 'an empty argument', input: { check: [{ ...check, command: ['tool', ''] }] }, valid: true },

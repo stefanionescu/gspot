@@ -26,7 +26,7 @@ test.each(['{file}', '{files}'])(
                         command: [process.execPath, 'checker.cjs', placeholder],
                         paths: [source],
                         stage: 'commit',
-                        findings_exit_codes: [1],
+                        exit_codes: [1],
                         output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
                     },
                 ],

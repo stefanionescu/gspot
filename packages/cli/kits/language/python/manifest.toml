@@ -104,8 +104,8 @@ example = "The expression `eval(user_input)` reports S307 when that rule is sele
 level = "recommended"
 stage = "commit"
 command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--output-format", "json", "{files}"]
-findings_exit_codes = [1]
-fix_command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
+exit_codes = [1]
+fix = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
 owners = {extensions = [".py", ".pyi"]}
 output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
 summary = "Lints every Python file with the shipped Ruff families, the security family included."
@@ -119,8 +119,8 @@ example = "The Python assignment `value=1` differs from Ruff formatting. Format 
 level = "recommended"
 stage = "commit"
 command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
-findings_exit_codes = [1]
-fix_command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
+exit_codes = [1]
+fix = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
 owners = {extensions = [".py", ".pyi"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it."}
 summary = "Checks the layout of every Python file against the Ruff formatter."
@@ -136,7 +136,7 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["basedpyright", "--outputjson"]
-findings_exit_codes = [1]
+exit_codes = [1]
 owners = {extensions = [".py", ".pyi"]}
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
 summary = "Type checks the project with stable diagnostics and adds annotation conventions at all."
@@ -196,7 +196,7 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["vulture", ".", "--min-confidence", "{setting:tools.vulture.min_confidence}", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
-findings_exit_codes = [3]
+exit_codes = [3]
 owners = {extensions = [".py"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
 summary = "Finds functions, classes, and variables nothing uses."
@@ -210,7 +210,7 @@ example = "The project metadata `version = 7` in `pyproject.toml` reports an inv
 level = "recommended"
 stage = "commit"
 command = ["validate-pyproject", "{file}"]
-findings_exit_codes = [1]
+exit_codes = [1]
 owners = {filenames = ["pyproject.toml"]}
 tool = "validate-pyproject"
 output = {format = "regex", pattern = "^\\[ERROR\\] (?<message>.*)$"}
