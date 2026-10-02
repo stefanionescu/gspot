@@ -1,5 +1,5 @@
 import pLimit from 'p-limit';
-import { run } from '#cli/platform/spawn.ts';
+import { runGit } from '#cli/platform/git.ts';
 import { statSync, constants } from 'node:fs';
 import { styleFiles } from '#cli/tools/vale.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -106,10 +106,8 @@ async function assertManifestsUnchanged(
         throw mismatch;
     // The confined read refuses a manifest link that leaves the repository before Git follows it.
     for (const entry of inputs) installed.source(entry.path);
-    const hashed = await run(['git', 'hash-object', '--stdin-paths'], {
-        cwd: root,
+    const hashed = await runGit(root, ['hash-object', '--stdin-paths'], {
         stdin: inputs.map((entry) => `${entry.path}\n`).join(''),
-        timeoutMs: 30_000,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (hashed.code !== 0)

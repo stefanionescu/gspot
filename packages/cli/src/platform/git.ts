@@ -1,8 +1,57 @@
 // The Git commands gspot runs: configuration reads, the hooks folder, and the queries of the revision code.
 import { resolve } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
-import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
+import { run, runBinary, runBlocking } from '#cli/platform/spawn.ts';
+import type { GitOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/types/platform/platform.ts';
+
+/**
+ * Runs Git and waits for it, with the one Git deadline.
+ * @param root the working directory
+ * @param argv the arguments after git
+ * @param options the other spawn options, such as the environment
+ * @returns what Git printed and how it exited
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every Git command runs through these three, so each gets the one deadline.
+export function runGitBlocking(root: string, argv: string[], options: Omit<SpawnOptions, 'cwd'> = {}): SpawnResult {
+    return runBlocking(['git', ...argv], { timeoutMs: GIT_TIMEOUT_MS, ...options, cwd: root });
+}
+
+/**
+ * Runs Git with the one Git deadline.
+ * @param root the working directory
+ * @param argv the arguments after git
+ * @param options the other spawn options, such as standard input and a cancellation that may be absent
+ * @returns what Git printed and how it exited
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every Git command runs through these three, so each gets the one deadline.
+export function runGit(root: string, argv: string[], options: GitOptions = {}): Promise<SpawnResult> {
+    const { cancelSignal, ...rest } = options;
+    return run(['git', ...argv], {
+        timeoutMs: GIT_TIMEOUT_MS,
+        ...rest,
+        cwd: root,
+        ...(cancelSignal && { cancelSignal }),
+    });
+}
+
+/**
+ * Runs Git with the one Git deadline and keeps its output as bytes, for paths and objects that need not be UTF-8.
+ * @param root the working directory
+ * @param argv the arguments after git
+ * @param options the other spawn options, such as standard input and a cancellation that may be absent
+ * @returns the bytes Git printed and how it exited
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every Git command runs through these three, so each gets the one deadline.
+export function runGitBinary(root: string, argv: string[], options: GitOptions = {}): Promise<BinarySpawnResult> {
+    const { cancelSignal, ...rest } = options;
+    return runBinary(['git', ...argv], {
+        timeoutMs: GIT_TIMEOUT_MS,
+        ...rest,
+        cwd: root,
+        ...(cancelSignal && { cancelSignal }),
+    });
+}
 
 /**
  * Reads a Git configuration value, distinguishing an unset key from a failed command.

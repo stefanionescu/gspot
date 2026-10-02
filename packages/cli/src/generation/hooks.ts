@@ -1,5 +1,5 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { runGitBlocking } from '#cli/platform/git.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import { headerLines } from '#cli/generation/headers.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -45,7 +45,7 @@ function hookScript(name: HookName, runner: string | undefined, prefix: string, 
  */
 export function hookPrefix(root: string): string {
     if (!isGitRepository(root)) return '';
-    const result = runBlocking(['git', 'rev-parse', '--show-prefix'], { cwd: root });
+    const result = runGitBlocking(root, ['rev-parse', '--show-prefix']);
     if (result.code !== 0) throw new Error(`Cannot resolve the hook directory: ${result.stderr.trim()}`);
     return result.stdout.replace(/\n$/u, '');
 }

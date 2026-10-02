@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { runToolCommand } from '#cli/tools/command.ts';
+import { runGit } from '#cli/platform/git.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
@@ -9,12 +9,10 @@ import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.t
 
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
     if (planned.commits !== undefined) return planned.commits;
-    const listed = await runToolCommand(
-        planned.scope.view,
-        ['git', 'rev-list', `${await pushBase(session.root, session.cancelSignal)}..HEAD`, '--'],
-        { cwd: session.root },
-        session.cancelSignal,
-    );
+    const base = await pushBase(session.root, session.cancelSignal);
+    const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
+        cancelSignal: session.cancelSignal,
+    });
     if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
     return listed.stdout.split('\n').filter(Boolean);
 }
@@ -45,11 +43,10 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     const statuses = new Set<CheckResult['status']>();
     const commitFile = join(scratch, 'message.txt');
     for (const object of commits) {
-        const read = await runToolCommand(
-            planned.scope.view,
-            ['git', 'show', '--no-patch', '--no-show-signature', '--format=%B', object, '--'],
-            { cwd: session.root },
-            session.cancelSignal,
+        const read = await runGit(
+            session.root,
+            ['show', '--no-patch', '--no-show-signature', '--format=%B', object, '--'],
+            { cancelSignal: session.cancelSignal },
         );
         if (read.code !== 0)
             return {

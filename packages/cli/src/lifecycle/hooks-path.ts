@@ -3,13 +3,12 @@
 import { relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readdirSync } from 'node:fs';
-import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { existingHooks } from '#cli/repository/survey.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/generation/generation.ts';
+import { hooksDirectory, readGitSetting, runGitBlocking } from '#cli/platform/git.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Install and doctor must compare core.hooksPath with the same spelling of the hooks folder.
@@ -53,7 +52,7 @@ export function installHooks({
         return `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
     }
     const path = ownHooksPath(repository.root);
-    const result = runBlocking(['git', 'config', 'core.hooksPath', path], { cwd: repository.root });
+    const result = runGitBlocking(repository.root, ['config', 'core.hooksPath', path]);
     if (result.code !== 0) throw new Error(`Cannot set core.hooksPath: ${result.stderr.trim()}`);
     return `installed hooks: core.hooksPath is ${path}`;
 }

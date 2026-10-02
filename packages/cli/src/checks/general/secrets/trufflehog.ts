@@ -1,17 +1,15 @@
 // Verified secret scanning over pushed history: each changed blob and each commit message handed to TruffleHog.
 import { join } from 'node:path';
-import { runBinary } from '#cli/platform/spawn.ts';
 import { decodedText } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
 import { writeFileSync, appendFileSync } from 'node:fs';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { gitBlobs } from '#cli/execution/checkout/revision.ts';
 import { pushBase } from '#cli/repository/revisions/changes.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
 import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA } from '#cli/config/checks/general/secrets.ts';
@@ -23,22 +21,15 @@ const PAIR = 2;
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await pushBase(session.root, session.cancelSignal);
-    const listed = await runToolCommand(
-        planned.scope.view,
-        ['git', 'rev-list', `${base}..HEAD`, '--'],
-        { cwd: session.root },
-        session.cancelSignal,
-    );
+    const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
+        cancelSignal: session.cancelSignal,
+    });
     return listed.code === 0 ? listed.stdout.split('\n').filter(Boolean) : undefined;
 }
 
 // The NUL-separated fields of a commit's raw change list, which must be UTF-8 and complete.
 async function changeFields(session: Session, commit: string): Promise<string[]> {
-    const read = await runBinary(['git', ...DIFF_TREE, commit, '--'], {
-        cwd: session.root,
-        timeoutMs: GIT_TIMEOUT_MS,
-        ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
-    });
+    const read = await runGitBinary(session.root, [...DIFF_TREE, commit, '--'], { cancelSignal: session.cancelSignal });
     if (read.code !== 0)
         throw new GspotError('selection', ['Cannot read the changed objects for verified secret scanning.']);
     const text = decodedText(read.stdout);
@@ -77,13 +68,10 @@ async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
 
 // Appends a commit's author, committer, and message to the enumerator input.
 async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
-    const { session, planned } = scan;
-    const commitResult = await runToolCommand(
-        planned.scope.view,
-        ['git', ...COMMIT_METADATA, commit, '--'],
-        { cwd: session.root },
-        session.cancelSignal,
-    );
+    const { session } = scan;
+    const commitResult = await runGit(session.root, [...COMMIT_METADATA, commit, '--'], {
+        cancelSignal: session.cancelSignal,
+    });
     if (commitResult.code !== 0)
         throw new GspotError('selection', ['Cannot read selected commit metadata for verified secret scanning.']);
     appendFileSync(scan.input, `${JSON.stringify({ metadata: { commit, file: '' }, data: commitResult.stdout })}\n`);

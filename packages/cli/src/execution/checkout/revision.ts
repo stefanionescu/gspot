@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { decodedText } from '#cli/platform/text.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
-import { run, runBinary } from '#cli/platform/spawn.ts';
+import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
@@ -23,9 +23,7 @@ const FRAME_NEWLINES = 2;
 const entryReads = new WeakMap<SourceReads, Map<string, Promise<GitEntry[]>>>();
 
 async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
-    const result = await run(['git', ...args], {
-        cwd: root,
-        timeoutMs: 30_000,
+    const result = await runGit(root, [...args], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
         ...(stdin === undefined ? {} : { stdin }),
     });
@@ -111,13 +109,8 @@ function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
  * @returns validated entries
  */
 async function readEntries(root: string, source: RevisionSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const command =
-        source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.hash];
-    const read = await runBinary(command, {
-        cwd: root,
-        timeoutMs: 30_000,
-        ...(cancelSignal === undefined ? {} : { cancelSignal }),
-    });
+    const argv = source.kind === 'index' ? ['ls-files', '--stage', '-z'] : ['ls-tree', '-r', '-z', source.hash];
+    const read = await runGitBinary(root, argv, { ...(cancelSignal === undefined ? {} : { cancelSignal }) });
     if (read.code !== 0)
         throw new GspotError('selection', [
             'Cannot read the Git index. Resolve Git errors before checking staged content.',
@@ -147,10 +140,8 @@ export async function gitBlobs(
     if (objects.length === 0) return new Map();
     if (objects.some((gitHash) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(gitHash)))
         throw new GspotError('selection', ['Git blob requests require full object IDs.']);
-    const result = await runBinary(['git', 'cat-file', '--batch'], {
-        cwd: root,
+    const result = await runGitBinary(root, ['cat-file', '--batch'], {
         stdin: objects.join('\n') + '\n',
-        timeoutMs: 30_000,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (result.code !== 0)
@@ -207,15 +198,19 @@ export function gitEntries(
  */
 export async function committedEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const options = { cwd: root, timeoutMs: 30_000, ...(cancelSignal === undefined ? {} : { cancelSignal }) };
-    const head = await run(['git', 'rev-parse', '--verify', '--quiet', 'HEAD'], options);
+    const head = await runGit(options.cwd, ['rev-parse', '--verify', '--quiet', 'HEAD'], options);
     if (head.code === 0) return gitEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
     const failure = new GspotError('selection', [
         'Cannot read committed Git history. Restore HEAD before checking migrations.',
     ]);
     if (head.code !== 1) throw failure;
-    const symbolic = await run(['git', 'symbolic-ref', '--quiet', 'HEAD'], options);
+    const symbolic = await runGit(options.cwd, ['symbolic-ref', '--quiet', 'HEAD'], options);
     if (symbolic.code !== 0) throw failure;
-    const refs = await run(['git', 'for-each-ref', '--format=%(refname)', '--', symbolic.stdout.trim()], options);
+    const refs = await runGit(
+        options.cwd,
+        ['for-each-ref', '--format=%(refname)', '--', symbolic.stdout.trim()],
+        options,
+    );
     if (refs.code === 0 && refs.stdout.trim() === '' && refs.stderr.trim() === '') return [];
     throw failure;
 }

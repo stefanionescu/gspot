@@ -2,7 +2,7 @@
 import ignore from 'ignore';
 import type { Dirent } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { runGitBlocking } from '#cli/platform/git.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
@@ -36,7 +36,7 @@ function assertParents(root: string, path: string): void {
 
 // The paths the Git index records as executable. A Windows file system keeps no executable bit, so the index stands in.
 function indexedExecutables(root: string): ReadonlySet<string> {
-    const listed = runBlocking(['git', 'ls-files', '--stage', '-z'], { cwd: root });
+    const listed = runGitBlocking(root, ['ls-files', '--stage', '-z']);
     if (listed.code !== 0) return new Set();
     const executables = listed.stdout.split('\0').filter((entry) => entry.startsWith('100755 '));
     return new Set(executables.map((entry) => entry.slice(entry.indexOf('\t') + 1)));
@@ -80,10 +80,7 @@ function hasGitEntry(directory: string): boolean {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Five readers ask git once; the default parameter carries the inspection for the caller that has it.
 function isOutsideGit(
     root: string,
-    inspection: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
-        cwd: root,
-        env: { LC_ALL: 'C' },
-    }),
+    inspection: SpawnResult = runGitBlocking(root, ['rev-parse', '--is-inside-work-tree'], { env: { LC_ALL: 'C' } }),
 ): boolean {
     return (
         inspection.code === NOT_REPOSITORY_CODE &&
@@ -140,7 +137,7 @@ function walkPaths(root: string): string[] {
 }
 
 function listedPaths(root: string): string[] {
-    const listed = runBlocking(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: root });
+    const listed = runGitBlocking(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
     if (listed.code === 0) return listed.stdout.split('\0').filter((path) => path !== '');
     if (!isOutsideGit(root))
         throw new Error(`Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`);
@@ -154,10 +151,7 @@ function listedPaths(root: string): string[] {
  * @throws when Git cannot establish the repository state
  */
 export function isGitRepository(root: string): boolean {
-    const inspection = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
-        cwd: root,
-        env: { LC_ALL: 'C' },
-    });
+    const inspection = runGitBlocking(root, ['rev-parse', '--is-inside-work-tree'], { env: { LC_ALL: 'C' } });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(root, inspection)) return false;
     throw new Error(
@@ -173,7 +167,7 @@ export function isGitRepository(root: string): boolean {
  */
 export function findRoot(start: string, markers = ['gspot.toml']): string {
     const directory = resolve(start);
-    const top = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: directory });
+    const top = runGitBlocking(directory, ['rev-parse', '--show-toplevel']);
     const gitRoot = top.code === 0 ? resolve(top.stdout.trim()) : undefined;
     if (gitRoot === undefined && !isOutsideGit(directory))
         throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
@@ -193,7 +187,7 @@ export function findRoot(start: string, markers = ['gspot.toml']): string {
  * @returns the indexed paths
  */
 export function indexedPaths(root: string): string[] {
-    const listed = runBlocking(['git', 'ls-files', '--cached', '-z'], { cwd: root });
+    const listed = runGitBlocking(root, ['ls-files', '--cached', '-z']);
     if (listed.code === 0) return [...new Set(listed.stdout.split('\0').filter((path) => path !== ''))];
     if (isOutsideGit(root)) return [];
     throw new Error(`Git index listing failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`);
@@ -205,7 +199,7 @@ export function indexedPaths(root: string): string[] {
  * @returns the submodule paths
  */
 export function submodulePaths(root: string): string[] {
-    const listed = runBlocking(['git', 'ls-files', '--stage', '-z'], { cwd: root });
+    const listed = runGitBlocking(root, ['ls-files', '--stage', '-z']);
     if (listed.code === 0)
         return [
             ...new Set(

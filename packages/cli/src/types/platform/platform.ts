@@ -57,6 +57,8 @@ export type AsyncSpawnOptions = SpawnOptions & {
     onStdout?: (chunk: string) => void;
     onStderr?: (chunk: string) => void;
 };
+/** The spawn options of a Git command; the cancellation may be absent, as a session's is. */
+export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'cancelSignal'> & { cancelSignal?: AbortSignal | undefined };
 export type ProcessTermination = {
     stopped: boolean;
     failure: Error | undefined;
