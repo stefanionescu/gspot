@@ -1,3 +1,4 @@
+// The package runner script removes its local registry whether the publication is refused or the run is signaled.
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { chmodSync, readdirSync } from 'node:fs';
@@ -6,7 +7,8 @@ import { root } from '#tests/harness/package/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { waitForFile, captureChild } from '#tests/harness/cli/process.ts';
 
-test.each(['refusal', 'SIGTERM'] as const)(
+// The fake npm is a shebang script and the case sends SIGTERM, which Windows has neither of.
+test.skipIf(process.platform === 'win32').each(['refusal', 'SIGTERM'] as const)(
     'release acceptance removes its registry after publication %s',
     async (scenario) => {
         await using sandbox = await testdir();
