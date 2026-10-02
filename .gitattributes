@@ -5,4 +5,14 @@
 .gspot/** text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
+/.editorconfig text eol=lf
+/.mise/conf.d/gspot-tools.toml text eol=lf
+/.prettierignore text eol=lf
+/.prettierrc.json text eol=lf
+/.semgrepignore text eol=lf
+/docs/.semgrepignore text eol=lf
+/docs/.stylelintrc.json text eol=lf
+/eslint.config.mjs text eol=lf
+/packages/cli/.semgrepignore text eol=lf
+/packages/eslint-plugin/.semgrepignore text eol=lf
 # <<< gspot managed <<<
