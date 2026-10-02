@@ -93,3 +93,26 @@ test('a reinstall the registry answers with 404 keeps the working tools and leav
     const version = await spawn.run([process.execPath, prettier, '--version'], { cwd: root });
     expect(version.stdout.trim()).toBe('3.8.1');
 }, 120_000);
+
+test('a tool project file that changes during the install is refused and nothing is installed', async () => {
+    await using fixture = await createPackageProject('npm', 'package.json', 'mise');
+    const { root } = fixture;
+    const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
+    await writeOutputs(await openSession(root));
+    const manifestPath = join(root, '.gspot/package.json');
+    const original = spawn.run;
+    // Another writer edits the tool project while the package manager installs it.
+    using installing = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
+        const result = await original(argv, options);
+        if (argv.includes('ci')) {
+            chmodSync(manifestPath, 0o644);
+            writeFileSync(manifestPath, `${readFileSync(manifestPath, 'utf8')}\n`);
+        }
+        return result;
+    });
+    expect(await rejection(asOwner(root, (owner) => installPackageProject(root, owner, tools)))).toContain(
+        'changed during installation',
+    );
+    expect(installing).toHaveBeenCalled();
+    expect(existsSync(join(root, '.gspot/node_modules'))).toBe(false);
+}, 120_000);
