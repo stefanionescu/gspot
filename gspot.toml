@@ -66,15 +66,15 @@ directory = ".gspot/guides"
 
 [tools.docs]
 
-[[tools.docs.paths_allowed]]
-patterns = [
+[[tools.docs.exclude]]
+paths = [
     ".github/workflows/gspot.yml",
     "packages/cli/grammars",
 ]
 reason = "These documented paths are ignored build or installation outputs, exact packaged asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
 
-[[tools.docs.paths_allowed]]
-patterns = [
+[[tools.docs.exclude]]
+paths = [
     "src/orders.ts",
     "src/discounts.ts",
     "src/utils.ts",
@@ -84,20 +84,20 @@ patterns = [
 ]
 reason = "Documentation walkthroughs and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
 
-[[tools.docs.paths_allowed]]
-patterns = ["acceptance/kits/language/css.test.ts"]
+[[tools.docs.exclude]]
+paths = ["acceptance/kits/language/css.test.ts"]
 reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/kits/language/css.test.ts."
 
-[[tools.docs.paths_allowed]]
-patterns = ["packages/cli/guides/**"]
+[[tools.docs.exclude]]
+paths = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
-[[tools.docs.paths_allowed]]
-patterns = [".gitlab/ci/gspot.yml"]
+[[tools.docs.exclude]]
+paths = [".gitlab/ci/gspot.yml"]
 reason = "This documented integration destination belongs to consumer repositories that select GitLab CI."
 
-[[tools.docs.paths_allowed]]
-patterns = [
+[[tools.docs.exclude]]
+paths = [
     "packages/eslint-plugin/dist",
     "packages/cli/dist",
     "packages/cli/dist/gspot.js",
@@ -107,8 +107,8 @@ patterns = [
 ]
 reason = "These exact documented outputs are ignored build products, runtime state, or configuration generated only for selected consumer integrations. Source manifests and output tests own their paths."
 
-[[tools.docs.paths_allowed]]
-patterns = [
+[[tools.docs.exclude]]
+paths = [
     "scripts/check-notes.ts",
     "notes/deploy.txt",
     "bash",

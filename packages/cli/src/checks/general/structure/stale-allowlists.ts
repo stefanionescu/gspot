@@ -19,14 +19,12 @@ function listed(value: unknown, key: string): string[] {
     });
 }
 
-// Tool exclusions list paths; only the docs path exceptions list patterns that are paths (lychee's exclude is URL regexes).
+// Tool exclusions list their paths under paths; the URL patterns of tools.lychee.exclude_urls are no paths.
 function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPattern[] {
     return Object.entries(tools).flatMap(([tool, table]) =>
-        Object.entries(table).flatMap(([setting, value]) => {
-            const paths = listed(value, 'paths');
-            const patterns = tool === 'docs' && setting === 'paths_allowed' ? listed(value, 'patterns') : [];
-            return [...paths, ...patterns].map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` }));
-        }),
+        Object.entries(table).flatMap(([setting, value]) =>
+            listed(value, 'paths').map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` })),
+        ),
     );
 }
 
@@ -139,7 +137,7 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
         .filter((entry) => {
             const matches = pathMatcher([entry.pattern]);
             if (candidates.some((path) => matches(path))) return false;
-            return entry.where !== 'tools.docs.paths_allowed' || ![...references].some((path) => matches(path));
+            return entry.where !== 'tools.docs.exclude' || ![...references].some((path) => matches(path));
         })
         .map((entry) =>
             findingAt(

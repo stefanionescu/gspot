@@ -8,7 +8,7 @@ import { runGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const REASON = 'The report names the folders the move deleted, which is what it is for.';
-const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
+const TABLE = `[{paths = ["REPORT.md"], reason = "${REASON}"}]`;
 const CHECK = ['check', '--only', 'docs/readme-present', '--json'];
 
 test('gspot set writes a list of tables typed the TOML way as tables, and the policy refuses quoted ones', async () => {
@@ -18,12 +18,12 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
         'gspot.toml': policyOf(['docs', 'spelling'], '[guides]\ninstall = false\n'),
     });
     commitAll(sandbox.path);
-    const written = await runGspot(sandbox.path, ['set', 'tools.docs.paths_allowed', TABLE]);
+    const written = await runGspot(sandbox.path, ['set', 'tools.docs.exclude', TABLE]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-    expect(policy).toContain('patterns = ["REPORT.md"]');
-    expect(policy).not.toContain('"[{patterns');
-    const unreadable = await runGspot(sandbox.path, ['set', 'tools.docs.paths_allowed', '[{patterns = ']);
+    expect(policy).toContain('paths = ["REPORT.md"]');
+    expect(policy).not.toContain('"[{paths');
+    const unreadable = await runGspot(sandbox.path, ['set', 'tools.docs.exclude', '[{paths = ']);
     expect(unreadable.code).toBe(2);
     expect(unreadable.stdout + unreadable.stderr).toContain('reads as neither JSON nor TOML');
     // A person can still type the quotes by hand, and the policy refuses that when it loads.

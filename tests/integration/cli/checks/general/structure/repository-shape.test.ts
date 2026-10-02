@@ -14,7 +14,7 @@ const policy = {
     ignore: [{ check: 'x/y', paths: ['gone/**'], reason: 'A test reason.' }],
     generated: [{ paths: ['data/**'], reason: 'The fixture owns generated output.' }],
     structure: { lone_files_allowed: [{ paths: ['src'], reason: 'A test reason.' }] },
-    tools: { docs: { paths_allowed: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
+    tools: { docs: { exclude: [{ paths: ['docs/**'], reason: 'A test reason.' }] } },
     architecture: { roles: { config: 'config' } },
 };
 
@@ -27,9 +27,9 @@ test('documentation path exceptions must match tracked paths or actual documenta
         kits: ['docs'],
         tools: {
             docs: {
-                paths_allowed: [
+                exclude: [
                     {
-                        patterns: ['.reports/output.json', '.reports/unused.json'],
+                        paths: ['.reports/output.json', '.reports/unused.json'],
                         reason: 'The runner writes an ignored report.',
                     },
                 ],
@@ -39,7 +39,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
     });
     expect(allowlistsMatch(selected).map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
-        '.reports/unused.json under tools.docs.paths_allowed matches no tracked file or folder.',
+        '.reports/unused.json under tools.docs.exclude matches no tracked file or folder.',
     ]);
 });
 test('suppression validation ignores source text and valid reasons but reports missing required reasons', async () => {

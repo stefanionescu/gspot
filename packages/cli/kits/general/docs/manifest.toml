@@ -75,7 +75,7 @@ level = "recommended"
 stage = "commit"
 summary = "Checks that every path a Markdown file names is tracked, and every mise run or bun run names a task that exists."
 why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
-help = "Fix the path or the task name, or add the pattern with a reason under tools.docs.paths_allowed."
+help = "Fix the path or the task name, or add the path with a reason under tools.docs.exclude."
 
 [[checks]]
 name = "docs/readme-present"
@@ -105,11 +105,11 @@ default = []
 summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
 
 [[settings]]
-name = "tools.docs.paths_allowed"
+name = "tools.docs.exclude"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Path patterns the stale-paths check skips, each with a reason."
+summary = "Paths the stale-paths check skips, each with a reason."
 
 [[settings]]
 name = "tools.docs.banned_headings"
