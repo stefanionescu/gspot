@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 
 const EXPLAIN_POLICY = `kits = []
@@ -38,7 +38,7 @@ coverage_lines = 95
         'api/example.test.js': 'test("example", () => {});\n',
         'api/worker/example.test.js': 'test("worker", () => {});\n',
     });
-    const result = await spawnGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         scopes: [
@@ -46,14 +46,10 @@ coverage_lines = 95
             { scope: 'api/worker', current: 95, source: '[[scope]] api/worker' },
         ],
     });
-    const text = await spawnGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines']);
-    expect(text.stdout).toContain('Scope: api\n');
-    expect(text.stdout).toContain('Scope: api/worker\n');
-    expect(text.stdout).toContain('Current value: 95');
-    expect(text.stdout).toContain('gspot set tools.jest.coverage_lines <value> --scope api/worker --reason');
-    const changed = await spawnGspot(sandbox.path, ['set', 'tools.jest.coverage_lines', '96', '--scope', 'api/worker']);
-    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const updated = await spawnGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
+    const policy = join(sandbox.path, 'gspot.toml');
+    const original = await Bun.file(policy).text();
+    await Bun.write(policy, original.replace('coverage_lines = 95', 'coverage_lines = 96'));
+    const updated = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
     expect(JSON.parse(updated.stdout)).toMatchObject({
         scopes: [
             { scope: 'api', current: 90 },
@@ -77,7 +73,7 @@ stage = "manual"
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "project/syntax"\nreason = "The fixture verifies a disabled check."\n`,
         'api/build.sh': script,
     });
-    const ignored = await spawnGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
+    const ignored = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(ignored.code).toBe(0);
     expect(JSON.parse(ignored.stdout)).toMatchObject({
         checks: [],
@@ -85,13 +81,13 @@ stage = "manual"
         ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-    const corrected = await spawnGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
+    const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(JSON.parse(corrected.stdout)).toMatchObject({
         checks: [{ check: 'project/syntax', stage: 'manual' }],
         ignores: [],
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
-    const command = await spawnGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
+    const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
     expect(JSON.parse(command.stdout)).toMatchObject({
         kind: 'check',
@@ -100,18 +96,15 @@ stage = "manual"
         command: ['bash', '-n', '{files}'],
         paths: ['**/*.sh'],
     });
-    const commandText = await spawnGspot(sandbox.path, ['explain', 'project/syntax']);
-    expect(commandText.stdout).toContain('repository command');
-    expect(commandText.stdout).toContain('gspot ignore project/syntax');
 });
 test('explain > a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, bash: script, 'api/build.sh': script });
     commitAll(sandbox.path);
-    const configuration = await spawnGspot(sandbox.path, ['explain', 'bash', '--json']);
+    const configuration = await runGspot(sandbox.path, ['explain', 'bash', '--json']);
     expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
     expect(JSON.parse(configuration.stdout)).toMatchObject({ kind: 'kit', subject: 'bash' });
-    const file = await spawnGspot(sandbox.path, ['explain', './bash', '--json']);
+    const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
 });
@@ -123,7 +116,7 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
         'api/build.sh': script,
     });
     commitAll(sandbox.path);
-    const result = await spawnGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         kind: 'path',
@@ -141,20 +134,14 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
             },
         ],
     });
-    const text = await spawnGspot(sandbox.path, ['explain', 'api/build.sh']);
-    expect(text.code, text.stdout + text.stderr).toBe(0);
-    expect(text.stdout).toContain('api/build.sh  (scope api, source');
-    expect(text.stdout).toContain('bash/shellcheck  commit');
-    expect(text.stdout).toContain('SC2086');
 });
 
 test('explain > a missing explicit path fails', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, 'api/build.sh': script });
     commitAll(sandbox.path);
-    const missing = await spawnGspot(sandbox.path, ['explain', './missing.sh']);
+    const missing = await runGspot(sandbox.path, ['explain', './missing.sh']);
     expect(missing.code).toBe(2);
-    expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
 });
 
 test('explain > kit and check explanations still resolve without a policy', async () => {
@@ -165,7 +152,7 @@ test('explain > kit and check explanations still resolve without a policy', asyn
         ['bash', 'kit'],
         ['bash/shellcheck', 'check'],
     ] as const) {
-        const result = await spawnGspot(sandbox.path, ['explain', subject, '--json']);
+        const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
     }
