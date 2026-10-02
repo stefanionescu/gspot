@@ -1,8 +1,11 @@
 // File arguments, stages, and scope paths select the checks a run executes.
+import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runGspot, spawnGspot } from '#tests/harness/cli/command.ts';
 
@@ -171,4 +174,27 @@ kits = ["javascript", "naming"]
     expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(
         report.checks.flatMap((check) => check.findings),
     );
+});
+
+test('a staged environment file stops the commit hook before any check runs', async () => {
+    const definition = `
+[[check]]
+name = "sandbox/marker"
+command = ${JSON.stringify([process.execPath, '-e', 'require("node:fs").writeFileSync("ran.txt", "")'])}
+paths = ["**"]
+stage = "commit"
+`;
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf([], definition),
+        '.gitignore': '.env\nran.txt\n',
+        'source.txt': 'input',
+    });
+    commitAll(sandbox.path);
+    writeFileSync(join(sandbox.path, '.env'), 'TOKEN=secret\n');
+    gitOutput(sandbox.path, ['add', '-f', '.env']);
+    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+    expect(JSON.parse(refused.stdout)).toStrictEqual({ failed: ['secrets/env-files'], files: ['.env'] });
+    expect(existsSync(join(sandbox.path, 'ran.txt'))).toBe(false);
 });
