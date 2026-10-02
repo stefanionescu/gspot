@@ -18,7 +18,7 @@ if (args.includes('--version')) {
     console.log('pinact 5.0.0');
     process.exit(0);
 }
-if (!args.includes('--verify')) process.exit(0);
+if (!args.includes('--verify-comment')) process.exit(0);
 const file = Bun.file(args.at(-1));
 const content = await file.text();
 if (!args.includes('--check')) await Bun.write(file, 'rewritten by pinact');
