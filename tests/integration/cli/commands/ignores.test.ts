@@ -100,3 +100,36 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
 });
+
+const TWO_RULES = policyOf(
+    ['bash'],
+    `[rules]\ninstall = false\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "Word lists pass through on purpose."\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2034"\nreason = "The variables are read by sourcing scripts."\n`,
+);
+
+test.each([
+    ['an unknown check', ['ignore', 'bash/shelcheck', '--reason', 'A typo of the check.'], 2, 'bash/shellcheck'],
+    [
+        'the removal of an entry that does not exist',
+        ['ignore', 'bash/shellcheck', '--rule', 'SC1000', '--remove'],
+        0,
+        'no matching ignore entry',
+    ],
+])('ignore with %s exits %d and leaves gspot.toml byte for byte', async (_, argv, code, expected) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'gspot.toml': TWO_RULES, 'entry.sh': 'echo example\n' });
+    const result = await runGspot(directory.path, argv);
+    expect(result.code, result.stdout + result.stderr).toBe(code);
+    expect(result.stdout + result.stderr).toContain(expected);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(TWO_RULES);
+});
+
+test('removing the ignore of one rule keeps the ignore of the other rule', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'gspot.toml': TWO_RULES, 'entry.sh': 'echo example\n' });
+    const removed = await runGspot(directory.path, ['ignore', 'bash/shellcheck', '--rule', 'SC2086', '--remove']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(removed.stdout).toContain('removed 1 ignore entry for bash/shellcheck');
+    const policy = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
+    expect(policy).not.toContain('SC2086');
+    expect(policy).toContain('rule = "SC2034"');
+});
