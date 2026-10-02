@@ -1,5 +1,6 @@
 // The rule blocks of the generated ESLint configuration: policy overrides, structural ceilings, manifest exclusions,
 // and the selector groups of framework fragments.
+import { isDeepStrictEqual } from 'node:util';
 import { policyValue } from '#cli/policy/settings.ts';
 import { pathExpressions } from '#cli/repository/selectors.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -131,16 +132,15 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
         groups.push({
             files: paths,
             selectors: general
-                .filter((entry) => JSON.stringify(entry.except) !== JSON.stringify(paths))
+                .filter((entry) => !isDeepStrictEqual(entry.except, paths))
                 .map((entry) => ({ selector: entry.selector, message: entry.message })),
         });
     for (const files of distinctLists(selectors.flatMap((entry) => (entry.files === undefined ? [] : [entry.files]))))
         groups.push({
             files,
-            selectors: [
-                ...general,
-                ...selectors.filter((entry) => JSON.stringify(entry.files) === JSON.stringify(files)),
-            ].map((entry) => ({ selector: entry.selector, message: entry.message })),
+            selectors: [...general, ...selectors.filter((entry) => isDeepStrictEqual(entry.files, files))].map(
+                (entry) => ({ selector: entry.selector, message: entry.message }),
+            ),
         });
     return groups;
 }

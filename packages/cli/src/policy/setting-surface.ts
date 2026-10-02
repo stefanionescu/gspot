@@ -1,5 +1,6 @@
 // Settings exposed by gspot and selected manifests. Later kits override defaults, through their own settings or
 // through a [defaults] table for settings another kit declares.
+import { isDeepStrictEqual } from 'node:util';
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
 import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
@@ -10,7 +11,7 @@ import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schem
 // Whether another kit's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(previous: { value: unknown; kit: string }, manifest: Manifest, spec: SettingSpec): boolean {
     if (previous.kit === manifest.kit.name) return false;
-    if (JSON.stringify(previous.value) === JSON.stringify(spec.default)) return false;
+    if (isDeepStrictEqual(previous.value, spec.default)) return false;
     return !OVERRIDING_KINDS.has(manifest.kit.kind);
 }
 

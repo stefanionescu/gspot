@@ -1,6 +1,7 @@
 // The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
@@ -88,9 +89,8 @@ async function revisionOf(context: PushSearch, line: PushLine, gitHash: string):
 
 // Records a revision, merging it into one already recorded with the same tree and paths.
 function recordRevision(result: PushSelection, revision: PushRevision): void {
-    const paths = JSON.stringify(revision.paths);
     const duplicate = result.revisions.find(
-        (entry) => entry.tree === revision.tree && JSON.stringify(entry.paths) === paths,
+        (entry) => entry.tree === revision.tree && isDeepStrictEqual(entry.paths, revision.paths),
     );
     if (duplicate === undefined) {
         result.revisions.push(revision);

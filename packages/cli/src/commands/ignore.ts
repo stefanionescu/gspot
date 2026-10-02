@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { allChecks } from '#cli/kits/listing.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -47,7 +48,6 @@ function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
 
 async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
     const counter = { removed: 0 };
-    const paths = JSON.stringify(o.paths ?? []);
     const result = await commitPolicy(
         root,
         removeEntries(
@@ -55,7 +55,7 @@ async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
             (entry: TomlTable): boolean =>
                 entry['check'] === o.check &&
                 (entry['rule'] ?? undefined) === o.rule &&
-                JSON.stringify(entry['paths'] ?? []) === paths,
+                isDeepStrictEqual(entry['paths'] ?? [], o.paths ?? []),
             counter,
         ),
         false,

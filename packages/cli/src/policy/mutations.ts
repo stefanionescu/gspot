@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -165,8 +166,7 @@ export function appendList(key: string, entries: unknown[]): Mutation {
         if (!table) throw new Error(`\`${key}\` runs through a value that is not a table.`);
         const existing = table[name];
         const list: unknown[] = Array.isArray(existing) ? [...(existing as unknown[])] : [];
-        for (const value of entries)
-            if (list.every((item) => JSON.stringify(item) !== JSON.stringify(value))) list.push(value);
+        for (const value of entries) if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
         table[name] = list;
     };
 }
