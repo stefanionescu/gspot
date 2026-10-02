@@ -6,11 +6,10 @@ import { LOCKS } from '#cli/config/tools/packages.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { RegistryPackage } from '#tests/types/registry.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { PackageClient } from '#tests/types/integration/tools.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
+import type { CreatePackageProjectResult } from '#tests/types/tools.ts';
 import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createPackageRegistry } from '#tests/harness/registry/packages.ts';
-import type { ReadPackageInputsResult, CreatePackageProjectResult } from '#tests/types/results.ts';
 
 const QUIET_GUIDES = '[guides]\ninstall = false\n';
 
@@ -43,7 +42,17 @@ const PACKAGES: Record<'mise' | 'none', RegistryPackage[]> = {
 const RUNNER_POLICY = { mise: '[runner]\ntool = "mise"\n', none: '' };
 
 /** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
-export function readPackageInputs(root: string, client: PackageClient): ReadPackageInputsResult {
+export function readPackageInputs(
+    root: string,
+    client: keyof typeof LOCKS,
+): {
+    manifest: NonSharedBuffer;
+    lockPath: string;
+    lock: NonSharedBuffer;
+    mode: number;
+    ownershipPath: string;
+    ownership: NonSharedBuffer;
+} {
     const lockPath = join(root, '.gspot', LOCKS[client]);
     const ownershipPath = join(root, '.gspot/state/ownership.json');
     return {
@@ -58,7 +67,7 @@ export function readPackageInputs(root: string, client: PackageClient): ReadPack
 
 /** Creates an authenticated registry and an authored project for a native package manager. */
 export async function createPackageProject(
-    client: PackageClient,
+    client: keyof typeof LOCKS,
     projectPath: string,
     runner: 'mise' | 'none',
 ): Promise<CreatePackageProjectResult> {

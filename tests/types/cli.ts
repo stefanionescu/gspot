@@ -1,8 +1,8 @@
-// The types of support/cli in this package.
+// The types the CLI harness and its tests share: planted repositories, their findings, and spawned commands.
 import type { Finding } from '#cli/types/execution/execution.ts';
 
 /** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
-type Correction = {
+export type Correction = {
     files: Record<string, string>;
     policy?: string | undefined;
     removed?: string[];
@@ -37,20 +37,6 @@ export type Sandbox = {
     /** The level set after init; all unless a test says otherwise. */
     level?: 'recommended' | 'all';
 };
-/** A repository the planted cases of one table share, with what happens once around its install. */
-export type PlantedRepository = Sandbox & {
-    /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
-    dirname?: string;
-    /** Runs once before init: files that are copied rather than written. */
-    before?: (root: string) => void;
-    /** Runs once after install: settings, commits, or files the cases need in place. */
-    prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
-    /** The correction of a case that names none. */
-    corrected?: (planted: FindingCase) => Correction;
-};
-/** An installed repository and the environment its commands run with. */
-export type Planted = { root: string; environment: Record<string, string> };
-export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {
     check: string;

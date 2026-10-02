@@ -1,5 +1,5 @@
 import { join, dirname } from 'node:path';
-import type { OriginalFile, PlantedInput } from '#tests/types/cli.ts';
+import type { PlantedInput } from '#tests/types/cli.ts';
 
 import {
     rmSync,
@@ -16,7 +16,9 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-function originalFile(path: string): OriginalFile | undefined {
+function originalFile(
+    path: string,
+): { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string } | undefined {
     try {
         const attributes = lstatSync(path);
         if (attributes.isSymbolicLink()) return { kind: 'symlink', target: readlinkSync(path) };
@@ -49,7 +51,13 @@ function absentParents(cwd: string, paths: string[]): string[] {
     return [...parents].toSorted((a, b) => b.length - a.length);
 }
 
-function restoreFiles(cwd: string, originals: Map<string, OriginalFile | undefined>): void {
+function restoreFiles(
+    cwd: string,
+    originals: Map<
+        string,
+        { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string } | undefined
+    >,
+): void {
     for (const [path, original] of originals) {
         const full = join(cwd, path);
         rmSync(full, { force: true });

@@ -1,8 +1,10 @@
 import executables from 'which';
 import { join } from 'node:path';
+import type { TestdirResult } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -10,7 +12,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { drizzleMigrations } from '#cli/checks/library/drizzle.ts';
-import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const DRIZZLE_MIGRATIONS_GENERATOR = String.raw`import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,7 +32,18 @@ if (schema === 'failure') {
 const DRIZZLE_MIGRATIONS_SCOPES = ['', 'packages/db'];
 
 // A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
-async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Planted> {
+async function plant(
+    scope: string,
+    schema: 'changed' | 'failure',
+): Promise<{
+    directory: TestdirResult;
+    path: (file: string) => string;
+    manual: string;
+    mode: number;
+    initial: string;
+    spec: CheckSpec;
+    input: EngineInput;
+}> {
     const directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': policyOf(['drizzle']) + (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nkits = []\n`),
@@ -67,7 +80,21 @@ async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Plan
 }
 
 // Whatever the generator did, the tracked edits, the untracked migration, and the other scope are untouched.
-function expectPreserved({ directory, path, manual, mode, initial }: Planted): void {
+function expectPreserved({
+    directory,
+    path,
+    manual,
+    mode,
+    initial,
+}: {
+    directory: TestdirResult;
+    path: (file: string) => string;
+    manual: string;
+    mode: number;
+    initial: string;
+    spec: CheckSpec;
+    input: EngineInput;
+}): void {
     expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
     expect(statSync(manual).mode).toBe(mode);
     expect(readFileSync(initial, 'utf8')).toBe('-- Developer edit\n');

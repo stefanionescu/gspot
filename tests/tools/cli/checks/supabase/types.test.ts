@@ -13,7 +13,6 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import { isCi, environmentVariables } from '#cli/platform/environment.ts';
-import type { PrepareSupabaseDatabaseResult } from '#tests/types/results.ts';
 
 const DATABASE_START = [
     'supabase',
@@ -23,7 +22,13 @@ const DATABASE_START = [
 ];
 
 /** Starts an isolated native database and retains the authored configuration for preservation checks. */
-async function prepareSupabaseDatabase(root: string): Promise<PrepareSupabaseDatabaseResult> {
+async function prepareSupabaseDatabase(root: string): Promise<{
+    options: { cwd: string; timeoutMs: number };
+    configPath: string;
+    authored: NonSharedBuffer;
+    version: string;
+    [Symbol.asyncDispose](): Promise<void>;
+}> {
     const project = `gspot-types-${randomUUID().replaceAll('-', '').slice(0, 28)}`;
     const options = { cwd: root, timeoutMs: 180_000 };
     const version = await run(['supabase', '--version'], options);

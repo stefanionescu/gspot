@@ -11,7 +11,6 @@ import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
-import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();
@@ -46,7 +45,7 @@ test('apply preview names a generated ESLint rule change using installed depende
     const nativeBefore = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    }).calculateConfigForFile('entry.js')) as { rules: Record<string, [number, ...unknown[]]> };
     expect(nativeBefore.rules['no-console']?.[0]).toBe(0);
     writeFileSync(join(directory.path, 'gspot.toml'), `${policy}${ignored}paths = ["tests/**"]\n`);
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
@@ -67,7 +66,7 @@ test('apply preview names a generated ESLint rule change using installed depende
     const nativeAfter = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    }).calculateConfigForFile('entry.js')) as { rules: Record<string, [number, ...unknown[]]> };
     expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });

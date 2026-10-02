@@ -8,13 +8,18 @@ import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { JestReportInputs } from '#tests/types/integration/cli/checks.ts';
 
 async function writeJestReports(
     root: string,
     output: string,
     coverageDirectory: string,
-    scenario: JestReportInputs,
+    scenario: {
+        tests: 'valid' | 'malformed' | 'missing';
+        testCount: number;
+        runtimeFailures: number;
+        status: string;
+        coverage: number | string | undefined;
+    },
 ): Promise<void> {
     const report = {
         success: true,

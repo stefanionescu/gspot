@@ -14,7 +14,6 @@ import { initArgs } from '#tests/harness/planted/init.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
-import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
 import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
@@ -97,7 +96,12 @@ export async function prepareNextjsBuild(root: string, scope: string, check: str
  * @param check the Next.js command whose diagnostic format to simulate
  * @returns reads and a disposer that restores the process boundaries
  */
-export function readNextjsCommands(check: string): NextjsRead {
+export function readNextjsCommands(check: string): {
+    directories: string[];
+    inspections: string[][];
+    routesSeen: string[];
+    [Symbol.dispose]: () => void;
+} {
     const failureOutput = {
         stdout: check === 'nextjs/typecheck' ? 'src/page.ts(1,1): error TS2322: Type mismatch\n' : '',
         stderr: check === 'nextjs/build' ? 'Error: Page is invalid\n' : '',

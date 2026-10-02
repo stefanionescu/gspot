@@ -1,16 +1,20 @@
 import { join } from 'node:path';
+import type { Mock } from 'bun:test';
+import type { TestdirResult } from 'testdirs';
 import * as tools from '#cli/tools/inspect.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import type { inspectTool } from '#cli/tools/inspect.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/platform/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 
 const CLOUDFLARE_TYPES_GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
 const content = readFileSync('bindings.txt', 'utf8');
@@ -22,7 +26,19 @@ if (content === 'failure') { console.error('Types generation failed'); process.e
 const CLOUDFLARE_TYPES_SCOPES = ['', 'workers/api'];
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
-async function plant(scope: string, bindings: string): Promise<Planted> {
+async function plant(
+    scope: string,
+    bindings: string,
+): Promise<{
+    directory: TestdirResult;
+    path: (name: string) => string;
+    target: string;
+    edited: string;
+    mode: number;
+    spec: CheckSpec;
+    input: EngineInput;
+    locate: Mock<typeof inspectTool>;
+}> {
     const directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': policyOf(['cloudflare']),
@@ -63,7 +79,22 @@ async function plant(scope: string, bindings: string): Promise<Planted> {
 }
 
 // The developer's edit, its mode, and the absence of generator side effects, whatever the generator did.
-function expectPreserved({ directory, path, target, edited, mode }: Planted): void {
+function expectPreserved({
+    directory,
+    path,
+    target,
+    edited,
+    mode,
+}: {
+    directory: TestdirResult;
+    path: (name: string) => string;
+    target: string;
+    edited: string;
+    mode: number;
+    spec: CheckSpec;
+    input: EngineInput;
+    locate: Mock<typeof inspectTool>;
+}): void {
     expect(readFileSync(target, 'utf8')).toBe(edited);
     expect(statSync(target).mode).toBe(mode);
     expect(existsSync(join(directory.path, path('generated-note.txt')))).toBe(false);

@@ -10,7 +10,6 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
-import type { Parser } from '#tests/types/integration/cli/generation.ts';
 
 const PLANTED = {
     'package.json': '{"name":"planted","private":true,"type":"module"}\n',
@@ -19,7 +18,7 @@ const PLANTED = {
     'src/index.ts': 'export const answer = 42;\n',
 };
 
-const PARSERS: Record<string, Parser> = {
+const PARSERS: Record<string, (text: string, path: string) => void> = {
     '.json': parseJson,
     '.jsonc': parseJson,
     '.webmanifest': parseJson,

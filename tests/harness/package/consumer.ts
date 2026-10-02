@@ -4,7 +4,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environment } from '#tests/harness/package/packages.ts';
-import type { CreateConsumerResult } from '#tests/types/results.ts';
+import type { CreateConsumerResult } from '#tests/types/package.ts';
 
 const OFFLINE_ENVIRONMENT = {
     HTTP_PROXY: 'http://127.0.0.1:1',

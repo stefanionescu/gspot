@@ -8,8 +8,8 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
+import type { CheckResult } from '#cli/types/execution/execution.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
-import type { PrepareSupabaseCheckResult } from '#tests/types/results.ts';
 import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
@@ -17,7 +17,12 @@ async function prepareSupabaseCheck(
     root: string,
     scope: string,
     outcome: Awaited<ReturnType<typeof processes.run>>,
-): Promise<PrepareSupabaseCheckResult> {
+): Promise<{
+    prefix: string;
+    execute: () => Promise<CheckResult>;
+    requests: { args: string[]; cwd: string }[];
+    [Symbol.dispose](): void;
+}> {
     const prefix = scope === '' ? '' : `${scope}/`;
     const policy =
         scope === '' ? '[tools.supabase]' : `[[scope]]\npath = "${scope}"\nkits = ["supabase"]\n[scope.tools.supabase]`;

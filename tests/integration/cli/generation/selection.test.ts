@@ -7,7 +7,6 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 
 test('security output follows the selected security configuration', async () => {
     await using sandbox = await testdir();
@@ -83,7 +82,12 @@ test('license configuration retains scoped exceptions and inherited license allo
         version: session.version,
         packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('/licenses.json'));
-    const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content) as LicensesConfiguration]));
+    const parsed = new Map(
+        configs.map(({ path, content }) => [
+            path,
+            JSON.parse(content) as { licenses_allowed: string[]; packages_allowed: unknown[] },
+        ]),
+    );
     expect(parsed.size).toBe(4);
     for (const path of [
         '.gspot/config/licenses.json',

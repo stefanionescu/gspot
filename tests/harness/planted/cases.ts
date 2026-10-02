@@ -9,10 +9,13 @@ import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepository } from '#tests/types/cli.ts';
+import type { Sandbox, Correction, FindingCase, PlantedInput, SpawnOutcome } from '#tests/types/cli.ts';
 
 // The check fails with the planted defect, and the finding is where the case says.
-async function expectDefect(planted: Planted, entry: FindingCase): Promise<void> {
+async function expectDefect(
+    planted: { root: string; environment: Record<string, string> },
+    entry: FindingCase,
+): Promise<void> {
     const outcome = await runPlanted(planted.root, entry, planted.environment);
     expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
     const failed = JSON.parse(outcome.stdout) as RunReport;
@@ -21,7 +24,19 @@ async function expectDefect(planted: Planted, entry: FindingCase): Promise<void>
 }
 
 // The clean rerun plants the correction under the case's policy and executable bits, unless it names its own.
-function correctionOf(entry: FindingCase, repository: PlantedRepository): PlantedInput {
+function correctionOf(
+    entry: FindingCase,
+    repository: Sandbox & {
+        /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
+        dirname?: string;
+        /** Runs once before init: files that are copied rather than written. */
+        before?: (root: string) => void;
+        /** Runs once after install: settings, commits, or files the cases need in place. */
+        prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
+        /** The correction of a case that names none. */
+        corrected?: (planted: FindingCase) => Correction;
+    },
+): PlantedInput {
     const given = entry.corrected ?? repository.corrected?.(entry) ?? { files: {} };
     const policy = 'policy' in given ? given.policy : entry.policy;
     const executable = 'executable' in given ? given.executable : entry.executable;
@@ -31,7 +46,20 @@ function correctionOf(entry: FindingCase, repository: PlantedRepository): Plante
 }
 
 // The check passes once the correction is planted.
-async function expectCorrection(planted: Planted, entry: FindingCase, repository: PlantedRepository): Promise<void> {
+async function expectCorrection(
+    planted: { root: string; environment: Record<string, string> },
+    entry: FindingCase,
+    repository: Sandbox & {
+        /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
+        dirname?: string;
+        /** Runs once before init: files that are copied rather than written. */
+        before?: (root: string) => void;
+        /** Runs once after install: settings, commits, or files the cases need in place. */
+        prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
+        /** The correction of a case that names none. */
+        corrected?: (planted: FindingCase) => Correction;
+    },
+): Promise<void> {
     const outcome = await runPlanted(planted.root, correctionOf(entry, repository), planted.environment);
     expect(outcome.code, `${entry.check} corrected: ${outcome.stdout}${outcome.stderr}`).toBe(0);
     const accepted = JSON.parse(outcome.stdout) as RunReport;
@@ -74,14 +102,23 @@ export async function runPlanted(
  */
 export function plantedCases(
     name: string,
-    repository: PlantedRepository,
+    repository: Sandbox & {
+        /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
+        dirname?: string;
+        /** Runs once before init: files that are copied rather than written. */
+        before?: (root: string) => void;
+        /** Runs once after install: settings, commits, or files the cases need in place. */
+        prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
+        /** The correction of a case that names none. */
+        corrected?: (planted: FindingCase) => Correction;
+    },
     cases: FindingCase[],
-    more?: (planted: () => Planted) => void,
+    more?: (planted: () => { root: string; environment: Record<string, string> }) => void,
 ): void {
     describe(name, () => {
         let sandbox: Awaited<ReturnType<typeof testdir>> | undefined;
-        let planted: Planted | undefined;
-        const installed = (): Planted => {
+        let planted: { root: string; environment: Record<string, string> } | undefined;
+        const installed = (): { root: string; environment: Record<string, string> } => {
             if (planted === undefined) throw new Error(`The ${name} repository is not installed.`);
             return planted;
         };

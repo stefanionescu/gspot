@@ -6,8 +6,6 @@ import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { git, gitOutput } from '#tests/harness/cli/git.ts';
 import { run, gspot } from '#tests/harness/cli/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { PrepareCiProjectResult } from '#tests/types/results.ts';
-import type { Generated } from '#tests/types/acceptance/source/cli.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 function commitCiSource(root: string, text: string): string {
@@ -17,7 +15,19 @@ function commitCiSource(root: string, text: string): string {
 }
 
 /** Creates authored provider jobs and a changed object with a deliberate shell syntax error. */
-async function prepareCiProject(root: string, provider: 'gitlab' | 'github'): Promise<PrepareCiProjectResult> {
+async function prepareCiProject(
+    root: string,
+    provider: 'gitlab' | 'github',
+): Promise<{
+    base: string;
+    generated: {
+        gspot: { script: string[] };
+        jobs: Record<string, { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }>;
+    };
+    pipeline: string;
+    pipelinePath: string;
+    workflowPath: string;
+}> {
     gitOutput(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
     const pipeline =
@@ -49,7 +59,10 @@ format = "lines"
     writeFileSync(join(root, 'changed.sh'), 'if then\n');
     commitCiSource(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
-    const generated = Bun.YAML.parse(readFileSync(join(root, workflowPath), 'utf8')) as Generated;
+    const generated = Bun.YAML.parse(readFileSync(join(root, workflowPath), 'utf8')) as {
+        gspot: { script: string[] };
+        jobs: Record<string, { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }>;
+    };
     return { base, generated, pipeline, pipelinePath, workflowPath };
 }
 
@@ -88,7 +101,10 @@ writeFileSync(${JSON.stringify(join(directory, 'gspot'))}, ${JSON.stringify(laun
 /** Executes the generated provider script with its documented comparison and artifact environment. */
 async function runCiJob(
     root: string,
-    generated: Generated,
+    generated: {
+        gspot: { script: string[] };
+        jobs: Record<string, { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }>;
+    },
     directory: string,
     comparison: string,
     provider: 'gitlab' | 'github',
@@ -114,7 +130,10 @@ async function runCiJob(
 }
 
 // Whether the GitHub manual job alone runs the manual stage.
-function runsManualStageAlone(generated: Generated): boolean {
+function runsManualStageAlone(generated: {
+    gspot: { script: string[] };
+    jobs: Record<string, { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }>;
+}): boolean {
     const check = generated.jobs['check-ubuntu']!.steps;
     const manual = generated.jobs['manual-ubuntu']!.steps;
     return (
@@ -192,7 +211,13 @@ test.each(['gitlab', 'github'] as const)(
         }
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
         commitCiSource(repository.path, 'check the full tree in CI');
-        const full = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as Generated;
+        const full = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as {
+            gspot: { script: string[] };
+            jobs: Record<
+                string,
+                { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }
+            >;
+        };
         const all = await runCiJob(repository.path, full, install.directory, base, provider);
         expect(all.code, all.stdout + all.stderr).toBe(1);
         expect(all.stdout).toContain('legacy.sh');

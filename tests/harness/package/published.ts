@@ -3,12 +3,13 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
 import * as processes from '#cli/platform/spawn.ts';
+import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { root, environment } from '#tests/harness/package/packages.ts';
-import type { PublishedRelease, InstalledConsumer, ConsumerInitialization } from '#tests/types/package.ts';
+import type { PublishedRelease, InstalledConsumer } from '#tests/types/package.ts';
 
 /**
  * Builds gspot and its ESLint plugin, and publishes both into the caller-owned registry.
@@ -56,7 +57,7 @@ export async function publishRelease(registry: Registry, signal: AbortSignal): P
 export async function initializeConsumer(
     release: PublishedRelease,
     installation: InstalledConsumer,
-): Promise<ConsumerInitialization> {
+): Promise<{ initialized: SpawnOutcome; installedTools: SpawnOutcome }> {
     const { registry, toolNpmrc } = release;
     const { command, setupOptions } = installation;
     const initialized = await processes.run(

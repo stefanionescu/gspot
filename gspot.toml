@@ -277,12 +277,12 @@ names = ["rule_id"]
 reason = "The SwiftLint JSON diagnostic key."
 
 [[naming.contract_properties]]
-file = "tests/types/integration/cli/generation.ts"
+file = "tests/integration/cli/generation/selection.test.ts"
 names = ["licenses_allowed", "packages_allowed"]
 reason = "The license scanner policy keys."
 
 [[naming.contract_properties]]
-file = "tests/types/acceptance/source/cli.ts"
+file = "tests/acceptance/cli/ci.test.ts"
 names = ["with"]
 reason = "The GitHub Actions inputs key."
 

@@ -9,7 +9,6 @@ import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
-import type { ComponentShape } from '#tests/types/acceptance/source/kits.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/samples/components.ts';
 
 const VUE_CLEAN =
@@ -40,7 +39,14 @@ const SVELTE_CASES: [string, string][] = [
     ],
 ];
 
-const SHAPES: ComponentShape[] = [
+const SHAPES: {
+    check: string;
+    kits: string[];
+    dependencies: Record<string, string>;
+    files: Record<string, string>;
+    planted: string;
+    cases: [string, string][];
+}[] = [
     {
         check: 'vue/eslint',
         kits: ['typescript', 'vue'],

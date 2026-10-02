@@ -6,7 +6,6 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
-import type { CreateSecretVerifierResult } from '#tests/types/results.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
 // A planted credential for the secrets tests, built from halves so no scanner of this repository reads a key here.
@@ -51,7 +50,13 @@ export async function prepareSecretHistory(
 }
 
 /** Routes pinned TruffleHog custom-detector verification to a local provider and simulates process failures. */
-export async function createSecretVerifier(directory: string): Promise<CreateSecretVerifierResult> {
+export async function createSecretVerifier(directory: string): Promise<{
+    firstToken: string;
+    secondToken: string;
+    requests: unknown[];
+    mode: string;
+    [Symbol.asyncDispose](): Promise<void>;
+}> {
     const firstToken = ['gspot-acceptance-', 'token-first'].join('');
     const secondToken = ['gspot-acceptance-', 'token-second'].join('');
     const requests: unknown[] = [];

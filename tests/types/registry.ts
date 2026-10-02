@@ -1,4 +1,4 @@
-// The types of support/registry in this package.
+// The types of the local registry harness.
 
 /** A local npm registry the release tests publish into. */
 export type Registry = {

@@ -11,7 +11,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { PreparePythonInstallationResult } from '#tests/types/results.ts';
+import type { PreparePythonInstallationResult } from '#tests/types/tools.ts';
 
 // The authored files every Python fixture starts from.
 const AUTHORED_FILES = {

@@ -12,7 +12,7 @@ import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
-import type { SiteReportCase } from '#tests/types/integration/cli/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
 import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
 
@@ -27,7 +27,15 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-const SITE_REPORTS: SiteReportCase[] = [
+const SITE_REPORTS: {
+    name: string;
+    analyze: (input: EngineInput) => Promise<Finding[]>;
+    defect: (output: string) => Record<string, unknown> | Record<string, unknown>[];
+    corrected: Record<string, unknown> | Record<string, unknown>[];
+    status: number;
+    file: string;
+    rule: string;
+}[] = [
     {
         name: 'links',
         analyze: internalLinks,

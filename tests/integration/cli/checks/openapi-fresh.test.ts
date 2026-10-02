@@ -1,14 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import type { TestdirResult } from 'testdirs';
 import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 
 const OPENAPI_FRESH_POLICY = policyOf(
     ['express'],
@@ -26,7 +28,14 @@ if (readFileSync('schema.json', 'utf8').includes('fail')) {
 `;
 
 // A planted Express project whose generator writes the document from schema.json and fails when the schema says so.
-async function plant(schema: string): Promise<Planted> {
+async function plant(schema: string): Promise<{
+    directory: TestdirResult;
+    document: string;
+    edited: string;
+    mode: number;
+    spec: CheckSpec;
+    input: EngineInput;
+}> {
     const directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': OPENAPI_FRESH_POLICY,
@@ -52,7 +61,19 @@ async function plant(schema: string): Promise<Planted> {
 }
 
 // The dirty document, the untracked file, and the absence of generator side effects, whatever the generator did.
-function expectPreserved({ directory, document, edited, mode }: Planted): void {
+function expectPreserved({
+    directory,
+    document,
+    edited,
+    mode,
+}: {
+    directory: TestdirResult;
+    document: string;
+    edited: string;
+    mode: number;
+    spec: CheckSpec;
+    input: EngineInput;
+}): void {
     expect(readFileSync(document, 'utf8')).toBe(edited);
     expect(statSync(document).mode).toBe(mode);
     expect(readFileSync(join(directory.path, '0009_manual.sql'), 'utf8')).toBe('-- Untracked manual migration\n');

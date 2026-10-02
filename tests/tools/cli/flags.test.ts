@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
@@ -10,7 +11,6 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
@@ -61,12 +61,14 @@ async function helpText(executable: string, subcommands: string[], flags: string
     return text.replaceAll(/.\u0008/gu, '');
 }
 
-function ownerOf(tool: ToolCommand['tool']): typeof context {
+function ownerOf(
+    tool: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }['tool'],
+): typeof context {
     if (privateToolInstallation(tool, 'mise') !== undefined) return privateContext;
     return tool.provider === 'host' || tool.version === undefined ? hostContext : context;
 }
 
-const commands: ToolCommand[] = [];
+const commands: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }[] = [];
 const checks = manifests.flatMap((manifest) => manifest.checks.map((check) => ({ manifest, check })));
 for (const { manifest, check } of checks)
     for (const argv of [check.command, check.fix_command]) {

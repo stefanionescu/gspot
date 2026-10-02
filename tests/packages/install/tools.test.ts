@@ -11,7 +11,6 @@ import { createConsumer } from '#tests/harness/package/consumer.ts';
 import { getPublishedRelease } from '#tests/harness/package/published.ts';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import type { PublishedRelease, InstalledConsumer } from '#tests/types/package.ts';
-import type { PrepareNativeConsumerResult, PrepareFormatterConsumerResult } from '#tests/types/results.ts';
 
 const FORMATTER_INIT = [
     'init',
@@ -29,7 +28,15 @@ const FORMATTER_INIT = [
 async function prepareFormatterConsumer(
     installation: InstalledConsumer,
     release: PublishedRelease,
-): Promise<PrepareFormatterConsumerResult> {
+): Promise<{
+    toolConsumer: string;
+    toolOptions: {
+        cwd: string;
+        timeoutMs: number;
+        env: Record<string, string | undefined>;
+    };
+    authoredPackage: string;
+}> {
     const { command } = installation;
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const hostTools = join(installation.workspace, 'host-tools');
@@ -79,7 +86,11 @@ async function prepareFormatterConsumer(
 }
 
 /** Initializes and installs native check wrappers through the published CLI. */
-async function prepareNativeConsumer(installation: InstalledConsumer): Promise<PrepareNativeConsumerResult> {
+async function prepareNativeConsumer(installation: InstalledConsumer): Promise<{
+    nativeConsumer: string;
+    nativeOptions: { cwd: string; env: Record<string, string | undefined>; timeoutMs: number };
+    authoredPackage: string;
+}> {
     const authoredPackage = JSON.stringify({ private: true, scripts: { test: 'authored-command' } });
     const nativeConsumer = join(installation.workspace, 'wrapper-consumer');
     mkdirSync(nativeConsumer);
