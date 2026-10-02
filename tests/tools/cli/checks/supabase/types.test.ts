@@ -6,8 +6,8 @@ import { test, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
-import { tableAt } from '#cli/policy/mutations.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { getTable } from '#cli/policy/mutations.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
@@ -48,7 +48,7 @@ async function prepareSupabaseDatabase(root: string): Promise<{
     await new Promise<void>((complete) => listener.listen(0, '127.0.0.1', complete));
     const address = listener.address();
     if (address === null || typeof address === 'string') throw new Error('No isolated database port was allocated.');
-    const db = tableAt(config, ['db'], false);
+    const db = getTable(config, ['db'], false);
     if (db === undefined) throw new Error('Supabase init did not declare database settings.');
     db['port'] = address.port;
     await new Promise<void>((complete, reject) =>

@@ -10,7 +10,7 @@ import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
+import { addIgnore, removeMatching } from '#cli/policy/mutations.ts';
 import type { Program, CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
 
 function assertKnownCheck(checkName: string, repositoryChecks: string[]): void {
@@ -50,7 +50,7 @@ async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
     const counter = { removed: 0 };
     const result = await commitPolicy(
         root,
-        removeEntries(
+        removeMatching(
             'ignore',
             (entry: TomlTable): boolean =>
                 entry['check'] === o.check &&
@@ -85,7 +85,7 @@ async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     if (o.remove) return deleteIgnore(root, o);
     if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, buildReasonHint(o));
     const { entry, lines } = buildIgnore(o);
-    return commitPolicy(root, appendIgnore(entry), false, lines.join('\n'));
+    return commitPolicy(root, addIgnore(entry), false, lines.join('\n'));
 }
 
 /**

@@ -1,12 +1,12 @@
 // An exported profile keeps the rules of the policy and leaves out what only fits this repository.
 import { test, expect } from 'bun:test';
 import { parseProfile } from '#cli/policy/profiles/parse.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { exportProfile } from '#cli/policy/profiles/export.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/samples/javascript.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/samples/formatting.ts';
 
 test('profile export preserves ESLint rules and omits repository-specific overrides', () => {
-    const exported = exportedProfile(ESLINT_OVERRIDE_POLICY, 'project.profile.toml');
+    const exported = exportProfile(ESLINT_OVERRIDE_POLICY, 'project.profile.toml');
     expect(exported.text).not.toContain('overrides');
     expect(parseProfile(exported.text, 'project.profile.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual([
         'error',
@@ -16,7 +16,7 @@ test('profile export preserves ESLint rules and omits repository-specific overri
 });
 
 test('profile export omits repository-specific formatter overrides', () => {
-    const exported = exportedProfile(FORMAT_OVERRIDES_POLICY, 'format.profile.toml');
+    const exported = exportProfile(FORMAT_OVERRIDES_POLICY, 'format.profile.toml');
     expect(exported.text).not.toContain('overrides');
     expect(exported.leftOut).toContain('format.overrides[0]: names a repository path');
 });

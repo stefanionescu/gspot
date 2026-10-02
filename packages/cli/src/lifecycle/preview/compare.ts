@@ -56,7 +56,7 @@ function ruleId(entry: unknown, path: string): string {
 }
 
 // The value at a dotted path inside parsed configuration, or undefined once a segment is absent.
-function tableAt(parsed: unknown, segments: string[], path: string): unknown {
+function getTable(parsed: unknown, segments: string[], path: string): unknown {
     let value: unknown = parsed;
     for (const part of segments) {
         if (value === undefined) break;
@@ -79,7 +79,7 @@ function ruleList(value: unknown[], path: string): Map<string, unknown> {
 
 function rulesAt(parsed: unknown, path: string): Map<string, unknown> {
     const segments = path === '' ? [] : path.split('.');
-    const value = tableAt(parsed, segments, path);
+    const value = getTable(parsed, segments, path);
     if (value === undefined || value === null) return new Map();
     if (Array.isArray(value)) return ruleList(value, path);
     if (typeof value === 'object') return new Map(Object.entries(value).filter(([key]) => key !== GENERATED_JSON_KEY));

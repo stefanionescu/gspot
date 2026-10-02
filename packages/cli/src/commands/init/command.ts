@@ -8,7 +8,7 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
-import { readProfile } from '#cli/policy/profiles/parse.ts';
+import { getProfile } from '#cli/policy/profiles/parse.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
@@ -61,7 +61,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root))
         return { text: ALREADY_INSTALLED, json: { error: 'already-initialized' }, exitCode: EXIT_ERROR };
-    const profile = options.from === undefined ? undefined : await readProfile(options.from, options.cwd);
+    const profile = options.from === undefined ? undefined : await getProfile(options.from, options.cwd);
     const effective = profile === undefined ? options : { ...profileAnswers(profile), ...options, profile };
     const prepared = await prepare(root, effective);
     const { plan, policyText } = prepared;

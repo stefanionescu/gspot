@@ -7,8 +7,8 @@ import { policySchema } from '#cli/policy/schema.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
-import { pathProblems, reasonProblems } from '#cli/policy/problems.ts';
 import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
+import { reasonProblems, pathProblems as getPathProblems } from '#cli/policy/problems.ts';
 import type { Policy, RawPolicy, PathSegment, PolicyFiles, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
@@ -115,7 +115,7 @@ export function parseTomlText(text: string, path: string): Record<string, unknow
  */
 export function parsePolicyText(text: string, path: string, root?: string): Policy {
     const policy = normalize(validatedRaw(text, path));
-    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
+    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : getPathProblems(root, policy))];
     if (problems.length > 0)
         throw new GspotError(
             'policy',
@@ -145,7 +145,7 @@ export function readPolicyText(
         ...new Map(
             [
                 ...reasonProblems(complete),
-                ...(root === undefined ? [] : pathProblems(root, complete)),
+                ...(root === undefined ? [] : getPathProblems(root, complete)),
                 ...completenessProblems(complete),
             ].map((problem) => [JSON.stringify(ownerOf(problem.path)), problem]),
         ).values(),
@@ -163,7 +163,7 @@ export function readPolicyText(
     const policy = completePolicy(path, raw);
     const remaining = [
         ...reasonProblems(policy),
-        ...(root === undefined ? [] : pathProblems(root, policy)),
+        ...(root === undefined ? [] : getPathProblems(root, policy)),
         ...completenessProblems(policy),
     ];
     if (remaining.length > 0)

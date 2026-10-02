@@ -6,7 +6,7 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { exportProfile } from '#cli/policy/profiles/export.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -20,7 +20,7 @@ import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner
 export function exportCommand(cwd: string, file: string): CommandResult {
     const root = findRoot(cwd);
     const policy = readPolicy(root);
-    const saved = exportedProfile(policy.text, file);
+    const saved = exportProfile(policy.text, file);
     mutationTarget(file);
     const path = toPosix(relative(root, resolve(cwd, file)));
     mutationTarget(path);

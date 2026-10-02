@@ -5,7 +5,7 @@ import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { scopeHolder } from '#cli/policy/mutations.ts';
+import { getScopeTable } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
@@ -22,7 +22,7 @@ async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     assertPinMatches(root);
     const manifests = kitManifests();
     const mutation: Mutation = (raw) => {
-        const holder = scopeHolder(raw, o.scope);
+        const holder = getScopeTable(raw, o.scope);
         const list = (holder['kits'] as string[] | undefined) ?? [];
         const rootList = (raw['kits'] as string[] | undefined) ?? [];
         const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.kit);

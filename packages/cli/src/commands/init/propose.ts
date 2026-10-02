@@ -3,8 +3,8 @@ import { asRecord } from '#cli/policy/settings.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { InitPlan } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
+import { getIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -63,7 +63,7 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
 function bodyText(document: TomlTable): string {
     const tight = stringify(document).replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
     const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
-    return wrapLongArrays(seed, policyIndent(document));
+    return wrapLongArrays(seed, getIndent(document));
 }
 
 /**

@@ -20,7 +20,7 @@ const KINDS = new Set([
  * @param node the syntax node
  * @returns the kind
  */
-function kindOf(node: Kinded): NodeKind {
+function getKind(node: Kinded): NodeKind {
     const kind = String(node.type);
     if (!KINDS.has(kind)) throw new Error(`The TOML parser produced a node of an unknown kind: ${kind}.`);
     return kind as NodeKind;
@@ -31,8 +31,8 @@ function kindOf(node: Kinded): NodeKind {
  * @param node the syntax node.
  * @returns whether the node represents a TOML value.
  */
-export function isTomlValue(node: Kinded): node is Value {
-    return VALUE_KINDS.has(kindOf(node));
+export function isValue(node: Kinded): node is Value {
+    return VALUE_KINDS.has(getKind(node));
 }
 
 /**
@@ -41,7 +41,7 @@ export function isTomlValue(node: Kinded): node is Value {
  * @returns whether the node assigns a key
  */
 export function isKeyValue(node: Kinded): node is KeyValue {
-    return kindOf(node) === 'KeyValue';
+    return getKind(node) === 'KeyValue';
 }
 
 /**
@@ -50,7 +50,7 @@ export function isKeyValue(node: Kinded): node is KeyValue {
  * @returns whether the node is a comment
  */
 export function isComment(node: Kinded): node is Extract<TomlBlock, { type: 'Comment' }> {
-    return kindOf(node) === 'Comment';
+    return getKind(node) === 'Comment';
 }
 
 /**
@@ -59,7 +59,7 @@ export function isComment(node: Kinded): node is Extract<TomlBlock, { type: 'Com
  * @returns whether the node is an inline table
  */
 export function isInlineTable(node: Kinded): node is Extract<Value, { type: 'InlineTable' }> {
-    return kindOf(node) === 'InlineTable';
+    return getKind(node) === 'InlineTable';
 }
 
 /**
@@ -68,5 +68,5 @@ export function isInlineTable(node: Kinded): node is Extract<Value, { type: 'Inl
  * @returns whether the node is an inline array
  */
 export function isInlineArray(node: Kinded): node is Extract<Value, { type: 'InlineArray' }> {
-    return kindOf(node) === 'InlineArray';
+    return getKind(node) === 'InlineArray';
 }

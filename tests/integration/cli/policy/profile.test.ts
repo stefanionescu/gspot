@@ -6,8 +6,8 @@ import { applyCommand } from '#cli/commands/apply.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { readProfile } from '#cli/policy/profiles/parse.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { getProfile } from '#cli/policy/profiles/parse.ts';
+import { exportProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
@@ -20,8 +20,8 @@ describe('profile file paths', () => {
             [source]: 'profile = "house"\nselection = "exact"\nkits = ["bash"]\n',
             'project/README.md': '# Project\n',
         });
-        const relative = await readProfile(source, sandbox.path);
-        const absolute = await readProfile(join(sandbox.path, source), join(sandbox.path, 'project'));
+        const relative = await getProfile(source, sandbox.path);
+        const absolute = await getProfile(join(sandbox.path, source), join(sandbox.path, 'project'));
         expect(absolute.tables).toStrictEqual(relative.tables);
         expect(absolute.digest).toBe(relative.digest);
     });
@@ -31,12 +31,12 @@ test('profiles retain runner coverage settings and omit the architecture roles, 
     await using directory = await testdir();
     const tools = { jest: { coverage: { lines: 90 }, test_module: 'bun:test' } };
     const roles = { harness: 'tests/fixtures' };
-    const exported = exportedProfile(
+    const exported = exportProfile(
         stringify({ kits: ['jest'], tools, architecture: { roles } }),
         'shared.profile.toml',
     );
     await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-    const restored = await readProfile('shared.profile.toml', directory.path);
+    const restored = await getProfile('shared.profile.toml', directory.path);
     expect(restored.tables.tools?.['jest']).toStrictEqual(tools.jest);
     expect(exported.leftOut).toStrictEqual(['architecture.roles: names a repository path']);
     await createFileTree(directory.path, {
@@ -47,7 +47,7 @@ test('profiles retain runner coverage settings and omit the architecture roles, 
             architecture: { roles },
         }),
     });
-    expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
+    expect(await rejection(getProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
 });
 
 test('profile publication is idempotent, preserves edits, and survives apply', async () => {
@@ -132,14 +132,14 @@ test('profile publication recovers an interrupted write through the lifecycle lo
     }
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readOwnership(directory.path).pending).toBeUndefined();
-    const reread = await readProfile('shared.profile.toml', directory.path);
+    const reread = await getProfile('shared.profile.toml', directory.path);
     expect(reread.tables.kits).toStrictEqual([]);
 });
 
 test('profile publication preserves permissions when adopting identical existing bytes', async () => {
     await using directory = await testdir();
     const policy = policyOf([]);
-    const profile = exportedProfile(policy, 'shared.profile.toml');
+    const profile = exportProfile(policy, 'shared.profile.toml');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'shared.profile.toml': profile.text });
     const path = join(directory.path, 'shared.profile.toml');
     chmodSync(path, 0o444);
@@ -154,9 +154,9 @@ test('profiles round-trip license allowances and exact-version exceptions', asyn
         allowed: ['MPL-2.0'],
         exceptions: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
     };
-    const exported = exportedProfile(stringify({ kits: ['licenses'], tools: { licenses } }), 'licenses.profile.toml');
+    const exported = exportProfile(stringify({ kits: ['licenses'], tools: { licenses } }), 'licenses.profile.toml');
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });
-    const restored = await readProfile('licenses.profile.toml', directory.path);
+    const restored = await getProfile('licenses.profile.toml', directory.path);
     expect(restored.tables.tools?.licenses).toStrictEqual(licenses);
     expect(exported.leftOut).toStrictEqual([]);
 });

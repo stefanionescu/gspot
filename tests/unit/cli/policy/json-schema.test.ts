@@ -4,7 +4,7 @@ import { test, expect, describe } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { failure } from '#tests/harness/expectations.ts';
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
+import { buildJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 const check = { name: 'project/lint', command: ['lint'], paths: ['src/**'], stage: 'commit' };
@@ -21,7 +21,7 @@ describe('the JSON schema of gspot.toml', () => {
     });
 
     test('the published schema accepts a check with and without its correction command', () => {
-        const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+        const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
         expect(validate({ check: [check] })).toBe(true);
         expect(validate({ check: [{ ...check, fix: ['lint', '--fix'] }] })).toBe(true);
     });
@@ -90,11 +90,11 @@ test.each([
 ])('runtime and published schemas agree on $name', ({ input, valid }) => {
     const document = { ...input };
     expect(policySchema.safeParse(document).success).toBe(valid);
-    expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(document)).toBe(valid);
+    expect(new Ajv2020({ strict: false }).compile(buildJsonSchema())(document)).toBe(valid);
 });
 
 test('manifest settings validate their kind in root and scope tables', () => {
-    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+    const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
     for (const [scoped, locales, valid] of [
         [false, [], false],
         [true, [], false],
@@ -125,7 +125,7 @@ test('manifest settings preserve typed values and reject unknown siblings', () =
     expect(() => {
         assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
     }).toThrow('gspot.toml: tools.bash.unknown:');
-    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+    const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
     expect(validate({ kits: ['bash'], tools: { bash: { safety_owners: ['scripts/cleanup.sh'] } } })).toBe(true);
     expect(validate({ kits: ['bash'], tools: { bash: { unknown: true } } })).toBe(false);
 });

@@ -14,10 +14,10 @@ import { TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Program, SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
-import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/mutations.ts';
+import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/mutations.ts';
 import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/config/commands/commands.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
@@ -79,7 +79,7 @@ function fillReasons(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.type !== 'list') return isWeaker(spec, value, shipped);
+    if (spec.type !== 'list') return isLoosening(spec, value, shipped);
     if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items: unknown[] = Array.isArray(value) ? value : [];
@@ -90,20 +90,20 @@ function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped:
         )
     )
         return false;
-    return o.replace ? spec.direction !== 'neutral' : isWeaker(spec, value, shipped);
+    return o.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
 }
 
 function buildMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
     return (raw) => {
-        const holder = scopeHolder(raw, o.scope);
+        const holder = getScopeTable(raw, o.scope);
         if (o.remove && isPathList(o.key, value)) {
             const entries = (holder[o.key] ?? []) as NonNullable<RawPolicy['generated']>;
             holder[o.key] = entries
                 .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
                 .filter((entry) => entry.paths.length > 0);
         } else if (isList && o.remove) removeFromList(o.key, value as unknown[])(holder);
-        else if (isList && !o.replace) appendList(o.key, value as unknown[])(holder);
+        else if (isList && !o.replace) addToList(o.key, value as unknown[])(holder);
         else setKey(o.key, written)(holder);
     };
 }
@@ -213,7 +213,7 @@ async function setCommand(o: SetOptions): Promise<CommandResult> {
     return commitPolicy(
         root,
         (raw) => {
-            deleteKey(o.key)(scopeHolder(raw, o.scope));
+            deleteKey(o.key)(getScopeTable(raw, o.scope));
         },
         false,
         `${shown} back to the shipped default`,

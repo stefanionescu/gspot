@@ -25,7 +25,7 @@ export function isReasonAccepted(reason: string | undefined): boolean {
  * @param shipped the shipped default
  * @returns whether a reason is needed
  */
-export function isWeaker(spec: SettingSpec, value: unknown, shipped: unknown): boolean {
+export function isLoosening(spec: SettingSpec, value: unknown, shipped: unknown): boolean {
     if (spec.direction === 'loosening') return true;
     if (spec.direction === 'ceiling' || spec.direction === 'floor')
         return isNumberLoosening(spec.direction, value, shipped);

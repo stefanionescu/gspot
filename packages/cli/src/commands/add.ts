@@ -3,8 +3,8 @@ import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { scopeHolder } from '#cli/policy/mutations.ts';
 import { compact, similar } from '#cli/platform/text.ts';
+import { getScopeTable } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
@@ -26,7 +26,7 @@ async function addCommand(o: AddOptions): Promise<CommandResult> {
             throw new GspotError('policy', [unknownKit(id, similar(id, known))]);
         }
     const mutation: Mutation = (raw) => {
-        const holder = scopeHolder(raw, o.scope);
+        const holder = getScopeTable(raw, o.scope);
         const list = (holder['kits'] as string[] | undefined) ?? [];
         for (const id of o.kits) if (!list.includes(id)) list.push(id);
         holder['kits'] = list;

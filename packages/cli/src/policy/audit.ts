@@ -5,7 +5,7 @@ import { policyLayers } from '#cli/policy/problems.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
-import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 import { POLICY_ASSET, LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 
@@ -109,7 +109,7 @@ function scalarProblems(
     scope: string | undefined,
 ): PolicyProblem[] {
     const shipped = surface.defaults.get(match.spec.name)?.value;
-    if (!isWeaker(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningProblem(key, written, shipped, scope);
     return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
 }
