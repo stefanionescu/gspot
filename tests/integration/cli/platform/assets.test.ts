@@ -39,7 +39,7 @@ describe('development assets', () => {
             stderr: 'pipe',
         });
         expect(missing.exitCode).toBe(1);
-        expect(missing.stderr.toString()).toContain('Run: mise run prepare:grammar');
+        expect(missing.stderr.toString()).toContain('Reinstall @gspothq/cli.');
         for (const name of GRAMMAR_FILES)
             copyFileSync(join(ROOT, 'packages/cli/grammars', name), join(cwd, 'packages/cli/grammars', name));
         const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {

@@ -65,7 +65,7 @@ export function grammarPath(name: string): string {
     if (source !== undefined) return createRequire(join(root, 'package.json')).resolve(source);
     const path = join(root, 'grammars', name);
     if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new Error(`The grammar ${name} is missing. Run: mise run prepare:grammar`);
+        throw new Error(`The grammar ${name} is missing from the installed package. Reinstall @gspothq/cli.`);
     return path;
 }
 
