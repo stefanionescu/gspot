@@ -297,6 +297,9 @@ The owner and the work settled these while implementing:
       match the record.
     - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
       check name.
+    - On Windows gspot installs the npm build of Taplo. That build checks no file there, so broken TOML passes. The
+      two Taplo rows of `kits/general/files` run on Linux and macOS until gspot installs a Taplo that checks on
+      Windows.
     - `LICENSE_FILE` matches any name that starts with `license-`, `notice-`, or `copying-`, so every check skips such
       a source file, `license-locks.test.ts` among them.
     - eslint-plugin-boundaries 7 deprecates the `mode` option, the `element-types` rule, its `rules` option, and string
