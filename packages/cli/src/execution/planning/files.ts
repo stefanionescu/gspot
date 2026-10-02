@@ -18,7 +18,7 @@ function projectFiles(context: PlanInputs, scopeForFiles: string): TrackedFile[]
 // The files a project-wide check runs over: the scope's tree, when its owners select anything in it.
 function projectOwned(context: PlanInputs, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
     const { session, scope, children } = context;
-    const isPerScope = spec.runs === 'per-scope';
+    const isPerScope = spec.runs === 'scope';
     const selectedFiles =
         spec.owners === undefined
             ? undefined
@@ -43,7 +43,7 @@ function listOwned(context: PlanInputs, entry: PlanEntry, scopeForFiles: string)
 
 // The files the check owners in the scope.
 function ownedFor(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
-    if (entry.spec.runs !== 'per-file-list') return projectOwned(context, entry.spec, scopeForFiles);
+    if (entry.spec.runs !== 'files') return projectOwned(context, entry.spec, scopeForFiles);
     return listOwned(context, entry, scopeForFiles);
 }
 
@@ -72,16 +72,16 @@ function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): 
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
     const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
-    if (inNarrowed.length > 0) return entry.spec.runs === 'per-file-list' ? inNarrowed : files;
+    if (inNarrowed.length > 0) return entry.spec.runs === 'files' ? inNarrowed : files;
     if (!isTouched) return [];
-    if (entry.spec.runs !== 'per-file-list') return files;
+    if (entry.spec.runs !== 'files') return files;
     if (entry.manifest === undefined) return [];
     return allOwned(context, entry);
 }
 
 // Selected paths deleted from the tree but still trigger a project check.
 function missingTriggers(context: PlanInputs, spec: CheckSpec, scopePath: string): string[] {
-    if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
+    if (spec.runs === 'files' || context.narrow === undefined) return [];
     const readable = new Set(context.session.repository.files.map((file) => file.path));
     return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
 }
@@ -105,11 +105,11 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
  * @returns true when the check runs once for the repository
  */
 export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.kit.kind !== 'general' || manifest.owners.from_languages || spec.runs === 'per-scope') return false;
+    if (manifest.kit.kind !== 'general' || manifest.owners.languages || spec.runs === 'scope') return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>
-            config.per_scope &&
+            config.scoped &&
             !config.fragment &&
             command.some((part) => part.includes(`{config:${kitName(config.target)}}`)),
     );
@@ -131,7 +131,7 @@ export function filesFor(
     const { spec, manifest } = entry;
     const scopePath = isWholeCheck ? '' : scope.scope.path;
     const triggerPaths = missingTriggers(context, spec, scopePath);
-    const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
+    const isWhole = spec.runs !== 'files' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
     let files = triggerPaths.length === 0 ? ownedFor(context, entry, scopePath) : projectFiles(context, scopePath);
     if (!isWhole && manifest !== undefined)
         files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));

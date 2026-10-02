@@ -155,9 +155,9 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
     none: () => [],
     json: jsonFindings,
     'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
-    'typos-json': ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
-    'markdownlint-json': ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
-    'eslint-json': ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
+    typos: ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
+    markdownlint: ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
+    eslint: ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
     lines: ({ spec, text }) =>
         text
             .split('\n')

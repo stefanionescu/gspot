@@ -111,7 +111,7 @@ title = "TOML"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
 owners = {extensions = [".toml"]}
 output = {format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
@@ -125,7 +125,7 @@ title = "TOML format"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
 owners = {extensions = [".toml"]}
@@ -140,7 +140,7 @@ title = "YAML"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
 owners = {extensions = [".yaml", ".yml"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
@@ -154,7 +154,7 @@ title = "Validate configuration schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
 stage = "push"
-runs = "per-file-list"
+runs = "files"
 requires = "network"
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = {V8R_CONFIG_FILE = "{config:v8r}"}
@@ -170,7 +170,7 @@ title = "Validate GitHub Actions workflows"
 example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 tool = "actionlint"
 exit_codes = [1]
 owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
@@ -185,7 +185,7 @@ title = "Verify GitHub Actions pins"
 example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
 level = "recommended"
 stage = "push"
-runs = "per-file-list"
+runs = "files"
 requires = "network"
 command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
 owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
@@ -200,7 +200,7 @@ title = "Audit GitHub Actions security"
 example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
 exit_codes = [11, 12, 13, 14]
 owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
@@ -215,7 +215,7 @@ title = "Dotenv"
 example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
 fix = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
 owners = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
@@ -230,7 +230,7 @@ title = "Environment example"
 example = "Source code reading `API_URL` while the environment template omits that key reports a missing template entry. Add `API_URL=` to `.env.example` and document the required value without committing credentials."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 summary = "Checks that every environment variable the code reads appears in the environment template."
 why = "A variable missing from the template is the one a new machine lacks on its first run."
 help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."
@@ -241,7 +241,7 @@ title = "Property lists"
 example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 platforms = ["macos"]
 command = ["plutil", "-lint", "{files}"]
 owners = {extensions = [".plist", ".entitlements"]}
@@ -256,7 +256,7 @@ title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["xmllint", "--noout", "{files}"]
 owners = {extensions = [".xml", ".storyboard", ".xib"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}

@@ -30,7 +30,7 @@ import type {
 
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
-    const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
+    const isInScope = spec.cwd === 'scope' || (spec.runs === 'scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
 }
 

@@ -85,8 +85,8 @@ run.
   finding.
 - For JSON output, map the fields of your tool under `[check.output.fields]`. Name nested
   arrays with `items` or `children`.
-- `format = "typos-json"` reads the JSON of typos. It turns byte offsets into character columns.
-- `format = "markdownlint-json"` reads the results of markdownlint.
+- `format = "typos"` reads the JSON of typos. It turns byte offsets into character columns.
+- `format = "markdownlint"` reads the results of markdownlint.
 
 Malformed output counts as a failed run, exit code `2`. The
 [policy reference](/reference/configuration/#check) lists every field.

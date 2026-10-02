@@ -1,5 +1,5 @@
 # Where a dead-code scan starts when no framework names its own entries.
-entry_files = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}"]
+entry = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}"]
 
 [kit]
 name = "javascript"
@@ -20,7 +20,7 @@ tags = ["shebang:node"]
 
 [[tools]]
 name = "eslint"
-rule_page = "https://eslint.org/docs/latest/rules/{rule}"
+rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 suppression = {marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)", reason = " -- (?<reason>\\S.*)"}
 version = "9.39.5"
@@ -89,7 +89,7 @@ floor = "3.0.0"
 
 [[tools]]
 name = "eslint-plugin-unicorn"
-rule_page = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
+rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
 kind = "library"
 version = "65.0.1"
 npm = "eslint-plugin-unicorn"
@@ -197,7 +197,7 @@ pointer = {path = "eslint.config.mjs", body = "export { default } from '{target}
 [[configs]]
 template = "jsconfig.json.tmpl"
 target = ".gspot/config/jsconfig.json"
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "knip.json.tmpl"
@@ -210,12 +210,12 @@ title = "ESLint"
 example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 owners = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"]}
-output = {format = "eslint-json"}
+output = {format = "eslint"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file and every package.json."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
@@ -226,7 +226,7 @@ title = "Check JavaScript types"
 example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 tool = "tsc"
 owners = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
@@ -241,7 +241,7 @@ title = "Find unused JavaScript code"
 example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, declare its real entry point in policy."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
 cwd = "root"
 output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
@@ -332,7 +332,7 @@ title = "Required rules"
 example = "An authored ESLint override disabling a rule required by policy reports that missing rule. Remove the override or record the intended scoped exception with a reason through policy, then regenerate configuration."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the configurations require."
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."

@@ -20,7 +20,7 @@ async function storageSession(root: string, status: number, stage: Stage = 'comm
             checks: [
                 {
                     level: 'recommended',
-                    runs: 'per-scope',
+                    runs: 'scope',
                     summary: 'Reports the planted storage finding.',
                     why: 'Storage failures preserve the check result.',
                     help: 'Fix the planted finding.',

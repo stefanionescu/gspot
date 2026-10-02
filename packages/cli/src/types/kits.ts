@@ -63,9 +63,9 @@ export type ToolPin = {
     platforms?: readonly ToolPlatform[];
     version_command?: string[];
     version_exit_code?: number;
-    version_regex?: string;
+    version_pattern?: string;
     crash_pattern?: string;
-    rule_page?: string;
+    rule_url?: string;
     suppression?: NonNullable<RawTool['suppression']>;
     replace?: NonNullable<RawTool['replace']>;
     query_packs?: NonNullable<RawTool['query_packs']>;

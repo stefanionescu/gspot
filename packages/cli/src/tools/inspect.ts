@@ -24,8 +24,8 @@ import {
 } from '#cli/config/tools/tools.ts';
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
-    if (tool.version_regex === undefined) return semver.coerce(text)?.version;
-    const match = new RegExp(tool.version_regex, 'u').exec(text);
+    if (tool.version_pattern === undefined) return semver.coerce(text)?.version;
+    const match = new RegExp(tool.version_pattern, 'u').exec(text);
     return match?.[1] ?? match?.[0];
 }
 

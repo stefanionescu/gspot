@@ -11,7 +11,7 @@ const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
  * @returns the repository-relative path
  */
 export function targetInScope(scope: string, config: ConfigurationTarget): string {
-    if (scope === '' || !config.per_scope) return config.target;
+    if (scope === '' || !config.scoped) return config.target;
     if (config.target.startsWith(GSPOT_DIRECTORY))
         return posix.join(GSPOT_DIRECTORY, scope, config.target.slice(GSPOT_DIRECTORY.length));
     return `${scope}/${config.target}`;

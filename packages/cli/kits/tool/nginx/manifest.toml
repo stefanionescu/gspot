@@ -17,7 +17,7 @@ version = "0.2.53"
 pypi = "gixy-ng"
 mise = "pipx:gixy-ng"
 platforms = ["macos", "linux"]
-version_regex = "(\\d+\\.\\d+\\.\\d+)"
+version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tools]]
 name = "docker"
@@ -51,7 +51,7 @@ title = "Validate nginx configuration"
 example = "The line `invalid_directive on;` fails the native configuration test with `nginx-t`. Remove the unknown directive or replace it with the intended supported directive, such as `listen 443 ssl;` in the configured TLS server. Rerun with the configured deployment image available."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 requires = "docker"
 tool = "docker"
 owners = {filenames = ["nginx.conf"]}

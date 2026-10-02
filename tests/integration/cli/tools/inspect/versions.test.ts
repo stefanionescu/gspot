@@ -120,7 +120,7 @@ test.each([
             floor: '4.4',
             installers: {},
             version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
-            version_regex: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
+            version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
         };
         const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
         expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });

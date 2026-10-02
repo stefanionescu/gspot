@@ -6,7 +6,7 @@ description = "One [format] block every formatter reads, so indentation cannot d
 
 [owners]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".graphql"]
-from_prettier_plugins = true
+prettier_plugins = true
 
 [[tools]]
 name = "prettier"
@@ -116,7 +116,7 @@ title = "Prettier"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 exit_codes = [1]
 fix = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
@@ -131,7 +131,7 @@ title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
 tool = "ec"
 output = {format = "grouped", file_pattern = "^(?<file>[^\\s].*):$", pattern = "^\\s+(?<line>\\d+)(?:-\\d+)?: (?<message>.*)$"}

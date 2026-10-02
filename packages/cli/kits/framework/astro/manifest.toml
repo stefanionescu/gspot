@@ -46,7 +46,7 @@ template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
-code_files = ["**/*.astro"]
+components = ["**/*.astro"]
 
 [[rules_off]]
 tool = "eslint"
@@ -60,13 +60,13 @@ title = "ESLint"
 example = "A component containing `<div set:html={html} />` reports `astro/no-set-html-directive`. Render text with an expression, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".astro"]}
-output = {format = "eslint-json"}
+output = {format = "eslint"}
 summary = "Runs ESLint with the Astro plugin over every .astro file. It reads the frontmatter, the markup, and the scripts together."
 why = "A component file is frontmatter, markup, and scripts in one, and a plain JavaScript parser reads none of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
@@ -77,7 +77,7 @@ title = "Check Astro components"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 exit_codes = [1]

@@ -47,23 +47,23 @@ provider = "host"
 [[configs]]
 template = "hadolint.yaml.tmpl"
 target = ".gspot/config/hadolint.yaml"
-per_scope = true
+scoped = true
 rules_path = ["ignored"]
 
 [[configs]]
 template = "trivy/configuration.yaml.tmpl"
 target = ".gspot/config/trivy.yaml"
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "trivyignore.tmpl"
 target = ".gspot/config/trivyignore"
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "trivy/findings.tpl.tmpl"
 target = ".gspot/config/trivy-findings.tpl"
-per_scope = true
+scoped = true
 header = false
 
 [[checks]]
@@ -111,7 +111,7 @@ title = "Audit container configuration"
 example = "A Dockerfile whose final application stage runs as root can report a container-security finding. Create an unprivileged user, grant it only required file access, and select it with `USER` before running the application."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 isolated_files = true
 command = ["trivy", "config", "--quiet", "--skip-check-update", "--config", "{config:trivy}", "--ignorefile", "{config:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{config:trivy-findings}", "{root}"]
 tool = "trivy"
@@ -127,7 +127,7 @@ title = "Scan container images"
 example = "A configured image containing a package with a known advisory reports that advisory. Move to a reviewed image version containing the package fix, then rerun the image scan. Results depend on the advisory database and available image."
 level = "recommended"
 stage = "manual"
-runs = "per-scope"
+runs = "scope"
 requires = "docker"
 tool = "trivy"
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."

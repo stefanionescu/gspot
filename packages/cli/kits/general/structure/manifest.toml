@@ -5,7 +5,7 @@ title = "Structure"
 description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
 
 [owners]
-from_languages = true
+languages = true
 
 [[tools]]
 name = "ast-grep"
@@ -23,7 +23,7 @@ file = ".qlty"
 name = "structure/single-file-folder"
 title = "Single file folder"
 example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
-runs = "per-scope"
+runs = "scope"
 level = "all"
 stage = "commit"
 searched = ["eslint-plugin-unicorn", "ls-lint", "knip"]
@@ -35,7 +35,7 @@ help = "Move the file up beside its neighbors, or allow the folder with a reason
 name = "structure/prefix-collisions"
 title = "Prefix collisions"
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
-runs = "per-scope"
+runs = "scope"
 level = "all"
 stage = "commit"
 limit = "limits.prefix_collisions"
@@ -48,7 +48,7 @@ help = "Move the files into a folder named after the shared prefix, or allow the
 name = "structure/file-directory-collision"
 title = "File directory collision"
 example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
-runs = "per-scope"
+runs = "scope"
 level = "all"
 stage = "commit"
 searched = ["ls-lint"]

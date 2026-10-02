@@ -53,8 +53,8 @@ function checkEnvironment(check: CheckSpec): string[] {
         `- Scope: ${
             {
                 once: 'one execution for the repository',
-                'per-scope': 'each selected scope, excluding files owned by child scopes',
-                'per-file-list': 'selected file lists under the applicable scope policy',
+                scope: 'each selected scope, excluding files owned by child scopes',
+                files: 'selected file lists under the applicable scope policy',
             }[check.runs]
         }. See [scope configuration](/guides/scopes/).\n`,
         ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),

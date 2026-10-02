@@ -85,7 +85,7 @@ function planOne(context: PlanInputs, entry: PlanEntry, isWholeCheck: boolean): 
         scope: isWholeCheck ? rootScope : scope,
         spec,
         ...filesFor(context, entry, isWholeCheck),
-        projectWide: spec.runs !== 'per-file-list',
+        projectWide: spec.runs !== 'files',
         ...(manifest === undefined ? {} : { manifest }),
         ...(tool === undefined ? {} : { tool }),
         ...(options.commits === undefined ? {} : { commits: options.commits }),
@@ -206,7 +206,7 @@ export function configuredChecks(session: Session): PlannedCheck[] {
  */
 export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
     const owners = check.spec.owners ?? check.manifest?.owners;
-    const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
+    const children = check.spec.runs === 'scope' ? childScopes(session, check.scope) : [];
     const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
 }

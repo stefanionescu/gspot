@@ -8,7 +8,7 @@ import { TEST_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 
 // What the kits declare, read from their manifests so the test pins no copy of shipped lists.
 const MANIFESTS = kitManifests();
-const ENTRY = MANIFESTS.get('javascript')!.entry_files[0]!;
+const ENTRY = MANIFESTS.get('javascript')!.entry[0]!;
 const TAILWIND_AT_RULES = MANIFESTS.get('nextjs')!.defaults['tools.stylelint.ignore_at_rules'];
 const PYTEST = MANIFESTS.get('pytest')!.defaults;
 const TEST_FILES = TEST_FILE_GLOBS;

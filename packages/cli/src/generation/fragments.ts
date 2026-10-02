@@ -11,7 +11,7 @@ import type { Fragment, TemplateInputs, FragmentSelector, ResolvedSelector } fro
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
 function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
-    if (owner.per_scope) return selection.selected;
+    if (owner.scoped) return selection.selected;
     const every = [selection, ...scopes].flatMap((entry) => entry.selected);
     return new Map(every.map((manifest) => [manifest.kit.name, manifest])).values().toArray();
 }
@@ -77,7 +77,7 @@ export function fragmentInputs(
     return {
         fragments: rendered,
         fragmentImports: [...new Set(imports.filter((line) => line.trim() !== ''))].join('\n'),
-        fragmentFiles: [...new Set(fragments.flatMap(({ config }) => config.code_files))],
+        fragmentFiles: [...new Set(fragments.flatMap(({ config }) => config.components))],
         fragmentSelectors: scopes.flatMap((scope) => {
             const resolved = fragments
                 .filter(({ manifest }) => scope.selected.includes(manifest))

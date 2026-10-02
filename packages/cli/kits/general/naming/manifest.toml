@@ -5,7 +5,7 @@ title = "Naming"
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
 [owners]
-from_languages = true
+languages = true
 
 [[checks]]
 name = "naming/identifiers"

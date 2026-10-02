@@ -164,10 +164,10 @@ names = [
     "check_references",
     "crash_pattern",
     "query_packs",
-    "rule_page",
+    "rule_url",
     "version_command",
     "version_exit_code",
-    "version_regex",
+    "version_pattern",
 ]
 reason = "Kit manifests declare these keys, and the normalized types keep their spelling."
 

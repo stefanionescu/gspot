@@ -17,12 +17,12 @@ const OUTPUTS: NonNullable<CheckSpec['output']>[] = [
     { format: 'lines' },
     { format: 'none' },
     { format: 'json', fields: { file: 'file', line: 'line', rule: 'rule', message: 'message' } },
-    { format: 'eslint-json' },
-    { format: 'typos-json' },
+    { format: 'eslint' },
+    { format: 'typos' },
     { format: 'trufflehog-json' },
-    { format: 'markdownlint-json' },
+    { format: 'markdownlint' },
 ];
-const JSON_FORMATS = new Set(['json', 'eslint-json', 'typos-json', 'trufflehog-json', 'markdownlint-json']);
+const JSON_FORMATS = new Set(['json', 'eslint', 'typos', 'trufflehog-json', 'markdownlint']);
 const FOREIGN = 'not the output of any tool {\n';
 
 // What the parser did with the output for a check of that format: the findings, or the error it threw.
@@ -31,7 +31,7 @@ function parsed(output: NonNullable<CheckSpec['output']>, stdout: string, root: 
         name: 'sandbox/output',
         level: 'recommended',
         stage: 'commit',
-        runs: 'per-file-list',
+        runs: 'files',
         summary: 'Reads the output of a sandbox tool.',
         example: 'sandbox',
         why: 'The output contract holds for every format.',

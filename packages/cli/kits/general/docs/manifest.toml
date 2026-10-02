@@ -33,7 +33,7 @@ title = "Check local documentation links"
 example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"
 output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
@@ -47,7 +47,7 @@ title = "Check external documentation links"
 example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
 level = "recommended"
 stage = "manual"
-runs = "per-file-list"
+runs = "files"
 requires = "network"
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"

@@ -35,7 +35,7 @@ title = "Check Jest coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.jest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
 tool = "jest"

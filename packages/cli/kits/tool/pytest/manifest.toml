@@ -14,7 +14,7 @@ name = "pytest"
 suppression = {marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 floor = "7.0.0"
 pypi = "pytest"
-version_regex = "(\\d+\\.\\d+\\.\\d+)"
+version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[checks]]
 name = "pytest/coverage"
@@ -22,7 +22,7 @@ title = "Check Python test coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.pytest.coverage.lines`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:tools.pytest.coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
 exit_codes = [1]

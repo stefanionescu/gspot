@@ -57,7 +57,7 @@ title = "Commitlint"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
 level = "all"
 stage = "message"
-runs = "per-file-list"
+runs = "files"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."

@@ -48,7 +48,7 @@ title = "Keep Drizzle migrations current"
 example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 tool = "drizzle-kit"
 owners = {extensions = [".ts", ".sql"]}
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."

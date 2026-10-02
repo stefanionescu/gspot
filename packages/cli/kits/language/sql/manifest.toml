@@ -42,7 +42,7 @@ shared = true
 [[configs]]
 template = "sqlfluff.cfg.tmpl"
 target = ".gspot/config/sqlfluff.cfg"
-per_scope = true
+scoped = true
 rules_path = ["sqlfluff.rules", "sqlfluff.exclude_rules", "sqlfluff:rules"]
 
 [[checks]]

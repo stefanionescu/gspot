@@ -50,7 +50,7 @@ template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
-code_files = ["**/*.svelte"]
+components = ["**/*.svelte"]
 
 [[checks]]
 name = "svelte/eslint"
@@ -58,13 +58,13 @@ title = "ESLint"
 example = "A Svelte template containing `<div>{@html html}</div>` reports `svelte/no-at-html-tags`. Render text with interpolation, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".svelte"]}
-output = {format = "eslint-json"}
+output = {format = "eslint"}
 summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
@@ -75,7 +75,7 @@ title = "Check Svelte components"
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 replaces = "typescript/tsc"
 owners = {extensions = [".svelte"]}
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."

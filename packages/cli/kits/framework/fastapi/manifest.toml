@@ -13,7 +13,7 @@ dependencies = ["fastapi"]
 template = "semgrep-fastapi.yml.tmpl"
 target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 needs = "security"
 
 [guides]

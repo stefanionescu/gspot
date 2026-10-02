@@ -13,7 +13,7 @@ dependencies = ["express"]
 template = "semgrep-express.yml.tmpl"
 target = ".gspot/config/semgrep/express.yml"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 needs = "security"
 
 [[checks]]
@@ -22,7 +22,7 @@ title = "Routes tested"
 example = "With `tools.express.route_files = [\"routes/*.ts\"]`, `routes/users.ts` reports `untested-route` when no test in the same scope imports it. Add `import { users } from './routes/users.js';` to `users.test.ts` and test the route's behavior. This check resolves imports; it does not execute the test or establish assertion coverage."
 level = "all"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 summary = "Checks that a test in the same scope imports each route file."
 why = "A route with no test is the one that changes behavior without anyone noticing."
 help = "Add a test that imports and exercises the route."

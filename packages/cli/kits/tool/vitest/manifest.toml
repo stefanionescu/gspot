@@ -35,7 +35,7 @@ title = "Check Vitest coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.vitest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 command = ["vitest", "run", "{each:--config:tools.vitest.config}", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:tools.vitest.coverage.lines}", "--coverage.thresholds.branches={setting:tools.vitest.coverage.branches}", "--coverage.thresholds.functions={setting:tools.vitest.coverage.functions}", "--coverage.thresholds.statements={setting:tools.vitest.coverage.statements}"]
 owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs"]}

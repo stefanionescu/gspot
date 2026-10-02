@@ -12,9 +12,9 @@ const ownersSchema = z.strictObject({
     filenames: stringList,
     tags: stringList,
     paths: stringList,
-    from_languages: z.boolean().default(false),
+    languages: z.boolean().default(false),
     // The file types the Prettier plugins of the selected kits format, such as .astro, join the owned ones.
-    from_prettier_plugins: z.boolean().default(false),
+    prettier_plugins: z.boolean().default(false),
     kinds: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
@@ -60,10 +60,10 @@ const configSchema = z
         rules_path: z.array(z.string()).optional(),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
-        per_scope: z.boolean().default(false),
+        scoped: z.boolean().default(false),
         header: z.boolean().default(true),
         needs: z.string().optional(),
-        code_files: z.array(z.string().min(1)).default([]),
+        components: z.array(z.string().min(1)).default([]),
         selectors: z.array(selectorSchema).default([]),
     })
     .refine(
@@ -80,7 +80,7 @@ const checkFields = z.strictObject({
     name: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
     level: z.enum(['recommended', 'all']),
     stage: z.enum(['commit', 'push', 'manual', 'message']),
-    runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
+    runs: z.enum(['files', 'scope', 'once']).default('files'),
     command: commandSchema.optional(),
     isolated_files: z.boolean().optional(),
     file_prefix: z.string().optional(),
@@ -197,8 +197,8 @@ export const manifestSchema = z.strictObject({
         filenames: [],
         tags: [],
         paths: [],
-        from_languages: false,
-        from_prettier_plugins: false,
+        languages: false,
+        prettier_plugins: false,
         kinds: ['source'],
     }),
     tools: z.array(toolSchema).default([]),
@@ -211,7 +211,7 @@ export const manifestSchema = z.strictObject({
     // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
     naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
-    entry_files: stringList,
+    entry: stringList,
     guides: z
         .record(
             z.string(),

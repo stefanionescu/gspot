@@ -14,20 +14,19 @@ const CHECK_RULES: CheckRule[] = [
     },
     {
         applies: (check) =>
-            check.file_prefix !== undefined &&
-            (check.runs !== 'per-file-list' || check.command?.includes('{files}') !== true),
+            check.file_prefix !== undefined && (check.runs !== 'files' || check.command?.includes('{files}') !== true),
         problem: (check) =>
-            `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`,
+            `check ${check.name} prefixes file arguments and requires runs = "files" with {files} in its command.`,
     },
     {
         applies: (check) => {
             if (check.isolated_files !== true) return false;
-            const perFile = check.runs === 'per-file-list' && check.command?.includes('{files}') === true;
-            const perScope = check.runs === 'per-scope' && check.command?.includes('{root}') === true;
+            const perFile = check.runs === 'files' && check.command?.includes('{files}') === true;
+            const perScope = check.runs === 'scope' && check.command?.includes('{root}') === true;
             return !perFile && !perScope;
         },
         problem: (check) =>
-            `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`,
+            `check ${check.name} isolates files and requires runs = "files" with {files} or runs = "scope" with {root}.`,
     },
     {
         applies: (check) => check.requires !== undefined && check.stage === 'commit',
@@ -37,7 +36,7 @@ const CHECK_RULES: CheckRule[] = [
         applies: (check) =>
             check.stage === 'manual' &&
             check.requires === undefined &&
-            check.runs === 'per-file-list' &&
+            check.runs === 'files' &&
             check.command === undefined,
         problem: (check) => `check ${check.name} is manual with nothing that makes it slow.`,
     },

@@ -23,7 +23,7 @@ version_command = ["--version"]
 
 [[tools]]
 name = "typescript-eslint"
-rule_page = "https://typescript-eslint.io/rules/{rule}"
+rule_url = "https://typescript-eslint.io/rules/{rule}"
 kind = "library"
 version = "8.70.0"
 npm = "typescript-eslint"
@@ -44,7 +44,7 @@ fragment = true
 [[configs]]
 template = "tsconfig.check.json.tmpl"
 target = ".gspot/config/tsconfig.check.json"
-per_scope = true
+scoped = true
 
 [[checks]]
 name = "typescript/tsc"
@@ -52,7 +52,7 @@ title = "TypeScript"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 tool = "tsc"
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
@@ -66,12 +66,12 @@ title = "ESLint"
 example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 owners = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
-output = {format = "eslint-json"}
+output = {format = "eslint"}
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."

@@ -48,7 +48,7 @@ function projectChecks(session: Session): void {
         name: 'sandbox/project',
         level: 'recommended',
         stage: 'commit',
-        runs: 'per-scope',
+        runs: 'scope',
         summary: 'Reports the planted project finding.',
         why: 'Changed files trigger the complete project check.',
         help: 'Fix the planted project finding.',
@@ -58,7 +58,7 @@ function projectChecks(session: Session): void {
         owners: manifest.owners,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
-    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'per-file-list' as const };
+    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'files' as const };
     for (const scope of session.scopes) {
         if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [spec, fileCheck] }];
     }
@@ -156,7 +156,7 @@ test('a check with no command and no built-in check refuses the complete plan be
         name: 'sandbox/command',
         level: 'recommended',
         stage: 'commit',
-        runs: 'per-file-list',
+        runs: 'files',
         summary: 'Inspect the source file.',
         why: 'The input must be valid.',
         help: 'Correct the source file.',

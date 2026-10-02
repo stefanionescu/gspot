@@ -13,8 +13,8 @@ export const POLICY_CHECK = 'integrity/policy';
 
 /** Native structured reporters reserve these nonzero exit codes for findings. */
 export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
-    ['typos-json', [TYPOS_FINDINGS]],
-    ['markdownlint-json', [1]],
+    ['typos', [TYPOS_FINDINGS]],
+    ['markdownlint', [1]],
 ]);
 
 /** The checks that read the history of the pushed commits. */

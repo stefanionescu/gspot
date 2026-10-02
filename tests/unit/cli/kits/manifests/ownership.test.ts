@@ -127,7 +127,7 @@ test('check references require one standalone built-in owner and preserve its de
         validateManifests(manifests);
     }).toThrow('Referenced check');
     consumer.kit.check_references = ['owner/shared'];
-    owner.checks[0] = { ...owner.checks[0]!, runs: 'per-scope' };
+    owner.checks[0] = { ...owner.checks[0]!, runs: 'scope' };
     expect(() => {
         validateManifests(manifests);
     }).toThrow('standalone built-in');

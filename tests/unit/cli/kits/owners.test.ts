@@ -22,8 +22,8 @@ describe('owners', () => {
                     filenames: ['_headers'],
                     tags: [],
                     paths: [],
-                    from_languages: false,
-                    from_prettier_plugins: false,
+                    languages: false,
+                    prettier_plugins: false,
                     kinds: ['source'],
                 },
                 trackedFile('public/_headers'),
@@ -31,7 +31,7 @@ describe('owners', () => {
         ).toBe(true);
     });
 
-    test('a repository configuration with from_languages owners what the language kits claim', () => {
+    test('a repository configuration with languages owners what the language kits claim', () => {
         const selected = selectKits(['bash'], manifests);
         const structure = manifests.get('structure')!;
         const owned = ownedBy(structure.owners, selected, [trackedFile('a.sh'), trackedFile('README.md')], '');

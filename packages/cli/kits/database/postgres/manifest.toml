@@ -29,7 +29,7 @@ file = "squawk.toml"
 [[configs]]
 template = "squawk.toml.tmpl"
 target = ".gspot/config/squawk.toml"
-per_scope = true
+scoped = true
 rules_path = ["excluded_rules"]
 
 [[checks]]

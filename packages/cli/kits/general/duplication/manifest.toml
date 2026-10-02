@@ -6,7 +6,7 @@ proposed = true
 description = "Copy-paste detection across every language a selected kit claims, with a ceiling for the share of duplicated lines."
 
 [owners]
-from_languages = true
+languages = true
 
 [[tools]]
 name = "jscpd"
@@ -28,7 +28,7 @@ title = "Duplicate code"
 example = "Two selected files containing the same substantial code block can exceed the configured duplication threshold. Move the shared behavior into its actual owner and call it from both locations, then rerun."
 level = "all"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 tool = "jscpd"
 exclude_setting = "tools.jscpd.ignore"
 summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."

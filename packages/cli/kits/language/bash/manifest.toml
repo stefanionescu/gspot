@@ -16,7 +16,7 @@ tags = ["shebang:shell"]
 
 [[tools]]
 name = "shellcheck"
-rule_page = "https://www.shellcheck.net/wiki/{rule}"
+rule_url = "https://www.shellcheck.net/wiki/{rule}"
 suppression = {marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)"}
 version = "0.11.0"
 mise = "shellcheck"
@@ -44,7 +44,7 @@ provider = "host"
 # The bash kit writes scripts for Bash 4.4 or newer, and Bats under Bash 3.2 passes files that do not parse.
 floor = "4.4"
 version_command = ["--version"]
-version_regex = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
+version_pattern = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
 
 [[tools]]
 name = "zsh"
@@ -59,7 +59,7 @@ template = "semgrep/hooks.yml"
 target = ".gspot/config/semgrep/bash.yml"
 rules_path = ["rules"]
 needs = "security"
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "shellcheckrc.tmpl"
@@ -72,7 +72,7 @@ title = "Check Bash syntax"
 example = "In `greet.sh`, `if then` produces a syntax error. Replace the file contents with `printf \"%s\\n\" \"Hello\"`, then rerun the syntax check. This is a manual edit, not an automatic correction."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["bash", "-n", "{file}"]
 owners = {tags = ["bash"]}
 output = {format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$"}
@@ -86,7 +86,7 @@ title = "Check Zsh syntax"
 example = "In a Zsh script, `if then` is missing a condition and produces a syntax error. Replace it with `print -r -- \"Hello\"` and rerun with Zsh installed."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["zsh", "-n", "{file}"]
 owners = {tags = ["zsh"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$"}
@@ -100,7 +100,7 @@ title = "Check Bats syntax"
 example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["bats", "--count", "{file}"]
 # Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
 requires_tools = ["bash"]
@@ -116,7 +116,7 @@ title = "ShellCheck"
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 owners = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 exit_codes = [1]
@@ -131,7 +131,7 @@ title = "Format shell scripts"
 example = "In a script, `if true;then echo hello;fi` differs from shfmt output. Run the configured formatter to add the required spacing and block layout, then rerun the check."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 owners = {tags = ["bash", "bats"]}
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]

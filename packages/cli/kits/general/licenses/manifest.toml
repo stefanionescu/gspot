@@ -31,7 +31,7 @@ mise = "pipx:pip-licenses"
 [[configs]]
 template = "licenses.json.tmpl"
 target = ".gspot/config/licenses.json"
-per_scope = true
+scoped = true
 
 [[checks]]
 name = "licenses/packages"
@@ -39,7 +39,7 @@ title = "Check dependency licenses"
 example = "A locked package whose declared license is outside the allowed license policy reports a finding for that exact package version. Replace the dependency with an acceptable one or record a reviewed package-and-license exception with a reason. An exception for another version does not apply."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 waits_for = "tools.licenses.allowed"
 owners = {filenames = ["package.json", "pyproject.toml"]}
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."

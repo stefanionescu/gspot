@@ -86,7 +86,7 @@ function pointerFor(
         plan.files.push(...directoryPointers(context, configuration, file.path));
         return;
     }
-    const scope = configuration.per_scope ? context.selection.scope.path : '';
+    const scope = configuration.scoped ? context.selection.scope.path : '';
     const pointerPath = scope === '' ? pointer.path : `${scope}/${pointer.path}`;
     const replaced = context.selection.selected.some((owner) =>
         owner.configs.some(
@@ -107,7 +107,7 @@ function pointerFor(
 function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], selection: ScopeSelection): boolean {
     if (configuration.needs === undefined) return true;
     const wanted = configuration.needs;
-    const selectedScopes = configuration.per_scope ? [selection] : scopes;
+    const selectedScopes = configuration.scoped ? [selection] : scopes;
     return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.kit.name === wanted));
 }
 

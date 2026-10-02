@@ -48,7 +48,7 @@ template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
-code_files = ["**/*.vue"]
+components = ["**/*.vue"]
 
 [[checks]]
 name = "vue/eslint"
@@ -56,13 +56,13 @@ title = "ESLint"
 example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".vue"]}
-output = {format = "eslint-json"}
+output = {format = "eslint"}
 summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
@@ -73,7 +73,7 @@ title = "Check Vue types"
 example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 cwd = "scope"
 tool = "vue-tsc"
 replaces = "typescript/tsc"

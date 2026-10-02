@@ -7,7 +7,7 @@ const base = {
     command: ['tool'],
     level: 'recommended',
     stage: 'commit',
-    runs: 'per-file-list',
+    runs: 'files',
     summary: '',
     why: '',
     help: '',
@@ -55,7 +55,7 @@ describe('isToolBroken', () => {
         const links = {
             ...base,
             name: 'docs/links',
-            output: { format: 'regex', file_is: 'link', pattern: '(?<file>.+)' },
+            output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
         } satisfies CheckSpec;
         const lines = { ...base, name: 'dependencies/syncpack', output: { format: 'lines' } } satisfies CheckSpec;
         for (const spec of [floor, links, lines]) expect(isToolBroken(spec, [], [here])).toBe(false);

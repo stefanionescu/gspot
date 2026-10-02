@@ -70,25 +70,25 @@ template = "semgrep/ios.yml.tmpl"
 target = ".gspot/config/semgrep/ios.yml"
 rules_path = ["rules"]
 needs = "security"
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "swiftlint.yml.tmpl"
 target = ".gspot/config/swiftlint.yml"
 rules_path = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
-per_scope = true
+scoped = true
 pointer = {path = ".swiftlint.yml", body = "parent_config: {target_json}\n"}
 
 [[configs]]
 template = "swiftformat.tmpl"
 target = ".gspot/config/swiftformat"
 rules_path = ["enable", "disable", "rules", "lint-only"]
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "periphery.yml.tmpl"
 target = ".gspot/config/periphery.yml"
-per_scope = true
+scoped = true
 
 [[checks]]
 name = "swift/swiftlint"
@@ -127,7 +127,7 @@ title = "Build the Swift project"
 example = "A Swift assignment of a string to an `Int` variable fails compilation. Correct the value or declared type and rerun with the required compiler and project settings available."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 requires = "build"
 platforms = ["macos"]
 summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
@@ -140,7 +140,7 @@ title = "Analyze Swift compiler output"
 example = "An import unused by the compiled Swift sources reports an analyzer finding. Remove the import and rerun the build-backed analysis. A missing build log does not establish a clean result."
 level = "recommended"
 stage = "manual"
-runs = "per-scope"
+runs = "scope"
 requires = "build"
 platforms = ["macos"]
 tool = "swiftlint"
@@ -154,7 +154,7 @@ title = "Periphery"
 example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 requires = "build"
 platforms = ["macos"]
 tool = "periphery"
@@ -169,7 +169,7 @@ title = "Trivial function"
 example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
 level = "all"
 stage = "commit"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".swift"]}
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
@@ -181,7 +181,7 @@ title = "Duplicate functions"
 example = "Two Swift functions with the same executable body report duplication. Keep the implementation that owns the behavior, replace calls to the duplicate, and remove it."
 level = "all"
 stage = "commit"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".swift"]}
 summary = "Finds functions whose bodies match line for line."
 why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
@@ -193,7 +193,7 @@ title = "Private before public"
 example = "A file-local private declaration below a public declaration reports an ordering finding. Move the private declaration above the first internal or public declaration without changing its behavior."
 level = "all"
 stage = "commit"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".swift"]}
 summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
 why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
@@ -205,7 +205,7 @@ title = "No comments among imports"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `// swiftlint:` or `// swiftformat:` directive stays."
 level = "all"
 stage = "commit"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".swift"]}
 summary = "Finds a comment written inside an import block, between its first and last import."
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
@@ -217,7 +217,7 @@ title = "Environment access owner"
 example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
 level = "all"
 stage = "commit"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".swift"]}
 summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."

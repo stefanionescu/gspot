@@ -47,7 +47,7 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     return {
         ...definition,
         level: 'recommended',
-        runs: 'per-file-list',
+        runs: 'files',
         summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',
@@ -56,8 +56,8 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
             filenames: [],
             tags: [],
             paths,
-            from_languages: false,
-            from_prettier_plugins: false,
+            languages: false,
+            prettier_plugins: false,
             kinds: ['source', 'generated'],
         },
     };

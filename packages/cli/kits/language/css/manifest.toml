@@ -63,7 +63,7 @@ npm = "postcss-html"
 template = "stylelint.json.tmpl"
 target = ".gspot/config/stylelint.json"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 header = false
 pointer = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n"}
 
@@ -88,7 +88,7 @@ title = "CSS usage"
 example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
+runs = "scope"
 owners = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."

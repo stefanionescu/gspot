@@ -43,13 +43,13 @@ function rulePage(check: CheckSpec, tool: string, rule: string): string | undefi
     const slash = rule.lastIndexOf('/');
     if (slash === -1) {
         const pin = pinNamed(tool) ?? pinNamed(toolOf(check));
-        return pin?.rule_page?.replace('{rule}', rule);
+        return pin?.rule_url?.replace('{rule}', rule);
     }
     const prefix = rule.slice(0, slash).replace(/^@/u, '');
     const plugin = [prefix, `${tool}-plugin-${prefix}`, `@${prefix}/${tool}-plugin`]
         .map((name) => pinNamed(name))
         .find((pin) => pin !== undefined);
-    return plugin?.rule_page?.replace('{rule}', rule.slice(slash + 1));
+    return plugin?.rule_url?.replace('{rule}', rule.slice(slash + 1));
 }
 
 // The tool a check runs: the declared tool, or the first word of its command.

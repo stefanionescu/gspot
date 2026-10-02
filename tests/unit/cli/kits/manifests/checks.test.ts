@@ -9,7 +9,7 @@ test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
         expect(() => parseManifest(`${source}${command}\n`, 'configurations/x')).toThrow('isolates files');
         expect(() => parseManifest(`${source}command = ["x", "{files}"]\n`, 'configurations/x')).not.toThrow();
         expect(() =>
-            parseManifest(`${source}runs = "per-scope"\ncommand = ["x", "{root}"]\n`, 'configurations/x'),
+            parseManifest(`${source}runs = "scope"\ncommand = ["x", "{root}"]\n`, 'configurations/x'),
         ).not.toThrow();
     },
 );

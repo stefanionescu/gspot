@@ -51,7 +51,7 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
         .filter((entry) => isInScope(scope, entry.scope.path))
         .toSorted((left, right) => right.scope.path.length - left.scope.path.length)[0];
     const selected = owner?.selected ?? [];
-    const declared = selected.flatMap((manifest) => manifest.entry_files).map((pattern) => prefixed(scope, pattern));
+    const declared = selected.flatMap((manifest) => manifest.entry).map((pattern) => prefixed(scope, pattern));
     return [...new Set([...authored, ...declared])];
 }
 

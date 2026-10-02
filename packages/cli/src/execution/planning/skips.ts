@@ -68,7 +68,7 @@ export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, h
  * @returns the check with its files restricted
  */
 export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.spec.runs !== 'per-file-list' || check.files.length === 0) return check;
+    if (check.skip !== undefined || check.spec.runs !== 'files' || check.files.length === 0) return check;
     const ignored = check.scope.view
         .ignoresFor(check.check)
         .flatMap((entry) =>

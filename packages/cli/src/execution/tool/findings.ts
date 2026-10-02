@@ -59,14 +59,14 @@ function markFailure(
 function attributeFile(parsed: Finding[], invocation: ToolInvocation, spec: CheckSpec): void {
     if (invocation.file === undefined) return;
     // Regex file groups can name a rule or another identifier instead of a path.
-    if (spec.output?.format === 'regex' && (spec.output.file_is ?? 'path') !== 'path') return;
+    if (spec.output?.format === 'regex' && (spec.output.file_type ?? 'path') !== 'path') return;
     for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
 }
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
-    if (output === undefined || ['eslint-json', 'typos-json', 'markdownlint-json'].includes(output.format)) return true;
-    if (FILELESS_FORMATS.has(output.format) || (output.file_is ?? 'path') !== 'path') return false;
+    if (output === undefined || ['eslint', 'typos', 'markdownlint'].includes(output.format)) return true;
+    if (FILELESS_FORMATS.has(output.format) || (output.file_type ?? 'path') !== 'path') return false;
     if (output.pattern !== undefined) return output.pattern.includes('(?<file>');
     return output.fields?.file !== undefined;
 }

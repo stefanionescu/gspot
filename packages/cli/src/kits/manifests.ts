@@ -83,7 +83,7 @@ export function parseManifest(text: string, dir: string): Manifest {
             .filter((config) => config.imports !== undefined && !config.fragment)
             .map((config) => `config ${config.target} declares imports, which only a fragment renders.`),
         ...raw.configs
-            .filter((config) => !config.fragment && (config.code_files.length > 0 || config.selectors.length > 0))
+            .filter((config) => !config.fragment && (config.components.length > 0 || config.selectors.length > 0))
             .map((config) => `config ${config.target} declares code files or selectors, which only a fragment adds.`),
     ];
     if (raw.checks.some((check) => raw.kit.check_references.includes(check.name)))
@@ -110,7 +110,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         settings: raw.settings.map((setting) => compact(setting)),
         defaults: raw.defaults,
         defaults_all: raw.defaults_all,
-        entry_files: raw.entry_files,
+        entry: raw.entry,
         naming: raw.naming,
         guides: raw.guides,
         required_rules: raw.required_rules,

@@ -41,22 +41,22 @@ const TOOL_MANIFEST =
 
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseManifest(
-        `${TOOL_MANIFEST}rule_page = "https://example.test/rules/{rule}"\ncrash_pattern = '^Fatal:'\n`,
+        `${TOOL_MANIFEST}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '^Fatal:'\n`,
         'configurations/example',
     );
     expect(manifest.tools[0]).toMatchObject({
-        rule_page: 'https://example.test/rules/{rule}',
+        rule_url: 'https://example.test/rules/{rule}',
         crash_pattern: '^Fatal:',
     });
     expect(() =>
         parseManifest(
-            `${TOOL_MANIFEST}rule_page = "https://example.test/rules"\ncrash_pattern = '^Fatal:'\n`,
+            `${TOOL_MANIFEST}rule_url = "https://example.test/rules"\ncrash_pattern = '^Fatal:'\n`,
             'configurations/example',
         ),
     ).toThrow('{rule}');
     expect(() =>
         parseManifest(
-            `${TOOL_MANIFEST}rule_page = "https://example.test/rules/{rule}"\ncrash_pattern = '(Fatal'\n`,
+            `${TOOL_MANIFEST}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '(Fatal'\n`,
             'configurations/example',
         ),
     ).toThrow('regular expression');

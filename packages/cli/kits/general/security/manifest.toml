@@ -6,7 +6,7 @@ proposed = true
 description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL on request."
 
 [owners]
-from_languages = true
+languages = true
 extensions = [".plist"]
 
 [[tools]]
@@ -42,18 +42,18 @@ query_packs = {actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7
 template = "semgrep/node.yml.tmpl"
 target = ".gspot/config/semgrep/node.yml"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "semgrep/secrets.yml.tmpl"
 target = ".gspot/config/semgrep/secrets.yml"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 
 [[configs]]
 template = "semgrepignore.tmpl"
 target = ".semgrepignore"
-per_scope = true
+scoped = true
 
 [[checks]]
 name = "security/semgrep"
@@ -61,7 +61,7 @@ title = "Semgrep"
 example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
 level = "recommended"
 stage = "push"
-runs = "per-file-list"
+runs = "files"
 exclude_setting = "tools.semgrep.exclude"
 exit_codes = [1]
 platforms = ["macos", "linux"]
@@ -77,7 +77,7 @@ title = "Semgrep registry"
 example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
 level = "recommended"
 stage = "manual"
-runs = "per-file-list"
+runs = "files"
 exclude_setting = "tools.semgrep.exclude"
 exit_codes = [1]
 requires = "network"
