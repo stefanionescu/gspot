@@ -3,15 +3,15 @@
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/generation/markers.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
-import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
-import { pruneConfigurationParents } from '#cli/lifecycle/merge/plan.ts';
+import { openDocument } from '#cli/lifecycle/merge/document.ts';
 import type { Planned, MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
-function fieldRestoration(
+function getMergedFields(
     existing: OwnershipEntry,
     current: Read | undefined,
 ): { current: Read; configuration: MergeRecord } | undefined {
@@ -22,15 +22,15 @@ function fieldRestoration(
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreConfiguration(current: Read, configuration: MergeRecord): Read | undefined {
+function restoreFields(current: Read, configuration: MergeRecord): Read | undefined {
     const text = current.bytes.toString('utf8');
     if (!Buffer.from(text).equals(current.bytes)) return undefined;
-    const document = configurationDocument(text, configuration.format);
+    const document = openDocument(text, configuration.format);
     for (const field of configuration.fields) {
         if (!isDeepStrictEqual(document.value(field.path), field.installed)) return undefined;
     }
     for (const field of configuration.fields) document.set(field.path, field.original);
-    pruneConfigurationParents(document, configuration.parents ?? []);
+    pruneParents(document, configuration.parents ?? []);
     return { bytes: Buffer.from(document.text()), mode: current.mode };
 }
 
@@ -54,10 +54,10 @@ function fileRestoration(existing: OwnershipEntry, current: Read | undefined): R
 }
 
 // What a restoration writes, {} for a removal, or undefined when the file must be preserved.
-function restorationFor(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
-    const fields = fieldRestoration(existing, current);
+function getRestoration(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
+    const fields = getMergedFields(existing, current);
     if (fields !== undefined) {
-        const next = restoreConfiguration(fields.current, fields.configuration);
+        const next = restoreFields(fields.current, fields.configuration);
         return next === undefined ? undefined : { next };
     }
     if (current !== undefined && existing.block !== undefined) return restoreBlock(current, existing.block);
@@ -75,7 +75,7 @@ export function proposeRestoration(log: Log, path: string): Planned {
     const current = currentRead(log, path, existing);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
-    const restoration = restorationFor(existing, current);
+    const restoration = getRestoration(existing, current);
     if (restoration === undefined) return { ...base, status: 'preserved' };
     return { ...base, ...(restoration.next === undefined ? {} : { next: restoration.next }), status: 'changed' };
 }

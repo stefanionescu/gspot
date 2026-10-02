@@ -12,7 +12,7 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Changes, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/repository.ts';
@@ -62,7 +62,7 @@ function unownedConfigs(
 }
 
 function getUnownedOutputs(session: Session): ChangeRow[] {
-    const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
+    const recorded = new Set(getOwnership(session.root).files.map((entry) => entry.path));
     return session.repository.files
         .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
         .map((file) => ({

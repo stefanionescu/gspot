@@ -1,9 +1,9 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
 import { decodedText } from '#cli/platform/text.ts';
+import { planMerge } from '#cli/lifecycle/merge/plan.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
-import { planConfiguration } from '#cli/lifecycle/merge/plan.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
@@ -34,7 +34,7 @@ function isPreservedReplacement(
 }
 
 // The plan that installs the next bytes. A file gspot first records while it already holds them is adopted.
-function changedReplacement(
+function planChange(
     path: string,
     current: Read | undefined,
     existing: OwnershipEntry | undefined,
@@ -49,7 +49,7 @@ function changedReplacement(
 }
 
 // The text of a managed block's file, refused when the file is not UTF-8 text.
-function blockText(path: string, current: Read | undefined): string {
+function decodeText(path: string, current: Read | undefined): string {
     if (current === undefined) return '';
     const text = decodedText(current.bytes);
     if (text === undefined) throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
@@ -57,7 +57,7 @@ function blockText(path: string, current: Read | undefined): string {
 }
 
 // The next text and record when the recorded block is still in place, or undefined when it was edited away.
-function updatedBlock(
+function planUpdate(
     text: string,
     span: BlockSpan | undefined,
     recorded: OwnedBlock,
@@ -72,7 +72,7 @@ function updatedBlock(
 }
 
 // The next text and record for a file whose block is not recorded yet.
-function insertedBlock(
+function planInsert(
     current: Read | undefined,
     span: BlockSpan | undefined,
     style: BlockStyle,
@@ -88,7 +88,7 @@ function insertedBlock(
 }
 
 // The plan a planned block yields: unchanged when the bytes already stand, otherwise the new record.
-function blockPlan(
+function planBlock(
     path: string,
     current: Read | undefined,
     existing: OwnershipEntry | undefined,
@@ -97,7 +97,7 @@ function blockPlan(
     const next = { bytes: Buffer.from(planned.nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
     if (existing?.block !== undefined && matches(current, identity(next)))
         return { path, current, previous: existing, status: 'unchanged' };
-    const plan = changedReplacement(path, current, existing, next, 'block');
+    const plan = planChange(path, current, existing, next, 'block');
     plan.entry.block = planned.block;
     return plan;
 }
@@ -139,7 +139,7 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
         return { path, current, previous: existing, status: 'preserved' };
     if (existing !== undefined && matches(current, installed))
         return { path, current, previous: existing, status: 'unchanged' };
-    return changedReplacement(path, current, existing, next, kind);
+    return planChange(path, current, existing, next, kind);
 }
 
 /**
@@ -153,17 +153,17 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
 export function proposeBlock(log: Log, path: string, body: string, style: BlockStyle): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
-    const text = blockText(path, current);
+    const text = decodeText(path, current);
     const span = blockSpan(text, style);
     const recorded = existing?.block;
     if (recorded !== undefined && current !== undefined) {
-        const planned = updatedBlock(text, span, recorded, style, body);
+        const planned = planUpdate(text, span, recorded, style, body);
         if (planned === undefined) return { path, current, previous: existing, status: 'preserved' };
-        return blockPlan(path, current, existing, planned);
+        return planBlock(path, current, existing, planned);
     }
     if (existing !== undefined && current !== undefined && !isRecorded(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
-    return blockPlan(path, current, existing, insertedBlock(current, span, style, body));
+    return planBlock(path, current, existing, planInsert(current, span, style, body));
 }
 
 /**
@@ -175,7 +175,7 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
  * @param replace whether an unowned file may be merged into
  * @returns the plan
  */
-export function proposeConfiguration(
+export function proposeMerge(
     log: Log,
     path: string,
     format: ConfigurationFormat,
@@ -185,7 +185,7 @@ export function proposeConfiguration(
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     const isInstalled = isRecorded(current, existing?.installed);
-    const plan = planConfiguration({
+    const plan = planMerge({
         path,
         format,
         changes,

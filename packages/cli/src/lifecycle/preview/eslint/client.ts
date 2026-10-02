@@ -14,7 +14,7 @@ import type { configurationRequest } from '#cli/lifecycle/preview/eslint/protoco
  * @param cancelSignal cancellation for the process
  * @returns the structured result the process reported
  */
-export async function runConfiguration(
+export async function evaluate(
     request: z.infer<typeof configurationRequest>,
     view?: Pick<MergedView, 'settings'>,
     cancelSignal?: AbortSignal,

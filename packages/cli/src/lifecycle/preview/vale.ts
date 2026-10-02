@@ -2,7 +2,7 @@ import type { Reader, Section } from '#cli/types/lifecycle/preview.ts';
 import { KEY_QUOTES, VALUE_QUOTES, BYTE_ORDER_MARK } from '#cli/config/lifecycle/preview.ts';
 
 // The key and the value text of a plain option line: the key, then = or :, then the rest.
-function plainEntry(line: string): [string | undefined, string] {
+function splitPlain(line: string): [string | undefined, string] {
     const keyEnd = line.search(/[=:]/u);
     if (keyEnd === -1) return [undefined, ''];
     return [line.slice(0, keyEnd).trim(), line.slice(keyEnd + 1).trimStart()];
@@ -61,9 +61,9 @@ function openSection(sections: Map<string, Section>, line: string, lineNumber: n
 }
 
 // Records one option line in its section, keeping every distinct value in order.
-function readOption(reader: Reader, line: string, section: Section): void {
+function parseOption(reader: Reader, line: string, section: Section): void {
     const keyQuote = KEY_QUOTES.find((candidate) => line.startsWith(candidate));
-    const [key, rest] = keyQuote === undefined ? plainEntry(line) : quotedEntry(line, keyQuote);
+    const [key, rest] = keyQuote === undefined ? splitPlain(line) : quotedEntry(line, keyQuote);
     if (key === undefined || key === '') throw new Error(`Invalid Vale option on line ${String(reader.index + 1)}.`);
     const valueQuote = VALUE_QUOTES.find((candidate) => rest.startsWith(candidate));
     const value = valueQuote === undefined ? plainValue(reader, rest) : quotedValue(reader, rest, valueQuote);
@@ -73,7 +73,7 @@ function readOption(reader: Reader, line: string, section: Section): void {
 }
 
 // What a section says: the last level of each rule, and the styles it is based on.
-function sectionSummary(entries: Section): { rules: Record<string, string | undefined>; BasedOnStyles: string[] } {
+function summarizeSection(entries: Section): { rules: Record<string, string | undefined>; BasedOnStyles: string[] } {
     const rules = [...entries]
         .filter(([key]) => key.includes('.'))
         .map(([key, assignments]): [string, string | undefined] => [key, assignments.at(-1)]);
@@ -91,7 +91,7 @@ function sectionSummary(entries: Section): { rules: Record<string, string | unde
  * @param text the vale.ini text
  * @returns the styles and rule levels of each section
  */
-export function valeRules(text: string): Record<string, unknown> {
+export function parseVale(text: string): Record<string, unknown> {
     const sections = new Map<string, Section>();
     let section: Section = new Map();
     sections.set('DEFAULT', section);
@@ -103,7 +103,7 @@ export function valeRules(text: string): Record<string, unknown> {
         const line = (reader.lines[reader.index] ?? '').trim();
         if (line === '' || line.startsWith('#') || line.startsWith(';')) continue;
         if (line.startsWith('[')) section = openSection(sections, line, reader.index + 1);
-        else readOption(reader, line, section);
+        else parseOption(reader, line, section);
     }
-    return Object.fromEntries([...sections].map(([name, entries]) => [name, sectionSummary(entries)]));
+    return Object.fromEntries([...sections].map(([name, entries]) => [name, summarizeSection(entries)]));
 }

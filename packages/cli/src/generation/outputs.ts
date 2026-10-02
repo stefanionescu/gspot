@@ -11,8 +11,8 @@ import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
+import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
-import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
@@ -25,7 +25,7 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
     if (policy.ci === undefined) return;
     const swiftScope = scopes.find((selection) => selection.selected.some((manifest) => manifest.kit.name === 'swift'));
     out.files.push(
-        (policy.ci.provider === 'github' ? workflowFile : gitlabFile)({
+        (policy.ci.provider === 'github' ? githubFile : gitlabFile)({
             version,
             run: policy.ci.run,
             platforms: policy.ci.platforms,

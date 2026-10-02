@@ -8,11 +8,11 @@ import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { EXIT_ERROR, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { Written, Installed, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
@@ -23,7 +23,7 @@ function retireReplaced(
     removed: { path: string }[],
     read: ReadonlyMap<string, Read>,
 ): ReplaceRemovalResult {
-    return runOwnedLifecycle(root, (owner) => {
+    return asOwner(root, (owner) => {
         const result: ReplaceRemovalResult = { removed: [], preserved: [] };
         const plans = [];
         for (const entry of removed) {
@@ -90,7 +90,7 @@ async function installed(session: Session, install: boolean): Promise<Installed>
  * @returns the lines to print, the installation note, and the exit code
  */
 export async function write(root: string, options: InitOptions, prepared: InitPrepared): Promise<Written> {
-    return runOwnedLifecycle(root, async (owner) => {
+    return asOwner(root, async (owner) => {
         assertReadUnchanged(owner, prepared.read);
         const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
         const replace = new Map([...prepared.read].filter(([path]) => removedPaths.has(path)));

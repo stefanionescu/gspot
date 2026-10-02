@@ -5,10 +5,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePythonProject } from '#cli/tools/python.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { PreparePythonInstallationResult } from '#tests/types/tools.ts';
@@ -60,7 +60,7 @@ export async function preparePythonInstallation(
         writeFileSync(join(root, configuration), authored + index);
         const rootProject = readFileSync(join(root, 'pyproject.toml'));
         const rootConfiguration = readFileSync(join(root, configuration));
-        await runOwnedLifecycle(root, async (owner) => {
+        await asOwner(root, async (owner) => {
             await preparePythonProject(root, plans, owner);
             for (const file of plans)
                 owner.replace(

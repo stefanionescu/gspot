@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
-import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
+import { openDocument } from '#cli/lifecycle/merge/document.ts';
 
 test('YAML field reads preserve nested mappings, sequences, scalars, aliases, and missing keys', () => {
-    const document = configurationDocument(
+    const document = openDocument(
         'defaults: &shared\n  enabled: false\n  values: [0, null, ""]\nfirst: *shared\n',
         'yaml',
     );

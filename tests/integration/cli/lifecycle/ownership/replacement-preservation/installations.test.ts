@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/harness/cli/process.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
-import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { rmSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
@@ -94,7 +94,7 @@ test('a Python installation replaces the whole environment, runtime caches inclu
         // Runtime caches leave with the old environment; the staged caches are never published.
         expect(existsSync(join(directory.path, `${cache}/unowned.pyc`))).toBe(false);
         expect(existsSync(join(directory.path, `${cache}/new.pyc`))).toBe(false);
-        expect(readOwnership(directory.path)).toStrictEqual({ version: 1, files: [], installs: ['python'] });
+        expect(getOwnership(directory.path)).toStrictEqual({ version: 1, files: [], installs: ['python'] });
     } finally {
         owner.close();
     }

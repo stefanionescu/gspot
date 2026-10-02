@@ -9,7 +9,7 @@ import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, VALE_INI, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
@@ -168,7 +168,7 @@ async function copyDependency(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const isPrivate = basename(folder) === DOT_GSPOT;
-    const pending = isPrivate ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
+    const pending = isPrivate ? (getOwnership(join(root, dirname(folder))).installations ?? []) : [];
     assertDependencyReady(revisionRoot, folder, pending);
     const source = join(root, folder, dependency);
     const target = join(revisionRoot, folder, dependency);

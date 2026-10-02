@@ -2,18 +2,18 @@
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#package' with { type: 'json' };
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 /**
  * The pinned version, or undefined when the repository has none.
  * @param root the repository root
  * @returns the version in .gspot/version
  */
-export function pinnedVersion(root: string): string | undefined {
+export function getPin(root: string): string | undefined {
     const current = openRoot(root).read('.gspot/version');
     if (current === undefined) return undefined;
     const line = current.bytes.toString('utf8').trim();
@@ -25,8 +25,8 @@ export function pinnedVersion(root: string): string | undefined {
  * @param root the repository root
  * @param version the version to pin
  */
-export function writePin(root: string, version = GSPOT_VERSION): void {
-    runOwnedLifecycle(root, (owner) => {
+export function setPin(root: string, version = RUNNING_VERSION): void {
+    asOwner(root, (owner) => {
         const status = owner.replace(
             '.gspot/version',
             { bytes: Buffer.from(`${version}\n`), mode: OWNER_WRITABLE_FILE },
@@ -43,7 +43,7 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
  * @param root the repository root
  */
 export function assertPinMatches(root: string): void {
-    const pinned = pinnedVersion(root);
-    if (pinned !== undefined && pinned !== GSPOT_VERSION)
-        throw new GspotError('pin', messages.versionMismatch(pinned, GSPOT_VERSION));
+    const pinned = getPin(root);
+    if (pinned !== undefined && pinned !== RUNNING_VERSION)
+        throw new GspotError('pin', messages.versionMismatch(pinned, RUNNING_VERSION));
 }

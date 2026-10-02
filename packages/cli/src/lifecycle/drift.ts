@@ -5,11 +5,11 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { currentBlock } from '#cli/generation/markers.ts';
-import { ruleDiff } from '#cli/lifecycle/preview/compare.ts';
+import { hasFields } from '#cli/lifecycle/merge/document.ts';
+import { diffRules } from '#cli/lifecycle/preview/compare.ts';
 import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 
@@ -32,7 +32,7 @@ function fileDrift(root: string, rendered: Generated): Drift[] {
     for (const file of rendered.files) {
         const current = files.read(file.path);
         if (current === undefined) {
-            entries.push({ path: file.path, kind: 'missing', ...ruleDiff(file, undefined) });
+            entries.push({ path: file.path, kind: 'missing', ...diffRules(file, undefined) });
             continue;
         }
         const disk = current.bytes.toString('utf8');
@@ -43,7 +43,7 @@ function fileDrift(root: string, rendered: Generated): Drift[] {
                 path: file.path,
                 kind: 'changed',
                 diff: patch(file.path, disk, file.content, 'on disk'),
-                ...ruleDiff(file, disk),
+                ...diffRules(file, disk),
             });
     }
     return entries;
@@ -71,7 +71,7 @@ function blockDrift(root: string, rendered: Generated): Drift[] {
 function otherDrift(root: string, rendered: Generated): Drift[] {
     using files = openRoot(root);
     return [...rendered.merges, ...rendered.configurations]
-        .filter((output) => !hasConfiguration(root, output))
+        .filter((output) => !hasFields(root, output))
         .map((output) => ({ path: output.path, kind: files.read(output.path) === undefined ? 'missing' : 'changed' }));
 }
 
@@ -93,7 +93,7 @@ export function computeDrift(root: string, policy: Policy, rendered: Generated):
     if (lock !== undefined) known.add(lock.path);
     const python = pythonLockDrift(root, rendered.files);
     if (python !== undefined) known.add(python.path);
-    const strays = readOwnership(root)
+    const strays = getOwnership(root)
         .files.filter(
             (entry) =>
                 !['hook', 'export'].includes(entry.kind) &&

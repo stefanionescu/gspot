@@ -24,13 +24,13 @@ function recoverPending(files: Root, pending: PendingOwnership, accept: (pending
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function readState(recorded: Read | undefined): Ownership {
+function parseState(recorded: Read | undefined): Ownership {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }
 
 // The recorded entry of a path, refusing a record under another spelling of the same path.
-function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): OwnershipEntry | undefined {
+function getEntry(entries: Map<string, OwnershipEntry>, path: string): OwnershipEntry | undefined {
     const entry = entries.get(path.normalize('NFC').toLowerCase());
     if (entry !== undefined && entry.path !== path)
         throw new Error(`Lifecycle path aliases recorded ${entry.path}: ${path}`);
@@ -91,7 +91,7 @@ export function isRecorded(file: Read | undefined, recorded: Identity | undefine
 export function openLog(files: Root, stateDirectory: string): Log {
     const record = `${stateDirectory}/ownership.json`;
     let recorded = files.read(record);
-    const state = readState(recorded);
+    const state = parseState(recorded);
     const entries = new Map(state.files.map((entry) => [entry.path.normalize('NFC').toLowerCase(), entry]));
     const save = (): void => {
         state.files = [...entries.values()];
@@ -120,7 +120,7 @@ export function openLog(files: Root, stateDirectory: string): Log {
                     'An interrupted mutation must be recovered before another operation. Reopen the lifecycle owner.',
                 );
             mutationTarget(path);
-            return recordedEntry(entries, path);
+            return getEntry(entries, path);
         },
         finish() {
             for (const pending of state.pending ?? []) accept(pending);

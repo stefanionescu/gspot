@@ -8,8 +8,8 @@ import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportProfile } from '#cli/policy/profiles/export.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import { asOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
-import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**
  * Writes a profile from the policy of this repository.
@@ -25,10 +25,10 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     const path = toPosix(relative(root, resolve(cwd, file)));
     mutationTarget(path);
     parseProfile(saved.text, file);
-    runOwnedLifecycle(root, (owner) => {
+    asOwner(root, (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== policy.text)
             throw new Error('The policy changed while the profile was prepared. Retry the export.');
-        const existing = readOwnership(root).files.find((entry) => entry.path === path);
+        const existing = getOwnership(root).files.find((entry) => entry.path === path);
         if (existing !== undefined && existing.kind !== 'export')
             throw new Error(`Profile export cannot replace managed ${path}. Choose another destination.`);
         const current = owner.read(path);

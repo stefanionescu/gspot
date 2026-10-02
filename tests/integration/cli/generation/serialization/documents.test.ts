@@ -9,7 +9,7 @@ import { symlinkSync, readFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';
-import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
+import { hasFields } from '#cli/lifecycle/merge/document.ts';
 
 test('JSON option keys and YAML values keep their literal structure', async () => {
     const key = 'custom"key\\name\ncafé';
@@ -76,17 +76,17 @@ test('shared output readers reject external links without changing their targets
     symlinkSync(join(sandbox.path, 'outside'), join(project, 'linked.json'));
     const pointer = { path: 'linked.json', merge: { extends: '{target}' } };
     expect(() => mergePointer(project, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow('private regular file');
-    expect(() => hasConfiguration(project, { path: pointer.path, format: 'json', changes: [] })).toThrow(
+    expect(() => hasFields(project, { path: pointer.path, format: 'json', changes: [] })).toThrow(
         'private regular file',
     );
     expect(() =>
-        hasConfiguration(project, {
+        hasFields(project, {
             path: pointer.path,
             format: 'json',
             changes: [{ path: ['scripts', 'check'], value: 'gspot check' }],
         }),
     ).toThrow('private regular file');
-    expect(() => hasConfiguration(project, { path: pointer.path, format: 'yaml', changes: [] })).toThrow(
+    expect(() => hasFields(project, { path: pointer.path, format: 'yaml', changes: [] })).toThrow(
         'private regular file',
     );
     expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe(original);
@@ -101,7 +101,7 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
         expect(() => mergePointer(sandbox.path, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow(
             'valid JSON object',
         );
-        expect(() => hasConfiguration(sandbox.path, { path: pointer.path, format: 'json', changes: [] })).toThrow(
+        expect(() => hasFields(sandbox.path, { path: pointer.path, format: 'json', changes: [] })).toThrow(
             'valid JSON object',
         );
         expect(readFileSync(join(sandbox.path, pointer.path), 'utf8')).toBe(content);
@@ -111,11 +111,11 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
 test('malformed YAML and package configuration fails inspection instead of returning empty drift', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'tool.yml': 'checks: [\n', 'package.json': '{"scripts":' });
-    expect(() => hasConfiguration(sandbox.path, { path: 'tool.yml', format: 'yaml', changes: [] })).toThrow(
+    expect(() => hasFields(sandbox.path, { path: 'tool.yml', format: 'yaml', changes: [] })).toThrow(
         'valid YAML mapping',
     );
     expect(() =>
-        hasConfiguration(sandbox.path, {
+        hasFields(sandbox.path, {
             path: 'package.json',
             format: 'json',
             changes: [{ path: ['scripts', 'check'], value: 'gspot check' }],

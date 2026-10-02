@@ -5,9 +5,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { UV_INSTALLER } from '#cli/config/tools/tools.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { InstallationStep } from '#cli/types/commands/install.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
@@ -37,7 +37,7 @@ const installations: InstallationStep[] = [
         run: async (session, manifests) =>
             session.packageClient === undefined
                 ? ''
-                : await runOwnedLifecycle(session.root, (owner) =>
+                : await asOwner(session.root, (owner) =>
                       installPackageProject(
                           session.root,
                           owner,
@@ -60,7 +60,7 @@ const installations: InstallationStep[] = [
                     throw new GspotError('tool', 'The pinned uv installer is unavailable. Run: gspot install');
                 executable = located.stdout.trim();
             }
-            return runOwnedLifecycle(session.root, (owner) => installPythonProject(session.root, owner, executable));
+            return asOwner(session.root, (owner) => installPythonProject(session.root, owner, executable));
         },
     },
 ];

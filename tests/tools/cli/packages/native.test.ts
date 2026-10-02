@@ -7,7 +7,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { gspot as CLI } from '#tests/harness/cli/command.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test('CLI installation records the npm tools as one install with the native wrapper binary, and reports a usable tool', async () => {
@@ -21,7 +21,7 @@ test('CLI installation records the npm tools as one install with the native wrap
     expect(readFileSync(lockPath)).toStrictEqual(lock);
     expect(readFileSync(join(root, '.gspot/package.json'))).toStrictEqual(manifest);
     expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(rootPackage);
-    expect(readOwnership(root).installs).toStrictEqual(['npm']);
+    expect(getOwnership(root).installs).toStrictEqual(['npm']);
     const binaries = readdirSync(join(root, '.gspot/node_modules/editorconfig-checker/bin'), {
         encoding: 'utf8',
         recursive: true,

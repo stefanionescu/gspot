@@ -8,7 +8,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { getProfile } from '#cli/policy/profiles/parse.ts';
 import { exportProfile } from '#cli/policy/profiles/export.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 
@@ -60,7 +60,7 @@ test('profile publication is idempotent, preserves edits, and survives apply', a
     const first = readFileSync(path);
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readFileSync(path)).toStrictEqual(first);
-    expect(readOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
+    expect(getOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
     const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
     expect(readFileSync(path)).toStrictEqual(first);
@@ -124,14 +124,12 @@ test('profile publication recovers an interrupted write through the lifecycle lo
             'Profile publication interrupted',
         );
         expect(await Bun.file(path).exists()).toBe(false);
-        expect(readOwnership(directory.path).pending?.map((entry) => entry.path)).toStrictEqual([
-            'shared.profile.toml',
-        ]);
+        expect(getOwnership(directory.path).pending?.map((entry) => entry.path)).toStrictEqual(['shared.profile.toml']);
     } finally {
         failed.mockRestore();
     }
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
-    expect(readOwnership(directory.path).pending).toBeUndefined();
+    expect(getOwnership(directory.path).pending).toBeUndefined();
     const reread = await getProfile('shared.profile.toml', directory.path);
     expect(reread.tables.kits).toStrictEqual([]);
 });

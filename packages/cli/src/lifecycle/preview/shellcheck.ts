@@ -18,7 +18,7 @@ function quotedEnd(text: string, quote: string, lineNumber: number): number {
 }
 
 // A directive's value and what follows it: quoted up to the closing quote, or plain up to whitespace.
-function valueSpan(afterKey: string, key: string, lineNumber: number): Pick<Directive, 'value' | 'remaining'> {
+function parseValue(afterKey: string, key: string, lineNumber: number): Pick<Directive, 'value' | 'remaining'> {
     const quote = afterKey.slice(0, 1);
     if (quote === '"' || quote === "'") {
         const end = quotedEnd(afterKey, quote, lineNumber);
@@ -30,12 +30,12 @@ function valueSpan(afterKey: string, key: string, lineNumber: number): Pick<Dire
 }
 
 // The next directive on a line: its key, its plain or quoted value, and what follows it.
-function readDirective(text: string, lineNumber: number): Directive {
+function parseDirective(text: string, lineNumber: number): Directive {
     const directive = DIRECTIVE.exec(text);
     const key = directive?.[1];
     if (directive === null || key === undefined)
         throw new Error(`Invalid ShellCheck directive on line ${String(lineNumber)}.`);
-    return { key, ...valueSpan(text.slice(directive[0].length), key, lineNumber) };
+    return { key, ...parseValue(text.slice(directive[0].length), key, lineNumber) };
 }
 
 // Whether a disable entry is `all`, one code, or a range of two codes.
@@ -46,7 +46,7 @@ function isDisableEntry(entry: string): boolean {
 }
 
 // The entries of a rule list, checked against the form the key accepts.
-function ruleEntries(key: keyof Rules, value: string, lineNumber: number): string[] {
+function parseRuleList(key: keyof Rules, value: string, lineNumber: number): string[] {
     const entries = value === '' ? [] : value.split(',');
     if (!entries.every((entry) => (key === 'enable' ? RULE_NAME.test(entry) : isDisableEntry(entry))))
         throw new Error(`Invalid ShellCheck ${key} list on line ${String(lineNumber)}.`);
@@ -60,15 +60,15 @@ function ruleEntries(key: keyof Rules, value: string, lineNumber: number): strin
  * @param text the configuration text
  * @returns the enabled and disabled rule codes
  */
-export function shellcheckRules(text: string): Rules {
+export function parseShellcheck(text: string): Rules {
     const rules: Rules = { enable: [], disable: [] };
     for (const [index, line] of text.split(/\r?\n/u).entries()) {
         let remaining = line.trimStart();
         while (remaining !== '' && !remaining.startsWith('#')) {
-            const directive = readDirective(remaining, index + 1);
+            const directive = parseDirective(remaining, index + 1);
             remaining = directive.remaining;
             if (isRuleKey(directive.key))
-                rules[directive.key].push(...ruleEntries(directive.key, directive.value, index + 1));
+                rules[directive.key].push(...parseRuleList(directive.key, directive.value, index + 1));
         }
     }
     return rules;

@@ -8,10 +8,10 @@ import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -109,13 +109,13 @@ beforeAll(async () => {
         ...toolEnvironment(selected),
         ...toolPackages(selected, { name: 'bun', version: Bun.version }, 'mise'),
     ];
-    await runOwnedLifecycle(sandbox.path, async (owner) => {
+    await asOwner(sandbox.path, async (owner) => {
         await preparePythonProject(sandbox.path, files, owner);
         await preparePackageProject(sandbox.path, files, owner);
     });
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
-    await runOwnedLifecycle(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
-    await runOwnedLifecycle(sandbox.path, (owner) =>
+    await asOwner(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
+    await asOwner(sandbox.path, (owner) =>
         installPackageProject(
             sandbox.path,
             owner,

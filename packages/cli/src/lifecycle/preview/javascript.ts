@@ -24,7 +24,7 @@ const KEYWORD_LITERALS = new Map<ts.SyntaxKind, unknown>([
 ]);
 
 // The scalar a literal spells: a string, a number, a boolean, or null. Anything else is code.
-function scalarValue(node: ts.Expression): unknown {
+function parseScalar(node: ts.Expression): unknown {
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
     if (ts.isNumericLiteral(node) || (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)))
         return Number(node.getText());
@@ -40,16 +40,16 @@ function propertyKey(property: ts.ObjectLiteralElementLike): string {
 }
 
 // The data a literal expression spells: objects and arrays of scalars, read without running any code.
-function literalValue(node: ts.Expression): unknown {
+function parseLiteral(node: ts.Expression): unknown {
     if (ts.isObjectLiteralExpression(node))
         return Object.fromEntries(
             node.properties.map((property) => [
                 propertyKey(property),
-                literalValue((property as ts.PropertyAssignment).initializer),
+                parseLiteral((property as ts.PropertyAssignment).initializer),
             ]),
         );
-    if (ts.isArrayLiteralExpression(node)) return node.elements.map((element) => literalValue(element));
-    return scalarValue(node);
+    if (ts.isArrayLiteralExpression(node)) return node.elements.map((element) => parseLiteral(element));
+    return parseScalar(node);
 }
 
 /**
@@ -58,7 +58,7 @@ function literalValue(node: ts.Expression): unknown {
  * @param text the file text
  * @returns the exported value as data
  */
-export function javascriptRules(path: string, text: string): unknown {
+export function parseJavascript(path: string, text: string): unknown {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
     const [statement] = source.statements;
     if (source.statements.length !== 1 || statement === undefined)
@@ -68,5 +68,5 @@ export function javascriptRules(path: string, text: string): unknown {
     else if (ts.isExpressionStatement(statement)) expression = commonjsExport(statement);
     if (expression === undefined || !ts.isObjectLiteralExpression(expression))
         throw new Error('JavaScript rule comparison requires a static object export.');
-    return literalValue(expression);
+    return parseLiteral(expression);
 }

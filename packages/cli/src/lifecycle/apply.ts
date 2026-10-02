@@ -1,6 +1,6 @@
 import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
-import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { written, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
@@ -73,7 +73,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     ]);
     // Pruning restores only recorded outputs that no selected owner still needs.
     const recorded = new Set(
-        readOwnership(root)
+        getOwnership(root)
             .files.filter((entry) => ['hook', 'export'].includes(entry.kind))
             .map((entry) => entry.path),
     );

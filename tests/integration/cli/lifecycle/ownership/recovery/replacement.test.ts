@@ -7,7 +7,7 @@ import { cliSource } from '#tests/harness/cli/process.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
@@ -166,7 +166,7 @@ try {
         expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
         expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
     }
-    expect(readOwnership(directory.path).files).toStrictEqual([]);
+    expect(getOwnership(directory.path).files).toStrictEqual([]);
     const owner = openOwner(directory.path);
     try {
         const plans = ['first.bin', 'second.bin'].map((path) =>

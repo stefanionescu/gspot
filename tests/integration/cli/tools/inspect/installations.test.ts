@@ -11,8 +11,8 @@ import * as environment from '#cli/platform/environment.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
+import { asOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
-import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 if (onPosix)
     test('the tool inspection > version inspections and tool execution prefer helpers from the selected installation', async () => {
@@ -188,14 +188,14 @@ test.each(['mise', 'npm'])(
         chmodSync(join(sandbox.path, 'node_modules/.bin/ec'), EXECUTABLE_FILE);
         chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/teller'), EXECUTABLE_FILE);
         chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/ec'), EXECUTABLE_FILE);
-        runOwnedLifecycle(sandbox.path, (owner) => {
+        asOwner(sandbox.path, (owner) => {
             owner.beginInstallation('npm');
         });
         const context = {
             root: sandbox.path,
             inspections: new Map(),
             policyFiles: readPolicy(sandbox.path),
-            installations: (path: string) => readOwnership(path).installations,
+            installations: (path: string) => getOwnership(path).installations,
         };
         const tool = commandPin('teller', '3.8.1', 'teller');
         tool.installers['mise'] = { name: 'teller', version: '3.8.1' };
@@ -203,13 +203,13 @@ test.each(['mise', 'npm'])(
         expect(inspectTool(context, libraryPin('globals', '17.12.0')).state).toBe('error');
         let discovered: string | undefined;
         const error = failure(() => {
-            discovered = locateTool(sandbox.path, 'ec', readOwnership(sandbox.path).installations);
+            discovered = locateTool(sandbox.path, 'ec', getOwnership(sandbox.path).installations);
         });
         expect(error?.message).toBe(
             runner === 'mise' ? undefined : 'Tool installation is incomplete. Run: gspot install',
         );
         expect(discovered).toBe(runner === 'mise' ? join(sandbox.path, 'node_modules/.bin/ec') : undefined);
-        runOwnedLifecycle(sandbox.path, (owner) => {
+        asOwner(sandbox.path, (owner) => {
             owner.finishInstallation('npm');
         });
         expect(inspectTool(context, tool).state).toBe('ok');

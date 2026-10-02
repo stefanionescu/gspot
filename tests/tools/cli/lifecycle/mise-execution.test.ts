@@ -7,11 +7,11 @@ import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -32,7 +32,7 @@ if (onPosix)
         chmodSync(join(state.path, 'old/mise'), 0o755);
         await writeOutputs(await openSession(repository.path));
         const generated = readFileSync(join(repository.path, MISE_CONFIG_PATH));
-        runOwnedLifecycle(repository.path, (owner) => {
+        asOwner(repository.path, (owner) => {
             owner.replace('.gspot/obsolete.json', { bytes: Buffer.from('{}\n'), mode: 0o444 }, 'config');
         });
         const env = {

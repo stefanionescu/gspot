@@ -5,13 +5,13 @@ import { join, dirname, delimiter } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -123,9 +123,9 @@ export async function installSemgrep(root: string): Promise<void> {
     const outputs = emitted(session).files.filter(
         ({ path }) => path.includes('/semgrep/') || path.endsWith('.semgrepignore') || path === '.gspot/pyproject.toml',
     );
-    await runOwnedLifecycle(root, async (owner) => {
+    await asOwner(root, async (owner) => {
         await preparePythonProject(root, outputs, owner);
     });
     for (const output of outputs) await Bun.write(join(root, output.path), output.content);
-    await runOwnedLifecycle(root, (owner) => installPythonProject(root, owner));
+    await asOwner(root, (owner) => installPythonProject(root, owner));
 }

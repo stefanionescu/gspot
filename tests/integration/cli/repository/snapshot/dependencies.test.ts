@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
 import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
@@ -102,13 +102,13 @@ test('a nested revision refuses its incomplete managed dependency installation',
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, 'project');
-    runOwnedLifecycle(project, (owner) => {
+    asOwner(project, (owner) => {
         owner.beginInstallation('npm');
     });
     expect(await rejection(checkOutRevision(project, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'Tool installation is incomplete',
     );
-    runOwnedLifecycle(project, (owner) => {
+    asOwner(project, (owner) => {
         owner.finishInstallation('npm');
     });
     await checkOutRevision(project, { kind: 'index' }, async (snapshot) => {

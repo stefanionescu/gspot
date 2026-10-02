@@ -11,7 +11,7 @@ function content(line: string): string {
     return line.trim();
 }
 
-function* configurationLines(text: string): Generator<{ line: string; number: number }> {
+function* logicalLines(text: string): Generator<{ line: string; number: number }> {
     let continuation: string | undefined;
     for (const [index, original] of text.split(/\r?\n/u).entries()) {
         if (continuation !== undefined && original.trimStart().startsWith('#')) continue;
@@ -36,7 +36,7 @@ function option(line: string, number: number): { key: string; value: string } {
     return { key, value: gap === -1 ? '' : line.slice(gap).trim() };
 }
 
-function ruleNames(value: string, key: string, number: number): string[] {
+function parseRuleNames(value: string, key: string, number: number): string[] {
     const unquoted = value.replaceAll(/"[a-zA-Z\d,\s]*"/gu, '');
     if (unquoted.includes('"') || !/^[a-zA-Z\d,\s]*$/u.test(unquoted))
         throw new Error(`Invalid SwiftFormat ${key} list on line ${String(number)}.`);
@@ -55,13 +55,13 @@ function ruleNames(value: string, key: string, number: number): string[] {
  * @param text the configuration text
  * @returns the rule names under each list option
  */
-export function swiftformatRules(text: string): Record<string, string[]> {
+export function parseSwiftformat(text: string): Record<string, string[]> {
     const rules: Record<string, string[]> = { enable: [], disable: [], rules: [], 'lint-only': [] };
-    for (const { line, number } of configurationLines(text)) {
+    for (const { line, number } of logicalLines(text)) {
         if (line === '') continue;
         const { key, value } = option(line, number);
         if (!Object.hasOwn(rules, key)) continue;
-        rules[key]?.push(...ruleNames(value, key, number));
+        rules[key]?.push(...parseRuleNames(value, key, number));
     }
     return rules;
 }

@@ -8,9 +8,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
+import { evaluate } from '#cli/lifecycle/preview/eslint/client.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
-import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
@@ -91,7 +91,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 console.log('Configuration log stays outside the structured result.');
 export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 'example/root': ['error', { root }] } }];`;
     const result = eslintPreviewResponse.parse(
-        await runConfiguration({
+        await evaluate({
             tool: 'eslint',
             operation: 'preview-rules',
             root: directory.path,

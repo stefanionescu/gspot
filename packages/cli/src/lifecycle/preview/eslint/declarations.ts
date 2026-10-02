@@ -7,9 +7,9 @@ import { resolve } from 'import-meta-resolve';
 import { join, resolve as resolvePath } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
+import type { previewRequestSchema, eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
-function moduleSource(path: string, text: string): string {
+function rewriteImports(path: string, text: string): string {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
     const transformed = ts.transform(source, [
         (context) => {
@@ -47,7 +47,7 @@ function moduleSource(path: string, text: string): string {
     }
 }
 
-function ruleTable(value: unknown): z.infer<typeof eslintPreviewResponse>[number] {
+function collectRules(value: unknown): z.infer<typeof eslintPreviewResponse>[number] {
     const entries = z.array(z.record(z.string(), z.unknown())).parse(value);
     const rules = new Map<string, unknown[]>();
     for (const entry of entries) {
@@ -78,21 +78,21 @@ function ruleTable(value: unknown): z.infer<typeof eslintPreviewResponse>[number
  * @param work the directory the configuration process runs in
  * @returns the rules each source resolves to
  */
-export async function runEslintPreview(
-    request: z.infer<typeof eslintPreviewRequest>,
+export async function previewRules(
+    request: z.infer<typeof previewRequestSchema>,
     work: string,
 ): Promise<z.infer<typeof eslintPreviewResponse>> {
     const path = resolvePath(request.root, ...mutationPath(request.path));
     // Every module is on disk before the first import: the runtime reads the directory once and keeps that listing.
     const modules = request.sources.map((source, index) => {
         const module = join(work, `eslint-preview-${String(index)}.mjs`);
-        writeFileSync(module, moduleSource(path, source), { mode: PRIVATE_FILE });
+        writeFileSync(module, rewriteImports(path, source), { mode: PRIVATE_FILE });
         return module;
     });
     const results: z.infer<typeof eslintPreviewResponse> = [];
     for (const module of modules) {
         const namespace = (await import(pathToFileURL(module).href)) as { default: unknown };
-        results.push(ruleTable(namespace.default));
+        results.push(collectRules(namespace.default));
     }
     return results;
 }

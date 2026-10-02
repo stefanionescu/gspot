@@ -18,7 +18,7 @@ function option(line: string, section: string): [string, string] {
  * @param text the configuration text
  * @returns the values of each list option, by option
  */
-export function gixyRules(text: string): Record<string, string[]> {
+export function parseGixy(text: string): Record<string, string[]> {
     const result: Record<string, string[]> = {};
     let section = '';
     const lines = text

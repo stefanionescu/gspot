@@ -13,9 +13,9 @@ const pathSchema = z.string().superRefine((path, context) => {
         context.addIssue({ code: 'custom', message: String(error) });
     }
 });
-const configurationPathSchema = z.array(z.union([z.string().min(1), z.number().int().nonnegative()])).min(1);
+const keyPathSchema = z.array(z.union([z.string().min(1), z.number().int().nonnegative()])).min(1);
 const configurationFieldSchema = z.strictObject({
-    path: configurationPathSchema,
+    path: keyPathSchema,
     installed: z.json(),
     original: z.json().optional(),
 });
@@ -24,7 +24,7 @@ export const identitySchema = z.strictObject({
     mode: modeSchema,
     isLink: z.literal(true).optional(),
 });
-export const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
+export const fieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
     for (const [index, field] of fields.entries()) {
         for (const other of fields.slice(index + 1)) {
             const length = Math.min(field.path.length, other.path.length);
@@ -37,7 +37,7 @@ export const configurationFieldsSchema = z.array(configurationFieldSchema).super
     }
 });
 
-export const entrySchema = z.strictObject({
+export const fileSchema = z.strictObject({
     path: pathSchema,
     kind: z.enum(OWNED_KINDS),
     installed: identitySchema.optional(),
@@ -46,8 +46,8 @@ export const entrySchema = z.strictObject({
     configuration: z
         .strictObject({
             format: z.enum(['json', 'yaml', 'toml']),
-            fields: configurationFieldsSchema,
-            parents: z.array(configurationPathSchema).optional(),
+            fields: fieldsSchema,
+            parents: z.array(keyPathSchema).optional(),
             edited: z.boolean(),
             created: z.boolean(),
         })
@@ -67,7 +67,7 @@ export const entrySchema = z.strictObject({
 export const ownershipSchema = z
     .strictObject({
         version: z.literal(1),
-        files: z.array(entrySchema),
+        files: z.array(fileSchema),
         installations: z.array(z.enum(['npm', 'python'])).optional(),
         // The private tool folders gspot installed whole, by kind.
         installs: z.array(z.enum(['npm', 'python'])).optional(),
@@ -78,7 +78,7 @@ export const ownershipSchema = z
                         path: pathSchema,
                         before: identitySchema.optional(),
                         after: identitySchema.optional(),
-                        entry: entrySchema.optional(),
+                        entry: fileSchema.optional(),
                     })
                     .superRefine((pending, context) => {
                         if (pending.entry !== undefined && !isDeepStrictEqual(pending.entry.installed, pending.after))

@@ -36,7 +36,7 @@ function setupSteps(shape: Pipeline): Record<string, unknown>[] {
 }
 
 // A first push has no base, so the job checks everything; otherwise it checks what changed after the base commit.
-function comparisonCheck(command: string, isFull: boolean): string {
+function buildCheckScript(command: string, isFull: boolean): string {
     if (isFull) return command;
     return [
         'base="${GSPOT_CI_BASE:-}"',
@@ -64,14 +64,14 @@ const CACHED_PATHS = [
     '~/.yarn/berry/cache',
 ];
 
-function checkJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
+function buildJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
     const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
     const selected =
         stage === 'manual'
             ? `${command} --only ${shape.manualChecks.join(' ')}`
-            : comparisonCheck(command, shape.run === 'all');
+            : buildCheckScript(command, shape.run === 'all');
     const check = {
         name: 'Check',
         ...(stage === 'manual'
@@ -114,7 +114,7 @@ function checkJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'):
  * @param shape what the workflow covers: platforms, the Swift scope, and the runner
  * @returns the GitHub workflow file
  */
-export function workflowFile(shape: Pipeline): GeneratedFile {
+export function githubFile(shape: Pipeline): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
     const workflow = new Document({
         name: 'gspot',
@@ -127,10 +127,10 @@ export function workflowFile(shape: Pipeline): GeneratedFile {
         jobs: Object.fromEntries(
             platforms.flatMap((platform) => {
                 const jobs: [string, Record<string, unknown>][] = [
-                    [`check-${platform}`, checkJob(shape, platform, 'check')],
+                    [`check-${platform}`, buildJob(shape, platform, 'check')],
                 ];
                 if (shape.manualChecks.length > 0)
-                    jobs.push([`manual-${platform}`, checkJob(shape, platform, 'manual')]);
+                    jobs.push([`manual-${platform}`, buildJob(shape, platform, 'manual')]);
                 return jobs;
             }),
         ),
@@ -151,7 +151,7 @@ export function gitlabFile(shape: Pipeline): GeneratedFile {
         : [`npm install --global @gspothq/cli@${shape.version}`];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
-        comparisonCheck(`${command} check`, shape.run === 'all'),
+        buildCheckScript(`${command} check`, shape.run === 'all'),
     ].join('\n');
     const path = '.gitlab/ci/gspot.yml';
     const content = stringify({

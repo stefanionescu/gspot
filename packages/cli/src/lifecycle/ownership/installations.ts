@@ -77,7 +77,7 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
  * @param log the open log
  * @param kind the installation
  */
-export function removeInstallation(log: Log, kind: InstallationKind): void {
+export function deleteInstallation(log: Log, kind: InstallationKind): void {
     if (log.state.installs?.includes(kind) !== true) return;
     log.files.removeTree(INSTALLATION_DIRECTORIES[kind]);
     setInstalled(log, kind, false);

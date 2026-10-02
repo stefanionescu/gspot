@@ -1,14 +1,14 @@
 import { emitAll } from '#cli/generation/outputs.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
+import { setPin } from '#cli/lifecycle/version-pin.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { writeGenerated } from '#cli/lifecycle/apply.ts';
-import { writePin } from '#cli/lifecycle/version-pin.ts';
 import { installProsePackages } from '#cli/tools/vale.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePythonProject } from '#cli/tools/python.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -42,7 +42,7 @@ function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read>
 export async function writeOutputs(session: Session, replace?: ReadonlyMap<string, Read>): Promise<ApplyReport> {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoProblems(session.policyFiles);
-    return runOwnedLifecycle(session.root, async (owner) => {
+    return asOwner(session.root, async (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed after generation was planned. Retry the command.');
         const report: ApplyReport = {
@@ -88,7 +88,7 @@ export async function writeOutputs(session: Session, replace?: ReadonlyMap<strin
             throw new Error(
                 `Apply preserved edited outputs: ${report.preserved.join(', ')}. ${report.notes.join('. ')}. Resolve them and retry; the version pin was not changed.`,
             );
-        writePin(session.root);
+        setPin(session.root);
         return report;
     });
 }

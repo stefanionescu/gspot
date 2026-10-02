@@ -7,7 +7,7 @@ import { LOCKS } from '#cli/config/tools/packages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
@@ -44,7 +44,7 @@ test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'pa
         expect(existsSync(join(clone, '.gspot/node_modules'))).toBe(false);
         expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
         for (let attempt = 0; attempt < 2; attempt++) {
-            const installed = await runOwnedLifecycle(clone, (owner) => installPackageProject(clone, owner, tools));
+            const installed = await asOwner(clone, (owner) => installPackageProject(clone, owner, tools));
             expect(installed).toContain('.gspot/node_modules');
             const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
             expect(status.code, status.stderr).toBe(0);

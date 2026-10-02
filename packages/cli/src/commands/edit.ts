@@ -8,11 +8,11 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposePolicy } from '#cli/policy/mutations.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Mutation, Proposal } from '#cli/types/policy/policy.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, PreparedPolicy } from '#cli/types/commands/commands.ts';
 
 /**
@@ -38,7 +38,7 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
  */
 export function writePolicy(root: string, plan: PreparedPolicy): Proposal {
     if (plan.changed)
-        runOwnedLifecycle(root, (owner) => {
+        asOwner(root, (owner) => {
             const previous = owner.read('gspot.toml');
             if (!isDeepStrictEqual(previous, plan.original))
                 throw new Error('The policy file gspot.toml changed while the edit was prepared. Retry the command.');
@@ -74,7 +74,7 @@ export async function commitPolicy(
             json: { text: result.text, dryRun: true },
             exitCode: 0,
         };
-    return runOwnedLifecycle(root, async () => {
+    return asOwner(root, async () => {
         writePolicy(root, result);
         const session = await openSession(root, {
             policy: result.policy,
