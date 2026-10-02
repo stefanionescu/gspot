@@ -198,12 +198,12 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'bash/limits',
         files: { 'scripts/branchy.sh': `${HEAD}# main: runs the script.\nmain() {\n${BRANCHES}\n}\n\nmain "$@"\n` },
-        expected: { file: 'scripts/branchy.sh', rule: 'function-branches', line: 9 },
+        expected: { file: 'scripts/branchy.sh', rule: 'branches', line: 9 },
     },
     {
         check: 'bash/limits',
         files: { 'scripts/deep.sh': `${HEAD}# main: runs the script.\nmain() {\n${NESTED}\n}\n\nmain "$@"\n` },
-        expected: { file: 'scripts/deep.sh', rule: 'function-nesting', line: 9 },
+        expected: { file: 'scripts/deep.sh', rule: 'nesting', line: 9 },
     },
     {
         check: 'bash/limits',
