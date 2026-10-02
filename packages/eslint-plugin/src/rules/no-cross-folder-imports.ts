@@ -36,7 +36,7 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         },
         schema: [
             optionsSchema({
-                scope: { type: 'array', items: { type: 'string' } },
+                roots: { type: 'array', items: { type: 'string' } },
                 aliases: { type: 'object', additionalProperties: { type: 'string' } },
             }),
         ],
@@ -45,13 +45,13 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
             crossNoAlias: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',
         },
     },
-    defaultOptions: [{ scope: [], aliases: {} }],
+    defaultOptions: [{ roots: [], aliases: {} }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined) return {};
         const root = lintedRoot(context);
         const relative = relativeToRoot(root, file);
-        const roots = options.scope ?? [];
+        const roots = options.roots ?? [];
         const candidates =
             roots.length === 0 ? [relative.split('/', 1)[0] ?? ''] : roots.map((entry) => posix.normalize(entry));
         const sourceRoot = candidates

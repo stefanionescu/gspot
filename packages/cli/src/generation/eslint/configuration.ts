@@ -101,7 +101,7 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
         'gspot/registry-instances':
             config === undefined
                 ? 'error'
-                : ['error', { registryFiles: [...REGISTRY_FILES, `${config}/**`, `**/${config}/**`] }],
+                : ['error', { files: [...REGISTRY_FILES, `${config}/**`, `**/${config}/**`] }],
         'gspot/private-before-public': 'error',
         'gspot/import-direction': ['error', { roles, aliases }],
         'gspot/env-owner': ['error', { owners: roles['env'] }],
@@ -119,7 +119,7 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
     return {
         ...(architecture.types_directory === undefined
             ? {}
-            : { 'gspot/types-placement': ['error', { typesDirectory: architecture.types_directory }] }),
+            : { 'gspot/types-placement': ['error', { directory: architecture.types_directory }] }),
         'gspot/no-trivial-functions': ['error', trivial],
         'gspot/no-trivial-files': ['error', trivial],
         ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),

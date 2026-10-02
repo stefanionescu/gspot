@@ -9,7 +9,7 @@ tester().run('registry-instances', registryInstances, {
         {
             code: 'export const store = new Store();',
             filename: '/repo/src/store.ts',
-            options: [{ registryFiles: ['**/store.ts'] }],
+            options: [{ files: ['**/store.ts'] }],
         },
     ],
     invalid: [

@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { EnvOwnerOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { EnvAccessOwnerOptions } from '#plugin/types/rules.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
@@ -18,7 +18,7 @@ function isEnvironmentRead(
     );
 }
 
-export const envOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
+export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
     name: 'env-owner',
     meta: {
         type: 'problem',

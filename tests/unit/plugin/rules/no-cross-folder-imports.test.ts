@@ -11,21 +11,21 @@ tester().run('no-cross-folder-imports', noCrossFolderImports, {
         {
             code: "import { b } from '../cart/b';",
             filename: '/repo/packages/shop/source/cart/a.ts',
-            options: [{ scope: ['packages/shop/source'] }],
+            options: [{ roots: ['packages/shop/source'] }],
         },
         { code: "import { a } from './a.js';", filename: '/repo/src/turn/b.ts', options: [{ aliases }] },
         { code: "import { a } from '@/turn/a.js';", filename: '/repo/src/other/b.ts', options: [{ aliases }] },
         {
             code: "import { a } from '../a.js';",
             filename: '/repo/scripts/inner/b.ts',
-            options: [{ aliases, scope: ['src'] }],
+            options: [{ aliases, roots: ['src'] }],
         },
     ],
     invalid: [
         {
             code: "import { b } from '../../tests/b';",
             filename: '/repo/features/cart/a.ts',
-            options: [{ scope: ['.'] }],
+            options: [{ roots: ['.'] }],
             errors: [{ messageId: 'crossNoAlias', data: { source: '../../tests/b', folder: 'features' } }],
         },
         {
@@ -41,7 +41,7 @@ tester().run('no-cross-folder-imports', noCrossFolderImports, {
         {
             code: "import { b } from '../../user/b';",
             filename: '/repo/packages/shop/source/cart/inner/a.ts',
-            options: [{ scope: ['packages/shop/source'] }],
+            options: [{ roots: ['packages/shop/source'] }],
             errors: [{ messageId: 'crossNoAlias' }],
         },
         {

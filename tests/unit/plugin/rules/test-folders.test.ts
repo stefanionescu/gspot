@@ -15,11 +15,11 @@ const root = await plantedRoot({
     'tests/mocks/factory.ts': '',
 });
 
-const options: [{ harnessDirectory: string }] = [{ harnessDirectory: 'tests/support' }];
+const options: [{ harness: string }] = [{ harness: 'tests/support' }];
 
 tester(root).run('test-folders', testFolders, {
     valid: [
-        { code: '', filename: `${root}/tests/custom/factory.ts`, options: [{ harnessDirectory: 'tests/custom' }] },
+        { code: '', filename: `${root}/tests/custom/factory.ts`, options: [{ harness: 'tests/custom' }] },
         { code: '', filename: `${root}/tests/unit/a.test.ts`, options },
         { code: '', filename: `${root}/tests/unit/b.d.ts`, options },
         { code: '', filename: `${root}/tests/support/factory.ts`, options },

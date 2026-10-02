@@ -3,16 +3,16 @@ import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEFAULT_PREFIXES } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { ImportPathStyleName, ImportPathStyleOptions } from '#plugin/types/rules.ts';
+import type { ImportStyleName, ImportStyleOptions } from '#plugin/types/rules.ts';
 
-function isCompliant(source: string, style: ImportPathStyleName): boolean {
+function isCompliant(source: string, style: ImportStyleName): boolean {
     if (source.endsWith('.json') || source.endsWith('.css') || source.endsWith('.svg')) return true;
     if (style === 'js') return /\.[cm]?js$/u.test(source);
     if (style === 'ts') return /\.[cm]?tsx?$/u.test(source);
     return !/\.[cm]?[jt]sx?$/u.test(source);
 }
 
-export const importStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 'extensionless'>({
+export const importStyle = createRule<ImportStyleOptions, 'js' | 'ts' | 'extensionless'>({
     name: 'import-style',
     meta: {
         type: 'problem',

@@ -2,7 +2,7 @@ import { WRAPPERS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { RegistryInstanceOnlyOptions } from '#plugin/types/rules.ts';
+import type { RegistryInstancesOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 function isConstructed(node: TSESTree.Node | null): boolean {
@@ -11,7 +11,7 @@ function isConstructed(node: TSESTree.Node | null): boolean {
     return current?.type === AST_NODE_TYPES.NewExpression;
 }
 
-export const registryInstances = createRule<RegistryInstanceOnlyOptions, 'registry'>({
+export const registryInstances = createRule<RegistryInstancesOptions, 'registry'>({
     name: 'registry-instances',
     meta: {
         type: 'problem',
@@ -24,16 +24,13 @@ export const registryInstances = createRule<RegistryInstanceOnlyOptions, 'regist
             why: 'An instance exported from anywhere is a hidden singleton; a registry file makes every shared instance visible in one place.',
             fix: "Create the instance in the module's registry file and import it from there.",
         },
-        schema: [optionsSchema({ registryFiles: { type: 'array', items: { type: 'string' } } })],
+        schema: [optionsSchema({ files: { type: 'array', items: { type: 'string' } } })],
         messages: { registry: 'Exported instances created with new live in a registry file, not here.' },
     },
-    defaultOptions: [{ registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js'] }],
+    defaultOptions: [{ files: ['**/registry.ts', '**/registry.tsx', '**/registry.js'] }],
     create(context, [options]) {
         const file = lintedFile(context);
-        if (
-            file === undefined ||
-            isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), options.registryFiles ?? [])
-        )
+        if (file === undefined || isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), options.files ?? []))
             return {};
         return {
             ExportNamedDeclaration(node) {

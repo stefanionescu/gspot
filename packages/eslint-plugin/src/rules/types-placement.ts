@@ -133,16 +133,16 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
             level: 'all',
             title: 'Place types with their owner',
             example:
-                'With `typesDirectory: "types"`, `type A = string;` in `src/a.ts` reports `aliasOutside`. Declare and export `A` in `types/a.ts`, then use `import type { A } from "../types/a";` where the runtime code needs it.',
+                'With `directory: "types"`, `type A = string;` in `src/a.ts` reports `aliasOutside`. Declare and export `A` in `types/a.ts`, then use `import type { A } from "../types/a";` where the runtime code needs it.',
             summary: 'Enforces an explicitly configured type-only directory.',
             why: 'A repository can explicitly designate a type-only public contract directory. Types otherwise live beside their behavioral owners.',
             fix: 'Move the type under the types directory and import it with import type. Exceptions go through gspot ignore with a reason.',
         },
         schema: [
             optionsSchema({
-                typesDirectory: { type: 'string' },
+                directory: { type: 'string' },
                 allowInterface: { type: 'boolean' },
-                exempt: { type: 'array', items: { type: 'string' } },
+                allowed: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: {
@@ -155,14 +155,14 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
             valueImportInside: 'Files under {{directory}} import types only. Write import type for "{{source}}".',
         },
     },
-    defaultOptions: [{ allowInterface: false, exempt: [] }],
+    defaultOptions: [{ allowInterface: false, allowed: [] }],
     create(context, [options]) {
-        if (options.typesDirectory === undefined) return {};
+        if (options.directory === undefined) return {};
         const file = lintedFile(context);
         if (file === undefined || file.endsWith('.d.ts')) return {};
         const relative = relativeToRoot(lintedRoot(context), file);
-        if (isAnyGlobMatch(relative, options.exempt ?? [])) return {};
-        const directory = options.typesDirectory.replace(/\/$/u, '');
+        if (isAnyGlobMatch(relative, options.allowed ?? [])) return {};
+        const directory = options.directory.replace(/\/$/u, '');
         const isInside = relative.startsWith(`${directory}/`) || relative.includes(`/${directory}/`);
         return isInside
             ? insideListeners((node, id, extra = {}) => {

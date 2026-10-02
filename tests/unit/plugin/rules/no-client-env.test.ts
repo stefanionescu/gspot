@@ -9,7 +9,7 @@ tester().run('no-client-env', noClientEnv, {
         "'use client';\nconst mode = process.env.NODE_ENV;",
         'const key = process.env.SECRET;',
         "'use client';\nconst process = { env: { SECRET: 1 } };\nconst key = process.env.SECRET;",
-        { code: 'const url = process.env.NEXT_PUBLIC_URL;', options: [{ clientModule: true }] },
+        { code: 'const url = process.env.NEXT_PUBLIC_URL;', options: [{ isClient: true }] },
     ],
     invalid: [
         { code: example.broken, errors: [{ messageId: 'private', line: 2, column: 25 }] },
@@ -18,7 +18,7 @@ tester().run('no-client-env', noClientEnv, {
         { code: "'use client';\nconst all = process.env;", errors: [{ messageId: 'private' }] },
         {
             code: 'const key = process.env.SECRET;',
-            options: [{ clientModule: true }],
+            options: [{ isClient: true }],
             errors: [{ messageId: 'private' }],
         },
     ],

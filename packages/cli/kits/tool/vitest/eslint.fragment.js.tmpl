@@ -17,6 +17,6 @@
     },
 <% if (isAll) { for (const selected of kitScopes('vitest').filter((entry) => entry.harness !== undefined)) { %>    {
         files: CODE.map((pattern) => [pattern, <%= json(selected.path === '' ? '**/*' : `${selected.path}/**/*`) %>]),
-        rules: { 'gspot/test-folders': ['error', { harnessDirectory: <%= json([selected.path, selected.harness].filter(Boolean).join('/')) %> }] },
+        rules: { 'gspot/test-folders': ['error', { harness: <%= json([selected.path, selected.harness].filter(Boolean).join('/')) %> }] },
     },
 <% } } %>

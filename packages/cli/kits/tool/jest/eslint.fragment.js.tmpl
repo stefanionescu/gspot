@@ -19,6 +19,6 @@
     },
 <% if (isAll && selected.harness !== undefined) { %>    {
         files: CODE.map((pattern) => [pattern, <%= json(inScope) %>]),
-        rules: { 'gspot/test-folders': ['error', { harnessDirectory: <%= json([selected.path, selected.harness].filter(Boolean).join('/')) %> }] },
+        rules: { 'gspot/test-folders': ['error', { harness: <%= json([selected.path, selected.harness].filter(Boolean).join('/')) %> }] },
     },
 <% } } %>

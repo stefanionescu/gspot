@@ -136,7 +136,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
     "gspot/types-placement": [
         "error",
         {
-            "typesDirectory": "types"
+            "directory": "types"
         }
     ],
     "gspot/no-trivial-functions": [
@@ -183,7 +183,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
     "gspot/registry-instances": [
         "error",
         {
-            "registryFiles": [
+            "files": [
                 "**/registry.ts",
                 "**/registry.tsx",
                 "**/registry.js",
