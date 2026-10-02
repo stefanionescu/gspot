@@ -44,7 +44,7 @@ rules_path = ["*.rules", "*.BasedOnStyles"]
 
 [[check]]
 name = "vale"
-title = "Vale"
+title = "Lint prose"
 example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Project names belong in the vocabulary only when they are legitimate names."
 level = "recommended"
 stage = "commit"

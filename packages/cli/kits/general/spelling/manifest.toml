@@ -32,7 +32,7 @@ scoped = true
 
 [[check]]
 name = "typos"
-title = "Spelling"
+title = "Check spelling"
 example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
 level = "recommended"
 stage = "commit"

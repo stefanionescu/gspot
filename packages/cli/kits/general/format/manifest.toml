@@ -109,7 +109,7 @@ target = ".prettierignore"
 
 [[check]]
 name = "prettier"
-title = "Prettier"
+title = "Format code and documents"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 level = "recommended"
 stage = "commit"

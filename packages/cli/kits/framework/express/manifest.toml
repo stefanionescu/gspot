@@ -16,7 +16,7 @@ when = {kit = "security"}
 
 [[check]]
 name = "untested-routes"
-title = "Routes tested"
+title = "Test every route file"
 example = "With `tools.express.route_files = [\"routes/*.ts\"]`, `routes/users.ts` reports `untested-route` when no test in the same scope imports it. Add `import { users } from './routes/users.js';` to `users.test.ts` and test the route's behavior. This check resolves imports; it does not execute the test or establish assertion coverage."
 level = "all"
 stage = "push"

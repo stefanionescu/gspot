@@ -95,7 +95,7 @@ header = false
 
 [[check]]
 name = "ruff"
-title = "Ruff"
+title = "Lint Python files"
 example = "The expression `eval(user_input)` reports S307 when that rule is selected. Replace dynamic evaluation with parsing and explicit operations appropriate to the input contract."
 level = "recommended"
 stage = "commit"
@@ -110,7 +110,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[check]]
 name = "ruff-format"
-title = "Ruff format"
+title = "Format Python files"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
 level = "recommended"
 stage = "commit"
@@ -141,7 +141,7 @@ help = "Fix the type, or narrow it where the value arrives. Exclude a file that 
 
 [[check]]
 name = "import-linter"
-title = "Import linter"
+title = "Check import contracts"
 example = "A module importing from a layer forbidden by the configured import contract reports that dependency. Move the shared behavior to an allowed owner and update the import, then rerun against the same contract."
 level = "recommended"
 stage = "commit"
@@ -155,7 +155,7 @@ help = "Move the import to the side the contract allows, or change the contract 
 
 [[check]]
 name = "pydoclint"
-title = "Pydoclint"
+title = "Match docstrings to their functions"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
 level = "recommended"
 stage = "commit"
@@ -170,7 +170,7 @@ help = "Bring the docstring in line with the signature. An explicit [tool.pydocl
 
 [[check]]
 name = "deptry"
-title = "Deptry"
+title = "Match imports to declared dependencies"
 example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare and lock that dependency with the project package manager, or remove the unused import."
 level = "recommended"
 stage = "push"
@@ -185,7 +185,7 @@ help = "Declare the dependency, or remove the one nothing imports. Turn one rule
 
 [[check]]
 name = "vulture"
-title = "Vulture"
+title = "Find unused Python code"
 example = "An unused `import colorsys` reports `unused import 'colorsys'`. Remove the unused import and rerun. Dynamically used names need exact entries in the configured allowlist."
 level = "recommended"
 stage = "push"
@@ -216,7 +216,7 @@ help = "Correct the key the message names."
 
 [[check]]
 name = "pip-installs"
-title = "Dependency ownership"
+title = "Keep dependencies in pyproject.toml"
 example = "An authored `requirements.txt` beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
 level = "all"
 stage = "commit"
@@ -228,7 +228,7 @@ help = "Export the requirements file from the lockfile and declare it generated,
 
 [[check]]
 name = "stale-exclusions"
-title = "Type checking membership"
+title = "Find stale type check exclusions"
 example = "An entry `missing/**` under `tools.basedpyright.exclude` reports a stale exclusion when no selected file matches it. Remove the obsolete entry or correct its path. This check verifies exclusion membership; it does not ban every exclusion."
 level = "recommended"
 stage = "commit"
@@ -239,7 +239,7 @@ help = "Remove the entry from tools.basedpyright.exclude."
 
 [[check]]
 name = "file-lines"
-title = "File length"
+title = "Limit Python file lines"
 example = "A Python module whose code-line count exceeds the configured file ceiling reports its count and limit. Move an independent responsibility to its owner and update imports, then verify both modules fit the limit."
 level = "all"
 stage = "commit"
@@ -251,7 +251,7 @@ help = "Split the module by the job, or raise limits.file_lines for python with 
 
 [[check]]
 name = "function-lines"
-title = "Function length"
+title = "Limit Python function lines"
 example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
 level = "all"
 stage = "commit"
@@ -263,7 +263,7 @@ help = "Move one job of the function into a function of its own."
 
 [[check]]
 name = "trivial-functions"
-title = "Trivial function"
+title = "Find trivial functions"
 example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
 level = "all"
 stage = "commit"
@@ -288,7 +288,7 @@ help = "Say what the function does that its name does not, or for whom it exists
 
 [[check]]
 name = "private-prefix"
-title = "Private prefix"
+title = "Prefix private Python names"
 example = "A file-local function with no leading underscore and no public export reports a naming finding. Add the underscore and update its local callers, or declare the actual public contract in the export list."
 level = "all"
 stage = "commit"
@@ -300,7 +300,7 @@ help = "Add the underscore, or list the name in the export list."
 
 [[check]]
 name = "private-before-public"
-title = "Private before public"
+title = "Put private functions first"
 example = "A private `_parse` function below an exported public function reports declaration order. Move `_parse` before the public function without changing either body."
 level = "all"
 stage = "commit"
@@ -312,7 +312,7 @@ help = "Move the private functions above the first public one."
 
 [[check]]
 name = "exports-at-bottom"
-title = "Exports at bottom"
+title = "Put the export list last"
 example = "A module with `__all__` before later declarations reports an export-list position finding. Move the export list after those declarations."
 level = "all"
 stage = "commit"
@@ -324,7 +324,7 @@ help = "Move the export list to the end of the module."
 
 [[check]]
 name = "lazy-exports"
-title = "No lazy exports"
+title = "Find lazy exports"
 example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
 level = "all"
 stage = "commit"
@@ -336,7 +336,7 @@ help = "Import the names and list them."
 
 [[check]]
 name = "package-exports"
-title = "Package exports"
+title = "Limit package exports"
 example = "A package export list larger than its configured limit reports the export count. Split unrelated public responsibilities into separate packages or remove unnecessary exports and update consumers."
 level = "all"
 stage = "commit"
@@ -348,7 +348,7 @@ help = "Split the package, or export fewer names."
 
 [[check]]
 name = "import-comments"
-title = "No comments among imports"
+title = "Keep comments out of import blocks"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `# noqa` or `# type:` directive stays."
 level = "all"
 stage = "commit"
@@ -360,7 +360,7 @@ help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
 name = "export-order"
-title = "Export order"
+title = "Order the export list"
 example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
 level = "all"
 stage = "commit"
@@ -372,7 +372,7 @@ help = "Reorder the names shortest first."
 
 [[check]]
 name = "singletons"
-title = "No singletons"
+title = "Find module singletons"
 example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."
 level = "all"
 stage = "commit"

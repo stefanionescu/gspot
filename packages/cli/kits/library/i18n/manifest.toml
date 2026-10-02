@@ -20,7 +20,7 @@ fragment = true
 
 [[check]]
 name = "locales"
-title = "Locales"
+title = "Check message files"
 example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
 level = "recommended"
 stage = "push"

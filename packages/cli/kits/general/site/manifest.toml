@@ -67,7 +67,7 @@ help = "Fix the template or the content that writes the markup the rule names."
 
 [[check]]
 name = "purgecss"
-title = "Dead selectors"
+title = "Find unused selectors"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
 level = "recommended"
 stage = "push"
@@ -116,7 +116,7 @@ help = "Remove what the page does not need, or raise the ceiling with a reason."
 
 [[check]]
 name = "sitemap"
-title = "Sitemap"
+title = "Match the sitemap to the built pages"
 example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
 level = "recommended"
 stage = "push"
@@ -128,7 +128,7 @@ help = "Add the page to the sitemap, remove the dead entry, or leave a page out 
 
 [[check]]
 name = "dead-assets"
-title = "Dead assets"
+title = "Find unused assets"
 example = "An image in the output directory that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
 level = "recommended"
 stage = "push"
@@ -164,7 +164,7 @@ help = "Correct the manifest, or add the icon."
 
 [[check]]
 name = "security-headers"
-title = "Security headers"
+title = "Set security headers"
 example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
 level = "recommended"
 stage = "commit"

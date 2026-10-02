@@ -79,7 +79,7 @@ target = ".gspot/config/v8r.yml"
 
 [[check]]
 name = "taplo"
-title = "TOML"
+title = "Parse TOML files"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
 stage = "commit"
@@ -93,7 +93,7 @@ help = "Fix the line taplo names."
 
 [[check]]
 name = "taplo-format"
-title = "TOML format"
+title = "Format TOML files"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
 stage = "commit"
@@ -108,7 +108,7 @@ help = "Run gspot check --fix."
 
 [[check]]
 name = "yamllint"
-title = "YAML"
+title = "Lint YAML files"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
 stage = "commit"
@@ -138,7 +138,7 @@ help = "Fix the key v8r names, or map the file to its schema under tools.v8r.sch
 
 [[check]]
 name = "dotenv-linter"
-title = "Dotenv"
+title = "Lint environment files"
 example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
 level = "recommended"
 stage = "commit"
@@ -153,7 +153,7 @@ help = "Run gspot check --fix, or fix the line dotenv-linter names."
 
 [[check]]
 name = "env-example"
-title = "Environment example"
+title = "List every environment variable in the template"
 example = "Source code reading `API_URL` while the environment template omits that key reports a missing template entry. Add `API_URL=` to `.env.example` and document the required value without committing credentials."
 level = "recommended"
 stage = "push"
@@ -164,7 +164,7 @@ help = "Add the key to the template (.env.example or the files under tools.doten
 
 [[check]]
 name = "plutil"
-title = "Property lists"
+title = "Parse property lists"
 example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 level = "recommended"
 stage = "commit"

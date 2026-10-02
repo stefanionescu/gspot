@@ -63,7 +63,7 @@ help = "Replace the section with prose that explains, or delete it."
 
 [[check]]
 name = "stale-paths"
-title = "Stale paths"
+title = "Check the paths and tasks docs name"
 example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
 runs = "once"
 level = "recommended"
@@ -74,7 +74,7 @@ help = "Fix the path or the task name, or add the path with a reason under tools
 
 [[check]]
 name = "readme-present"
-title = "README present"
+title = "Require a README and a license"
 example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
 level = "all"
 stage = "commit"
@@ -84,7 +84,7 @@ help = "Write the README; the docs rule files say what goes in it."
 
 [[check]]
 name = "readme-shape"
-title = "README shape"
+title = "Check the shape of each README"
 example = "A README with two H1 headings reports `one-h1`. Keep one title and make the second heading an H2. A scope-root README also needs a getting-started section and an opening paragraph."
 level = "all"
 stage = "commit"

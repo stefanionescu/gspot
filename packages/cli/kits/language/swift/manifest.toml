@@ -87,7 +87,7 @@ scoped = true
 
 [[check]]
 name = "swiftlint"
-title = "SwiftLint"
+title = "Lint Swift files"
 example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 level = "recommended"
 stage = "commit"
@@ -103,7 +103,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[check]]
 name = "swiftformat"
-title = "SwiftFormat"
+title = "Format Swift files"
 example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
 level = "recommended"
 stage = "commit"
@@ -145,7 +145,7 @@ help = "Remove what the rule names. Keep an import the analyzer misjudges under 
 
 [[check]]
 name = "periphery"
-title = "Periphery"
+title = "Find unused Swift declarations"
 example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
 level = "recommended"
 stage = "push"
@@ -160,7 +160,7 @@ help = "Delete the declaration, or mark it with a periphery:ignore comment that 
 
 [[check]]
 name = "trivial-functions"
-title = "Trivial function"
+title = "Find trivial functions"
 example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
 level = "all"
 stage = "commit"
@@ -172,7 +172,7 @@ help = "Inline unnecessary functions. For one an external API requires, run `gsp
 
 [[check]]
 name = "duplicate-functions"
-title = "Duplicate functions"
+title = "Find duplicate Swift functions"
 example = "Two Swift functions with the same executable body report duplication. Keep the implementation that owns the behavior, replace calls to the duplicate, and remove it."
 level = "all"
 stage = "commit"
@@ -184,7 +184,7 @@ help = "Keep one of the functions and call it from both places."
 
 [[check]]
 name = "private-before-public"
-title = "Private before public"
+title = "Put private declarations first"
 example = "A file-local private declaration below a public declaration reports an ordering finding. Move the private declaration above the first internal or public declaration without changing its behavior."
 level = "all"
 stage = "commit"
@@ -196,7 +196,7 @@ help = "Move the file-local declarations above the first internal, public, or op
 
 [[check]]
 name = "import-comments"
-title = "No comments among imports"
+title = "Keep comments out of import blocks"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `// swiftlint:` or `// swiftformat:` directive stays."
 level = "all"
 stage = "commit"
@@ -208,7 +208,7 @@ help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
 name = "env-owner"
-title = "Environment access owner"
+title = "Read the environment in one place"
 example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
 level = "all"
 stage = "commit"

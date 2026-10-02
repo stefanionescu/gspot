@@ -54,7 +54,7 @@ help = "Run next build and read the first error it prints."
 
 [[check]]
 name = "route-segments"
-title = "Route segments"
+title = "Keep pages and route handlers apart"
 example = "A Next.js segment containing both `page.tsx` and `route.ts` reports conflicting route ownership. Move the route handler into a separate segment, such as `api`, and update its callers."
 level = "recommended"
 stage = "commit"
@@ -76,7 +76,7 @@ help = "Remove the switch, and read the secret on the server."
 
 [[check]]
 name = "version-pairs"
-title = "Dependency alignment"
+title = "Keep paired packages on one version"
 example = "Different declared versions of `react` and `react-dom` report an alignment finding. Select the same compatible version for both and update the lockfile with the package manager."
 level = "recommended"
 stage = "commit"

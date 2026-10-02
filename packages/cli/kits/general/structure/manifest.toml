@@ -20,7 +20,7 @@ file = ".qlty"
 
 [[check]]
 name = "lone-files"
-title = "Single file folder"
+title = "Find folders with one file"
 example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
 runs = "scope"
 level = "all"
@@ -32,7 +32,7 @@ help = "Move the file up beside its neighbors, or allow the folder with a reason
 
 [[check]]
 name = "prefix-collisions"
-title = "Prefix collisions"
+title = "Find files that share a prefix"
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
 runs = "scope"
 level = "all"
@@ -45,7 +45,7 @@ help = "Move the files into a folder named after the shared prefix, or allow the
 
 [[check]]
 name = "stem-collisions"
-title = "File directory collision"
+title = "Find files that collide with folders"
 example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
 runs = "scope"
 level = "all"
@@ -57,7 +57,7 @@ help = "Rename the file or the folder so their stems differ."
 
 [[check]]
 name = "folder-names"
-title = "Folder names"
+title = "Name folders after what they hold"
 example = "A folder containing `helpers/first.sh` and `helpers/second.sh` reports `container-name` because `helpers` does not name its responsibility. Rename the folder after the operation it owns, such as `deployment`, and update every source path. A required ecosystem name needs a specific allowance."
 level = "all"
 stage = "commit"
@@ -79,7 +79,7 @@ help = "Move the logic into a module under src and keep the literal in the confi
 
 [[check]]
 name = "suppressions"
-title = "Suppressions"
+title = "Explain each suppression"
 example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
 level = "recommended"
 stage = "commit"
@@ -90,7 +90,7 @@ help = "Write the reason in the comment (after two dashes for eslint-disable, af
 
 [[check]]
 name = "stale-allowlists"
-title = "Allowlists match"
+title = "Find allowlist entries that match nothing"
 example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
 level = "recommended"
 stage = "commit"
@@ -101,7 +101,7 @@ help = "Remove the entry, correct its path or exact package version, or restore 
 
 [[check]]
 name = "large-files"
-title = "Large files"
+title = "Keep large files out of git"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
 level = "recommended"
 stage = "commit"
@@ -112,7 +112,7 @@ help = "Track the file with git lfs, classify it with gspot set generated <path>
 
 [[check]]
 name = "tracked-dependencies"
-title = "Tracked dependencies"
+title = "Keep installed dependencies out of git"
 example = "A tracked `node_modules` directory reports committed dependency output. Add `node_modules/` to `.gitignore` and run `git rm -r --cached node_modules` to remove it from the index while preserving local installed files."
 level = "recommended"
 stage = "commit"

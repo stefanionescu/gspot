@@ -59,7 +59,7 @@ scoped = true
 
 [[check]]
 name = "markdownlint"
-title = "Markdownlint"
+title = "Lint Markdown files"
 example = "A Markdown document with two top-level headings can report MD025. Keep one document title and change the later section heading to level two."
 isolated_files = true
 file_prefix = ":"

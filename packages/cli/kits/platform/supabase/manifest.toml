@@ -50,7 +50,7 @@ help = "Correct the file at the place the message names, or remove the table of 
 
 [[check]]
 name = "migration-names"
-title = "Migration names"
+title = "Name migrations by timestamp"
 example = "A Supabase migration named `add_users.sql` lacks the required timestamp prefix. Create it with `supabase migration new add_users`, then move the intended SQL into the generated migration file."
 level = "recommended"
 stage = "commit"
@@ -61,7 +61,7 @@ help = "Create the migration with supabase migration new <name>, which writes th
 
 [[check]]
 name = "storage-policies"
-title = "Storage policies"
+title = "Give every bucket a policy"
 example = "A declared storage bucket with no matching policy on `storage.objects` reports missing access policy. Add a migration defining the intended access policy for that bucket and rerun."
 level = "recommended"
 stage = "commit"
@@ -72,7 +72,7 @@ help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
 name = "admin-key"
-title = "Admin key containment"
+title = "Contain the service role key"
 example = "A client source reading the Supabase service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
 level = "recommended"
 stage = "commit"
@@ -83,7 +83,7 @@ help = "Move the code to a server path, or add the path to tools.supabase.admin_
 
 [[check]]
 name = "deno-lint"
-title = "Deno lint"
+title = "Lint edge functions"
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` when the value does not change, then rerun with the pinned Deno tool available."
 level = "recommended"
 stage = "commit"
@@ -95,7 +95,7 @@ help = "Change the code the way the rule says; deno lint --rules explains each o
 
 [[check]]
 name = "deno-check"
-title = "Deno check"
+title = "Type check edge functions"
 example = "An Edge Function assigning a string to a number-typed variable reports a Deno type error. Correct the value or type to match the intended contract, then rerun."
 level = "recommended"
 stage = "push"

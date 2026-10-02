@@ -50,7 +50,7 @@ rules_path = ["rules"]
 
 [[check]]
 name = "commitlint"
-title = "Commitlint"
+title = "Lint the commit message"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
 level = "all"
 stage = "message"

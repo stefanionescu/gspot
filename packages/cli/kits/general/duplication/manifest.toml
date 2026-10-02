@@ -21,7 +21,7 @@ header = false
 
 [[check]]
 name = "jscpd"
-title = "Duplicate code"
+title = "Find copied code"
 example = "Two selected files containing the same substantial code block can exceed the configured duplication threshold. Move the shared behavior into its actual owner and call it from both locations, then rerun."
 level = "all"
 stage = "push"

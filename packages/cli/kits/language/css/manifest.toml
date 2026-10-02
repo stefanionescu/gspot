@@ -66,7 +66,7 @@ pointer = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\
 
 [[check]]
 name = "stylelint"
-title = "Stylelint"
+title = "Lint stylesheets"
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 level = "recommended"
 stage = "commit"
@@ -81,7 +81,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[check]]
 name = "module-classes"
-title = "CSS usage"
+title = "Match CSS module classes to their use"
 example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
 level = "recommended"
 stage = "push"

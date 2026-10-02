@@ -202,7 +202,7 @@ header = false
 
 [[check]]
 name = "eslint"
-title = "ESLint"
+title = "Lint JavaScript and TypeScript"
 example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
 level = "recommended"
 stage = "commit"
@@ -324,7 +324,7 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 
 [[check]]
 name = "rules-off"
-title = "Required rules"
+title = "Keep required ESLint rules on"
 example = "An authored ESLint override disabling a rule required by policy reports that missing rule. Remove the override or record the intended scoped exception with a reason through policy, then regenerate configuration."
 level = "recommended"
 stage = "push"

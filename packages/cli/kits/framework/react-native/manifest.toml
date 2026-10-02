@@ -62,7 +62,7 @@ message = "AsyncStorage is plain text on the device. Keep a secret in the secure
 
 [[check]]
 name = "expo-doctor"
-title = "Expo Doctor"
+title = "Run Expo Doctor"
 example = "An Expo project whose installed `react-native` differs from the version its Expo SDK expects reports a failed Doctor check. Install the expected version with `npx expo install --check` and rerun."
 level = "recommended"
 stage = "push"

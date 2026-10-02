@@ -59,7 +59,7 @@ header = false
 
 [[check]]
 name = "osv"
-title = "OSV"
+title = "Scan dependencies for advisories"
 example = "A locked dependency version affected by a published OSV advisory reports the package and advisory. Upgrade to a reviewed fixed version and update the lockfile, then rescan. Available findings depend on the advisory database."
 level = "recommended"
 stage = "push"
@@ -74,7 +74,7 @@ help = "Upgrade the package the finding names. When no fix exists, use gspot set
 
 [[check]]
 name = "syncpack"
-title = "Syncpack"
+title = "Keep one version of each dependency"
 example = "Two workspace manifests declaring different versions of a dependency governed by the same version group report a mismatch. Align both declarations to the reviewed version and update the lockfile."
 level = "all"
 stage = "push"
@@ -89,7 +89,7 @@ help = "Run syncpack fix-mismatches with the gspot configuration, or align the v
 
 [[check]]
 name = "manifests"
-title = "Manifest policy"
+title = "Check package manifests"
 example = "A dependency declared with a range such as `^1.2.3` reports an unpinned version under the exact-version policy. Pin the actual reviewed lockfile version, then update the lockfile through the package manager."
 level = "all"
 stage = "commit"
@@ -112,7 +112,7 @@ help = "Run the install of the package manager once and commit the lockfile it w
 
 [[check]]
 name = "install"
-title = "Install policy"
+title = "Check the install configuration"
 example = "A Bun project without the required `[install] minimumReleaseAge` reports a missing installation safeguard. Set it to the seconds named in the finding and configure the required scanner under `[install.security]`."
 level = "all"
 stage = "commit"
@@ -124,7 +124,7 @@ help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the messag
 
 [[check]]
 name = "lockfile-hosts"
-title = "Lockfile hosts"
+title = "Check lockfile hosts"
 example = "A locked package URL pointing to a host outside `tools.dependencies.registry_hosts` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
 level = "recommended"
 stage = "commit"

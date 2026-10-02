@@ -64,7 +64,7 @@ header = false
 
 [[check]]
 name = "hadolint"
-title = "Dockerfile lint"
+title = "Lint Dockerfiles"
 example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
 level = "recommended"
 stage = "commit"

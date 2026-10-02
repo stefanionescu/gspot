@@ -109,7 +109,7 @@ help = "Fix the syntax reported by Bats. Install bats-core when the command is m
 
 [[check]]
 name = "shellcheck"
-title = "ShellCheck"
+title = "Lint shell scripts"
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 level = "recommended"
 stage = "commit"
@@ -139,7 +139,7 @@ help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[check]]
 name = "contract"
-title = "Bash interpreter"
+title = "Check the Bash script contract"
 example = "With tools.bash.platforms set to `macOS and Linux`, an executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
 level = "all"
 stage = "commit"
@@ -161,7 +161,7 @@ help = "Write \"# name: what it does\" above the function; when it carries doc s
 
 [[check]]
 name = "duplicate-functions"
-title = "Duplicate functions"
+title = "Find duplicate shell functions"
 example = "Two shell functions with the same executable body report duplication even when their names differ. Keep the function that owns the behavior, replace calls to the duplicate, and delete the duplicate definition."
 level = "all"
 stage = "commit"
@@ -173,7 +173,7 @@ help = "Keep one function and call it from both places."
 
 [[check]]
 name = "unused-functions"
-title = "Unused functions"
+title = "Find unused shell functions"
 example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, record that contract with `gspot ignore` and a reason."
 level = "recommended"
 stage = "commit"
@@ -195,7 +195,7 @@ help = "Read the argument in the function, or drop it from every call."
 
 [[check]]
 name = "source-comments"
-title = "No comments among source statements"
+title = "Keep comments out of source blocks"
 example = "A comment written between two `source` lines reports a source comment. Move it above the block or next to the code that uses the sourced file; a `# shellcheck` directive stays."
 level = "all"
 stage = "commit"
@@ -206,7 +206,7 @@ help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
 name = "source-order"
-title = "Source order"
+title = "Order source statements"
 example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
 level = "all"
 stage = "commit"
@@ -217,7 +217,7 @@ help = "Reorder the source statements shortest first."
 
 [[check]]
 name = "private-prefix"
-title = "Private prefix"
+title = "Prefix private shell functions"
 example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."
 level = "all"
 stage = "commit"
@@ -228,7 +228,7 @@ help = "Rename the function with a leading underscore, or drop the underscore wh
 
 [[check]]
 name = "private-before-public"
-title = "Private before public"
+title = "Put private functions first"
 example = "A private function `_late` declared after a public shell function reports an ordering finding. Move `_late` above the public function, leaving `main` at the end."
 level = "all"
 stage = "commit"
@@ -239,7 +239,7 @@ help = "Move the private functions above the public ones and main to the end."
 
 [[check]]
 name = "trivial-functions"
-title = "Trivial function"
+title = "Find trivial functions"
 example = "A shell function `_tiny() { printf \"%s\\n\" \"Hello\"; }` has one executable statement and reports a trivial-function finding. Inline the command at its call sites and delete the wrapper."
 level = "all"
 stage = "commit"
@@ -252,7 +252,7 @@ help = "Inline unnecessary functions. For one an external API requires, run `gsp
 
 [[check]]
 name = "limits"
-title = "Bash limits"
+title = "Keep shell scripts within the size limits"
 example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
 level = "all"
 stage = "commit"
@@ -263,7 +263,7 @@ help = "Split the script or the function, or raise the named limits.bash setting
 
 [[check]]
 name = "wrappers"
-title = "Bash script policy"
+title = "Find wrappers and aliases"
 example = "Invoking a repository script as `bash scripts/build.sh` reports an interpreter-wrapper finding. Give the script its required shebang and executable permission, then invoke `scripts/build.sh` directly."
 level = "all"
 stage = "commit"
@@ -318,7 +318,7 @@ help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readon
 
 [[check]]
 name = "boundaries"
-title = "Bash boundaries"
+title = "Declare script boundaries"
 example = "A `source` statement without its ShellCheck source annotation reports a boundary finding. Name the actual sourced file in `# shellcheck source=...` above the statement and declare the script boundary in its header. Replace the ellipsis with the real repository path."
 level = "all"
 stage = "commit"
@@ -329,7 +329,7 @@ help = "Add a Boundary line to the header comment, annotate every source with # 
 
 [[check]]
 name = "env-owner"
-title = "Environment access owner"
+title = "Read environment variables through their owner"
 example = "Reading an environment value outside the paths selected by `architecture.roles.env` reports an ownership finding. Read it in the declared configuration owner and pass the resulting value into the consumer."
 level = "all"
 stage = "commit"
@@ -340,7 +340,7 @@ help = "Read the variable in the owner named under architecture.roles.env and pa
 
 [[check]]
 name = "safety"
-title = "Bash safety"
+title = "Find unsafe shell commands"
 example = "An unchecked `cd \"$directory\"` reports a safety finding. Handle failure with `cd \"$directory\" || return 1` inside a function, so later commands cannot run in the wrong directory."
 level = "recommended"
 stage = "commit"

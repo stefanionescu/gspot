@@ -31,7 +31,7 @@ help = "Write the line as a name, an equals sign, and a value."
 
 [[check]]
 name = "xcstrings"
-title = "String catalogs"
+title = "Check string catalogs"
 example = "A string catalog entry with one translated locale and an absent required locale reports the missing translation. Add that locale and its translation, or explicitly mark the string as not translated when that is the intended catalog state."
 level = "recommended"
 stage = "commit"
@@ -66,7 +66,7 @@ help = "Add the target to a test plan, and point the scheme at the plan."
 
 [[check]]
 name = "orphan-sources"
-title = "Orphan sources"
+title = "Match Swift files to project targets"
 example = "A Swift source file under the project that belongs to no target reports an orphan source. Add the file to its intended target or delete the unused source. Remove project references to files that no longer exist."
 level = "recommended"
 stage = "commit"
@@ -78,7 +78,7 @@ help = "Add the file to a target or delete it, and remove the reference to a fil
 
 [[check]]
 name = "symlinks"
-title = "Symlinks"
+title = "Report symlinks in Xcode projects"
 example = "A source directory represented by a symlink reports a project symlink finding. Replace the link with the intended repository-owned directory and update project references."
 level = "all"
 stage = "commit"
@@ -89,7 +89,7 @@ help = "Replace the symlink with the folder it points at, or ignore the path wit
 
 [[check]]
 name = "entitlements"
-title = "Entitlements policy"
+title = "Allow only listed entitlements"
 example = "An entitlement enabled in an `.entitlements` file but absent from `tools.xcode.entitlements_allowed` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
 level = "recommended"
 when = {setting = "tools.xcode.entitlements_allowed"}
@@ -102,7 +102,7 @@ help = "Remove the entitlement, or add it to tools.xcode.entitlements_allowed."
 
 [[check]]
 name = "ats"
-title = "App Transport Security"
+title = "Keep App Transport Security on"
 example = "An Info.plist enabling `NSAllowsArbitraryLoads` disables transport protection broadly and reports a finding. Remove that key. If one host requires an exception, declare only the host-specific exception."
 level = "recommended"
 stage = "commit"

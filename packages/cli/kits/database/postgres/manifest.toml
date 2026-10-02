@@ -31,7 +31,7 @@ rules_path = ["excluded_rules"]
 
 [[check]]
 name = "squawk"
-title = "Squawk"
+title = "Lint migrations for locking changes"
 example = "A migration adding a constraint that requires a disruptive table scan can report a migration-safety finding. Follow the reported rule to separate creation and validation or otherwise reduce the lock, then review the migration against the deployment database."
 level = "recommended"
 stage = "commit"
@@ -43,7 +43,7 @@ help = "Follow the help squawk prints for the rule. Turn one rule off with gspot
 
 [[check]]
 name = "migration-order"
-title = "Migration order"
+title = "Order migrations by version"
 example = "A new migration numbered before the latest committed migration reports an ordering finding. Give the new migration a version later than the committed maximum without renaming already applied migrations."
 level = "recommended"
 stage = "commit"
@@ -76,7 +76,7 @@ help = "Enable row level security on the table, and add its policies in the same
 
 [[check]]
 name = "grants"
-title = "Explicit grants"
+title = "Refuse grants of every privilege"
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
 level = "recommended"
 stage = "commit"
@@ -87,7 +87,7 @@ help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[check]]
 name = "definer-search-path"
-title = "Security definer search path"
+title = "Set the search path of definer functions"
 example = "A `SECURITY DEFINER` function without an explicit safe search path reports a finding. Add `SET search_path = ''` to the definition and schema-qualify the objects used in its body."
 level = "recommended"
 stage = "commit"

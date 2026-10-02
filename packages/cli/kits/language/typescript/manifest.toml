@@ -46,7 +46,7 @@ scoped = true
 
 [[check]]
 name = "tsc"
-title = "TypeScript"
+title = "Type check TypeScript"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
 stage = "push"
