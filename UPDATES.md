@@ -23,8 +23,9 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 25 to 27 are on `refactor/shared-helpers` and become pull request #20.
-- The next stage to start is stage 28.
+- Stages 25 to 28 are on `refactor/shared-helpers` and become pull request #20.
+- The next stage to start is stage 29. Stages 29 to 35 rename keys, fields, checks, flags, and identifiers, and make
+  one batch.
 
 ### Stages
 
@@ -59,7 +60,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | pull request #20 |
 | 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | pull request #20 |
 | 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | pull request #20 |
-| 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | not started      |
+| 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | pull request #20 |
 | 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | not started      |
 | 30    | Rename the kit manifest fields                         | A.4                                                                                                     | not started      |
 | 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | not started      |
@@ -320,6 +321,14 @@ The owner and the work settled these while implementing:
     - Left for later stages: the `[rules]` wording in `packages/cli/src/config/agents.ts` goes with the rename to
       rules, and the agent rules that teach rejected code go with appendix F.3. The rows that a D.5 test confirms
       wait for those tests.
+- Stage 28 settled appendix C:
+    - The functions with an inline, merge, replace, or delete verdict are gone, among them `head`, `scopeFile`,
+      `baseName` (now `posix.basename`), `asRaw`, `presenceDrift`, `totalStatements`'s pass-through, and the test
+      helpers the harness now shares: `trackedFile` and `migration`. Earlier stages had removed the rest.
+    - `escapePattern` waits for `RegExp.escape`, as in 6.3. The kept suppressions whose reasons were false now name
+      the callers the code has.
+    - The React kit turns both tiny rules off for `.tsx` and `.jsx` files and the NestJS kit for module files, so the
+      planted clean sources carry no suppression.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
