@@ -30,7 +30,7 @@ version against `package.json` at startup. A plain `bun test` can pick an older 
 | `mise run test:tools`      | The pinned tools, run over the generated configuration.                    |
 | `mise run test:acceptance` | Planted repositories, checked end to end through a local registry.         |
 | `mise run test:package`    | The two npm packages, built, published to a local registry, and installed. |
-| `mise run check`           | The checks of this repository, run from source.                            |
+| `mise run gspot -- check`  | The checks of this repository, run from source.                            |
 
 The full acceptance suite stops after 90 minutes. Each test also has its own time limit. To run
 some of it, pass files or folders:

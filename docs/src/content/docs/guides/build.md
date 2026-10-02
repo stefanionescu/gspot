@@ -122,7 +122,7 @@ npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.
 
 ```shell
 mise run repo:install-checks
-mise run doctor
+mise run gspot -- doctor
 gspot check
 gspot check --stage manual
 ```

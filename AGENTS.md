@@ -44,13 +44,13 @@ Documentation:
 
 Languages:
 
-- `.gspot/guides/language/JAVASCRIPT.md`
-- `.gspot/guides/language/naming/JAVASCRIPT.md`
 - `.gspot/guides/language/BASH.md`
 - `.gspot/guides/language/bash/LANGUAGE.md`
 - `.gspot/guides/language/bash/SAFETY.md`
 - `.gspot/guides/language/bash/OPERATIONS.md`
 - `.gspot/guides/language/naming/BASH.md`
+- `.gspot/guides/language/JAVASCRIPT.md`
+- `.gspot/guides/language/naming/JAVASCRIPT.md`
 - `.gspot/guides/language/TYPESCRIPT.md`
 - `.gspot/guides/language/naming/TYPESCRIPT.md`
 - `.gspot/guides/language/YAML.md`

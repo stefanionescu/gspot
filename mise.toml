@@ -32,20 +32,10 @@ description = "Run the source CLI: mise run gspot -- <command>."
 dir = "{{config_root}}"
 run = "bun packages/cli/src/main.ts"
 
-[tasks.check]
-description = "Run repository checks from gspot source."
-dir = "{{config_root}}"
-run = "bun packages/cli/src/main.ts check"
-
 [tasks.apply]
 description = "Generate repository configuration using gspot source and the workspace plugin."
 dir = "{{config_root}}"
 run = "bun tests/support/registry/workspace-command.ts apply"
-
-[tasks.doctor]
-description = "Diagnose the repository using gspot source."
-dir = "{{config_root}}"
-run = "bun packages/cli/src/main.ts doctor"
 
 [tasks."repo:tools"]
 description = "Write the mise pins of every kit tool from the manifests."
@@ -96,15 +86,6 @@ depends = ["prepare:grammar", "build:plugin"]
 description = "Run native compatibility tests with the selected tools installed."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/tools"
-
-[tasks."guides:lint"]
-depends = ["prepare:grammar", "build:plugin"]
-description = "Validate guide structure and native Good examples at both levels."
-dir = "{{config_root}}/tests"
-run = [
-    "bun ../packages/cli/scripts/guides-lint.ts",
-    "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
-]
 
 [tasks."test:acceptance"]
 depends = ["prepare:grammar"]
