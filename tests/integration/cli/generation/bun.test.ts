@@ -13,7 +13,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     await createFileTree(repository.path, {
         'gspot.toml': policyOf(
             ['dependencies'],
-            '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n[guides]\ninstall = false\n',
+            '[install]\nscanner = "@socketsecurity/bun-security-scanner"\n[guides]\ninstall = false\n',
         ),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,

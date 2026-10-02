@@ -367,13 +367,6 @@ default = 6
 summary = "The most sentences one paragraph may have."
 
 [[settings]]
-name = "limits.install.min_release_age_days"
-kind = "number"
-direction = "floor"
-default = 7
-summary = "How many days a package must have been published before the package manager installs it."
-
-[[settings]]
 name = "structure.reexports"
 kind = "string"
 direction = "tightening"

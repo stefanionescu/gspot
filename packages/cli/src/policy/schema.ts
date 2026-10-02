@@ -124,6 +124,12 @@ const formatOverride = formatFields
 
 const formatSchema = formatFields.extend({ overrides: z.array(formatOverride).optional() });
 
+// The package manager install settings the dependencies kit writes into the install configuration.
+const installSchema = z.strictObject({
+    min_release_age_days: reasonedNumber.optional(),
+    scanner: text.optional(),
+});
+
 const proseSchema = z.strictObject({ vocabulary: textList.optional() });
 
 const ignoreSchema = z.strictObject({
@@ -198,6 +204,7 @@ const scopeBody = {
     structure: structureSchema.optional(),
     tools: toolsSchema.optional(),
     format: formatSchema.optional(),
+    install: installSchema.optional(),
 };
 
 /** Primitive value shapes declared by manifest settings, before reason wrappers. */

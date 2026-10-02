@@ -91,6 +91,7 @@ export type Policy = {
     format: Defined<NonNullable<RawPolicy['format']>>;
     prose: { vocabulary: string[] };
     tools: Record<string, ToolTable>;
+    install: Record<string, unknown>;
     ignores: IgnoreEntry[];
     declarations: FileDeclaration[];
     checks: RepositoryCheck[];

@@ -22,8 +22,8 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
         const document =
             source === undefined ? {} : (parseToml(source.bytes.toString('utf8')) as Record<string, unknown>);
         const install = document['install'] as Record<string, unknown> | undefined;
-        const settings = selection.view.tool('install');
-        const required = Number(settings['min_release_age_days'] ?? DEFAULT_RELEASE_AGE_DAYS) * SECONDS_PER_DAY;
+        const { settings } = selection.view;
+        const required = Number(settings['install.min_release_age_days'] ?? DEFAULT_RELEASE_AGE_DAYS) * SECONDS_PER_DAY;
         const current = install?.['minimumReleaseAge'];
         const changes: ConfigurationOutput['changes'] = [
             {
@@ -31,7 +31,7 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
                 value: typeof current === 'number' ? Math.max(required, current) : required,
             },
         ];
-        const scanner = settings['security_scanner'];
+        const scanner = settings['install.scanner'];
         if (typeof scanner === 'string' && scanner !== '')
             changes.push({ path: ['install', 'security', 'scanner'], value: scanner });
         return { path, format: 'toml' as const, changes };

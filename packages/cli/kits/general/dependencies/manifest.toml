@@ -138,14 +138,14 @@ why = "A lockfile line that resolves from another host installs code nobody chos
 help = "Install the package from the registry again, or add the host to tools.dependencies.registry_hosts."
 
 [[settings]]
-name = "tools.install.min_release_age_days"
+name = "install.min_release_age_days"
 kind = "number"
 direction = "floor"
 default = 7
 summary = "The fewest days a release has existed before the package manager installs it."
 
 [[settings]]
-name = "tools.install.security_scanner"
+name = "install.scanner"
 kind = "string"
 direction = "neutral"
 default = ""

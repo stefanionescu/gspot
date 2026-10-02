@@ -40,7 +40,7 @@ plantedCases(
         {
             check: 'integrity/install-policy',
             files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
-            policy: '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n',
+            policy: '[install]\nscanner = "@socketsecurity/bun-security-scanner"\n',
             expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
             corrected: {
                 files: {
