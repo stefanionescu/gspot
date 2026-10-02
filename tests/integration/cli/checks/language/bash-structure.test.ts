@@ -1,12 +1,13 @@
 // The built-in Bash checks on planted scripts, run in-process: each fires on its defect and accepts the correction.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { chmodSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { commitAll, markExecutable } from '#tests/harness/cli/git.ts';
 import { script, plantedCases } from '#tests/harness/planted/cases.ts';
 import { BASH_CASES, TOOL_CHECKS, BASH_CASES_MAIN as MAIN } from '#tests/samples/bash.ts';
 
@@ -33,8 +34,8 @@ plantedCases(
         modules: false,
         installs: false,
         files: { 'scripts/build.sh': CLEAN },
-        before: (root) => {
-            chmodSync(join(root, 'scripts/build.sh'), 0o755);
+        prepare: (root) => {
+            markExecutable(root, 'scripts/build.sh');
         },
         corrected: (planted) => ({
             files: {
@@ -61,7 +62,8 @@ test.each([
         'greet.sh': base + (isInherited ? inherited : '') + MAIN,
     });
     const path = join(sandbox.path, 'greet.sh');
-    chmodSync(path, 0o755);
+    commitAll(sandbox.path);
+    markExecutable(sandbox.path, 'greet.sh');
     const command = ['check', '--only', 'structure/bash-interpreter', '--json'];
     const clean = await runGspot(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);

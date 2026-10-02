@@ -1,9 +1,9 @@
 import { join, dirname } from 'node:path';
 import type { PlantedInput } from '#tests/types/cli.ts';
+import { resetIndex, markExecutable } from '#tests/harness/cli/git.ts';
 
 import {
     rmSync,
-    statSync,
     chmodSync,
     lstatSync,
     mkdirSync,
@@ -88,7 +88,7 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
         if (lstatSync(full, { throwIfNoEntry: false })?.isSymbolicLink() === true) unlinkSync(full);
         writeFileSync(full, text);
     }
-    for (const path of executable) chmodSync(join(cwd, path), statSync(join(cwd, path)).mode | 0o111);
+    for (const path of executable) markExecutable(cwd, path);
     writeFileSync(join(cwd, 'gspot.toml'), policy);
 }
 
@@ -104,10 +104,10 @@ export function plant(cwd: string, planted: PlantedInput): () => void {
     for (const path of gone)
         if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
     const parents = absentParents(cwd, paths);
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The caller receives this function and the failure path runs it; both need the same value.
     const restore = (): void => {
         restoreFiles(cwd, originals);
         removeParents(parents);
+        resetIndex(cwd, executables);
     };
     try {
         plantFiles(cwd, planted, policy);
