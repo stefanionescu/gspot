@@ -23,7 +23,7 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
         const [planned] = planRun(session, {
             stage: 'push',
             skips: [],
-            only: ['integrity/lockfile-fresh'],
+            only: ['dependencies/lockfile-fresh'],
         });
         const copies: string[] = [];
         const spawn = spyOn(processes, 'run').mockImplementation((_command, options) => {

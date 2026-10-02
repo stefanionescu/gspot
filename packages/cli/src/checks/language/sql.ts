@@ -217,5 +217,5 @@ export const SQL_ANALYSES: Record<string, Engine> = {
     'sql/functions': sqlFunctions,
     'sql/syntax': sqlSyntax,
     'sql/block-comments': sqlBlockComments,
-    'sql/file-length': sqlFileLength,
+    'sql/file-lines': sqlFileLength,
 };

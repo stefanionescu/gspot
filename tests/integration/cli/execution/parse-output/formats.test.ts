@@ -89,7 +89,7 @@ test('XML diagnostics with carriage returns remain findings on real files', asyn
     await createFileTree(sandbox.path, { 'settings/feed.xml': '<feed><entry></feed>\n' });
     const spec = kitManifests()
         .get('files')!
-        .checks.find((check) => check.name === 'files/xml')!;
+        .checks.find((check) => check.name === 'files/xmllint')!;
     const findings = parseOutput(
         spec,
         '',
@@ -106,7 +106,7 @@ test('Taplo reports one finding from a diff, a log entry, or both', async () => 
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
     const spec = kitManifests()
         .get('files')!
-        .checks.find((check) => check.name === 'files/toml-format')!;
+        .checks.find((check) => check.name === 'files/taplo-format')!;
     const path = join(sandbox.path, 'settings', 'café.toml');
     const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
     const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -125,7 +125,7 @@ test('Taplo reports one finding from a diff, a log entry, or both', async () => 
 test('a Taplo syntax error names its file by a Windows path with a drive letter', () => {
     const spec = kitManifests()
         .get('files')!
-        .checks.find((check) => check.name === 'files/toml')!;
+        .checks.find((check) => check.name === 'files/taplo')!;
     const stdout = 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n';
     expect(parseOutput(spec, stdout, '', 'C:/work')).toMatchObject([{ file: 'settings.toml', line: 2, column: 3 }]);
 });
@@ -135,7 +135,7 @@ test('grouped output strips line endings and relativizes native absolute paths',
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
     const base = kitManifests()
         .get('files')!
-        .checks.find((check) => check.name === 'files/toml-format')!;
+        .checks.find((check) => check.name === 'files/taplo-format')!;
     const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(spec, output, '', sandbox.path);
@@ -151,7 +151,7 @@ test.skipIf(process.platform === 'linux')(
         await createFileTree(sandbox.path, { 'planted/math.py': 'answer = 1\n' });
         const base = kitManifests()
             .get('files')!
-            .checks.find((check) => check.name === 'files/toml-format')!;
+            .checks.find((check) => check.name === 'files/taplo-format')!;
         const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
         const output = `${join(sandbox.path.toUpperCase(), 'planted', 'math.py')}:\n  1: Incorrect spacing\n`;
         expect(parseOutput(spec, output, '', sandbox.path)).toMatchObject([{ file: 'planted/math.py', line: 1 }]);
@@ -161,10 +161,10 @@ test.skipIf(process.platform === 'linux')(
 test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
     const spec = kitManifests()
         .get('files')!
-        .checks.find((check) => check.name === 'files/toml')!;
+        .checks.find((check) => check.name === 'files/taplo')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
     expect(findings).toMatchObject([
-        { check: 'files/toml', file: 'settings.toml', line: 2, column: 1, fixable: false },
+        { check: 'files/taplo', file: 'settings.toml', line: 2, column: 1, fixable: false },
     ]);
 });
 

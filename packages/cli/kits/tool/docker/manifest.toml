@@ -76,7 +76,7 @@ why = "An unpinned base image or a cache left in a layer makes a build nobody ca
 help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason."
 
 [[check]]
-name = "docker/compose-config"
+name = "docker/compose"
 title = "Validate Docker Compose files"
 example = "A Compose service with an unknown key such as `bogus` fails configuration validation. Remove the key or replace it with the supported setting for the intended behavior."
 level = "recommended"

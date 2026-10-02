@@ -38,7 +38,7 @@ do not matter. Versions and licenses must match exactly.
 
 ## Exceptions and the lockfile
 
-Selecting `licenses` also turns on `integrity/allowlists-match` at the commit stage. It checks
+Selecting `licenses` also turns on `structure/stale-allowlists` at the commit stage. It checks
 that each exception names a version that the lockfile of the project or workspace holds. A
 kit that selects the same check does not run it twice.
 

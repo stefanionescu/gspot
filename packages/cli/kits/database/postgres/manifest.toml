@@ -64,7 +64,7 @@ why = "A migration that ran never runs again, so an edit to it changes new datab
 help = "Restore the file with git checkout, and write the change as a new migration."
 
 [[check]]
-name = "postgres/rls-present"
+name = "postgres/rls"
 title = "Require row level security"
 example = "A newly created table without row-level security reports a missing-RLS finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for the actual table and define its intended policies in the migration set."
 level = "recommended"
@@ -75,7 +75,7 @@ why = "A table in an exposed schema with no row security is readable and writabl
 help = "Enable row level security on the table, and add its policies in the same or a later migration."
 
 [[check]]
-name = "postgres/explicit-grants"
+name = "postgres/grants"
 title = "Explicit grants"
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
 level = "recommended"
@@ -86,7 +86,7 @@ why = "Granting everything includes truncating the table, adding triggers, and e
 help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[check]]
-name = "postgres/security-definer-search-path"
+name = "postgres/definer-search-path"
 title = "Security definer search path"
 example = "A `SECURITY DEFINER` function without an explicit safe search path reports a finding. Add `SET search_path = ''` to the definition and schema-qualify the objects used in its body."
 level = "recommended"
@@ -97,7 +97,7 @@ why = "A definer function runs with its owner's rights, and a caller who control
 help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
 
 [[check]]
-name = "postgres/index-covers-foreign-key"
+name = "postgres/foreign-key-indexes"
 title = "Index foreign key columns"
 example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
 level = "recommended"

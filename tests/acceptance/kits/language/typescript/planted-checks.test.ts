@@ -126,7 +126,7 @@ const CASES: FindingCase[] = [
         corrected: { files: { 'src/orders/typo.ts': TYPO.replace(MISSPELLED, 'The') } },
     },
     {
-        check: 'javascript/checkjs',
+        check: 'javascript/tsc',
         files: { 'src/orders/legacy.js': PLAIN_JS },
         expected: { file: 'src/orders/legacy.js', rule: 'TS2345', line: 13, column: 28 },
         corrected: { files: { 'src/orders/legacy.js': PLAIN_JS.replace('twice("x")', 'twice(3)') } },

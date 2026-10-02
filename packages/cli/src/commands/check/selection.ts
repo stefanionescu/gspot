@@ -47,7 +47,7 @@ export function refusalFor(
     if (environmentStaged.length > 0)
         return {
             text: `An environment file is staged: ${environmentStaged.join(', ')}. Unstage it (git restore --staged <file>); only templates like .env.example belong in git.\n`,
-            json: { failed: ['integrity/env-files'], files: environmentStaged },
+            json: { failed: ['secrets/env-files'], files: environmentStaged },
             exitCode: 1,
         };
     if (stage === 'message' && options.messageFile !== undefined && !isReadable(options.messageFile))

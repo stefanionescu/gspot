@@ -28,12 +28,12 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     );
     expect(refused.code).toBe(1);
     expect(refused.stdout).toContain('commits/commitlint');
-    const accepted = await spawnGspot(root, ['check', '--only', 'commits/range'], environment);
+    const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
     expect(accepted.code).toBe(0);
     await Bun.write(join(root, 'more.md'), '# more\n');
     git(root, ['add', '-A']);
     git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
-    const range = await spawnGspot(root, ['check', '--only', 'commits/range'], environment);
+    const range = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
     expect(range.code).toBe(1);
     expect(range.stdout).toContain('type-empty');
 }
@@ -44,7 +44,7 @@ async function expectDistinctMessages(root: string, environment: Record<string, 
     const tree = git(root, ['rev-parse', 'HEAD^{tree}']).stdout.trim();
     const good = git(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']).stdout.trim();
     const bad = git(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']).stdout.trim();
-    const command = [process.execPath, gspot, 'check', '--push', '--only', 'commits/range', '--json'];
+    const command = [process.execPath, gspot, 'check', '--push', '--only', 'commits/commitlint-range', '--json'];
     const options = { cwd: root, env: environment };
     const rejected = await processes.run(command, {
         ...options,
@@ -154,14 +154,14 @@ test(
             historyComplete: false,
             report: { checks: [{ status: 'ok' }] },
         });
-        const refused = await processes.run([...command, 'commits/range'], options);
+        const refused = await processes.run([...command, 'commits/commitlint-range'], options);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
-            'Pushed history is incomplete for commits/range',
+            'Pushed history is incomplete for commits/commitlint-range',
         );
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
         expect(git(checkout, ['fetch', '--unshallow']).code).toBe(0);
-        const completed = await processes.run([...command, 'commits/range'], options);
+        const completed = await processes.run([...command, 'commits/commitlint-range'], options);
         expect(completed.code, completed.stdout + completed.stderr).toBe(0);
         expectCompleteHistory(completed.stdout, [base, selected]);
         expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);

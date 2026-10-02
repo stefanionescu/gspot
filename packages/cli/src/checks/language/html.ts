@@ -211,5 +211,5 @@ export function scriptProblems(root: Node): MarkupProblem[] {
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const HTML_ANALYSES: Record<string, Engine> = {
     'html/scripts': htmlScripts,
-    'html/text': htmlText,
+    'html/literals': htmlText,
 };

@@ -25,7 +25,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
         'other/requirements.txt': 'unlocked-dependency\n',
         'other/main.py': 'value = 2\n',
     });
-    const command = ['check', '--only', 'integrity/dependency-ownership', '--json'];
+    const command = ['check', '--only', 'python/pip-installs', '--json'];
     const checked = await runGspot(sandbox.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;

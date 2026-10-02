@@ -10,7 +10,7 @@ import { runOptions } from '#tests/harness/cli/command.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
-const GENERATED_DRIFT_OPTIONS = runOptions({ only: ['integrity/generated-drift'] });
+const GENERATED_DRIFT_OPTIONS = runOptions({ only: ['gspot/drift'] });
 
 const GENERATED = '.gspot/config/shellcheckrc';
 
@@ -23,7 +23,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     });
     await writeOutputs(await openSession(sandbox.path));
     const clean = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
-    expect(clean.report.checks).toMatchObject([{ check: 'integrity/generated-drift', status: 'ok', findings: [] }]);
+    expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'ok', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');
     // Generated files are read-only; the edits below stand for a developer who forced one through.
     chmodSync(join(sandbox.path, GENERATED), 0o644);

@@ -80,7 +80,7 @@ why = "A browser skips a declaration it cannot read without a word, so a typo in
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
 
 [[check]]
-name = "integrity/css-usage"
+name = "css/module-classes"
 title = "CSS usage"
 example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
 level = "recommended"

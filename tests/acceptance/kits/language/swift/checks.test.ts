@@ -17,12 +17,12 @@ const NEGATED =
 
 const STRUCTURAL: FindingCase[] = [
     {
-        check: 'swift/trivial-function',
+        check: 'swift/trivial-functions',
         files: { 'Sources/App/Label.swift': SWITCHED },
         expected: { file: 'Sources/App/Label.swift', rule: 'trivial-function', line: 15 },
     },
     {
-        check: 'swift/trivial-function',
+        check: 'swift/trivial-functions',
         files: { 'Sources/App/Fresh.swift': NEGATED },
         expected: { file: 'Sources/App/Fresh.swift', rule: 'trivial-function', line: 4 },
     },

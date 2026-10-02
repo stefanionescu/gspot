@@ -45,7 +45,7 @@ plantedCases(
             expected: { file: 'supabase/migrations/002-AddThing.sql', rule: 'migration-name', line: 1 },
         },
         {
-            check: 'supabase/admin-key-containment',
+            check: 'supabase/admin-key',
             files: { 'app/client.ts': `export const key = process.env.${KEY};\n` },
             expected: { file: 'app/client.ts', rule: 'admin-key', line: 1 },
         },

@@ -109,7 +109,7 @@ test('check references require one standalone built-in owner and preserve its de
     );
     const spec = kitManifests()
         .get('structure')!
-        .checks.find((check) => check.name === 'integrity/allowlists-match')!;
+        .checks.find((check) => check.name === 'structure/stale-allowlists')!;
     if (spec.command !== undefined) throw new Error('Expected a built-in check fixture.');
     owner.checks = [{ ...spec, name: 'owner/shared' }];
     consumer.kit.check_references = ['owner/shared'];

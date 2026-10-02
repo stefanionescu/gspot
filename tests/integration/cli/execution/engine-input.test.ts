@@ -19,7 +19,7 @@ test.each([
     {
         language: 'python',
         path: 'source.py',
-        structural: 'python/trivial-function',
+        structural: 'python/trivial-functions',
         // Ruff owns case now, so the naming defect is a name over the word ceiling.
         defect: 'def read_source_entries_from_files_now():\n    return 1\n',
         corrected:
@@ -28,7 +28,7 @@ test.each([
     {
         language: 'swift',
         path: 'Source.swift',
-        structural: 'swift/trivial-function',
+        structural: 'swift/trivial-functions',
         defect: 'func readSourceEntriesFromFilesNow() -> Int { 1 }\n',
         corrected:
             'func readLines(_ source: String) -> [String] {\n    let trimmed = source.trimmingCharacters(in: .whitespaces)\n    let lines = trimmed.components(separatedBy: "\\n")\n    return lines\n}\n',
@@ -36,7 +36,7 @@ test.each([
     {
         language: 'bash',
         path: 'source.sh',
-        structural: 'structure/trivial-function',
+        structural: 'bash/trivial-functions',
         defect: 'BadName() { echo ready; }\n',
         corrected:
             'read_lines() {\n    local source="$1"\n    printf "%s\\n" "$source"\n    printf "%s\\n" "Complete"\n}\n',
@@ -82,7 +82,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
     const planned = planRun(session, {
         stage: 'all',
         skips: [],
-        only: ['jest/coverage', 'integrity/stale-paths'],
+        only: ['jest/coverage', 'docs/stale-paths'],
     });
     const project = planned.find((entry) => entry.check === 'jest/coverage' && entry.scope.scope.path === 'apps/web')!;
     const scopeInput = engineInput(session, project);
@@ -168,7 +168,7 @@ if (onPosix)
             [path]: 'select 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const options = runOptions({ only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'], isDryRun: true });
+        const options = runOptions({ only: ['sql/syntax', 'sql/block-comments', 'sql/file-lines'], isDryRun: true });
         const read = spyOn(fs, 'readFileSync');
         try {
             const clean = await executeRun(session, options);
@@ -178,7 +178,7 @@ if (onPosix)
                     .filter((check) => check.scope === 'app')
                     .map((check) => check.check)
                     .toSorted((left, right) => left.localeCompare(right)),
-            ).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
+            ).toStrictEqual(['sql/block-comments', 'sql/file-lines', 'sql/syntax']);
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
             read.mockClear();
             await Bun.write(join(sandbox.path, path), 'select from;\n');

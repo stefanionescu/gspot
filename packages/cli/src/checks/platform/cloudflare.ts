@@ -197,8 +197,8 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const CLOUDFLARE_ANALYSES: Record<string, Engine> = {
-    'cloudflare/headers-syntax': headersSyntax,
-    'cloudflare/redirects-syntax': redirectsSyntax,
-    'cloudflare/wrangler-config': wranglerFile,
-    'cloudflare/env-types-fresh': envTypesFresh,
+    'cloudflare/headers': headersSyntax,
+    'cloudflare/redirects': redirectsSyntax,
+    'cloudflare/wrangler': wranglerFile,
+    'cloudflare/types-fresh': envTypesFresh,
 };

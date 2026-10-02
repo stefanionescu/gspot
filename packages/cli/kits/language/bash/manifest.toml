@@ -78,7 +78,7 @@ why = "A script with a syntax error stops at the broken line, sometimes after it
 help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[check]]
-name = "bash/zsh-syntax"
+name = "bash/zsh"
 title = "Check Zsh syntax"
 example = "In a Zsh script, `if then` is missing a condition and produces a syntax error. Replace it with `print -r -- \"Hello\"` and rerun with Zsh installed."
 level = "recommended"
@@ -92,7 +92,7 @@ why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs
 help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
 
 [[check]]
-name = "bash/bats-syntax"
+name = "bash/bats"
 title = "Check Bats syntax"
 example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
 level = "recommended"
@@ -138,7 +138,7 @@ why = "One formatter means diffs show what changed, not how someone's editor ind
 help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[check]]
-name = "structure/bash-interpreter"
+name = "bash/contract"
 title = "Bash interpreter"
 example = "With tools.bash.platforms set to `macOS and Linux`, an executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
 level = "all"
@@ -149,7 +149,7 @@ why = "A script that skips strict mode or hides its runtime fails on the machine
 help = "Open with the shebang and, when tools.bash.platforms is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
 
 [[check]]
-name = "structure/doc-comment"
+name = "bash/doc-comments"
 title = "Document shell functions"
 example = "A function `_quiet() { printf \"%s\\n\" \"Hello\"; }` without a preceding description reports a missing comment. Add `# _quiet: prints a greeting.` immediately above the function. Other structural checks still apply."
 level = "all"
@@ -160,7 +160,7 @@ why = "A function with no summary makes the reader run it in their head; a vague
 help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
 
 [[check]]
-name = "structure/duplicate-functions"
+name = "bash/duplicate-functions"
 title = "Duplicate functions"
 example = "Two shell functions with the same executable body report duplication even when their names differ. Keep the function that owns the behavior, replace calls to the duplicate, and delete the duplicate definition."
 level = "all"
@@ -172,7 +172,7 @@ why = "Two copies drift apart; the fix lands in one and the bug stays in the oth
 help = "Keep one function and call it from both places."
 
 [[check]]
-name = "structure/unused-functions"
+name = "bash/unused-functions"
 title = "Unused functions"
 example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, record that contract with `gspot ignore` and a reason."
 level = "recommended"
@@ -180,10 +180,10 @@ stage = "commit"
 searched = ["shellcheck SC2329", "knip"]
 summary = "Finds shell functions no script in the scope calls."
 why = "Dead code is read and maintained for nobody."
-help = "Delete the function. For a required hook entry point, run `gspot ignore structure/unused-functions --paths <file> --reason <why>`."
+help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason <why>`."
 
 [[check]]
-name = "structure/dead-parameters"
+name = "bash/unread-arguments"
 title = "Remove unused shell arguments"
 example = "A call `_deaf one two` whose function never reads positional arguments reports dead parameters. If both arguments are unnecessary, remove them from the call. Otherwise read and use the arguments in the function."
 level = "recommended"
@@ -194,7 +194,7 @@ why = "An argument the callee ignores is a promise the call site believes in."
 help = "Read the argument in the function, or drop it from every call."
 
 [[check]]
-name = "structure/source-comments"
+name = "bash/source-comments"
 title = "No comments among source statements"
 example = "A comment written between two `source` lines reports a source comment. Move it above the block or next to the code that uses the sourced file; a `# shellcheck` directive stays."
 level = "all"
@@ -205,7 +205,7 @@ why = "A block of source statements is a list, and a note inside a list is read 
 help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
-name = "structure/source-order"
+name = "bash/source-order"
 title = "Source order"
 example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
 level = "all"
@@ -216,7 +216,7 @@ why = "One order for every block means a reader never searches it."
 help = "Reorder the source statements shortest first."
 
 [[check]]
-name = "structure/private-prefix"
+name = "bash/private-prefix"
 title = "Private prefix"
 example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."
 level = "all"
@@ -227,7 +227,7 @@ why = "The underscore tells a reader what the file publishes without reading eve
 help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
 
 [[check]]
-name = "structure/private-before-public"
+name = "bash/private-before-public"
 title = "Private before public"
 example = "A private function `_late` declared after a public shell function reports an ordering finding. Move `_late` above the public function, leaving `main` at the end."
 level = "all"
@@ -238,7 +238,7 @@ why = "A file read top to bottom then explains its helpers before it uses them a
 help = "Move the private functions above the public ones and main to the end."
 
 [[check]]
-name = "structure/trivial-function"
+name = "bash/trivial-functions"
 title = "Trivial function"
 example = "A shell function `_tiny() { printf \"%s\\n\" \"Hello\"; }` has one executable statement and reports a trivial-function finding. Inline the command at its call sites and delete the wrapper."
 level = "all"
@@ -247,11 +247,11 @@ limit = "limits.trivial_statements"
 searched = ["shellcheck"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore structure/trivial-function --paths <file> --reason <why>`."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore bash/trivial-functions --paths <file> --reason <why>`."
 
 
 [[check]]
-name = "structure/bash-limits"
+name = "bash/limits"
 title = "Bash limits"
 example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
 level = "all"
@@ -262,7 +262,7 @@ why = "A long script holds more than one job, and a function with many branches 
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 
 [[check]]
-name = "structure/bash-script-policy"
+name = "bash/wrappers"
 title = "Bash script policy"
 example = "Invoking a repository script as `bash scripts/build.sh` reports an interpreter-wrapper finding. Give the script its required shebang and executable permission, then invoke `scripts/build.sh` directly."
 level = "all"
@@ -273,7 +273,7 @@ why = "A wrapper is a second entry point that drifts from the first; inline Node
 help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
 [[check]]
-name = "structure/inline"
+name = "bash/embeds"
 title = "Avoid embedded scripts"
 example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
 level = "all"
@@ -284,7 +284,7 @@ why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
 
 [[check]]
-name = "structure/remote"
+name = "bash/ssh-blocks"
 title = "Name and document SSH blocks"
 example = "An anonymous SSH heredoc reports a remote-block finding. Move the remote operation into a named function with a comment that explains its purpose, then invoke that function through the supported remote call."
 level = "all"
@@ -295,7 +295,7 @@ why = "A remote command block with no name is the hardest thing in a script to t
 help = "Move the block into a named function and write \"# name - what it does\" above it."
 
 [[check]]
-name = "structure/bash-config-defaults"
+name = "bash/defaults"
 title = "Keep defaults in configuration owners"
 example = "A default such as `${PORT:-8080}` outside a declared configuration owner reports a misplaced default. Set the default in a path listed in `tools.bash.config_owners` and consume the configured value elsewhere."
 level = "all"
@@ -306,7 +306,7 @@ why = "A default set in three places is three settings with one name."
 help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
 [[check]]
-name = "structure/guards"
+name = "bash/guards"
 title = "Guard shell configuration imports"
 example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
 level = "all"
@@ -317,7 +317,7 @@ why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
 
 [[check]]
-name = "structure/bash-boundaries"
+name = "bash/boundaries"
 title = "Bash boundaries"
 example = "A `source` statement without its ShellCheck source annotation reports a boundary finding. Name the actual sourced file in `# shellcheck source=...` above the statement and declare the script boundary in its header. Replace the ellipsis with the real repository path."
 level = "all"
@@ -328,7 +328,7 @@ why = "A script that works only because another file was sourced first breaks wh
 help = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
 
 [[check]]
-name = "structure/env-access-owner"
+name = "bash/env-owner"
 title = "Environment access owner"
 example = "Reading an environment value outside the paths selected by `architecture.roles.env` reports an ownership finding. Read it in the declared configuration owner and pass the resulting value into the consumer."
 level = "all"
@@ -339,7 +339,7 @@ why = "When any script reads the environment, nobody can list what the program n
 help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
 
 [[check]]
-name = "structure/bash-safety"
+name = "bash/safety"
 title = "Bash safety"
 example = "An unchecked `cd \"$directory\"` reports a safety finding. Handle failure with `cd \"$directory\" || return 1` inside a function, so later commands cannot run in the wrong directory."
 level = "recommended"

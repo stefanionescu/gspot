@@ -171,7 +171,7 @@ export const NAMING_ENGINES: Record<string, Engine> = {
     'naming/paths': namingEngine((input, policy) =>
         pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
     ),
-    'naming/policy-schema': namingEngine(schemaFindings),
+    'naming/policy': namingEngine(schemaFindings),
 };
 
 /**

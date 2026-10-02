@@ -61,12 +61,12 @@ async function checked(planted: InstalledRepository, checks: string[], code: num
 async function requiredRules(planted: InstalledRepository): Promise<void> {
     const config = join(planted.root, '.gspot/config/eslint.config.mjs');
     const written = await Bun.file(config).text();
-    await checked(planted, ['integrity/required-rules'], 0);
+    await checked(planted, ['javascript/rules-off'], 0);
     chmodSync(config, OWNER_WRITABLE_FILE);
-    // A later block that turns a required rule off is what integrity/required-rules exists to see.
+    // A later block that turns a required rule off is what javascript/rules-off exists to see.
     await Bun.write(config, written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'"));
     try {
-        const seen = await checked(planted, ['integrity/required-rules'], 1);
+        const seen = await checked(planted, ['javascript/rules-off'], 1);
         expect(seen.checks[0]!.findings).toContainEqual(
             containing({
                 file: '.gspot/config/eslint.config.mjs',
@@ -79,7 +79,7 @@ async function requiredRules(planted: InstalledRepository): Promise<void> {
     } finally {
         await Bun.write(config, written);
     }
-    await checked(planted, ['integrity/required-rules'], 0);
+    await checked(planted, ['javascript/rules-off'], 0);
 }
 
 // Type checking delegates to the Next.js check only when that check runs.
@@ -90,18 +90,18 @@ async function delegation(planted: InstalledRepository): Promise<void> {
     ]);
     const direct = await checked(planted, ['typescript/tsc'], 0);
     expect(direct.checks).toMatchObject([{ check: 'typescript/tsc', status: 'ok' }]);
-    const delegated = await checked(planted, ['typescript/tsc', 'nextjs/typecheck'], 0);
-    expect(delegated.checks.find(({ check }) => check === 'nextjs/typecheck')?.status).toBe('ok');
+    const delegated = await checked(planted, ['typescript/tsc', 'nextjs/tsc'], 0);
+    expect(delegated.checks.find(({ check }) => check === 'nextjs/tsc')?.status).toBe('ok');
     expect(delegated.checks.find(({ check }) => check === 'typescript/tsc')).toMatchObject({
         status: 'skipped',
-        note: 'nextjs/typecheck runs it here',
+        note: 'nextjs/tsc runs it here',
     });
 }
 
 // The TypeScript check still finds defects when the Next.js check is skipped.
 async function skippedReplacement(planted: InstalledRepository): Promise<void> {
     const path = join(planted.root, 'app/count.ts');
-    const checks = ['typescript/tsc', 'nextjs/typecheck', '--skip', 'nextjs/typecheck'];
+    const checks = ['typescript/tsc', 'nextjs/tsc', '--skip', 'nextjs/tsc'];
     writeFileSync(path, COUNT);
     try {
         const failed = await checked(planted, checks, 1);
@@ -109,7 +109,7 @@ async function skippedReplacement(planted: InstalledRepository): Promise<void> {
             status: 'fail',
             findings: [{ check: 'typescript/tsc', file: 'app/count.ts', rule: 'TS2322', line: 4 }],
         });
-        expect(failed.skips.some(({ check, source }) => check === 'nextjs/typecheck' && source === 'flag')).toBe(true);
+        expect(failed.skips.some(({ check, source }) => check === 'nextjs/tsc' && source === 'flag')).toBe(true);
         writeFileSync(path, COUNT.replace('"three"', '3'));
         await checked(planted, checks, 0);
     } finally {
@@ -155,7 +155,7 @@ plantedCases(
     },
     [
         {
-            check: 'nextjs/typecheck',
+            check: 'nextjs/tsc',
             files: { 'app/count.ts': COUNT },
             expected: { file: 'app/count.ts', rule: 'TS2322', line: 4 },
             corrected: { files: { 'app/count.ts': COUNT.replace('"three"', '3') } },

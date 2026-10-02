@@ -217,7 +217,7 @@ why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "javascript/checkjs"
+name = "javascript/tsc"
 title = "Check JavaScript types"
 example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
 level = "recommended"
@@ -323,7 +323,7 @@ default = []
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
 
 [[check]]
-name = "integrity/required-rules"
+name = "javascript/rules-off"
 title = "Required rules"
 example = "An authored ESLint override disabling a rule required by policy reports that missing rule. Remove the override or record the intended scoped exception with a reason through policy, then regenerate configuration."
 level = "recommended"

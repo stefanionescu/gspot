@@ -60,7 +60,7 @@ plantedCases(
     },
     [
         {
-            check: 'openapi/lint',
+            check: 'openapi/spectral',
             files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
             policy: EXPRESS_POLICY,
             expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },

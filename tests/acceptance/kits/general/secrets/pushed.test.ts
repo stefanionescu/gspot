@@ -26,7 +26,7 @@ test(
             'settings.py': PLANTED_SETTINGS,
         });
         expect(git(sandbox.path, ['rev-parse', 'HEAD^{tree}']).stdout.trim()).toBe(tree);
-        const command = [process.execPath, gspot, 'check', '--push', '--only', 'secrets/gitleaks', '--json'];
+        const command = [process.execPath, gspot, 'check', '--push', '--only', 'secrets/gitleaks-history', '--json'];
         const options = { cwd: sandbox.path, env: { PATH: toolsPath(['gitleaks']) } };
         const rejected = await processes.run(command, {
             ...options,
@@ -36,7 +36,9 @@ test(
         const report = JSON.parse(rejected.stdout) as PushReport;
         expect(report.revisions).toHaveLength(1);
         expect(report.revisions[0]?.commits).toContain(leaked);
-        expect(report.revisions[0]?.report.checks).toMatchObject([{ check: 'secrets/gitleaks', status: 'fail' }]);
+        expect(report.revisions[0]?.report.checks).toMatchObject([
+            { check: 'secrets/gitleaks-history', status: 'fail' },
+        ]);
         expect(report.revisions[0]?.report.checks[0]?.findings).toContainEqual(
             containing({ rule: 'aws-access-token', file: 'settings.py', line: 1 }),
         );

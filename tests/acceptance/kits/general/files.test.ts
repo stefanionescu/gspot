@@ -24,7 +24,7 @@ plantedCases(
     },
     [
         {
-            check: 'files/toml-format',
+            check: 'files/taplo-format',
             files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
             expected: {
                 file: 'settings/layout.toml',
@@ -33,13 +33,13 @@ plantedCases(
             corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
         },
         {
-            check: 'files/dotenv',
+            check: 'files/dotenv-linter',
             files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
             expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
             corrected: { files: { '.env.example': 'PORT=3000\n' } },
         },
         {
-            check: 'files/xml',
+            check: 'files/xmllint',
             files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
             expected: {
                 file: 'settings/feed.xml',
@@ -50,7 +50,7 @@ plantedCases(
         },
         // The plist reader is the macOS plutil.
         {
-            check: 'files/plist',
+            check: 'files/plutil',
             files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
             expected: { file: 'app/Info.plist' },
             platforms: ['darwin'],
@@ -69,8 +69,8 @@ plantedCases(
                 const { root, environment } = planted();
                 const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
-                expect(ids).not.toContain('files/schema');
-                expect(ids).toContain('files/toml');
+                expect(ids).not.toContain('files/v8r');
+                expect(ids).toContain('files/taplo');
             },
             PLANTED_TIMEOUT_MS * 2,
         );
@@ -79,14 +79,14 @@ plantedCases(
 
 test.each([
     {
-        check: 'files/toml',
+        check: 'files/taplo',
         path: 'settings.toml',
         broken: 'a = 1\n[x\n',
         corrected: 'a = 1\n',
         expected: { file: 'settings.toml', line: 2 },
     },
     {
-        check: 'files/yaml',
+        check: 'files/yamllint',
         path: 'config.yaml',
         broken: 'key: 1\nkey: 2\n',
         corrected: '---\nkey: 1\n',
@@ -158,12 +158,12 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--json'];
+        const command = ['check', '--only', 'files/v8r', '--staged', '--stage', 'push', '--json'];
         const invalid = await spawnGspot(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
             {
-                check: 'files/schema',
+                check: 'files/v8r',
                 status: 'fail',
                 findings: [
                     containing({
@@ -178,7 +178,7 @@ test(
         const valid = await spawnGspot(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/schema', status: 'ok', findings: [] },
+            { check: 'files/v8r', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -194,10 +194,10 @@ test(
         await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const fixed = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv', '--fix'], environment);
+        const fixed = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter', '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

@@ -72,7 +72,7 @@ test.each([
         });
         const result = await executeRun(
             await openSession(sandbox.path),
-            runOptions({ stage: 'commit', only: ['integrity/suppressions'], isDryRun: true }),
+            runOptions({ stage: 'commit', only: ['structure/suppressions'], isDryRun: true }),
         );
         expect(result.report.checks.map(({ status }) => status)).toStrictEqual([lines.length === 0 ? 'ok' : 'fail']);
         expect(result.report.checks.flatMap(({ findings }) => findings.map(({ line }) => line))).toStrictEqual([
@@ -106,7 +106,7 @@ test.each(['-->', '--!>'])(
             },
             { file: 'page.html', line: 2, form: 'html-validate', forbidden: false },
         ]);
-        const result = await executeRun(session, runOptions({ stage: 'commit', only: ['integrity/suppressions'] }));
+        const result = await executeRun(session, runOptions({ stage: 'commit', only: ['structure/suppressions'] }));
         expect(result.report.exitCode).toBe(1);
         expect(
             result.report.checks.flatMap((check) => check.findings).map(({ file, line }) => ({ file, line })),

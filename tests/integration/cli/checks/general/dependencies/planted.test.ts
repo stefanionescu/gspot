@@ -7,12 +7,12 @@ import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
 
 const INVALID: (PlantedInput & { expected: string })[] = [
     {
-        check: 'integrity/manifest-policy',
+        check: 'dependencies/manifests',
         files: { 'package.json': '{' },
         expected: 'Cannot read package manifest package.json',
     },
     {
-        check: 'integrity/manifest-policy',
+        check: 'dependencies/manifests',
         files: { 'package.json': '{"dependencies":{"example":false}}' },
         expected: 'Cannot read package manifest package.json',
     },
@@ -32,13 +32,13 @@ plantedCases(
     },
     [
         {
-            check: 'integrity/install-policy',
+            check: 'dependencies/install',
             files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
             expected: { file: 'bunfig.toml', rule: 'release-age', line: 1 },
             corrected: { files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' } },
         },
         {
-            check: 'integrity/install-policy',
+            check: 'dependencies/install',
             files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
             policy: '[install]\nscanner = "@socketsecurity/bun-security-scanner"\n',
             expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
@@ -51,7 +51,7 @@ plantedCases(
             },
         },
         {
-            check: 'integrity/lockfile-hosts',
+            check: 'dependencies/lockfile-hosts',
             files: { 'package-lock.json': FOREIGN_LOCK },
             expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
             corrected: {

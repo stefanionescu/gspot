@@ -77,7 +77,7 @@ why = "The prose and spelling checks read line comments, and a block comment hid
 help = "Rewrite the block as line comments that start with two dashes."
 
 [[check]]
-name = "sql/file-length"
+name = "sql/file-lines"
 title = "File length"
 example = "A SQL file with 401 code lines exceeds a 400-line ceiling. Split independent database changes into appropriately ordered files and rerun with each file below the configured limit."
 level = "all"

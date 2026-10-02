@@ -15,7 +15,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         nested: [containing({ file: 'apps/backend/supabase/config.toml', rule: 'function' })],
     },
     {
-        check: 'supabase/admin-key-containment',
+        check: 'supabase/admin-key',
         root: [],
         nested: [containing({ file: 'apps/backend/client.ts', rule: 'admin-key' })],
     },
@@ -25,7 +25,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         nested: [containing({ file: 'apps/backend/messages/de.json' })],
     },
     {
-        check: 'integrity/security-headers',
+        check: 'site/security-headers',
         root: [],
         nested: [
             containing({ file: 'apps/backend/_headers', rule: 'missing-header' }),
@@ -101,7 +101,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
         'app/child/cleanup.sh': source,
         'sibling/cleanup.sh': source,
     });
-    const command = ['check', '--only', 'structure/bash-safety', '--json'];
+    const command = ['check', '--only', 'bash/safety', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
@@ -120,7 +120,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
 test.each([
     {
         configuration: 'supabase',
-        check: 'supabase/admin-key-containment',
+        check: 'supabase/admin-key',
         setting: '[tools.supabase]\nadmin_key_files = ["trusted/**"]\n',
         path: 'trusted/key.ts',
         source: 'const key = "SUPABASE_SERVICE_ROLE_KEY";\n',
@@ -129,7 +129,7 @@ test.each([
     },
     {
         configuration: 'html',
-        check: 'html/text',
+        check: 'html/literals',
         setting:
             '[tools.html]\ntemplates = ["**/*.html"]\nliterals_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
         path: 'trusted/page.html',

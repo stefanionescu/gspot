@@ -40,7 +40,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 
 /** The analyses by the name a manifest gives them. */
 const PYTHON_STRUCTURE: Record<string, Engine> = {
-    'python/file-length': analysis(({ modules }, input) => {
+    'python/file-lines': analysis(({ modules }, input) => {
         const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
         return modules.flatMap((module) => {
             const count = [...module.lines].filter(
@@ -58,7 +58,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
                   ];
         });
     }),
-    'python/function-length': analysis(({ modules, functions }, input) => {
+    'python/function-lines': analysis(({ modules, functions }, input) => {
         const ceiling = input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES;
         const lines = new Map(modules.map((module) => [module.path, module.lines]));
         return functions.flatMap((fn) => {
@@ -77,7 +77,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
                   ];
         });
     }),
-    'python/trivial-function': analysis(({ functions, modules }, input) => {
+    'python/trivial-functions': analysis(({ functions, modules }, input) => {
         const threshold = input.view.limit('trivial_statements', 'python') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
@@ -93,11 +93,11 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
                 })),
         ];
     }),
-    'python/placeholder-docstring': analysis(({ functions }) => placeholderDocstrings(functions)),
+    'python/placeholder-docstrings': analysis(({ functions }) => placeholderDocstrings(functions)),
     'python/private-prefix': analysis(({ modules }) => privatePrefixes(modules)),
     'python/private-before-public': analysis(({ modules }) => privateBeforePublic(modules)),
     'python/exports-at-bottom': analysis(({ modules }) => exportsAtBottom(modules)),
-    'python/no-lazy-exports': analysis(({ modules }) =>
+    'python/lazy-exports': analysis(({ modules }) =>
         modules.flatMap((module) =>
             module.statements
                 .filter(
@@ -118,7 +118,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
     }),
     'python/import-comments': analysis(({ modules }) => importComments(modules)),
     'python/export-order': analysis(({ modules }) => exportOrder(modules)),
-    'python/no-singletons': analysis(({ modules }, input) => {
+    'python/singletons': analysis(({ modules }, input) => {
         const entries =
             (input.view.settings['structure.python.singletons_allowed'] as { names?: string[] }[] | undefined) ?? [];
         return singletons(modules, new Set(entries.flatMap((entry) => entry.names ?? [])));
@@ -129,6 +129,6 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
 export const PYTHON_ANALYSES: Record<string, Engine> = {
     ...PYTHON_STRUCTURE,
     'python/import-linter': importLinter,
-    'integrity/dependency-ownership': dependencyOwnership,
-    'integrity/typecheck-membership': typecheckMembership,
+    'python/pip-installs': dependencyOwnership,
+    'python/stale-exclusions': typecheckMembership,
 };

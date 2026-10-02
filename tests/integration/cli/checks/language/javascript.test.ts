@@ -21,11 +21,11 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     const projects = emitted(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
     for (const project of projects) await Bun.write(join(sandbox.path, project.path), project.content);
     const reopened = await openSession(sandbox.path);
-    const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/checkjs'] });
+    const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/tsc'] });
     // A policy change plans the check in every scope, including one with no JavaScript file.
     const site = { ...root!, scope: reopened.scopes.find((entry) => entry.scope.path === 'site')!, files: [] };
     expect(await checkJavascript(reopened, site)).toMatchObject({
-        check: 'javascript/checkjs',
+        check: 'javascript/tsc',
         scope: 'site',
         status: 'ok',
         files: 0,

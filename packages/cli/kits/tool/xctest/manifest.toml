@@ -32,7 +32,7 @@ why = "A test turned off with no reason stays off, because nobody knows when it 
 help = "Say why the test is off and what turns it back on, or delete the test."
 
 [[check]]
-name = "xctest/no-sleep"
+name = "xctest/sleep"
 title = "Avoid sleeps in tests"
 example = "A test using a fixed sleep to wait for asynchronous work reports a timing finding. Wait for the actual completion expectation or poll the required condition with a bounded timeout."
 level = "all"
@@ -56,7 +56,7 @@ why = "A recording test writes a new reference and passes, so it approves whatev
 help = "Take the recording flag out, and commit the references it wrote after looking at them."
 
 [[check]]
-name = "xctest/reference-images"
+name = "xctest/references"
 title = "Validate snapshot references"
 example = "A snapshot reference folder whose corresponding test file no longer exists reports unused references. Delete the unused references, or rename the folder to match the renamed test file."
 level = "all"

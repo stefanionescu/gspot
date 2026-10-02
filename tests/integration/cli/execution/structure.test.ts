@@ -36,10 +36,7 @@ test('folder checks count code files and preserve allowed and nested directories
         'dist/pkg/lone.ts': '',
         'allowed/only.ts': '',
     });
-    const result = await executeRun(
-        await openSession(sandbox.path),
-        runOptions({ only: ['structure/single-file-folder'] }),
-    );
+    const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['structure/lone-files'] }));
     expect(result.report.exitCode).toBe(1);
     expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
         'dist/pkg/lone.ts',
@@ -115,11 +112,11 @@ test.each([
         [card]: '',
         [list]: '',
     });
-    const options = runOptions({ only: ['structure/single-file-folder', 'structure/prefix-collisions'] });
+    const options = runOptions({ only: ['structure/lone-files', 'structure/prefix-collisions'] });
     const initial = await executeRun(await openSession(sandbox.path), options);
     expect(initial.report.exitCode).toBe(1);
     expect(initial.report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { check: 'structure/single-file-folder', file: lone, line: 1, rule: 'lone-file' },
+        { check: 'structure/lone-files', file: lone, line: 1, rule: 'lone-file' },
         { check: 'structure/prefix-collisions', file: card, line: 1, rule: 'shared-prefix' },
     ]);
     await Bun.write(join(sandbox.path, `feature/second.${extension}`), '');
@@ -199,7 +196,7 @@ test.each(['recommended', 'all'])('structural checks classify output directories
     });
     const result = await executeRun(
         await openSession(sandbox.path),
-        runOptions({ stage: 'commit', only: ['structure/single-file-folder', 'structure/prefix-collisions'] }),
+        runOptions({ stage: 'commit', only: ['structure/lone-files', 'structure/prefix-collisions'] }),
     );
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
@@ -214,7 +211,7 @@ test.each(['recommended', 'all'])('structural checks classify output directories
 
 // A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
 async function loneFiles(root: string): Promise<string[]> {
-    const result = await executeRun(await openSession(root), runOptions({ only: ['structure/single-file-folder'] }));
+    const result = await executeRun(await openSession(root), runOptions({ only: ['structure/lone-files'] }));
     return result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file));
 }
 

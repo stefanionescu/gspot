@@ -51,7 +51,7 @@ process.exit(2);
         const environment = {
             PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
         };
-        const result = await runGspot(sandbox.path, ['check', '--only', 'files/toml-format'], environment);
+        const result = await runGspot(sandbox.path, ['check', '--only', 'files/taplo-format'], environment);
         expect(result.code, result.stderr + result.stdout).toBe(2);
         expect(result.stdout).toContain('taplo broke: exit 2');
         expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -60,10 +60,14 @@ process.exit(2);
             join(sandbox.path, 'bin/taplo'),
             '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
         );
-        const corrected = await runGspot(sandbox.path, ['check', '--only', 'files/toml-format', '--json'], environment);
+        const corrected = await runGspot(
+            sandbox.path,
+            ['check', '--only', 'files/taplo-format', '--json'],
+            environment,
+        );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/toml-format', status: 'ok', findings: [] },
+            { check: 'files/taplo-format', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

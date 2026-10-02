@@ -8,7 +8,7 @@ const TABLES = `// A planted file.\n\nimport { uuid, pgTable } from 'drizzle-orm
 
 const CASES: FindingCase[] = [
     {
-        check: 'trpc/router-boundaries',
+        check: 'trpc/boundaries',
         files: {
             'src/server/router.ts': 'export const appRouter = {};\n',
             'src/client/page.ts': `// A planted file.\n\nimport { appRouter } from '../server/router.ts';\n\n/** The router, pulled into client code. */\nexport const leaked = appRouter;\n`,
@@ -23,7 +23,7 @@ const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'drizzle/relations-complete',
+        check: 'drizzle/relations',
         files: { 'src/tables.ts': TABLES },
         expected: { file: 'src/tables.ts', rule: 'relations', line: 9 },
         corrected: {

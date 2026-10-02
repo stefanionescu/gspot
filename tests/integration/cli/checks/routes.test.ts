@@ -17,7 +17,7 @@ path = "api"
 kits = ["express"]
 `;
 
-const ROUTES_OPTIONS = runOptions({ only: ['express/routes-tested'] });
+const ROUTES_OPTIONS = runOptions({ only: ['express/untested-routes'] });
 
 const ROUTE = 'export const users = () => [];\n';
 

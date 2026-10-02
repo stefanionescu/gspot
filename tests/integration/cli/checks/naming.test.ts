@@ -94,14 +94,14 @@ test('naming policy validates inherited and scoped declarations against the comp
         'web/source.js': 'export const remoteRecord = 1;\n',
         'worker/source.py': 'remote_record = 1\n',
     });
-    const command = ['check', '--only', 'naming/policy-schema', '--json'];
+    const command = ['check', '--only', 'naming/policy', '--json'];
     const accepted = await runGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     const complete = JSON.parse(accepted.stdout) as RunReport;
     expect(complete.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
-        { check: 'naming/policy-schema', scope: '', status: 'ok' },
+        { check: 'naming/policy', scope: '', status: 'ok' },
     ]);
-    const narrowed = await runGspot(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy-schema', '--json']);
+    const narrowed = await runGspot(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy', '--json']);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'gspot.toml'), MISMATCHED_POLICY);
     const refused = await runGspot(sandbox.path, command);
@@ -130,7 +130,7 @@ test('naming policy validates inherited and scoped declarations against the comp
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'naming/policy-schema', status: 'ok', findings: [] },
+        { check: 'naming/policy', status: 'ok', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'worker/source.py')).text()).toBe('remote_record = 1\n');
 });
@@ -147,7 +147,7 @@ test.each(['constructor', 'toString', '__proto__'])(
             ),
             'source.ts': 'export const bad_name = 1;\n',
         });
-        const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
+        const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy'];
         const failed = await runGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;

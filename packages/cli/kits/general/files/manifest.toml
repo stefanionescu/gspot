@@ -78,7 +78,7 @@ rules_path = ["rules"]
 target = ".gspot/config/v8r.yml"
 
 [[check]]
-name = "files/toml"
+name = "files/taplo"
 title = "TOML"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
@@ -92,7 +92,7 @@ why = "A TOML file that does not parse stops the tool that reads it at the worst
 help = "Fix the line taplo names."
 
 [[check]]
-name = "files/toml-format"
+name = "files/taplo-format"
 title = "TOML format"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
@@ -107,7 +107,7 @@ why = "One formatter keeps a diff about the values, not the spacing."
 help = "Run gspot check --fix."
 
 [[check]]
-name = "files/yaml"
+name = "files/yamllint"
 title = "YAML"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
@@ -121,7 +121,7 @@ why = "A YAML file that parses to the wrong shape fails silently: a duplicated k
 help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
 
 [[check]]
-name = "files/schema"
+name = "files/v8r"
 title = "Validate configuration schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
@@ -137,7 +137,7 @@ why = "A key the schema refuses is a setting that never applies, and nobody find
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
 
 [[check]]
-name = "files/dotenv"
+name = "files/dotenv-linter"
 title = "Dotenv"
 example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
 level = "recommended"
@@ -163,7 +163,7 @@ why = "A variable missing from the template is the one a new machine lacks on it
 help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."
 
 [[check]]
-name = "files/plist"
+name = "files/plutil"
 title = "Property lists"
 example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 level = "recommended"
@@ -178,7 +178,7 @@ why = "A broken plist fails the build or, worse, ships an app whose settings sil
 help = "Fix the element plutil names."
 
 [[check]]
-name = "files/xml"
+name = "files/xmllint"
 title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"

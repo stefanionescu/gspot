@@ -19,12 +19,12 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
     });
-    const options = runOptions({ only: ['xcode/entitlements-policy'] });
+    const options = runOptions({ only: ['xcode/entitlements'] });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
     expect(outcome.report.checks).toMatchObject([
         {
-            check: 'xcode/entitlements-policy',
+            check: 'xcode/entitlements',
             status: 'skipped',
             note: textContaining('tools.xcode.entitlements_allowed'),
         },
@@ -53,10 +53,10 @@ test('a failed site build skips every output consumer and a new session rebuilds
     });
     const consumers = new Set([
         'site/build-reproducible',
-        'site/html-validate-built',
-        'css/dead-selectors',
-        'site/links-internal',
-        'site/links-external',
+        'site/html-validate',
+        'site/purgecss',
+        'site/linkinator',
+        'site/linkinator-external',
         'site/size',
         'site/sitemap',
     ]);

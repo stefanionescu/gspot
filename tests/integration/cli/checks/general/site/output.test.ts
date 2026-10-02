@@ -14,10 +14,10 @@ test.each([
     {
         name: 'links',
         analyze: (input: EngineInput) => brokenLinks(input, false),
-        check: 'site/links-internal',
+        check: 'site/linkinator',
         body: '<a href="/missing.html">Missing</a>',
         finding: {
-            check: 'site/links-internal',
+            check: 'site/linkinator',
             file: './',
             rule: 'broken-link',
             line: 1,
@@ -27,14 +27,14 @@ test.each([
     {
         name: 'markup',
         analyze: builtMarkup,
-        check: 'site/html-validate-built',
+        check: 'site/html-validate',
         body: '<img src="image.png">',
         finding: { file: 'dist/index.html', rule: 'wcag/h37', line: 1 },
     },
     {
         name: 'selectors',
         analyze: deadSelectors,
-        check: 'css/dead-selectors',
+        check: 'site/purgecss',
         body: '<p>Example</p>',
         finding: {
             file: 'dist/style.css',

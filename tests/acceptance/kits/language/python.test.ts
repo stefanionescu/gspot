@@ -21,11 +21,11 @@ const TOOLS_PROJECT =
 // What each check accepts beside the clean module.
 const CORRECTIONS: Record<string, Record<string, string>> = {
     'python/vulture': { 'planted/unused.py': '"""No unused imports."""\n' },
-    'integrity/dependency-ownership': {
+    'python/pip-installs': {
         'uv.lock': 'version = 1\n',
         'scripts/setup.sh': '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n',
     },
-    'integrity/typecheck-membership': { 'planted/gone.py': '"""A file with a separate dependency set."""\n' },
+    'python/stale-exclusions': { 'planted/gone.py': '"""A file with a separate dependency set."""\n' },
 };
 const CASES: FindingCase[] = [
     {

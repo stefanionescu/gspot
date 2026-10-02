@@ -15,7 +15,7 @@ plantedCases(
     },
     [
         {
-            check: 'html/html-validate',
+            check: 'html/validate',
             files: {
                 'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" />\n    </body>\n</html>\n`,
             },

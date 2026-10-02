@@ -25,7 +25,7 @@ plantedCases(
     },
     [
         {
-            check: 'docker/compose-config',
+            check: 'docker/compose',
             docker: true,
             files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
             expected: { file: 'api/compose.yml', message: textContaining('bogus') },

@@ -23,12 +23,12 @@ const VALID = JSON.stringify({
 test('malformed TypeScript configuration reports its path instead of missing options', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY, 'tsconfig.json': '{' });
-    const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
+    const input = await sessionInput(sandbox.path, 'typescript/tsconfig');
     expect(() => tsconfigOptions(input)).toThrow(
         `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
     );
     fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
-    expect(tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'))).toStrictEqual([]);
+    expect(tsconfigOptions(await sessionInput(sandbox.path, 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
 test('a missing inherited configuration cannot be replaced by empty compiler options', async () => {
@@ -37,26 +37,26 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
         'gspot.toml': TSCONFIG_OPTIONS_POLICY,
         'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
     });
-    const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
+    const input = await sessionInput(sandbox.path, 'typescript/tsconfig');
     // TypeScript prints the inherited path with forward slashes on every platform.
     expect(() => tsconfigOptions(input)).toThrow(`Cannot read file '${toPosix(join(sandbox.path, 'missing.json'))}'`);
     fs.writeFileSync(join(sandbox.path, 'missing.json'), VALID);
-    expect(tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'))).toStrictEqual([]);
+    expect(tsconfigOptions(await sessionInput(sandbox.path, 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
 test('a scope without tsconfig.json reports the missing configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY });
-    const findings = tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'));
+    const findings = tsconfigOptions(await sessionInput(sandbox.path, 'typescript/tsconfig'));
     expect(findings).toMatchObject([
         {
-            check: 'integrity/tsconfig-options',
+            check: 'typescript/tsconfig',
             file: 'tsconfig.json',
             message: textContaining('no tsconfig.json'),
         },
     ]);
     fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
-    expect(tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'))).toStrictEqual([]);
+    expect(tsconfigOptions(await sessionInput(sandbox.path, 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
 test('nested configurations inherit the configuration an ancestor package names', async () => {
@@ -72,7 +72,7 @@ test('nested configurations inherit the configuration an ancestor package names'
         }),
         [`node_modules/@example/config/${filename}`]: '{"compilerOptions":{"strict":true}}',
     });
-    const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
+    const input = await sessionInput(sandbox.path, 'typescript/tsconfig');
     const inherited = tsconfigOptions(input);
     expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
     fs.writeFileSync(
@@ -85,7 +85,7 @@ test('nested configurations inherit the configuration an ancestor package names'
             .filter((finding) => finding.rule === 'strict')
             .map(({ check, file, rule }) => ({ check, file, rule })),
     ).toStrictEqual([
-        { check: 'integrity/tsconfig-options', file: 'tsconfig.json', rule: 'strict' },
-        { check: 'integrity/tsconfig-options', file: 'apps/web/tsconfig.json', rule: 'strict' },
+        { check: 'typescript/tsconfig', file: 'tsconfig.json', rule: 'strict' },
+        { check: 'typescript/tsconfig', file: 'apps/web/tsconfig.json', rule: 'strict' },
     ]);
 });

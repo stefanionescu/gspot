@@ -159,7 +159,7 @@ help = "Delete the declaration, or mark it with a periphery:ignore comment that 
 
 
 [[check]]
-name = "swift/trivial-function"
+name = "swift/trivial-functions"
 title = "Trivial function"
 example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
 level = "all"
@@ -168,7 +168,7 @@ runs = "scope"
 files = {extensions = [".swift"]}
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-function --paths <file> --reason <why>`."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-functions --paths <file> --reason <why>`."
 
 [[check]]
 name = "swift/duplicate-functions"
@@ -207,7 +207,7 @@ why = "An import block is a list, and a note inside a list is read as part of th
 help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
-name = "swift/env-access-owner"
+name = "swift/env-owner"
 title = "Environment access owner"
 example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
 level = "all"

@@ -72,7 +72,7 @@ plantedCases(
             expected: { file: 'site.webmanifest', rule: 'icon', line: 1 },
         },
         {
-            check: 'integrity/security-headers',
+            check: 'site/security-headers',
             files: { _headers: '/*\n    Referrer-Policy: no-referrer\n' },
             expected: { file: '_headers', rule: 'missing-header', line: 1 },
         },
@@ -90,7 +90,7 @@ plantedCases(
                 );
                 expect(checked.code, checked.stdout + checked.stderr).toBe(0);
                 const report = JSON.parse(checked.stdout) as RunReport;
-                expect(report.checks.map(({ check }) => check)).not.toContain('site/links-external');
+                expect(report.checks.map(({ check }) => check)).not.toContain('site/linkinator-external');
                 expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'ok' }));
             },
             PLANTED_TIMEOUT_MS * 5,
@@ -98,7 +98,7 @@ plantedCases(
     },
 );
 
-const COMMAND = ['check', '--only', 'site/svg-optimized', '--json'];
+const COMMAND = ['check', '--only', 'site/svgo', '--json'];
 
 // Recommended savings thresholds and strict optimization both accept corrected bytes.
 async function expectSvgThresholds(root: string, svg: string): Promise<void> {
@@ -120,7 +120,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     const corrected = await spawnGspot(root, COMMAND);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'site/svg-optimized', status: 'ok', files: 1, findings: [] },
+        { check: 'site/svgo', status: 'ok', files: 1, findings: [] },
     ]);
 }
 
@@ -140,7 +140,7 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     const repaired = await spawnGspot(root, COMMAND);
     expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
     expect((JSON.parse(repaired.stdout) as RunReport).checks).toMatchObject([
-        { check: 'site/svg-optimized', status: 'ok', files: 2, findings: [] },
+        { check: 'site/svgo', status: 'ok', files: 2, findings: [] },
     ]);
 }
 

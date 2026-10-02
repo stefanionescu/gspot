@@ -23,7 +23,7 @@ npm = "ajv"
 target = ".gspot/config/spectral.yaml"
 
 [[check]]
-name = "openapi/lint"
+name = "openapi/spectral"
 title = "Validate the OpenAPI document"
 example = "An OpenAPI document whose operation references an undefined schema reports a validation finding. Define the schema or correct the reference in the source that produces the document, then regenerate it."
 level = "recommended"

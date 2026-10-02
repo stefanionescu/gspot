@@ -20,7 +20,7 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
     expect(indexedPaths(sandbox.path)).toStrictEqual([path]);
 });
 
-test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
+test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
     '%s reports a failed index read instead of a clean verdict',
     async (check) => {
         await using sandbox = await testdir();

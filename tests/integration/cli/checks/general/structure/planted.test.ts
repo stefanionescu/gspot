@@ -35,7 +35,7 @@ plantedCases(
     },
     [
         {
-            check: 'structure/single-file-folder',
+            check: 'structure/lone-files',
             files: { 'tools/only/one.sh': CLEAN },
             expected: { file: 'tools/only/one.sh', rule: 'lone-file', line: 1 },
         },
@@ -46,7 +46,7 @@ plantedCases(
         },
         // JavaScript folders report through the same check; the ESLint plugin has no rule of its own for them.
         {
-            check: 'structure/single-file-folder',
+            check: 'structure/lone-files',
             files: { 'feature/only.js': 'export const only = 1;\n' },
             expected: { file: 'feature/only.js', rule: 'lone-file', line: 1 },
         },
@@ -60,7 +60,7 @@ plantedCases(
             expected: { file: 'cards/asset-card.js', rule: 'shared-prefix', line: 1 },
         },
         {
-            check: 'structure/file-directory-collision',
+            check: 'structure/stem-collisions',
             files: { 'jobs/turn.sh': CLEAN, 'jobs/turn/first.sh': CLEAN, 'jobs/turn/second.sh': CLEAN },
             expected: { file: 'jobs/turn.sh', rule: 'stem-collision', line: 1 },
         },
@@ -70,7 +70,7 @@ plantedCases(
             expected: { file: 'helpers/first.sh', rule: 'container-name', line: 1 },
         },
         {
-            check: 'integrity/suppressions',
+            check: 'structure/suppressions',
             files: {
                 'scripts/quiet.sh': CLEAN.replace(
                     '    echo "${greeting}"',
@@ -80,24 +80,24 @@ plantedCases(
             expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 12 },
         },
         {
-            check: 'integrity/allowlists-match',
+            check: 'structure/stale-allowlists',
             files: {},
             policy: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["nowhere/**"]\nreason = "A pattern that matches no file here."\n',
             expected: { file: 'gspot.toml', rule: 'unmatched-pattern', line: 1 },
             corrected: { files: {}, policy: undefined },
         },
         {
-            check: 'integrity/large-files',
+            check: 'structure/large-files',
             files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * BYTES_PER_KB) },
             expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
         },
     ],
     (planted) => {
         test(
-            'integrity/tracked-dependencies reports a dependency folder that git tracks',
+            'structure/tracked-dependencies reports a dependency folder that git tracks',
             async () => {
                 const { root, environment } = planted();
-                const command = ['check', '--only', 'integrity/tracked-dependencies', '--json'];
+                const command = ['check', '--only', 'structure/tracked-dependencies', '--json'];
                 const clean = await runGspot(root, command, environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 mkdirSync(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });
@@ -107,7 +107,7 @@ plantedCases(
                 expect(tracked.code).toBe(1);
                 expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
                     {
-                        check: 'integrity/tracked-dependencies',
+                        check: 'structure/tracked-dependencies',
                         status: 'fail',
                         findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
                     },
@@ -116,7 +116,7 @@ plantedCases(
                 const corrected = await runGspot(root, command, environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                    { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
+                    { check: 'structure/tracked-dependencies', status: 'ok', findings: [] },
                 ]);
             },
             PLANTED_TIMEOUT_MS,

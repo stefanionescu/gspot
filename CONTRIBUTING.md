@@ -108,7 +108,7 @@ replays it and checks the recorded findings.
 
 `gspot.toml` is the policy of this repository. Change it with `gspot set`, `gspot ignore`,
 `gspot add`, or `gspot remove`, then run `mise run apply` to write the files under `.gspot/`
-again. Do not edit a generated file by hand. `integrity/generated-drift` reports a generated
+again. Do not edit a generated file by hand. `gspot/drift` reports a generated
 file that differs from the policy.
 
 ## Commits

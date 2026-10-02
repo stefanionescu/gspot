@@ -88,7 +88,7 @@ why = "Two versions of one dependency in a workspace mean two behaviors, and a b
 help = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
 
 [[check]]
-name = "integrity/manifest-policy"
+name = "dependencies/manifests"
 title = "Manifest policy"
 example = "A dependency declared with a range such as `^1.2.3` reports an unpinned version under the exact-version policy. Pin the actual reviewed lockfile version, then update the lockfile through the package manager."
 level = "all"
@@ -100,7 +100,7 @@ why = "A version range installs a different tree tomorrow, and two package manag
 help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
 
 [[check]]
-name = "integrity/lockfile-fresh"
+name = "dependencies/lockfile-fresh"
 title = "Keep lockfiles current"
 example = "Adding a dependency to a package manifest without updating its lockfile reports a stale lock. Run the owning package manager installation, inspect its manifest and lock changes, and retain both together."
 level = "recommended"
@@ -111,7 +111,7 @@ why = "A lockfile that lags its manifest installs versions nobody reviewed the m
 help = "Run the install of the package manager once and commit the lockfile it writes."
 
 [[check]]
-name = "integrity/install-policy"
+name = "dependencies/install"
 title = "Install policy"
 example = "A Bun project without the required `[install] minimumReleaseAge` reports a missing installation safeguard. Set it to the seconds named in the finding and configure the required scanner under `[install.security]`."
 level = "all"
@@ -123,7 +123,7 @@ why = "Most malicious releases are pulled within days, so a package nobody insta
 help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
 
 [[check]]
-name = "integrity/lockfile-hosts"
+name = "dependencies/lockfile-hosts"
 title = "Lockfile hosts"
 example = "A locked package URL pointing to a host outside `tools.dependencies.registry_hosts` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
 level = "recommended"

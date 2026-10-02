@@ -39,11 +39,7 @@ async function storageSession(root: string, status: number, stage: Stage = 'comm
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
-    [
-        'xcode/asset-catalogs',
-        'App/Assets.xcassets/Logo.imageset/Contents.json',
-        '{"images":[{"filename":"logo.png"}]}\n',
-    ],
+    ['xcode/assets', 'App/Assets.xcassets/Logo.imageset/Contents.json', '{"images":[{"filename":"logo.png"}]}\n'],
 ] as const)(
     'a failed resource read is an execution error for %s; malformed JSON remains a finding',
     async (check, path, content) => {
@@ -89,7 +85,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
     const session = await openSession(sandbox.path);
-    const options = runOptions({ stage: 'commit', only: ['xcode/asset-catalogs'] });
+    const options = runOptions({ stage: 'commit', only: ['xcode/assets'] });
     const target = join(sandbox.path, image);
     const original = fs.statSync;
     const read = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {

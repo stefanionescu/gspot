@@ -14,17 +14,17 @@ import { BASH_CASES, TOOL_CHECKS, BASH_CASES_MAIN as MAIN } from '#tests/samples
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
 // What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.
 const CORRECTIONS: Record<string, (planted: { files: Record<string, string> }) => Record<string, string>> = {
-    'structure/guards': () => ({
+    'bash/guards': () => ({
         'scripts/settings.sh':
             '#!/usr/bin/env bash\n[[ -n ${SETTINGS_READY:-} ]] && return 0\nreadonly SETTINGS_READY=1\nreadonly PORT=8080\n',
     }),
-    'structure/bash-boundaries': () => ({
+    'bash/boundaries': () => ({
         'deploy/step.sh': CLEAN.replace(
             '#!/usr/bin/env bash',
             '#!/usr/bin/env bash\n# Boundary: Owns deployment steps and their explicit input values.',
         ),
     }),
-    'structure/env-access-owner': (planted) => ({ 'scripts/environment.sh': planted.files['scripts/environment.sh']! }),
+    'bash/env-owner': (planted) => ({ 'scripts/environment.sh': planted.files['scripts/environment.sh']! }),
 };
 
 plantedCases(
@@ -64,15 +64,13 @@ test.each([
     const path = join(sandbox.path, 'greet.sh');
     commitAll(sandbox.path);
     markExecutable(sandbox.path, 'greet.sh');
-    const command = ['check', '--only', 'structure/bash-interpreter', '--json'];
+    const command = ['check', '--only', 'bash/contract', '--json'];
     const clean = await runGspot(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
-        { check: 'structure/bash-interpreter', status: 'fail' },
-    ]);
+    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([{ check: 'bash/contract', status: 'fail' }]);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
@@ -80,6 +78,6 @@ test.each([
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'structure/bash-interpreter', status: 'ok', findings: [] },
+        { check: 'bash/contract', status: 'ok', findings: [] },
     ]);
 });

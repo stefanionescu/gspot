@@ -204,14 +204,14 @@ test(
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'files/toml-format',
+            only: 'files/taplo-format',
             path: 'settings.toml',
             isNpm: false,
             finding: { fixable: true },
         });
         expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'files/toml',
+            only: 'files/taplo',
             path: 'settings.toml',
             isNpm: false,
             defect: 'a = [\n',

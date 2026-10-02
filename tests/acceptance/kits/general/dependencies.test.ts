@@ -44,12 +44,12 @@ test(
             join(sandbox.path, 'bun.lock'),
             '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
         );
-        const args = ['check', '--only', 'integrity/lockfile-fresh', '--json'];
+        const args = ['check', '--only', 'dependencies/lockfile-fresh', '--json'];
         const stale = await spawnGspot(sandbox.path, args, environment);
         expect(stale.code, stale.stdout + stale.stderr).toBe(1);
         expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
-                check: 'integrity/lockfile-fresh',
+                check: 'dependencies/lockfile-fresh',
                 status: 'fail',
                 findings: [
                     containing({
@@ -70,7 +70,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
+            { check: 'dependencies/lockfile-fresh', status: 'ok', findings: [] },
         ]);
         const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);

@@ -9,6 +9,6 @@
         brackets: { 'max-spaces-inside': 1 },
         indentation: { spaces: format.indent_width, 'indent-sequences': 'consistent' },
         ...tool('yamllint').rules,
-        ...Object.fromEntries(rulesOff('files/yaml').map((name) => [name, 'disable'])),
+        ...Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])),
     },
 }).trimEnd() %>

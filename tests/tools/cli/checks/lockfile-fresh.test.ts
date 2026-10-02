@@ -50,7 +50,7 @@ test.each([
     const [planned] = planRun(session, {
         stage: 'push',
         skips: [],
-        only: ['integrity/lockfile-fresh'],
+        only: ['dependencies/lockfile-fresh'],
     });
     const input = engineInput(session, planned!);
     expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale-lockfile' }));

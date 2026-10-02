@@ -54,7 +54,7 @@ describe('isToolBroken', () => {
         } satisfies CheckSpec;
         const links = {
             ...base,
-            name: 'docs/links',
+            name: 'docs/lychee',
             output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
         } satisfies CheckSpec;
         const lines = { ...base, name: 'dependencies/syncpack', output: { format: 'lines' } } satisfies CheckSpec;

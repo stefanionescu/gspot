@@ -16,9 +16,9 @@ test.each([
     // Windows has no zsh to install, and it runs no Bats, a Bash script, from PATH; Linux and macOS have both.
     ...(onPosix
         ? [
-              { check: 'bash/zsh-syntax', path: 'script.zsh', files: 2, broken: 'if then\n' },
+              { check: 'bash/zsh', path: 'script.zsh', files: 2, broken: 'if then\n' },
               {
-                  check: 'bash/bats-syntax',
+                  check: 'bash/bats',
                   path: 'script.bats',
                   files: 1,
                   broken: '@test "broken" {\n    if then\n}\n',
@@ -57,7 +57,7 @@ test.each([
                 containing({
                     file: entry.path,
                     line: entry.check === 'bash/syntax' ? 1 : 2,
-                    message: textContaining(entry.check === 'bash/zsh-syntax' ? 'parse error' : 'syntax'),
+                    message: textContaining(entry.check === 'bash/zsh' ? 'parse error' : 'syntax'),
                 }),
             );
         } finally {

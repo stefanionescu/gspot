@@ -78,12 +78,12 @@ test.each([false, true])('inline suppression reasons follow require_reasons=%s',
         'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
         'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
     });
-    const command = ['check', '--only', 'integrity/suppressions', '--json'];
+    const command = ['check', '--only', 'structure/suppressions', '--json'];
     const missing = await runGspot(directory.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
     const report = JSON.parse(missing.stdout) as RunReport;
     const unexplained: Finding = containing({
-        check: 'integrity/suppressions',
+        check: 'structure/suppressions',
         file: 'entry.sh',
         line: 1,
         rule: 'shellcheck-no-reason',
@@ -109,7 +109,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await runGspot(directory.path, ['check', '--only', 'integrity/suppressions', '--json']);
+    const result = await runGspot(directory.path, ['check', '--only', 'structure/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]!.findings).toStrictEqual(
@@ -141,7 +141,7 @@ test.each([false, true])(
         const findings = (
             JSON.parse(checked.stdout) as { checks: { check: string; findings: { file: string }[] }[] }
         ).checks
-            .filter((check) => check.check === 'integrity/policy')
+            .filter((check) => check.check === 'gspot/policy')
             .flatMap((check) => check.findings);
         const aboutExtra = { file: 'gspot.toml', message: textContaining('extra') };
         expect(findings).toMatchObject(required ? [aboutExtra] : []);

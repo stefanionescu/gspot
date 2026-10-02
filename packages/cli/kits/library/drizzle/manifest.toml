@@ -30,7 +30,7 @@ message = "Raw SQL skips the types of the schema. Use the query builder, or allo
 allowed = "tools.drizzle.raw_sql_allowed"
 
 [[check]]
-name = "drizzle/relations-complete"
+name = "drizzle/relations"
 title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
 level = "all"

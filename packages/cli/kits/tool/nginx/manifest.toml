@@ -43,7 +43,7 @@ why = "These mistakes parse, serve traffic, and look like any other location blo
 help = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason."
 
 [[check]]
-name = "nginx/config-test"
+name = "nginx/test"
 title = "Validate nginx configuration"
 example = "The line `invalid_directive on;` fails the native configuration test with `nginx-t`. Remove the unknown directive or replace it with the intended supported directive, such as `listen 443 ssl;` in the configured TLS server. Rerun with the configured deployment image available."
 level = "recommended"

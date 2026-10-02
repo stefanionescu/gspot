@@ -23,7 +23,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
     await createFileTree(sandbox.path, {
         'docs/guide.md': 'The runner writes `.reports/output.json`.\n',
     });
-    const selected = await checkInput(sandbox.path, 'integrity/allowlists-match', ['docs/guide.md'], {
+    const selected = await checkInput(sandbox.path, 'structure/stale-allowlists', ['docs/guide.md'], {
         kits: ['docs'],
         tools: {
             docs: {
@@ -35,7 +35,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
                 ],
             },
         },
-        ignore: [{ check: 'docs/links', paths: ['.reports/output.json'], reason: 'An obsolete source exclusion.' }],
+        ignore: [{ check: 'docs/lychee', paths: ['.reports/output.json'], reason: 'An obsolete source exclusion.' }],
     });
     expect(allowlistsMatch(selected).map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
@@ -53,7 +53,7 @@ test('suppression validation ignores source text and valid reasons but reports m
     const scope = session.scopes[0]!;
     const spec = scope.selected
         .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'integrity/suppressions')!;
+        .find((check) => check.name === 'structure/suppressions')!;
     const read = engineInput(session, { scope, spec, files: session.repository.files });
     const found = await suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
@@ -70,7 +70,7 @@ test('a file over the limit that is neither declared nor under LFS is reported',
         'small.txt': 'small',
     });
     const paths = ['big.bin', 'data/big.bin', 'small.txt'];
-    const found = largeFiles(await checkInput(sandbox.path, 'integrity/large-files', paths, policy));
+    const found = largeFiles(await checkInput(sandbox.path, 'structure/large-files', paths, policy));
     expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
 });
 
@@ -83,7 +83,7 @@ test('a configuration module with a function or a call is reported; literals pas
             "import { readFileSync } from 'node:fs';\n\nexport const text = readFileSync('x', 'utf8');\nexport const pick = (value: string): string => value;\n",
     });
     const paths = ['config/pure.ts', 'config/logic.ts'];
-    const found = await fileIntegrity(await checkInput(sandbox.path, 'integrity/files', paths, policy));
+    const found = await fileIntegrity(await checkInput(sandbox.path, 'structure/config-logic', paths, policy));
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
         'config/logic.ts:1',
         'config/logic.ts:3',

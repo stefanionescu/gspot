@@ -92,6 +92,6 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const DRIZZLE_ANALYSES: Record<string, Engine> = {
-    'drizzle/relations-complete': drizzleRelations,
+    'drizzle/relations': drizzleRelations,
     'drizzle/migrations-fresh': drizzleMigrations,
 };

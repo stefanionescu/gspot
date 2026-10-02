@@ -54,7 +54,7 @@ why = "A build that differs from run to run cannot be cached, compared, or trust
 help = "Take the timestamp, the random value, or the unordered list out of the build."
 
 [[check]]
-name = "site/html-validate-built"
+name = "site/html-validate"
 title = "Validate built HTML"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
 level = "recommended"
@@ -66,7 +66,7 @@ why = "Templates can each be valid and still join into a page with two main elem
 help = "Fix the template or the content that writes the markup the rule names."
 
 [[check]]
-name = "css/dead-selectors"
+name = "site/purgecss"
 title = "Dead selectors"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
 level = "recommended"
@@ -78,7 +78,7 @@ why = "A selector nobody uses is downloaded by every visitor and read by every m
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
 
 [[check]]
-name = "site/links-internal"
+name = "site/linkinator"
 title = "Check internal site links"
 example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
 level = "recommended"
@@ -90,7 +90,7 @@ why = "A broken internal link is a dead end a visitor finds before the author do
 help = "Fix the link, or the page it points at."
 
 [[check]]
-name = "site/links-external"
+name = "site/linkinator-external"
 title = "Check external site links"
 example = "A built link to an external URL that responds with HTTP 404 reports a link failure. Replace it with the verified destination or remove the obsolete link, then rerun with network access."
 level = "recommended"
@@ -139,7 +139,7 @@ why = "An asset nobody references ships with every deploy and is kept by everyon
 help = "Delete the file."
 
 [[check]]
-name = "site/svg-optimized"
+name = "site/svgo"
 title = "Optimize SVG assets"
 example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
 level = "recommended"
@@ -163,7 +163,7 @@ why = "A manifest with a missing icon installs an app with a blank tile."
 help = "Correct the manifest, or add the icon."
 
 [[check]]
-name = "integrity/security-headers"
+name = "site/security-headers"
 title = "Security headers"
 example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
 level = "recommended"

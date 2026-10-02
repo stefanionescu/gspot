@@ -215,7 +215,7 @@ why = "A key the build backend does not know is ignored without a word."
 help = "Correct the key the message names."
 
 [[check]]
-name = "integrity/dependency-ownership"
+name = "python/pip-installs"
 title = "Dependency ownership"
 example = "An authored `requirements.txt` beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
 level = "all"
@@ -227,7 +227,7 @@ why = "Two owners of the dependency list drift apart, and the image installs wha
 help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.pip.installs_allowed with a reason."
 
 [[check]]
-name = "integrity/typecheck-membership"
+name = "python/stale-exclusions"
 title = "Type checking membership"
 example = "An entry `missing/**` under `tools.basedpyright.exclude` reports a stale exclusion when no selected file matches it. Remove the obsolete entry or correct its path. This check verifies exclusion membership; it does not ban every exclusion."
 level = "recommended"
@@ -238,7 +238,7 @@ why = "An exclusion that outlives its file hides the next file that takes the na
 help = "Remove the entry from tools.basedpyright.exclude."
 
 [[check]]
-name = "python/file-length"
+name = "python/file-lines"
 title = "File length"
 example = "A Python module whose code-line count exceeds the configured file ceiling reports its count and limit. Move an independent responsibility to its owner and update imports, then verify both modules fit the limit."
 level = "all"
@@ -250,7 +250,7 @@ why = "A long module holds more than one job, and the second job is the one nobo
 help = "Split the module by the job, or raise limits.file_lines for python with a reason."
 
 [[check]]
-name = "python/function-length"
+name = "python/function-lines"
 title = "Function length"
 example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
 level = "all"
@@ -262,7 +262,7 @@ why = "A function that fills a screen does several things, and a reader has to h
 help = "Move one job of the function into a function of its own."
 
 [[check]]
-name = "python/trivial-function"
+name = "python/trivial-functions"
 title = "Trivial function"
 example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
 level = "all"
@@ -271,11 +271,11 @@ runs = "scope"
 files = {extensions = [".py"]}
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-function --paths <file> --reason <why>`."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-functions --paths <file> --reason <why>`."
 
 
 [[check]]
-name = "python/placeholder-docstring"
+name = "python/placeholder-docstrings"
 title = "Replace placeholder docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
 level = "all"
@@ -323,7 +323,7 @@ why = "A reader looks for the public surface in one place."
 help = "Move the export list to the end of the module."
 
 [[check]]
-name = "python/no-lazy-exports"
+name = "python/lazy-exports"
 title = "No lazy exports"
 example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
 level = "all"
@@ -371,7 +371,7 @@ why = "One order for every export list means a reader never searches it."
 help = "Reorder the names shortest first."
 
 [[check]]
-name = "python/no-singletons"
+name = "python/singletons"
 title = "No singletons"
 example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."
 level = "all"

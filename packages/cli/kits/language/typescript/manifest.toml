@@ -74,7 +74,7 @@ why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsaf
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "integrity/tsconfig-options"
+name = "typescript/tsconfig"
 title = "Keep strict TypeScript options"
 example = "An authored TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the resulting type errors rather than disabling the integrity check."
 level = "recommended"

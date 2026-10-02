@@ -40,7 +40,7 @@ rules_path = ["rules"]
 header = false
 
 [[check]]
-name = "html/html-validate"
+name = "html/validate"
 title = "Validate HTML"
 example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
 level = "recommended"
@@ -49,7 +49,7 @@ command = ["html-validate", "--config", "{config:html-validate-templates}", "--f
 output = {format = "json", children = "messages", fields = {file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message"}}
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
-help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
+help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule <name> --reason."
 
 [[check]]
 name = "html/scripts"
@@ -62,7 +62,7 @@ why = "A content security policy that allows inline script allows an injected on
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
 [[check]]
-name = "html/text"
+name = "html/literals"
 title = "Use placeholders in HTML templates"
 example = "Authored prose embedded in a governed HTML template reports copy outside the content owner. Move the words to the content file and reference that content from the template."
 level = "all"

@@ -92,7 +92,7 @@ test(
         expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'structure/bash-limits'], environment);
+        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'bash/limits'], environment);
         expect(missing.code).toBe(2);
         expect(missing.stdout).toContain('missing');
         expect(missing.stdout).toContain('Run: gspot install');

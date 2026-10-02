@@ -12,7 +12,7 @@ import { containing } from '#tests/harness/expectations.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
 
 describe.if(onMac)('native property lists', () => {
-    test('files/plist classifies mixed native parse and input failures as execution errors', async () => {
+    test('files/plutil classifies mixed native parse and input failures as execution errors', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(['files']),
@@ -20,7 +20,7 @@ describe.if(onMac)('native property lists', () => {
             'private.plist': '<plist><dict/></plist>\n',
         });
         const session = await openSession(sandbox.path);
-        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['files/plist'] });
+        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['files/plutil'] });
         const roots: [string, string] = [sandbox.path, sandbox.path];
         chmodSync(join(sandbox.path, 'private.plist'), 0);
         try {

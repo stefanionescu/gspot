@@ -48,7 +48,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const baseline = await runPlanted(
         root,
         {
-            check: 'integrity/gitleaks-baseline',
+            check: 'secrets/gitleaks-baseline',
             files: { '.gspot/gitleaks-baseline.json': BASELINE },
         },
         environment,
@@ -57,7 +57,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const baselineReport = JSON.parse(baseline.stdout) as RunReport;
     expect(baselineReport.checks).toMatchObject([
         {
-            check: 'integrity/gitleaks-baseline',
+            check: 'secrets/gitleaks-baseline',
             status: 'fail',
             findings: [
                 {
@@ -84,7 +84,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const explained = await runPlanted(
         root,
         {
-            check: 'integrity/gitleaks-baseline',
+            check: 'secrets/gitleaks-baseline',
             files: {
                 '.gspot/gitleaks-baseline.json': BASELINE,
                 'old.py': '# A reviewed historical fixture.\n',
@@ -95,7 +95,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     );
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const accepted = JSON.parse(explained.stdout) as RunReport;
-    expect(accepted.checks).toMatchObject([{ check: 'integrity/gitleaks-baseline', status: 'ok', findings: [] }]);
+    expect(accepted.checks).toMatchObject([{ check: 'secrets/gitleaks-baseline', status: 'ok', findings: [] }]);
     const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
     const network = JSON.parse(checked.stdout) as RunReport;
     expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');

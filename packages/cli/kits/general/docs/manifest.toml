@@ -25,7 +25,7 @@ file = ".lycheeignore"
 target = ".gspot/config/lychee.toml"
 
 [[check]]
-name = "docs/links"
+name = "docs/lychee"
 title = "Check local documentation links"
 example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
 level = "recommended"
@@ -38,7 +38,7 @@ why = "A dead link inside the repository is a promise the docs broke without any
 help = "Point the link at the file or heading that exists, or delete it."
 
 [[check]]
-name = "docs/links-external"
+name = "docs/lychee-external"
 title = "Check external documentation links"
 example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
 level = "recommended"
@@ -52,7 +52,7 @@ why = "An external link rots on its own schedule; this run says which ones did."
 help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude_urls."
 
 [[check]]
-name = "integrity/docs-headings"
+name = "docs/headings"
 title = "Check documentation headings"
 example = "A document section using a heading banned by the configured documentation policy reports that heading. Replace the section with content that answers a reader task and give it a descriptive heading, or delete the unnecessary section."
 level = "all"
@@ -62,7 +62,7 @@ why = "An inventory heading promises a map that goes stale; the reader wanted an
 help = "Replace the section with prose that explains, or delete it."
 
 [[check]]
-name = "integrity/stale-paths"
+name = "docs/stale-paths"
 title = "Stale paths"
 example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
 runs = "once"

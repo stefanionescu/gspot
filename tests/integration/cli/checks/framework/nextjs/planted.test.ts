@@ -38,13 +38,13 @@ plantedCases(
     },
     [
         {
-            check: 'integrity/route-segments',
+            check: 'nextjs/route-segments',
             files: { 'app/route.ts': ROUTE },
             expected: { file: 'app/route.ts', rule: 'route-segment', line: 1 },
             corrected: { files: { 'app/api/route.ts': ROUTE } },
         },
         {
-            check: 'integrity/next-config',
+            check: 'nextjs/config',
             files: {
                 'next.config.mjs':
                     '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
@@ -52,7 +52,7 @@ plantedCases(
             expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
         },
         {
-            check: 'integrity/dependency-alignment',
+            check: 'nextjs/version-pairs',
             files: { 'package.json': MANIFEST.replace('"react-dom": "19.1.1"', '"react-dom": "18.3.1"') },
             expected: { file: 'package.json', rule: 'version-pair', line: 1 },
         },

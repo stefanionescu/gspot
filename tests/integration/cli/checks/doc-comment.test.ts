@@ -15,7 +15,7 @@ test.each(['colon', 'dash'])(
             'gspot.toml': policyOf(['bash'], `[tools.bash]\ndoc_style = "${style}"\n`, 'all'),
             'show.sh': summary + '# Returns:\n# Arguments:\n' + body,
         });
-        const options = runOptions({ only: ['structure/doc-comment'], isDryRun: true });
+        const options = runOptions({ only: ['bash/doc-comments'], isDryRun: true });
         const failed = await executeRun(await openSession(sandbox.path), options);
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
