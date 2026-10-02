@@ -6,12 +6,12 @@ import { applyFixers } from '#cli/execution/fixers.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { checkExecution } from '#cli/execution/engines.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { failureOf, checkExecution } from '#cli/execution/engines.ts';
 import { DOCKER, RAN_STATUSES, HISTORY_CHECKS, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 
 import type {
@@ -64,7 +64,12 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
     };
     const early = unrunnable(session, planned, base);
     if (early) return early;
-    return await run(session, planned, staged);
+    // A check that throws past its own handling errors alone, so the other results of the run survive.
+    try {
+        return await run(session, planned, staged);
+    } catch (error) {
+        return { ...base, ...failureOf(planned.check, error) };
+    }
 }
 
 // Adds the findings each ignore entry matched to the run's tally.
