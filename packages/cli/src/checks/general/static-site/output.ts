@@ -34,9 +34,9 @@ function pageOf(url: string): string[] {
  */
 export async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireSiteBuild(input);
-    const skipped = ((input.view.tool('linkinator')['exclude'] as { pattern?: string }[] | undefined) ?? []).flatMap(
-        (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
-    );
+    const skipped = (
+        (input.view.tool('linkinator')['exclude_urls'] as { pattern?: string }[] | undefined) ?? []
+    ).flatMap((entry) => (entry.pattern === undefined ? [] : [entry.pattern]));
     const skips = [
         // Linkinator serves the output on the loopback address, so an internal run skips every other host.
         ...(isExternal ? [] : [String.raw`^https?://(?!localhost|127\.0\.0\.1)`]),

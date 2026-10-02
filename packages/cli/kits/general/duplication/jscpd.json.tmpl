@@ -5,5 +5,5 @@
     "reporters": ["console"],
     "absolute": true,
     "gitignore": true,
-    "ignore": <%= json(["**/.gspot/**", "**/*.md", "**/*.mdx", ...(settings['tools.jscpd.ignore'] ?? []).flatMap((entry) => entry.paths ?? [])], 0) %>
+    "ignore": <%= json(["**/.gspot/**", "**/*.md", "**/*.mdx", ...(settings['tools.jscpd.exclude'] ?? []).flatMap((entry) => entry.paths ?? [])], 0) %>
 }

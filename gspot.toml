@@ -121,7 +121,7 @@ reason = "The guides explicitly introduce these downloaded binaries, consumer pr
 
 [tools.lychee]
 
-[[tools.lychee.exclude_paths]]
+[[tools.lychee.exclude]]
 paths = ["docs/src/content/docs/**"]
 reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
 [tools.typos]

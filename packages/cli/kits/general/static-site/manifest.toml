@@ -101,7 +101,7 @@ runs = "scope"
 requires = "network"
 summary = "Follows every link of the built site, the ones that leave it included."
 why = "Other sites move their pages, and a link nobody rechecks rots."
-help = "Update the link. Skip a host that refuses crawlers under tools.linkinator.exclude with a reason."
+help = "Update the link. Skip a host that refuses crawlers under tools.linkinator.exclude_urls with a reason."
 
 [[check]]
 name = "static-site/size"
@@ -211,7 +211,7 @@ default = []
 summary = "Class names a script adds at run time: the names and the reason."
 
 [[setting]]
-name = "tools.linkinator.exclude"
+name = "tools.linkinator.exclude_urls"
 type = "list"
 direction = "loosening"
 default = []

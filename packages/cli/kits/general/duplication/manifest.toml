@@ -30,7 +30,7 @@ level = "all"
 stage = "push"
 runs = "scope"
 tool = "jscpd"
-exclude_setting = "tools.jscpd.ignore"
+exclude_setting = "tools.jscpd.exclude"
 summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
 why = "A copied block is fixed in one place and stays broken in the other."
 help = "Move the shared block into one function both callers use, or raise limits.duplication.percent with a reason."
@@ -57,7 +57,7 @@ default = 4
 summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
 
 [[setting]]
-name = "tools.jscpd.ignore"
+name = "tools.jscpd.exclude"
 type = "list"
 direction = "loosening"
 default = []
