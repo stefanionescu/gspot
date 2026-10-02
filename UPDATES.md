@@ -18,12 +18,13 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 2, 2026
 
-- `main` is at `57e8edb3`. Stages 1 to 21 are merged as pull requests #2 to #8 and #10 to #17. Stage 7 also deleted
+- `main` is at `c7d347e9`. Stages 1 to 23 are merged as pull requests #2 to #8 and #10 to #18. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
-  own. Stages 15 to 21 were pull request #17. Stages 22 and 23 are pull request #18, branch `refactor/test-tiers`.
-- The next stage to start is stage 24.
+  own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
+- Stage 24 is pull request #19, branch `refactor/acceptance-tiers`.
+- The next stage to start is stage 25.
 
 ### Stages
 
@@ -52,9 +53,9 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | merged, #17      |
 | 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | merged, #17      |
 | 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | merged, #17      |
-| 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | pull request #18 |
-| 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | pull request #18 |
-| 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | not started      |
+| 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | merged, #18      |
+| 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | merged, #18      |
+| 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | pull request #19 |
 | 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | not started      |
 | 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | not started      |
 | 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | not started      |
@@ -180,28 +181,13 @@ The owner and the work settled these while implementing:
 - Stage 9 cut the D.3 rows that delete, trim, or merge within the tools tier. These D.3 rows wait:
     - stage 23: the rewrites of `tools/flags` and `parse-output/actionlint`, and one helper for the emit-and-write block
       the tools tests repeat.
-    - stage 24: the cases that move to the CLI tier: `checks/site-output`, `generation/toml`, the empty-scope case in
-      `generation/javascript`, and the ESLint and Stylelint cases in `execution/fixers`.
     - stage 25: the shared Swift helpers in `swift-build`.
 - Stage 10 cut the D.4 command and package rows that delete, trim, or merge within acceptance. Stages 2 to 6 had
   already deleted the cache, performance, uninstall, and report-storage files.
 - A weekly `pins` workflow runs `repo:pins` (`packages/cli/scripts/pins.ts`) in place of the pins test.
-- These D.4 command rows wait for stage 24:
-    - every "move to the CLI tier" row, `checks/declared` into the declared-check parse test, the split of
-      `ignored-execution`, and `nested-scopes` into the CLI scopes test.
-    - the cases of `format-overrides` and `scopes` that belong to generation, unit, or init tests, and the per-tool
-      rows of `reasons` that become one unit table.
-    - the merge of `hooks/push/revisions` into `hooks/push/refs`, with the helper for its pasted assertion blocks; the
-      merged file is over 300 lines until then.
 - `package/lifecycle` tests the package runner script and moves with it in stage 21.
 - Stage 11 cut the D.4 kit rows that delete, trim, or merge within acceptance. `svg` merged into `static-site`, and
-  `swift/security` was deleted. `swift/package` and the plist case of `xcode` run on macOS only. These kit rows wait
-  for stage 24:
-    - the files with one install that become CLI-tier tests: `react`, `bash/checks`, `libraries`, `naming`,
-      `platforms`, `structure`, `vite`, and the ESLint and project cases of `typescript`.
-    - the merges of `component-files` into `components`, of the Next.js files, and of `nginx`, which is over the
-      function limit until its cases move.
-    - the docstring and structure cases of `python`, and the cases of `xctest`.
+  `swift/security` was deleted. `swift/package` and the plist case of `xcode` run on macOS only.
 - Stage 12 deleted the checks of 5.3 and the plugin rules of 5.4, with their tests, and these other parts of 5.7:
     - No other entry set `reported_by`, so the field is deleted with the four entries that only named another check.
     - The fastapi kit has no check of its own now. Manifest validation accepts a config that another kit reads through
@@ -267,6 +253,31 @@ The owner and the work settled these while implementing:
     - Left for stage 25: the local manifest of `shared-settings`, the source copy list of `platform/assets`, the
       repeated snapshot case of `xcode-project`, the spawn blocks of `squawk`, and the shared Swift helpers of
       `swift-build`.
+- Stage 24 moved the acceptance cases of D.3 and D.4 to faster tiers and deleted the Windows quarantine list:
+    - The command journeys with no tool run in-process in `integration/cli/commands`, and the init tests sit in one
+      `init` folder. `set` runs `apply`, which resolves the tool lockfile, so the in-process cases edit the policy or
+      read a preview where the acceptance test installed.
+    - The engine rows of the kits run in-process through planted tables with `installs: false`. Bash syntax and the
+      TypeScript projects run in the tools tier and write their configurations in-process, because `init` and `apply`
+      need the plugin registry that only acceptance serves.
+    - The rows that read ESLint configuration lint against the generated configuration in `generation`: TypeScript,
+      Vite entries, React and React Native, the component Testing Library rules, and the format overrides.
+    - Next.js is one install, Vue and Svelte are one install each, and React keeps one case per kit. The pre-push files
+      merged with one helper for the untouched working tree, and the two `nginx -t` cases are one.
+    - Running the TypeScript rules in one process found that the barrel export rule of the plugin parsed without a
+      root folder and threw when two configurations were loaded.
+    - The Windows runs found these product bugs, all fixed:
+        - The executable bit came from the file system, which has none there, instead of the Git index.
+        - An npm tool behind a `.bin` shim file lost its package version: `astro check`, `purgecss`, the license
+          checker, and the npm Taplo.
+        - The attributes block kept LF only for `.gspot`, so a clone checked out the other generated files with CRLF.
+        - Scratch copies kept 8.3 short names, which the paths Jest reports did not match.
+        - Engines read tool output with CRLF, svelte-check paths kept backslashes, and absolute tool paths with a
+          lowercase drive letter stayed absolute.
+    - macOS refuses a signal to an exited process group as not permitted, which a run reported as a tool error. That
+      refusal now counts as a group with nothing left.
+    - The test Git helper turns off checkout line-ending conversion, planted executables get their index mode on
+      Windows, and a planted install may run to its own time limit.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
@@ -291,13 +302,9 @@ The owner and the work settled these while implementing:
     - eslint-plugin-boundaries 7 deprecates the `mode` option, the `element-types` rule, its `rules` option, and string
       selectors, which the generated configuration uses, so it warns on every run. Its element patterns match folders
       only, so the move needs a file descriptor for `main.ts`.
-- The stdin case of `acceptance/source/cli/cancellation` writes its ready marker before the SIGTERM handler is
-  attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
   request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
-- The quarantine list: 51 acceptance files skip on Windows (`WINDOWS_PENDING` in `scripts/acceptance.ts`) until
-  stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journey runs in
-  CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
+- The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
 
