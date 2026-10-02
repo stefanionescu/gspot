@@ -1,4 +1,6 @@
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -7,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS, readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each([PACKAGE_PROJECTS[0]])(
@@ -64,4 +66,30 @@ test('native wrapper download failure preserves the lock and publishes no partia
     } finally {
         initialize.mockRestore();
     }
+}, 120_000);
+
+test('a reinstall the registry answers with 404 keeps the working tools and leaves no scratch folder', async () => {
+    await using fixture = await createPackageProject('npm', 'package.json', 'mise');
+    const { root, registry } = fixture;
+    const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
+    await writeOutputs(await openSession(root));
+    await asOwner(root, (owner) => installPackageProject(root, owner, tools));
+    const prettier = join(root, '.gspot/node_modules/prettier/bin/prettier.cjs');
+    const { lockPath, lock } = readPackageInputs(root, 'npm');
+    // The changed pin names a tarball the registry does not have, under an integrity no cache holds.
+    const missing = createHash('sha512').update('missing tarball').digest('base64');
+    const changed = lock
+        .toString('utf8')
+        .replace(`${registry.url}/prettier.tgz`, `${registry.url}/prettier-missing.tgz`)
+        .replace(/"integrity": "sha512-[^"]+"/u, `"integrity": "sha512-${missing}"`);
+    chmodSync(lockPath, 0o644);
+    writeFileSync(lockPath, changed);
+    chmodSync(lockPath, 0o444);
+    const before = readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-install-'));
+    expect(await rejection(asOwner(root, (owner) => installPackageProject(root, owner, tools)))).toContain(
+        'immutable installation failed',
+    );
+    expect(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-install-'))).toStrictEqual(before);
+    const version = await spawn.run([process.execPath, prettier, '--version'], { cwd: root });
+    expect(version.stdout.trim()).toBe('3.8.1');
 }, 120_000);
