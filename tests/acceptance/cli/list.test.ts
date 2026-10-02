@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 
 test('list shows selected policy states, detected kits, and setting values without writing', async () => {
     await using directory = await testdir();
@@ -16,7 +16,7 @@ test('list shows selected policy states, detected kits, and setting values witho
         'entry.sh': 'echo example\n',
         'query.sql': 'SELECT 1;\n',
     });
-    const listed = await run(directory.path, ['list', '--json']);
+    const listed = await spawnGspot(directory.path, ['list', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as {
         installed: { name: string; checks: { name: string; scope: string; state: string }[] }[];
@@ -31,13 +31,13 @@ test('list shows selected policy states, detected kits, and setting values witho
     expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'waits for tools.next.build_in_gate' });
     expect(result.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
     expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
-    const settings = await run(directory.path, ['list', 'settings', '--json']);
+    const settings = await spawnGspot(directory.path, ['list', 'settings', '--json']);
     expect(settings.code, settings.stdout + settings.stderr).toBe(0);
     const rows = (JSON.parse(settings.stdout) as { settings: { key: string; value: unknown }[] }).settings;
     expect(rows.find((row) => row.key === 'level')?.value).toBe('recommended');
-    const invalid = await run(directory.path, ['list', 'unknown']);
+    const invalid = await spawnGspot(directory.path, ['list', 'unknown']);
     expect(invalid.code).toBe(2);
-    const obsolete = await run(directory.path, ['doctor', '--settings']);
+    const obsolete = await spawnGspot(directory.path, ['doctor', '--settings']);
     expect(obsolete.code).toBe(2);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);

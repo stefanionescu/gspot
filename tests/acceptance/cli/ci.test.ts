@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { git, gitOutput } from '#tests/harness/cli/git.ts';
-import { run, gspot } from '#tests/harness/cli/command.ts';
+import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -53,7 +53,7 @@ format = "lines"
         'changed.sh': 'echo valid\n',
         'legacy.sh': 'if then\n',
     });
-    const applied = await run(root, ['apply']);
+    const applied = await spawnGspot(root, ['apply']);
     if (applied.code !== 0) throw new Error(`CI fixture apply failed: ${applied.stdout}${applied.stderr}`);
     const base = commitCiSource(root, 'base');
     writeFileSync(join(root, 'changed.sh'), 'if then\n');
@@ -202,11 +202,11 @@ test.each(['gitlab', 'github'] as const)(
         const { base, pipeline, pipelinePath, workflowPath } = await prepareCiProject(repository.path, provider);
         const install = createCiInstall(executables.path);
         const policyBefore = readFileSync(join(repository.path, 'gspot.toml'));
-        const invalidSetting = await run(repository.path, ['set', 'ci.run', 'unknown']);
+        const invalidSetting = await spawnGspot(repository.path, ['set', 'ci.run', 'unknown']);
         expect(invalidSetting.code).toBe(2);
         expect(readFileSync(join(repository.path, 'gspot.toml'))).toStrictEqual(policyBefore);
         for (const args of [['set', 'ci.run', 'all'], ['apply']]) {
-            const changed = await run(repository.path, args);
+            const changed = await spawnGspot(repository.path, args);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         }
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
@@ -266,7 +266,7 @@ test.each([
         await createFileTree(repository.path, { [path]: content });
         expect(git(repository.path, ['init', '-q']).code).toBe(0);
         expect(git(repository.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
-        const result = await run(repository.path, [
+        const result = await spawnGspot(repository.path, [
             'init',
             '--dry-run',
             '--json',

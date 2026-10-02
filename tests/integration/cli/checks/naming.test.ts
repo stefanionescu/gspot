@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const SCOPE_POLICY = `kits = ["naming", "bash"]
@@ -39,7 +39,7 @@ test('external property allowances retain adjacent local signature findings thro
         'source.ts': source,
     });
     const command = ['check', '--json', '--only', 'naming/identifiers'];
-    const failed = await run(sandbox.path, command);
+    const failed = await runGspot(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const report = JSON.parse(failed.stdout) as RunReport;
     expect(
@@ -54,7 +54,7 @@ test('external property allowances retain adjacent local signature findings thro
         join(sandbox.path, 'source.ts'),
         source.replace('user_name', 'userName').replace('USER_COUNT', 'userCount'),
     );
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'source.ts')).text()).toContain('external_key: string');
 });
@@ -69,14 +69,14 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
         'queries/select_users.sql': 'SELECT id FROM users;\n',
     });
     const command = ['check', '--only', 'naming/paths', '--json'];
-    const refused = await run(sandbox.path, command);
+    const refused = await runGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
     expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: invalid, line: 1, column: 1, rule: 'case' },
     ]);
     renameSync(join(sandbox.path, invalid), join(sandbox.path, valid));
-    const accepted = await run(sandbox.path, command);
+    const accepted = await runGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/paths', status: 'ok', findings: [] },
@@ -92,16 +92,16 @@ test('naming policy validates inherited and scoped declarations against the comp
         'worker/source.py': 'remote_record = 1\n',
     });
     const command = ['check', '--only', 'naming/policy-schema', '--json'];
-    const accepted = await run(sandbox.path, command);
+    const accepted = await runGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     const complete = JSON.parse(accepted.stdout) as RunReport;
     expect(complete.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
         { check: 'naming/policy-schema', scope: '', status: 'ok' },
     ]);
-    const narrowed = await run(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy-schema', '--json']);
+    const narrowed = await runGspot(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy-schema', '--json']);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'gspot.toml'), MISMATCHED_POLICY);
-    const refused = await run(sandbox.path, command);
+    const refused = await runGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
     expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
@@ -113,18 +113,18 @@ test('naming policy validates inherited and scoped declarations against the comp
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(MISMATCHED_POLICY);
     await Bun.write(join(sandbox.path, 'gspot.toml'), SCOPE_POLICY);
     await Bun.write(join(sandbox.path, 'web/source.js'), 'export const localRecord = 1;\n');
-    const unused = await run(sandbox.path, command);
+    const unused = await runGspot(sandbox.path, command);
     expect(unused.code, unused.stdout + unused.stderr).toBe(1);
     expect((JSON.parse(unused.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toHaveLength(2);
     await Bun.write(join(sandbox.path, 'web/source.js'), 'export const remoteRecord = 1;\n');
     renameSync(join(sandbox.path, 'web/source.js'), join(sandbox.path, 'web/renamed.js'));
-    const unmatched = await run(sandbox.path, command);
+    const unmatched = await runGspot(sandbox.path, command);
     expect(unmatched.code, unmatched.stdout + unmatched.stderr).toBe(1);
     expect((JSON.parse(unmatched.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'gspot.toml', message: 'A [[naming.rules]] entry matches no file: web/source.js.' },
     ]);
     renameSync(join(sandbox.path, 'web/renamed.js'), join(sandbox.path, 'web/source.js'));
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/policy-schema', status: 'ok', findings: [] },
@@ -145,7 +145,7 @@ test.each(['constructor', 'toString', '__proto__'])(
             'source.ts': 'export const bad_name = 1;\n',
         });
         const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
-        const failed = await run(sandbox.path, command);
+        const failed = await runGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail', 'fail']);
@@ -154,13 +154,13 @@ test.each(['constructor', 'toString', '__proto__'])(
             join(sandbox.path, 'gspot.toml'),
             policyOf(['typescript', 'naming'], '[[naming.rules]]\npaths = ["source.ts"]\ncase = ["camel"]\n', 'all'),
         );
-        const neighbor = await run(sandbox.path, command);
+        const neighbor = await runGspot(sandbox.path, command);
         expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);
         expect((JSON.parse(neighbor.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
             { file: 'source.ts', line: 1, rule: 'case' },
         ]);
         await Bun.write(join(sandbox.path, 'source.ts'), 'export const goodName = 1;\n');
-        const corrected = await run(sandbox.path, command);
+        const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );

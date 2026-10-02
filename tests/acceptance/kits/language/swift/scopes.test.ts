@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/samples/swift.ts';
@@ -34,7 +34,7 @@ test(
         ];
         await installAtLevel(sandbox.path, argv, environment);
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-            const clean = await run(sandbox.path, ['check', '--only', id], environment);
+            const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
         const outcome = await runPlanted(
@@ -57,7 +57,7 @@ test(
             join(sandbox.path, 'ios/Sources/App/Cast.swift'),
             CLEAN_SWIFT.replace('greeting', 'correctedGreeting'),
         );
-        const corrected = await run(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json'], environment);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'ok', findings: [] },

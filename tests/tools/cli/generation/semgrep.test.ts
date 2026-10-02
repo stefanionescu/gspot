@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { installSemgrep } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -30,7 +30,7 @@ if (toolShipsHere('semgrep'))
         });
         await installSemgrep(sandbox.path);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const broken = await run(sandbox.path, command);
+        const broken = await spawnGspot(sandbox.path, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findingsByScope = (JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ scope, findings }) =>
             findings.map((finding) => ({ scope, finding })),
@@ -56,21 +56,21 @@ if (toolShipsHere('semgrep'))
         for (const path of ['app/source.js', 'app/child/source.js'])
             await Bun.write(join(sandbox.path, path), 'res.json({ message: "Accepted" });\n');
         await Bun.write(join(sandbox.path, 'sibling/ignored.js'), 'JSON.parse(input);\n');
-        const corrected = await run(sandbox.path, command);
+        const corrected = await spawnGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'source.js')).text()).toBe(source);
         expect(await Bun.file(join(sandbox.path, 'sibling/source.js')).text()).toBe(source);
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
         const invalidRule = join(sandbox.path, '.gspot/config/app/semgrep/broken.yml');
         await Bun.write(invalidRule, 'rules: [');
-        const invalid = await run(sandbox.path, command);
+        const invalid = await spawnGspot(sandbox.path, command);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect((JSON.parse(invalid.stdout) as RunReport).checks.find((check) => check.scope === 'app')?.status).toBe(
             'error',
         );
         expect(await Bun.file(invalidRule).text()).toBe('rules: [');
         await Bun.file(invalidRule).delete();
-        const recovered = await run(sandbox.path, command);
+        const recovered = await spawnGspot(sandbox.path, command);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
     }, 120_000);
 
@@ -89,7 +89,7 @@ if (toolShipsHere('semgrep'))
         });
         await installSemgrep(root);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const recommended = await run(root, command);
+        const recommended = await spawnGspot(root, command);
         expect(recommended.code, recommended.stdout + recommended.stderr).toBe(1);
         expect(
             (JSON.parse(recommended.stdout) as RunReport).checks
@@ -106,7 +106,7 @@ if (toolShipsHere('semgrep'))
             packageClient: session.packageClient,
         }).files.filter(({ path }) => path.includes('/semgrep/')))
             await Bun.write(join(root, output.path), output.content);
-        const all = await run(root, command);
+        const all = await spawnGspot(root, command);
         expect(all.code, all.stdout + all.stderr).toBe(1);
         const findings = (JSON.parse(all.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
@@ -120,6 +120,6 @@ if (toolShipsHere('semgrep'))
         expect(await Bun.file(join(root, 'script.sh')).text()).toBe(script);
         await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
         await Bun.write(join(root, 'Value.swift'), 'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\n');
-        const clean = await run(root, command);
+        const clean = await spawnGspot(root, command);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     }, 120_000);

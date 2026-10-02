@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -48,7 +48,7 @@ const ESLINT_CHECK = ['check', '--only', 'javascript/eslint', '--json'];
 const ENTRY_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'];
 
 async function trivialFiles(root: string): Promise<string[]> {
-    const outcome = await run(root, ESLINT_CHECK);
+    const outcome = await spawnGspot(root, ESLINT_CHECK);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
     const report = JSON.parse(outcome.stdout) as RunReport;
     expect(report.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
@@ -79,7 +79,7 @@ test(
         });
         expect(build.code, build.stdout + build.stderr).toBe(0);
         commitAll(sandbox.path);
-        const initial = await run(sandbox.path, ['apply']);
+        const initial = await spawnGspot(sandbox.path, ['apply']);
         expect(initial.code, initial.stdout + initial.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
         expect(await trivialFiles(sandbox.path)).toStrictEqual(ENTRY_FILES);
@@ -88,7 +88,7 @@ test(
             VITE_POLICY.replaceAll('entry = []', 'entry = ["src/*.js", "!src/task.js"]'),
         ]) {
             writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-            const applied = await run(sandbox.path, ['apply']);
+            const applied = await spawnGspot(sandbox.path, ['apply']);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             expect(await trivialFiles(sandbox.path)).toStrictEqual(ENTRY_FILES);
         }
@@ -106,9 +106,9 @@ test(
                     )
                     .replaceAll('entry = []', 'entry = ["src/main.js"]'),
             );
-            const configured = await run(sandbox.path, ['apply']);
+            const configured = await spawnGspot(sandbox.path, ['apply']);
             expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-            const checked = await run(sandbox.path, [...ESLINT_CHECK, '--', 'src/main.js']);
+            const checked = await spawnGspot(sandbox.path, [...ESLINT_CHECK, '--', 'src/main.js']);
             const report = JSON.parse(checked.stdout) as RunReport;
             expect(checked.code, checked.stdout + checked.stderr).toBe(1);
             expect(report.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);

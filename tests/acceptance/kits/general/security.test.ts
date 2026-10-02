@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
@@ -42,11 +42,11 @@ test(
         const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
         await installAtLevel(sandbox.path, SECURITY_INIT, environment);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const clean = await run(sandbox.path, command, environment);
+        const clean = await spawnGspot(sandbox.path, command, environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'src/run.ts'), EVALUATED);
         commitAll(sandbox.path);
-        const found = await run(sandbox.path, command, environment);
+        const found = await spawnGspot(sandbox.path, command, environment);
         // Semgrep ships no Windows build, so the check is skipped there and the run passes.
         const isWindows = process.platform === 'win32';
         const evaluated: Finding = containing({ rule: 'node-no-eval', file: 'src/run.ts', line: 3 });
@@ -64,7 +64,7 @@ test(
         const policy = join(sandbox.path, 'gspot.toml');
         await Bun.write(policy, `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`);
         commitAll(sandbox.path);
-        const own = await run(sandbox.path, command, environment);
+        const own = await spawnGspot(sandbox.path, command, environment);
         expect(own.code, own.stdout + own.stderr).toBe(isWindows ? 0 : 1);
         const report = JSON.parse(own.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: isWindows ? 'skipped' : 'fail' }]);
@@ -73,7 +73,7 @@ test(
         );
         await Bun.write(join(sandbox.path, 'src/run.ts'), SECURITY_CLEAN);
         await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
-        const corrected = await run(sandbox.path, command, environment);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'security/semgrep', status: isWindows ? 'skipped' : 'ok', findings: [] },

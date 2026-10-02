@@ -1,8 +1,8 @@
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
@@ -63,7 +63,11 @@ describe('the ansible configuration', () => {
                 isWindows,
             );
             expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : expectedFindings);
-            const corrected = await run(sandbox.path, ['check', '--only', 'ansible/lint', '--json'], environment);
+            const corrected = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'ansible/lint', '--json'],
+                environment,
+            );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'ansible/lint', status: isWindows ? 'skipped' : 'ok', findings: [] },

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
@@ -15,7 +15,7 @@ test('the selected naming configuration rejects banned terms in declarations and
         'helper/port.js': 'export const port = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
-    const refused = await run(sandbox.path, command);
+    const refused = await spawnGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
@@ -29,7 +29,7 @@ test('the selected naming configuration rejects banned terms in declarations and
     renameSync(join(sandbox.path, 'helper.js'), join(sandbox.path, 'entry.js'));
     renameSync(join(sandbox.path, 'helper'), join(sandbox.path, 'app'));
     await Bun.write(join(sandbox.path, 'entry.js'), 'export const command = 1;\n');
-    const accepted = await run(sandbox.path, command);
+    const accepted = await spawnGspot(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/identifiers', status: 'ok', findings: [] },
@@ -43,7 +43,7 @@ test('ordinary service and generation names pass the naming checks in code and p
         'gspot.toml': policyOf(['javascript', 'naming'], '', 'all'),
         'service/generate.js': 'export function generate() { return "message"; }\nexport const service = generate();\n',
     });
-    const result = await run(sandbox.path, ['check', '--only', 'naming/identifiers', 'naming/paths', '--json']);
+    const result = await spawnGspot(sandbox.path, ['check', '--only', 'naming/identifiers', 'naming/paths', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([

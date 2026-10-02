@@ -5,11 +5,11 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { run, gspot } from '#tests/harness/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
+import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
@@ -29,7 +29,7 @@ export async function leaveOut(cwd: string, kits: string[], environment: Record<
         path,
         text.replace(list, () => kept),
     );
-    const applied = await run(cwd, ['apply'], environment);
+    const applied = await spawnGspot(cwd, ['apply'], environment);
     if (applied.code !== 0)
         throw new Error(`Sandbox apply failed with status ${String(applied.code)}: ${applied.stderr}${applied.stdout}`);
 }
@@ -68,7 +68,7 @@ export async function install(
     environment: Record<string, string> = {},
     without: string[] = [],
 ): Promise<void> {
-    const outcome = await run(cwd, argv, environment);
+    const outcome = await spawnGspot(cwd, argv, environment);
     if (outcome.code !== 0)
         throw new Error(`Sandbox init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`);
     if (await Bun.file(join(cwd, 'gspot.toml')).exists()) {
@@ -109,7 +109,7 @@ export async function installAtLevel(
     without: string[] = [],
 ): Promise<void> {
     await install(cwd, argv, environment, without);
-    const selected = await run(cwd, ['set', 'level', level], environment);
+    const selected = await spawnGspot(cwd, ['set', 'level', level], environment);
     if (selected.code !== 0)
         throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
 }

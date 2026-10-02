@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -75,7 +75,7 @@ for (const shape of SHAPES)
                 dependencies: shape.dependencies,
                 files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, ...shape.files },
             });
-            const clean = await run(sandbox.path, ['check', '--only', shape.check, '--json'], environment);
+            const clean = await spawnGspot(sandbox.path, ['check', '--only', shape.check, '--json'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', files: 1, findings: [] },
@@ -101,14 +101,22 @@ for (const shape of SHAPES)
                 }),
             );
             await Bun.write(join(sandbox.path, shape.planted), shape.check === 'vue/eslint' ? VUE_CLEAN : SVELTE_CLEAN);
-            const correctedCheck = await run(sandbox.path, ['check', '--only', shape.check, '--json'], environment);
+            const correctedCheck = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', shape.check, '--json'],
+                environment,
+            );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', findings: [] },
             ]);
-            const code = await run(sandbox.path, ['check', '--only', 'typescript/eslint'], environment);
+            const code = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint'], environment);
             expect(code.code, code.stdout + code.stderr).toBe(0);
-            const required = await run(sandbox.path, ['check', '--only', 'integrity/required-rules'], environment);
+            const required = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'integrity/required-rules'],
+                environment,
+            );
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,
@@ -143,7 +151,7 @@ test.each([
             },
         });
         const args = ['check', '--only', `${framework}/eslint`, '--json'];
-        const broken = await run(sandbox.path, args, environment);
+        const broken = await spawnGspot(sandbox.path, args, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = JSON.parse(broken.stdout) as RunReport;
         expect(
@@ -170,7 +178,7 @@ test.each([
             join(sandbox.path, filename),
             `<script${markup.setup}${language === 'typescript' ? ' lang="ts"' : ''}>\nconst answer = 42;\n</script>\n${markup.body}`,
         );
-        const corrected = await run(sandbox.path, args, environment);
+        const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: `${framework}/eslint`, status: 'ok', findings: [] },

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
@@ -18,17 +18,17 @@ test('generated and vendored settings classify directories and removal returns f
         ['generated', 'output types'],
         ['vendored', 'upstream'],
     ]) {
-        const changed = await run(directory.path, ['set', kind!, path!]);
+        const changed = await spawnGspot(directory.path, ['set', kind!, path!]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     }
-    const before = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const before = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 1, findings: [] },
     ]);
-    const removed = await run(directory.path, ['set', 'generated', 'output types', '--remove']);
+    const removed = await spawnGspot(directory.path, ['set', 'generated', 'output types', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const after = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const after = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'fail' });
@@ -38,7 +38,7 @@ test('generated and vendored settings classify directories and removal returns f
         'output types/broken.sh',
     ]);
     writeFileSync(join(directory.path, 'output types/broken.sh'), 'echo corrected\n');
-    const corrected = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const corrected = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 2, findings: [] },
@@ -53,10 +53,10 @@ test('declarations retain producer metadata and reasons while removing individua
         'b.sh': 'if then\n',
     });
     const original = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
-    const refused = await run(directory.path, ['set', 'generated', 'a.sh']);
+    const refused = await spawnGspot(directory.path, ['set', 'generated', 'a.sh']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(original);
-    const accepted = await run(directory.path, [
+    const accepted = await spawnGspot(directory.path, [
         'set',
         'generated',
         '{"paths":["a.sh","b.sh"],"produced_by":"bun generate.ts"}',
@@ -64,7 +64,7 @@ test('declarations retain producer metadata and reasons while removing individua
         'Build output retained for consumers',
     ]);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    const removed = await run(directory.path, ['set', 'generated', 'a.sh', '--remove']);
+    const removed = await spawnGspot(directory.path, ['set', 'generated', 'a.sh', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(
         (Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')) as Record<string, unknown>)[
@@ -82,14 +82,14 @@ test('excluded directories stay out of checks until the policy removes their exc
         'entry.sh': 'echo example\n',
         'legacy scripts/broken.sh': 'if then\n',
     });
-    const before = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const before = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 1, findings: [] },
     ]);
-    const changed = await run(directory.path, ['set', 'exclude', 'legacy scripts', '--remove']);
+    const changed = await spawnGspot(directory.path, ['set', 'exclude', 'legacy scripts', '--remove']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const after = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const after = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'fail' });
@@ -99,7 +99,7 @@ test('excluded directories stay out of checks until the policy removes their exc
         'legacy scripts/broken.sh',
     ]);
     writeFileSync(join(directory.path, 'legacy scripts/broken.sh'), 'echo corrected\n');
-    const corrected = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const corrected = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 2, findings: [] },

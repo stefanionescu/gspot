@@ -2,11 +2,12 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-test('file and folder arguments intersect check lists and respect -C', async () => {
+// A sandbox with three commit checks that report every file they receive.
+async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const command = [
         process.execPath,
         '-e',
@@ -20,14 +21,19 @@ test('file and folder arguments intersect check lists and respect -C', async () 
         stage: 'commit',
         output: { format: 'lines' },
     }));
-    await using sandbox = await testdir();
+    const sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({ kits: [], check: entries }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
     });
-    const selected = await run(sandbox.path, [
+    return sandbox;
+}
+
+test('file and folder arguments intersect check lists, and --skip leaves the other checks', async () => {
+    await using sandbox = await selectionSandbox();
+    const selected = await spawnGspot(sandbox.path, [
         'check',
         'src/selected.ts',
         'docs',
@@ -43,7 +49,7 @@ test('file and folder arguments intersect check lists and respect -C', async () 
         expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
-    const skipped = await run(sandbox.path, [
+    const skipped = await spawnGspot(sandbox.path, [
         'check',
         'src/selected.ts',
         '--skip',
@@ -58,7 +64,19 @@ test('file and folder arguments intersect check lists and respect -C', async () 
         ['sandbox/two', 'skipped'],
         ['sandbox/three', 'fail'],
     ]);
-    const relative = await run(sandbox.path, ['-C', 'src', 'check', 'selected.ts', '--only', 'sandbox/one', '--json']);
+});
+
+test('-C resolves file arguments from the folder it names', async () => {
+    await using sandbox = await selectionSandbox();
+    const relative = await spawnGspot(sandbox.path, [
+        '-C',
+        'src',
+        'check',
+        'selected.ts',
+        '--only',
+        'sandbox/one',
+        '--json',
+    ]);
     expect(relative.code, relative.stdout + relative.stderr).toBe(1);
     const relativeReport = JSON.parse(relative.stdout) as RunReport;
     expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
@@ -81,7 +99,7 @@ stage = "${name}"
         'gspot.toml': policyOf([], definitions.join('\n')),
         'source.txt': 'input',
     });
-    const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);
+    const checked = await spawnGspot(sandbox.path, ['check', '--stage', stage, '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'ok']]);
@@ -102,13 +120,13 @@ kits = ["javascript", "naming"]
         'api/port.js': 'export const helperCommand = 1;\n',
         'web/port.js': 'export const helperCommand = 2;\n',
     });
-    const selected = await run(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
+    const selected = await spawnGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
     expect(report.checks.map((check) => check.scope)).toStrictEqual(['api']);
     const command = report.checks[0]?.reproduce;
     expect(command).toBeDefined();
-    const repeated = await run(sandbox.path, [...command!.split(' ').slice(1), '--json']);
+    const repeated = await spawnGspot(sandbox.path, [...command!.split(' ').slice(1), '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
     expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(

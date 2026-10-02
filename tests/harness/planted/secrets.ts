@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
@@ -32,7 +32,7 @@ export async function prepareSecretHistory(
         'gspot.toml': policyOf(['secrets'], '[guides]\ninstall = false\n'),
     });
     gitOutput(root, ['init', '-q']);
-    const applied = await run(root, ['apply']);
+    const applied = await spawnGspot(root, ['apply']);
     if (applied.code !== 0) throw new Error(`Secret fixture apply failed: ${applied.stdout}${applied.stderr}`);
     gitOutput(root, ['add', '-A']);
     gitOutput(root, ['commit', '-qm', 'chore: initialize']);

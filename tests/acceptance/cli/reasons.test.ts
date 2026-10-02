@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
@@ -13,17 +13,17 @@ test.each([false, true])(
         await using directory = await testdir();
         const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
-        const ignored = await run(directory.path, ['ignore', 'bash/syntax']);
+        const ignored = await spawnGspot(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
-        const loosened = await run(directory.path, ['set', 'limits.file_lines', '400']);
+        const loosened = await spawnGspot(directory.path, ['set', 'limits.file_lines', '400']);
         expect(loosened.code, loosened.stdout + loosened.stderr).toBe(required ? 2 : 0);
         // A refused write leaves the policy as it was; the ignore then needs its reason.
         expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
         const explained = required
-            ? await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'Reviewed independently.'])
+            ? await spawnGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'Reviewed independently.'])
             : ignored;
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+        const checked = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout) as { ignores: { check: string; reason?: string; matched: number }[] };
         expect(report.ignores[0]?.check).toBe('bash/syntax');
@@ -41,11 +41,11 @@ test.each([false, true])(
             const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
             const entry = '{"name":"helper_command"}';
-            const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
+            const allowed = await spawnGspot(directory.path, ['set', 'naming.allowed', entry]);
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
             expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
             const explained = required
-                ? await run(directory.path, [
+                ? await spawnGspot(directory.path, [
                       'set',
                       'naming.allowed',
                       entry,
@@ -55,11 +55,11 @@ test.each([false, true])(
                 : allowed;
             expect(explained.code, explained.stdout + explained.stderr).toBe(0);
             const command = ['check', '--only', 'naming/identifiers', '--json'];
-            const checked = await run(directory.path, command);
+            const checked = await spawnGspot(directory.path, command);
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            const removed = await run(directory.path, ['set', 'naming.allowed', 'helper_command', '--remove']);
+            const removed = await spawnGspot(directory.path, ['set', 'naming.allowed', 'helper_command', '--remove']);
             expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-            const restored = await run(directory.path, command);
+            const restored = await spawnGspot(directory.path, command);
             expect(restored.code, restored.stdout + restored.stderr).toBe(1);
             const report = JSON.parse(restored.stdout) as {
                 checks: { findings: { file: string; line: number; rule: string }[] }[];
@@ -79,7 +79,7 @@ test.each([false, true])('inline suppression reasons follow require_reasons=%s',
         'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
     });
     const command = ['check', '--only', 'integrity/suppressions', '--json'];
-    const missing = await run(directory.path, command);
+    const missing = await spawnGspot(directory.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
     const report = JSON.parse(missing.stdout) as RunReport;
     const unexplained: Finding = containing({
@@ -90,13 +90,13 @@ test.each([false, true])('inline suppression reasons follow require_reasons=%s',
     });
     expect(report.checks[0]!.findings).toStrictEqual(required ? [unexplained] : []);
     await Bun.write(join(directory.path, 'entry.sh'), '# shellcheck disable=SC2086 # reason: N/A\necho $name\n');
-    const empty = await run(directory.path, command);
+    const empty = await spawnGspot(directory.path, command);
     expect(empty.code, empty.stdout + empty.stderr).toBe(required ? 1 : 0);
     await Bun.write(
         join(directory.path, 'entry.sh'),
         '# shellcheck disable=SC2086 # reason: Intentional word splitting for this command.\necho $name\n',
     );
-    const explained = await run(directory.path, command);
+    const explained = await spawnGspot(directory.path, command);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect((JSON.parse(explained.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
 });
@@ -133,7 +133,7 @@ test.each([
             [path]: `${bare}\n${clean}\n`,
         });
         const command = ['check', '--only', 'integrity/suppressions', '--json'];
-        const failed = await run(directory.path, command);
+        const failed = await spawnGspot(directory.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks[0]!.findings).toStrictEqual([
@@ -145,7 +145,7 @@ test.each([
             }),
         ]);
         await Bun.write(join(directory.path, path), `${clean}\n`);
-        const corrected = await run(directory.path, command);
+        const corrected = await spawnGspot(directory.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
     },
@@ -159,7 +159,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--json']);
+    const result = await spawnGspot(directory.path, ['check', '--only', 'integrity/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]!.findings).toStrictEqual(
@@ -179,14 +179,14 @@ test.each([false, true])(
             'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
-        const ignored = await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
+        const ignored = await spawnGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
-        const loosened = await run(directory.path, ['set', 'limits.file_lines', '400', '--reason', 'TBD']);
+        const loosened = await spawnGspot(directory.path, ['set', 'limits.file_lines', '400', '--reason', 'TBD']);
         expect(loosened.code, loosened.stdout + loosened.stderr).toBe(required ? 2 : 0);
         const policyPath = join(directory.path, 'gspot.toml');
         const written = readFileSync(policyPath, 'utf8');
         await Bun.write(policyPath, written + '\n[tools.shellcheck.extra]\nexternal_sources = true\n');
-        const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+        const checked = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(required ? 1 : 0);
         const findings = (
             JSON.parse(checked.stdout) as { checks: { check: string; findings: { file: string }[] }[] }
@@ -222,11 +222,13 @@ test.each([
     ].join('\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['set', key, item, ...[flag].filter((value) => value !== '')];
-    const result = await run(directory.path, args);
+    const result = await spawnGspot(directory.path, args);
     expect(result.code, result.stdout + result.stderr).toBe(code);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(code === 2);
     const explained =
-        code === 2 ? await run(directory.path, [...args, '--reason', 'Repository requirements changed.']) : result;
+        code === 2
+            ? await spawnGspot(directory.path, [...args, '--reason', 'Repository requirements changed.'])
+            : result;
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const parsed = Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8'));
     let written: unknown = parsed;

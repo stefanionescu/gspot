@@ -1,7 +1,7 @@
 // One installed repository per table, and each planted defect as an edit that is restored: the check fails with the
 // expected finding, then the corrected repository passes.
 import { testdir } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plant } from '#tests/harness/planted/preservation.ts';
@@ -85,7 +85,7 @@ export async function runPlanted(
     const restore = plant(cwd, planted);
     try {
         // A case may build a site twice, which takes minutes on a slow runner.
-        return await run(cwd, ['check', '--only', planted.check, '--json'], environment, PLANTED_TIMEOUT_MS * 4);
+        return await spawnGspot(cwd, ['check', '--only', planted.check, '--json'], environment, PLANTED_TIMEOUT_MS * 4);
     } finally {
         restore();
     }

@@ -2,8 +2,8 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
@@ -64,7 +64,7 @@ test(
         await using sandbox = await testdir();
         const root = sandbox.path;
         const environment = await prepareLicenseProject(root);
-        const baseline = await run(root, LICENSE_CHECK, environment);
+        const baseline = await spawnGspot(root, LICENSE_CHECK, environment);
         expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
         const policy = join(root, 'gspot.toml');
         const before = await Bun.file(policy).text();
@@ -79,9 +79,9 @@ test(
                     ? before
                     : `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
             );
-            const applied = await run(root, ['apply'], environment);
+            const applied = await spawnGspot(root, ['apply'], environment);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            const checked = await run(root, LICENSE_CHECK, environment);
+            const checked = await spawnGspot(root, LICENSE_CHECK, environment);
             expect(checked.code, `${license} ${String(exception)}: ${checked.stdout}`).toBe(
                 finding === undefined ? 0 : 1,
             );

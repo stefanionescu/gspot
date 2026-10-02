@@ -3,10 +3,10 @@ import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/harness/planted/cases.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
@@ -20,11 +20,11 @@ test(
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
         const flags = ['init', '--dry-run', '--no-hooks', ...INIT_REFUSALS_QUIET];
-        const result = await run(sandbox.path, flags);
+        const result = await spawnGspot(sandbox.path, flags);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --kits <ids>\./u);
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-        const json = await run(sandbox.path, [...flags, '--json']);
+        const json = await spawnGspot(sandbox.path, [...flags, '--json']);
         expect(json.code, json.stdout + json.stderr).toBe(0);
         expect(() => JSON.parse(json.stdout) as unknown).not.toThrow();
         expect(json.stdout + json.stderr).not.toContain('Selected:');
@@ -38,11 +38,11 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
-        const result = await run(sandbox.path, ['init', '--yes', '--ci', 'foo']);
+        const result = await spawnGspot(sandbox.path, ['init', '--yes', '--ci', 'foo']);
         expect(result.code).toBe(2);
         expect(result.stderr).toContain('Allowed choices are github, gitlab');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-        const invalidStage = await run(sandbox.path, ['check', '--stage', 'later']);
+        const invalidStage = await spawnGspot(sandbox.path, ['check', '--stage', 'later']);
         expect(invalidStage.code).toBe(2);
     },
     PLANTED_TIMEOUT_MS,
@@ -54,7 +54,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
-        const unknown = await run(sandbox.path, ['init', '--yes', '--kits', 'bassh', ...INIT_REFUSALS_QUIET]);
+        const unknown = await spawnGspot(sandbox.path, ['init', '--yes', '--kits', 'bassh', ...INIT_REFUSALS_QUIET]);
         expect(unknown.code).toBe(2);
         expect(unknown.stderr).toContain('Did you mean `bash`');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
@@ -69,12 +69,12 @@ test(
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
         await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-        const refused = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET]);
+        const refused = await spawnGspot(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET]);
         expect(refused.code).toBe(2);
         expect(refused.stderr).toContain('Commit or stash them');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         commitAll(sandbox.path);
-        const allowed = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], {
+        const allowed = await spawnGspot(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], {
             PATH: `${join(import.meta.dir, '../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
         });
         expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
@@ -89,7 +89,7 @@ test(
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-        await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], environment);
+        await spawnGspot(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], environment);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         expect(policy).toContain('"formatting"');
         expect(policy).toContain('"naming"');
@@ -104,7 +104,7 @@ test(
         await createFileTree(sandbox.path, { 'tools/a.sh': script, 'jobs/b.sh': script });
         commitAll(sandbox.path);
         const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...INIT_REFUSALS_QUIET];
-        const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
+        const init = await spawnGspot(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
         expect(init.code, init.stdout + init.stderr).toBe(0);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         const parsed = parsePolicyText(policy, 'gspot.toml');
@@ -133,7 +133,7 @@ test('initialization flags control integrations, and the plan names the formatte
         '--dry-run',
         '--json',
     ];
-    const preview = await run(sandbox.path, command);
+    const preview = await spawnGspot(sandbox.path, command);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = JSON.parse(preview.stdout) as { policy: string; plan: { remove: { path: string; note: string }[] } };
     const policy = parsePolicyText(plan.policy, 'gspot.toml');
@@ -160,7 +160,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const before = treeContents(sandbox.path);
-    const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...INIT_REFUSALS_QUIET]);
+    const result = await spawnGspot(sandbox.path, ['init', '--yes', '--no-hooks', ...INIT_REFUSALS_QUIET]);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain(path);
     expect(treeContents(sandbox.path)).toStrictEqual(before);

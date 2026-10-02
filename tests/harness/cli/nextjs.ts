@@ -5,12 +5,12 @@ import { randomUUID } from 'node:crypto';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
@@ -50,7 +50,7 @@ export async function installedNextProject(): Promise<{
             PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
         };
         await install(sandbox.path, NEXT_INIT, environment, ['naming', 'spelling', 'css', 'files']);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         if (selected.code !== 0)
             throw new Error(`Next.js setup failed (${String(selected.code)}): ${selected.stdout}${selected.stderr}`);
         return { sandbox, environment };

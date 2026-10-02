@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -28,10 +28,10 @@ test(
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
-        const initialized = await run(sandbox.path, initArgs(['javascript']), environment);
+        const initialized = await spawnGspot(sandbox.path, initArgs(['javascript']), environment);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const outcome = await runPlanted(
             sandbox.path,
@@ -51,7 +51,7 @@ test(
             join(sandbox.path, 'src/paused.js'),
             '// The number of orders.\n\n/** The number of orders. */\nexport const orderCount = 1;\n',
         );
-        const corrected = await run(
+        const corrected = await spawnGspot(
             sandbox.path,
             ['check', '--only', 'javascript/eslint', '--json', '--', 'src/paused.js'],
             environment,

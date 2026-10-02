@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import example from '#docs/src/components/home/example.json';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -44,7 +44,7 @@ test(
             'gspot.toml': example.policy,
         });
         commitAll(sandbox.path);
-        const applied = await run(sandbox.path, ['apply']);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
         gitOutput(sandbox.path, ['add', '-A']);
@@ -54,7 +54,7 @@ test(
             Object.fromEntries(example.agent.files.map((file) => [file.path, file.content])),
         );
         gitOutput(sandbox.path, ['add', '-A']);
-        const rejected = await run(sandbox.path, ['check', '--staged', '--json']);
+        const rejected = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(recorded(findings)).toStrictEqual(recorded(example.findings));
@@ -64,7 +64,7 @@ test(
             Object.fromEntries(example.fix.files.map((file) => [file.path, file.content])),
         );
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const passed = await run(sandbox.path, ['check', '--staged', '--json']);
+        const passed = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     },
     INSTALL_TIMEOUT_MS,

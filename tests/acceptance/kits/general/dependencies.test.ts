@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import type { PlantedInput } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
@@ -86,7 +86,7 @@ plantedCases(
                 const outcome = await runPlanted(root, invalid, environment);
                 expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
                 expect(outcome.stdout + outcome.stderr).toContain(invalid.expected);
-                const corrected = await run(root, ['check', '--only', invalid.check, '--json'], environment);
+                const corrected = await spawnGspot(root, ['check', '--only', invalid.check, '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: invalid.check, status: 'ok', findings: [] },
@@ -118,7 +118,7 @@ test(
             '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
         );
         const args = ['check', '--only', 'integrity/lockfile-fresh', '--json'];
-        const stale = await run(sandbox.path, args, environment);
+        const stale = await spawnGspot(sandbox.path, args, environment);
         expect(stale.code, stale.stdout + stale.stderr).toBe(1);
         expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
@@ -140,12 +140,12 @@ test(
         });
         expect(locked.code, locked.stdout + locked.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'bun.lock')).exists()).toBe(true);
-        const corrected = await run(sandbox.path, args, environment);
+        const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
         ]);
-        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);
         expect(ids).not.toContain('dependencies/osv');
         expect(ids).not.toContain('dependencies/syncpack');

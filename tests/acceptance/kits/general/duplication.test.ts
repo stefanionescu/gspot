@@ -2,8 +2,8 @@
 import { join, delimiter } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
@@ -41,14 +41,22 @@ describe('the duplication configuration', () => {
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
             await installAtLevel(sandbox.path, DUPLICATION_INIT, environment, 'all', DUPLICATION_LEFT_OUT);
-            const clean = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--json'], environment);
+            const clean = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'duplication/jscpd', '--json'],
+                environment,
+            );
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(
                 `${sandbox.path}/scripts/second.sh`,
                 `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_second() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_second\n`,
             );
             commitAll(sandbox.path);
-            const found = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--json'], environment);
+            const found = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'duplication/jscpd', '--json'],
+                environment,
+            );
             expect(found.code, found.stdout + found.stderr).toBe(1);
             const report = JSON.parse(found.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'fail' }]);
@@ -65,7 +73,7 @@ describe('the duplication configuration', () => {
                 join(sandbox.path, 'scripts/second.sh'),
                 '#!/usr/bin/env bash\nprintf "Independent task\\n"\n',
             );
-            const correctedCheck = await run(
+            const correctedCheck = await spawnGspot(
                 sandbox.path,
                 ['check', '--only', 'duplication/jscpd', '--json'],
                 environment,

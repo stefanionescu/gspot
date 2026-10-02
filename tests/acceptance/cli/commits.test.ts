@@ -8,9 +8,9 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { run, gspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 
@@ -20,19 +20,19 @@ const COMMITS_INIT = ['init', '--yes', '--kits', 'commits', '--no-runner', '--no
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {
     const draft = join(root, 'draft.txt');
     await Bun.write(draft, 'Fixed stuff.\n');
-    const refused = await run(
+    const refused = await spawnGspot(
         root,
         ['check', '--only', 'commits/commitlint', '--stage', 'message', '--message-file', draft],
         environment,
     );
     expect(refused.code).toBe(1);
     expect(refused.stdout).toContain('commits/commitlint');
-    const accepted = await run(root, ['check', '--only', 'commits/range'], environment);
+    const accepted = await spawnGspot(root, ['check', '--only', 'commits/range'], environment);
     expect(accepted.code).toBe(0);
     await Bun.write(join(root, 'more.md'), '# more\n');
     git(root, ['add', '-A']);
     git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
-    const range = await run(root, ['check', '--only', 'commits/range'], environment);
+    const range = await spawnGspot(root, ['check', '--only', 'commits/range'], environment);
     expect(range.code).toBe(1);
     expect(range.stdout).toContain('type-empty');
 }
@@ -90,12 +90,12 @@ process.exit(child.exitCode);
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
-        const init = await run(sandbox.path, COMMITS_INIT);
+        const init = await spawnGspot(sandbox.path, COMMITS_INIT);
         expect(init.stdout).toContain('write');
         expect(init.code, init.stdout + init.stderr).toBe(0);
-        const installed = await run(sandbox.path, ['install']);
+        const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        const selected = await run(sandbox.path, ['set', 'level', 'all']);
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'notes.md'), '# notes\n');
         git(sandbox.path, ['add', '-A']);
@@ -126,7 +126,7 @@ test(
             'source.sh': 'echo base\n',
         });
         expect(git(source, ['init', '-q']).code).toBe(0);
-        const applied = await run(source, ['apply']);
+        const applied = await spawnGspot(source, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         expect(git(source, ['add', '-A']).code).toBe(0);
         expect(git(source, ['commit', '-qm', 'chore: initialize']).code).toBe(0);

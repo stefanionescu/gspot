@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -27,10 +27,10 @@ test.each(['none', 'index-only'])(
             'app/forward.ts': 'export { value } from "./value.ts";\n',
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
-        const applied = await run(sandbox.path, ['apply']);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const outcome = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = JSON.parse(outcome.stdout) as RunReport;
         const findings = report.checks
@@ -49,7 +49,7 @@ test.each(['none', 'index-only'])(
                 join(sandbox.path, path),
                 '// Values owned by this module.\n\n/** The displayed value. */\nexport const value = 1;\n',
             );
-        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'typescript/eslint', status: 'ok', findings: [] },
@@ -71,13 +71,13 @@ test(
             'src/count.ts': 'export const count: number = "wrong";\n',
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
-        const applied = await run(sandbox.path, ['apply']);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
         const args = ['check', '--only', 'typescript/tsc', 'nextjs/typecheck', '--skip', 'nextjs/typecheck'];
         // tsc comes from the installed packages, as in a project that depends on TypeScript.
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
-        const failed = await run(sandbox.path, [...args, '--json'], environment);
+        const failed = await spawnGspot(sandbox.path, [...args, '--json'], environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.find((check) => check.check === 'typescript/tsc')).toMatchObject({
@@ -86,7 +86,7 @@ test(
         });
         expect(report.skips.some((skip) => skip.check === 'nextjs/typecheck' && skip.source === 'flag')).toBe(true);
         writeFileSync(join(sandbox.path, 'src/count.ts'), 'export const count: number = 3;\n');
-        const corrected = await run(sandbox.path, [...args, '--json'], environment);
+        const corrected = await spawnGspot(sandbox.path, [...args, '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 6,
@@ -108,7 +108,7 @@ test.each([
             }),
             'app/page.tsx': 'export default function Page() { return "home"; }\n',
         });
-        const result = await run(sandbox.path, [
+        const result = await spawnGspot(sandbox.path, [
             'init',
             '--yes',
             '--dry-run',

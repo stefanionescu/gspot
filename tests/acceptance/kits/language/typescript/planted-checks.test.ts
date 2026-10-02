@@ -1,7 +1,7 @@
 // Source CLI journeys: every check of the typescript configuration reports its planted defect and accepts the correction.
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/samples/typescript.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
@@ -142,7 +142,7 @@ plantedCases(
             'every check passes on the clean repository',
             async () => {
                 const { root, environment } = planted();
-                const whole = await run(root, ['check'], environment);
+                const whole = await spawnGspot(root, ['check'], environment);
                 expect(whole.code, whole.stdout).toBe(0);
             },
             PLANTED_TIMEOUT_MS * 4,

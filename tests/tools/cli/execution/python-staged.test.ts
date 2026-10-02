@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -43,7 +43,7 @@ if (onPosix)
         gitOutput(repository.path, ['add', 'source.py']);
         writeFileSync(join(repository.path, 'source.py'), 'VALUE = 1\n');
         const command = ['check', '--only', 'python/ruff', '--json'];
-        const staged = await run(repository.path, [...command, '--staged']);
+        const staged = await spawnGspot(repository.path, [...command, '--staged']);
         expect(staged.code, staged.stdout + staged.stderr).toBe(1);
         const report = JSON.parse(staged.stdout) as RunReport;
         expect(report.checks).toMatchObject([
@@ -56,7 +56,7 @@ if (onPosix)
                 ],
             },
         ]);
-        const working = await run(repository.path, command);
+        const working = await spawnGspot(repository.path, command);
         expect(working.code, working.stdout + working.stderr).toBe(0);
         expect((JSON.parse(working.stdout) as RunReport).checks).toMatchObject([
             { check: 'python/ruff', status: 'ok' },

@@ -2,8 +2,8 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
@@ -73,7 +73,7 @@ async function expectFormatterDiscovery(root: string): Promise<void> {
 async function expectFormatterCorrection(root: string): Promise<void> {
     const args = ['check', '--only', 'formatting/prettier', '--json'];
     const files = CASES.map(({ file }) => file);
-    const before = await run(root, [...args, '--', ...files]);
+    const before = await spawnGspot(root, [...args, '--', ...files]);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     const report = JSON.parse(before.stdout) as RunReport;
     expect(
@@ -81,7 +81,7 @@ async function expectFormatterCorrection(root: string): Promise<void> {
             .flatMap(({ findings }) => findings.map(({ file }) => file))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
-    const corrected = await run(root, [...args, '--fix', '--', ...files]);
+    const corrected = await spawnGspot(root, [...args, '--fix', '--', ...files]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const { file, tabWidth, singleQuote, semi, endOfLine } of CASES) {
         const quote = singleQuote ? "'" : '"';
@@ -97,9 +97,13 @@ async function expectFormatterCorrection(root: string): Promise<void> {
             ].join(ending),
         );
     }
-    const editor = await run(root, ['check', '--only', 'formatting/editorconfig-checker', '--json', '--', ...files], {
-        PATH: toolsPath(['ec']),
-    });
+    const editor = await spawnGspot(
+        root,
+        ['check', '--only', 'formatting/editorconfig-checker', '--json', '--', ...files],
+        {
+            PATH: toolsPath(['ec']),
+        },
+    );
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }
 
@@ -117,7 +121,7 @@ test.each([
                 CASES.map(({ file }) => [file, 'const greeting="hello";if(greeting){console.log(greeting);}']),
             ),
         });
-        const applied = await run(directory.path, ['apply']);
+        const applied = await spawnGspot(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(directory.path);
         await verify(directory.path);

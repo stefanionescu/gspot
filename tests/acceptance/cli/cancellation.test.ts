@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { git, gitOutput } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -85,7 +85,7 @@ test.each(['diff', 'clone', 'cat-file'])(
         expect(started.snapshot !== undefined && existsSync(started.snapshot)).toBe(false);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+        const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
         expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
     },
@@ -177,7 +177,7 @@ await import(${JSON.stringify(CLI)});
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
-            const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+            const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
             expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
         } finally {
@@ -230,7 +230,7 @@ await import(${JSON.stringify(CLI)});
     expect(readdirSync(dependencies)).toHaveLength(4000);
     expect(readFileSync(join(dependencies, '0.js'), 'utf8')).toBe('export const value=0;\n');
     expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
-    const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+    const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
     expect(retry.code, retry.stdout + retry.stderr).toBe(0);
     expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
 }, 20_000);

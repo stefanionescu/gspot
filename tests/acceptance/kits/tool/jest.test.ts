@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -35,7 +35,7 @@ test(
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
-        const uncovered = await run(sandbox.path, command, environment);
+        const uncovered = await spawnGspot(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         const report = JSON.parse(uncovered.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'fail' }]);
@@ -43,7 +43,7 @@ test(
             containing({ rule: 'coverage-functions', message: textContaining('100% floor') }),
         );
         await Bun.write(join(sandbox.path, 'app/math.test.cjs'), corrected);
-        const passing = await run(sandbox.path, command, environment);
+        const passing = await spawnGspot(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
         expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', scope: 'app', status: 'ok', findings: [] },
@@ -72,7 +72,7 @@ test(
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
-        const uncovered = await run(sandbox.path, command, environment);
+        const uncovered = await spawnGspot(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         expect((JSON.parse(uncovered.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
             containing({ rule: 'coverage-lines' }),
@@ -83,26 +83,26 @@ test(
             }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
-        const passing = await run(sandbox.path, command, environment);
+        const passing = await spawnGspot(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
         expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', status: 'ok', findings: [] },
         ]);
         expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected.replace('toBe(6)', 'toBe(7)'));
-        const failed = await run(sandbox.path, command, environment);
+        const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
             containing({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), 'require("./missing-test-dependency.cjs");\n');
-        const unavailable = await run(sandbox.path, command, environment);
+        const unavailable = await spawnGspot(sandbox.path, command, environment);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         expect((JSON.parse(unavailable.stdout) as RunReport).checks).toStrictEqual([
             containing({ check: 'jest/coverage', status: 'error' }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
-        const recovered = await run(sandbox.path, command, environment);
+        const recovered = await spawnGspot(sandbox.path, command, environment);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
         expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', status: 'ok', findings: [] },

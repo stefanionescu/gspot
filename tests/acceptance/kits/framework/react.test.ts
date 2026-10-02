@@ -1,8 +1,8 @@
 // Planted repositories for the react and react-native configurations: each ESLint addition fires on a small component.
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { LIBRARIES_CLEAN } from '#tests/samples/components.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -139,7 +139,7 @@ function requiredRulesStay(planted: () => { root: string; environment: Record<st
         'integrity/required-rules accepts the generated configuration',
         async () => {
             const { root, environment } = planted();
-            const required = await run(root, ['check', '--only', 'integrity/required-rules'], environment);
+            const required = await spawnGspot(root, ['check', '--only', 'integrity/required-rules'], environment);
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 2,
@@ -187,7 +187,7 @@ test(
         expect(recommended.checks.flatMap(({ findings }) => findings).map(({ rule }) => rule)).not.toContain(
             'react/self-closing-comp',
         );
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const atAll = await runPlanted(
             sandbox.path,

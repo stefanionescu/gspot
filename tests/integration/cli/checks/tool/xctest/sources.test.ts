@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
@@ -17,7 +17,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
     const command = ['check', '--only', 'xctest/no-sleep', '--json'];
-    const broken = await run(sandbox.path, command);
+    const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
@@ -26,7 +26,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
         `${sandbox.path}/Examples/Checks.swift`,
         source.replace('try await Task.sleep(for: .seconds(1))', '#expect(true)'),
     );
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'xctest/no-sleep', status: 'ok', findings: [] },
@@ -80,7 +80,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
-    const result = await run(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
         (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
@@ -157,7 +157,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
         'custom/References/Missing-title.png': 'png',
     });
     const command = ['check', '--only', 'xctest/reference-images', '--json'];
-    const broken = await run(sandbox.path, command);
+    const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
         (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
@@ -170,7 +170,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
     ]);
     await Bun.write(`${sandbox.path}/second/Checks.swift`, 'import Testing\n@Test func title() {}\n');
     await Bun.write(`${sandbox.path}/custom/Missing.swift`, 'import XCTest\n');
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
@@ -186,12 +186,12 @@ test.each([
         'gspot.toml': policyOf(['xctest'], `[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`),
         'Checks.swift': 'import Testing\n',
     });
-    const result = await run(sandbox.path, ['check', '--only', 'xctest/reference-images']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/reference-images']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('reference_layout');
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['xctest'], '', 'all'));
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
-    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/reference-images', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'xctest/reference-images', status: 'ok', findings: [] },

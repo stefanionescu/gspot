@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 function git(root: string, ...argv: string[]): string {
@@ -43,14 +43,14 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'committed change');
     commit(sandbox.path);
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
-    const selected = await run(sandbox.path, ['check', '--changed', 'api', '--json']);
+    const selected = await spawnGspot(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
     expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
     expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
-    const explicit = await run(sandbox.path, ['check', '--changed=base', '--json']);
+    const explicit = await spawnGspot(sandbox.path, ['check', '--changed=base', '--json']);
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
     const all = JSON.parse(explicit.stdout) as RunReport;
     expect(
@@ -58,7 +58,7 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-    const invalid = await run(sandbox.path, ['check', '--changed=missing-ref', '--json']);
+    const invalid = await spawnGspot(sandbox.path, ['check', '--changed=missing-ref', '--json']);
     expect(invalid.code).toBe(2);
     expect((JSON.parse(invalid.stdout) as { message: string }).message).toContain('Git merge-base failed');
 });
@@ -72,19 +72,19 @@ test('changed selection resolves the remote default and refuses absent upstream 
     });
     git(sandbox.path, 'init', '-b', 'topic');
     commit(sandbox.path);
-    const absent = await run(sandbox.path, ['check', '--changed', '--json']);
+    const absent = await spawnGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(absent.code).toBe(2);
     expect((JSON.parse(absent.stdout) as { message: string }).message).toContain('use --changed=<ref>');
     git(sandbox.path, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
     git(sandbox.path, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'changed');
-    const defaultRange = await run(sandbox.path, ['check', '--changed']);
+    const defaultRange = await spawnGspot(sandbox.path, ['check', '--changed']);
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
     expect(defaultRange.stdout).toContain('refs/remotes/origin/main');
     git(sandbox.path, 'branch', 'upstream');
     git(sandbox.path, 'branch', '--set-upstream-to=upstream');
     git(sandbox.path, 'update-ref', '-d', 'refs/heads/upstream');
-    const missing = await run(sandbox.path, ['check', '--changed', '--json']);
+    const missing = await spawnGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(missing.code).toBe(2);
     expect((JSON.parse(missing.stdout) as { message: string }).message).toContain('refs/heads/upstream');
 });
@@ -92,7 +92,7 @@ test('changed selection resolves the remote default and refuses absent upstream 
 test.each(['--changed', '--staged'])('%s reports a setup error outside Git', async (flag) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.txt': 'before' });
-    const result = await run(sandbox.path, ['check', flag, '--json']);
+    const result = await spawnGspot(sandbox.path, ['check', flag, '--json']);
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as { message: string }).message).toContain('requires a Git repository');
 });
@@ -107,7 +107,7 @@ test('a shallow comparison failure explains how to fetch the missing history', a
     await Bun.write(join(source, 'api/source.txt'), 'after');
     commit(source);
     git(sandbox.path, 'clone', '--depth=1', pathToFileURL(source).href, 'checkout');
-    const result = await run(join(sandbox.path, 'checkout'), ['check', `--changed=${base}`, '--json']);
+    const result = await spawnGspot(join(sandbox.path, 'checkout'), ['check', `--changed=${base}`, '--json']);
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as { message: string }).message).toContain('git fetch --unshallow');
 });

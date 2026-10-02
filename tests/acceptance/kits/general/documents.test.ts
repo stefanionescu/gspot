@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
@@ -96,20 +96,20 @@ plantedCases(
                 rmSync(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
                     recursive: true,
                 });
-                const broken = await run(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
+                const broken = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
                 expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'error' },
                 ]);
                 // Apply syncs the missing packages again, which the error message tells the reader to run.
-                const synced = await run(sandbox, ['apply'], environment);
+                const synced = await spawnGspot(sandbox, ['apply'], environment);
                 expect(synced.code, synced.stdout + synced.stderr).toBe(0);
-                const corrected = await run(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
+                const corrected = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'ok', findings: [] },
                 ]);
-                const checked = await run(sandbox, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(sandbox, ['check', '--stage', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('docs/links-external');
             },

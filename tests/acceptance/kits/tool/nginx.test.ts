@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
@@ -46,13 +46,13 @@ if (hasLinuxDocker)
                 'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
             });
             const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--json'];
-            const failed = await run(sandbox.path, command);
+            const failed = await spawnGspot(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
                 { file: 'proxy/conf.d/server.conf', line: 2, message: textContaining('invalid_directive') },
             ]);
             await Bun.write(join(sandbox.path, 'proxy/conf.d/server.conf'), server);
-            const corrected = await run(sandbox.path, command);
+            const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
@@ -83,7 +83,7 @@ if (hasLinuxDocker)
                 'proxy/nginx.conf': configuration.replace('listen 443 ssl;', 'invalid_directive on;'),
             });
             const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--json'];
-            const failed = await run(sandbox.path, command);
+            const failed = await spawnGspot(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
                 {
@@ -94,19 +94,19 @@ if (hasLinuxDocker)
                 },
             ]);
             await Bun.write(join(sandbox.path, 'proxy/nginx.conf'), configuration);
-            const corrected = await run(sandbox.path, command);
+            const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
             ]);
             await Bun.write(join(sandbox.path, 'gspot.toml'), policy.replace('1.29.3-alpine', '1.29.3-alpine@'));
-            const unavailable = await run(sandbox.path, command);
+            const unavailable = await spawnGspot(sandbox.path, command);
             expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
             expect((JSON.parse(unavailable.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'error' },
             ]);
             await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
-            const recovered = await run(sandbox.path, command);
+            const recovered = await spawnGspot(sandbox.path, command);
             expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
             expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
@@ -125,7 +125,7 @@ describe('the nginx configuration', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
             await installAtLevel(sandbox.path, NGINX_INIT, environment);
-            const clean = await run(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
+            const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const outcome = await runPlanted(
                 sandbox.path,
@@ -142,12 +142,12 @@ describe('the nginx configuration', () => {
                     ? { check: 'nginx/gixy', status: 'skipped' }
                     : { check: 'nginx/gixy', status: 'fail', findings: [forged] },
             ]);
-            const corrected = await run(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
+            const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },
             ]);
-            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+            const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

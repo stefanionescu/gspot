@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -51,14 +51,14 @@ test('JavaScript checking includes authored build directories at all', async () 
     }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
     await Bun.write(join(sandbox.path, generated.path), generated.content);
     const command = ['check', '--only', 'javascript/checkjs', '--json'];
-    const broken = await run(sandbox.path, command, environment);
+    const broken = await spawnGspot(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const report = JSON.parse(broken.stdout) as RunReport;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(
         paths.toSorted((left, right) => left.localeCompare(right)),
     );
     for (const path of paths) await Bun.write(join(sandbox.path, path), 'export const value = 1;\n');
-    const corrected = await run(sandbox.path, command, environment);
+    const corrected = await spawnGspot(sandbox.path, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
@@ -87,14 +87,14 @@ test.each([false, true])(
         chmodSync(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/checkjs', '--json'];
         const env = { PATH: toolsPath(['tsc']) };
-        const broken = await run(sandbox.path, command, env);
+        const broken = await spawnGspot(sandbox.path, command, env);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
             { file: 'source/main.js', line: 2, column: 28, rule: 'TS2345' },
         ]);
         expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toHaveLength(1);
         await Bun.write(join(sandbox.path, 'source/main.js'), source.replace('format(42)', 'format("42")'));
-        const corrected = await run(sandbox.path, command, env);
+        const corrected = await spawnGspot(sandbox.path, command, env);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'authored/cache.tsbuildinfo')).text()).toBe(
             'Preserve this authored metadata.\n',
@@ -144,7 +144,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
     const command = ['check', '--only', 'javascript/checkjs', '--json'];
     const env = { PATH: toolsPath(['tsc']) };
-    const broken = await run(sandbox.path, command, env);
+    const broken = await spawnGspot(sandbox.path, command, env);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const report = JSON.parse(broken.stdout) as RunReport;
     expect(
@@ -156,13 +156,13 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         },
     ]);
     await Bun.write(join(sandbox.path, 'app/child/source.js'), corrected);
-    const fixed = await run(sandbox.path, command, env);
+    const fixed = await spawnGspot(sandbox.path, command, env);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe(config);
     expect(await Bun.file(join(sandbox.path, 'app/authored.cache')).text()).toBe('Preserve this cache.\n');
     for (const output of outputs) expect(await Bun.file(join(sandbox.path, output.path)).text()).toBe(output.content);
     await Bun.write(join(sandbox.path, 'app/jsconfig.json'), '{');
-    const invalid = await run(sandbox.path, command, env);
+    const invalid = await spawnGspot(sandbox.path, command, env);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
     expect(invalid.stderr).toContain('app/jsconfig.json');
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe('{');

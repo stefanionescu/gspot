@@ -1,6 +1,6 @@
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -61,7 +61,7 @@ plantedCases(
             'the commit stage leaves the coverage run to its own stage',
             async () => {
                 const { root, environment } = planted();
-                const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('xctest/coverage');
             },

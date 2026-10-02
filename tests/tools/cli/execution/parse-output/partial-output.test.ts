@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
@@ -67,7 +67,7 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
 // The plan for the vulture check of a sandbox, and the environment that reaches the vulture gspot installed for it.
 async function preparedVulture(root: string): Promise<{ planned: PlannedCheck; env: Record<string, string> }> {
     // The tool comes from the installation gspot makes for the sandbox, which no runner puts on PATH.
-    const applied = await run(root, ['apply']);
+    const applied = await spawnGspot(root, ['apply']);
     if (applied.code !== 0) throw new Error(`The sandbox apply failed: ${applied.stdout}${applied.stderr}`);
     await installPrivateTools(root);
     const session = await openSession(root);

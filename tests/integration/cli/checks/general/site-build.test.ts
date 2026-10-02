@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import { rejection } from '#tests/harness/expectations.ts';
@@ -81,7 +81,7 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
         'dist/index.html': 'committed output\n',
     });
     commitAll(sandbox.path);
-    const outcome = await run(sandbox.path, [
+    const outcome = await runGspot(sandbox.path, [
         'check',
         '--stage',
         'push',

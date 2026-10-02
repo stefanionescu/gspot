@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -57,7 +57,7 @@ describe('component accessibility', () => {
                 framework === 'vue' ? ':src="source" alt="The product"' : 'src={source} alt="The product"',
             );
             await Bun.write(join(sandbox.path, path), corrected);
-            const fixed = await run(sandbox.path, ['check', '--only', check, '--json'], environment);
+            const fixed = await spawnGspot(sandbox.path, ['check', '--only', check, '--json'], environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             expect((JSON.parse(fixed.stdout) as RunReport).checks).toMatchObject([
                 { check, status: 'ok', findings: [] },

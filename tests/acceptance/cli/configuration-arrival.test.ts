@@ -3,8 +3,8 @@ import { join, delimiter } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { readdirSync, symlinkSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -48,11 +48,19 @@ describe('gspot add', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await installAtLevel(sandbox.path, CONFIGURATION_ARRIVAL_INIT, environment);
-            const before = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json'], environment);
+            const before = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--json'],
+                environment,
+            );
             expect(before.code, before.stdout + before.stderr).toBe(0);
-            const added = await run(sandbox.path, ['add', 'zod', '--json'], environment);
+            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
             expect(added.code, added.stdout + added.stderr).toBe(0);
-            const after = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json'], environment);
+            const after = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--json'],
+                environment,
+            );
             expect(after.code, after.stdout + after.stderr).toBe(1);
             const report = JSON.parse(after.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
@@ -65,7 +73,7 @@ describe('gspot add', () => {
                 }),
             );
             await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
-            const correctedCheck = await run(
+            const correctedCheck = await spawnGspot(
                 sandbox.path,
                 ['check', '--only', 'typescript/eslint', '--json'],
                 environment,

@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { statSync, chmodSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { writeSwiftlint } from '#tests/harness/cli/swift.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -32,7 +32,7 @@ const SWIFT_INLINE_DOCS = [
 ].join('\n');
 
 async function documentationFindings(root: string, code: 0 | 1) {
-    const result = await run(root, ['check', '--only', 'swift/swiftlint', '--json']);
+    const result = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const [checked] = (JSON.parse(result.stdout) as RunReport).checks;
     if (checked === undefined) throw new Error('The report holds no check.');
@@ -59,7 +59,7 @@ if (onPosix) {
                 level === 'all' ? [containing({ rule_id: 'doc_comment_style', line: 1, character: 1 })] : [],
             );
             // The documentation style rule is on at the all level alone, so the CLI reports it there and passes otherwise.
-            const cli = await run(root, ['check', '--only', 'swift/swiftlint', '--json']);
+            const cli = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
             const docComment = containing({ rule: 'doc_comment_style', file: 'Value.swift', line: 1, column: 1 });
             expect(cli.code, cli.stdout + cli.stderr).toBe(level === 'all' ? 1 : 0);
             const findings = (JSON.parse(cli.stdout) as { checks: { findings: unknown[] }[] }).checks.flatMap(

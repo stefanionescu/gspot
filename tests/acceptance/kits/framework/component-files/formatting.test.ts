@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -27,12 +27,12 @@ test(
                 'src/Greeting.svelte': LOOSE,
             },
         });
-        const loose = await run(sandbox.path, ['check', '--only', 'formatting/prettier', '--json'], environment);
+        const loose = await spawnGspot(sandbox.path, ['check', '--only', 'formatting/prettier', '--json'], environment);
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
         const [check] = (JSON.parse(loose.stdout) as RunReport).checks;
         expect(check).toMatchObject({ check: 'formatting/prettier', status: 'fail' });
         expect(check!.findings).toContainEqual(containing({ file: 'src/Greeting.svelte' }));
-        const fixed = await run(sandbox.path, ['check', '--fix', '--only', 'formatting/prettier'], environment);
+        const fixed = await spawnGspot(sandbox.path, ['check', '--fix', '--only', 'formatting/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'src/Greeting.svelte')).text()).toBe(FORMATTED);
     },

@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -47,7 +47,11 @@ test.each(SHAPES)(
         const report = JSON.parse(outcome.stdout) as RunReport;
         expect(report.checks[0]!.findings).toContainEqual(containing({ rule: 'TS2322', file: path, line: 2 }));
         await Bun.write(join(sandbox.path, path), planted.replace("'one'", '1'));
-        const both = await run(sandbox.path, ['check', '--json', '--only', 'typescript/tsc', check], environment);
+        const both = await spawnGspot(
+            sandbox.path,
+            ['check', '--json', '--only', 'typescript/tsc', check],
+            environment,
+        );
         expect(both.code, both.stdout + both.stderr).toBe(0);
         const corrected = JSON.parse(both.stdout) as RunReport;
         expect(corrected.checks).toContainEqual(containing({ check, status: 'ok', findings: [] }));
@@ -72,7 +76,7 @@ test(
                 'src/Product.svelte': '<script>\n    let { source } = $props();\n</script>\n\n<img src={source} />\n',
             },
         });
-        const result = await run(
+        const result = await spawnGspot(
             sandbox.path,
             ['check', '--json', '--only', 'vue/typecheck', 'svelte/check'],
             environment,

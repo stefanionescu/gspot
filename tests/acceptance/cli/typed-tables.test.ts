@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
@@ -34,13 +34,13 @@ describe('gspot set', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
             await install(sandbox.path, TYPED_TABLES_INIT, environment);
-            const written = await run(sandbox.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
+            const written = await spawnGspot(sandbox.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
             expect(written.code, written.stdout + written.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('patterns = ["REPORT.md"]');
             expect(policy).not.toContain('"[{patterns');
 
-            const unreadable = await run(
+            const unreadable = await spawnGspot(
                 sandbox.path,
                 ['set', 'tools.docs.paths_allowed', '[{patterns = '],
                 environment,
@@ -54,7 +54,7 @@ describe('gspot set', () => {
                 `${policy}\n[tools.typos]\nexclude = ['{paths = ["a"], reason = "x"}']\n`,
             );
             const args = ['check', '--only', 'docs/links', '--json'];
-            const read = await run(sandbox.path, args, environment);
+            const read = await spawnGspot(sandbox.path, args, environment);
             expect(read.code, read.stdout + read.stderr).toBe(1);
             expect((JSON.parse(read.stdout) as RunReport).checks).toMatchObject([
                 { check: 'docs/links', status: 'ok', findings: [] },
@@ -70,7 +70,7 @@ describe('gspot set', () => {
                 },
             ]);
             await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
-            const corrected = await run(sandbox.path, args, environment);
+            const corrected = await spawnGspot(sandbox.path, args, environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'docs/links', status: 'ok', findings: [] },

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
@@ -54,13 +54,13 @@ test('a global ignore stops a repository check and its correction command until 
     );
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--json'];
-    const before = await run(directory.path, args);
+    const before = await spawnGspot(directory.path, args);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
     unlinkSync(join(directory.path, 'read.txt'));
-    const ignored = await run(directory.path, ['ignore', 'project/quality']);
+    const ignored = await spawnGspot(directory.path, ['ignore', 'project/quality']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const skipped = await run(directory.path, [...args, '--fix']);
+    const skipped = await spawnGspot(directory.path, [...args, '--fix']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const report = JSON.parse(skipped.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
@@ -68,9 +68,9 @@ test('a global ignore stops a repository check and its correction command until 
     expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
     expect(existsSync(join(directory.path, 'read.txt'))).toBe(false);
     expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
-    const removed = await run(directory.path, ['ignore', 'project/quality', '--remove']);
+    const removed = await spawnGspot(directory.path, ['ignore', 'project/quality', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await run(directory.path, args);
+    const restored = await spawnGspot(directory.path, args);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
 });
@@ -92,7 +92,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
             join(directory.path, 'gspot.toml'),
             policy + (ignored ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\n' : ''),
         );
-        const applied = await run(directory.path, ['apply']);
+        const applied = await spawnGspot(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const lint = await processes.run([...ESLINT_COMMAND, 'source.js'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(ignored ? 0 : 1);
@@ -122,7 +122,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
         'apps/web/admin/page.js': source,
     });
     linkInstalledModules(join(directory.path, 'node_modules'));
-    const applied = await run(directory.path, ['apply']);
+    const applied = await spawnGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     writeFileSync(join(directory.path, 'tests/future.js'), source);
     for (const ignored of [false, true]) {
@@ -131,7 +131,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
             ESLINT_OVERRIDE_POLICY +
                 (ignored ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\n' : ''),
         );
-        const updated = await run(directory.path, ['apply']);
+        const updated = await spawnGspot(directory.path, ['apply']);
         expect(updated.code, updated.stdout + updated.stderr).toBe(0);
         const lint = await processes.run([...ESLINT_COMMAND, 'source.js', 'tests', 'apps'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
@@ -201,7 +201,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         'inputs/skip-keep.txt': 'defect\n',
     });
     const args = ['check', '--only', 'project/quality', '--fix', '--json'];
-    const corrected = await run(directory.path, args);
+    const corrected = await spawnGspot(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const report = JSON.parse(corrected.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
@@ -215,14 +215,14 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
     const checked = readFileSync(join(directory.path, 'checked.txt'), 'utf8');
     const fixed = readFileSync(join(directory.path, 'fixed.txt'), 'utf8');
-    const skipped = await run(directory.path, [...args, '--', 'inputs/skip café.txt']);
+    const skipped = await spawnGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
     expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
     expect(readFileSync(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(readFileSync(join(directory.path, 'fixed.txt'), 'utf8')).toBe(fixed);
-    const restored = await run(directory.path, [
+    const restored = await spawnGspot(directory.path, [
         'ignore',
         'project/quality',
         '--remove',
@@ -231,7 +231,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         '!inputs/skip-keep.txt',
     ]);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    const accepted = await run(directory.path, [...args, '--', 'inputs/skip café.txt']);
+    const accepted = await spawnGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
 });

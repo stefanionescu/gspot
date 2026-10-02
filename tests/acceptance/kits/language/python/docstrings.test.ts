@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { installAtLevel } from '#tests/harness/tools/install.ts';
@@ -39,13 +39,13 @@ test.each([
         commitAll(sandbox.path);
         await installAtLevel(sandbox.path, STRUCTURE_INIT, {}, 'all', STRUCTURE_LEFT_OUT);
         const command = ['check', '--only', 'python/pydoclint', '--json'];
-        const rejected = await run(sandbox.path, command);
+        const rejected = await spawnGspot(sandbox.path, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = JSON.parse(rejected.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'python/pydoclint', status: 'fail' }]);
         expect(report.checks[0]!.findings).toContainEqual(containing({ file: TOOLS_MODULE, rule: 'DOC103', line: 4 }));
         await Bun.write(join(sandbox.path, TOOLS_MODULE), clean);
-        const corrected = await run(sandbox.path, command);
+        const corrected = await spawnGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'python/pydoclint', status: 'ok', findings: [] },

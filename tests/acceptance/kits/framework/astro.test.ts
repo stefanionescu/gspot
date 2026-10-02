@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -45,12 +45,12 @@ test(
             containing({ rule: 'ts(2322)', file: PAGE, line: 2, column: 7 }),
         );
         await Bun.write(join(root, PAGE), CLEAN.replace('<h1>{title}</h1>', '<h1>{title}</h1   >'));
-        const loose = await run(root, ['check', '--only', 'formatting/prettier', '--json'], environment);
+        const loose = await spawnGspot(root, ['check', '--only', 'formatting/prettier', '--json'], environment);
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
-        const fixed = await run(root, ['check', '--fix', '--only', 'formatting/prettier'], environment);
+        const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'formatting/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(root, PAGE)).text()).toBe(CLEAN);
-        const clean = await run(root, ['check', '--json', '--only', 'astro/eslint', 'astro/check'], environment);
+        const clean = await spawnGspot(root, ['check', '--json', '--only', 'astro/eslint', 'astro/check'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 8,

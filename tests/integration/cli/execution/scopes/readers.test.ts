@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 
@@ -60,7 +60,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
         'apps/backend/client.ts': 'const credentialName = "SUPABASE_SERVICE_ROLE_KEY";\n',
     });
     for (const entry of EXPECTED_READERS) {
-        const result = await run(sandbox.path, ['check', '--only', entry.check, '--json']);
+        const result = await runGspot(sandbox.path, ['check', '--only', entry.check, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(
             (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
@@ -82,7 +82,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await Bun.write(`${sandbox.path}/apps/backend/client.ts`, 'export {};\n');
     await Bun.write(`${sandbox.path}/index.html`, '<img alt="Fixture diagram" src="/assets/unused.png">');
     for (const entry of EXPECTED_READERS) {
-        const corrected = await run(sandbox.path, ['check', '--only', entry.check, '--json']);
+        const corrected = await runGspot(sandbox.path, ['check', '--only', entry.check, '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     }
 });
@@ -102,7 +102,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
         'sibling/cleanup.sh': source,
     });
     const command = ['check', '--only', 'structure/bash-safety', '--json'];
-    const broken = await run(sandbox.path, command);
+    const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
         containing({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
@@ -110,7 +110,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
     ]);
     for (const path of ['app/child/cleanup.sh', 'sibling/cleanup.sh'])
         await Bun.write(`${sandbox.path}/${path}`, '#!/usr/bin/env bash\nprintf "%s\\n" "$target"\n');
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
     expect(await Bun.file(`${sandbox.path}/root.sh`).text()).toBe(source);
@@ -145,13 +145,13 @@ test.each([
         const untrusted = path.replace('trusted/', 'public/');
         await createFileTree(sandbox.path, { 'gspot.toml': policy, [path]: source, [untrusted]: source });
         const command = ['check', '--only', check, '--json'];
-        const failed = await run(sandbox.path, command);
+        const failed = await runGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings)).toMatchObject([
             { file: untrusted, line: 1, rule },
         ]);
         await Bun.write(`${sandbox.path}/${untrusted}`, correction);
-        const corrected = await run(sandbox.path, command);
+        const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
         expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(source);

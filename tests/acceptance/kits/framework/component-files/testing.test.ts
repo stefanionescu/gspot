@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -53,7 +53,11 @@ describe('the Testing Library rules of component frameworks', () => {
                     .filter(({ rule }) => rule?.startsWith('testing-library/') === true),
             ).toStrictEqual([]);
             await Bun.write(join(sandbox.path, 'src/greeting.test.js'), `${opening}screen.getByText('hello');\n`);
-            const corrected = await run(sandbox.path, ['check', '--only', 'javascript/eslint', '--json'], environment);
+            const corrected = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'javascript/eslint', '--json'],
+                environment,
+            );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,

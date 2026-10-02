@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
@@ -19,23 +19,23 @@ const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String
 
 // Configuration edits change the findings, and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {
-    const ran = await run(root, command);
+    const ran = await spawnGspot(root, command);
     expect(ran.code).toBe(0);
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
     const nested = await Bun.file(nestedPath).text();
     await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
-    const changedConfiguration = await run(root, command);
+    const changedConfiguration = await spawnGspot(root, command);
     expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
     expect((JSON.parse(changedConfiguration.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
     );
     await Bun.write(nestedPath, nested);
     await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT.replace('value: String', 'value:String'));
-    const fixed = await run(root, [...command, '--fix']);
+    const fixed = await spawnGspot(root, [...command, '--fix']);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await Bun.file(join(root, `${prefix}Sources/Value.swift`)).text()).toBe(CORRECT);
     unlinkSync(join(root, `${prefix}.swiftlint.yml`));
-    const missing = await run(root, command);
+    const missing = await spawnGspot(root, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(2);
     expect(missing.stdout).toContain('Required configuration');
 }
@@ -63,7 +63,7 @@ if (toolShipsHere('swiftlint'))
         expect(planned).toHaveLength(1);
         expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         const command = ['check', '--only', 'swift/swiftlint', '--json'];
-        const broken = await run(root, command);
+        const broken = await spawnGspot(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
@@ -75,7 +75,7 @@ if (toolShipsHere('swiftlint'))
         );
         expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
         await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT);
-        const corrected = await run(root, command);
+        const corrected = await spawnGspot(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         await expectConfigurationChanges(root, prefix, command);
     });
@@ -102,7 +102,7 @@ if (toolShipsHere('swiftlint'))
             );
             expect(native.code, native.stdout + native.stderr).toBe(0);
             expect(JSON.parse(native.stdout)).toStrictEqual([]);
-            const result = await run(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json']);
+            const result = await spawnGspot(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json']);
             expect(result.code, result.stdout + result.stderr).toBe(0);
         },
     );

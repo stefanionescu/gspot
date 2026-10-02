@@ -3,8 +3,8 @@ import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/config/cli.ts';
 import type { Sandbox } from '#tests/types/cli.ts';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
@@ -46,7 +46,7 @@ export async function installSandbox(
     const argv = ['init', '--yes', '--kits', ...sandbox.kits, ...(sandbox.init ?? QUIET_INIT)];
     await install(root, argv, environment, sandbox.without ?? ['naming', 'spelling']);
     const level = sandbox.level ?? 'all';
-    const selected = await run(root, ['set', 'level', level], environment);
+    const selected = await spawnGspot(root, ['set', 'level', level], environment);
     if (selected.code !== 0)
         throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
     return environment;

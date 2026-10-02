@@ -5,8 +5,8 @@ import { join, delimiter } from 'node:path';
 import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/harness/planted/cases.ts';
-import { run, gspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { leaveOut, toolsPath } from '#tests/harness/tools/install.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
@@ -15,17 +15,17 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     const clone = join(cloneRoot.path, 'clone');
     const cloned = git(source, ['clone', '--quiet', '--no-local', source, clone]);
     expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
-    const uninstalled = await run(clone, ['check', '--only', 'bash/shellcheck']);
+    const uninstalled = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
     expect((uninstalled.stdout + uninstalled.stderr).match(/gspot install/gu)).toHaveLength(1);
     for (let attempt = 0; attempt < 2; attempt++) {
-        const installation = await run(clone, ['install']);
+        const installation = await spawnGspot(clone, ['install']);
         expect(installation.code, installation.stdout + installation.stderr).toBe(0);
         const status = git(clone, ['status', '--porcelain']);
         expect(status.code, status.stderr).toBe(0);
         expect(status.stdout).toBe('');
     }
-    const ready = await run(clone, ['check', '--only', 'bash/shellcheck']);
+    const ready = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
     expect(ready.code, ready.stdout + ready.stderr).toBe(0);
     expect(ready.stdout + ready.stderr).not.toContain('Configured hooks are not ready');
     await Bun.write(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho $1\n');
@@ -47,7 +47,7 @@ test(
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
-        await run(sandbox.path, [
+        await spawnGspot(sandbox.path, [
             'init',
             '--yes',
             '--kits',
@@ -58,7 +58,7 @@ test(
             '--no-install',
         ]);
         await leaveOut(sandbox.path, ['formatting'], {});
-        const installed = await run(sandbox.path, ['install']);
+        const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
         git(sandbox.path, ['add', '-A']);
@@ -100,10 +100,10 @@ command = ${JSON.stringify([process.execPath, '-e', 'if ((await Bun.file("source
         'nested config/source.txt': 'invalid\n',
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-    const applied = await run(project, ['apply']);
+    const applied = await spawnGspot(project, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-    const installed = await run(project, ['install']);
+    const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await Bun.write(join(project, 'source.txt'), 'corrected working tree\n');
     const environment = { PATH: `${launcher.path}${delimiter}${toolsPath([])}` };

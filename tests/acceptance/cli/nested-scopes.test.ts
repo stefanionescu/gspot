@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const NESTED_SCOPES_POLICY = `kits = ["formatting"]
@@ -34,9 +34,9 @@ test('nested scopes inherit parent configurations and settings and check each fi
         'api/worker/entry.sh': 'if then\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
-    const applied = await run(directory.path, ['apply']);
+    const applied = await spawnGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const settings = await run(directory.path, ['list', 'settings', '--json']);
+    const settings = await spawnGspot(directory.path, ['list', 'settings', '--json']);
     expect(settings.code, settings.stdout + settings.stderr).toBe(0);
     const rows = (
         JSON.parse(settings.stdout) as { settings: { key: string; scope: string; value: unknown; source: string }[] }
@@ -47,7 +47,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     });
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'format.indent_width')?.value).toBe(2);
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
-    const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const checked = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = (JSON.parse(checked.stdout) as RunReport).checks;
     expect(checks.map((check) => ({ check: check.check, scope: check.scope, files: check.files }))).toStrictEqual([
@@ -61,7 +61,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     ]);
     writeFileSync(join(directory.path, 'api/entry.sh'), 'echo example\n');
     writeFileSync(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
-    const corrected = await run(directory.path, ['check', '--only', 'bash/syntax', 'sql/syntax', '--json']);
+    const corrected = await spawnGspot(directory.path, ['check', '--only', 'bash/syntax', 'sql/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', scope: 'api', status: 'ok', findings: [] },

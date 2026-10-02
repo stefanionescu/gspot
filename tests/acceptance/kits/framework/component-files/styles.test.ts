@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -49,7 +49,11 @@ describe('component style blocks', () => {
             );
             expect(findings.map(({ rule }) => rule)).not.toContain('selector-pseudo-class-no-unknown');
             await Bun.write(join(sandbox.path, path), text.replace('#ggg', '#abc'));
-            const corrected = await run(sandbox.path, ['check', '--only', 'css/stylelint', '--json'], environment);
+            const corrected = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'css/stylelint', '--json'],
+                environment,
+            );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/harness/planted/cases.ts';
@@ -64,10 +64,10 @@ test.each([
     const path = join(sandbox.path, 'greet.sh');
     chmodSync(path, 0o755);
     const command = ['check', '--only', 'structure/bash-interpreter', '--json'];
-    const clean = await run(sandbox.path, command);
+    const clean = await spawnGspot(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);
-    const broken = await run(sandbox.path, command);
+    const broken = await spawnGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
         { check: 'structure/bash-interpreter', status: 'fail' },
@@ -76,7 +76,7 @@ test.each([
         containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
     writeFileSync(path, base + (isInherited ? inherited : '') + MAIN);
-    const corrected = await run(sandbox.path, command);
+    const corrected = await spawnGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'structure/bash-interpreter', status: 'ok', findings: [] },

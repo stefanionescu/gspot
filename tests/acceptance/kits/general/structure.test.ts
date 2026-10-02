@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/harness/planted/cases.ts';
@@ -30,7 +30,7 @@ plantedCases(
             'package-lock.json': '{"lockfileVersion":3,"requires":true,"packages":{}}\n',
         },
         prepare: async (root, environment) => {
-            const reasons = await run(root, ['set', 'require_reasons', 'true'], environment);
+            const reasons = await spawnGspot(root, ['set', 'require_reasons', 'true'], environment);
             if (reasons.code !== 0) throw new Error(`Reasons were not required: ${reasons.stdout}${reasons.stderr}`);
         },
     },
@@ -99,12 +99,12 @@ plantedCases(
             async () => {
                 const { root, environment } = planted();
                 const command = ['check', '--only', 'integrity/tracked-dependencies', '--json'];
-                const clean = await run(root, command, environment);
+                const clean = await spawnGspot(root, command, environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 mkdirSync(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });
                 await Bun.write(join(root, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
                 expect(git(root, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-                const tracked = await run(root, command, environment);
+                const tracked = await spawnGspot(root, command, environment);
                 expect(tracked.code).toBe(1);
                 expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
                     {
@@ -114,7 +114,7 @@ plantedCases(
                     },
                 ]);
                 expect(git(root, ['rm', '-r', '--cached', '--quiet', 'web/node_modules']).code).toBe(0);
-                const corrected = await run(root, command, environment);
+                const corrected = await spawnGspot(root, command, environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },

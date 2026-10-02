@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
@@ -34,7 +34,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
             });
             const environment = { PATH: toolsPath(['codeql']) };
             const command = ['check', '--stage', 'manual', '--only', 'security/codeql', '--json'];
-            const planted = await run(directory.path, command, environment);
+            const planted = await spawnGspot(directory.path, command, environment);
             expect(planted.code, planted.stdout + planted.stderr).toBe(1);
             const report = JSON.parse(planted.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'security/codeql', status: 'fail' }]);
@@ -43,7 +43,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
             ]);
             expect(readFileSync(join(directory.path, file), 'utf8')).toBe(unsafe);
             await Bun.write(join(directory.path, file), corrected);
-            const fixed = await run(directory.path, command, environment);
+            const fixed = await spawnGspot(directory.path, command, environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             const fixedReport = JSON.parse(fixed.stdout) as RunReport;
             expect(fixedReport.checks).toMatchObject([{ check: 'security/codeql', status: 'ok', findings: [] }]);

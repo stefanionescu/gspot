@@ -2,10 +2,10 @@ import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { WORKFLOW_HEAD } from '#tests/samples/files.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -51,7 +51,7 @@ process.exit(2);
         const environment = {
             PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
         };
-        const result = await run(sandbox.path, ['check', '--only', 'files/toml-format'], environment);
+        const result = await runGspot(sandbox.path, ['check', '--only', 'files/toml-format'], environment);
         expect(result.code, result.stderr + result.stdout).toBe(2);
         expect(result.stdout).toContain('taplo broke: exit 2');
         expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -60,7 +60,7 @@ process.exit(2);
             join(sandbox.path, 'bin/taplo'),
             '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
         );
-        const corrected = await run(sandbox.path, ['check', '--only', 'files/toml-format', '--json'], environment);
+        const corrected = await runGspot(sandbox.path, ['check', '--only', 'files/toml-format', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/toml-format', status: 'ok', findings: [] },
@@ -87,7 +87,7 @@ test(
         const path = join(sandbox.path, '.github/workflows/broken.yml');
         const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
         await Bun.write(path, workflow);
-        const result = await run(
+        const result = await runGspot(
             sandbox.path,
             ['check', '--only', 'files/actions-pins', '--stage', 'push'],
             environment,
@@ -96,7 +96,7 @@ test(
         expect(result.stdout).toContain('invalid action pin: broken.yml');
         expect(await Bun.file(path).text()).toBe(workflow);
         await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
-        const corrected = await run(
+        const corrected = await runGspot(
             sandbox.path,
             ['check', '--only', 'files/actions-pins', '--stage', 'push', '--json'],
             environment,

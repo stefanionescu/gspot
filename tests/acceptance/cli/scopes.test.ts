@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -53,7 +53,7 @@ test(
         ];
         await installAtLevel(sandbox.path, argv, environment);
         const command = ['check', '--only', 'typescript/eslint', '--json'];
-        const lint = await run(sandbox.path, command, environment);
+        const lint = await spawnGspot(sandbox.path, command, environment);
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
         const report = JSON.parse(lint.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'typescript/eslint', scope: 'api', status: 'fail' }]);
@@ -66,7 +66,7 @@ test(
             }),
         );
         await Bun.write(join(sandbox.path, 'api/src/port.ts'), SCOPES_SOURCE.replace(' as number', ''));
-        const corrected = await run(sandbox.path, command, environment);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'typescript/eslint', scope: 'api', status: 'ok', findings: [] },
@@ -101,7 +101,7 @@ test(
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         expect(policy).not.toContain('templates');
         expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
-        const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax'], environment);
+        const syntax = await spawnGspot(sandbox.path, ['check', '--only', 'sql/syntax'], environment);
         expect(syntax.code).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 3,
@@ -115,18 +115,18 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
         'packages/api/source.js': 'export const port = 8080;\n',
     });
     const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
-    const proposed = await run(sandbox.path, [...command, '--dry-run', '--json']);
+    const proposed = await spawnGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as { policy: string };
     const policy = parsePolicyText(plan.policy, 'gspot.toml');
     expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     const before = treeContents(sandbox.path);
-    const refused = await run(sandbox.path, command);
+    const refused = await spawnGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(treeContents(sandbox.path)).toStrictEqual(before);
     writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
-    const corrected = await run(sandbox.path, [...command, '--dry-run', '--json']);
+    const corrected = await spawnGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
         parsePolicyText((JSON.parse(corrected.stdout) as InitJson).policy!, 'gspot.toml').scopes.map(

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -22,10 +22,10 @@ test(
             'src/order.ts': 'export interface Order { total: number }\n',
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
-        const applied = await run(sandbox.path, ['apply']);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const outcome = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = JSON.parse(outcome.stdout) as RunReport;
         const findings = report.checks
@@ -50,7 +50,7 @@ test(
             join(sandbox.path, 'src/order.ts'),
             '// The shape of a priced order.\n\n/** A total owned by one order. */\nexport type Order = { total: number };\n',
         );
-        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const after = JSON.parse(corrected.stdout) as RunReport;
         expect(after.checks).toMatchObject([{ check: 'typescript/eslint', status: 'ok', findings: [] }]);
@@ -77,10 +77,10 @@ test.each([
             'src/forward.ts': 'export { shared } from "./first.ts";\n',
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
-        const applied = await run(sandbox.path, ['apply']);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const outcome = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = JSON.parse(outcome.stdout) as RunReport;
         const findings = report.checks.flatMap((check) => check.findings);
@@ -96,7 +96,7 @@ test.each([
             'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
         );
         writeFileSync(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
-        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         const correctedReport = JSON.parse(corrected.stdout) as RunReport;
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(1);
         expect(correctedReport.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);

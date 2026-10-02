@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -39,17 +39,17 @@ stage = "commit"
         'selected.txt': 'unchanged trigger',
         'state.txt': 'invalid',
     });
-    const failed = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const failed = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failed.code).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
-    const passed = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const passed = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(passed.code).toBe(0);
     expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
-    const failedAgain = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const failedAgain = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failedAgain.code).toBe(1);
     expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
         { check: 'notes/state', status: 'fail' },
@@ -66,14 +66,14 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-        await run(
+        await spawnGspot(
             sandbox.path,
             ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
             environment,
         );
         const policy = join(sandbox.path, 'gspot.toml');
         await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
-        const check = await run(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
+        const check = await spawnGspot(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
         expect(check.code).toBe(1);
         expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
             {
@@ -83,7 +83,7 @@ test(
             },
         ]);
         await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
-        const corrected = await run(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'notes/no-fixme', status: 'ok', findings: [] },
@@ -125,7 +125,7 @@ rule = "code"
 message = "text"
 `,
     });
-    const result = await run(sandbox.path, ['check', '--json']);
+    const result = await spawnGspot(sandbox.path, ['check', '--json']);
     expect(result.code).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
@@ -140,7 +140,7 @@ message = "text"
         },
     ]);
     await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
-    const corrected = await run(sandbox.path, ['check', '--json']);
+    const corrected = await spawnGspot(sandbox.path, ['check', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'sandbox/json', status: 'ok', findings: [] },

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
-import { run } from '#tests/harness/cli/command.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -19,7 +19,7 @@ const BASELINE = JSON.stringify([
 async function expectStagedSecret(root: string, environment: Record<string, string>): Promise<void> {
     await Bun.write(join(root, 'settings.py'), PLANTED_SETTINGS);
     git(root, ['add', 'settings.py']);
-    const staged = await run(root, ['check', '--only', 'secrets/gitleaks-staged', '--json'], environment);
+    const staged = await spawnGspot(root, ['check', '--only', 'secrets/gitleaks-staged', '--json'], environment);
     expect(staged.code, staged.stdout).toBe(1);
     expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
         {
@@ -32,7 +32,11 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
 
     await Bun.write(join(root, 'settings.py'), 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n');
     expect(git(root, ['add', 'settings.py']).code).toBe(0);
-    const correctedSecret = await run(root, ['check', '--only', 'secrets/gitleaks-staged', '--json'], environment);
+    const correctedSecret = await spawnGspot(
+        root,
+        ['check', '--only', 'secrets/gitleaks-staged', '--json'],
+        environment,
+    );
     expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
     expect((JSON.parse(correctedSecret.stdout) as RunReport).checks).toMatchObject([
         { check: 'secrets/gitleaks-staged', status: 'ok', findings: [] },
@@ -92,7 +96,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const accepted = JSON.parse(explained.stdout) as RunReport;
     expect(accepted.checks).toMatchObject([{ check: 'integrity/gitleaks-baseline', status: 'ok', findings: [] }]);
-    const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
+    const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
     const network = JSON.parse(checked.stdout) as RunReport;
     expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
 }
@@ -102,7 +106,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareStagedSecrets(sandbox.path);
-        const clean = await run(sandbox.path, ['check', '--stage', 'commit'], environment);
+        const clean = await spawnGspot(sandbox.path, ['check', '--stage', 'commit'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await expectStagedSecret(sandbox.path, environment);
         await expectExplainedBaseline(sandbox.path, environment);

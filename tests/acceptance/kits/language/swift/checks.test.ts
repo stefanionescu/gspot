@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/samples/swift.ts';
@@ -80,7 +80,7 @@ plantedCases(
             'the commit stage leaves the build, the analyzer, and the dead code scan to their own stages',
             async () => {
                 const { root, environment } = planted();
-                const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('swift/build');
                 expect(ids).not.toContain('swift/swiftlint-analyze');
@@ -97,7 +97,7 @@ plantedCases(
                     '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
                 const path = join(root, 'Sources/App/Greeting.swift');
                 await Bun.write(path, header + SPACED);
-                const fixed = await run(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
+                const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
                 expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
                 expect(readFileSync(path, 'utf8')).toBe(header + CLEAN_SWIFT);
                 await Bun.write(path, CLEAN_SWIFT);

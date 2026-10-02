@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { readProject } from '#cli/checks/tool/xcode/pbxproj.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -40,7 +40,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         'Synced/Excluded.swift': 'let excluded = 1\n',
     });
     const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
-    const broken = await run(sandbox.path, command);
+    const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({ file: 'Second/Shared.swift', rule: 'no-target' }),
@@ -50,10 +50,10 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
         .replace('membershipExceptions = (Excluded.swift,);', 'membershipExceptions = ();');
     await Bun.write(`${sandbox.path}/App.xcodeproj/project.pbxproj`, included);
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
-    const missing = await run(sandbox.path, command);
+    const missing = await runGspot(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
     expect((JSON.parse(missing.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({
@@ -102,7 +102,7 @@ test.each([
         'App.xcodeproj/project.pbxproj': source,
         'Root.swift': 'let root = 1\n',
     });
-    const result = await run(sandbox.path, ['check', '--only', 'xcode/orphan-sources', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'xcode/orphan-sources', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
 });
 
@@ -125,7 +125,7 @@ test('membership combines projects in a scope and checks nested scopes independe
         'nested/Extra.swift': 'let extra = 1\n',
     });
     const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
-    const broken = await run(sandbox.path, command);
+    const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
         (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
@@ -137,6 +137,6 @@ test('membership combines projects in a scope and checks nested scopes independe
         { scope: 'nested', findings: [containing({ file: 'nested/Extra.swift', rule: 'no-target' })] },
     ]);
     await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

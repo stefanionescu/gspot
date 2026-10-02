@@ -2,9 +2,9 @@
 import { test, expect } from 'bun:test';
 import { QUIET_INIT } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -39,7 +39,7 @@ test(
             ['spelling', 'dependencies'],
         );
         for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-            const clean = await run(sandbox.path, ['check', '--only', id], environment);
+            const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
         const untested: FindingCase = {
