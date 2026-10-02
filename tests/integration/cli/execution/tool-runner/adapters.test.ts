@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
 
@@ -29,14 +30,8 @@ if (toolShipsHere('ansible-lint'))
             chmodSync(executable, 0o755);
             const controller = new AbortController();
             const session = await openSession(sandbox.path);
-            const options = {
-                stage: 'all' as const,
-                skips: [],
-                only: ['ansible/lint'],
-                fix: false,
-                isDryRun: false,
-            };
-            const running = executeRun(session, { checks: CHECKS, ...options, cancelSignal: controller.signal });
+            const options = runOptions({ only: ['ansible/lint'] });
+            const running = executeRun(session, { ...options, cancelSignal: controller.signal });
             try {
                 const started = join(sandbox.path, 'deploy/started.txt');
                 if (failure === 'canceled') {
@@ -82,7 +77,7 @@ if (toolShipsHere('ansible-lint'))
         });
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
         chmodSync(executable, 0o755);
-        const options = { stage: 'commit' as const, skips: [], only: ['ansible/lint'], fix: false, isDryRun: false };
+        const options = runOptions({ stage: 'commit', only: ['ansible/lint'] });
         const initial = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(initial.report.checks[0]!.status).toBe('ok');
         writeFileSync(executable, versionCommand('23.0.0'));
@@ -113,7 +108,7 @@ if (onPosix)
         });
         chmodSync(executable, 0o755);
         const session = await openSession(sandbox.path);
-        const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
+        const options = runOptions({ stage: 'commit' });
         const executed = await executeRun(session, { ...options, checks: CHECKS });
         expect(executed.report.exitCode).toBe(0);
         const repeated = await executeRun(session, { ...options, checks: CHECKS });

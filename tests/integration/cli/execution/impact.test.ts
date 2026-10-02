@@ -11,6 +11,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
 
@@ -31,14 +32,7 @@ test('repository checks retain nested inputs and report their defects once at th
         'api/source.sh': 'if then\n',
         'web/source.sh': 'echo sibling\n',
     });
-    const options = {
-        stage: 'push' as const,
-        only: ['project/syntax'],
-        changed: ['api/source.sh'],
-        skips: [],
-        fix: false,
-        isDryRun: true,
-    };
+    const options = runOptions({ stage: 'push', only: ['project/syntax'], changed: ['api/source.sh'], isDryRun: true });
     const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'fail' }]);
@@ -107,7 +101,7 @@ test.each([
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
     );
-    const outcome = await executeRun(session, { checks: CHECKS, ...options, ...revision, fix: false, isDryRun: false });
+    const outcome = await executeRun(session, runOptions({ ...options, ...revision }));
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
         operation === 'delete' ? ['api'] : ['api', 'web'],
@@ -174,10 +168,8 @@ test('a check with no command and no built-in check refuses the complete plan be
         name: 'sandbox/unknown',
     };
     session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
-    expect(
-        await rejection(
-            executeRun(session, { checks: CHECKS, stage: 'commit', skips: [], fix: false, isDryRun: false }),
-        ),
-    ).toContain('The check sandbox/unknown names no command, and gspot has no built-in check by that name.');
+    expect(await rejection(executeRun(session, runOptions({ stage: 'commit' })))).toContain(
+        'The check sandbox/unknown names no command, and gspot has no built-in check by that name.',
+    );
     expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
 });

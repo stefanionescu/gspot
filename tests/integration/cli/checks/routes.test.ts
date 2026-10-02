@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 
 const ROUTES_POLICY = `level = "all"
 kits = ["express"]
@@ -16,13 +17,7 @@ path = "api"
 kits = ["express"]
 `;
 
-const ROUTES_OPTIONS = {
-    stage: 'all' as const,
-    skips: [],
-    only: ['express/routes-tested'],
-    fix: false,
-    isDryRun: false,
-};
+const ROUTES_OPTIONS = runOptions({ only: ['express/routes-tested'] });
 
 const ROUTE = 'export const users = () => [];\n';
 

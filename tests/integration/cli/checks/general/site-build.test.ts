@@ -1,17 +1,16 @@
 import { join } from 'node:path';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { runGspot } from '#tests/harness/cli/command.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
+import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
 import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
@@ -171,14 +170,7 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
         });
     });
     try {
-        const outcome = await executeRun(session, {
-            checks: CHECKS,
-            stage: 'all',
-            skips: [],
-            only: ['static-site/build'],
-            fix: false,
-            isDryRun: false,
-        });
+        const outcome = await executeRun(session, runOptions({ only: ['static-site/build'] }));
         expect(outcome.report.exitCode).toBe(code === 0 ? 0 : 1);
         expect(cwd).not.toBe(sandbox.path);
         expect(cwd).not.toBe('');

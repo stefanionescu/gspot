@@ -7,6 +7,7 @@ import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
@@ -30,13 +31,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
         packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config'))
         await Bun.write(join(sandbox.path, file.path), file.content);
-    const options = {
-        stage: 'push' as const,
-        only: ['docker/trivy-config'],
-        skips: [],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ stage: 'push', only: ['docker/trivy-config'] });
     const failed = await executeRun(session, { ...options, checks: CHECKS });
     expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
     expect(

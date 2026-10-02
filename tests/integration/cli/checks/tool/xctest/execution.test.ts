@@ -5,6 +5,7 @@ import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { test, expect, describe, afterEach } from 'bun:test';
 import { rmSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -16,13 +17,7 @@ scheme = "Example"
 coverage = [{ target = "Example", percent = 80 }]
 `;
 
-const XCTEST_EXECUTION_OPTIONS = {
-    stage: 'push' as const,
-    skips: [],
-    only: ['xctest/coverage'],
-    fix: false,
-    isDryRun: false,
-};
+const XCTEST_EXECUTION_OPTIONS = runOptions({ stage: 'push', only: ['xctest/coverage'] });
 
 const caches = new Set<string>();
 afterEach(() => {

@@ -9,6 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { scriptIndex } from '#cli/checks/language/bash/scripts.ts';
@@ -50,13 +51,7 @@ test.each([
             [path]: defect,
         });
         const session = await openSession(sandbox.path);
-        const options = {
-            stage: 'all' as const,
-            only: ['naming/identifiers', structural],
-            skips: [],
-            fix: false,
-            isDryRun: true,
-        };
+        const options = runOptions({ only: ['naming/identifiers', structural], isDryRun: true });
         const failed = await executeRun(session, { ...options, checks: CHECKS });
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
@@ -177,13 +172,7 @@ if (onPosix)
             [path]: 'select 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'],
-            fix: false,
-            isDryRun: true,
-        };
+        const options = runOptions({ only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'], isDryRun: true });
         const read = spyOn(fs, 'readFileSync');
         try {
             const clean = await executeRun(session, { ...options, checks: CHECKS });
@@ -249,19 +238,13 @@ format = "none"
         'correct.cjs': String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
     });
     const session = await openSession(sandbox.path);
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['sql/syntax', 'project/correct-sql'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['sql/syntax', 'project/correct-sql'] });
     const defect = await executeRun(session, { ...options, checks: CHECKS });
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
         containing({ file: 'query.sql', line: 1 }),
     );
-    const corrected = await executeRun(session, { checks: CHECKS, ...options, fix: true });
+    const corrected = await executeRun(session, { ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
         { check: 'sql/syntax', status: 'ok', findings: [] },

@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 
 test.each(['colon', 'dash'])(
     'Bash documentation preserves %s summaries and rejects reversed sections',
@@ -15,13 +16,7 @@ test.each(['colon', 'dash'])(
             'gspot.toml': policyOf(['bash'], `[tools.bash]\ndoc_style = "${style}"\n`, 'all'),
             'show.sh': summary + '# Returns:\n# Arguments:\n' + body,
         });
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            only: ['structure/doc-comment'],
-            fix: false,
-            isDryRun: true,
-        };
+        const options = runOptions({ only: ['structure/doc-comment'], isDryRun: true });
         const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([

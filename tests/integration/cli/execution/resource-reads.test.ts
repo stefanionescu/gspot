@@ -7,6 +7,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import type { Stage } from '#cli/types/execution/planning.ts';
 
 async function storageSession(root: string, status: number, stage: Stage = 'commit'): Promise<Session> {
@@ -55,13 +56,7 @@ test.each([
             'App/Home.swift': 'let logo = Image("Logo")\n',
         });
         const session = await openSession(sandbox.path);
-        const options = {
-            stage: 'commit' as const,
-            skips: [],
-            only: [check],
-            fix: false,
-            isDryRun: false,
-        };
+        const options = runOptions({ stage: 'commit', only: [check] });
         const target = join(sandbox.path, path);
         fs.rmSync(target);
         fs.mkdirSync(target);
@@ -95,13 +90,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
     const session = await openSession(sandbox.path);
-    const options = {
-        stage: 'commit' as const,
-        skips: [],
-        only: ['xcode/asset-catalogs'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ stage: 'commit', only: ['xcode/asset-catalogs'] });
     const target = join(sandbox.path, image);
     const original = fs.statSync;
     const read = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
@@ -135,13 +124,10 @@ test('a dry run creates no files', async () => {
         'source.ts': 'export {};\n',
     });
     const before = fs.readdirSync(sandbox.path, { recursive: true });
-    const outcome = await executeRun(await storageSession(sandbox.path, 0), {
-        checks: CHECKS,
-        stage: 'commit',
-        skips: [],
-        fix: false,
-        isDryRun: true,
-    });
+    const outcome = await executeRun(
+        await storageSession(sandbox.path, 0),
+        runOptions({ stage: 'commit', isDryRun: true }),
+    );
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.status).toBe('ok');
     expect(fs.readdirSync(sandbox.path, { recursive: true })).toStrictEqual(before);

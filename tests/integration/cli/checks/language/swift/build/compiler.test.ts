@@ -6,6 +6,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -49,13 +50,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
             '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
     });
     removeBuildFolders(sandbox.path);
-    const options = {
-        stage: 'all' as const,
-        only: ['swift/build'],
-        skips: [],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['swift/build'] });
     const initial = await openSession(sandbox.path);
     const corrected = await openSession(sandbox.path);
     const run = spyOn(spawn, 'run').mockResolvedValue({

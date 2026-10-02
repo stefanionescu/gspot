@@ -11,6 +11,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
 import { head, readSource } from '#cli/repository/sources.ts';
 
@@ -103,13 +104,7 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
     const root = join(sandbox.path, 'project');
     const baseline = join(root, '.gspot/gitleaks-baseline.json');
     fs.symlinkSync('../../baseline.json', baseline);
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['integrity/gitleaks-baseline'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['integrity/gitleaks-baseline'] });
     const refused = await executeRun(await openSession(root), { ...options, checks: CHECKS });
     expect(refused.report.exitCode).toBe(2);
     expect(refused.report.checks[0]).toMatchObject({ status: 'error', findings: [] });
@@ -168,13 +163,7 @@ if (onPosix)
             'gspot.toml': policyOf(['bash']),
             ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
         });
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            only: ['bash/syntax'],
-            fix: false,
-            isDryRun: false,
-        };
+        const options = runOptions({ only: ['bash/syntax'] });
         const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(broken.report.exitCode).toBe(1);
         expect(

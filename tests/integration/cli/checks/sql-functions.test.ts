@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 
 test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', async () => {
     const threshold = 2;
@@ -20,14 +21,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
             'CREATE FUNCTION eight(a int,b int,c int,d int,e int,f int,g int,h int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
         ].join('\n'),
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        only: ['sql/functions'],
-        fix: false,
-        isDryRun: false,
-    });
+    const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['sql/functions'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(1);
     expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
@@ -46,14 +40,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
         { check: 'sql/functions', file: 'functions.sql', line: 7, rule: 'function-parameters' },
     ]);
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['sql'], '[limits.sql]\nfunction_parameters = 8\n', 'all'));
-    const overridden = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        only: ['sql/functions'],
-        fix: false,
-        isDryRun: false,
-    });
+    const overridden = await executeRun(await openSession(sandbox.path), runOptions({ only: ['sql/functions'] }));
     expect(overridden.report.exitCode).toBe(1);
     expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
     expect(
@@ -71,14 +58,7 @@ test('SQL atomic bodies count each statement and reject files containing only tr
             'CREATE FUNCTION substantial() RETURNS int LANGUAGE SQL BEGIN ATOMIC SELECT 1; SELECT 2; SELECT 3; END;',
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        only: ['sql/functions'],
-        fix: false,
-        isDryRun: false,
-    });
+    const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['sql/functions'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.filter(({ file }) => file === 'owner.sql')).toStrictEqual([]);
     expect(
@@ -96,7 +76,7 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
         'gspot.toml': policyOf(['sql'], '', 'all'),
         'functions.sql': source,
     });
-    const options = { stage: 'all' as const, skips: [], only: ['sql/functions'], fix: false, isDryRun: false };
+    const options = runOptions({ only: ['sql/functions'] });
     const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.checks[0]?.status).toBe('error');
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);

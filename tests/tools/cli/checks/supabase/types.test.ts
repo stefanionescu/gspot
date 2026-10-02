@@ -5,12 +5,12 @@ import { test, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { tableAt } from '#cli/policy/mutations.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import { isCi, environmentVariables } from '#cli/platform/environment.ts';
 
@@ -91,14 +91,10 @@ if (runsDatabase)
         await using sandbox = await testdir();
         await using database = await prepareSupabaseDatabase(sandbox.path);
         const { options, configPath, authored } = database;
-        const stale = await executeRun(await openSession(sandbox.path), {
-            checks: CHECKS,
-            stage: 'push',
-            only: ['supabase/types-fresh'],
-            skips: [],
-            fix: false,
-            isDryRun: true,
-        });
+        const stale = await executeRun(
+            await openSession(sandbox.path),
+            runOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true }),
+        );
         expect(stale.report.exitCode, JSON.stringify(stale.report)).toBe(1);
         expect(stale.report.checks).toMatchObject([
             {
@@ -112,14 +108,10 @@ if (runsDatabase)
         expect(generated.code, generated.stderr).toBe(0);
         expect(generated.stdout).toContain('export type Database');
         await Bun.write(join(sandbox.path, 'database.ts'), generated.stdout);
-        const corrected = await executeRun(await openSession(sandbox.path), {
-            checks: CHECKS,
-            stage: 'push',
-            only: ['supabase/types-fresh'],
-            skips: [],
-            fix: false,
-            isDryRun: true,
-        });
+        const corrected = await executeRun(
+            await openSession(sandbox.path),
+            runOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true }),
+        );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
         expect(readFileSync(configPath)).toStrictEqual(authored);

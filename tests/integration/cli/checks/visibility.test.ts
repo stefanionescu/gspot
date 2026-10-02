@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 
 test('shell visibility uses outside callers and keeps entrypoints public', async () => {
     await using sandbox = await testdir();
@@ -13,13 +14,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
             '_private() {\n echo first\n}\nhelper() {\n echo second\n}\nshared() {\n echo third\n}\nmain() {\n shared\n}\n',
         'caller.sh': '_private\nshared\n',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['structure/private-prefix'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['structure/private-prefix'] });
     const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks).toMatchObject([{ check: 'structure/private-prefix', status: 'fail' }]);
@@ -48,13 +43,7 @@ test('shell declaration order resets between files and requires main last', asyn
         'second.sh': '_local() {\n echo local\n}\nmain() {\n _local\n}\n',
         'empty.sh': '# No declarations.\n',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['structure/private-before-public'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['structure/private-before-public'] });
     const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks).toMatchObject([{ check: 'structure/private-before-public', status: 'fail' }]);
@@ -83,13 +72,7 @@ test('Swift declaration order identifies private types and extensions and accept
         'gspot.toml': policyOf(['swift'], '', 'all'),
         'Declarations.swift': shared + hidden,
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['swift/private-before-public'],
-        fix: false,
-        isDryRun: true,
-    };
+    const options = runOptions({ only: ['swift/private-before-public'], isDryRun: true });
     const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([

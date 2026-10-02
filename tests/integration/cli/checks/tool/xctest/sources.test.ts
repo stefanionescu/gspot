@@ -1,12 +1,11 @@
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 
 test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {
     await using sandbox = await testdir();
@@ -54,14 +53,7 @@ test.each([
         'gspot.toml': policyOf(['xctest']),
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        only: ['xctest/disabled'],
-        skips: [],
-        fix: false,
-        isDryRun: false,
-    });
+    const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['xctest/disabled'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(missing ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'fail' : 'ok' }]);
@@ -105,14 +97,7 @@ test.each([
         'gspot.toml': policyOf(['xctest'], '', 'all'),
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        only: [check],
-        skips: [],
-        fix: false,
-        isDryRun: false,
-    });
+    const result = await executeRun(await openSession(sandbox.path), runOptions({ only: [check] }));
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
@@ -123,16 +108,7 @@ test.each([
             `import Testing\n@Test func checks() {\n    #expect(true)\n}\n`,
         );
     const corrected =
-        count > 0
-            ? await executeRun(await openSession(sandbox.path), {
-                  checks: CHECKS,
-                  stage: 'all',
-                  only: [check],
-                  skips: [],
-                  fix: false,
-                  isDryRun: false,
-              })
-            : result;
+        count > 0 ? await executeRun(await openSession(sandbox.path), runOptions({ only: [check] })) : result;
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
 });

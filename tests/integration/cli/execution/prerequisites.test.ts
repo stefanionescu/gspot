@@ -8,6 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 
 test('a disabled setting skips its check and enabling the setting runs it', async () => {
@@ -18,13 +19,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['xcode/entitlements-policy'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['xcode/entitlements-policy'] });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, { ...options, checks: CHECKS });
     expect(outcome.report.checks).toMatchObject([

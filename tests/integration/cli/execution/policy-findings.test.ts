@@ -7,15 +7,10 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
-const POLICY_FINDINGS_OPTIONS = {
-    stage: 'all' as const,
-    skips: [],
-    only: ['swift/trivial-function'],
-    fix: false,
-    isDryRun: false,
-};
+const POLICY_FINDINGS_OPTIONS = runOptions({ only: ['swift/trivial-function'] });
 
 const BROKEN = policyOf(
     ['swift'],

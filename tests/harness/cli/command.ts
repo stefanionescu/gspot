@@ -3,9 +3,11 @@ import { join } from 'node:path';
 import { spyOn } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { main } from '#cli/commands/program.ts';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { run as spawn } from '#cli/platform/spawn.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 
@@ -73,4 +75,14 @@ export async function spawnGspot(
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
         timeoutMs,
     });
+}
+
+/**
+ * The options of an in-process run: every stage, the built-in checks, nothing skipped, no fixes, and a real run.
+ * @param overrides the options a test changes, such as the checks it runs with only
+ * @returns the run options
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Most run tests change one or two options of the same defaults.
+export function runOptions(overrides: Partial<RunOptions> = {}): RunOptions {
+    return { checks: CHECKS, stage: 'all', skips: [], fix: false, isDryRun: false, ...overrides };
 }

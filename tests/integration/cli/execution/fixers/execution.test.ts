@@ -7,6 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { waitForExit } from '#tests/harness/cli/process.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/harness/cli/correction.ts';
@@ -113,7 +114,7 @@ fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.
 `,
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
+    const options = runOptions({ stage: 'commit', fix: true });
     const outcome = await executeRun(session, { ...options, checks: CHECKS });
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.files).toBe(2);
@@ -145,7 +146,7 @@ command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'
 fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
     });
-    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
+    const options = runOptions({ stage: 'commit', fix: true });
     const outcome = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(outcome.report.exitCode, JSON.stringify(outcome.report.checks)).toBe(0);
     expect(outcome.fixes?.results).toMatchObject([

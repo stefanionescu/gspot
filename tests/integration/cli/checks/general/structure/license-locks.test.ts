@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
@@ -110,14 +110,7 @@ test.each(['root', 'nested', 'combined'])(
             .flatMap((scope) => scope.selected)
             .some((manifest) => manifest.kit.name === 'structure');
         expect(selectsStructure).toBe(selection === 'combined');
-        const options = {
-            checks: CHECKS,
-            stage: 'all' as const,
-            skips: [],
-            only: ['integrity/allowlists-match'],
-            fix: false,
-            isDryRun: false,
-        };
+        const options = runOptions({ only: ['integrity/allowlists-match'] });
         const result = await executeRun(session, options);
         expect(result.report.exitCode).toBe(1);
         expect(result.report.checks).toMatchObject([

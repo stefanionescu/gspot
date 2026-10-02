@@ -6,16 +6,11 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
-const GENERATED_DRIFT_OPTIONS = {
-    stage: 'all' as const,
-    skips: [],
-    only: ['integrity/generated-drift'],
-    fix: false,
-    isDryRun: false,
-};
+const GENERATED_DRIFT_OPTIONS = runOptions({ only: ['integrity/generated-drift'] });
 
 const GENERATED = '.gspot/config/shellcheckrc';
 

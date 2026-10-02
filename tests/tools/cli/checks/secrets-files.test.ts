@@ -1,12 +1,12 @@
 // Without git the secrets configuration scans the files themselves, and the git scans wait for a repository.
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 
@@ -16,7 +16,7 @@ const SECRETS_FILES_POLICY = policyOf(['secrets'], '[guides]\ninstall = false\n'
 const PLANTED_TOKEN = `const token = "${['ghp', 'Xk92lM3nPq7RsT1vWy4ZaB6cDe8FgH0iJkLmN'].join('_')}";\n`;
 
 async function secretChecks(root: string): Promise<{ check: string; status: string; findings: { file: string }[] }[]> {
-    const options: RunOptions = { checks: CHECKS, stage: 'all', skips: [], fix: false, isDryRun: false };
+    const options: RunOptions = runOptions();
     const outcome = await executeRun(await openSession(root), options);
     return outcome.report.checks
         .filter((check) => check.check.startsWith('secrets/'))
