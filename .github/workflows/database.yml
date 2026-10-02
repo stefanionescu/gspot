@@ -26,6 +26,6 @@ jobs:
                   version: '2026.8.8'
                   cache: true
             - run: mise use --global supabase@2.72.7
-            - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools repo:install-checks
+            - run: mise run --skip-tools setup
+            - run: mise run --skip-tools install
             - run: mise run --skip-tools test:tools -- ./tools/cli/checks/supabase/types.test.ts

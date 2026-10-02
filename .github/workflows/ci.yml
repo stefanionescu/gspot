@@ -45,12 +45,12 @@ jobs:
                   DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
             - name: Install the XML tools and zsh that doctor expects
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools setup
             - id: install
-              run: mise run --skip-tools repo:install-checks
+              run: mise run --skip-tools install
             - run: mise run --skip-tools check:types
             # The tracked pins of the kit tools must be what the manifests write.
-            - run: mise run --skip-tools repo:tools && git diff --exit-code .mise/conf.d/test-tools.toml
+            - run: mise run --skip-tools pin:test-tools && git diff --exit-code .mise/conf.d/test-tools.toml
             - run: mise run --skip-tools gspot -- check
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools gspot -- check --only docs/lychee-external security/codeql security/semgrep-registry
@@ -70,8 +70,8 @@ jobs:
                   version: '2026.8.8'
                   install: false
             - run: mise install bun node
-            - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools docs:build
+            - run: mise run --skip-tools setup
+            - run: mise run --skip-tools build:docs
     package:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
@@ -94,8 +94,8 @@ jobs:
                       ~/.bun/install/cache
                       ~/.cache/uv
                   key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-            - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools repo:install-checks
+            - run: mise run --skip-tools setup
+            - run: mise run --skip-tools install
             - run: mise run --skip-tools test:package
     unit:
         strategy:
@@ -131,11 +131,11 @@ jobs:
             - name: Install Bash 5 on macOS, which ships Bash 3.2
               if: runner.os == 'macOS'
               run: brew install bash
-            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
               run: mise run --skip-tools ci:swiftformat
-            - run: mise run --skip-tools repo:install-checks
+            - run: mise run --skip-tools install
             - run: mise run --skip-tools test
     suite:
         name: suite (${{ matrix.system }} ${{ matrix.shard }}/${{ matrix.shards }})
@@ -190,12 +190,12 @@ jobs:
               if: runner.os == 'Windows'
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
-            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
               run: mise run --skip-tools ci:swiftformat
             - id: install
-              run: mise run --skip-tools repo:install-checks
+              run: mise run --skip-tools install
             - name: Run this shard of the tool tests
               run: mise run --skip-tools test:tools -- "--shard=${SHARD}"
             - name: Run this shard of the acceptance tests

@@ -22,5 +22,5 @@ jobs:
                   version: '2026.8.8'
                   install: false
             - run: mise install bun
-            - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools repo:pins
+            - run: mise run --skip-tools setup
+            - run: mise run --skip-tools check:pins

@@ -30,13 +30,13 @@ jobs:
               with:
                   version: '2026.8.8'
                   cache: false
-            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools setup
             - name: Validate the release version
               shell: bash
-              run: mise run --skip-tools release:verify-version
+              run: mise run --skip-tools check:release
               env:
                   TAG: ${{ github.ref_name }}
-            - run: mise run --skip-tools build
+            - run: mise run --skip-tools build:cli
             - run: mise run --skip-tools test:package
             # npm trusted publishing: npm trades this job's OIDC token for a publish token that lasts one run, and
             # records provenance. Each package names this workflow and the release environment as its trusted
