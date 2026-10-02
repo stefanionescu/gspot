@@ -97,9 +97,14 @@ stage = "manual"
         paths: ['**/*.sh'],
     });
 });
-test('explain > a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
+test('explain > a recognized name keeps its meaning, and a tracked or explicit path selects a colliding file', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, bash: script, 'api/build.sh': script });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': EXPLAIN_POLICY,
+        bash: script,
+        'api/build.sh': script,
+        'shellcheck/run.sh': script,
+    });
     commitAll(sandbox.path);
     const configuration = await runGspot(sandbox.path, ['explain', 'bash', '--json']);
     expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
@@ -107,6 +112,9 @@ test('explain > a recognized name keeps its meaning and an explicit path selects
     const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
+    // The folder shares its name with bash/shellcheck, which once made the path read as one of its rules.
+    const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
+    expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
 });
 
 test('explain > a file path reports its scope, checks, and recorded ignores', async () => {
