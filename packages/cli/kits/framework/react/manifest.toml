@@ -64,6 +64,12 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
+[[rules_off]]
+tool = "eslint"
+rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
+files = ["**/*.tsx", "**/*.jsx"]
+reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+
 [guides]
 framework = [{path = "framework/react/REACT.md"}]
 

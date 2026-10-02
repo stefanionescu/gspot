@@ -55,11 +55,12 @@ test.each(['none', 'index-only'])(
     async (reexports) => {
         const rules = await configuredRules(
             `kits = ["typescript"]\n[structure]\nreexports = "${reexports}"\n[[scope]]\npath = "app"\nkits = ["nextjs"]`,
-            ['app/page.tsx', 'app/component.tsx', 'library/page.tsx'],
+            ['app/page.tsx', 'app/format.ts', 'library/page.tsx'],
         );
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
         expect(rules['app/page.tsx']!['gspot/no-reexports']![0]).toBe(reexports === 'index-only' ? 0 : 2);
-        expect(rules['app/component.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
+        // A component may be small, but a plain module of the scope keeps the rule.
+        expect(rules['app/format.ts']!['gspot/no-trivial-files']![0]).toBe(2);
         expect(rules['library/page.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
     },
 );

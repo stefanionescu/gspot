@@ -117,7 +117,8 @@ async function skippedReplacement(planted: InstalledRepository): Promise<void> {
     }
 }
 
-// The i18n rules reject literal markup and keep other findings after its correction.
+// The i18n rules reject literal markup, and the corrected layout passes. A page component of one statement passes
+// too, because the React kit lets components be that small.
 async function literalMarkup(planted: InstalledRepository): Promise<void> {
     const layout = join(planted.root, 'app/layout.tsx');
     // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
@@ -130,10 +131,8 @@ async function literalMarkup(planted: InstalledRepository): Promise<void> {
     } finally {
         await Bun.write(layout, NEXT_LAYOUT);
     }
-    const corrected = await checked(planted, ['typescript/eslint'], 1);
-    const findings = corrected.checks[0]!.findings;
-    expect(findings).toContainEqual(containing({ rule: 'gspot/no-trivial-functions', file: 'app/page.tsx', line: 7 }));
-    expect(findings.filter(({ rule }) => rule === 'i18next/no-literal-string')).toStrictEqual([]);
+    const corrected = await checked(planted, ['typescript/eslint'], 0);
+    expect(corrected.checks[0]!.findings).toStrictEqual([]);
 }
 
 plantedCases(
