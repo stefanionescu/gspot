@@ -1,4 +1,5 @@
 import { createRule } from '#plugin/definition.ts';
+import { isRequireCall } from '#plugin/imports.ts';
 import { DECLARATIONS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -20,12 +21,7 @@ function isPrivateDeclaration(statement: TSESTree.Statement): boolean {
     if (!DECLARATIONS.has(statement.type) || (statement as { declare?: boolean }).declare === true) return false;
     return !(
         statement.type === AST_NODE_TYPES.VariableDeclaration &&
-        statement.declarations.every(
-            (declarator) =>
-                declarator.init?.type === AST_NODE_TYPES.CallExpression &&
-                declarator.init.callee.type === AST_NODE_TYPES.Identifier &&
-                declarator.init.callee.name === 'require',
-        )
+        statement.declarations.every((declarator) => isRequireCall(declarator.init))
     );
 }
 

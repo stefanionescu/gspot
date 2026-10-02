@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { importFile, isRequireCall } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
@@ -140,12 +140,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                 check(node, node.source);
             },
             CallExpression(node) {
-                if (
-                    node.callee.type !== AST_NODE_TYPES.Identifier ||
-                    node.callee.name !== 'require' ||
-                    node.arguments.length !== 1
-                )
-                    return;
+                if (!isRequireCall(node)) return;
                 const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), 'require');
                 if (variable !== null && variable.defs.length > 0) return;
                 check(node, node.arguments[0]);
