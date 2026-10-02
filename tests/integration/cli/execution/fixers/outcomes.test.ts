@@ -160,3 +160,18 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
     for (const name of ['first', 'second', 'third'])
         expect(readFileSync(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');
 });
+
+test('check --fix --dry-run prints the diff of a correction and leaves the file as it was', async () => {
+    const script = String.raw`require('node:fs').writeFileSync('source.txt', 'corrected\n')`;
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `kits = []\n[[check]]\nname = "sandbox/format"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["source.txt"]\nstage = "commit"\n`,
+        'source.txt': 'original\n',
+    });
+    const preview = await runGspot(sandbox.path, ['check', '--fix', '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stdout).toContain('-original');
+    expect(preview.stdout).toContain('+corrected');
+    expect(preview.stdout).toContain('1 file(s) would change');
+    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+});
