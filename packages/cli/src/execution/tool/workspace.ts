@@ -1,5 +1,6 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { cp, readdir } from 'node:fs/promises';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { ScratchFolder } from '#cli/types/platform/platform.ts';
@@ -23,9 +24,7 @@ const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true, mode: constants
 // Copies each selected file that exists, resolving it through the files root.
 async function copySelected(context: Scratch, paths: string[], dependencies: string[]): Promise<void> {
     const copied = new Set(
-        [...paths, ...SCRATCH_EXTRAS].filter(
-            (path) => !dependencies.some((dir) => path === dir || path.startsWith(`${dir}/`)),
-        ),
+        [...paths, ...SCRATCH_EXTRAS].filter((path) => !dependencies.some((dir) => isInScope(path, dir))),
     );
     for (const path of copied) {
         if (statSync(join(context.root, path), { throwIfNoEntry: false }) === undefined) continue;

@@ -2,6 +2,7 @@
 
 import { eta } from '#cli/generation/registry.ts';
 import { readAsset } from '#cli/platform/assets.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
 import type { Manifest, ConfigurationTarget } from '#cli/types/kits.ts';
@@ -17,9 +18,7 @@ function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, own
 
 function scopeFragment(rendered: string, selection: ScopeSelection, scopes: ScopeSelection[]): string {
     const scope = selection.scope.path;
-    const children = scopes
-        .map((entry) => entry.scope.path)
-        .filter((path) => path !== scope && (scope === '' || path.startsWith(`${scope}/`)));
+    const children = scopes.map((entry) => entry.scope.path).filter((path) => path !== scope && isInScope(path, scope));
     const pattern = scope === '' ? '**/*' : `${scope}/**/*`;
     const excluded = children.map((path) => `${path}/**`);
     return `...[${rendered}].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), ${JSON.stringify(pattern)}]), ignores: [...(entry.ignores ?? []), ...${JSON.stringify(excluded)}] })),`;
@@ -99,11 +98,7 @@ export function fragmentInputs(
                 scope: scope.scope.path,
                 ignoredScopes: scopes
                     .map((entry) => entry.scope.path)
-                    .filter(
-                        (path) =>
-                            path !== scope.scope.path &&
-                            (scope.scope.path === '' || path.startsWith(`${scope.scope.path}/`)),
-                    ),
+                    .filter((path) => path !== scope.scope.path && isInScope(path, scope.scope.path)),
             }));
         }),
     };

@@ -1,15 +1,15 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import { projectFolder } from '#cli/repository/scopes.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Layout, Manifest, KitEvidence } from '#cli/types/kits.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function dependencyMap(fields: Fields[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
     for (const fact of fields) {
-        if (scope !== '' && !fact.path.startsWith(`${scope}/`)) continue;
+        if (!isInScope(fact.path, scope)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
@@ -20,7 +20,7 @@ function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
         (file) =>
             file.kind === 'source' &&
             !file.path.split('/').some((part) => part.toLowerCase() === '.gspot') &&
-            (scope === '' || file.path.startsWith(`${scope}/`)),
+            isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const names = new Set<string>();

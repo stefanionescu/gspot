@@ -6,9 +6,9 @@ import { join, dirname, resolve } from 'node:path';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import { statSync, lstatSync, readdirSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/platform.ts';
 import type { RawEntry, PathIgnore } from '#cli/types/repository/repository.ts';
 import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS, NOT_REPOSITORY_CODE } from '#cli/config/repository/repository.ts';
@@ -231,7 +231,7 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
                 !path.startsWith('.git/') &&
                 path !== '.git' &&
                 !LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC')) &&
-                !submodules.some((module) => path === module || path.startsWith(`${module}/`)) &&
+                !submodules.some((module) => isInScope(path, module)) &&
                 !isExcluded(path),
         )
         .toSorted((a, b) => a.localeCompare(b))

@@ -3,9 +3,9 @@ import { posix } from 'node:path';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import type { GeneratedFile, ConfigurationTarget } from '#cli/types/kits.ts';
@@ -24,9 +24,7 @@ function copyPointerContent(content: string, pointerPath: string): string {
 function isInChildScope(context: EmitInputs, file: TrackedFile): boolean {
     const scope = context.selection.scope.path;
     const children = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '' && path !== scope);
-    return children.some(
-        (child) => file.path.startsWith(`${child}/`) && (scope === '' || child.startsWith(`${scope}/`)),
-    );
+    return children.some((child) => file.path.startsWith(`${child}/`) && isInScope(child, scope));
 }
 
 // The directories above a file that a pointer's directory patterns name, each clamped to the scope.
@@ -34,7 +32,7 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
     const directories: string[] = [];
     for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
         if (!matches(directory)) continue;
-        const isOutside = scope !== '' && directory !== scope && !directory.startsWith(`${scope}/`);
+        const isOutside = !isInScope(directory, scope);
         directories.push(isOutside ? scope : directory);
     }
     return directories;

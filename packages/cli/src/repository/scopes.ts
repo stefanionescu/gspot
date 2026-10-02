@@ -5,6 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { packageManifestSchema } from '#cli/repository/packages.ts';
 import { toPosix, baseName, globPaths } from '#cli/platform/paths.ts';
@@ -232,7 +233,7 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
     };
     return (
         scopes
-            .filter((scope) => scope.path !== '' && (path === scope.path || path.startsWith(`${scope.path}/`)))
+            .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
             .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
     );
 }

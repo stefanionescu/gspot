@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
@@ -25,9 +26,7 @@ function isReadable(path: string): boolean {
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
     if (!isInside(selector)) throw new GspotError('selection', [`Path ${path} is outside this repository.`]);
-    const matches = candidates.filter(
-        (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
-    );
+    const matches = candidates.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('selection', [`Path ${path} matches no repository files.`]);
     return matches;
 }

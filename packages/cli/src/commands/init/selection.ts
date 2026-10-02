@@ -6,6 +6,7 @@ import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { KitReason, InitInputs, InitDetection, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -84,7 +85,7 @@ function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scop
     return context.files.some(
         (file) =>
             file.kind === 'source' &&
-            scopes.every((scope) => scope.path === '' || !file.path.startsWith(`${scope.path}/`)) &&
+            scopes.every((scope) => scope.path === '' || !isInScope(file.path, scope.path)) &&
             manifest.owners.extensions.some((extension) => file.path.endsWith(extension)),
     );
 }
