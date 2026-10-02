@@ -65,7 +65,7 @@ describe('the duplication configuration', () => {
                     check: 'duplication/jscpd',
                     file: 'scripts/second.sh',
                     line: 4,
-                    rule: 'copied-block',
+                    rule: 'clone',
                     message: textContaining('lines repeat scripts/first.sh:4.'),
                 }),
             ]);

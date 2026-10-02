@@ -145,7 +145,7 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
             .filter((entry) => !removable.has(entry.group))
             .map((entry) => `naming.dropped_groups names "${entry.group}", which is not a removable group.`);
         return [...unused, ...dead, ...groups, ...cases].map((text) =>
-            findingAt(input, { file: 'gspot.toml' }, 'configuration', scope === '' ? text : `${text} (scope ${scope})`),
+            findingAt(input, { file: 'gspot.toml' }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
         );
     });
 }

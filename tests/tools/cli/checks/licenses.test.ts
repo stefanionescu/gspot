@@ -53,7 +53,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({
             file: 'pyproject.toml',
-            rule: 'license',
+            rule: 'disallowed-license',
             message: textContaining('licensed-example@1.0.0 reports GPL-3.0-only'),
         }),
     ]);

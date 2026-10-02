@@ -78,7 +78,7 @@ export const scriptRemote: Analysis = async (context, scripts) => {
                 findingAt(
                     context.input,
                     { file: file.path, line: position + 1 },
-                    'undocumented-heredoc',
+                    'undocumented-block',
                     'An ssh heredoc carries a "# name - what it does" line above it.',
                 ),
             ];

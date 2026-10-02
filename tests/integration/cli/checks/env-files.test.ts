@@ -19,7 +19,7 @@ test('staged refusal and tracked-file checks agree on environment files and temp
     expect(git(directory.path, ['add', '-f', '.']).code).toBe(0);
     const input = await checkInput(directory.path, 'secrets/env-files', [], { kits: ['secrets'] });
     expect(envFiles(input).map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
-        privateFiles.map((file) => ({ file, rule: 'tracked-environment-file' })),
+        privateFiles.map((file) => ({ file, rule: 'tracked-env' })),
     );
     const options: CheckOptions = {
         cwd: directory.path,

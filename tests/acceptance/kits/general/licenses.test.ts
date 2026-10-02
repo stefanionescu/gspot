@@ -88,7 +88,13 @@ test(
             expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toStrictEqual(
                 finding === undefined
                     ? []
-                    : [containing({ file: 'package.json', rule: 'license', message: textContaining(finding) })],
+                    : [
+                          containing({
+                              file: 'package.json',
+                              rule: 'disallowed-license',
+                              message: textContaining(finding),
+                          }),
+                      ],
             );
         }
     },

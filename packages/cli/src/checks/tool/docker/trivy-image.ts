@@ -108,7 +108,7 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
                 findingAt(
                     input,
                     { file: file.path, line: 1 },
-                    'image',
+                    'vulnerability',
                     `${image}: ${messages.slice(0, SHOWN_FINDINGS).join(' | ')}`,
                 ),
             );

@@ -101,7 +101,7 @@ if (runsDatabase)
             {
                 check: 'supabase/types-fresh',
                 status: 'fail',
-                findings: [{ file: 'database.ts', rule: 'types', line: 1 }],
+                findings: [{ file: 'database.ts', rule: 'stale', line: 1 }],
             },
         ]);
         expect(readFileSync(join(sandbox.path, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');

@@ -40,18 +40,18 @@ plantedCases(
         {
             check: 'cloudflare/headers',
             files: { _headers: '    X-Frame-Options: DENY\n/*\n    Referrer-Policy no-referrer\n' },
-            expected: { file: '_headers', rule: 'headers-syntax', line: 1 },
+            expected: { file: '_headers', rule: 'syntax', line: 1 },
         },
         {
             check: 'cloudflare/redirects',
             files: { _redirects: '/old /new 999\n' },
-            expected: { file: '_redirects', rule: 'redirects-syntax', line: 1 },
+            expected: { file: '_redirects', rule: 'syntax', line: 1 },
         },
         // A tracked types file that differs from what wrangler writes is stale. The planted wrangler is a shebang script.
         {
             check: 'cloudflare/types-fresh',
             files: { 'cloudflare-env.d.ts': '// Written by hand.\ninterface Env {}\n' },
-            expected: { file: 'cloudflare-env.d.ts', rule: 'stale-types', line: 1 },
+            expected: { file: 'cloudflare-env.d.ts', rule: 'stale', line: 1 },
             platforms: ['darwin', 'linux'],
             corrected: { files: { 'cloudflare-env.d.ts': TYPES } },
         },

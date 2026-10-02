@@ -11,7 +11,7 @@ test('a module-level instance is a singleton unless its name is allowed', async 
     });
     try {
         expect(singletons(modules, new Set()).map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-            { file: 'planted/shared.py', line: 8, rule: 'no-singletons' },
+            { file: 'planted/shared.py', line: 8, rule: 'singleton' },
         ]);
         expect(singletons(modules, new Set(['store']))).toStrictEqual([]);
     } finally {

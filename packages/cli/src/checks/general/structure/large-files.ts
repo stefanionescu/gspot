@@ -28,7 +28,7 @@ export function largeFiles(input: EngineInput): Finding[] {
             findingAt(
                 input,
                 { file: file.path, line: 1 },
-                'over-limit',
+                'size',
                 `${String(Math.round(file.size / BYTES_PER_KB))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
             ),
         );

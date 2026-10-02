@@ -85,7 +85,7 @@ test.each(['', 'apps/api'])(
             check: 'supabase/types-fresh',
             status: 'fail',
             findings: [
-                { file: `${prefix}database.ts`, line: 1, rule: 'types', message: 'The types file does not exist.' },
+                { file: `${prefix}database.ts`, line: 1, rule: 'stale', message: 'The types file does not exist.' },
             ],
         });
         await Bun.write(join(sandbox.path, prefix, 'database.ts'), 'export type Database = {};\n');
@@ -93,7 +93,7 @@ test.each(['', 'apps/api'])(
         const stale = await execute();
         expect(stale).toMatchObject({
             status: 'fail',
-            findings: [{ check: 'supabase/types-fresh', file: `${prefix}database.ts`, rule: 'types', line: 1 }],
+            findings: [{ check: 'supabase/types-fresh', file: `${prefix}database.ts`, rule: 'stale', line: 1 }],
         });
         expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
         expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(keptMode(0o640));

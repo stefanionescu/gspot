@@ -54,7 +54,7 @@ test(
                 findings: [
                     containing({
                         file: 'bun.lock',
-                        rule: 'stale-lockfile',
+                        rule: 'stale',
                         line: 1,
                         message: textContaining('refuses this lockfile'),
                     }),

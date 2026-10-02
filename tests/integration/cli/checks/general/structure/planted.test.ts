@@ -89,7 +89,7 @@ plantedCases(
         {
             check: 'structure/large-files',
             files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * BYTES_PER_KB) },
-            expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
+            expected: { file: 'notes/big.txt', rule: 'size', line: 1 },
         },
     ],
     (planted) => {

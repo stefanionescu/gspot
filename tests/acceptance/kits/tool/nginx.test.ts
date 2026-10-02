@@ -57,7 +57,7 @@ if (hasLinuxDocker)
                 {
                     file: 'proxy/conf.d/server.conf',
                     line: 2,
-                    rule: 'nginx-t',
+                    rule: 'syntax',
                     message: textContaining('invalid_directive'),
                 },
             ]);

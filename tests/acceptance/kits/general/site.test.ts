@@ -109,7 +109,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     const large = await spawnGspot(root, COMMAND);
     expect(large.code, large.stdout + large.stderr).toBe(1);
     expect((JSON.parse(large.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
-        containing({ file: 'icon.svg', rule: 'svg' }),
+        containing({ file: 'icon.svg', rule: 'unoptimized' }),
     ]);
     await Bun.write(join(root, 'icon.svg'), `${svg} `);
     const configured = await spawnGspot(root, ['set', 'level', 'all']);

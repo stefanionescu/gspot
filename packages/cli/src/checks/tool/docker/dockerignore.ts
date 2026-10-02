@@ -20,7 +20,12 @@ export function dockerignore(input: EngineInput): Finding[] {
         const path = folder === '.' ? '.dockerignore' : `${folder}/.dockerignore`;
         if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
             return [
-                findingAt(input, { file: dockerfile, line: 1 }, 'missing', `No ${path} sits beside this Dockerfile.`),
+                findingAt(
+                    input,
+                    { file: dockerfile, line: 1 },
+                    'missing-file',
+                    `No ${path} sits beside this Dockerfile.`,
+                ),
             ];
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
@@ -32,7 +37,7 @@ export function dockerignore(input: EngineInput): Finding[] {
             findingAt(
                 input,
                 { file: path, line: 1 },
-                'entries',
+                'missing-entry',
                 `The ignore file lets through: ${missing.join(', ')}.`,
             ),
         ];

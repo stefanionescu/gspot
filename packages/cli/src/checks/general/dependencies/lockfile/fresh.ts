@@ -51,7 +51,7 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
         });
         if (result.code === 0) continue;
         const refusal = lockfileRefusal(command, result);
-        findings.push(findingAt(input, { file: file.path, line: 1 }, 'stale-lockfile', refusal));
+        findings.push(findingAt(input, { file: file.path, line: 1 }, 'stale', refusal));
     }
     return findings;
 }

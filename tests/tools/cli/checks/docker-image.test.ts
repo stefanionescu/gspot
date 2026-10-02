@@ -45,7 +45,7 @@ describe.if(Bun.which('docker') !== null && process.platform !== 'win32')('with 
             const findings = await trivyImage(input);
             expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
             expect(findings).toMatchObject([
-                { file: 'compose.yaml', line: 1, rule: 'image', message: textContaining('private-key') },
+                { file: 'compose.yaml', line: 1, rule: 'vulnerability', message: textContaining('private-key') },
             ]);
             await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [');
             await rejects(trivyImage(input), /Trivy could not scan/u);

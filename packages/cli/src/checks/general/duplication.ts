@@ -56,7 +56,7 @@ export function cloneFindings(
                 check: shape.check,
                 file,
                 line: clone.secondFile.start,
-                rule: 'copied-block',
+                rule: 'clone',
                 message: `${String(clone.lines)} lines repeat ${other}. The duplicated share is ${share.toFixed(1)} of 100, over the ceiling of ${String(shape.ceiling)}.`,
                 fixable: false,
             },

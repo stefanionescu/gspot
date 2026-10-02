@@ -53,7 +53,7 @@ plantedCases(
         {
             check: 'dependencies/lockfile-hosts',
             files: { 'package-lock.json': FOREIGN_LOCK },
-            expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
+            expected: { file: 'package-lock.json', rule: 'host', line: 2 },
             corrected: {
                 files: { 'package-lock.json': FOREIGN_LOCK.replace('registry.example.test', 'registry.npmjs.org') },
             },

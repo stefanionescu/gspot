@@ -49,7 +49,7 @@ plantedCases(
                 'next.config.mjs':
                     '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
             },
-            expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
+            expected: { file: 'next.config.mjs', rule: 'checks-off', line: 2 },
         },
         {
             check: 'nextjs/version-pairs',

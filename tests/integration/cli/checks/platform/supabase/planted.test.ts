@@ -32,7 +32,7 @@ plantedCases(
         {
             check: 'supabase/config',
             files: { 'supabase/config.toml': 'project_id = \n' },
-            expected: { file: 'supabase/config.toml', rule: 'parse', line: 1 },
+            expected: { file: 'supabase/config.toml', rule: 'syntax', line: 1 },
         },
         {
             check: 'supabase/storage-policies',

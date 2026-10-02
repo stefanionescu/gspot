@@ -98,7 +98,7 @@ plantedCases(
             files: {
                 'planted/lazy.py': `"""A planted module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,
             },
-            expected: { file: 'planted/lazy.py', rule: 'no-lazy-exports', line: 4 },
+            expected: { file: 'planted/lazy.py', rule: 'lazy-export', line: 4 },
         },
         {
             check: 'python/package-exports',
@@ -111,7 +111,7 @@ plantedCases(
             files: {
                 'planted/shared.py': `"""A planted module."""\n\n\nclass Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
             },
-            expected: { file: 'planted/shared.py', rule: 'no-singletons', line: 8 },
+            expected: { file: 'planted/shared.py', rule: 'singleton', line: 8 },
         },
     ],
 );

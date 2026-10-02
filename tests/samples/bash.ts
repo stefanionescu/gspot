@@ -52,7 +52,7 @@ export const BASH_CASES: FindingCase[] = [
         files: {
             'scripts/silent.sh': `${HEAD}_quiet() {\n    echo one\n    echo "$1"\n    echo three\n}\n\n${BASH_CASES_MAIN.replace('echo "hello $1"', () => '_quiet "$1"\n    _quiet "$1"')}`,
         },
-        expected: { file: 'scripts/silent.sh', rule: 'missing', line: 8 },
+        expected: { file: 'scripts/silent.sh', rule: 'missing-comment', line: 8 },
     },
     {
         check: 'bash/duplicate-functions',
@@ -105,7 +105,7 @@ export const BASH_CASES: FindingCase[] = [
         files: {
             'scripts/local.sh': `${HEAD}# build_it: only this file calls it.\nbuild_it() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    build_it "$1"\n    build_it "$1"\n}\n\nmain "$@"\n`,
         },
-        expected: { file: 'scripts/local.sh', rule: 'file-local', line: 9 },
+        expected: { file: 'scripts/local.sh', rule: 'unprefixed', line: 9 },
     },
     {
         check: 'bash/private-before-public',
@@ -113,7 +113,7 @@ export const BASH_CASES: FindingCase[] = [
             'scripts/lib.sh': `${HEAD}# shared_step: other files call this one.\nshared_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n# _late: a private function below a public one.\n_late() {\n    echo a\n    echo c\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    _late "$1"\n    _late "$1"\n    shared_step "$1"\n}\n\nmain "$@"\n`,
             'scripts/user.sh': `${HEAD}# main: runs the script.\nmain() {\n    shared_step "$1"\n}\n\nmain "$@"\n`,
         },
-        expected: { file: 'scripts/lib.sh', rule: 'private-below-public', line: 16 },
+        expected: { file: 'scripts/lib.sh', rule: 'private-before-public', line: 16 },
     },
     {
         check: 'bash/trivial-functions',
@@ -160,7 +160,7 @@ export const BASH_CASES: FindingCase[] = [
         files: {
             'scripts/remote.sh': `${HEAD}# main: runs the script.\nmain() {\n    ssh "$1" <<'REMOTE'\nuptime\nREMOTE\n}\n\nmain "$@"\n`,
         },
-        expected: { file: 'scripts/remote.sh', rule: 'undocumented-heredoc', line: 10 },
+        expected: { file: 'scripts/remote.sh', rule: 'undocumented-block', line: 10 },
     },
     {
         check: 'bash/defaults',

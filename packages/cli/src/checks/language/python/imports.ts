@@ -45,7 +45,7 @@ export function singletons(modules: PythonModule[], allowed: Set<string>): Struc
                 {
                     file: module.path,
                     line: statement.startPosition.row + 1,
-                    rule: 'no-singletons',
+                    rule: 'singleton',
                     text: `${name} is built when the module is imported, so every importer shares it. Build it where it is used, and pass it in.`,
                 },
             ];

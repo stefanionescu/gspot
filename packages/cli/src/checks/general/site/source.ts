@@ -24,7 +24,14 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     const exceeds =
         input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
     return exceeds
-        ? [findingAt(input, { file: path, line: 1 }, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)]
+        ? [
+              findingAt(
+                  input,
+                  { file: path, line: 1 },
+                  'unoptimized',
+                  `svgo makes this file ${String(saved)} bytes smaller.`,
+              ),
+          ]
         : [];
 }
 
@@ -113,7 +120,7 @@ export function webManifest(input: EngineInput): Finding[] {
         const unnamed =
             typeof parsed.name === 'string' && parsed.name !== ''
                 ? []
-                : [findingAt(input, { file: file.path, line: 1 }, 'name', 'The manifest has no name.')];
+                : [findingAt(input, { file: file.path, line: 1 }, 'missing-name', 'The manifest has no name.')];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
             .filter(

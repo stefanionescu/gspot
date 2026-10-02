@@ -50,7 +50,7 @@ function configurationFailure(
     const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups ?? {};
     const file = configurations.get(target)?.path ?? path;
     return {
-        findings: [{ check, file, line: Number(line), rule: 'nginx-t', message: said, fixable: false }],
+        findings: [{ check, file, line: Number(line), rule: 'syntax', message: said, fixable: false }],
         checkedFiles: configurations.has(target) ? [file] : [],
     };
 }

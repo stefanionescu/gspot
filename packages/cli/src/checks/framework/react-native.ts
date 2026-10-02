@@ -42,7 +42,7 @@ export function doctorFindings(check: string, file: string, stdout: string): Fin
         const end = rest.findIndex((next) => isBlockEnd(next));
         const issues = end === -1 ? rest : rest.slice(0, end);
         return [
-            { check, file, line: 1, rule: 'expo-doctor', message: [description, ...issues].join(' '), fixable: false },
+            { check, file, line: 1, rule: 'failed-check', message: [description, ...issues].join(' '), fixable: false },
         ];
     });
 }

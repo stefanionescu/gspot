@@ -51,7 +51,7 @@ export function orphanSources(input: EngineInput): Finding[] {
                 synced.every(({ prefix, excluded }) => !file.startsWith(prefix) || excluded.has(file)),
         )
         .map((file) =>
-            findingAt(input, { file, line: 1 }, 'no-target', 'This Swift file is in no target of the project.'),
+            findingAt(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
         );
     const gone = references
         .filter(({ path }) => !inTree.has(path))

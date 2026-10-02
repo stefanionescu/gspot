@@ -107,7 +107,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
                 .map((statement) => ({
                     file: module.path,
                     line: statement.startPosition.row + 1,
-                    rule: 'no-lazy-exports',
+                    rule: 'lazy-export',
                     text: 'A module __getattr__ makes names appear at run time. Import and list them.',
                 })),
         ),

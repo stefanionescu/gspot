@@ -35,7 +35,7 @@ async function expectServiceImages(input: EngineInput, run: Mock<typeof tools.ru
                 check: 'docker/trivy-image',
                 file: 'compose.yaml',
                 line: 1,
-                rule: 'image',
+                rule: 'vulnerability',
                 message: 'nginx:1.27.2: CVE-example (example)',
                 fixable: false,
             },
@@ -104,7 +104,7 @@ test.each([
         stderr: '',
     });
     try {
-        expect(await trivyImage(input)).toMatchObject([{ file: 'compose.yaml', rule: 'image' }]);
+        expect(await trivyImage(input)).toMatchObject([{ file: 'compose.yaml', rule: 'vulnerability' }]);
         await verify(input, run);
     } finally {
         run.mockRestore();

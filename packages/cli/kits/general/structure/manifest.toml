@@ -102,7 +102,7 @@ help = "Remove the entry, correct its path or exact package version, or restore 
 [[check]]
 name = "large-files"
 title = "Large files"
-example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `over-limit`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
+example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
 level = "recommended"
 stage = "commit"
 runs = "once"

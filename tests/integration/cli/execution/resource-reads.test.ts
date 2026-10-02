@@ -64,7 +64,7 @@ test.each([
         fs.writeFileSync(target, '{');
         const malformed = await executeRun(session, options);
         expect(malformed.report.exitCode).toBe(1);
-        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'parse' }]);
+        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'syntax' }]);
         expect(fs.readFileSync(target, 'utf8')).toBe('{');
         fs.writeFileSync(target, content);
         const corrected = await executeRun(session, options);

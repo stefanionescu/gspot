@@ -27,7 +27,7 @@ export const privatePrefix: Analysis = async (context, scripts) => {
                     findingAt(
                         context.input,
                         { file: file.path, line: entry.start },
-                        'private-called-outside',
+                        'called-outside',
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
                     ),
                 ];
@@ -36,7 +36,7 @@ export const privatePrefix: Analysis = async (context, scripts) => {
                     findingAt(
                         context.input,
                         { file: file.path, line: entry.start },
-                        'file-local',
+                        'unprefixed',
                         `${entry.name} is called from no other file; name it _${entry.name}.`,
                     ),
                 ];
@@ -63,7 +63,7 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
                     findingAt(
                         context.input,
                         { file: file.path, line: entry.start },
-                        'private-below-public',
+                        'private-before-public',
                         `${entry.name} is private and sits below a public function.`,
                     ),
                 );

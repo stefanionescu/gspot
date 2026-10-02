@@ -20,8 +20,8 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
-        { file: 'owner.sh', line: 1, rule: 'private-called-outside' },
-        { file: 'owner.sh', line: 4, rule: 'file-local' },
+        { file: 'owner.sh', line: 1, rule: 'called-outside' },
+        { file: 'owner.sh', line: 4, rule: 'unprefixed' },
     ]);
     await createFileTree(sandbox.path, {
         'owner.sh':
@@ -49,7 +49,7 @@ test('shell declaration order resets between files and requires main last', asyn
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
-        { file: 'first.sh', line: 7, rule: 'private-below-public' },
+        { file: 'first.sh', line: 7, rule: 'private-before-public' },
         { file: 'first.sh', line: 10, rule: 'main-not-last' },
     ]);
     await createFileTree(sandbox.path, {
@@ -78,14 +78,14 @@ test('Swift declaration order identifies private types and extensions and accept
         {
             file: 'Declarations.swift',
             line: 2,
-            rule: 'private-below-shared',
+            rule: 'private-before-public',
             message:
                 'Hidden is private and sits below a declaration other files see. File-local declarations come first.',
         },
         {
             file: 'Declarations.swift',
             line: 3,
-            rule: 'private-below-shared',
+            rule: 'private-before-public',
             message:
                 'The extension of Shared is private and sits below a declaration other files see. File-local declarations come first.',
         },

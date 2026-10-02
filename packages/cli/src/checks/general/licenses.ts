@@ -156,7 +156,7 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
             if (exception === undefined && isAllowed(license, allow)) return [];
             const text = verdict(name, license, exception);
             if (text === undefined) return [];
-            return [findingAt(input, { file: manifest, line: 1 }, 'license', text)];
+            return [findingAt(input, { file: manifest, line: 1 }, 'disallowed-license', text)];
         });
     });
 }

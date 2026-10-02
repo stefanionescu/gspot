@@ -84,7 +84,7 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
         findingAt(
             input,
             { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
-            'missing-migration',
+            'stale',
             'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
         ),
     );

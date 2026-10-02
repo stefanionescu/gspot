@@ -62,7 +62,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
             findings: [
                 {
                     file: '.gspot/gitleaks-baseline.json',
-                    rule: 'no-reason',
+                    rule: 'missing-reason',
                     line: 1,
                     message: textContaining('old.py:aws-access-token:1'),
                 },
@@ -74,7 +74,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
                 },
                 {
                     file: '.gspot/gitleaks-baseline.json',
-                    rule: 'no-reason',
+                    rule: 'missing-reason',
                     line: 1,
                     message: textContaining('abc123:gone.md:generic-api-key:4'),
                 },
