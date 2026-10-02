@@ -9,10 +9,10 @@ import * as processes from '#cli/platform/spawn.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
+import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 const COMMITS_INIT = ['init', '--yes', '--kits', 'commits', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
 
@@ -113,7 +113,8 @@ process.exit(child.exitCode);
         await expectCommitChecks(sandbox.path, environment);
         await expectDistinctMessages(sandbox.path, environment);
     },
-    PLANTED_TIMEOUT_MS,
+    // The journey installs the private tools, then commits through the hooks.
+    INSTALL_TIMEOUT_MS + PLANTED_TIMEOUT_MS * 2,
 );
 
 test(
