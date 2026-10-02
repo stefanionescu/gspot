@@ -74,6 +74,7 @@
         "entities": "7.0.1",
         "eta": "4.6.0",
         "execa": "9.6.1",
+        "fastest-levenshtein": "1.0.16",
         "ignore": "7.0.9",
         "import-meta-resolve": "4.2.0",
         "jsonc-parser": "3.3.1",
