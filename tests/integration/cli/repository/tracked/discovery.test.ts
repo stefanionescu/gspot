@@ -6,7 +6,7 @@ import { statSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { failure, rejection } from '#tests/support/expectations.ts';
+import { failure, rejection } from '#tests/harness/expectations.ts';
 import { findRoot, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 test('repository file discovery > excluded links are omitted before resolving external targets', async () => {

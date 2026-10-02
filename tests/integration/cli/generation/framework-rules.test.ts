@@ -4,10 +4,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
+import { emitted, generatedEslint } from '#tests/harness/cli/generated.ts';
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
@@ -22,10 +21,7 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
     // The generated configuration imports its plugins from the private installation.
     linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const session = await openSession(sandbox.path);
-    const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    const config = emitted(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
     const results: Record<string, Record<string, unknown[]>> = {};

@@ -83,7 +83,7 @@ The full acceptance suite stops after 90 minutes. Each test also has its own tim
 some of it, pass files or folders:
 
 ```sh
-mise run test:acceptance -- acceptance/source/kits/css.test.ts acceptance/source/cli/hooks
+mise run test:acceptance -- acceptance/kits/language/css.test.ts acceptance/cli/hooks
 ```
 
 Some tool installers download a binary from GitHub. Without a token, GitHub allows 60 requests
@@ -101,7 +101,7 @@ come from the CLI help, the policy schema, the kit manifests, and the plugin rul
 those owners rather than a page.
 
 The homepage and the README show one recorded example, stored in
-`docs/src/components/home/example.json`. `tests/acceptance/source/cli/example.test.ts`
+`docs/src/components/home/example.json`. `tests/acceptance/cli/example.test.ts`
 replays it and checks the recorded findings.
 
 ## Policy and generated files

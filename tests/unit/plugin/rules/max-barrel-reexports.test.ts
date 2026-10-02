@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.

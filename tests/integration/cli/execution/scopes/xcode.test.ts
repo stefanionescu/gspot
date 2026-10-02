@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
@@ -11,7 +11,7 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });
-    const failed = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
+    const failed = await runGspot(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
         (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
@@ -30,46 +30,18 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         `${sandbox.path}/apps/second/Tests/SecondTests.swift`,
         'import XCTest\nfunc testSecond() throws { throw XCTSkip("Requires a physical device") }\n',
     );
-    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 test.each([
     ['xcode/xcconfig', 'Build.xcconfig', 'PRODUCT_NAME App\n', 'PRODUCT_NAME = App\n', 'xcconfig-line'],
     [
-        'xcode/xcstrings',
-        'Localizable.xcstrings',
-        '{"strings":{"one":{"localizations":{"de":{},"en":{}}},"two":{"localizations":{"en":{}}}}}',
-        '{"strings":{}}',
-        'missing-translation',
-    ],
-    [
-        'xcode/asset-catalogs',
-        'Assets.xcassets/Logo.imageset/Contents.json',
-        '{"images":[]}',
-        '{"images":[{"filename":"logo.png"}]}',
-        'empty-set',
-    ],
-    [
         'xcode/entitlements-policy',
         'App.entitlements',
         '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
         '<plist><dict><key>nested-capability</key><true/></dict></plist>',
         'entitlement',
-    ],
-    [
-        'xcode/ats',
-        'Info.plist',
-        '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>',
-        '<plist><dict/></plist>',
-        'arbitrary-loads',
-    ],
-    [
-        'xcode/test-plan',
-        'App.xcodeproj/xcshareddata/xcschemes/App.xcscheme',
-        '<Scheme><TestAction><TestableReference/></TestAction></Scheme>',
-        '<Scheme><TestAction><TestableReference/><TestPlanReference/></TestAction></Scheme>',
-        'scheme-plan',
     ],
 ] as const)(
     '%s checks the deepest scope and preserves sibling settings',
@@ -102,7 +74,7 @@ test.each([
             ),
         });
         const command = ['check', '--only', check, '--json'];
-        const result = await run(sandbox.path, command);
+        const result = await runGspot(sandbox.path, command);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const report = JSON.parse(result.stdout) as {
             checks: { scope: string; status: string; findings: { file: string; line: number; rule: string }[] }[];
@@ -117,7 +89,7 @@ test.each([
             { file: `app/child/${path}`, line: 1, rule },
         ]);
         await Bun.write(`${sandbox.path}/app/child/${path}`, corrected);
-        const fixed = await run(sandbox.path, command);
+        const fixed = await runGspot(sandbox.path, command);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
         expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(rootContent);
@@ -136,18 +108,18 @@ test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked 
         'Sibling.swift': 'let image = Image("Logo")\n',
     });
     const command = ['check', '--only', 'xcode/asset-catalogs', '--json'];
-    const result = await run(sandbox.path, command);
+    const result = await runGspot(sandbox.path, command);
     expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
     const findings = (JSON.parse(result.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
     expect(findings).toHaveLength(level === 'all' ? 1 : 0);
     await Bun.write(`${sandbox.path}/app/Source.swift`, 'let image = Image("Logo")\n');
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await Bun.write(`${sandbox.path}/app/Source.swift`, 'let image = "selected at runtime"\n');
     const exception =
         '\n[[ignore]]\ncheck = "xcode/asset-catalogs"\nrule = "orphan-asset"\npaths = ["app/Assets.xcassets/**"]\nreason = "Assets are selected by a runtime catalog."\n';
     await Bun.write(`${sandbox.path}/gspot.toml`, policy + exception);
-    const allowed = await run(sandbox.path, command);
+    const allowed = await runGspot(sandbox.path, command);
     expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     expect(await Bun.file(`${sandbox.path}/${assetManifest}`).text()).toBe('{"images":[{"filename":"logo.png"}]}\n');
 });

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { RUNS } from '#tests/inputs/cli.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { kitManifests } from '#cli/kits/manifests.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
-import { venvExecutable } from '#tests/support/cli/platforms.ts';
-import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
+import { venvExecutable } from '#tests/harness/cli/platforms.ts';
+import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
+import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
 test('managed executable discovery refuses an external link before inspecting and accepts an internal replacement', async () => {
@@ -18,8 +18,8 @@ test('managed executable discovery refuses an external link before inspecting an
     });
     const root = join(directory.path, 'project');
     const binary = join(root, '.gspot/node_modules/.bin/teller');
-    chmodSync(join(directory.path, 'outside/teller'), RUNS);
-    chmodSync(join(root, '.gspot/node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(directory.path, 'outside/teller'), EXECUTABLE_FILE);
+    chmodSync(join(root, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     symlinkSync('../../../../outside/teller', binary);
     expect(() => inspectTool({ root, inspections: new Map() }, commandPin('teller', '1.2.3'))).toThrow(
         'Source link leaves the repository',
@@ -43,25 +43,35 @@ test('managed library discovery refuses a linked package directory', async () =>
     );
 });
 
+// Synthetic pins for each installer combination: npm only, npm with mise, PyPI with mise, and none.
+const NPM: ToolPin = {
+    ...commandPin('linter', '1.0.0', 'linter'),
+    installers: { npm: { name: 'linter', version: '1.0.0' } },
+};
+const MISE_FIRST: ToolPin = {
+    ...commandPin('searcher', '2.0.0'),
+    installers: { npm: { name: '@scope/searcher', version: '2.0.0' }, mise: { name: 'searcher', version: '2.0.0' } },
+};
+const PYPI: ToolPin = {
+    ...commandPin('formatter', '3.0.0'),
+    installers: { pypi: { name: 'formatter', version: '3.0.0' }, mise: { name: 'formatter', version: '3.0.0' } },
+};
+const NONE: ToolPin = commandPin('compiler', '4.0.0');
+
 test.each([
-    ['javascript', 'eslint', undefined, 'npm'],
-    ['javascript', 'eslint', 'mise', 'npm'],
-    ['structure', 'ast-grep', 'mise', undefined],
-    ['structure', 'ast-grep', 'npm', 'npm'],
-    ['python', 'ruff', undefined, 'python'],
-    ['python', 'ruff', 'mise', 'python'],
-    ['typescript', 'tsc', undefined, undefined],
-] as const)('installation placement for %s/%s under %s is %s', (configuration, name, runner, kind) => {
-    const tool = kitManifests()
-        .get(configuration)!
-        .tools.find((entry) => entry.name === name)!;
-    expect(tool).toBeDefined();
+    ['an npm pin', NPM, undefined, 'npm'],
+    ['an npm pin', NPM, 'mise', 'npm'],
+    ['an npm or mise pin', MISE_FIRST, 'mise', undefined],
+    ['an npm or mise pin', MISE_FIRST, 'npm', 'npm'],
+    ['a PyPI pin', PYPI, undefined, 'python'],
+    ['a PyPI pin', PYPI, 'mise', 'python'],
+    ['a pin with no installer', NONE, undefined, undefined],
+] as const)('the private installation of %s under %s is %s', (_label, tool, runner, kind) => {
     const placement = privateToolInstallation(tool, runner);
     expect(placement?.kind).toBe(kind);
     // A private installation pins the version its installer names.
     const installer = placement?.kind === 'python' ? 'pypi' : 'npm';
-    const pinned = placement === undefined ? undefined : tool.installers[installer]?.version;
-    expect(pinned).toBe(placement?.version);
+    expect(placement === undefined ? undefined : tool.installers[installer]?.version).toBe(placement?.version);
 });
 
 test('a missing private npm binary cannot fall back to the developer executable', async () => {
@@ -70,7 +80,7 @@ test('a missing private npm binary cannot fall back to the developer executable'
         'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         'node_modules/teller/run.sh': '#!/bin/sh\ntouch fallback-ran\necho 5.0.1\n',
     });
-    chmodSync(join(sandbox.path, 'node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(sandbox.path, 'node_modules/teller/run.sh'), EXECUTABLE_FILE);
     mkdirSync(join(sandbox.path, 'node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, 'node_modules/.bin/teller'));
     const tool = commandPin('teller', '5.0.1', 'teller');
@@ -82,7 +92,7 @@ test('a missing private npm binary cannot fall back to the developer executable'
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         '.gspot/node_modules/teller/run.sh': '#!/bin/sh\necho 5.0.1\n',
     });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
@@ -107,14 +117,14 @@ test('a private Python pin refuses a project executable and uses its own environ
         [venvExecutable('.venv', 'teller')]:
             `#!${process.execPath}\nawait Bun.write('fallback-ran', '');\nconsole.log('1.2.3');\n`,
     });
-    chmodSync(join(sandbox.path, venvExecutable('.venv', 'teller')), RUNS);
+    chmodSync(join(sandbox.path, venvExecutable('.venv', 'teller')), EXECUTABLE_FILE);
     const tool = commandPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
     expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool).state).toBe('missing');
     await createFileTree(sandbox.path, {
         [venvExecutable('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
     });
-    chmodSync(join(sandbox.path, venvExecutable('.gspot/.venv', 'teller')), RUNS);
+    chmodSync(join(sandbox.path, venvExecutable('.gspot/.venv', 'teller')), EXECUTABLE_FILE);
     expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
         state: 'ok',
         found: '1.2.3',

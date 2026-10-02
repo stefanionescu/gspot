@@ -1,5 +1,5 @@
-import { tester } from '#tests/support/plugin/tester.ts';
-import { plantedRoot } from '#tests/support/plugin/planted.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
+import { plantedRoot } from '#tests/harness/plugin/planted.ts';
 import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
 
 const root = await plantedRoot({

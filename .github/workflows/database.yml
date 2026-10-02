@@ -28,4 +28,4 @@ jobs:
             - run: mise use --global supabase@2.72.7
             - run: mise run --skip-tools repo:setup
             - run: mise run --skip-tools repo:install-checks
-            - run: mise run --skip-tools test:tools -- ./integration/tools/checks/supabase/types.test.ts
+            - run: mise run --skip-tools test:tools -- ./tools/cli/checks/supabase/types.test.ts

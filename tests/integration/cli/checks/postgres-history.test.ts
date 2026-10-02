@@ -6,12 +6,17 @@ import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { sessionInput } from '#tests/support/cli/input.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { sessionInput } from '#tests/harness/cli/input.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
-import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/inputs/integration/cli/checks.ts';
+
+const POSTGRES_HISTORY_POLICY = policyOf(['postgres'], '[tools.squawk]\nfrozen_through = "all"\n');
+
+const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
+
+const PATH = 'migrations/20240201_teams.sql';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

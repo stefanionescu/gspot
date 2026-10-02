@@ -5,10 +5,11 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { textContaining } from '#tests/support/expectations.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 
 test('a disabled setting skips its check and enabling the setting runs it', async () => {
     const policy = policyOf(['xcode'], '', 'all');
@@ -18,15 +19,9 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['xcode/entitlements-policy'],
-        fix: false,
-        isDryRun: false,
-    };
+    const options = runOptions({ only: ['xcode/entitlements-policy'] });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, { ...options, checks: CHECKS });
+    const outcome = await executeRun(session, options);
     expect(outcome.report.checks).toMatchObject([
         {
             check: 'xcode/entitlements-policy',
@@ -38,7 +33,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         join(sandbox.path, 'gspot.toml'),
         policy + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
-    const enabled = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const enabled = await executeRun(await openSession(sandbox.path), options);
     expect(enabled.report.exitCode).toBe(1);
     expect(enabled.report.checks[0]?.status).toBe('fail');
     expect(enabled.report.checks[0]?.findings[0]?.message).toContain('aps-environment is not an allowed entitlement');

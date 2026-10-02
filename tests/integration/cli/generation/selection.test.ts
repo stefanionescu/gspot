@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 
 test('security output follows the selected security configuration', async () => {
     await using sandbox = await testdir();
@@ -16,10 +16,7 @@ test('security output follows the selected security configuration', async () => 
     });
     const target = '.gspot/config/semgrep/bash.yml';
     const plainSession = await openSession(sandbox.path);
-    const plainOutput = emitAll(plainSession.policyFiles.policy, plainSession.repository, plainSession.scopes, {
-        version: plainSession.version,
-        packageClient: plainSession.packageClient,
-    });
+    const plainOutput = emitted(plainSession);
     expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
     writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
@@ -47,10 +44,7 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
         'dir',
     );
     const session = await openSession(sandbox.path);
-    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    });
+    const output = emitted(session);
     const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
     expect(config).toBeDefined();
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
@@ -79,11 +73,13 @@ test('license configuration retains scoped exceptions and inherited license allo
         ),
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('/licenses.json'));
-    const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content) as LicensesConfiguration]));
+    const configs = emitted(session).files.filter(({ path }) => path.endsWith('/licenses.json'));
+    const parsed = new Map(
+        configs.map(({ path, content }) => [
+            path,
+            JSON.parse(content) as { licenses_allowed: string[]; packages_allowed: unknown[] },
+        ]),
+    );
     expect(parsed.size).toBe(4);
     for (const path of [
         '.gspot/config/licenses.json',

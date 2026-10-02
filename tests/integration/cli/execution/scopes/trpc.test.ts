@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test.each([
@@ -24,7 +24,7 @@ test.each([
         'public.ts': 'import {publicValue} from "./server-public/unrelated.js";\n',
     });
     const command = ['check', '--only', 'trpc/router-boundaries', '--json'];
-    const failed = await run(sandbox.path, command);
+    const failed = await runGspot(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
     expect(findings).toMatchObject([{ file: 'client.ts', line: 2, rule: 'server-import' }]);
@@ -33,7 +33,7 @@ test.each([
         `${sandbox.path}/client.ts`,
         'import type { router } from "./private/router.js";\nimport { type router as Router } from "./private/router.js";\n',
     );
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
     expect(await Bun.file(`${sandbox.path}/public.ts`).text()).toBe(
@@ -59,7 +59,7 @@ test('tRPC architecture boundaries retain source locations, scope isolation, and
         'app/child/client.ts': source,
     });
     const command = ['check', '--only', 'trpc/router-boundaries', '--json'];
-    const failed = await run(sandbox.path, command);
+    const failed = await runGspot(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
         (JSON.parse(failed.stdout) as RunReport).checks.map((entry) => ({
@@ -72,11 +72,11 @@ test('tRPC architecture boundaries retain source locations, scope isolation, and
         { scope: 'app/child', findings: [{ file: 'app/child/client.ts', line: 2 }] },
     ]);
     await Bun.write(`${sandbox.path}/app/child/client.ts`, 'import { broken from "./private/router.js";\n');
-    const malformed = await run(sandbox.path, command);
+    const malformed = await runGspot(sandbox.path, command);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
     expect(malformed.stdout).toContain('Cannot parse imports in app/child/client.ts');
     await Bun.write(`${sandbox.path}/app/child/client.ts`, 'import type { router } from "./private/router.js";\n');
-    const corrected = await run(sandbox.path, command);
+    const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
     expect(await Bun.file(`${sandbox.path}/server/public.ts`).text()).toBe('export const value = 1;\n');

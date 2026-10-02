@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { importDirection } from '#plugin/rules/import-direction.ts';
 import type { ImportDirectionOptions } from '#plugin/types/rules.ts';
 

@@ -1,9 +1,10 @@
 // Runs the package acceptance tests against a release published to a throwaway local registry.
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { root } from '#tests/support/package/packages.ts';
-import { publishRelease } from '#tests/support/package/published.ts';
-import { startRegistry, settleRegistry } from '#tests/support/registry/lifecycle.ts';
+import { root } from '#tests/harness/package/packages.ts';
+import { PACKAGE_RUN_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { publishRelease } from '#tests/harness/package/published.ts';
+import { startRegistry, settleRegistry } from '#tests/harness/registry/lifecycle.ts';
 
 const controller = new AbortController();
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: process.on and process.removeListener need the same function.
@@ -20,12 +21,12 @@ try {
         const release = await publishRelease(registry, controller.signal);
         const args = process.argv.slice(2);
         const executed = await run(
-            [process.execPath, 'test', '--timeout', '60000', ...(args.length === 0 ? ['./acceptance/package'] : args)],
+            [process.execPath, 'test', '--timeout', '60000', ...(args.length === 0 ? ['./packages'] : args)],
             {
                 cwd: join(root, 'tests'),
                 env: { GSPOT_RELEASE_FIXTURE: JSON.stringify(release) },
                 cancelSignal: controller.signal,
-                timeoutMs: 30 * 60_000,
+                timeoutMs: PACKAGE_RUN_TIMEOUT_MS,
                 onStdout: (chunk) => {
                     process.stdout.write(chunk);
                 },

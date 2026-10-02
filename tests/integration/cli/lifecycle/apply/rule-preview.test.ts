@@ -5,8 +5,9 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {
     await using sandbox = await testdir();
@@ -16,10 +17,7 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
         'Example.swift': 'let example = 1\n',
     });
     const originalSession = await openSession(sandbox.path);
-    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
-        version: originalSession.version,
-        packageClient: originalSession.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/swiftlint.yml')!;
+    const original = emitted(originalSession).files.find((file) => file.path === '.gspot/config/swiftlint.yml')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
@@ -58,10 +56,7 @@ test('apply preview names a removed suppression without changing installed rules
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture verifies a removed suppression."\n`,
     });
     const originalSession = await openSession(sandbox.path);
-    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
-        version: originalSession.version,
-        packageClient: originalSession.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/shellcheckrc')!;
+    const original = emitted(originalSession).files.find((file) => file.path === '.gspot/config/shellcheckrc')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
@@ -87,10 +82,7 @@ test('apply preview names added Vale styles when prose moves from recommended to
     const policy = policyOf(['prose'], '[guides]\ninstall = false\n');
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
     const originalSession = await openSession(sandbox.path);
-    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
-        version: originalSession.version,
-        packageClient: originalSession.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/vale.ini')!;
+    const original = emitted(originalSession).files.find((file) => file.path === '.gspot/config/vale.ini')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), `level = "all"\n${policy}`);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
@@ -130,10 +122,9 @@ test('apply preview names an enabled rule and preserves installed configuration'
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "commits/commitlint"\nrule = "type-case"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
     });
     const originalSession = await openSession(sandbox.path);
-    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
-        version: originalSession.version,
-        packageClient: originalSession.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/commitlint.config.cjs')!;
+    const original = emitted(originalSession).files.find(
+        (file) => file.path === '.gspot/config/commitlint.config.cjs',
+    )!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });

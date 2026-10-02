@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseManifest } from '#cli/kits/manifests.ts';
+import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
 test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
     'parseManifest > file isolation refuses an incomplete command declaration %s',
@@ -41,4 +41,15 @@ test('a generated configuration needs a reader in its manifest or the kit it nee
         '[kit]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "x.yml.tmpl"\ntarget = ".gspot/config/semgrep/x.yml"\n';
     expect(() => parseManifest(source, 'configurations/x')).toThrow('has no check that reads it');
     expect(() => parseManifest(`${source}needs = "security"\n`, 'configurations/x')).not.toThrow();
+});
+
+test('every pinned tool a manifest command names is defined in that manifest', () => {
+    const manifests = [...kitManifests().values()];
+    const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    const undefinedTools = manifests.flatMap((manifest) =>
+        manifest.checks
+            .flatMap((check) => (check.command === undefined ? [] : [check.tool ?? check.command[0]!]))
+            .filter((name) => !declared.has(name)),
+    );
+    expect([...new Set(undefinedTools)]).toStrictEqual([]);
 });

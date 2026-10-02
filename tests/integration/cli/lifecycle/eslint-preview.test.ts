@@ -6,12 +6,12 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
-import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();
@@ -38,15 +38,12 @@ test('apply preview names a generated ESLint rule change using installed depende
     });
     linkInstalledModules(join(directory.path, '.gspot/node_modules'));
     const originalSession = await openSession(directory.path);
-    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
-        version: originalSession.version,
-        packageClient: originalSession.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    const original = emitted(originalSession).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(directory.path, original.path), original.content);
     const nativeBefore = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    }).calculateConfigForFile('entry.js')) as { rules: Record<string, [number, ...unknown[]]> };
     expect(nativeBefore.rules['no-console']?.[0]).toBe(0);
     writeFileSync(join(directory.path, 'gspot.toml'), `${policy}${ignored}paths = ["tests/**"]\n`);
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
@@ -67,7 +64,7 @@ test('apply preview names a generated ESLint rule change using installed depende
     const nativeAfter = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    }).calculateConfigForFile('entry.js')) as { rules: Record<string, [number, ...unknown[]]> };
     expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });

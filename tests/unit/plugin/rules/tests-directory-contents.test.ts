@@ -1,5 +1,5 @@
-import { tester } from '#tests/support/plugin/tester.ts';
-import { plantedRoot } from '#tests/support/plugin/planted.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
+import { plantedRoot } from '#tests/harness/plugin/planted.ts';
 import { testsDirectoryContents } from '#plugin/rules/tests-directory-contents.ts';
 
 const root = await plantedRoot({

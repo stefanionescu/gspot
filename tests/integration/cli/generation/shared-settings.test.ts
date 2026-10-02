@@ -1,14 +1,16 @@
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containingAll } from '#tests/support/expectations.ts';
-import { generatedFile } from '#tests/support/cli/generated/files.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
+import { generatedFile } from '#tests/harness/cli/generated.ts';
 
-import {
-    PYTHON,
-    TAILWIND_AT_RULES,
-    SHARED_SETTINGS_PACKAGE,
-} from '#tests/inputs/integration/cli/generation/generation.ts';
+const SHARED_SETTINGS_PACKAGE = '{"private":true,"type":"module"}\n';
+
+// The at-rules the Next.js kit adds for Tailwind, read from its manifest so the test pins no copy.
+const TAILWIND_AT_RULES = kitManifests().get('nextjs')!.defaults['tools.stylelint.ignore_at_rules'];
+
+const PYTHON = policyOf(['python']);
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases read the generated knip configuration; one owner parses it.
 async function knipConfiguration(

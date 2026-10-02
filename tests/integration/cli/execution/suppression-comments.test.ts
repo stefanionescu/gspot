@@ -1,10 +1,10 @@
 import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 test.each([
@@ -70,14 +70,10 @@ test.each([
             'gspot.toml': 'level = "all"\nrequire_reasons = true\nkits = ["typescript", "bash"]\n',
             [path]: source,
         });
-        const result = await executeRun(await openSession(sandbox.path), {
-            checks: CHECKS,
-            stage: 'commit',
-            only: ['integrity/suppressions'],
-            skips: [],
-            fix: false,
-            isDryRun: true,
-        });
+        const result = await executeRun(
+            await openSession(sandbox.path),
+            runOptions({ stage: 'commit', only: ['integrity/suppressions'], isDryRun: true }),
+        );
         expect(result.report.checks.map(({ status }) => status)).toStrictEqual([lines.length === 0 ? 'ok' : 'fail']);
         expect(result.report.checks.flatMap(({ findings }) => findings.map(({ line }) => line))).toStrictEqual([
             ...lines,
@@ -110,14 +106,7 @@ test.each(['-->', '--!>'])(
             },
             { file: 'page.html', line: 2, form: 'html-validate', forbidden: false },
         ]);
-        const result = await executeRun(session, {
-            checks: CHECKS,
-            stage: 'commit',
-            skips: [],
-            fix: false,
-            isDryRun: false,
-            only: ['integrity/suppressions'],
-        });
+        const result = await executeRun(session, runOptions({ stage: 'commit', only: ['integrity/suppressions'] }));
         expect(result.report.exitCode).toBe(1);
         expect(
             result.report.checks.flatMap((check) => check.findings).map(({ file, line }) => ({ file, line })),

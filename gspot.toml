@@ -95,8 +95,8 @@ patterns = [
 reason = "Documentation walkthroughs and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
 
 [[tools.docs.paths_allowed]]
-patterns = ["acceptance/source/kits/css.test.ts"]
-reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/kits/css.test.ts."
+patterns = ["acceptance/kits/language/css.test.ts"]
+reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/kits/language/css.test.ts."
 
 [[tools.docs.paths_allowed]]
 patterns = ["packages/cli/guides/**"]
@@ -135,7 +135,7 @@ reason = "The site links are root-relative and resolve once Starlight builds it;
 [tools.typos]
 
 [[tools.typos.exclude]]
-paths = ["tests/support/spelling.ts"]
+paths = ["tests/harness/spelling.ts"]
 reason = "The deliberate misspellings the spelling tests plant; every other test file stays checked."
 
 [[tools.typos.exclude]]
@@ -272,17 +272,17 @@ names = ["MD007"]
 reason = "The markdownlint rule name."
 
 [[naming.contract_properties]]
-file = "tests/integration/tools/parameter-limits.test.ts"
+file = "tests/tools/cli/parameter-limits.test.ts"
 names = ["rule_id"]
 reason = "The SwiftLint JSON diagnostic key."
 
 [[naming.contract_properties]]
-file = "tests/types/integration/cli/generation.ts"
+file = "tests/integration/cli/generation/selection.test.ts"
 names = ["licenses_allowed", "packages_allowed"]
 reason = "The license scanner policy keys."
 
 [[naming.contract_properties]]
-file = "tests/types/acceptance/source/cli.ts"
+file = "tests/acceptance/cli/ci.test.ts"
 names = ["with"]
 reason = "The GitHub Actions inputs key."
 
@@ -483,9 +483,9 @@ to = ["platform"]
 
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
-harness = "tests/support"
+harness = "tests/harness"
 runtime = ["src/**"]
-env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]
+env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts"]
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
@@ -596,13 +596,12 @@ reason = "The site imports the fonts from docs/src/theme.css, outside the TypeSc
 
 [[structure.folder_name_allowed]]
 paths = [
-    "tests/acceptance/source/kits/bash",
-    "tests/acceptance/source/kits/python",
-    "tests/acceptance/source/kits/swift",
-    "tests/acceptance/source/kits/typescript",
-    "tests/integration/cli/checks/swift",
-    "tests/support/cli/python",
-    "tests/unit/cli/checks/python",
+    "tests/acceptance/kits/language/bash",
+    "tests/acceptance/kits/language/python",
+    "tests/acceptance/kits/language/swift",
+    "tests/acceptance/kits/language/typescript",
+    "tests/integration/cli/checks/language/swift",
+    "tests/unit/cli/checks/language/python",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
@@ -614,6 +613,10 @@ paths = [
     "packages/cli/src/checks/language/swift",
 ]
 reason = "Each folder holds the checks of one language kit and is named after the kit, as the kits folder is."
+
+[[structure.single_file_folder_allowed]]
+paths = ["tests/acceptance/kits/database", "tests/acceptance/kits/library", "tests/acceptance/kits/platform"]
+reason = "The acceptance tests of the kits sit under the kit category, as the kits folder does, and these categories have one test file."
 
 [[structure.single_file_folder_allowed]]
 paths = ["docs/src/pages/schema"]
@@ -699,13 +702,13 @@ languages = ["javascript-typescript", "actions"]
 [[tools.codeql.false_positives]]
 rule = "js/file-system-race"
 paths = [
-    "tests/acceptance/source/cli/agents.test.ts",
-    "tests/acceptance/source/cli/lifecycle/clone.test.ts",
-    "tests/integration/cli/checks/nextjs-build.test.ts",
-    "tests/integration/cli/checks/swift/build/isolation.test.ts",
+    "tests/acceptance/cli/agents.test.ts",
+    "tests/acceptance/cli/lifecycle/clone.test.ts",
+    "tests/integration/cli/checks/framework/nextjs-build.test.ts",
+    "tests/integration/cli/checks/language/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/resource-reads.test.ts",
-    "tests/integration/tools/tools/packages/project.test.ts",
-    "tests/support/cli/preservation.ts",
+    "tests/tools/cli/packages/project.test.ts",
+    "tests/harness/planted/preservation.ts",
 ]
 reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
 

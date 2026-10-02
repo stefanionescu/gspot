@@ -1,0 +1,138 @@
+import { join, dirname } from 'node:path';
+import type { PlantedInput } from '#tests/types/cli.ts';
+
+import {
+    rmSync,
+    statSync,
+    chmodSync,
+    lstatSync,
+    mkdirSync,
+    rmdirSync,
+    unlinkSync,
+    readdirSync,
+    symlinkSync,
+    readFileSync,
+    readlinkSync,
+    writeFileSync,
+} from 'node:fs';
+
+function originalFile(
+    path: string,
+): { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string } | undefined {
+    try {
+        const attributes = lstatSync(path);
+        if (attributes.isSymbolicLink()) return { kind: 'symlink', target: readlinkSync(path) };
+        return { kind: 'file', bytes: readFileSync(path), mode: attributes.mode };
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
+function isAbsent(path: string): boolean {
+    try {
+        lstatSync(path);
+        return false;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return true;
+        throw error;
+    }
+}
+
+function absentParents(cwd: string, paths: string[]): string[] {
+    const parents = new Set<string>();
+    for (const path of paths) {
+        let parent = dirname(join(cwd, path));
+        while (parent !== cwd && isAbsent(parent)) {
+            parents.add(parent);
+            parent = dirname(parent);
+        }
+    }
+    return [...parents].toSorted((a, b) => b.length - a.length);
+}
+
+function restoreFiles(
+    cwd: string,
+    originals: Map<
+        string,
+        { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string } | undefined
+    >,
+): void {
+    for (const [path, original] of originals) {
+        const full = join(cwd, path);
+        rmSync(full, { force: true });
+        if (original?.kind === 'symlink') symlinkSync(original.target, full);
+        else if (original?.kind === 'file') {
+            writeFileSync(full, original.bytes);
+            chmodSync(full, original.mode);
+        }
+    }
+}
+
+function removeParents(parents: string[]): void {
+    for (const path of parents) {
+        try {
+            rmdirSync(path);
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        }
+    }
+}
+
+function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
+    const { removed = [], executable = [] } = planted;
+    for (const path of removed) rmSync(join(cwd, path));
+    for (const [path, text] of Object.entries(planted.files)) {
+        const full = join(cwd, path);
+        mkdirSync(dirname(full), { recursive: true });
+        if (lstatSync(full, { throwIfNoEntry: false })?.isSymbolicLink() === true) unlinkSync(full);
+        writeFileSync(full, text);
+    }
+    for (const path of executable) chmodSync(join(cwd, path), statSync(join(cwd, path)).mode | 0o111);
+    writeFileSync(join(cwd, 'gspot.toml'), policy);
+}
+
+// Preserve bytes and permissions before the first mutation, including setup that fails partway through.
+export function plant(cwd: string, planted: PlantedInput): () => void {
+    const policyPath = join(cwd, 'gspot.toml');
+    const current = readFileSync(policyPath, 'utf8');
+    const policy = planted.policy === undefined ? current : `${current}\n${planted.policy}`;
+    const gone = planted.removed ?? [];
+    const executables = planted.executable ?? [];
+    const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(planted.files)])];
+    const originals = new Map(paths.map((path) => [path, originalFile(join(cwd, path))]));
+    for (const path of gone)
+        if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
+    const parents = absentParents(cwd, paths);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The caller receives this function and the failure path runs it; both need the same value.
+    const restore = (): void => {
+        restoreFiles(cwd, originals);
+        removeParents(parents);
+    };
+    try {
+        plantFiles(cwd, planted, policy);
+    } catch (error) {
+        restore();
+        throw error;
+    }
+    return restore;
+}
+
+/**
+ * Captures repository paths, file contents, and modes for write-preservation tests.
+ * @param root the repository directory
+ * @returns each path and its mode and contents
+ */
+export function treeContents(root: string): Record<string, string> {
+    return Object.fromEntries(
+        readdirSync(root, { recursive: true }).map((entry) => {
+            const path = String(entry);
+            const full = join(root, path);
+            const attributes = lstatSync(full);
+            let bytes = 'directory';
+            if (attributes.isSymbolicLink()) bytes = `symlink:${readlinkSync(full)}`;
+            else if (attributes.isFile()) bytes = `file:${readFileSync(full).toString('base64')}`;
+            return [path, `${String(attributes.mode)}:${bytes}`];
+        }),
+    );
+}

@@ -1,7 +1,9 @@
 import { test, expect } from 'bun:test';
 import { validateManifests } from '#cli/kits/problems.ts';
-import { PINNED_HEADER } from '#tests/inputs/unit/cli/kits.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
+
+const PINNED_HEADER =
+    '[kit]\nname = "pinned"\nkind = "tool"\ntitle = "Pinned"\ndescription = "Pins one tool for the tests."\n';
 
 test('every shipped manifest passes the checks across manifests', () => {
     expect(() => {

@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
@@ -19,10 +19,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
         'bunfig.toml': original,
     });
     const session = await openSession(repository.path);
-    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).configurations.find((entry) => entry.path === 'bunfig.toml')!;
+    const generated = emitted(session).configurations.find((entry) => entry.path === 'bunfig.toml')!;
     const owner = openOwner(repository.path);
     owner.applyPlan(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
     const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { cliSource } from '#tests/support/cli/process.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { cliSource } from '#tests/harness/cli/process.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { symlinkSync, readFileSync, readlinkSync } from 'node:fs';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';

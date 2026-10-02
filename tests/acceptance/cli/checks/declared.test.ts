@@ -1,0 +1,148 @@
+// Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { script } from '#tests/harness/planted/cases.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
+import { toolsPath } from '#tests/harness/tools/install.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
+
+const ENTRY = String.raw`
+[[check]]
+name = "notes/no-fixme"
+command = ["grep", "-n", "-H", "FIXME", "{files}"]
+paths = ["notes/**"]
+stage = "commit"
+count_regex = "FIXME"
+summary = "Finds FIXME notes left in the notes folder."
+
+[check.output]
+format = "regex"
+pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
+`;
+
+test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
+    const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gitignore': '.gspot/\n',
+        'gspot.toml': `kits = []
+
+[[check]]
+name = "notes/state"
+command = ${JSON.stringify(command)}
+paths = ["selected.txt"]
+stage = "commit"
+`,
+        'selected.txt': 'unchanged trigger',
+        'state.txt': 'invalid',
+    });
+    const failed = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(failed.code).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
+
+    await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
+    const passed = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(passed.code).toBe(0);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
+
+    await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
+    const failedAgain = await spawnGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(failedAgain.code).toBe(1);
+    expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
+        { check: 'notes/state', status: 'fail' },
+    ]);
+});
+
+test(
+    'a [[check]] entry > runs the command of the repository and reports file and line through its output format',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'scripts/a.sh': script,
+            'notes/plan.txt': 'one\nFIXME later\n',
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
+        await spawnGspot(
+            sandbox.path,
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
+            environment,
+        );
+        const policy = join(sandbox.path, 'gspot.toml');
+        await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
+        const check = await spawnGspot(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
+        expect(check.code).toBe(1);
+        expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
+            {
+                check: 'notes/no-fixme',
+                status: 'fail',
+                findings: [{ file: 'notes/plan.txt', line: 2, message: 'FIXME later' }],
+            },
+        ]);
+        await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'notes/no-fixme', status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test('a declared check maps nested JSON output into findings', async () => {
+    const diagnostic = {
+        files: [
+            { path: 'source.txt', messages: [{ row: 0, column: 2, code: 'sandbox-rule', text: 'A planted defect.' }] },
+        ],
+    };
+    const command = [
+        process.execPath,
+        '-e',
+        `if ((await Bun.file('source.txt').text()) === 'defect') { console.log(${JSON.stringify(JSON.stringify(diagnostic))}); process.exitCode = 1; } else console.log(JSON.stringify({files:[]}));`,
+    ];
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.txt': 'defect',
+        'gspot.toml': `kits = []
+[[check]]
+name = "sandbox/json"
+command = ${JSON.stringify(command)}
+paths = ["source.txt"]
+stage = "commit"
+[check.output]
+format = "json"
+items = "files"
+children = "messages"
+line_base = 0
+[check.output.fields]
+file = "path"
+line = "row"
+column = "column"
+rule = "code"
+message = "text"
+`,
+    });
+    const result = await spawnGspot(sandbox.path, ['check', '--json']);
+    expect(result.code).toBe(1);
+    const report = JSON.parse(result.stdout) as RunReport;
+    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
+    expect(report.checks[0]?.findings).toMatchObject([
+        {
+            check: 'sandbox/json',
+            file: 'source.txt',
+            line: 1,
+            column: 3,
+            rule: 'sandbox-rule',
+            message: 'A planted defect.',
+        },
+    ]);
+    await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
+    const corrected = await spawnGspot(sandbox.path, ['check', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        { check: 'sandbox/json', status: 'ok', findings: [] },
+    ]);
+});

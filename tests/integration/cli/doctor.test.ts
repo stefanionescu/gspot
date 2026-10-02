@@ -5,10 +5,10 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { installHooks } from '#cli/lifecycle/hooks-path.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { containing, containingAll } from '#tests/support/expectations.ts';
+import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('doctor lists a tool only on the systems it has a build for', async () => {
     await using sandbox = await testdir();

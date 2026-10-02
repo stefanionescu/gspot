@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/support/spelling.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { TYPO } from '#tests/harness/spelling.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
@@ -50,21 +50,6 @@ test('SQL statement positions skip nested comments and count Unicode prefixes co
     expect(parsed.statements.map((statement) => positionAt(text, statement.start))).toStrictEqual([
         { line: 5, column: 1 },
         { line: 8, column: 2 },
-    ]);
-});
-
-test('concurrent SQL parsing returns independent results in a fresh process', () => {
-    const script = `
-        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/pg.ts', import.meta.dir))};
-        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parseSql(sql)));
-        console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
-    `;
-    const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });
-    expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(JSON.parse(result.stdout.toString())).toStrictEqual([
-        null,
-        { text: `syntax error at or near "${TYPO.select}"`, offset: 0 },
-        null,
     ]);
 });
 

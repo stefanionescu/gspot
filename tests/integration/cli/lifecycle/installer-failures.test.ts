@@ -4,10 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { initOptions } from '#tests/harness/planted/init.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { installCommand } from '#cli/commands/install/command.ts';
 import { MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
@@ -39,18 +40,16 @@ test.each([
             });
         });
         try {
-            const result = await initCommand({
-                cwd: sandbox.path,
-                yes: true,
-                isDryRun: false,
-                json: true,
-                kits: ['none'],
-                hooks: 'none',
-                ci: 'none',
-                runner: 'mise',
-                rules: 'no',
-                install: true,
-            });
+            const result = await initCommand(
+                initOptions(sandbox.path, {
+                    kits: ['none'],
+                    hooks: 'none',
+                    ci: 'none',
+                    runner: 'mise',
+                    rules: 'no',
+                    install: true,
+                }),
+            );
             expect(result.exitCode).toBe(2);
             expect(result.text).toContain('tool installation is incomplete');
             expect(result.text).toContain('Run: gspot install');
@@ -89,19 +88,17 @@ test('init does not report success when required Python lock resolution cannot r
     try {
         expect(
             await rejection(
-                initCommand({
-                    cwd: sandbox.path,
-                    yes: true,
-                    isDryRun: false,
-                    json: true,
-                    kits: ['python'],
-                    isListExact: true,
-                    hooks: 'none',
-                    ci: 'none',
-                    runner: 'mise',
-                    rules: 'no',
-                    install: true,
-                }),
+                initCommand(
+                    initOptions(sandbox.path, {
+                        kits: ['python'],
+                        isListExact: true,
+                        hooks: 'none',
+                        ci: 'none',
+                        runner: 'mise',
+                        rules: 'no',
+                        install: true,
+                    }),
+                ),
             ),
         ).toContain('Install uv');
         expect(readFileSync(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');

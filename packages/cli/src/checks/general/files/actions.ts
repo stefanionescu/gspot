@@ -47,8 +47,12 @@ function replaceReference(text: string, reference: Scalar): string {
     return text.slice(0, start) + replaced + text.slice(start + source.length);
 }
 
-// Actionlint predates self-repository syntax. Substitute local references while preserving offsets.
-function actionlintSource(text: string): string {
+/**
+ * Actionlint predates self-repository syntax. Substitute local references while preserving offsets.
+ * @param text a workflow or action file
+ * @returns the text with each self-repository marker of a reference turned into a local path, at the same offsets
+ */
+export function actionlintSource(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
     if (document.errors.length > 0 || !isMap(document.contents)) return text;
     let prepared = text;

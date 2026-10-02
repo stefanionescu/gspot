@@ -3,15 +3,15 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { head, readSource } from '#cli/repository/sources.ts';
 
 test('opening a session reads less than one megabyte with a two-megabyte source', async () => {
@@ -103,20 +103,14 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
     const root = join(sandbox.path, 'project');
     const baseline = join(root, '.gspot/gitleaks-baseline.json');
     fs.symlinkSync('../../baseline.json', baseline);
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['integrity/gitleaks-baseline'],
-        fix: false,
-        isDryRun: false,
-    };
-    const refused = await executeRun(await openSession(root), { ...options, checks: CHECKS });
+    const options = runOptions({ only: ['integrity/gitleaks-baseline'] });
+    const refused = await executeRun(await openSession(root), options);
     expect(refused.report.exitCode).toBe(2);
     expect(refused.report.checks[0]).toMatchObject({ status: 'error', findings: [] });
     expect(refused.report.checks[0]!.note).toContain('private regular file');
     fs.unlinkSync(baseline);
     await Bun.write(baseline, '[]\n');
-    const corrected = await executeRun(await openSession(root), { ...options, checks: CHECKS });
+    const corrected = await executeRun(await openSession(root), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(fs.readFileSync(join(sandbox.path, 'baseline.json'), 'utf8')).toBe('[]\n');
 });
@@ -168,14 +162,8 @@ if (onPosix)
             'gspot.toml': policyOf(['bash']),
             ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
         });
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            only: ['bash/syntax'],
-            fix: false,
-            isDryRun: false,
-        };
-        const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+        const options = runOptions({ only: ['bash/syntax'] });
+        const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);
         expect(
             [...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].toSorted((left, right) =>
@@ -183,7 +171,7 @@ if (onPosix)
             ),
         ).toStrictEqual(paths);
         for (const path of paths) writeFileSync(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
-        const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+        const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     });

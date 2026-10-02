@@ -3,12 +3,13 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { runSourceCommand } from '#tests/support/registry/plugin.ts';
+import { runSourceCommand } from '#tests/harness/registry/plugin.ts';
+import { SOURCE_COMMAND_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);
 
-await runSourceCommand([process.execPath, 'packages/cli/src/main.ts', ...args], ROOT, 10 * 60_000);
+await runSourceCommand([process.execPath, 'packages/cli/src/main.ts', ...args], ROOT, SOURCE_COMMAND_TIMEOUT_MS);
 if (args[0] === 'install' && (process.exitCode === undefined || process.exitCode === 0)) {
     for (const file of ['plugin.js', 'plugin.cjs', 'plugin.d.ts']) {
         const built = readFileSync(join(ROOT, 'packages/eslint-plugin/dist', file));

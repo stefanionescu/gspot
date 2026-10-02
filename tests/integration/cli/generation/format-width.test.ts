@@ -4,8 +4,8 @@ import { parse as parseYaml } from 'yaml';
 import prettier, { type Options } from 'prettier';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
@@ -23,12 +23,7 @@ test('the format width reaches editors and generated tool configurations', async
         'sample.sh': 'echo example\n',
     });
     const session = await openSession(directory.path);
-    const generated = new Map(
-        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.map((file) => [file.path, file.content]),
-    );
+    const generated = new Map(emitted(session).files.map((file) => [file.path, file.content]));
     const [bashCheck] = planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
     const command = prepareCommand(session, bashCheck!, bashCheck!.spec.command!);
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
@@ -70,12 +65,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
         'sample.yaml': 'parent:\n child: value\n',
     });
     const session = await openSession(directory.path);
-    const generated = new Map(
-        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.map((file) => [file.path, file.content]),
-    );
+    const generated = new Map(emitted(session).files.map((file) => [file.path, file.content]));
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     await Bun.write(join(directory.path, '.gspot/config/prettier.json'), generated.get('.gspot/config/prettier.json')!);
     await Bun.write(join(directory.path, '.prettierrc.json'), generated.get('.prettierrc.json')!);

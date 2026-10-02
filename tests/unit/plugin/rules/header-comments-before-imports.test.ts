@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-before-imports.ts';
 
 tester().run('header-comments-before-imports', headerCommentsBeforeImports, {

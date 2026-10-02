@@ -6,8 +6,19 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection, textContaining } from '#tests/support/expectations.ts';
-import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/inputs/integration/cli/execution/execution.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
+
+const POLICY_FINDINGS_OPTIONS = runOptions({ only: ['swift/trivial-function'] });
+
+const BROKEN = policyOf(
+    ['swift'],
+    'require_reasons = true\n[[ignore]]\ncheck = "swift/trivial-function"\npaths = ["Sources/Other.swift"]\n',
+    'all',
+);
+
+const CORRECTED = `${BROKEN}reason = "The protocol entry point forwards by design."\n`;
 
 test('a wrong entry in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();

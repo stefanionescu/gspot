@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import type { CheckResult } from '#cli/types/execution/execution.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
@@ -41,17 +41,16 @@ test('completion callbacks publish filtered results before the remaining check f
         }),
     });
     const completed: CheckResult[] = [];
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        fix: false,
-        isDryRun: true,
-        onResult: (entry) => {
-            completed.push(entry);
-            if (entry.check === 'project/fast') writeFileSync(join(sandbox.path, 'completed'), 'ready');
-        },
-    });
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        runOptions({
+            isDryRun: true,
+            onResult: (entry) => {
+                completed.push(entry);
+                if (entry.check === 'project/fast') writeFileSync(join(sandbox.path, 'completed'), 'ready');
+            },
+        }),
+    );
     expect(result.report.exitCode).toBe(0);
     expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
     expect(completed[0]).toMatchObject({ status: 'ok', findings: [] });

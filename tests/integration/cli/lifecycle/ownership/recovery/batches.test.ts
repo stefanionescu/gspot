@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { cliSource } from '#tests/support/cli/process.ts';
+import { cliSource } from '#tests/harness/cli/process.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');

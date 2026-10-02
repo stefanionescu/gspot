@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { PAGE } from '#tests/inputs/integration/cli/execution/execution.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
+
+const PAGE = '<script>\n    let count = 0;\n</script>\n<p>{count}</p>\n';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
     await using sandbox = await testdir();
@@ -33,14 +34,10 @@ test('folder checks count code files and preserve allowed and nested directories
         'dist/pkg/lone.ts': '',
         'allowed/only.ts': '',
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/single-file-folder'],
-    });
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        runOptions({ only: ['structure/single-file-folder'] }),
+    );
     expect(result.report.exitCode).toBe(1);
     expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
         'dist/pkg/lone.ts',
@@ -75,14 +72,8 @@ test('prefix checks group files and directories once and honor allowances and th
         'pnpm/pnpm-lock.yaml': '',
         'pnpm/pnpm-workspace.yaml': '',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/prefix-collisions'],
-    };
-    const initial = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const options = runOptions({ only: ['structure/prefix-collisions'] });
+    const initial = await executeRun(await openSession(sandbox.path), options);
     expect(initial.report.checks[0]?.findings).toMatchObject([
         { file: 'cards/asset-card.ts', rule: 'shared-prefix' },
         { file: 'mixed/turn.ts', rule: 'shared-prefix' },
@@ -92,14 +83,14 @@ test('prefix checks group files and directories once and honor allowances and th
         policy +
         '[structure]\nprefix_collision_allowed = [{ paths = ["cards/**"], reason = "Required public names." }]\n';
     await Bun.write(join(sandbox.path, 'gspot.toml'), allowed);
-    const retained = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const retained = await executeRun(await openSession(sandbox.path), options);
     expect(retained.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
     expect(retained.report.checks[0]?.findings).toHaveLength(1);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         allowed + '[limits]\nprefix_collisions = { value = 3, reason = "Required grouping threshold." }\n',
     );
-    const raised = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const raised = await executeRun(await openSession(sandbox.path), options);
     expect(raised.report.exitCode).toBe(0);
 });
 
@@ -119,14 +110,8 @@ test.each([
         [card]: '',
         [list]: '',
     });
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/single-file-folder', 'structure/prefix-collisions'],
-    };
-    const initial = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const options = runOptions({ only: ['structure/single-file-folder', 'structure/prefix-collisions'] });
+    const initial = await executeRun(await openSession(sandbox.path), options);
     expect(initial.report.exitCode).toBe(1);
     expect(initial.report.checks.flatMap((check) => check.findings)).toMatchObject([
         { check: 'structure/single-file-folder', file: lone, line: 1, rule: 'lone-file' },
@@ -134,7 +119,7 @@ test.each([
     ]);
     await Bun.write(join(sandbox.path, `feature/second.${extension}`), '');
     renameSync(join(sandbox.path, list), join(sandbox.path, `cards/other.${extension}`));
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.checks).toHaveLength(2);
     expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     expect(corrected.report.exitCode).toBe(0);
@@ -149,14 +134,8 @@ if (onPosix)
             ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
         });
         commitAll(sandbox.path);
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            fix: false,
-            isDryRun: false,
-            only: ['structure/prefix-collisions'],
-        };
-        const initial = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+        const options = runOptions({ only: ['structure/prefix-collisions'] });
+        const initial = await executeRun(await openSession(sandbox.path), options);
         expect(
             initial.report.checks[0]!.findings.map((finding) => finding.file).toSorted((left, right) =>
                 left.localeCompare(right),
@@ -165,7 +144,7 @@ if (onPosix)
         renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
         renameSync(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
         commitAll(sandbox.path);
-        const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+        const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     });
@@ -183,14 +162,10 @@ test.each(['', 'nested'])('naming checks leave the harness folder of scope %j al
         [`${prefix}tests/helpers/startup.ts`]: '',
         [`${prefix}app/support/startup.ts`]: '',
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/folder-names', 'naming/paths'],
-    });
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        runOptions({ only: ['structure/folder-names', 'naming/paths'] }),
+    );
     expect(result.report.checks.flatMap((check) => check.findings)).toMatchObject([
         { check: 'structure/folder-names', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'container-name' },
         { check: 'naming/paths', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'banned-term' },
@@ -217,14 +192,10 @@ test.each(['recommended', 'all'])('structural checks classify output directories
         'emitted/cards/asset-one.ts': '',
         'emitted/cards/asset-two.ts': '',
     });
-    const result = await executeRun(await openSession(sandbox.path), {
-        checks: CHECKS,
-        stage: 'commit',
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/single-file-folder', 'structure/prefix-collisions'],
-    });
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        runOptions({ stage: 'commit', only: ['structure/single-file-folder', 'structure/prefix-collisions'] }),
+    );
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         level === 'all'
@@ -238,14 +209,7 @@ test.each(['recommended', 'all'])('structural checks classify output directories
 
 // A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
 async function loneFiles(root: string): Promise<string[]> {
-    const result = await executeRun(await openSession(root), {
-        checks: CHECKS,
-        stage: 'all',
-        skips: [],
-        fix: false,
-        isDryRun: false,
-        only: ['structure/single-file-folder'],
-    });
+    const result = await executeRun(await openSession(root), runOptions({ only: ['structure/single-file-folder'] }));
     return result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file));
 }
 

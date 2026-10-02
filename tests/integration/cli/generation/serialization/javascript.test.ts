@@ -1,10 +1,9 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { emitted, generatedEslint } from '#tests/harness/cli/generated.ts';
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {
     const parser = await parserFor('javascript');
@@ -27,10 +26,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
             }),
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
         expect(script).toBeDefined();
         const tree = parser.parse(script!.content);
@@ -69,10 +65,7 @@ test('runtime names remain data in generated JavaScript', async () => {
             }),
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
         expect(file).toBeDefined();
         const tree = parser.parse(file!.content);
@@ -108,10 +101,7 @@ test('scope paths remain string literals in fragment file selectors and child ex
             [`${child}/source.js`]: 'export const value = 2;',
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
         expect(file).toBeDefined();
         const tree = parser.parse(file!.content);

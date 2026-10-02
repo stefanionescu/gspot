@@ -1,8 +1,8 @@
 // ESLint reads each part of an Astro component: the frontmatter with type information, the markup, and each script.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { containingAll } from '#tests/support/expectations.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
+import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 const COMPONENT = [
     '---',

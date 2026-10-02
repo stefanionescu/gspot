@@ -3,13 +3,11 @@ import type { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/policy/policy.ts';
-import { generatedFile } from '#tests/support/cli/generated/files.ts';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
+import { emitted, generatedFile, generatedEslint } from '#tests/harness/cli/generated.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {
     await using sandbox = await testdir();
@@ -100,10 +98,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
         const policy = policyOf(['javascript'], '', level);
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         await Bun.write(join(sandbox.path, config.path), config.content);
         const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;

@@ -3,8 +3,8 @@ import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { substitute, commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 
 test('nested configuration inputs stop at the declared scope and reject linked ancestors', async () => {

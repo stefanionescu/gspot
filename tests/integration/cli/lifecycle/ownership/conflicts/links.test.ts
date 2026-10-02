@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';

@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { hookStatus, installHooks } from '#cli/lifecycle/hooks-path.ts';
 
 // The policy and repository of a session: what install and doctor both read.

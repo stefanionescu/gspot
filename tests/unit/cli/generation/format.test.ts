@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 
 const policy = parsePolicyText(

@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { hookFiles } from '#cli/generation/hooks.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 
 test.each([undefined, 'npm', 'mise'])(
     'the hook scripts under the %s runner parse and run one check each',

@@ -4,7 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { applyBlock } from '#cli/generation/markers.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 

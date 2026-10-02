@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { run, runBinary } from '#cli/platform/spawn.ts';
-import { waitForExit } from '#tests/support/cli/process.ts';
+import { waitForExit } from '#tests/harness/cli/process.ts';
 
 const captures = { text: run, binary: runBinary };
 

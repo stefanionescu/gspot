@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { onPosix } from '#tests/support/cli/platforms.ts';
+import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 
 const backends = [

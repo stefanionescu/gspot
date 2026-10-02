@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
 
 const scopes = ['api', 'supabase'];

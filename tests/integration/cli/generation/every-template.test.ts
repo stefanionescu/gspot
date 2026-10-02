@@ -5,15 +5,20 @@ import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import type { Parser } from '#tests/types/integration/cli/generation.ts';
-import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
+import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
-const PARSERS: Record<string, Parser> = {
+const PLANTED = {
+    'package.json': '{"name":"planted","private":true,"type":"module"}\n',
+    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
+    'pyproject.toml': '[project]\nname = "planted"\nversion = "1.0.0"\n',
+    'src/index.ts': 'export const answer = 42;\n',
+};
+
+const PARSERS: Record<string, (text: string, path: string) => void> = {
     '.json': parseJson,
     '.jsonc': parseJson,
     '.webmanifest': parseJson,
@@ -46,22 +51,26 @@ const kits = [...kitManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
     .map((manifest) => manifest.kit.name);
 
-test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
-    'the %s configuration renders files their readers parse at level %s',
-    async (name, level) => {
+test.each(['recommended', 'all'])(
+    'every configuration renders files their readers parse at level %s',
+    async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `level = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `level = "${level}"\nkits = ${JSON.stringify(kits)}\n`,
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
-        expect(generated.length).toBeGreaterThan(0);
+        const written = new Set(
+            session.scopes
+                .flatMap((scope) => scope.selected)
+                .filter((manifest) => kits.includes(manifest.kit.name))
+                .map((manifest) => manifest.kit.name),
+        );
+        expect(written).toStrictEqual(new Set(kits));
+        expect(generated.length).toBeGreaterThan(kits.length);
         for (const file of generated) {
             const parser = PARSERS[extname(file.path)];
             if (parser !== undefined) parser(file.content, file.path);

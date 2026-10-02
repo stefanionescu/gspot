@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 
 import {

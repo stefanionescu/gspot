@@ -1,4 +1,4 @@
-import { tester } from '#tests/support/plugin/tester.ts';
+import { tester } from '#tests/harness/plugin/tester.ts';
 import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
 
 tester().run('no-exported-alias-constants', noExportedAliasConstants, {

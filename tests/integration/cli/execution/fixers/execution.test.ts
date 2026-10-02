@@ -1,15 +1,15 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { waitForExit } from '#tests/support/cli/process.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
+import { waitForExit } from '#tests/harness/cli/process.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
+import { CORRECTION_POLICY, plannedCorrection } from '#tests/harness/cli/correction.ts';
 
 test('Correction environment paths expand against the execution root', async () => {
     await using sandbox = await testdir();
@@ -113,8 +113,8 @@ fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.
 `,
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
-    const outcome = await executeRun(session, { ...options, checks: CHECKS });
+    const options = runOptions({ stage: 'commit', fix: true });
+    const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.files).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
@@ -145,8 +145,8 @@ command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'
 fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
     });
-    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
-    const outcome = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const options = runOptions({ stage: 'commit', fix: true });
+    const outcome = await executeRun(await openSession(sandbox.path), options);
     expect(outcome.report.exitCode, JSON.stringify(outcome.report.checks)).toBe(0);
     expect(outcome.fixes?.results).toMatchObject([
         { check: 'project/format', status: 'changed', changed: ['source.txt'] },

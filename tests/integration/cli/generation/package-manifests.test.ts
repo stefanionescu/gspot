@@ -2,7 +2,7 @@
 import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { generatedEslint } from '#tests/harness/cli/generated.ts';
 
 test('every package.json gets the package-json rules and no code rule beside a test runner', async () => {
     await using sandbox = await testdir();

@@ -188,7 +188,7 @@ level = "recommended"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
-command = ["pinact", "run", "--verify", "--check", "{files}"]
+command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
 owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 output = {format = "lines"}
 summary = "Verifies GitHub action commits and version comments without changing workflow files."

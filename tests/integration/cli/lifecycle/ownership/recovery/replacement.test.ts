@@ -1,19 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import type { TestdirResult } from 'testdirs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { cliSource } from '#tests/support/cli/process.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
+import { cliSource } from '#tests/harness/cli/process.ts';
+import { keptMode } from '#tests/harness/cli/platforms.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
 // Publishes a read-only file through a child whose rename fails at the chosen point, with Windows semantics.
-async function publish(point: Point): Promise<Published> {
+async function publish(
+    point: 'error' | 'restoration error' | 'interruption' | 'edited',
+): Promise<{ directory: TestdirResult; original: NonSharedBuffer; destination: string }> {
     const directory = await testdir();
     const original = Buffer.from([0, 255, 10, 13]);
     const destination = join(directory.path, 'config.txt');

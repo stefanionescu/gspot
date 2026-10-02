@@ -1,0 +1,88 @@
+// Adding a configuration changes the next explicit check through its ESLint fragment.
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { readdirSync, symlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import { commitAll } from '#tests/harness/cli/git.ts';
+import { spawnGspot } from '#tests/harness/cli/command.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
+import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
+import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/samples/typescript.ts';
+
+const CONFIGURATION_ARRIVAL_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'typescript',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+const LOOSE =
+    "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
+
+const MODULES = join(import.meta.dir, '../../../node_modules');
+describe('gspot add', () => {
+    test(
+        'adding an ESLint fragment exposes its defect on the next explicit check',
+        async () => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                '.gitignore': 'node_modules\n',
+                'package.json': CONFIGURATION_ARRIVAL_PACKAGE,
+                'tsconfig.json':
+                    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["*.ts"]\n}\n',
+                'schema.ts': LOOSE,
+                node_modules: {},
+            });
+            for (const entry of readdirSync(MODULES))
+                symlinkSync(join(MODULES, entry), join(sandbox.path, 'node_modules', entry));
+            symlinkSync(join(MODULES, '../packages/cli/node_modules/zod'), join(sandbox.path, 'node_modules/zod'));
+            commitAll(sandbox.path);
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
+            await installAtLevel(sandbox.path, CONFIGURATION_ARRIVAL_INIT, environment);
+            const before = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--json'],
+                environment,
+            );
+            expect(before.code, before.stdout + before.stderr).toBe(0);
+            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
+            expect(added.code, added.stdout + added.stderr).toBe(0);
+            const after = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--json'],
+                environment,
+            );
+            expect(after.code, after.stdout + after.stderr).toBe(1);
+            const report = JSON.parse(after.stdout) as RunReport;
+            expect(report.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
+            expect(report.checks[0]?.findings).toContainEqual(
+                containing({
+                    check: 'typescript/eslint',
+                    file: 'schema.ts',
+                    line: 6,
+                    rule: 'zod/no-any-schema',
+                }),
+            );
+            await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
+            const correctedCheck = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
+                { check: 'typescript/eslint', status: 'ok', findings: [] },
+            ]);
+        },
+        PLANTED_TIMEOUT_MS * 4,
+    );
+});

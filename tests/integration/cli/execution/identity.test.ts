@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runOptions } from '#tests/harness/cli/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
@@ -24,7 +24,7 @@ test('a check keeps its name in the report and in its findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, { checks: CHECKS, stage: 'all', skips: [], fix: false, isDryRun: false });
+    const outcome = await executeRun(session, runOptions());
     expect(session.policyFiles.policy.checks[0]?.name).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
@@ -40,8 +40,8 @@ test('counted failures survive final filtering without diagnostic locations', as
         'source.txt': 'original',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, skips: [], fix: false, isDryRun: false };
-    const failed = await executeRun(session, { ...options, checks: CHECKS });
+    const options = runOptions();
+    const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'fail', findings: [] });
     await Bun.write(join(sandbox.path, '.gspot/version'), GSPOT_VERSION + '\n');
@@ -59,7 +59,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     expect(cli.exitCode, cli.stderr.toString()).toBe(1);
 
     session.policyFiles.policy.checks[0]!.count_regex = 'No matching output';
-    const corrected = await executeRun(session, { ...options, checks: CHECKS });
+    const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
 });
 
