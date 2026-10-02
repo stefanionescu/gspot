@@ -21,7 +21,7 @@ kits = [
     "security",
 ]
 runner = "mise"
-naming.banned_terms = [
+naming.banned = [
     "catalog",
     "catalogue",
     "corpus",
@@ -156,7 +156,7 @@ reason = "The naming policy bans this British spelling by name, so the policy an
 word = "IIFEs"
 reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/kits.ts"
 names = [
     "check_references",
@@ -169,58 +169,57 @@ names = [
 ]
 reason = "Kit manifests declare these keys, and the normalized types keep their spelling."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/policy/policy.ts"
 names = [
     "allow_digits",
     "allow_duplicate_words",
     "allowed_for",
-    "banned_terms",
     "config_directory",
-    "contract_properties",
+    "dropped_groups",
     "edges_allowed",
-    "folder_name_allowed",
+    "folder_names_allowed",
+    "lone_files_allowed",
     "max_chars",
     "max_words",
-    "prefix_collision_allowed",
-    "remove_groups",
-    "single_file_folder_allowed",
+    "prefix_collisions_allowed",
+    "protocol_keys",
     "structural_prefix",
     "types_directory",
 ]
 reason = "Public gspot.toml keys."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/repository/revisions.ts"
 names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/commands/check.ts"
 names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/commands/commands.ts"
 names = ["C"]
 reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/checks/general/secrets.ts"
 names = ["Commit", "File", "Fingerprint", "RuleID"]
 reason = "gitleaks reports spell these keys."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/checks/language/sql.ts"
 names = ["DefElem", "List", "String"]
 reason = "libpg-query AST tags spell these keys."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/checks/tool/xcode.ts"
 names = ["shouldTranslate"]
 reason = "Xcode string files spell this key."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/types/parsers/sql.ts"
 names = [
     "lengthBytesUTF8",
@@ -237,37 +236,37 @@ names = [
 ]
 reason = "Emscripten and libpg-query export these members."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/checks/language/sql.ts"
 names = ["FunctionParameter"]
 reason = "The libpg-query AST tag for a function parameter."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "packages/cli/src/lifecycle/preview/vale.ts"
 names = ["BasedOnStyles"]
 reason = "The Vale setting the rule preview reads."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "docs/src/content/docs/404.md"
 names = ["404"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "tests/integration/cli/generation/formatting.test.ts"
 names = ["MD007"]
 reason = "The markdownlint rule name."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "tests/tools/cli/parameter-limits.test.ts"
 names = ["rule_id"]
 reason = "The SwiftLint JSON diagnostic key."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "tests/integration/cli/generation/selection.test.ts"
 names = ["licenses_allowed", "packages_allowed"]
 reason = "The license scanner policy keys."
 
-[[naming.contract_properties]]
+[[naming.protocol_keys]]
 file = "tests/integration/cli/commands/ci.test.ts"
 names = ["with"]
 reason = "The GitHub Actions inputs key."
@@ -527,7 +526,7 @@ reason = "The site imports the fonts from docs/src/theme.css, outside the TypeSc
 
 # The rule corpus is this repository's product; its lint is this repository's check and ships in no package.
 
-[[structure.folder_name_allowed]]
+[[structure.folder_names_allowed]]
 paths = [
     "tests/acceptance/kits/language/bash",
     "tests/acceptance/kits/language/swift",
@@ -538,7 +537,7 @@ paths = [
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
-[[structure.folder_name_allowed]]
+[[structure.folder_names_allowed]]
 paths = [
     "packages/cli/src/checks/language/bash",
     "packages/cli/src/checks/language/javascript",
@@ -547,19 +546,19 @@ paths = [
 ]
 reason = "Each folder holds the checks of one language kit and is named after the kit, as the kits folder is."
 
-[[structure.single_file_folder_allowed]]
+[[structure.lone_files_allowed]]
 paths = ["tests/acceptance/kits/database", "tests/acceptance/kits/library", "tests/acceptance/kits/platform"]
 reason = "The acceptance tests of the kits sit under the kit category, as the kits folder does, and these categories have one test file."
 
-[[structure.single_file_folder_allowed]]
+[[structure.lone_files_allowed]]
 paths = ["docs/src/pages/schema"]
 reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
 
-[[structure.prefix_collision_allowed]]
+[[structure.prefix_collisions_allowed]]
 paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/plugin/rules/**"]
 reason = "ESLint rule ids are the file names, and the ids share their first word by convention."
 
-[[structure.prefix_collision_allowed]]
+[[structure.prefix_collisions_allowed]]
 paths = ["docs/src"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
 [tools.licenses]

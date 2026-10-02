@@ -16,7 +16,7 @@ test('folder checks count code files and preserve allowed and nested directories
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['typescript'],
-            '[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            '[structure]\nlone_files_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
             'all',
         ),
         'lone/only.ts': '',
@@ -86,7 +86,7 @@ test('prefix checks group files and directories once and honor allowances and th
     expect(initial.report.checks[0]?.findings).toHaveLength(2);
     const allowed =
         policy +
-        '[structure]\nprefix_collision_allowed = [{ paths = ["cards/**"], reason = "Required public names." }]\n';
+        '[structure]\nprefix_collisions_allowed = [{ paths = ["cards/**"], reason = "Required public names." }]\n';
     await Bun.write(join(sandbox.path, 'gspot.toml'), allowed);
     const retained = await executeRun(await openSession(sandbox.path), options);
     expect(retained.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
@@ -235,7 +235,7 @@ test('the repository allowance joins the framework allowance instead of replacin
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['javascript', 'svelte'],
-            '[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
+            '[structure]\nlone_files_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
             'all',
         ),
         'package.json': '{"name":"planted","private":true,"type":"module"}\n',

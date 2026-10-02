@@ -110,22 +110,22 @@ export function effectivePolicy(
     const tables = policyTables(policy, scope).map(({ table }) => table.naming);
     const naming: NamingSettings = {
         ...policy.naming,
-        banned_terms: [...new Set(tables.flatMap((table) => table?.banned_terms ?? []))],
+        banned: [...new Set(tables.flatMap((table) => table?.banned ?? []))],
         allowed: tables.flatMap((table) => table?.allowed ?? []),
         external: [...new Set(tables.flatMap((table) => table?.external ?? []))],
         reserved: tables.flatMap((table) => table?.reserved ?? []),
-        remove_groups: tables.flatMap((table) => table?.remove_groups ?? []),
-        contract_properties: tables.flatMap((table) => table?.contract_properties ?? []),
+        dropped_groups: tables.flatMap((table) => table?.dropped_groups ?? []),
+        protocol_keys: tables.flatMap((table) => table?.protocol_keys ?? []),
         rules: tables.flatMap((table) => table?.rules ?? []),
     };
     const removed = new Set(
-        naming.remove_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
+        naming.dropped_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
     );
     const terms = [
         ...Object.entries(shipped.groups)
             .filter(([group]) => !removed.has(group))
             .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
-        ...compileTerms(naming.banned_terms, 'naming.banned_terms'),
+        ...compileTerms(naming.banned, 'naming.banned'),
     ];
     // The shipped rules first, then what the selected kits know about their own files, then the repository's.
     const rules = [
@@ -142,7 +142,7 @@ export function effectivePolicy(
         reserved: reservedTerms(shipped, naming),
         external: new Set([...shipped.external, ...naming.external]),
         allowed: new Map(naming.allowed.map((entry) => [entry.name, entry.reason])),
-        contractProperties: new Map(naming.contract_properties.map((entry) => [entry.file, new Set(entry.names)])),
+        contractProperties: new Map(naming.protocol_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         languages: shipped.languages,
         limitsFor: limitsReader(shipped, surface, policy, scope),

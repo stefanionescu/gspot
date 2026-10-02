@@ -65,12 +65,12 @@ const groupReason = z.strictObject({ group: text, reason: text.optional() });
 const contractProperties = z.strictObject({ file: text, names: textList, reason: text.optional() });
 
 const namingLists = z.object({
-    banned_terms: textList.optional(),
+    banned: textList.optional(),
     allowed: z.array(namedReason).optional(),
     external: textList.optional(),
     reserved: z.array(reservedTerm).optional(),
-    remove_groups: z.array(groupReason).optional(),
-    contract_properties: z.array(contractProperties).optional(),
+    dropped_groups: z.array(groupReason).optional(),
+    protocol_keys: z.array(contractProperties).optional(),
     rules: z.array(namingRule).optional(),
 });
 
@@ -98,9 +98,9 @@ const reasonedPaths = z.strictObject({ paths: textListNonEmpty, reason: text.opt
 
 const structureSchema = z.strictObject({
     reexports: z.enum(['none', 'index-only']).optional(),
-    single_file_folder_allowed: z.array(reasonedPaths).optional(),
-    prefix_collision_allowed: z.array(reasonedPaths).optional(),
-    folder_name_allowed: z.array(reasonedPaths).optional(),
+    lone_files_allowed: z.array(reasonedPaths).optional(),
+    prefix_collisions_allowed: z.array(reasonedPaths).optional(),
+    folder_names_allowed: z.array(reasonedPaths).optional(),
     python: anyTable.optional(),
 });
 

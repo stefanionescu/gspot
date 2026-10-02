@@ -10,9 +10,9 @@ type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 
 type StructureSettings = {
     reexports: 'none' | 'index-only';
-    single_file_folder_allowed: { paths: string[]; reason?: string }[];
-    prefix_collision_allowed: { paths: string[]; reason?: string }[];
-    folder_name_allowed: { paths: string[]; reason?: string }[];
+    lone_files_allowed: { paths: string[]; reason?: string }[];
+    prefix_collisions_allowed: { paths: string[]; reason?: string }[];
+    folder_names_allowed: { paths: string[]; reason?: string }[];
     python: Record<string, unknown>;
 };
 
@@ -174,12 +174,12 @@ export type NamingLanguageTable = NamingCategoryTable & {
 };
 
 export type NamingSettings = {
-    banned_terms: string[];
+    banned: string[];
     allowed: { name: string; reason?: string }[];
     external: string[];
     reserved: { term: string; allowed_for: string[] }[];
-    remove_groups: { group: string; reason?: string }[];
-    contract_properties: { file: string; names: string[] }[];
+    dropped_groups: { group: string; reason?: string }[];
+    protocol_keys: { file: string; names: string[] }[];
     languages: Record<string, NamingLanguageTable>;
     rules: NamingRule[];
 };

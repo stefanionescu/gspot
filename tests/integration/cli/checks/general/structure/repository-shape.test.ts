@@ -13,7 +13,7 @@ const policy = {
     kits: ['typescript', 'docs'],
     ignore: [{ check: 'x/y', paths: ['gone/**'], reason: 'A test reason.' }],
     generated: [{ paths: ['data/**'], reason: 'The fixture owns generated output.' }],
-    structure: { single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }] },
+    structure: { lone_files_allowed: [{ paths: ['src'], reason: 'A test reason.' }] },
     tools: { docs: { paths_allowed: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
     architecture: { roles: { config: 'config' } },
 };

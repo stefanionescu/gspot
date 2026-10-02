@@ -29,7 +29,7 @@ stage = "commit"
 searched = ["eslint-plugin-unicorn", "ls-lint", "knip"]
 summary = "Finds a folder that holds one code file and nothing else."
 why = "A folder of one file adds a level to every path and promises siblings that never arrive."
-help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed."
+help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.lone_files_allowed."
 
 [[checks]]
 name = "structure/prefix-collisions"
@@ -65,7 +65,7 @@ stage = "commit"
 searched = ["ls-lint"]
 summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
 why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
-help = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
+help = "Name the folder after what it holds, or allow it with a reason under structure.folder_names_allowed."
 
 [[checks]]
 name = "integrity/files"
@@ -381,21 +381,21 @@ default = "none"
 summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
 
 [[settings]]
-name = "structure.single_file_folder_allowed"
+name = "structure.lone_files_allowed"
 kind = "list"
 direction = "loosening"
 default = []
 summary = "Folders allowed to hold one file, by path, each with a reason."
 
 [[settings]]
-name = "structure.prefix_collision_allowed"
+name = "structure.prefix_collisions_allowed"
 kind = "list"
 direction = "loosening"
 default = []
 summary = "Folders where sibling files may share a prefix, by path, each with a reason."
 
 [[settings]]
-name = "structure.folder_name_allowed"
+name = "structure.folder_names_allowed"
 kind = "list"
 direction = "loosening"
 default = []

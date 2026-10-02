@@ -172,12 +172,12 @@ export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 export const NAMING_SCALARS = ['max_chars', 'max_words', 'case'] as const;
 export const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library', 'database']);
 export const NAMING_LIST_KEYS = new Set([
-    'banned_terms',
+    'banned',
     'allowed',
     'external',
     'reserved',
-    'remove_groups',
-    'contract_properties',
+    'dropped_groups',
+    'protocol_keys',
     'rules',
 ]);
 export const CATEGORY_KEYS = new Set(['max_chars', 'max_words', 'case']);
@@ -202,9 +202,9 @@ export const MINIMUM_REASON_WORDS = 2;
 /** The structure table with nothing written: no re-exports and no allowances. */
 export const STRUCTURE_DEFAULTS: Policy['structure'] = {
     reexports: 'none',
-    single_file_folder_allowed: [],
-    prefix_collision_allowed: [],
-    folder_name_allowed: [],
+    lone_files_allowed: [],
+    prefix_collisions_allowed: [],
+    folder_names_allowed: [],
     python: {},
 };
 export const LIMITS_PREFIX = 'limits.';

@@ -41,7 +41,7 @@ why = "An allowed name that matches nothing is a leftover, and a path rule that 
 help = "Remove the entry that matches nothing, or fix its name or path."
 
 [[settings]]
-name = "naming.banned_terms"
+name = "naming.banned"
 kind = "list"
 direction = "tightening"
 default = []
@@ -69,14 +69,14 @@ default = []
 summary = "Terms banned except in the named uses."
 
 [[settings]]
-name = "naming.remove_groups"
+name = "naming.dropped_groups"
 kind = "list"
 direction = "loosening"
 default = []
 summary = "Removable term groups this repository drops, each with a reason. The marketing, defensive, and terminology groups never drop."
 
 [[settings]]
-name = "naming.contract_properties"
+name = "naming.protocol_keys"
 kind = "list"
 direction = "loosening"
 default = []

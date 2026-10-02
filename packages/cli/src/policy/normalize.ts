@@ -95,20 +95,20 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
  */
 function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
     const lists = defaulted(raw, {
-        banned_terms: [],
+        banned: [],
         allowed: [],
         external: [],
         reserved: [],
-        remove_groups: [],
-        contract_properties: [],
+        dropped_groups: [],
+        protocol_keys: [],
     });
     const naming: NamingSettings = {
-        banned_terms: lists.banned_terms,
+        banned: lists.banned,
         allowed: lists.allowed,
         external: lists.external,
         reserved: lists.reserved,
-        remove_groups: lists.remove_groups,
-        contract_properties: lists.contract_properties,
+        dropped_groups: lists.dropped_groups,
+        protocol_keys: lists.protocol_keys,
         languages: {},
         rules: (raw?.rules ?? []).map((entry) => compact(entry)),
     };

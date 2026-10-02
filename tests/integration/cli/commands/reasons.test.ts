@@ -152,9 +152,9 @@ test.each([false, true])(
 );
 
 test.each([
-    { key: 'naming.banned_terms', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
-    { key: 'naming.banned_terms', flag: '--remove', item: 'original', expected: [], code: 2 },
-    { key: 'naming.banned_terms', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
+    { key: 'naming.banned', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'naming.banned', flag: '--remove', item: 'original', expected: [], code: 2 },
+    { key: 'naming.banned', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
     { key: 'tools.bash.architecture_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
     { key: 'tools.bash.architecture_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
     { key: 'tools.bash.architecture_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
@@ -166,7 +166,7 @@ test.each([
         '[guides]',
         'install = false',
         '[naming]',
-        'banned_terms = ["original"]',
+        'banned = ["original"]',
         '[tools.bash]',
         'architecture_roots = ["original"]',
     ].join('\n');

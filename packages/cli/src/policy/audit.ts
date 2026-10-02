@@ -208,10 +208,10 @@ export function validateAgainstSurface(
         ];
         problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
     }
-    for (const [index, { group }] of policy.naming.remove_groups.entries())
+    for (const [index, { group }] of policy.naming.dropped_groups.entries())
         if (shippedPolicy().groups[group]?.removable === false)
             problems.push({
-                path: ['naming', 'remove_groups', index, 'group'],
+                path: ['naming', 'dropped_groups', index, 'group'],
                 message: messages.groupNotRemovable(group),
             });
     return problems;

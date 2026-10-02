@@ -94,4 +94,4 @@ framework = [{path = "framework/astro/ASTRO.md"}]
 astro = ["astro/valid-compile", "astro/no-set-html-directive", "astro/jsx-a11y/alt-text"]
 
 [defaults]
-"structure.single_file_folder_allowed" = [{paths = ["src/pages/**"], reason = "Astro names a route by its path, and a folder of one route holds one page file."}]
+"structure.lone_files_allowed" = [{paths = ["src/pages/**"], reason = "Astro names a route by its path, and a folder of one route holds one page file."}]

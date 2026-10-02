@@ -38,17 +38,17 @@ function policyPatterns(input: EngineInput): PathPattern[] {
         ...policy.declarations.flatMap((entry) =>
             entry.paths.map((pattern) => ({ pattern, where: `[[${entry.kind}]]` })),
         ),
-        ...listed(structure.single_file_folder_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.lone_files_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.single_file_folder_allowed',
+            where: 'structure.lone_files_allowed',
         })),
-        ...listed(structure.prefix_collision_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.prefix_collisions_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.prefix_collision_allowed',
+            where: 'structure.prefix_collisions_allowed',
         })),
-        ...listed(structure.folder_name_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.folder_names_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.folder_name_allowed',
+            where: 'structure.folder_names_allowed',
         })),
         ...listed(naming.rules, 'paths').map((pattern) => ({ pattern, where: '[[naming.rules]]' })),
         ...toolPatterns(policy.tools),

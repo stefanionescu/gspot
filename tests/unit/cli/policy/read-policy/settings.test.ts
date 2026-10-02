@@ -21,10 +21,10 @@ test('parsePolicyText > normalizes reasoned limits into value and reason', () =>
 
 test('parsePolicyText > normalizes per-language naming tables and categories', () => {
     const policy = parsePolicyText(
-        `${MINIMAL_POLICY}[naming]\nbanned_terms = ["dispatcher"]\n[naming.python]\nmax_words = 4\n[naming.python.parameters]\nmax_words = { value = 3, reason = "Handler signatures read as one line." }\n`,
+        `${MINIMAL_POLICY}[naming]\nbanned = ["dispatcher"]\n[naming.python]\nmax_words = 4\n[naming.python.parameters]\nmax_words = { value = 3, reason = "Handler signatures read as one line." }\n`,
         'gspot.toml',
     );
-    expect(policy.naming.banned_terms).toStrictEqual(['dispatcher']);
+    expect(policy.naming.banned).toStrictEqual(['dispatcher']);
     expect(policy.naming.languages['python']?.max_words).toStrictEqual({ value: 4 });
     expect(policy.naming.languages['python']?.categories['parameters']?.max_words?.reason).toBe(
         'Handler signatures read as one line.',

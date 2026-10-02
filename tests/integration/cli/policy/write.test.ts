@@ -118,11 +118,8 @@ test('policy edits keep a trailing array comma and write inline tables without o
 test('writePolicy > appends to a list without duplicates and removes matching entries', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': text });
-    writePolicy(
-        sandbox.path,
-        preparePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher', 'orchestrator'])),
-    );
-    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher'])));
+    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned', ['dispatcher', 'orchestrator'])));
+    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned', ['dispatcher'])));
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(written.match(/dispatcher/g)).toHaveLength(1);
     // A table entry is the same entry whatever order its keys come in.

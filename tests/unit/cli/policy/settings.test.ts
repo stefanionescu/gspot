@@ -129,14 +129,11 @@ test('the settings surface > lists append and deduplicate across layers', () => 
     const policy = parsePolicyText(
         policyOf(
             ['bash'],
-            '[naming]\nbanned_terms = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["dispatcher", "orchestrator"]\n',
+            '[naming]\nbanned = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned = ["dispatcher", "orchestrator"]\n',
         ),
         'gspot.toml',
     );
-    expect(settingValue(surface, policy, 'naming.banned_terms', 'api')?.value).toStrictEqual([
-        'dispatcher',
-        'orchestrator',
-    ]);
+    expect(settingValue(surface, policy, 'naming.banned', 'api')?.value).toStrictEqual(['dispatcher', 'orchestrator']);
 });
 
 test('the settings surface > list defaults append across configurations before root and scope additions', () => {
@@ -146,18 +143,18 @@ test('the settings surface > list defaults append across configurations before r
             ...naming,
             kit: { ...naming.kit, name: `naming-${String(index)}` },
             settings: naming.settings.map((spec) =>
-                spec.name === 'naming.banned_terms' ? { ...spec, default: terms } : spec,
+                spec.name === 'naming.banned' ? { ...spec, default: terms } : spec,
             ),
         })),
     );
     const policy = parsePolicyText(
         policyOf(
             ['naming'],
-            '[naming]\nbanned_terms = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["orchestrator", "handler"]\n',
+            '[naming]\nbanned = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned = ["orchestrator", "handler"]\n',
         ),
         'gspot.toml',
     );
-    expect(settingValue(defaults, policy, 'naming.banned_terms', 'api')?.value).toStrictEqual([
+    expect(settingValue(defaults, policy, 'naming.banned', 'api')?.value).toStrictEqual([
         'dispatcher',
         'orchestrator',
         'manager',
@@ -207,7 +204,7 @@ test('the settings surface > the marketing group cannot be removed', () => {
     const policy = parsePolicyText(
         policyOf(
             ['bash'],
-            '[naming]\nremove_groups = [{ group = "marketing", reason = "We like adjectives here." }]\n',
+            '[naming]\ndropped_groups = [{ group = "marketing", reason = "We like adjectives here." }]\n',
         ),
         'gspot.toml',
     );

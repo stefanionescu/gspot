@@ -89,4 +89,4 @@ framework = [{path = "framework/svelte/SVELTE.md"}]
 svelte = ["svelte/no-at-html-tags", "svelte/require-each-key", "svelte/no-target-blank"]
 
 [defaults]
-"structure.single_file_folder_allowed" = [{paths = ["src/routes/**"], reason = "SvelteKit names a route by its folder, and one page or layout file stands in it."}]
+"structure.lone_files_allowed" = [{paths = ["src/routes/**"], reason = "SvelteKit names a route by its folder, and one page or layout file stands in it."}]
