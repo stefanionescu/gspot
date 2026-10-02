@@ -54,7 +54,6 @@ stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database kit names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
@@ -66,7 +65,6 @@ title = "Check SQL syntax"
 example = "The statement `SELECT FROM;` lacks a valid select expression and reports a parser error. Replace it with the intended valid query, such as `SELECT 1;`."
 level = "recommended"
 stage = "commit"
-exclude_setting = "tools.sqlfluff.exclude"
 summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
 why = "A migration that does not parse fails at deploy, halfway through a release."
 help = "Correct the statement at the line and column the message names."

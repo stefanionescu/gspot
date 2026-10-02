@@ -1,5 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -140,10 +141,14 @@ async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
  * @returns the findings
  */
 async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
-    const dialect = (input.view.tool('sqlfluff')['dialect'] as string | undefined) ?? 'ansi';
+    const sqlfluff = input.view.tool('sqlfluff');
+    const dialect = (sqlfluff['dialect'] as string | undefined) ?? 'ansi';
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
+    // The paths SQLFluff leaves out, such as templates with placeholders, are no SQL the parser reads either.
+    const excluded = ((sqlfluff['exclude'] as { paths: string[] }[] | undefined) ?? []).flatMap((entry) => entry.paths);
+    const isExcluded = pathMatcher(excluded);
     const findings: Finding[] = [];
-    for (const source of sources(input)) {
+    for (const source of sources(input).filter((entry) => !isExcluded(entry.path))) {
         const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;

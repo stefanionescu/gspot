@@ -47,11 +47,14 @@ function ownedFor(context: PlanInputs, entry: PlanEntry, scopeForFiles: string):
     return listOwned(context, entry, scopeForFiles);
 }
 
-// The files less those the scope's exclude setting names.
+// The files less the paths the check's tool excludes, such as tools.semgrep.exclude. Only entries with paths count;
+// the Prettier ignore lines go to .prettierignore instead.
 function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSelection): TrackedFile[] {
-    if (spec.exclude_setting === undefined) return files;
-    const excluded = (scope.view.settings[spec.exclude_setting] as { paths: string[] }[] | undefined) ?? [];
-    const patterns = excluded.flatMap((entry) => entry.paths);
+    const tool = spec.tool ?? spec.command?.[0];
+    const excluded = tool === undefined ? undefined : scope.view.settings[`tools.${tool}.exclude`];
+    const patterns = (Array.isArray(excluded) ? excluded : []).flatMap((entry: { paths?: unknown }) =>
+        Array.isArray(entry.paths) ? entry.paths.map(String) : [],
+    );
     if (patterns.length === 0) return files;
     const isExcluded = pathMatcher(patterns);
     return files.filter((file) => !isExcluded(file.path));

@@ -107,7 +107,6 @@ const checkFields = z.strictObject({
         .string()
         .regex(/^[A-Za-z0-9_.-]+$/u)
         .optional(),
-    exclude_setting: z.string().optional(),
     summary: sentence,
     example: z.string().trim().min(1),
     why: sentence,
