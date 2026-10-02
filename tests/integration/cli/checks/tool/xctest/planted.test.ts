@@ -60,7 +60,7 @@ plantedCases(
             'the commit stage leaves the coverage run to its own stage',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('xctest/coverage');
             },

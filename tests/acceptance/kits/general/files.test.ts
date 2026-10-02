@@ -67,7 +67,7 @@ plantedCases(
             'the commit stage keeps schema validation for push',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('files/v8r');
                 expect(ids).toContain('files/taplo');
@@ -158,7 +158,7 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--only', 'files/v8r', '--staged', '--stage', 'push', '--json'];
+        const command = ['check', '--only', 'files/v8r', '--staged', '--hook', 'push', '--json'];
         const invalid = await spawnGspot(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([

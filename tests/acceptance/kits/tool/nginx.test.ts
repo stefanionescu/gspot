@@ -50,7 +50,7 @@ if (hasLinuxDocker)
                     'ssl_certificate "/etc/nginx/ssl/server  certificate.pem"; ssl_certificate_key "/etc/nginx/ssl/server key.pem";\n# include /outside/ignored.conf;\n',
                 'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
             });
-            const command = ['check', '--stage', 'push', '--only', 'nginx/test', '--json'];
+            const command = ['check', '--hook', 'push', '--only', 'nginx/test', '--json'];
             const failed = await spawnGspot(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
@@ -119,7 +119,7 @@ describe('the nginx configuration', () => {
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },
             ]);
-            const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+            const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

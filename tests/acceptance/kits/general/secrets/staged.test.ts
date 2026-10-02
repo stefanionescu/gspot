@@ -96,7 +96,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const accepted = JSON.parse(explained.stdout) as RunReport;
     expect(accepted.checks).toMatchObject([{ check: 'secrets/gitleaks-baseline', status: 'ok', findings: [] }]);
-    const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+    const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
     const network = JSON.parse(checked.stdout) as RunReport;
     expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
 }
@@ -106,7 +106,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareStagedSecrets(sandbox.path);
-        const clean = await spawnGspot(sandbox.path, ['check', '--stage', 'commit'], environment);
+        const clean = await spawnGspot(sandbox.path, ['check', '--hook', 'commit'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await expectStagedSecret(sandbox.path, environment);
         await expectExplainedBaseline(sandbox.path, environment);

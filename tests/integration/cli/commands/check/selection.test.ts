@@ -106,7 +106,7 @@ test('-C resolves file arguments from the folder it names', async () => {
     ]);
 });
 
-test.each(['commit', 'push', 'manual'])('--stage %s runs the checks assigned to that stage', async (stage) => {
+test.each(['commit', 'push'])('--hook %s runs the checks of that hook', async (stage) => {
     const definitions = ['commit', 'push', 'manual'].map(
         (name) => `
 [[check]]
@@ -121,10 +121,27 @@ stage = "${name}"
         'gspot.toml': policyOf([], definitions.join('\n')),
         'source.txt': 'input',
     });
-    const checked = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
+    const checked = await runGspot(sandbox.path, ['check', '--hook', stage, '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'ok']]);
+});
+
+test('a manual check runs only when --only names it', async () => {
+    const definition = `
+[[check]]
+name = "sandbox/manual"
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
+paths = ["source.txt"]
+stage = "manual"
+`;
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], definition), 'source.txt': 'input' });
+    const plain = await runGspot(sandbox.path, ['check', '--json']);
+    expect((JSON.parse(plain.stdout) as RunReport).checks).toStrictEqual([]);
+    const named = await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']);
+    const report = JSON.parse(named.stdout) as RunReport;
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/manual', 'ok']]);
 });
 
 test('a scope path selects its checks and its reproduction command repeats the same findings', async () => {

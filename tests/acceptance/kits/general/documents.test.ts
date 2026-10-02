@@ -109,7 +109,7 @@ plantedCases(
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'ok', findings: [] },
                 ]);
-                const checked = await spawnGspot(sandbox, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(sandbox, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('docs/lychee-external');
             },

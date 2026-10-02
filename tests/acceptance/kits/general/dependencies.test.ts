@@ -72,7 +72,7 @@ test(
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'dependencies/lockfile-fresh', status: 'ok', findings: [] },
         ]);
-        const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'commit', '--json'], environment);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);
         expect(ids).not.toContain('dependencies/osv');
         expect(ids).not.toContain('dependencies/syncpack');

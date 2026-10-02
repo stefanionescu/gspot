@@ -84,7 +84,7 @@ plantedCases(
                 const { root, environment } = planted();
                 const checked = await spawnGspot(
                     root,
-                    ['check', '--stage', 'push', '--json'],
+                    ['check', '--hook', 'push', '--json'],
                     environment,
                     PLANTED_TIMEOUT_MS * 4,
                 );

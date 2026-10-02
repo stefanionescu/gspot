@@ -77,10 +77,10 @@ function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     }
 }
 
-// The command that reruns one failed check with its original stage and staged flags.
-function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOptions): string {
+// The command that reruns one failed check with its message file and staged flag.
+function reproduceFor(result: CheckResult, options: RunOptions): string {
     const commitOptions = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
-    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...commitOptions });
+    const line = reproduceLine(result.check, result.scope, commitOptions);
     return options.comparison?.content === 'index' ? `${line} --staged` : line;
 }
 
@@ -105,7 +105,7 @@ function applyIgnoresTo(
 function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
     const { ignores } = pass.session.policyFiles.policy;
     if (RAN_STATUSES.has(result.status)) applyIgnoresTo(check, result, ignores, pass.uses);
-    if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
+    if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(result, pass.options);
 }
 
 // Runs every active check under the job limit and reports each result as it settles.

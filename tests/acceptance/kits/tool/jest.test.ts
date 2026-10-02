@@ -34,7 +34,7 @@ test(
             'app/authored.txt': 'preserved nested source\n',
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
-        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
+        const command = ['check', '--hook', 'push', '--only', 'jest/coverage', '--json'];
         const uncovered = await spawnGspot(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         const report = JSON.parse(uncovered.stdout) as RunReport;
@@ -71,7 +71,7 @@ test(
             'coverage/authored.txt': 'preserved report\n',
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
-        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
+        const command = ['check', '--hook', 'push', '--only', 'jest/coverage', '--json'];
         const uncovered = await spawnGspot(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         expect((JSON.parse(uncovered.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([

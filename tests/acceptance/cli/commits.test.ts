@@ -23,7 +23,7 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     await Bun.write(draft, 'Fixed stuff.\n');
     const refused = await spawnGspot(
         root,
-        ['check', '--only', 'commits/commitlint', '--stage', 'message', '--message-file', draft],
+        ['check', '--only', 'commits/commitlint', '--message-file', draft],
         environment,
     );
     expect(refused.code).toBe(1);

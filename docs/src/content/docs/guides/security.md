@@ -24,14 +24,14 @@ the line leaves the secret in Git history.
 With the `security` kit, run the shipped rules and your own:
 
 ```shell
-gspot check --stage push --only security/semgrep
+gspot check --only security/semgrep
 ```
 
 Add your rule files with `tools.semgrep.configs`. To run public rule packs, list them in
 `tools.semgrep.registry` and run:
 
 ```shell
-gspot check --stage manual --only security/semgrep-registry
+gspot check --only security/semgrep-registry
 ```
 
 The rule packs need network access. To turn a rule off for some paths, record an ignore with a
@@ -58,7 +58,7 @@ Then apply, install, and run the scan:
 ```bash
 gspot apply
 gspot install
-gspot check --stage manual --only security/codeql
+gspot check --only security/codeql
 ```
 
 CodeQL scans a copy of your sources, and the findings name paths in your repository. The

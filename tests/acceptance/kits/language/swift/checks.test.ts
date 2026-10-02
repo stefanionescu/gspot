@@ -80,7 +80,7 @@ plantedCases(
             'the commit stage leaves the build, the analyzer, and the dead code scan to their own stages',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('swift/build');
                 expect(ids).not.toContain('swift/swiftlint-analyze');

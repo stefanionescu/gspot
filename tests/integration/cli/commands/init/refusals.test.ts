@@ -25,7 +25,7 @@ test('a preview writes nothing and prints parseable JSON', async () => {
 test.each([
     ['a choice outside its list', ['init', '--yes', '--ci', 'foo']],
     ['an unknown kit', ['init', '--yes', '--kits', 'bassh', ...QUIET]],
-    ['an unknown stage', ['check', '--stage', 'later']],
+    ['an unknown hook', ['check', '--hook', 'later']],
 ])('%s exits 2 and writes nothing', async (_name, argv) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': script });

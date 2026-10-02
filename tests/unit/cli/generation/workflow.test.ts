@@ -1,10 +1,17 @@
-// The generated CI files, read as YAML: one check and one manual job per platform, and Swift on macOS.
+// The generated CI files, read as YAML: a check job per platform, a manual job when a manual check is selected, and
+// Swift on macOS.
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import type { WorkflowShape } from '#cli/types/generation/generation.ts';
 
-const SHAPE: WorkflowShape = { version: '1.2.3', platforms: ['ubuntu'], swiftScope: undefined, isMise: true };
+const SHAPE: WorkflowShape = {
+    version: '1.2.3',
+    platforms: ['ubuntu'],
+    swiftScope: undefined,
+    isMise: true,
+    manualChecks: ['security/codeql'],
+};
 
 test('the GitHub workflow has a check and a manual job per platform and only reads the repository', () => {
     const file = workflowFile(SHAPE);
@@ -14,6 +21,14 @@ test('the GitHub workflow has a check and a manual job per platform and only rea
     expect(workflow.name).toBe('gspot');
     expect(workflow.permissions).toStrictEqual({ contents: 'read' });
     expect(Object.keys(workflow.jobs)).toStrictEqual(['check-ubuntu', 'manual-ubuntu']);
+});
+
+test('the manual job runs the selected manual checks by name, and is left out when none is selected', () => {
+    const workflow = parse(workflowFile(SHAPE).content) as { jobs: Record<string, { steps: { run?: string }[] }> };
+    const runs = workflow.jobs['manual-ubuntu']!.steps.map((step) => step.run ?? '');
+    expect(runs.some((run) => run.includes('mise exec -- gspot check --only security/codeql'))).toBe(true);
+    const none = parse(workflowFile({ ...SHAPE, manualChecks: [] }).content) as { jobs: object };
+    expect(Object.keys(none.jobs)).toStrictEqual(['check-ubuntu']);
 });
 
 test('a Swift scope adds the macOS jobs', () => {

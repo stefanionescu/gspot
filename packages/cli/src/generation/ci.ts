@@ -68,7 +68,10 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
     const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
-    const selected = stage === 'manual' ? `${command} --stage manual` : comparisonCheck(command, shape.run === 'all');
+    const selected =
+        stage === 'manual'
+            ? `${command} --only ${shape.manualChecks.join(' ')}`
+            : comparisonCheck(command, shape.run === 'all');
     const check = {
         name: 'Check',
         ...(stage === 'manual'
@@ -106,7 +109,8 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
 }
 
 /**
- * Generate independent check and manual jobs with read-only permissions.
+ * Generate independent check and manual jobs with read-only permissions; the manual job runs only when a manual check
+ * is selected.
  * @param shape what the workflow covers: platforms, the Swift scope, and the runner
  * @returns the GitHub workflow file
  */
@@ -121,10 +125,14 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
             'cancel-in-progress': "${{ github.event_name == 'pull_request' }}",
         },
         jobs: Object.fromEntries(
-            platforms.flatMap((platform) => [
-                [`check-${platform}`, checkJob(shape, platform, 'check')],
-                [`manual-${platform}`, checkJob(shape, platform, 'manual')],
-            ]),
+            platforms.flatMap((platform) => {
+                const jobs: [string, Record<string, unknown>][] = [
+                    [`check-${platform}`, checkJob(shape, platform, 'check')],
+                ];
+                if (shape.manualChecks.length > 0)
+                    jobs.push([`manual-${platform}`, checkJob(shape, platform, 'manual')]);
+                return jobs;
+            }),
         ),
     });
     const content = `${headerFor('gspot.yml', shape.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;

@@ -93,7 +93,7 @@ test(
         await Bun.write(path, workflow);
         const result = await runGspot(
             sandbox.path,
-            ['check', '--only', 'actions/pinact', '--stage', 'push'],
+            ['check', '--only', 'actions/pinact', '--hook', 'push'],
             environment,
         );
         expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -102,7 +102,7 @@ test(
         await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
         const corrected = await runGspot(
             sandbox.path,
-            ['check', '--only', 'actions/pinact', '--stage', 'push', '--json'],
+            ['check', '--only', 'actions/pinact', '--hook', 'push', '--json'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

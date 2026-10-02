@@ -31,6 +31,16 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
             isMise: policy.runner === 'mise',
+            manualChecks: [
+                ...new Set(
+                    [
+                        ...policy.checks,
+                        ...scopes.flatMap((selection) => selection.selected.flatMap((kit) => kit.checks)),
+                    ]
+                        .filter((check) => check.stage === 'manual')
+                        .map((check) => check.name),
+                ),
+            ].toSorted((left, right) => left.localeCompare(right)),
         }),
     );
 }

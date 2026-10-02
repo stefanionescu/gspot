@@ -82,8 +82,6 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
     commitAll(sandbox.path);
     const outcome = await runGspot(sandbox.path, [
         'check',
-        '--stage',
-        'push',
         '--only',
         'site/build',
         'site/build-reproducible',

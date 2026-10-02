@@ -14,7 +14,7 @@ levels. For a test runner without a kit, write a [custom check](/guides/custom-c
 Select the `jest` kit, then run the coverage check:
 
 ```bash
-gspot check --stage push --only jest/coverage
+gspot check --only jest/coverage
 ```
 
 The check runs Jest in a copy of your sources, so your working tree and reports stay as they
@@ -41,7 +41,7 @@ Select the `vitest` kit, with Vitest and its coverage provider installed in your
 run:
 
 ```bash
-gspot check --stage push --only vitest/coverage
+gspot check --only vitest/coverage
 ```
 
 Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, and
@@ -53,7 +53,7 @@ Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, 
 Select the `pytest` kit, and install pytest and pytest-cov in your project's `.venv`. Then run:
 
 ```bash
-gspot check --stage push --only pytest/coverage
+gspot check --only pytest/coverage
 ```
 
 `tools.pytest.coverage.lines` sets the line coverage floor. The check runs pytest with strict markers

@@ -25,7 +25,7 @@ function assertPushOptions(options: CheckOptions): void {
         options.messageFile !== undefined;
     if (hasConflictingOptions)
         throw new GspotError('selection', [
-            'Pre-push object checks cannot be combined with staged, changed, fix, stage, or message-file options.',
+            'Pre-push object checks cannot be combined with --staged, --changed, --fix, --hook, or --message-file.',
         ]);
 }
 
