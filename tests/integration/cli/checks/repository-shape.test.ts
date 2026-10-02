@@ -5,9 +5,9 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
+import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
-import { suppressions, suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 const policy = {
     kits: ['typescript', 'docs'],
@@ -55,13 +55,7 @@ test('suppression validation ignores source text and valid reasons but reports m
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'integrity/suppressions')!;
     const read = engineInput(session, { scope, spec, files: session.repository.files });
-    read.suppressions = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.reads,
-        session.repository.files,
-    );
-    const found = suppressions(read);
+    const found = await suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
         'a.ts:2 eslint-no-reason',
         'b.sh:2 semgrep-no-reason',

@@ -1,0 +1,50 @@
+// The types of commands/check in this package.
+import type { CommandResult } from '#cli/types/commands/commands.ts';
+import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/execution.ts';
+import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
+
+export type PushedRevision = PushSelection['revisions'][number];
+export type Checked = PushReport['revisions'][number];
+export type Selections = {
+    paths: string[];
+    changed: ChangedSet | undefined;
+    set: StagedSet | { staged: undefined; unstaged: number };
+    stage: StageFilter;
+};
+
+/** What a snapshot stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
+export type Revision = {
+    commits?: string[];
+    historyComplete?: boolean;
+    content: 'index' | 'commit';
+    installedRoot: string;
+    reference: string;
+    reportRoot?: string;
+    staged?: StagedSet;
+    changed?: string[];
+};
+export type CheckOptions = {
+    onResult?: (result: CheckResult) => void;
+    cwd: string;
+    only?: string[];
+    paths: string[];
+    staged: boolean;
+    push?: { input: string; remote?: string };
+    changed?: string;
+    fix: boolean;
+    isDryRun: boolean;
+    stage?: StageFilter;
+    skips: string[];
+    messageFile?: string;
+    quiet: boolean;
+    verbose: boolean;
+};
+export type CheckCommandResult = CommandResult & { report?: RunReport };
+
+/** The push report: one run report for every distinct tree that Git's pre-push input names. */
+export type PushReport = {
+    canceled?: { pendingRefs: string[] };
+    revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
+    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    exitCode: number;
+};

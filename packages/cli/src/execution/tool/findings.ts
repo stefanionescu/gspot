@@ -2,19 +2,14 @@
 import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { toolPath } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { parseOutput } from '#cli/execution/tool/formats.ts';
-import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/kits.ts';
-import type { PlannedCheck, ToolRunState, ToolInvocation } from '#cli/types/execution/execution.ts';
-
-import {
-    TAIL_LINES,
-    FILELESS_FORMATS,
-    FINDING_EXIT_CODES,
-    TRUFFLEHOG_FINDINGS,
-} from '#cli/config/execution/execution.ts';
+import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { FINDING_EXIT_CODES } from '#cli/config/execution/execution.ts';
+import type { Finding, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { OutputFormat, ToolRunState, ToolInvocation } from '#cli/types/execution/tool.ts';
+import { TAIL_LINES, FILELESS_FORMATS, TRUFFLEHOG_FINDINGS } from '#cli/config/execution/tool.ts';
 
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)

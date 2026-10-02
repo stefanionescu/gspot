@@ -5,19 +5,19 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
+import type { Policy, TomlTable } from '#cli/types/policy/policy.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
-import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
-import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands.ts';
+import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.isDryRun) return;
@@ -84,7 +84,12 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
     const fields = readManifests(root, repo.files);
-    const workspace = proposedScopes(root, repo.files, fields, manifests.values());
+    const workspace = proposedScopes(
+        root,
+        repo.files,
+        fields,
+        [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
+    );
     const inputs = { root, repo, fields, workspace: workspace.scopes, manifests };
     const detected = selectForInit({ ...inputs, options });
     const tooling = existingTooling(root, repo.files, fields);

@@ -1,10 +1,16 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { LOCKFILES } from '#cli/config/repository/repository.ts';
 import { readPackageManifest } from '#cli/repository/packages.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
-import { NPM_MANIFEST, EXACT_VERSION, DEPENDENCY_TABLES, NON_REGISTRY_VERSION } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+
+import {
+    LOCKFILES,
+    NPM_MANIFEST,
+    EXACT_VERSION,
+    DEPENDENCY_TABLES,
+    NON_REGISTRY_VERSION,
+} from '#cli/config/checks/general/dependencies.ts';
 
 function rootFindings(input: EngineInput, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];

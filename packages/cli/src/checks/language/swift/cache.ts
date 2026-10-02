@@ -2,13 +2,14 @@
 import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Pruning } from '#cli/types/checks.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Read, Root } from '#cli/types/platform.ts';
+import { MODE_BITS } from '#cli/config/platform/root.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
+import type { Read, Root } from '#cli/types/platform/platform.ts';
+import type { Pruning } from '#cli/types/checks/language/swift.ts';
+import { PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
 import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';
-import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 
 // Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.
 function inspectFolder(folder: string, files: Root, directory: string, pending: string[]): void {

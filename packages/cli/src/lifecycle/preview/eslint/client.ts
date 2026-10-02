@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { rmSync, mkdtempSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import type { configurationRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
 

@@ -1,21 +1,17 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
+import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
+import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
-import type {
-    Finding,
-    ScriptFile,
-    ScriptIndex,
-    StructureInput,
-    StructureAnalysis as Analysis,
-} from '#cli/types/checks.ts';
 import {
     BOUNDARY_HEADER,
     SOURCE_STATEMENT,
     SOURCE_ANNOTATION,
     BOUNDARY_MIN_WORDS,
     BOUNDARY_HEADER_WINDOW,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 function resolvedSource(owner: string, annotation: string): string {
     if (annotation.startsWith('/')) return annotation.slice(1);

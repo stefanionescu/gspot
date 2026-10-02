@@ -7,7 +7,8 @@ import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
-import type { Finding, EngineInput, FencedBlock } from '#cli/types/checks.ts';
+import type { FencedBlock } from '#cli/types/checks/language/markdown.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 import {
     TREE_PARSERS,
@@ -16,7 +17,7 @@ import {
     ANGLE_PLACEHOLDER,
     ELLIPSIS_ARGUMENTS,
     STRUCTURED_PARSERS,
-} from '#cli/config/checks/docs.ts';
+} from '#cli/config/checks/language/markdown.ts';
 
 function fencesOf(text: string): FencedBlock[] {
     const out: FencedBlock[] = [];

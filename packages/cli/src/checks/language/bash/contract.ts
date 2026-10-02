@@ -1,7 +1,11 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
 import { findingAt } from '#cli/execution/finding.ts';
+import { HEADER_LINES } from '#cli/config/checks/checks.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
+import type { CodeLine, ScriptFile, ScriptReport } from '#cli/types/checks/language/bash.ts';
+import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 import {
     codeLines,
@@ -9,20 +13,11 @@ import {
     withoutDeclaration,
     isDirectoryConstant,
 } from '#cli/checks/language/bash/code-lines.ts';
-import type {
-    Finding,
-    CodeLine,
-    ScriptFile,
-    ScriptReport,
-    StructureInput,
-    StructureAnalysis as Analysis,
-} from '#cli/types/checks.ts';
 import {
     EXIT_CALL,
     MAIN_CALL,
     REMOVE_CALL,
     STRICT_MODE,
-    HEADER_LINES,
     BASH_FEATURES,
     BASH_SHEBANGS,
     READONLY_WORD,
@@ -33,7 +28,7 @@ import {
     TOP_LEVEL_ASSIGNMENT,
     DIRECTORY_CONSTANT_PIECES,
     OTHER_INTERPRETER_SHEBANG,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 // The line that must be a bare comment marker.
 const HEADER_LINE = 2;

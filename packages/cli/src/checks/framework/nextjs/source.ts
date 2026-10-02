@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/framework/nextjs.ts';
 
 function paths(input: EngineInput): string[] {
     return input.files.filter((file) => file.kind === 'source').map((file) => file.path);

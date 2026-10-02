@@ -2,12 +2,12 @@
 import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { LINE_FEED } from '#cli/config/execution/tool.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-import { LINE_FEED } from '#cli/config/execution/output.ts';
-import type { TypoEntry } from '#cli/types/execution/output.ts';
+import type { TypoEntry } from '#cli/types/execution/tool.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 
 const markdownlintEntries = z.array(
     z.object({

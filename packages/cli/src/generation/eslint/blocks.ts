@@ -2,8 +2,9 @@
 // and the selector groups of framework fragments.
 import { policyValue } from '#cli/policy/settings.ts';
 import { pathExpressions } from '#cli/repository/selectors.ts';
-import type { Policy, EslintSettings, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { SelectorGroup, EslintRuleBlock, ResolvedSelector } from '#cli/types/generation.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { ResolvedSelector } from '#cli/types/generation/generation.ts';
+import type { SelectorGroup, EslintSettings, EslintRuleBlock } from '#cli/types/generation/eslint.ts';
 
 function distinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();

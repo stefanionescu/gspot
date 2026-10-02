@@ -1,6 +1,6 @@
 // Python modules parsed from text, for the analyses that read them without a repository.
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import type { PythonModule } from '#cli/types/checks.ts';
+import type { PythonModule } from '#cli/types/checks/language/python.ts';
 
 /**
  * Parses Python sources into the modules the analyses read; the caller deletes the trees when done.

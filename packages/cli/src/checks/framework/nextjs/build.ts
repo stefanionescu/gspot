@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import { SHOWN_LINES } from '#cli/config/checks/checks.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { TSC_LINE, CAUSE_MARKS } from '#cli/config/checks/framework/nextjs.ts';
 
 // The marked line and the one after it.
 const MARKED_LINES = 2;

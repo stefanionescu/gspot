@@ -1,7 +1,7 @@
 // Reading the bytes of a repository file: a bounded prefix, its text, or the whole file a run may hold once.
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { NATURE_HEAD_BYTES } from '#cli/config/repository/repository.ts';
 
 /**

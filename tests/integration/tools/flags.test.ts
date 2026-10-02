@@ -109,10 +109,13 @@ beforeAll(async () => {
         await preparePackageProject(sandbox.path, files, owner);
     });
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
-    await installPythonProject(sandbox.path);
-    await installPackageProject(
-        sandbox.path,
-        distinct.map(({ tool }) => tool),
+    await runOwnedLifecycle(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
+    await runOwnedLifecycle(sandbox.path, (owner) =>
+        installPackageProject(
+            sandbox.path,
+            owner,
+            distinct.map(({ tool }) => tool),
+        ),
     );
 }, INSTALL_TIMEOUT_MS);
 

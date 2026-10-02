@@ -4,9 +4,8 @@ import semver from 'semver';
 import { isDeepStrictEqual } from 'node:util';
 import { kitName } from '#cli/kits/targets.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/execution/execution.ts';
-import { SETTING_DEFAULT_FIELDS, MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 import type { Checks, Manifest, RawCheck, Settings, CheckRule, RawManifest } from '#cli/types/kits.ts';
+import { SETTING_PLACEHOLDER, SETTING_DEFAULT_FIELDS, MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 // Each way a check declaration contradicts itself, with the sentence that reports it.
 const CHECK_RULES: CheckRule[] = [
     {

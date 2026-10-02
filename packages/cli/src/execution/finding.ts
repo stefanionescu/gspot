@@ -1,6 +1,6 @@
 // The shape of findings and check results, and the one builder every check makes its findings with.
 import { z } from 'zod';
-import type { Finding, EngineInput, FindingPlace } from '#cli/types/checks.ts';
+import type { Finding, EngineInput, FindingPlace } from '#cli/types/execution/execution.ts';
 
 export const findingSchema = z.strictObject({
     check: z.string(),

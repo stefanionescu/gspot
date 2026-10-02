@@ -3,10 +3,11 @@ import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { readSource } from '#cli/repository/sources.ts';
-import { SOURCE } from '#cli/config/checks/structure.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { Edge, EdgeSource, EngineInput, ImportIndex } from '#cli/types/checks.ts';
+import { SOURCE } from '#cli/config/checks/language/javascript.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
+import type { Edge, EdgeSource, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();
 const projects = new WeakMap<object, Map<string, ts.CompilerOptions>>();

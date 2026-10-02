@@ -4,23 +4,18 @@ import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
+import { HISTORY_CHECKS } from '#cli/config/execution/execution.ts';
+import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import { skipFor, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
-import { HISTORY_CHECKS, PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
+import type { StageFilter, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { filesFor, childScopes, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
-
-import type {
-    Session,
-    PlanEntry,
-    PlanInputs,
-    PlanOptions,
-    StageFilter,
-    PlannedCheck,
-} from '#cli/types/execution/execution.ts';
+import type { Stage, PlanEntry, PlanInputs, PlanOptions } from '#cli/types/execution/planning.ts';
 
 function isStageWanted(filter: StageFilter, stage: Stage): boolean {
     if (filter === 'all') return stage === 'commit' || stage === 'push';

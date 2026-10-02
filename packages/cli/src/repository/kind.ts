@@ -1,24 +1,21 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
-import { GSPOT_FOLDER } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { FileDeclaration } from '#cli/types/policy/policy.ts';
-import type { Verdict, Attribute } from '#cli/types/repository/repository.ts';
+import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
 
 import {
-    LICENSE_FILE,
-    GENERATED_BANNERS,
-    VALE_OWN_PREFIXES,
-    VALE_STYLES_PREFIX,
-    VENDORED_DIRECTORIES,
-} from '#cli/config/repository/patterns.ts';
-import {
     BANNER_BYTES,
+    GSPOT_FOLDER,
+    LICENSE_FILE,
     BINARY_ATTRIBUTES,
     ENV_FILE_PATTERNS,
+    GENERATED_BANNERS,
+    VALE_OWN_PREFIXES,
     ENV_TEMPLATE_NAMES,
+    VALE_STYLES_PREFIX,
     VENDORED_ATTRIBUTES,
     GENERATED_ATTRIBUTES,
+    VENDORED_DIRECTORIES,
 } from '#cli/config/repository/repository.ts';
 
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));

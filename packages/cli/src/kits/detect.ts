@@ -3,8 +3,8 @@ import { projectFolder } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { Manifest, KitEvidence } from '#cli/types/kits.ts';
-import type { Fields, Layout, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { Layout, Manifest, KitEvidence } from '#cli/types/kits.ts';
+import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function dependencyMap(fields: Fields[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();

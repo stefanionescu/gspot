@@ -1,17 +1,9 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { DECORATOR_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
-
-/** Additional compiler diagnostics required at all. */
-export const ALL_COMPILER_OPTIONS = {
-    ...RECOMMENDED_COMPILER_OPTIONS,
-    noFallthroughCasesInSwitch: true,
-    noUncheckedIndexedAccess: true,
-    noImplicitOverride: true,
-    exactOptionalPropertyTypes: true,
-};
+import { ALL_COMPILER_OPTIONS } from '#cli/config/generation/generation.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { DECORATOR_OPTIONS } from '#cli/config/checks/language/typescript.ts';
 
 /**
  * One finding per required option a scope's tsconfig leaves off.

@@ -1,8 +1,8 @@
 import { extensionOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/config/checks/docs.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/config/checks/general/prose.ts';
 
 function lineFindings(input: EngineInput, path: string, lines: string[]): Finding[] {
     const extension = extensionOf(path);

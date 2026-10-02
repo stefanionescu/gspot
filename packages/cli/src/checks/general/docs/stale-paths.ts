@@ -5,10 +5,12 @@ import { globPaths } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
+import type { ProseLine } from '#cli/types/parsers/parsers.ts';
+import type { PathIndex } from '#cli/types/checks/general/docs.ts';
 import { pathTokens, proseLines } from '#cli/parsers/references.ts';
-import { RUN_TOKEN, FILE_EXTENSION } from '#cli/config/checks/docs.ts';
-import type { Finding, PathIndex, ProseLine, EngineInput } from '#cli/types/checks.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { RUN_TOKEN, FILE_EXTENSION } from '#cli/config/checks/general/docs.ts';
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 function knownPaths(input: EngineInput): Set<string> {

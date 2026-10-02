@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { parse as parseToml } from 'smol-toml';
 import { similar } from '#cli/platform/text.ts';
+import { unknownKit } from '#cli/kits/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -74,7 +75,7 @@ export function parseProfile(text: string, source: string): Profile {
     const known = kitManifests().keys().toArray();
     const configurations = (Array.isArray(named) ? named.map(String) : [])
         .filter((id) => !known.includes(id))
-        .map((id) => messages.unknownKit(id, similar(id, known)));
+        .map((id) => unknownKit(id, similar(id, known)));
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new GspotError('profile', problems);
     return { source, digest: createHash('sha256').update(text).digest('hex'), tables: result.data };

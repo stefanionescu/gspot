@@ -1,21 +1,21 @@
 // Writing what init prepared: the policy, the generated files, the retirements, and the tool installation.
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
-import type { Read } from '#cli/types/platform.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/config/commands/init.ts';
-import type { Owner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
-import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import type { Written, Installed, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.

@@ -3,7 +3,7 @@
 import { sep, relative, isAbsolute } from 'node:path';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
-import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform.ts';
+import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform/platform.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
 
 import {

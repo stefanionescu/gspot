@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ImplementedFunction } from '#plugin/types/rules.ts';
+import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import { FUNCTIONS, TYPE_ONLY, EXECUTABLE_STATEMENTS } from '#plugin/config/plugin.ts';
 
 // Count executable statements under a node, entering the functions written inside it.

@@ -1,5 +1,5 @@
-import type { DirectiveScan } from '#cli/types/checks.ts';
-import { WORD_STOPS, NGINX_ESCAPES, WORD_START_STOPS, NGINX_PUNCTUATION } from '#cli/config/checks/platforms.ts';
+import type { DirectiveScan } from '#cli/types/checks/tool/nginx.ts';
+import { WORD_STOPS, NGINX_ESCAPES, WORD_START_STOPS, NGINX_PUNCTUATION } from '#cli/config/checks/tool/nginx.ts';
 
 // A backslash and the character it protects.
 const ESCAPE_PAIR = 2;

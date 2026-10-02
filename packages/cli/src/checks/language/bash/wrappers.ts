@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
 import { stemOf } from '#cli/checks/general/structure/directories.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 import {
     INLINE_NODE,
@@ -10,7 +10,7 @@ import {
     FORWARDED_SCRIPT,
     FORWARDING_MAX_LINES,
     FORWARDING_INTERPRETER,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 /**
  * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.

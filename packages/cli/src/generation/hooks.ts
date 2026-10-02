@@ -1,11 +1,18 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { runBlocking } from '#cli/platform/spawn.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
 import { headerLines } from '#cli/generation/headers.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import type { HookName, GeneratedFile } from '#cli/types/generation.ts';
-import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
-import { HOOK_ARGS, RUNNER_EXEC, HOOK_UNAVAILABLE } from '#cli/config/generation.ts';
+import type { HookName } from '#cli/types/generation/generation.ts';
+
+import {
+    HOOK_ARGS,
+    HOOK_FILES,
+    RUNNER_EXEC,
+    HOOKS_DIRECTORY,
+    HOOK_UNAVAILABLE,
+} from '#cli/config/generation/generation.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.

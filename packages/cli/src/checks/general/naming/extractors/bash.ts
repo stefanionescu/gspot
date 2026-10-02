@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { Identifier, ExtractSink } from '#cli/types/checks.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/general/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;

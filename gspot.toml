@@ -210,14 +210,29 @@ names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/types/execution/execution.ts"
+file = "packages/cli/src/types/commands/check.ts"
 names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/types/checks.ts"
-names = ["Commit", "DefElem", "File", "Fingerprint", "List", "RuleID", "String", "shouldTranslate"]
-reason = "gitleaks reports, libpg-query AST tags, and Xcode string files spell these keys."
+file = "packages/cli/src/types/checks/general/secrets.ts"
+names = ["Commit", "File", "Fingerprint", "RuleID"]
+reason = "gitleaks reports spell these keys."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/checks/language/sql.ts"
+names = ["DefElem", "List", "String"]
+reason = "libpg-query AST tags spell these keys."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/checks/tool/xcode.ts"
+names = ["shouldTranslate"]
+reason = "Xcode string files spell this key."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/repository/repository.ts"
+names = ["produced_by"]
+reason = "The gspot.toml key of a generated file entry."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/parsers/sql.ts"
@@ -274,6 +289,197 @@ reason = "The GitHub Actions inputs key."
 [architecture]
 types_directory = "types"
 config_directory = "config"
+
+# The layers of the CLI: a folder imports only itself and the rows its edge names. Its config and types files sit in its layer.
+[[architecture.elements]]
+name = "main"
+paths = ["packages/cli/src/main.ts"]
+
+[[architecture.elements]]
+name = "commands"
+paths = [
+    "packages/cli/src/commands/**",
+    "packages/cli/src/config/commands/**",
+    "packages/cli/src/types/commands/**",
+]
+
+[[architecture.elements]]
+name = "checks"
+paths = [
+    "packages/cli/src/checks/**",
+    "packages/cli/src/config/checks/**",
+    "packages/cli/src/types/checks/**",
+]
+
+[[architecture.elements]]
+name = "output"
+paths = [
+    "packages/cli/src/output/**",
+    "packages/cli/src/config/output.ts",
+    "packages/cli/src/types/output.ts",
+]
+
+[[architecture.elements]]
+name = "execution"
+paths = [
+    "packages/cli/src/execution/**",
+    "packages/cli/src/config/execution/**",
+    "packages/cli/src/types/execution/**",
+]
+
+[[architecture.elements]]
+name = "lifecycle"
+paths = [
+    "packages/cli/src/lifecycle/**",
+    "packages/cli/src/config/lifecycle/**",
+    "packages/cli/src/types/lifecycle/**",
+]
+
+[[architecture.elements]]
+name = "generation"
+paths = [
+    "packages/cli/src/generation/**",
+    "packages/cli/src/config/generation/**",
+    "packages/cli/src/types/generation/**",
+]
+
+[[architecture.elements]]
+name = "tools"
+paths = [
+    "packages/cli/src/tools/**",
+    "packages/cli/src/config/tools/**",
+    "packages/cli/src/types/tools/**",
+]
+
+[[architecture.elements]]
+name = "policy"
+paths = [
+    "packages/cli/src/policy/**",
+    "packages/cli/src/config/policy/**",
+    "packages/cli/src/types/policy/**",
+]
+
+[[architecture.elements]]
+name = "rules"
+paths = [
+    "packages/cli/src/rules/**",
+    "packages/cli/src/config/rules.ts",
+    "packages/cli/src/types/rules.ts",
+]
+
+[[architecture.elements]]
+name = "kits"
+paths = [
+    "packages/cli/src/kits/**",
+    "packages/cli/src/config/kits.ts",
+    "packages/cli/src/types/kits.ts",
+]
+
+[[architecture.elements]]
+name = "repository"
+paths = [
+    "packages/cli/src/repository/**",
+    "packages/cli/src/config/repository/**",
+    "packages/cli/src/types/repository/**",
+]
+
+[[architecture.elements]]
+name = "parsers"
+paths = [
+    "packages/cli/src/parsers/**",
+    "packages/cli/src/config/parsers/**",
+    "packages/cli/src/types/parsers/**",
+]
+
+[[architecture.elements]]
+name = "platform"
+paths = [
+    "packages/cli/src/platform/**",
+    "packages/cli/src/config/platform/**",
+    "packages/cli/src/types/platform/**",
+]
+
+[[architecture.edges_allowed]]
+from = "main"
+to = ["main", "commands", "platform"]
+
+[[architecture.edges_allowed]]
+from = "commands"
+to = [
+    "commands",
+    "checks",
+    "output",
+    "execution",
+    "lifecycle",
+    "generation",
+    "tools",
+    "policy",
+    "rules",
+    "kits",
+    "repository",
+    "parsers",
+    "platform",
+]
+
+[[architecture.edges_allowed]]
+from = "checks"
+to = [
+    "checks",
+    "execution",
+    "lifecycle",
+    "generation",
+    "tools",
+    "policy",
+    "rules",
+    "kits",
+    "repository",
+    "parsers",
+    "platform",
+]
+
+[[architecture.edges_allowed]]
+from = "output"
+to = ["output", "execution", "generation", "platform"]
+
+[[architecture.edges_allowed]]
+from = "execution"
+to = ["execution", "lifecycle", "generation", "tools", "policy", "rules", "kits", "repository", "parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "lifecycle"
+to = ["lifecycle", "generation", "tools", "policy", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "generation"
+to = ["generation", "tools", "policy", "rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "tools"
+to = ["tools", "policy", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "policy"
+to = ["policy", "rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "rules"
+to = ["rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "kits"
+to = ["kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "repository"
+to = ["repository", "parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "parsers"
+to = ["parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "platform"
+to = ["platform"]
 
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
@@ -470,8 +676,8 @@ reason = "These configuration evaluators intentionally execute repository-select
 [[ignore]]
 check = "typescript/eslint"
 rule = "gspot/no-trivial-functions"
-paths = ["packages/cli/src/policy/messages.ts"]
-reason = "Every policy message has one builder here, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalog moves out of functions."
+paths = ["packages/cli/src/kits/messages.ts", "packages/cli/src/policy/messages.ts"]
+reason = "Every message has one builder in its catalog, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalogs move out of functions."
 
 [[ignore]]
 check = "typescript/eslint"

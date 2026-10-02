@@ -1,13 +1,12 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import type { Root } from '#cli/types/platform.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
-import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.ts';
+import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
+import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
 import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
 
 import {
@@ -16,7 +15,7 @@ import {
     ENTRY_MODES,
     EXECUTABLE_MODE,
     MATERIALIZATION_BATCH_SIZE,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/execution/checkout.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;

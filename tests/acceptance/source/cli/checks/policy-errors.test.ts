@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import type { CommandFailureJson } from '#cli/types/commands.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 test.each([
     { scope: 'root', policy: policyOf(['bas']), where: 'kits.0' },

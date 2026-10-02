@@ -1,14 +1,9 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
-import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/structure.ts';
-
-import type {
-    Finding,
-    CodeLine,
-    ScriptFile,
-    StructureInput,
-    StructureAnalysis as Analysis,
-} from '#cli/types/checks.ts';
+import type { CodeLine, ScriptFile } from '#cli/types/checks/language/bash.ts';
+import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
+import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 function markProblems(
     file: ScriptFile,

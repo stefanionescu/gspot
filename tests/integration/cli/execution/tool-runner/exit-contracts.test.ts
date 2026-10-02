@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
@@ -74,7 +75,7 @@ test.each([0, 1, 3] as const)(
         const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await checkExecution(planned.spec)(session, planned);
+        const result = await checkExecution(planned.spec, CHECKS)(session, planned);
         expect(result.status, JSON.stringify(result)).toBe(({ 0: 'ok', 1: 'fail', 3: 'error' } as const)[code]);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);

@@ -6,10 +6,11 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { InstallJson } from '#cli/types/commands.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import type { InstallJson } from '#cli/types/commands/install.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { LOCKS, PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
@@ -41,7 +42,9 @@ test.each(PACKAGE_PROJECTS)(
         });
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-        expect(await rejection(installPackageProject(root, tools))).toContain('Run: gspot apply, then gspot install');
+        expect(
+            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
+        ).toContain('Run: gspot apply, then gspot install');
         expect(readFileSync(lockPath, 'utf8')).toBe(stale);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         const read = await openSession(root);

@@ -1,12 +1,12 @@
 import { join, dirname } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
-import { SHOWN_LINES } from '#cli/config/checks/platforms.ts';
+import { SHOWN_LINES } from '#cli/config/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { SpawnResult } from '#cli/types/platform/platform.ts';
 import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/general/dependencies.ts';
 
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
 function frozenCommand(input: EngineInput, path: string): string[] | undefined {

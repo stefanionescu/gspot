@@ -4,9 +4,10 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
-import { ACTIVE_LEVELS } from '#cli/config/native.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { PRIVATE_FILE, ARGUMENT_START } from '#cli/config/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { ACTIVE_LEVELS } from '#cli/config/lifecycle/preview.ts';
+import { ARGUMENT_START } from '#cli/config/platform/platform.ts';
 import { runEslintPreview } from '#cli/lifecycle/preview/eslint/declarations.ts';
 import type { eslintCoverageRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
 

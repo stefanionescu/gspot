@@ -1,5 +1,5 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ImplementedFunction } from '#plugin/types/rules.ts';
+import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 // Positions whose parent always takes a function value.

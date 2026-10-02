@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
-import type { Migration } from '#cli/types/checks.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
+import type { Migration } from '#cli/types/checks/database.ts';
 import { schema } from '#cli/checks/database/postgres/schema.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven cases parse a migration fixture; one owner keeps its shape.

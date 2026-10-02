@@ -3,8 +3,9 @@ import { statSync } from 'node:fs';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
-import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/swift.ts';
-import type { Finding, EngineInput, StringsFile, AssetContents } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { StringsFile, AssetContents } from '#cli/types/checks/tool/xcode.ts';
+import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {

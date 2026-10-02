@@ -1,7 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { assignmentOf } from '#cli/checks/language/python/modules.ts';
-import type { PythonModule, StructureProblem } from '#cli/types/checks.ts';
-import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/config/checks/python.ts';
+import type { PythonModule } from '#cli/types/checks/language/python.ts';
+import type { StructureProblem } from '#cli/types/checks/language/language.ts';
+import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/config/checks/language/python.ts';
 
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {

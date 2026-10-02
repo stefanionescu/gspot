@@ -1,6 +1,15 @@
-type RefMapping = { source: string; destination: string };
 // The types of repository/revisions in this package.
-export type RevisionSource = { kind: 'index' } | { kind: 'commit'; hash: string };
+
+type RefMapping = { source: string; destination: string };
+
+export type PushSelection = {
+    revisions: PushRevision[];
+    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+};
+
+export type ChangedSet = { reference: string; paths: string[]; commits?: string[] };
+export type StagedSet = { staged: string[]; unstaged: number };
+
 export type PushRevision = {
     object: string;
     tree: string;
@@ -9,14 +18,7 @@ export type PushRevision = {
     historyComplete: boolean;
     paths?: string[];
 };
-export type PushSelection = {
-    revisions: PushRevision[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
-};
-export type GitEntry = { mode: string; hash: string; path: string };
-export type Directory = { folder: string; dependency: string };
-export type ChangedSet = { reference: string; paths: string[]; commits?: string[] };
-export type StagedSet = { staged: string[]; unstaged: number };
+
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 export type Comparison = { changed: string[] | undefined; excluded: string[] };
 export type PushSearch = {

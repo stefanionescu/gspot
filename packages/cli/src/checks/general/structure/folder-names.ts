@@ -1,9 +1,9 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { directoryOf } from '#cli/checks/general/structure/directories.ts';
-import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/structure.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/general/structure.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.

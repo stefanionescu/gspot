@@ -6,12 +6,12 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { join, resolve, isAbsolute } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
+import type { ToolOwner } from '#cli/types/tools/tools.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
-import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 
 import {
@@ -79,7 +79,7 @@ function matches(project: string, lock: string): boolean {
  * @param work the directory the resolution runs in
  * @returns index credentials that must remain absent from generated lock files
  */
-function writePythonSettings(root: string, owner: Owner, work: string): string[] {
+function writePythonSettings(root: string, owner: ToolOwner, work: string): string[] {
     const configuration = owner.read('uv.toml');
     const source = configuration ?? owner.read('pyproject.toml');
     const parsed = parse(source?.bytes.toString('utf8') ?? '');
@@ -122,7 +122,7 @@ function writePythonSettings(root: string, owner: Owner, work: string): string[]
     });
 }
 
-async function uv(root: string, owner: Owner, work: string, args: string[], executable = 'uv'): Promise<void> {
+async function uv(root: string, owner: ToolOwner, work: string, args: string[], executable = 'uv'): Promise<void> {
     const credentials = writePythonSettings(root, owner, work);
     const result = await runToolCommand(
         undefined,
@@ -165,13 +165,37 @@ async function relocateInterpreter(work: string): Promise<void> {
         );
 }
 
+// Lock, sync, and relocate the environment in a scratch folder, then install it once its inputs are unchanged.
+async function installInWork(
+    root: string,
+    owner: ToolOwner,
+    work: string,
+    inputs: { project: Read; lock: Read },
+    executable: string,
+): Promise<void> {
+    const { project, lock } = inputs;
+    writeFileSync(join(work, 'pyproject.toml'), project.bytes);
+    writeFileSync(join(work, 'uv.lock'), lock.bytes);
+    await uv(root, owner, work, ['venv', '--relocatable', '.venv'], executable);
+    await uv(root, owner, work, ['sync', '--locked', '--no-install-project'], executable);
+    if (
+        !readFileSync(join(work, 'pyproject.toml')).equals(project.bytes) ||
+        !readFileSync(join(work, 'uv.lock')).equals(lock.bytes)
+    )
+        throw new Error(`The uv run changed locked inputs. ${SETUP}`);
+    await relocateInterpreter(work);
+    if (!isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) || !isDeepStrictEqual(owner.read(LOCK), lock))
+        throw new Error('Python tool inputs changed during installation. Retry the command.');
+    owner.installTree('python', installedOutputs(join(work, '.venv'), 'python'));
+}
+
 /**
  * Resolve Python tool requirements outside the repository before writing generated files.
  * @param root the repository root
  * @param files the generated files, among them the Python project
  * @param owner the lifecycle owner that records the lock
  */
-export async function preparePythonProject(root: string, files: GeneratedFile[], owner: Owner): Promise<void> {
+export async function preparePythonProject(root: string, files: GeneratedFile[], owner: ToolOwner): Promise<void> {
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
     projectSchema.parse(parse(project.content));
@@ -243,38 +267,22 @@ export function pythonInstallSteps(root: string): string[][] {
 /**
  * Install Python tools immutably and write the relocatable environment through lifecycle ownership.
  * @param root the repository root
+ * @param owner the lifecycle owner that records the writes
  * @param executable the uv executable to run
  * @returns the line that says what was installed, or '' without a Python project
  */
-export async function installPythonProject(root: string, executable = 'uv'): Promise<string> {
-    return runOwnedLifecycle(root, async (owner) => {
-        const project = owner.read(TOOL_PYTHON_PROJECT);
-        if (project === undefined) return '';
-        projectSchema.parse(parse(project.bytes.toString('utf8')));
-        const lock = owner.read(LOCK);
-        if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
-            throw new Error(SETUP);
-        const work = mkdtempSync(join(tmpdir(), 'gspot-python-install-'));
-        try {
-            writeFileSync(join(work, 'pyproject.toml'), project.bytes);
-            writeFileSync(join(work, 'uv.lock'), lock.bytes);
-            await uv(root, owner, work, ['venv', '--relocatable', '.venv'], executable);
-            await uv(root, owner, work, ['sync', '--locked', '--no-install-project'], executable);
-            if (
-                !readFileSync(join(work, 'pyproject.toml')).equals(project.bytes) ||
-                !readFileSync(join(work, 'uv.lock')).equals(lock.bytes)
-            )
-                throw new Error(`The uv run changed locked inputs. ${SETUP}`);
-            await relocateInterpreter(work);
-            if (
-                !isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) ||
-                !isDeepStrictEqual(owner.read(LOCK), lock)
-            )
-                throw new Error('Python tool inputs changed during installation. Retry the command.');
-            owner.installTree('python', installedOutputs(join(work, '.venv'), 'python'));
-            return 'installed locked Python tools under .gspot/.venv';
-        } finally {
-            rmSync(work, { recursive: true, force: true });
-        }
-    });
+export async function installPythonProject(root: string, owner: ToolOwner, executable = 'uv'): Promise<string> {
+    const project = owner.read(TOOL_PYTHON_PROJECT);
+    if (project === undefined) return '';
+    projectSchema.parse(parse(project.bytes.toString('utf8')));
+    const lock = owner.read(LOCK);
+    if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
+        throw new Error(SETUP);
+    const work = mkdtempSync(join(tmpdir(), 'gspot-python-install-'));
+    try {
+        await installInWork(root, owner, work, { project, lock }, executable);
+        return 'installed locked Python tools under .gspot/.venv';
+    } finally {
+        rmSync(work, { recursive: true, force: true });
+    }
 }

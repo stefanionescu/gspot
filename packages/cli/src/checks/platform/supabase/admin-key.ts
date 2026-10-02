@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/platform/supabase.ts';
 
 /**
  * One finding for each line that names the service role key outside tools.supabase.admin_key_files.

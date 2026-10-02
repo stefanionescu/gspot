@@ -3,15 +3,17 @@ import { hasPackages } from '#cli/tools/vale.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import { readSource } from '#cli/repository/sources.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
-import { SCRIPT_GRAMMAR } from '#cli/config/checks/docs.ts';
-import { SCRIPT_TAG } from '#cli/config/checks/structure.ts';
+import { VALE_CONFIG } from '#cli/config/tools/tools.ts';
 import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { SCRIPT_TAG } from '#cli/config/checks/general/general.ts';
+import { PROSE_GRAMMARS } from '#cli/config/generation/generation.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { VALE_STDIN, VALE_CONFIG, PROSE_GRAMMARS } from '#cli/config/kits.ts';
-import type { Finding, ValeAlert, ProseRoute, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { ValeAlert, ProseRoute } from '#cli/types/checks/general/prose.ts';
+import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 
 const alertsSchema = z.record(
     z.string().min(1),

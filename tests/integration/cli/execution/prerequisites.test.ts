@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -25,7 +26,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         isDryRun: false,
     };
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, options);
+    const outcome = await executeRun(session, { ...options, checks: CHECKS });
     expect(outcome.report.checks).toMatchObject([
         {
             check: 'xcode/entitlements-policy',
@@ -37,7 +38,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         join(sandbox.path, 'gspot.toml'),
         policy + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
-    const enabled = await executeRun(await openSession(sandbox.path), options);
+    const enabled = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(enabled.report.exitCode).toBe(1);
     expect(enabled.report.checks[0]?.status).toBe('fail');
     expect(enabled.report.checks[0]?.findings[0]?.message).toContain('aps-environment is not an allowed entitlement');
@@ -78,7 +79,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     // The build fails with its own output, and every check that reads the built site is skipped with one note.
     const outcomes: { check: string; status: string; note: string | undefined; message: string | undefined }[] = [];
     for (const check of planned) {
-        const result = await checkExecution(check.spec)(session, check);
+        const result = await checkExecution(check.spec, CHECKS)(session, check);
         outcomes.push({
             check: check.check,
             status: result.status,
@@ -101,6 +102,6 @@ test('a failed site build skips every output consumer and a new session rebuilds
     const next = await openSession(sandbox.path);
     next.resources = resources;
     const [build] = planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
-    const rebuilt = await checkExecution(build!.spec)(next, build!);
+    const rebuilt = await checkExecution(build!.spec, CHECKS)(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

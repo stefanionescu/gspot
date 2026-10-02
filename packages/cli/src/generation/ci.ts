@@ -1,8 +1,18 @@
 import { stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
-import { MISE, NODE, CACHE, RUNNERS, CHECKOUT, NODE_VERSION } from '#cli/config/generation.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
+import type { WorkflowShape } from '#cli/types/generation/generation.ts';
+
+import {
+    MISE,
+    NODE,
+    CACHE,
+    RUNNERS,
+    CHECKOUT,
+    NODE_VERSION,
+    MISE_CONFIG_PATH,
+    MISE_MIN_VERSION,
+} from '#cli/config/generation/generation.ts';
 
 function setupSteps(shape: WorkflowShape): string[] {
     if (shape.isMise)

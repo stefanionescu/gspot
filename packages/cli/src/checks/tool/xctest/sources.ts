@@ -3,8 +3,8 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/swift.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/tool/xctest.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;

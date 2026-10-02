@@ -3,12 +3,13 @@ import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import type { Mount } from '#cli/types/checks/tool/nginx.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/tool/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
-import type { Mount, Finding, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
-import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput, EngineOutcome } from '#cli/types/execution/execution.ts';
+import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
 function includedConfigurations(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {

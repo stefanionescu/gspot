@@ -1,11 +1,11 @@
-import type { CodeLine } from '#cli/types/checks.ts';
+import type { CodeLine } from '#cli/types/checks/language/bash.ts';
 
 import {
     QUOTES,
     DECLARATION_WORDS,
     DIRECTORY_CONSTANT_SIGNS,
     DIRECTORY_CONSTANT_START,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 function quoteAfter(quote: string | undefined, char: string): string | undefined {
     if (quote !== undefined) return char === quote ? undefined : quote;

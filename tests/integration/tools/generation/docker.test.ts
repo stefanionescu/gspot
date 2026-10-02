@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -36,7 +37,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
         fix: false,
         isDryRun: false,
     };
-    const failed = await executeRun(session, options);
+    const failed = await executeRun(session, { ...options, checks: CHECKS });
     expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
     expect(
         failed.report.checks.map((check) => ({
@@ -52,7 +53,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     ]);
     for (const path of ['Dockerfile', 'sibling/Dockerfile'])
         await Bun.write(join(sandbox.path, path), source.replace('USER root', 'USER node'));
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'app/Dockerfile')).text()).toBe(source);
     expect(await Bun.file(join(sandbox.path, 'untracked/Dockerfile')).text()).toBe(source);

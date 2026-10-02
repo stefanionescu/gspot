@@ -1,6 +1,7 @@
-import { PLACEHOLDERS } from '#cli/config/checks/python.ts';
+import { PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 import { docstringOf } from '#cli/checks/language/python/modules.ts';
-import type { PythonFunction, StructureProblem } from '#cli/types/checks.ts';
+import type { PythonFunction } from '#cli/types/checks/language/python.ts';
+import type { StructureProblem } from '#cli/types/checks/language/language.ts';
 import { trivialFunctionText, executableStatements } from '#cli/checks/general/structure/statements.ts';
 /**
  * Report every implemented function at or below the configured statement threshold.

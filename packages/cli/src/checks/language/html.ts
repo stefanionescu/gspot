@@ -4,7 +4,8 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine, Finding, EngineInput, MarkupProblem, MarkupAttribute } from '#cli/types/checks.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { MarkupProblem, MarkupAttribute } from '#cli/types/checks/language/html.ts';
 
 import {
     LETTERS,
@@ -15,7 +16,7 @@ import {
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/config/checks/repository.ts';
+} from '#cli/config/checks/language/html.ts';
 
 // The text with every placeholder mark pair removed.
 function withoutPlaceholders(text: string): string {

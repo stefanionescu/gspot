@@ -5,8 +5,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
-import type { InstallJson } from '#cli/types/commands.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
@@ -108,7 +108,9 @@ if (onPosix)
             expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
             expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
             for (let attempt = 0; attempt < 2; attempt++) {
-                expect(await installPythonProject(clone)).toContain('installed locked Python tools');
+                expect(await runOwnedLifecycle(clone, (owner) => installPythonProject(clone, owner))).toContain(
+                    'installed locked Python tools',
+                );
                 const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
                 expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
                 expect({
@@ -148,13 +150,15 @@ if (onPosix)
             const { scopes, rootConfiguration } = prepared;
             const lockPath = join(repository.path, '.gspot/uv.lock');
             const lock = readFileSync(lockPath);
-            await installPythonProject(repository.path);
+            await runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner));
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
-            expect(await rejection(installPythonProject(repository.path))).toContain(
-                'Run: gspot apply, then gspot install',
-            );
+            expect(
+                await rejection(
+                    runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner)),
+                ),
+            ).toContain('Run: gspot apply, then gspot install');
             const repaired = toolEnvironment(everyManifest(scopes));
             await runOwnedLifecycle(repository.path, async (owner) => {
                 await preparePythonProject(repository.path, repaired, owner);
@@ -168,7 +172,7 @@ if (onPosix)
                     );
             });
             expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });
-            await installPythonProject(repository.path);
+            await runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner));
             expect(readFileSync(lockPath)).toStrictEqual(lock);
             expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
         },

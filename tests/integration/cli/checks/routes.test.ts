@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -16,7 +17,7 @@ test('route imports must resolve to the route in the same scope', async () => {
         'api/users.test.ts': "import { users } from '../routes/users.ts'; users();\n",
         'users.test.ts': "// import { users } from './routes/users.ts';\nexport const label = 'users';\n",
     });
-    const untested = await executeRun(await openSession(sandbox.path), ROUTES_OPTIONS);
+    const untested = await executeRun(await openSession(sandbox.path), { ...ROUTES_OPTIONS, checks: CHECKS });
     expect(untested.report.exitCode).toBe(1);
     expect(
         untested.report.checks
@@ -28,7 +29,7 @@ test('route imports must resolve to the route in the same scope', async () => {
         join(sandbox.path, 'api/users.test.ts'),
         "const { users } = await import('./routes/users.ts'); users();\n",
     );
-    const tested = await executeRun(await openSession(sandbox.path), ROUTES_OPTIONS);
+    const tested = await executeRun(await openSession(sandbox.path), { ...ROUTES_OPTIONS, checks: CHECKS });
     expect(tested.report.checks.map((check) => check.scope).toSorted((a, b) => a.localeCompare(b))).toStrictEqual([
         '',
         'api',
@@ -49,7 +50,7 @@ test.each([
         'routes/users.ts': ROUTE,
         'users.test.ts': `import { test } from 'uninstalled-test-runner';\n${source}\ntest('users', users);\n`,
     });
-    const outcome = await executeRun(await openSession(sandbox.path), ROUTES_OPTIONS);
+    const outcome = await executeRun(await openSession(sandbox.path), { ...ROUTES_OPTIONS, checks: CHECKS });
     expect(outcome.report.checks[0]?.status, JSON.stringify(outcome.report.checks)).toBe('ok');
     expect(outcome.report.exitCode).toBe(0);
 });

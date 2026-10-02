@@ -6,7 +6,6 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import type { Fields, TrackedFile, ExistingTooling } from '#cli/types/repository/repository.ts';
-import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
 
 import {
     LINT_PAIRS,
@@ -15,6 +14,9 @@ import {
     RUNNER_LOCKS,
     TASK_RUNNERS,
     OTHER_CI_FILES,
+    AGENT_FILE_NAMES,
+    LINT_FOLDER_NAMES,
+    RULES_DIRECTORY_NAMES,
     FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/config/repository/repository.ts';
 

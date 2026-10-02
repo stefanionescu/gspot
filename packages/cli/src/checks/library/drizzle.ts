@@ -1,12 +1,12 @@
 import { rm } from 'node:fs/promises';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
+import { TABLE } from '#cli/config/checks/library.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { TABLE } from '#cli/config/checks/repository.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
     const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });

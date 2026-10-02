@@ -1,0 +1,46 @@
+// The types of checks/language/swift in this package.
+import type { Node, Tree } from 'web-tree-sitter';
+import type { Read, Root } from '#cli/types/platform/platform.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
+import type { StructureProblem } from '#cli/types/checks/language/language.ts';
+
+/** The files and functions of one run, parsed one time. */
+type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] };
+
+/** One parsed Swift file of a run. */
+export type SwiftSource = { path: string; text: string; lines: string[]; tree: Tree };
+
+/** Source comments whose inline documentation positions need native findings restored. */
+export type InlineDocumentation = { source: SwiftSource; comments: Node[]; inline: Node[] };
+
+/** One Swift function with what the structure checks ask about it. */
+export type SwiftFunction = {
+    path: string;
+    node: Node;
+    name: string;
+    /** The statements of the body. */
+    body: Node[];
+};
+
+/** One structure analysis over the parsed Swift files. */
+export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => StructureProblem[];
+export type Pruning = {
+    folder: string;
+    files: Root;
+    desired: Map<string, Read>;
+    wanted: Set<string>;
+};
+
+/** The build of one Swift scope. */
+export type SwiftBuildPlan = {
+    /** The cache folder of this scope. */
+    folder: string;
+    /** Where the compiler log is written. */
+    log: string;
+    argv: string[];
+    /** The analyzer clears this folder so its log includes every compiler call. */
+    scratch?: string;
+};
+
+/** The read build status and its compiler output. */
+export type SwiftBuildOutput = { code: number; output: string };

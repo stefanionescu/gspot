@@ -2,11 +2,13 @@ import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { referencedPaths } from '#cli/parsers/references.ts';
-import { POLICY_FILE } from '#cli/config/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
+import { pathTokens, proseLines } from '#cli/parsers/references.ts';
+import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
-import type { Finding, EngineInput, PathPattern, LicenseException } from '#cli/types/checks.ts';
+import type { PathPattern } from '#cli/types/checks/general/structure.ts';
+import type { LicenseException } from '#cli/types/checks/general/general.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];
@@ -60,6 +62,18 @@ function matchCandidates(paths: string[]): string[] {
         for (let depth = 1; depth < parts.length; depth += 1) folders.add(parts.slice(0, depth).join('/'));
     }
     return [...paths, ...folders];
+}
+
+// The path tokens of tracked Markdown prose, which can justify an exception for an untracked output or external path.
+function referencedPaths(input: EngineInput): Set<string> {
+    const referenced = new Set<string>();
+    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
+    for (const file of files) {
+        const prose = proseLines(readSource(input.root, file.path, input.reads).toString('utf8'));
+        for (const { line } of prose)
+            for (const token of pathTokens(line)) referenced.add(token.replace(/^\.\//u, '').replace(/\/$/u, ''));
+    }
+    return referenced;
 }
 
 function licenseFindings(input: EngineInput): Finding[] {

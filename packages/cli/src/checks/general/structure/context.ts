@@ -1,7 +1,9 @@
 // What every structure analysis reads: the source files without documents or generated output, and the Bash settings.
+import { SCRIPT_TAG } from '#cli/config/checks/general/general.ts';
 import { scriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import type { Engine, EngineInput, StructureInput, StructureAnalysis } from '#cli/types/checks.ts';
-import { SCRIPT_TAG, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/structure.ts';
+import type { Engine, EngineInput } from '#cli/types/execution/execution.ts';
+import type { StructureInput, StructureAnalysis } from '#cli/types/checks/checks.ts';
+import { GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 
 function contextFor(input: EngineInput): StructureInput {
     const files = input.files.filter(

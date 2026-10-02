@@ -10,8 +10,10 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { rmSync, statSync, mkdtempSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
-import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/repository.ts';
-import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks.ts';
+import type { LicenseException } from '#cli/types/checks/general/general.ts';
+import type { LicensedPackage } from '#cli/types/checks/general/licenses.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/general/licenses.ts';
 
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);

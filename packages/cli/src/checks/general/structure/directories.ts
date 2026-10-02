@@ -1,5 +1,5 @@
-import type { DirectoryEntry } from '#cli/types/checks.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { DirectoryEntry } from '#cli/types/checks/general/structure.ts';
 
 /**
  * The directory of a path, '' at the root.

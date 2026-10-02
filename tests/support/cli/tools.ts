@@ -130,5 +130,5 @@ export async function installSemgrep(root: string): Promise<void> {
         await preparePythonProject(root, outputs, owner);
     });
     for (const output of outputs) await Bun.write(join(root, output.path), output.content);
-    await installPythonProject(root);
+    await runOwnedLifecycle(root, (owner) => installPythonProject(root, owner));
 }

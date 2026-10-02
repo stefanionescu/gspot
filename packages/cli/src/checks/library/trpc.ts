@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import type { ArchitectureElement } from '#cli/types/policy/policy.ts';
 import { scopeImports } from '#cli/checks/language/javascript/imports.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * One finding for each value import that reaches into the server paths from outside them.

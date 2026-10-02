@@ -1,9 +1,10 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { ESLINT_RULE_LEVELS } from '#cli/config/generation/generation.ts';
 import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { eslintCoverageResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
-import { ESLINT_FILE, LINT_CHECKS, ESLINT_RULE_LEVELS } from '#cli/config/checks/typescript.ts';
+import { ESLINT_FILE, LINT_CHECKS } from '#cli/config/checks/language/javascript.ts';
 
 // The rules the selected kits require, for each file ending they name.
 function requiredByEnding(input: EngineInput): Map<string, Set<string>> {

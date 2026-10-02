@@ -1,12 +1,13 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { trivialFile } from '#cli/checks/general/structure/statements.ts';
+import type { StructureReader } from '#cli/types/checks/language/python.ts';
 import { dependencyOwnership } from '#cli/checks/language/python/deptry.ts';
 import { importLinter } from '#cli/checks/language/python/import-linter.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { typecheckMembership } from '#cli/checks/language/python/basedpyright.ts';
 import { functionsOf, pythonModules } from '#cli/checks/language/python/modules.ts';
 import { singletons, importComments } from '#cli/checks/language/python/imports.ts';
-import type { Engine, Finding, EngineInput, StructureReader } from '#cli/types/checks.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/language/python/functions.ts';
 
 import {
@@ -14,7 +15,7 @@ import {
     DEFAULT_FILE_LINES,
     DEFAULT_FUNCTION_LINES,
     DEFAULT_PACKAGE_EXPORTS,
-} from '#cli/config/checks/python.ts';
+} from '#cli/config/checks/language/python.ts';
 import {
     exportOrder,
     packageExports,

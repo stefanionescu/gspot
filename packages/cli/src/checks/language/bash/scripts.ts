@@ -1,10 +1,11 @@
 import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { IDENTIFIER, TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/structure.ts';
 import { executableStatements } from '#cli/checks/general/structure/statements.ts';
+import { IDENTIFIER, TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/language/bash.ts';
 import { withoutComment, withoutDeclaration } from '#cli/checks/language/bash/code-lines.ts';
-import type { ScriptFile, EngineInput, ScriptIndex, ScriptFunction } from '#cli/types/checks.ts';
+import type { ScriptFile, ScriptIndex, ScriptFunction } from '#cli/types/checks/language/bash.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();
 

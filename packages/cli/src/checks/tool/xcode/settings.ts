@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
-import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/swift.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**
  * One finding for each xcconfig line that is no setting, no include, and no comment.

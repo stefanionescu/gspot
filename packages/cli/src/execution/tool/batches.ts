@@ -4,7 +4,7 @@ import {
     WINDOWS_COMMAND_LIMIT,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/config/execution/execution.ts';
+} from '#cli/config/execution/tool.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The fixed arguments and each file count against the command-line budget by one platform rule.
 function argumentSize(argument: string, platform: NodeJS.Platform): number {

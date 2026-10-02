@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/support/spelling.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {

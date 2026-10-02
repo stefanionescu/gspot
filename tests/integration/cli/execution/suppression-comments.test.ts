@@ -1,5 +1,6 @@
 import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -70,6 +71,7 @@ test.each([
             [path]: source,
         });
         const result = await executeRun(await openSession(sandbox.path), {
+            checks: CHECKS,
             stage: 'commit',
             only: ['integrity/suppressions'],
             skips: [],
@@ -109,6 +111,7 @@ test.each(['-->', '--!>'])(
             { file: 'page.html', line: 2, form: 'html-validate', forbidden: false },
         ]);
         const result = await executeRun(session, {
+            checks: CHECKS,
             stage: 'commit',
             skips: [],
             fix: false,

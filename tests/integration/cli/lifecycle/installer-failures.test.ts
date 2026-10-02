@@ -8,9 +8,9 @@ import { onPosix } from '#tests/support/cli/platforms.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { installCommand } from '#cli/commands/install/command.ts';
+import { MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

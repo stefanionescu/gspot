@@ -1,12 +1,18 @@
 import { posix } from 'node:path';
 import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { CODE_EXTENSION } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-import { NO_ROLES, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES, DEFAULT_CONTRACTS } from '#plugin/config/import-direction.ts';
 
+import {
+    NO_ROLES,
+    ROLE_ORDER,
+    TEST_ROLES,
+    CONFIG_ROLES,
+    CODE_EXTENSION,
+    DEFAULT_CONTRACTS,
+} from '#plugin/config/rules.ts';
 import type {
     ImportEdge,
     ImportNode,

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { withoutComment } from '#cli/checks/language/bash/code-lines.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 function ownerPaths(roles: Record<string, string | string[]>): string[] {
     const env = roles['env'];

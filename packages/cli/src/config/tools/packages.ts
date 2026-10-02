@@ -4,6 +4,7 @@ export const TOOL_PACKAGE_PROJECT = '.gspot/package.json';
 export const YARN_SETTINGS = '.gspot/.yarnrc.yml';
 export const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;
 export const NPM_SETTING_PREFIX = 'npm_config_';
+
 // A package that fetches its binary at install time can fail for a reason the package manager does not name.
 export const GITHUB_REFUSAL = /api\.github\.com|github\.com\/.*\/releases|HTTP 403|rate limit/iu;
 export const CONNECTION_KEYS = new Set([
@@ -50,5 +51,6 @@ export const YARN_ENVIRONMENT_SETTINGS = [
         defaults: { npmAlwaysAuth: true },
     },
 ];
+
 /** The first Yarn major that reads .yarnrc.yml and drops the classic flags. */
 export const YARN_BERRY_MAJOR = 2;

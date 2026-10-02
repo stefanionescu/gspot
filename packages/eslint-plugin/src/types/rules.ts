@@ -3,11 +3,6 @@ import type { TSESTree } from '@typescript-eslint/utils';
 
 export type ContentCheck = (node: TSESTree.Node) => boolean;
 
-export type ImplementedFunction =
-    | TSESTree.FunctionDeclaration
-    | TSESTree.FunctionExpression
-    | TSESTree.ArrowFunctionExpression;
-
 export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
 export type ImportPathStyleOptions = [{ style: ImportPathStyleName; internalPrefixes?: string[] }];
 export type HeaderCommentsOptions = [{ allowRequire?: boolean }];
@@ -29,16 +24,7 @@ export type CrossProjectImportsOptions = [{ scopes?: string[]; allowedEscapes?: 
 export type TestsDirectoryContentsOptions = [
     { testPattern?: string; testDirectories?: string[]; harnessDirectory?: string; excluded?: string[] },
 ];
-export type ImportLayoutEntry = {
-    node: TSESTree.Statement;
-    start: number;
-    end: number;
-    text: string;
-    sortText: string;
-    lineSpan: number;
-    multiLine: boolean;
-    index: number;
-};
+
 export type ImportLayoutOptions = [{ allowRequire?: boolean }];
 export type ImportDirectionRoles = {
     types?: string[];
@@ -62,7 +48,7 @@ export type ImportVerdict = { messageId: ImportDirectionMessages; data: Record<s
 export type ImportDirectionOptions = [
     { roles?: ImportDirectionRoles; aliases?: Record<string, string>; contracts?: string[]; scope?: string },
 ];
-export type LayoutMessages = 'layout' | 'names';
+
 export type MaxBarrelReexportsOptions = [{ max?: number }];
 export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];
 export type RegistryInstanceOnlyOptions = [{ registryFiles?: string[] }];

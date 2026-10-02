@@ -3,6 +3,7 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -88,6 +89,7 @@ test('a repository command receives a declared empty argument without changing i
         'source.txt': 'source input',
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         skips: [],
         fix: false,

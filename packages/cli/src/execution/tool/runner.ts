@@ -5,12 +5,12 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import type { ToolInspection } from '#cli/types/tools/tools.ts';
-import { FILES_PLACEHOLDER } from '#cli/config/execution/execution.ts';
+import { FILES_PLACEHOLDER } from '#cli/config/execution/tool.ts';
 import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
+import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform/platform.ts';
+import type { ToolRun, ToolRunState, Substitutions, ToolInvocation } from '#cli/types/execution/tool.ts';
 import { collect, missingNote, checkedFindings, executionFailure } from '#cli/execution/tool/findings.ts';
 
 import {
@@ -20,12 +20,10 @@ import {
     commandConfigurations,
 } from '#cli/execution/tool/placeholders.ts';
 import type {
-    Session,
-    ToolRun,
+    Finding,
+    CheckResult,
+    EngineInput,
     PlannedCheck,
-    ToolRunState,
-    Substitutions,
-    ToolInvocation,
     PreparedCommand,
 } from '#cli/types/execution/execution.ts';
 

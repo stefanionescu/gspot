@@ -1,13 +1,13 @@
-import type { Read } from '#cli/types/platform.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
-import type { Generated } from '#cli/types/generation.ts';
 import { installProsePackages } from '#cli/tools/vale.ts';
-import { CONFLICT_MARKERS } from '#cli/config/lifecycle.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
 import { preparePythonProject } from '#cli/tools/python.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
+import type { Generated } from '#cli/types/generation/generation.ts';
+import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';

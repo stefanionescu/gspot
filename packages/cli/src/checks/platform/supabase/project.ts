@@ -4,9 +4,15 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import { SHARED_PREFIX, MIGRATION_NAME, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+
+import {
+    SHARED_PREFIX,
+    MIGRATION_NAME,
+    SUPABASE_CONFIG,
+    DEFAULT_FUNCTIONS,
+} from '#cli/config/checks/platform/supabase.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),

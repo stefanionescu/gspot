@@ -5,7 +5,7 @@ import { execa, execaSync } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform.ts';
+import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform/platform.ts';
 
 import type {
     SpawnResult,
@@ -14,7 +14,7 @@ import type {
     AsyncSpawnOptions,
     BinarySpawnResult,
     ProcessTermination,
-} from '#cli/types/platform.ts';
+} from '#cli/types/platform/platform.ts';
 
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };

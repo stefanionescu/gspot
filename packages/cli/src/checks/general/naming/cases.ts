@@ -5,7 +5,7 @@ import {
     UPPER_WORD,
     PASCAL_WORD,
     MIGRATION_TIMESTAMP_DIGITS,
-} from '#cli/config/checks/naming.ts';
+} from '#cli/config/checks/general/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_TIMESTAMP_DIGITS);

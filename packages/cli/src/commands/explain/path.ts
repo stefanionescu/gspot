@@ -1,10 +1,10 @@
 import { ownerOf } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Explanation, PathExplanation } from '#cli/types/commands.ts';
 import { ownedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
     if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';

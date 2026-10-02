@@ -1,9 +1,9 @@
 // gspot export: the policy of this repository without anything that names a path.
 import { basename } from 'node:path';
 import { stringify, parse as parseToml } from 'smol-toml';
+import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import type { ExportedProfile } from '#cli/types/policy/profiles.ts';
-import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { PROFILE_EXTENSION, REPOSITORY_TABLES } from '#cli/config/policy/profiles.ts';
 
 function isTable(value: unknown): value is TomlTable {

@@ -2,10 +2,10 @@
 import { tmpdir } from 'node:os';
 import { cp, rm, readdir } from 'node:fs/promises';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
-import { GSPOT_FOLDER, PERMISSION_BITS } from '#cli/config/platform.ts';
+import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
-import { SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
+import { SCRATCH_EXTRAS, PERMISSION_BITS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/tool.ts';
 
 import {
     rmSync,

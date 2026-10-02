@@ -2,11 +2,11 @@
 import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { DEFAULT_SCHEMA } from '#cli/config/checks/platforms.ts';
+import { DEFAULT_SCHEMA } from '#cli/config/checks/database.ts';
 import { schema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;

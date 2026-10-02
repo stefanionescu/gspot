@@ -2,7 +2,7 @@
 import { resolve } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
 
 /**
  * Reads a Git configuration value, distinguishing an unset key from a failed command.

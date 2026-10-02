@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { policyJsonSchema } from '@gspothq/cli/src/policy/json-schema.ts';
-import { PACKAGE_JSON_INDENT } from '@gspothq/cli/src/config/generation.ts';
+import { PACKAGE_JSON_INDENT } from '@gspothq/cli/src/config/generation/generation.ts';
 
 /**
  * Serves the policy JSON Schema at `/schema/gspot.schema.json`.

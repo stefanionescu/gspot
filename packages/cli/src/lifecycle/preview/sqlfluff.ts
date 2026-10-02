@@ -1,4 +1,4 @@
-import type { SqlfluffLine } from '#cli/types/repository/repository.ts';
+import type { SqlfluffLine } from '#cli/types/lifecycle/preview.ts';
 
 function value(text: string): unknown {
     const [mantissa = '', ...exponents] = text.toLowerCase().split('e');

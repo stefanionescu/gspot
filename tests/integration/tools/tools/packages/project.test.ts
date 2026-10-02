@@ -6,6 +6,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { setEnvironmentVariable } from '#tests/support/environment.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -24,7 +25,7 @@ test.each(PACKAGE_PROJECTS)(
         setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts, 'installation-cache'));
         setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts, 'installation-global'));
         const beforeInstall = registry.requests;
-        const installed = await installPackageProject(root, tools);
+        const installed = await runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools));
         expect(installed).toContain('.gspot/node_modules');
         expect(registry.requests).toBeGreaterThan(client === 'yarn' ? beforeInstall : 0);
         const workspace = join(root, 'pnpm-workspace.yaml');
@@ -50,7 +51,7 @@ test.each(PACKAGE_PROJECTS)(
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
         const readme = readFileSync(readmePath);
         writeFileSync(readmePath, 'authored later');
-        await installPackageProject(root, tools);
+        await runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools));
         expect(readFileSync(readmePath)).toStrictEqual(readme);
         const prettier = tools.find((tool) => tool.name === 'prettier')!;
         expect(inspectTool({ root, inspections: new Map() }, prettier).state).toBe('ok');

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { MODE_BITS } from '#cli/config/platform.ts';
+import { MODE_BITS } from '#cli/config/platform/root.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
+import { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(MODE_BITS);
@@ -38,7 +39,7 @@ export const configurationFieldsSchema = z.array(configurationFieldSchema).super
 
 export const entrySchema = z.strictObject({
     path: pathSchema,
-    kind: z.enum(['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'export']),
+    kind: z.enum(OWNED_KINDS),
     installed: identitySchema.optional(),
     // The file already held the exact bytes when gspot first wrote it, so a prune leaves it in place.
     adopted: z.literal(true).optional(),

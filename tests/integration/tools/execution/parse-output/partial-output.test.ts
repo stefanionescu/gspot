@@ -8,9 +8,9 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
+import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
-import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 

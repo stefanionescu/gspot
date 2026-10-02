@@ -2,9 +2,9 @@ import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 import {
     CONFIG_STATEMENTS,
@@ -12,7 +12,7 @@ import {
     CONFIG_CALL_ALLOWED,
     LANGUAGE_BY_EXTENSION,
     CONFIG_IMPORT_PREFIXES,
-} from '#cli/config/checks/repository.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 function configurationRolePaths(input: EngineInput): string[] {
     const role = input.policyFiles.policy.architecture.roles['config'];

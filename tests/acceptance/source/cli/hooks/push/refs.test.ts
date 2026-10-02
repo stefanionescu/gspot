@@ -6,9 +6,9 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import type { CommandFailureJson } from '#cli/types/commands.ts';
+import type { PushReport } from '#cli/types/commands/check.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
-import type { PushReport } from '#cli/types/execution/execution.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 test(
     'new references compare against fetched objects using default and mapped destinations',

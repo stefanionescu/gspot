@@ -1,7 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
-import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
-import { SSH_HEREDOC, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/structure.ts';
+import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { SSH_HEREDOC, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/language/bash.ts';
 
 // Quotes close in pairs.
 const PAIR = 2;

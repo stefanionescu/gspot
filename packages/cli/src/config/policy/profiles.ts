@@ -17,6 +17,7 @@ export const PATH_KEYS = new Set([
     'glob',
     'roles',
 ]);
+
 /** The tables a profile never holds, because each one belongs to one repository. */
 export const REPOSITORY_TABLES = ['scope', 'generated', 'vendored', 'check', 'exclude'] as const;
 export const PROFILE_EXTENSION = /\.profile\.toml$|\.toml$/u;

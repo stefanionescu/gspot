@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * One finding for each tracked environment file that is not a template.

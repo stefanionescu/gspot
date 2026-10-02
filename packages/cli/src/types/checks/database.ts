@@ -1,0 +1,39 @@
+// The types of checks/database in this package.
+import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
+
+/** Where a fact was declared, so a finding points at it. */
+type Declared = { path: string; offset: number; text: string };
+
+/** One foreign key column of a table. */
+type ForeignKey = Declared & { table: string; column: string };
+
+/** One parsed migration file. */
+export type Migration = {
+    path: string;
+    name: string;
+    /** The digits that lead the file name; empty when it has none. */
+    version: string;
+    text: string;
+    statements: SqlStatementView[];
+};
+
+/** What the migrations say about the schema, read across every file. */
+export type Schema = {
+    /** Qualified table name to where it was created. */
+    tables: Map<string, Declared>;
+    secured: Set<string>;
+    policed: Set<string>;
+    foreignKeys: ForeignKey[];
+    /** Qualified table name to the leading column of each index and key on it. */
+    indexed: Map<string, Set<string>>;
+};
+
+/** One layout problem of a documented migration. */
+export type DocProblem = { line: number; rule: string; text: string };
+export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
+    policies: Map<string, Set<string>>;
+    indexes: { table: string; name: string; column: string; constraint: string }[];
+    constraints: Map<string, Map<string, Schema['foreignKeys']>>;
+};
+export type Reader = (fields: SchemaState, migration: Migration, statement: SqlStatementView) => void;
+export type Location = { migration: Migration; statement: SqlStatementView; table: string };

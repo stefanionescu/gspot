@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { ENTRY_FUNCTIONS } from '#cli/config/checks/structure.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.

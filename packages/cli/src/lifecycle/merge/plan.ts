@@ -1,18 +1,11 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
-
-import type {
-    Field,
-    KeyPath,
-    KitPlan,
-    KitDocument,
-    ConfigurationOwnership,
-    ConfigurationWriteRequest,
-} from '#cli/types/lifecycle/lifecycle.ts';
+import type { ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Field, KeyPath, KitPlan, KitDocument, ConfigurationWriteRequest } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
 function isEmptyContainer(value: unknown): boolean {

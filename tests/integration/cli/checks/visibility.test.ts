@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -19,7 +20,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
         fix: false,
         isDryRun: false,
     };
-    const broken = await executeRun(await openSession(sandbox.path), options);
+    const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks).toMatchObject([{ check: 'structure/private-prefix', status: 'fail' }]);
     expect(
@@ -33,7 +34,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
             '_helper() {\n echo second\n}\nprivate() {\n echo first\n}\nshared() {\n echo third\n}\nmain() {\n shared\n}\n',
         'caller.sh': 'private\nshared\n',
     });
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'structure/private-prefix', status: 'ok', findings: [] }]);
 });
@@ -54,7 +55,7 @@ test('shell declaration order resets between files and requires main last', asyn
         fix: false,
         isDryRun: false,
     };
-    const broken = await executeRun(await openSession(sandbox.path), options);
+    const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks).toMatchObject([{ check: 'structure/private-before-public', status: 'fail' }]);
     expect(
@@ -67,7 +68,7 @@ test('shell declaration order resets between files and requires main last', asyn
         'first.sh':
             '_top() {\n echo first\n}\n_late() {\n echo third\n}\npublic() {\n echo second\n}\nafter() {\n echo last\n}\nmain() {\n public\n}\n',
     });
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([
         { check: 'structure/private-before-public', status: 'ok', findings: [] },
@@ -89,7 +90,7 @@ test('Swift declaration order identifies private types and extensions and accept
         fix: false,
         isDryRun: true,
     };
-    const failed = await executeRun(await openSession(sandbox.path), options);
+    const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         {
@@ -108,7 +109,7 @@ test('Swift declaration order identifies private types and extensions and accept
         },
     ]);
     await Bun.write(`${sandbox.path}/Declarations.swift`, hidden + shared);
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
 });

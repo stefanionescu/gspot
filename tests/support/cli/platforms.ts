@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
-import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import { PLANTED_MODULES, INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 

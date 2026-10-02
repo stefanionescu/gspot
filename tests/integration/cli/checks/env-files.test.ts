@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
-import type { CheckOptions } from '#cli/types/commands.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
+import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { envExample } from '#cli/checks/general/files/env-example.ts';
 

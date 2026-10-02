@@ -1,5 +1,5 @@
+import type { Level } from '#cli/types/rules.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import type { Policy } from '#cli/types/policy/policy.ts';
 
 /**
  * Locate heading sections and their level markers without treating fenced headings as structure.
@@ -29,7 +29,7 @@ export function guideSections(text: string): { start: number; end: number; all: 
  * @param level the selected enforcement level.
  * @returns the original bytes outside excluded sections.
  */
-export function selectedSections(text: string, level: Policy['level']): string {
+export function selectedSections(text: string, level: Level): string {
     if (level === 'all') return text;
     let through = 0;
     const output: string[] = [];

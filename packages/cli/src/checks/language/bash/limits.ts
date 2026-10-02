@@ -1,17 +1,12 @@
 // The size ceilings of a shell script: file and function lines, and the ast-grep counts.
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
 import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
 import { astGrepMatches } from '#cli/checks/language/bash/ast-grep.ts';
-import { RULES, OUTER_LEVELS, COUNT_ANALYSES } from '#cli/config/checks/structure.ts';
-
-import type {
-    Finding,
-    ScriptIndex,
-    AstGrepMatch,
-    StructureInput,
-    StructureAnalysis as Analysis,
-} from '#cli/types/checks.ts';
+import type { ScriptIndex, AstGrepMatch } from '#cli/types/checks/language/bash.ts';
+import { RULES, OUTER_LEVELS, COUNT_ANALYSES } from '#cli/config/checks/language/bash.ts';
+import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
     if (!isDepth) return matches.length;

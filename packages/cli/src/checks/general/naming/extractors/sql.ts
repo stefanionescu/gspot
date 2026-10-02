@@ -1,9 +1,9 @@
-import type { Identifier } from '#cli/types/checks.ts';
-import { SQL_LABELS } from '#cli/config/checks/naming.ts';
+import { SQL_LABELS } from '#cli/config/checks/general/naming.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
-import type { SqlFile, SqlNode, SqlNamed, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlNamed, Identifier } from '#cli/types/checks/general/naming.ts';
+import type { SqlFile, SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 function addedColumns(fields: SqlNode): SqlNamed[] {
     return nodesOf(fields['cmds'], 'AlterTableCmd')

@@ -4,8 +4,9 @@ import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, Importer, EngineInput } from '#cli/types/checks.ts';
-import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/repository.ts';
+import type { Importer } from '#cli/types/checks/language/css.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 
 // CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
 function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefined {

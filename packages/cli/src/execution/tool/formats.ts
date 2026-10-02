@@ -2,14 +2,14 @@
 import { z } from 'zod';
 import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
-import type { Finding } from '#cli/types/checks.ts';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/execution/tool/json.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
-import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
-import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/policy/policy.ts';
+import type { Parsing, RegexParser, OutputFormat } from '#cli/types/execution/tool.ts';
 import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/execution/tool/reports.ts';
 
 import {
@@ -20,7 +20,7 @@ import {
     DEFAULT_OUTPUT_FORMAT,
     TRAILING_BRACKET_RULE,
     DEFAULT_GROUPED_PATTERN,
-} from '#cli/config/execution/output.ts';
+} from '#cli/config/execution/tool.ts';
 
 const eslintEntry = z.object({
     ruleId: z.string().nullable(),

@@ -2,7 +2,7 @@
 
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
 
 import {
@@ -14,7 +14,7 @@ import {
     IGNORED_FOLDERS,
     DEFAULT_THRESHOLD,
     STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
 function isNestName(name: string): boolean {

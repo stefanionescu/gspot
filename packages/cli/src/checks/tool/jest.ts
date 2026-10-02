@@ -3,15 +3,16 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
-import type { Root } from '#cli/types/platform.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { jestPercentage, jestCoverageSettings } from '#cli/policy/tools.ts';
-import type { Suite, Finding, JestRun, TestReport, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Suite, JestRun, TestReport } from '#cli/types/checks/tool/jest.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
 const metric = z.object({ pct: jestPercentage });

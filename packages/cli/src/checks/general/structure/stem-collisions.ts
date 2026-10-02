@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 import { stemOf, directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
 
 /**

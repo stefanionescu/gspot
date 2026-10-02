@@ -5,6 +5,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
@@ -27,7 +28,9 @@ test.each([PACKAGE_PROJECTS[0]])(
         });
         writeFileSync(manifestPath, hasScript);
         const requestsBefore = registry.requests;
-        expect(await rejection(installPackageProject(root, tools))).toContain('scripts');
+        expect(
+            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
+        ).toContain('scripts');
         expect(registry.requests).toBe(requestsBefore);
         expect(readFileSync(manifestPath, 'utf8')).toBe(hasScript);
         writeFileSync(manifestPath, manifest);
@@ -54,7 +57,9 @@ test('native wrapper download failure preserves the lock and publishes no partia
         return original(argv, options);
     });
     try {
-        expect(await rejection(installPackageProject(root, tools))).toContain('Native wrapper download failed');
+        expect(
+            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
+        ).toContain('Native wrapper download failed');
         expect(existsSync(join(root, '.gspot/node_modules/prettier'))).toBe(false);
         expect(readFileSync(lockPath)).toStrictEqual(lock);
     } finally {

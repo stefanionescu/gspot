@@ -4,8 +4,9 @@ import { run } from '#tests/support/cli/command.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { git, gitOutput } from '#tests/support/cli/git.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { PushReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { RunReport, PushReport } from '#cli/types/execution/execution.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { waitForExit, waitForFile, waitForJson, captureChild } from '#tests/support/cli/process.ts';
 

@@ -3,9 +3,10 @@ import { readSource } from '#cli/repository/sources.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { trivialFunctionText } from '#cli/checks/general/structure/statements.ts';
-import type { Engine, Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { SqlSource, SqlAnalysis, FunctionOption } from '#cli/types/checks/language/sql.ts';
 
 import {
     SQL_TOKENS,
@@ -14,7 +15,7 @@ import {
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
     SHIPPED_PARAMETER_LIMIT,
-} from '#cli/config/checks/repository.ts';
+} from '#cli/config/checks/language/sql.ts';
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files

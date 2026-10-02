@@ -1,11 +1,10 @@
 import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
-import { compact } from '#cli/policy/normalize.ts';
+import { compact } from '#cli/platform/text.ts';
 import { INSTALLER_KEYS } from '#cli/kits/tools.ts';
 import { manifestSchema } from '#cli/kits/schema.ts';
-import { PRIVATE_PATHS } from '#cli/config/platform.ts';
-import { OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import { PRIVATE_PATHS, OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { manifestError, manifestProblems } from '#cli/kits/problems.ts';
 import type { RawTool, ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/kits.ts';
 

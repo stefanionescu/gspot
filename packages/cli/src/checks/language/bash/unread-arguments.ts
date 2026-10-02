@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import type { ScriptIndex } from '#cli/types/checks/language/bash.ts';
 import { withoutComment } from '#cli/checks/language/bash/code-lines.ts';
-import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 import {
     CALL,
@@ -9,7 +10,7 @@ import {
     CALL_ENDINGS,
     ALL_PARAMETERS,
     POSITIONAL_READ,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 function argumentCount(rest: string): number {
     const cut = OPERATORS.map((token) => rest.indexOf(token)).filter((position) => position >= 0);

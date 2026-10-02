@@ -1,8 +1,8 @@
 // The result shapes of the planted-project builders: what each one hands to its test.
-import type { CheckResult } from '#cli/types/checks.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { CheckResult } from '#cli/types/execution/execution.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
 
 export type PrepareCiProjectResult = {

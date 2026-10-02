@@ -1,7 +1,7 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
 import { isOwned } from '#cli/kits/takeover.ts';
-import type { Replaced } from '#cli/types/commands.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Replaced } from '#cli/types/commands/init.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 // Captures every owned file. The write refuses a file that changed after the plan was shown.

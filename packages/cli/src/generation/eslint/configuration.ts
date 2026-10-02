@@ -1,7 +1,7 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { aliasesFor } from '#cli/generation/javascript.ts';
-import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation.ts';
+import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/policy.ts';
 
 import {
@@ -11,7 +11,7 @@ import {
     ESLINT_CODE_FILES,
     DEFAULT_NODE_VERSION,
     ESLINT_JAVASCRIPT_LIMITS,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/eslint.ts';
 
 // The globs of a role: an element name stands for the paths of that element, and the fallback holds when unset.
 function roleGlobs(architecture: ArchitectureSettings, name: string, defaults: string[]): string[] {
@@ -53,12 +53,13 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
         });
 }
 
-// One boundaries block for each scope whose architecture table declares elements.
+// One boundaries block for each scope whose own architecture table declares elements. Element paths are relative to
+// the scope that names them, so a nested scope never takes the elements of the root.
 function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[] {
     const paths = ['', ...scopes.map((entry) => entry.scope.path).filter((path) => path !== '')];
     return paths.flatMap((path): EslintBlock[] => {
-        const table = policy.scopeTables[path]?.architecture ?? policy.architecture;
-        if (table.elements.length === 0) return [];
+        const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
+        if (table === undefined || table.elements.length === 0) return [];
         const prefix = path === '' ? '' : `${path}/`;
         const elements = table.elements.map((element) => ({
             type: element.name,

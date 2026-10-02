@@ -1,5 +1,4 @@
 // Every check gspot runs itself, keyed by check ID: the analyses of the kits, and the checks that drive their own tool.
-import type { Engine } from '#cli/types/checks.ts';
 import { generatedDrift } from '#cli/checks/drift.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
@@ -24,7 +23,6 @@ import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { scriptInline } from '#cli/checks/language/bash/embeds.ts';
 import { scriptSafety } from '#cli/checks/language/bash/safety.ts';
 import { testCoverage } from '#cli/checks/tool/xctest/coverage.ts';
-import type { Executable } from '#cli/types/execution/execution.ts';
 import { checkActions } from '#cli/checks/general/files/actions.ts';
 import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
@@ -80,6 +78,7 @@ import { scriptGuards, scriptConfigDefaults } from '#cli/checks/language/bash/gu
 import { siteBuilds, buildReproducible } from '#cli/checks/general/static-site/build.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/language/javascript/tsc.ts';
 import { fileDirectoryCollision } from '#cli/checks/general/structure/stem-collisions.ts';
+import type { Engine, Executable, CheckRegistry } from '#cli/types/execution/execution.ts';
 import { noSleep, disabledTests, recordingMode } from '#cli/checks/tool/xctest/sources.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
@@ -230,3 +229,6 @@ export const RUNNERS: Record<string, Executable['run']> = {
     'python/deptry': checkDependencies,
     'files/actions': checkActions,
 };
+
+/** The registry the check command hands to the run. */
+export const CHECKS: CheckRegistry = { engines: ENGINES, runners: RUNNERS };

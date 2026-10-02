@@ -1,8 +1,7 @@
 // The path tokens of Markdown prose outside free-text fences, which the docs and structure checks both read.
 import { visit } from 'unist-util-visit';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { readSource } from '#cli/repository/sources.ts';
-import type { ProseLine, EngineInput } from '#cli/types/checks.ts';
+import type { ProseLine } from '#cli/types/parsers/parsers.ts';
 
 import {
     PATH_CHARS,
@@ -10,7 +9,7 @@ import {
     PATH_TOKEN_SKIPS,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
-} from '#cli/config/checks/docs.ts';
+} from '#cli/config/parsers/parsers.ts';
 
 function withoutTrailingPunctuation(token: string): string {
     let end = token.length;
@@ -50,20 +49,4 @@ export function pathTokens(line: string): string[] {
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),
         );
-}
-
-/**
- * Documentation references that can justify an exception for an untracked output or external path.
- * @param input the repository inventory and source reader.
- * @returns the distinct path tokens in tracked Markdown prose.
- */
-export function referencedPaths(input: EngineInput): Set<string> {
-    const referenced = new Set<string>();
-    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
-    for (const file of files) {
-        const prose = proseLines(readSource(input.root, file.path, input.reads).toString('utf8'));
-        for (const { line } of prose)
-            for (const token of pathTokens(line)) referenced.add(token.replace(/^\.\//u, '').replace(/\/$/u, ''));
-    }
-    return referenced;
 }

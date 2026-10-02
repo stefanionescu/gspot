@@ -1,9 +1,10 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/swift.ts';
+import type { SwiftReader } from '#cli/types/checks/language/swift.ts';
 import { trivialFile } from '#cli/checks/general/structure/statements.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/language/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/language/swift/sources.ts';
-import type { Engine, Finding, EngineInput, SwiftReader } from '#cli/types/checks.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { trivialFunctions, duplicateFunctions } from '#cli/checks/language/swift/bodies.ts';
 import { swiftBuild, swiftAnalyze, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
 import { importComments, environmentReads, privateBeforePublic } from '#cli/checks/language/swift/order.ts';

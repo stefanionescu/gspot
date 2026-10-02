@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
 

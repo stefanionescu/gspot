@@ -4,22 +4,29 @@ import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
-import type { TemplateInputs } from '#cli/types/generation.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { policyValue, harnessFolders } from '#cli/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
-import { ALL_COMPILER_OPTIONS } from '#cli/checks/language/typescript.ts';
+import type { TemplateInputs } from '#cli/types/generation/generation.ts';
 import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
 import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
 import { aliasesFor, javascriptConfiguration } from '#cli/generation/javascript.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
 import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
-import { ESLINT_RULE_LEVELS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
+
+import {
+    BLOCK_IGNORES,
+    TOKEN_IGNORES,
+    JSON_EXTENSIONS,
+    LEADING_NEWLINES,
+    ESLINT_RULE_LEVELS,
+    PACKAGE_JSON_INDENT,
+    ALL_COMPILER_OPTIONS,
+    RECOMMENDED_COMPILER_OPTIONS,
+} from '#cli/config/generation/generation.ts';
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;

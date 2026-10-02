@@ -1,8 +1,8 @@
 import { sourceKits } from '#cli/kits/select.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { IGNORED_FOLDERS } from '#cli/config/checks/structure.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 import { directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
 
 function isSkipped(directory: string, isAllowed: (path: string) => boolean): boolean {

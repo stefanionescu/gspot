@@ -1,20 +1,14 @@
 // Giving back a file the owner changed: merged fields go back, a managed block leaves, or the file goes unless
 // gspot adopted it.
 import { isDeepStrictEqual } from 'node:util';
-import type { Read } from '#cli/types/platform.ts';
 import { blockSpan } from '#cli/generation/markers.ts';
 import { matches } from '#cli/lifecycle/ownership/log.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/merge/plan.ts';
-
-import type {
-    Log,
-    Planned,
-    Restoration,
-    OwnershipEntry,
-    ConfigurationOwnership,
-} from '#cli/types/lifecycle/lifecycle.ts';
+import type { Planned, ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
 function fieldRestoration(

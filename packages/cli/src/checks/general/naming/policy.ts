@@ -1,23 +1,21 @@
+import { compact } from '#cli/platform/text.ts';
 import type { Manifest } from '#cli/types/kits.ts';
-import { compact } from '#cli/policy/normalize.ts';
-import { readAsset } from '#cli/platform/assets.ts';
+import { shippedPolicy } from '#cli/policy/audit.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { compileTerms } from '#cli/checks/general/naming/match.ts';
 import { policyTables, settingValue } from '#cli/policy/settings.ts';
-import { POLICY_ASSET, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
-import type { Policy, NamingRule, NamingSettings, ExposedSettings } from '#cli/types/policy/policy.ts';
+import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
+import type { PathRule, Identifier, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 import type {
-    PathRule,
-    Identifier,
+    Policy,
+    NamingRule,
     ShippedRule,
     ShippedPolicy,
-    CategoryLimits,
-    EffectivePolicy,
+    NamingSettings,
+    ExposedSettings,
     ShippedLanguage,
-} from '#cli/types/checks.ts';
-
-const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
+} from '#cli/types/policy/policy.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rule lists treat an empty list as no filter.
 function toSet(names: string[] | undefined): Set<string> | undefined {
@@ -97,16 +95,6 @@ function limitsReader(
 function shippedCase(table: ShippedLanguage | undefined, category: string, parent: string): string[] {
     if (table === undefined) return [];
     return table.categories[category]?.case ?? table.categories[parent]?.case ?? [];
-}
-
-/**
- * The shipped policy, read once.
- * @returns the parsed bundled naming policy
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers share the shipped naming policy, which is parsed once and cached.
-export function shippedPolicy(): ShippedPolicy {
-    state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;
-    return state.shipped;
 }
 
 /**

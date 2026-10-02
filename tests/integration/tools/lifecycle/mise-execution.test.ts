@@ -5,14 +5,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { InstallJson } from '#cli/types/commands.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
+import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

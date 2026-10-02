@@ -5,10 +5,10 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { commandArguments } from '#cli/platform/quoting.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { SPECTRAL_LINE } from '#cli/config/checks/platforms.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
 import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * Spectral over tools.openapi.document. With no document named the check passes.

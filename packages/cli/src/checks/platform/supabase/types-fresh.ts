@@ -3,7 +3,7 @@ import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * One finding when tools.supabase.types_file differs from the types the CLI writes. Without the setting the check passes.

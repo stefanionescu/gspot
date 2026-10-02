@@ -3,8 +3,14 @@ import { statSync } from 'node:fs';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS, REPORTED_SAVINGS_SHARE } from '#cli/config/checks/platforms.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+
+import {
+    TEXT_SUFFIX,
+    ASSET_FOLDER,
+    REQUIRED_HEADERS,
+    REPORTED_SAVINGS_SHARE,
+} from '#cli/config/checks/general/static-site.ts';
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.reads).toString('utf8');

@@ -1,8 +1,8 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { Generated } from '#cli/types/generation.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { compareRules } from '#cli/lifecycle/preview/compare.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Generated } from '#cli/types/generation/generation.ts';
 import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 

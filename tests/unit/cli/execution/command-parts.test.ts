@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import type { CommandPart } from '#cli/types/execution/execution.ts';
+import type { CommandPart } from '#cli/types/execution/tool.ts';
 import { perFileCommands } from '#cli/execution/tool/placeholders.ts';
 
 test.each([0, 1, 2])('replaces a file marker at position %s without dropping neighboring arguments', (slot) => {

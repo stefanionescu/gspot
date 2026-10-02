@@ -10,8 +10,8 @@ import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult, RemoveOptions } from '#cli/types/commands.ts';
 import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
+import type { CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
 
 /**
  * gspot remove: drops one configuration from the root list or from one scope's list.

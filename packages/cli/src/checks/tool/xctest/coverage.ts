@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import type { Root } from '#cli/types/platform.ts';
-import { PERCENT } from '#cli/config/checks/swift.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
+import { PERCENT } from '#cli/config/checks/tool/xctest.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
-import type { Finding, EngineInput, CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks.ts';
+import type { CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks/tool/xctest.ts';
 
 const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),

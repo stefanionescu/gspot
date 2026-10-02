@@ -1,15 +1,16 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import { compact } from '#cli/platform/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { compact } from '#cli/policy/normalize.ts';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { swiftSources } from '#cli/checks/language/swift/sources.ts';
 import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/swift.ts';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
-import type { CheckResult, InlineDocumentation } from '#cli/types/checks.ts';
-import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/language/swift.ts';
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.
 function isSourceComment(node: Node): boolean {

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 function dependencyFolder(path: string): string | undefined {
     const segments = path.split('/').slice(0, -1);

@@ -1,23 +1,25 @@
 import { isOwned } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { shippedPolicy } from '#cli/policy/audit.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { CASE_NAMES } from '#cli/checks/general/naming/cases.ts';
 import { languageKits, selectForScope } from '#cli/kits/select.ts';
-import { TEST_FILE, REACT_FILE } from '#cli/config/checks/naming.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
+import { TEST_FILE, REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/checks/general/naming/extractors/bash.ts';
 import { swiftIdentifiers } from '#cli/checks/general/naming/extractors/swift.ts';
 import { pythonIdentifiers } from '#cli/checks/general/naming/extractors/python.ts';
-import { shippedPolicy, effectivePolicy } from '#cli/checks/general/naming/policy.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/paths.ts';
 import { typescriptIdentifiers } from '#cli/checks/general/naming/extractors/typescript.ts';
-import type { Engine, Finding, Identifier, EngineInput, NamingInputs, EffectivePolicy } from '#cli/types/checks.ts';
+import type { Identifier, NamingInputs, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
     const languages = languageKits(input.selection.selected);

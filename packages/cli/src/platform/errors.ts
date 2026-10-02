@@ -1,5 +1,5 @@
 // The one error gspot raises on purpose: a code says what went wrong, the problems say it in plain English.
-import type { ErrorCode } from '#cli/types/platform.ts';
+import type { ErrorCode } from '#cli/types/platform/platform.ts';
 
 export class GspotError extends Error {
     readonly code: ErrorCode;

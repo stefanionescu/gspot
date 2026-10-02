@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import type { Read } from '#cli/types/platform.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { Read } from '#cli/types/platform/platform.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';

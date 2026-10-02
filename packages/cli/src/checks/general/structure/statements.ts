@@ -1,6 +1,6 @@
 // Counting executable statements in Python, Swift, and Bash syntax trees, and telling a trivial file from a real one.
 import type { Node } from 'web-tree-sitter';
-import type { Language, Substance } from '#cli/types/checks.ts';
+import type { Language, Substance } from '#cli/types/checks/general/structure.ts';
 
 import {
     NAMES,
@@ -9,7 +9,7 @@ import {
     TYPE_ALIASES,
     CONTAINER_NOISE,
     TYPE_REFERENCES,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 // Whether a Bash node is one executable command or statement.
 function isBashStatement(node: Node): boolean {

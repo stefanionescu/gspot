@@ -3,7 +3,7 @@ import { misePins } from '#cli/tools/mise.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { miseToolLine } from '#cli/generation/tools/mise.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const TEST_TOOLS_PATH = '.mise/conf.d/test-tools.toml';
 

@@ -1,6 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
@@ -40,7 +41,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
             }),
             'source/sample.sql': 'select  * from foo;\n',
         });
-        const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
+        const options: RunOptions = { checks: CHECKS, stage: 'all', skips: [], fix: true, isDryRun: false };
         chmodSync(join(sandbox.path, 'source'), 0o500);
         try {
             const failed = await executeRun(await openSession(sandbox.path), options);
@@ -119,7 +120,7 @@ test.each([
         [entry.config]: entry.toolConfiguration,
         [entry.path]: entry.defect,
     });
-    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
+    const options: RunOptions = { checks: CHECKS, stage: 'all', skips: [], fix: true, isDryRun: false };
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
@@ -188,6 +189,7 @@ test.each([
     const source = readFileSync(join(sandbox.path, entry.path), 'utf8');
     writeFileSync(join(sandbox.path, entry.config), entry.invalidConfiguration);
     const invalid = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         skips: [],
         fix: false,
@@ -198,7 +200,7 @@ test.each([
     expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, entry.config), entry.nativeConfiguration);
     const session = await openSession(sandbox.path);
-    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
+    const options: RunOptions = { checks: CHECKS, stage: 'all', skips: [], fix: true, isDryRun: false };
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
@@ -248,15 +250,25 @@ test.each([
         }).files.filter((file) => file.kind === 'config'))
             await Bun.write(join(sandbox.path, output.path), output.content);
         const options = { stage: 'all', skips: [], only: [check], fix: true, isDryRun: false } as const;
-        const failed = await executeRun(session, { ...options, skips: [], only: [check] });
+        const failed = await executeRun(session, { checks: CHECKS, ...options, skips: [], only: [check] });
         expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
         expect(failed.fixes?.results).toMatchObject([{ check, status: 'changed', changed: [path] }]);
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(partial);
-        const repeated = await executeRun(await openSession(sandbox.path), { ...options, skips: [], only: [check] });
+        const repeated = await executeRun(await openSession(sandbox.path), {
+            checks: CHECKS,
+            ...options,
+            skips: [],
+            only: [check],
+        });
         expect(repeated.report.exitCode).toBe(1);
         expect(repeated.fixes?.results).toMatchObject([{ check, status: 'unchanged', changed: [] }]);
         await Bun.write(join(sandbox.path, path), corrected);
-        const passed = await executeRun(await openSession(sandbox.path), { ...options, skips: [], only: [check] });
+        const passed = await executeRun(await openSession(sandbox.path), {
+            checks: CHECKS,
+            ...options,
+            skips: [],
+            only: [check],
+        });
         expect(passed.report.exitCode, JSON.stringify(passed.report)).toBe(0);
     },
 );
@@ -275,6 +287,7 @@ test('shfmt reports and fixes ordinary shell formatting', async () => {
     }).files.filter((file) => file.kind === 'config'))
         await Bun.write(join(sandbox.path, file.path), file.content);
     const options = {
+        checks: CHECKS,
         stage: 'all' as const,
         skips: [],
         only: ['bash/shfmt'],

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import type { GeneratedFile } from '#cli/types/kits.ts';
 import { ruleDiff } from '#cli/lifecycle/preview/compare.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
 
 test('Gixy previews retain final root selectors and keep plugin options outside the rule lists', () => {
     const file: GeneratedFile = {

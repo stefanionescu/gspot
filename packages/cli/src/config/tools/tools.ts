@@ -1,5 +1,10 @@
 // The literal values tools reads: names, patterns, limits, and tables.
 
+/** The style directory under .gspot and the style Vale reads from it. */
+export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
+
+export const VALE_CONFIG = '.gspot/config/vale.ini';
+
 export const HOST_ONLY = new Set([
     'bash',
     'git',
@@ -10,9 +15,9 @@ export const HOST_ONLY = new Set([
     'swift',
     'xmllint',
 ]);
-export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';
-export const MISE_MIN_VERSION = '2026.8.8';
+
 export const VERSION_TIMEOUT_MS = 15_000;
+
 // What a mise shim prints when no configuration in reach names a version of the tool.
 export const NO_VERSION = 'No version is set for shim';
 export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };

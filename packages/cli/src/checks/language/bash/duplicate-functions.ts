@@ -1,7 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { DEFAULT_MIN_LINES } from '#cli/config/checks/structure.ts';
 import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
-import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { DEFAULT_MIN_LINES } from '#cli/config/checks/language/bash.ts';
+import type { ScriptFunction } from '#cli/types/checks/language/bash.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 /**
  * Reports matching normalized function bodies that meet `limits.bash.duplicate_min_lines`.

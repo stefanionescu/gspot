@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { statSync, readFileSync } from 'node:fs';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
-import { RUNTIME_WASM, GRAMMAR_FILES, ROOT_SEARCH_DEPTH } from '#cli/config/platform.ts';
+import { RUNTIME_WASM, GRAMMAR_FILES, ROOT_SEARCH_DEPTH } from '#cli/config/platform/platform.ts';
 
 const state: { root: string | undefined } = { root: undefined };
 

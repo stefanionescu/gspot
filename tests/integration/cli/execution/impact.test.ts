@@ -1,16 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
@@ -38,11 +39,11 @@ test('repository checks retain nested inputs and report their defects once at th
         fix: false,
         isDryRun: true,
     };
-    const failed = await executeRun(await openSession(sandbox.path), options);
+    const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'fail' }]);
     await Bun.write(join(sandbox.path, 'api/source.sh'), 'echo corrected\n');
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
 });
@@ -106,7 +107,7 @@ test.each([
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
     );
-    const outcome = await executeRun(session, { ...options, ...revision, fix: false, isDryRun: false });
+    const outcome = await executeRun(session, { checks: CHECKS, ...options, ...revision, fix: false, isDryRun: false });
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
         operation === 'delete' ? ['api'] : ['api', 'web'],
@@ -137,6 +138,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);
     const outcome = await executeRun(session, {
+        checks: CHECKS,
         ...options,
         paths: ['api/source.ts'],
         fix: false,
@@ -172,8 +174,10 @@ test('a check with no command and no built-in check refuses the complete plan be
         name: 'sandbox/unknown',
     };
     session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
-    expect(await rejection(executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false }))).toContain(
-        'The check sandbox/unknown names no command, and gspot has no built-in check by that name.',
-    );
+    expect(
+        await rejection(
+            executeRun(session, { checks: CHECKS, stage: 'commit', skips: [], fix: false, isDryRun: false }),
+        ),
+    ).toContain('The check sandbox/unknown names no command, and gspot has no built-in check by that name.');
     expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
 });

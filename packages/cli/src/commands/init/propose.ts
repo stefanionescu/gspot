@@ -1,8 +1,8 @@
 import { stringify } from 'smol-toml';
 import { asRaw } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { InitPlan } from '#cli/types/commands.ts';
-import type { TomlTable } from '#cli/types/repository/repository.ts';
+import type { InitPlan } from '#cli/types/commands/init.ts';
+import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 

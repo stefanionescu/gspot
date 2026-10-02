@@ -1,7 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput, SwiftSource, SwiftFunction } from '#cli/types/checks.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
+import type { SwiftSource, SwiftFunction } from '#cli/types/checks/language/swift.ts';
 
 /**
  * The visibility word a declaration carries, or internal when it carries none.

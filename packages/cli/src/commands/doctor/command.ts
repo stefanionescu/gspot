@@ -4,8 +4,9 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
+import type { DoctorOptions } from '#cli/types/commands/doctor.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
-import type { CommandResult, DoctorOptions } from '#cli/types/commands.ts';
 
 /**
  * Reports configuration and tool problems.

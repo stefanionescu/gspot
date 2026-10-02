@@ -3,13 +3,15 @@ import { pythonPins } from '#cli/tools/pins.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { UV_INSTALLER } from '#cli/config/tools/tools.ts';
 import { installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
-import type { InstallationStep } from '#cli/types/tools/tools.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import type { InstallationStep } from '#cli/types/commands/install.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import { UV_INSTALLER, MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const installations: InstallationStep[] = [
     {
@@ -38,9 +40,12 @@ const installations: InstallationStep[] = [
         run: async (session, manifests) =>
             session.packageClient === undefined
                 ? ''
-                : await installPackageProject(
-                      session.root,
-                      manifests.flatMap((manifest) => manifest.tools),
+                : await runOwnedLifecycle(session.root, (owner) =>
+                      installPackageProject(
+                          session.root,
+                          owner,
+                          manifests.flatMap((manifest) => manifest.tools),
+                      ),
                   ),
     },
     {
@@ -58,7 +63,7 @@ const installations: InstallationStep[] = [
                     throw new GspotError('missing-tool', 'The pinned uv installer is unavailable. Run: gspot install');
                 executable = located.stdout.trim();
             }
-            return installPythonProject(session.root, executable);
+            return runOwnedLifecycle(session.root, (owner) => installPythonProject(session.root, owner, executable));
         },
     },
 ];

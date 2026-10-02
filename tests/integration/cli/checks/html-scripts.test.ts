@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -26,14 +27,14 @@ test.each([
         isDryRun: false,
         only: ['html/scripts'],
     };
-    const result = await executeRun(await openSession(sandbox.path), options);
+    const result = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(
         result.report.checks
             .flatMap((check) => check.findings)
             .map(({ rule, line, column }) => ({ rule, line, column })),
     ).toStrictEqual([{ rule: 'script-link', line: 1, column }]);
     await createFileTree(sandbox.path, { 'page.html': '<a href="/page">Link</a><script src="/app.js"></script>' });
-    const corrected = await executeRun(await openSession(sandbox.path), options);
+    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['html/scripts']);
     expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
@@ -52,6 +53,7 @@ test.each([
         'page.html': markup,
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'commit',
         skips: [],
         fix: false,

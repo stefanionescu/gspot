@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -163,6 +164,7 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
     });
     try {
         const outcome = await executeRun(session, {
+            checks: CHECKS,
             stage: 'all',
             skips: [],
             only: ['static-site/build'],

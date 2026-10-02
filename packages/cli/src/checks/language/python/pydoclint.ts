@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
-import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DOCSTRING_COMMAND } from '#cli/config/checks/language/python.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 const projectSchema = z.object({
     tool: z

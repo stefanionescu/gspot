@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { scopeImports } from '#cli/checks/language/javascript/imports.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * Reports routes without a test that imports their resolved module in the same scope.

@@ -1,14 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { KEY_GROUP } from '#cli/config/checks/security.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-
-import {
-    ENV_KEY_LINE,
-    ENV_READ_PATTERNS,
-    ENV_TEMPLATE_NAMES,
-    ENV_READ_EXTENSIONS,
-} from '#cli/config/repository/repository.ts';
+import { ENV_TEMPLATE_NAMES } from '#cli/config/repository/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { KEY_GROUP, ENV_KEY_LINE, ENV_READ_PATTERNS, ENV_READ_EXTENSIONS } from '#cli/config/checks/general/files.ts';
 
 function readPatterns(input: EngineInput): RegExp[] {
     const accessor = input.view.tool('dotenv')['accessor'];

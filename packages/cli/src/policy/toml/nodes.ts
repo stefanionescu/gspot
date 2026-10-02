@@ -1,5 +1,5 @@
 // The kinds of TOML syntax nodes, named by the literals the parser uses, because the parser keeps its enum private.
-import type { Value, Kinded, KeyValue, NodeKind, TomlBlock } from '#cli/types/policy/policy.ts';
+import type { Value, Kinded, KeyValue, NodeKind, TomlBlock } from '#cli/types/policy/toml.ts';
 
 const VALUE_KINDS = new Set(['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable']);
 const KINDS = new Set([

@@ -9,7 +9,7 @@ import { existingHooks } from '#cli/repository/survey.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
-import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
+import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/generation/generation.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Install and doctor must compare core.hooksPath with the same spelling of the hooks folder.

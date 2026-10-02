@@ -1,0 +1,20 @@
+// The literal values checks/general/files reads: names, patterns, limits, and tables.
+
+export const ACTIONLINT_COMMAND = ['actionlint', '-no-color', '{files}'];
+
+export const KEY_GROUP = 1;
+
+/** How code reads an environment variable, by language; the first group is the key. */
+export const ENV_READ_PATTERNS = [
+    /process\.env\.([A-Z][A-Z0-9_]*)/gu,
+    /process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\.get\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
+    /os\.getenv\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
+];
+
+/** The files the environment reads are searched in. */
+export const ENV_READ_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx', '.py'];
+
+/** A key line in an environment file, trimmed: the key before the equals sign. */
+export const ENV_KEY_LINE = /^(?:export )?([A-Z][A-Z0-9_]*)=/u;

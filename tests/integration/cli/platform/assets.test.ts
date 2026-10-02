@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { GRAMMAR_FILES } from '#cli/config/platform.ts';
+import { GRAMMAR_FILES } from '#cli/config/platform/platform.ts';
 import { symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
 import {

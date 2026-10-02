@@ -5,10 +5,10 @@ import { join, dirname, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { statSync, lstatSync, readdirSync } from 'node:fs';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
+import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/platform.ts';
 import type { RawEntry, PathIgnore } from '#cli/types/repository/repository.ts';
 import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS, NOT_REPOSITORY_CODE } from '#cli/config/repository/repository.ts';
 

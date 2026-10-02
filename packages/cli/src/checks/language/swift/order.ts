@@ -1,7 +1,8 @@
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { visibilityOf } from '#cli/checks/language/swift/sources.ts';
-import type { SwiftSource, StructureProblem } from '#cli/types/checks.ts';
-import { COMMENTS, DIRECTIVE, FILE_LOCAL, DECLARATIONS, ENVIRONMENT_READ } from '#cli/config/checks/swift.ts';
+import type { SwiftSource } from '#cli/types/checks/language/swift.ts';
+import type { StructureProblem } from '#cli/types/checks/language/language.ts';
+import { COMMENTS, DIRECTIVE, FILE_LOCAL, DECLARATIONS, ENVIRONMENT_READ } from '#cli/config/checks/language/swift.ts';
 /**
  * Top-level declarations that are private or fileprivate and sit below one that other files see.
  * @param sources every source of the run

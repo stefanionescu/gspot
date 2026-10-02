@@ -1,20 +1,20 @@
 import type { Command } from 'commander';
-import { compact } from '#cli/policy/normalize.ts';
+import { compact } from '#cli/platform/text.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { installProsePackages } from '#cli/tools/vale.ts';
 import { pythonInstallSteps } from '#cli/tools/python.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
-import { HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { InstallJson, CommandResult, InstallOptions } from '#cli/types/commands.ts';
+import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
+import { HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 
 function preparation(session: Session): { steps: string[][]; failures: string[]; hooks: string | undefined } {
     const failures: string[] = [];

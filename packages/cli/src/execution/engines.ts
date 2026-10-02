@@ -4,34 +4,24 @@ import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { ENGINES, RUNNERS } from '#cli/checks/registry.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
-import type { Session, Executable, PlannedCheck } from '#cli/types/execution/execution.ts';
-import { SUPPRESSIONS_CHECK, GENERATED_DRIFT_CHECK } from '#cli/config/execution/execution.ts';
-import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
+import { GENERATED_DRIFT_CHECK } from '#cli/config/execution/execution.ts';
+
+import type {
+    Engine,
+    Finding,
+    Executable,
+    CheckResult,
+    EngineInput,
+    PlannedCheck,
+    CheckRegistry,
+    EngineOutcome,
+} from '#cli/types/execution/execution.ts';
 
 // A tool check runs the command of its definition; staged state does not change the command.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Executable.run passes the staged set third, where runToolCheck takes a command, so the tool check drops it here.
 const toolCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
-
-// Prepare asynchronous repository reads before handing input to the selected engine.
-async function executionInput(
-    session: Session,
-    planned: PlannedCheck,
-    staged: Set<string> | undefined,
-): Promise<EngineInput> {
-    const input = engineInput(session, planned);
-    if (planned.spec.runs === 'once' && planned.spec.name === SUPPRESSIONS_CHECK)
-        input.suppressions = await suppressionComments(
-            session.root,
-            session.scopes,
-            session.reads,
-            planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
-        );
-    if (staged) input.staged = staged;
-    return input;
-}
 
 // Explicit coverage must stay within the source inventory the engine received.
 function checkCoverage(input: EngineInput, checkedFiles: string[]): void {
@@ -92,6 +82,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
     };
     if (planned.spec.runs === 'once') {
         input.repositoryFiles = session.repository.files;
+        input.selections = session.scopes;
         if (planned.spec.name === GENERATED_DRIFT_CHECK)
             input.generatedDrift = () =>
                 computeDrift(
@@ -131,7 +122,8 @@ export async function runEngineCheck(
     };
     const started = performance.now();
     try {
-        const input = await executionInput(session, planned, staged);
+        const input = engineInput(session, planned);
+        if (staged) input.staged = staged;
         const outcome = await engine(input);
         const result = engineResult(input, outcome);
         return {
@@ -148,12 +140,13 @@ export async function runEngineCheck(
 /**
  * Select an implementation before execution starts.
  * @param spec the selected check definition
+ * @param checks the checks gspot runs itself
  * @returns the function that runs the check
  */
-export function checkExecution(spec: CheckSpec): Executable['run'] {
-    const runner = RUNNERS[spec.name];
+export function checkExecution(spec: CheckSpec, checks: CheckRegistry): Executable['run'] {
+    const runner = checks.runners[spec.name];
     if (runner !== undefined) return runner;
-    const engine = ENGINES[spec.name];
+    const engine = checks.engines[spec.name];
     if (engine !== undefined) return (session, planned, staged) => runEngineCheck(session, engine, planned, staged);
     if (spec.command === undefined) {
         throw new Error(`The check ${spec.name} names no command, and gspot has no built-in check by that name.`);

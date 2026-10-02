@@ -1,8 +1,9 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration, EngineInput } from '#cli/types/checks.ts';
-import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/platforms.ts';
+import type { Migration } from '#cli/types/checks/database.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
+import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database.ts';
 
 const reads = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 

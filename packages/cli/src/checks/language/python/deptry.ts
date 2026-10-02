@@ -8,11 +8,17 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
-import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
-import { PIP_INSTALL, INSTALL_HOLDERS, PYTHON_MANIFEST, REQUIREMENTS_FILE } from '#cli/config/checks/python.ts';
+import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/execution.ts';
+
+import {
+    PIP_INSTALL,
+    INSTALL_HOLDERS,
+    PYTHON_MANIFEST,
+    REQUIREMENTS_FILE,
+} from '#cli/config/checks/language/python.ts';
 
 const dependencyConfiguration = z.object({
     tool: z

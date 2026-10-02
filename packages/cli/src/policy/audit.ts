@@ -1,13 +1,13 @@
 import { similar } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { readAsset } from '#cli/platform/assets.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
-import { shippedPolicy } from '#cli/checks/general/naming/policy.ts';
 import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
-import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
+import { POLICY_ASSET, LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 
 import type {
     Policy,
@@ -15,8 +15,11 @@ import type {
     PathSegment,
     WrittenValue,
     PolicyProblem,
+    ShippedPolicy,
     ExposedSettings,
 } from '#cli/types/policy/policy.ts';
+
+const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
 function unknownKeyProblem(surface: ExposedSettings, key: string): string {
     const all = surface.specs.keys().toArray();
@@ -163,6 +166,16 @@ function unwrittenSurfaceProblems(
                 problems.push({ path, message: text });
     }
     return problems;
+}
+
+/**
+ * The shipped policy, read once.
+ * @returns the parsed bundled naming policy
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers share the shipped naming policy, which is parsed once and cached.
+export function shippedPolicy(): ShippedPolicy {
+    state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;
+    return state.shipped;
 }
 
 /**

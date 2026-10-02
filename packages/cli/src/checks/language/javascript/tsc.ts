@@ -1,19 +1,19 @@
 import ts from 'typescript';
 import { rm } from 'node:fs/promises';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
-import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
 function validateOutputs(root: string, config: ts.ParsedCommandLine, files: Root): void {

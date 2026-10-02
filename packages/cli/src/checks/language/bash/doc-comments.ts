@@ -1,5 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import type { ScriptFunction } from '#cli/types/checks/language/bash.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 import {
     WORD,
@@ -7,7 +8,7 @@ import {
     SHELLCHECK_COMMENT,
     VAGUE_SUMMARY_WORDS,
     BASH_DOC_SECTIONS as DOC_SECTIONS,
-} from '#cli/config/checks/structure.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 // From a one-based line to the zero-based index of the line above it.
 const LINE_ABOVE = 2;

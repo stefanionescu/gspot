@@ -2,24 +2,20 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/kits.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { kitName, targetInScope } from '#cli/kits/targets.ts';
+import type { PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { CommandPart, Substitutions, ToolInvocation } from '#cli/types/execution/tool.ts';
 
-import type {
-    Session,
-    CommandPart,
-    PlannedCheck,
-    Substitutions,
-    ToolInvocation,
-} from '#cli/types/execution/execution.ts';
 import {
     EACH_PLACEHOLDER,
     WORKSPACE_PREFIX,
     POINTER_PLACEHOLDER,
-    SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
     COMMAND_CONFIG_PLACEHOLDER,
-} from '#cli/config/execution/execution.ts';
+} from '#cli/config/execution/tool.ts';
 
 /**
  * Expands an each part, or returns undefined when the part is something else.

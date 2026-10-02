@@ -7,7 +7,7 @@ import { readSource } from '#cli/repository/sources.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 import {
     TYPES_FILE,
@@ -15,7 +15,7 @@ import {
     REDIRECT_PARTS,
     HTTP_HEADER_LINE,
     COMPATIBILITY_DATE,
-} from '#cli/config/checks/repository.ts';
+} from '#cli/config/checks/platform/cloudflare.ts';
 
 function named(input: EngineInput, name: string): string[] {
     return input.files

@@ -1,8 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { LOCKFILES } from '#cli/config/repository/repository.ts';
-import { LOCKFILE_URL, NPM_DOWNLOAD, NPM_LOCKFILES } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { LOCKFILES, LOCKFILE_URL, NPM_DOWNLOAD, NPM_LOCKFILES } from '#cli/config/checks/general/dependencies.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

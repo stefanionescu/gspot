@@ -7,8 +7,8 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { BROKEN_CONTRACT, PYTHON_MANIFEST } from '#cli/config/checks/python.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { BROKEN_CONTRACT, PYTHON_MANIFEST } from '#cli/config/checks/language/python.ts';
 
 const importConfiguration = z.object({
     tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),

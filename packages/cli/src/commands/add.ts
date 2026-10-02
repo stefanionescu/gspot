@@ -1,7 +1,7 @@
 // gspot add: append kits to the root selection or to one scope, apply, and install what they need.
 import type { Command } from 'commander';
 import { similar } from '#cli/platform/text.ts';
-import * as messages from '#cli/policy/messages.ts';
+import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -10,8 +10,8 @@ import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { AddOptions, CommandResult } from '#cli/types/commands.ts';
 import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
+import type { AddOptions, CommandResult } from '#cli/types/commands/commands.ts';
 
 /**
  * gspot add: appends kits to the root list or to one scope's list.
@@ -25,7 +25,7 @@ async function addCommand(o: AddOptions): Promise<CommandResult> {
     for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
-            throw new GspotError('policy', [messages.unknownKit(id, similar(id, known))]);
+            throw new GspotError('policy', [unknownKit(id, similar(id, known))]);
         }
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);

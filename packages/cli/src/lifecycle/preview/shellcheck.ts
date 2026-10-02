@@ -1,5 +1,5 @@
-import type { Rules, Directive } from '#cli/types/repository/repository.ts';
-import { DIRECTIVE, RULE_CODE, RULE_NAME } from '#cli/config/repository/repository.ts';
+import type { Rules, Directive } from '#cli/types/lifecycle/preview.ts';
+import { DIRECTIVE, RULE_CODE, RULE_NAME } from '#cli/config/lifecycle/preview.ts';
 
 // A rule entry is one code, or a range of two.
 const RANGE_PARTS = 2;

@@ -3,14 +3,15 @@ import which from 'which';
 import { homedir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/kits.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
-import { GSPOT_FOLDER, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
 

@@ -2,16 +2,17 @@ import pLimit from 'p-limit';
 import { run } from '#cli/platform/spawn.ts';
 import { statSync, constants } from 'node:fs';
 import { styleFiles } from '#cli/tools/vale.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { MODE_BITS } from '#cli/config/platform/root.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { GitEntry, Directory } from '#cli/types/repository/revisions.ts';
-import { MODE_BITS, GSPOT_FOLDER, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
-import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
+import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY, VALE_CONFIGURATION } from '#cli/config/execution/checkout.ts';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
 

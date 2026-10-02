@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/platforms.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/database.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { gitBlobs, committedEntries } from '#cli/execution/checkout/revision.ts';
 
 const history = new WeakMap<object, Promise<Map<string, string>>>();

@@ -1,9 +1,8 @@
 import type { Manifest } from '#cli/types/kits.ts';
-import type { RuleFile } from '#cli/types/agents.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/agents.ts';
+import type { Level, RuleFile, RuleSettings } from '#cli/types/rules.ts';
+import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/rules.ts';
 
 function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
@@ -15,7 +14,7 @@ function guideGroups(files: RuleFile[]): [string, string[]][] {
     return [...rows];
 }
 
-function indexLines(rules: Policy['guides'], files: RuleFile[]): string[] {
+function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
     const { directory, project } = rules;
     const projectRow: [string, string[]][] =
         project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
@@ -39,12 +38,7 @@ function indexLines(rules: Policy['guides'], files: RuleFile[]): string[] {
  * @param repository the source inventory for conditional guide selection.
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
-export function managedBlock(
-    rules: Policy['guides'],
-    manifests: Manifest[],
-    level: Policy['level'],
-    repository: Repository,
-): string {
+export function managedBlock(rules: RuleSettings, manifests: Manifest[], level: Level, repository: Repository): string {
     const files = selectRuleFiles(rules, manifests, repository);
     const index = files.length > 0 ? indexLines(rules, files) : [];
     const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);

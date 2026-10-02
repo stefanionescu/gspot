@@ -1,10 +1,11 @@
+import { FUNCTIONS } from '#plugin/config/plugin.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { ContentCheck } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
+import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import type { ContentCheck, ImplementedFunction } from '#plugin/types/rules.ts';
-import { FUNCTIONS, FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/config/plugin.ts';
+import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS, DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
 
 // Declarations own their schemas or the implementations they contain.
 function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {

@@ -2,9 +2,10 @@ import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, TestPlan, EngineInput } from '#cli/types/checks.ts';
+import type { TestPlan } from '#cli/types/checks/tool/xcode.ts';
 import { gitBlobs, gitEntries } from '#cli/execution/checkout/revision.ts';
-import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/swift.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 import { readProject, projectTestTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.

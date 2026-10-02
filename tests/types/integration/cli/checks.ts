@@ -3,7 +3,7 @@ import type { Mock } from 'bun:test';
 import type { TestdirResult } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import type { inspectTool } from '#cli/tools/inspect.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked inspection. */
 export type CloudflarePlanted = {

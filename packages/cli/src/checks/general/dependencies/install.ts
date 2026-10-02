@@ -3,10 +3,9 @@ import { statSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { SECONDS_PER_DAY } from '#cli/config/generation.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { LOCKFILES } from '#cli/config/repository/repository.ts';
-import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/config/checks/repository.ts';
+import { SECONDS_PER_DAY } from '#cli/config/generation/generation.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { BUNFIG, LOCKFILES, DEFAULT_AGE_DAYS } from '#cli/config/checks/general/dependencies.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);

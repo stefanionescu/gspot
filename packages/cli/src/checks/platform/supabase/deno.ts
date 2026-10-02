@@ -5,10 +5,10 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { CHECK_LOCATION } from '#cli/config/checks/platforms.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
+import { CHECK_LOCATION } from '#cli/config/checks/platform/supabase.ts';
 import { functionFolders } from '#cli/checks/platform/supabase/project.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 const lintReport = z.object({
     diagnostics: z.array(

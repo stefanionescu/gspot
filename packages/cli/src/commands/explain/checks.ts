@@ -3,12 +3,12 @@ import { allChecks } from '#cli/kits/listing.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
-import type { Found, OwnCheck, Explanation, ExplainFields } from '#cli/types/commands.ts';
+import type { Found, OwnCheck, Explanation, ExplainFields } from '#cli/types/commands/explain.ts';
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {

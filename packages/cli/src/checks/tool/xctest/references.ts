@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The file part and the planted name escape regular expression characters by one rule.
 function escapePattern(text: string): string {

@@ -5,13 +5,13 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { eslintRuleDiff } from '#cli/lifecycle/preview/eslint/diff.ts';
 import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
-import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands.ts';
+import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

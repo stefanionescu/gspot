@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 async function input(root: string): Promise<EngineInput> {

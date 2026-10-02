@@ -1,5 +1,5 @@
+import { FIRST_READ } from '#cli/config/rules.ts';
 import { test, expect, describe } from 'bun:test';
-import { FIRST_READ } from '#cli/config/agents.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';
 
 describe('[guides] exclude', () => {

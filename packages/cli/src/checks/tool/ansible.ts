@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 
 async function linted(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];

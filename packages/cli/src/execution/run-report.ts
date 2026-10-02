@@ -1,8 +1,8 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
 import { problemText } from '#cli/policy/read.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { UNABLE_EXIT, POLICY_CHECK, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
-import type { Session, FixReport, RunReport, ReportInput } from '#cli/types/execution/execution.ts';
+import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/execution.ts';
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
 function policyProblemsResult(session: Session): CheckResult | undefined {

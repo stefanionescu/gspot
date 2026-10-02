@@ -1,7 +1,7 @@
 // The exclusions of the basedpyright type check, each of which must still match a tracked file.
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
  * Every path the type check leaves out still exists, so the list of exclusions never outlives its files.

@@ -5,8 +5,15 @@ import { toString } from 'mdast-util-to-string';
 import { findingAt } from '#cli/execution/finding.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput, ShapeProblem } from '#cli/types/checks.ts';
-import { LICENSE_NAMES, CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/config/checks/docs.ts';
+import type { ShapeProblem } from '#cli/types/checks/general/docs.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+
+import {
+    LICENSE_NAMES,
+    CONTENTS_HEADING,
+    CONTENTS_THRESHOLD,
+    START_SECTION_WORDS,
+} from '#cli/config/checks/general/docs.ts';
 
 // A README section is a second-level heading.
 const SECTION_DEPTH = 2;

@@ -4,11 +4,11 @@ import { extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import type { ToolPin } from '#cli/types/kits.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
 import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 

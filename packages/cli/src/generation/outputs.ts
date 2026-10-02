@@ -11,13 +11,13 @@ import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/generation.ts';
 import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { Generated, GenerationOptions } from '#cli/types/generation/generation.ts';
 
 // Integrations for the selected hook tool. Native gspot hooks need no integration.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: Generated): void {

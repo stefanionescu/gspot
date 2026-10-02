@@ -1,10 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import type { RunReport } from '#cli/types/execution/execution.ts';
+import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { READERS_HEADERS } from '#tests/inputs/integration/cli/execution/scopes.ts';
 
 const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] = [

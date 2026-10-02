@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
 import { trivialFile, trivialFunctionText } from '#cli/checks/general/structure/statements.ts';
 
 /**

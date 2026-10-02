@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { withoutComment } from '#cli/checks/language/bash/code-lines.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
-import { UNCHECKED_CD, SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/structure.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { UNCHECKED_CD, SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
 
 /**
  * One finding per line that discards a failure, sources state, sweeps processes or trees outside an owner, or changes directory unchecked.

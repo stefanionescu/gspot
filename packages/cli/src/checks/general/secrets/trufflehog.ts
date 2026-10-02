@@ -3,15 +3,17 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { gitBlobs } from '#cli/execution/checkout/revision.ts';
 import { pushBase } from '#cli/repository/revisions/changes.ts';
-import type { SecretScan, CheckResult } from '#cli/types/checks.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
+import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
-import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
-import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/config/checks/security.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA } from '#cli/config/checks/general/secrets.ts';
 
 // The fields come as key and value pairs.
 const PAIR = 2;

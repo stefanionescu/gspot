@@ -1,13 +1,14 @@
 import { rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
-import type { Finding, EngineInput, SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks.ts';
-import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/swift.ts';
+import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';
+import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/language/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 

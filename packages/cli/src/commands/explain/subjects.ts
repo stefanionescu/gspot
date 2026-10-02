@@ -1,16 +1,17 @@
 // Explain a check, tool rule, kit, setting, or file path.
 import { similar } from '#cli/platform/text.ts';
 import { allChecks } from '#cli/kits/listing.ts';
+import { unknownKit } from '#cli/kits/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
+import type { SettingSpec } from '#cli/types/kits.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
-import type { ListingRow, SettingSpec } from '#cli/types/kits.ts';
 import { STAGES, DIRECTIONS } from '#cli/config/commands/explain.ts';
-import type { Explanation, SettingScope } from '#cli/types/commands.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
+import type { ListingRow, Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven rows of the subject listing share this shape; one owner keeps the label format.
 function listLine(label: string, items: string[]): string[] {
@@ -21,7 +22,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
     const manifest = kitManifests().get(kitName);
     if (!manifest)
         return {
-            error: messages.unknownKit(kitName, similar(kitName, kitManifests().keys().toArray())),
+            error: unknownKit(kitName, similar(kitName, kitManifests().keys().toArray())),
         };
     const row: ListingRow = {
         name: manifest.kit.name,

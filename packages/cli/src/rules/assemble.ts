@@ -1,15 +1,13 @@
 // Select the guides for the selection and render them under [guides] directory, keeping the layer folders.
 import { similar } from '#cli/platform/text.ts';
-import type { Manifest } from '#cli/types/kits.ts';
-import type { RuleFile } from '#cli/types/agents.ts';
 import { detectConditions } from '#cli/kits/detect.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectedSections } from '#cli/rules/sections.ts';
 import { readManifests } from '#cli/repository/packages.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/config/agents.ts';
+import type { Level, RuleFile, RuleSettings } from '#cli/types/rules.ts';
+import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/config/rules.ts';
 
 function declaredGuides(manifests: Manifest[], repository: Repository): Pick<RuleFile, 'source' | 'layer' | 'kit'>[] {
     const conditions = manifests.flatMap((manifest) =>
@@ -40,7 +38,7 @@ function declaredGuides(manifests: Manifest[], repository: Repository): Pick<Rul
  * @param repository the source inventory for conditional guide selection.
  * @returns the guides with their targets and titles
  */
-export function selectRuleFiles(rules: Policy['guides'], manifests: Manifest[], repository: Repository): RuleFile[] {
+export function selectRuleFiles(rules: RuleSettings, manifests: Manifest[], repository: Repository): RuleFile[] {
     const available = new Set(listAssets(RULES_PREFIX));
     const { exclude } = rules;
     const files = new Map<string, RuleFile>();
@@ -81,9 +79,9 @@ export function selectRuleFiles(rules: Policy['guides'], manifests: Manifest[], 
  * @returns the files to write under the rules directory
  */
 export function assembleRules(
-    rules: Policy['guides'],
+    rules: RuleSettings,
     manifests: Manifest[],
-    level: Policy['level'],
+    level: Level,
     repository: Repository,
 ): GeneratedFile[] {
     if (!rules.install) return [];

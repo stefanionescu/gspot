@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { Identifier, ExtractSink } from '#cli/types/checks.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/general/naming.ts';
 
 import {
     NAME_NODES,
@@ -10,7 +10,7 @@ import {
     NAMED_DECLARATIONS,
     TYPESCRIPT_FUNCTION_NODES,
     TYPESCRIPT_PARAMETER_NODES,
-} from '#cli/config/checks/naming.ts';
+} from '#cli/config/checks/general/naming.ts';
 
 function add(sink: ExtractSink, node: Node | null, category: string): void {
     if (node === null || !NAME_NODES.has(node.type)) return;

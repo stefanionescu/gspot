@@ -6,11 +6,12 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { SourceComment } from '#cli/types/parsers/parsers.ts';
-import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
-import type { SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 import { commentText, sourceComments } from '#cli/checks/general/structure/comments.ts';
-import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks.ts';
+import type { SourceComment, SuppressionForm } from '#cli/types/checks/general/structure.ts';
+import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/execution.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -109,9 +110,15 @@ export async function suppressionComments(
  * @param input the engine input with the read suppression comments
  * @returns the findings
  */
-export function suppressions(input: EngineInput): Finding[] {
-    if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
-    return input.suppressions.flatMap((entry): Finding[] => {
+export async function suppressions(input: EngineInput): Promise<Finding[]> {
+    if (input.selections === undefined) throw new Error('Suppression validation requires once-only execution.');
+    const comments = await suppressionComments(
+        input.root,
+        input.selections,
+        input.reads,
+        input.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
+    );
+    return comments.flatMap((entry): Finding[] => {
         const at = { file: entry.file, line: entry.line };
         if (entry.forbidden && input.policyFiles.policy.level === 'all')
             return [

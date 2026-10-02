@@ -7,14 +7,14 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { ciLintJobs } from '#cli/repository/survey.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
-import type { ChangeRow, ChangeReport } from '#cli/types/commands.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
+import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {

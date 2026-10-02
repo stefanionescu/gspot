@@ -8,7 +8,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { gspot } from '#tests/support/cli/command.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import type { PushReport } from '#cli/types/execution/execution.ts';
+import type { PushReport } from '#cli/types/commands/check.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 import {

@@ -1,6 +1,6 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
-import type { Read } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
 
 import {
     DEVICE_NAME,
@@ -10,7 +10,7 @@ import {
     UNSAFE_PATH_END,
     UNSAFE_CHARACTERS,
     LIFECYCLE_PRIVATE_PATH,
-} from '#cli/config/platform.ts';
+} from '#cli/config/platform/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {

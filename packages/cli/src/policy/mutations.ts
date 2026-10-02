@@ -2,9 +2,8 @@ import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
-import type { TomlTable } from '#cli/types/repository/repository.ts';
-import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
+import type { Mutation, TomlTable, WriteResult } from '#cli/types/policy/policy.ts';
 import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {

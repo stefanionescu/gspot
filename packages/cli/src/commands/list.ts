@@ -6,12 +6,12 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { CommandResult } from '#cli/types/commands.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
-import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { ExtraRow, ToolTables, CommandResult, SettingsListing } from '#cli/types/commands/commands.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.
 function scopeTag(scope: string | undefined): string {

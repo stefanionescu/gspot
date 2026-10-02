@@ -1,11 +1,11 @@
 import { similar } from '#cli/platform/text.ts';
+import { unknownKit } from '#cli/kits/messages.ts';
 import { selectForScope } from '#cli/kits/select.ts';
-import { unknownKit } from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/config/checks/python.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/config/policy/policy.ts';
 import { asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 import type { Policy, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 

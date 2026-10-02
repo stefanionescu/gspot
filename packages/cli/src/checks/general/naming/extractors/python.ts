@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { Identifier, ExtractSink } from '#cli/types/checks.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/general/naming.ts';
 
 import {
     DUNDER,
@@ -9,7 +9,7 @@ import {
     PYTHON_UPPER_SHAPE,
     IMPLICIT_PARAMETERS,
     PYTHON_PARAMETER_NODES,
-} from '#cli/config/checks/naming.ts';
+} from '#cli/config/checks/general/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;
