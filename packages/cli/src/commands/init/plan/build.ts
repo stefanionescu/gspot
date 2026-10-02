@@ -1,5 +1,5 @@
 import type { Manifest } from '#cli/types/kits.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
@@ -127,7 +127,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
               };
     const agents = policy.rules.install ? [...new Set(['AGENTS.md', ...(policy.rules.instructions ?? [])])] : [];
     const policyLines = policyText.split('\n').length;
-    const lintJobs = ciLintJobs(root, tooling.ci);
+    const lintJobs = getLintJobs(root, tooling.ci);
     return {
         ...(profile ? { profile } : {}),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),

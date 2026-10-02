@@ -1,7 +1,7 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import type { Tooling } from '#cli/types/repository/repository.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
@@ -42,7 +42,7 @@ async function askHooks(options: InitOptions): Promise<InitAnswers['hooks']> {
 }
 
 async function askCi(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers['ci']> {
-    if (options.ci === 'none' || ciLintJobs(root, tooling.ci).length > 0) return 'none';
+    if (options.ci === 'none' || getLintJobs(root, tooling.ci).length > 0) return 'none';
     if (options.ci !== undefined) return options.ci;
     return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes);
 }

@@ -9,14 +9,14 @@ import type { Root, ReadCache } from '#cli/types/platform/platform.ts';
 import type { GitEntry, Revision } from '#cli/types/execution/checkout.ts';
 import { NEWLINE, ENTRY_MODES, WRITE_BATCH } from '#cli/config/execution/checkout.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
+import { copyDependencies, copyValePackages } from '#cli/execution/checkout/installed.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;
 
 const entryReads = new WeakMap<ReadCache, Map<string, Promise<GitEntry[]>>>();
 
-async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
+async function gitText(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
     const result = await runGit(root, [...args], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
         ...(stdin === undefined ? {} : { stdin }),
@@ -66,7 +66,7 @@ async function populateRevision(
     }
 }
 
-function blobFrame(output: Buffer, cursor: number, gitHash: string): { end: number; size: number } {
+function parseFrame(output: Buffer, cursor: number, gitHash: string): { end: number; size: number } {
     const end = output.indexOf(NEWLINE, cursor);
     const header = output.subarray(cursor, end).toString('ascii');
     const match = /^([a-f0-9]{40}|[a-f0-9]{64}) blob (\d+)$/u.exec(header);
@@ -102,7 +102,7 @@ function parseEntry(line: string, kind: Revision['kind']): GitEntry {
  * @param cancelSignal command cancellation
  * @returns validated entries
  */
-async function readEntries(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+async function getEntries(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const argv = source.kind === 'index' ? ['ls-files', '--stage', '-z'] : ['ls-tree', '-r', '-z', source.hash];
     const read = await runGitBinary(root, argv, { ...(cancelSignal === undefined ? {} : { cancelSignal }) });
     if (read.code !== 0)
@@ -125,7 +125,7 @@ async function readEntries(root: string, source: Revision, cancelSignal?: AbortS
  * @param cancelSignal command cancellation
  * @returns validated object bytes
  */
-export async function gitBlobs(
+export async function getBlobs(
     root: string,
     requested: string[],
     cancelSignal?: AbortSignal,
@@ -146,7 +146,7 @@ export async function gitBlobs(
     const blobs = new Map<string, Buffer>();
     let cursor = 0;
     for (const gitHash of objects) {
-        const { end, size } = blobFrame(output, cursor, gitHash);
+        const { end, size } = parseFrame(output, cursor, gitHash);
         blobs.set(gitHash, output.subarray(end + 1, end + size + 1));
         cursor = end + size + FRAME_NEWLINES;
     }
@@ -163,13 +163,13 @@ export async function gitBlobs(
  * @param reads optional run-owned reads, absent during snapshot preparation
  * @returns validated index or tree entries
  */
-export function gitEntries(
+export function getCachedEntries(
     root: string,
     source: Revision,
     cancelSignal?: AbortSignal,
     reads?: ReadCache,
 ): Promise<GitEntry[]> {
-    if (reads === undefined) return readEntries(root, source, cancelSignal);
+    if (reads === undefined) return getEntries(root, source, cancelSignal);
     let entries = entryReads.get(reads);
     if (entries === undefined) {
         entries = new Map();
@@ -178,7 +178,7 @@ export function gitEntries(
     const key = JSON.stringify([root, source]);
     let read = entries.get(key);
     if (read === undefined) {
-        read = readEntries(root, source, cancelSignal);
+        read = getEntries(root, source, cancelSignal);
         entries.set(key, read);
     }
     return read;
@@ -190,10 +190,10 @@ export function gitEntries(
  * @param cancelSignal command cancellation
  * @returns HEAD entries, or an empty list for an unborn branch
  */
-export async function committedEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+export async function getHeadEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const options = { cwd: root, timeoutMs: 30_000, ...(cancelSignal === undefined ? {} : { cancelSignal }) };
     const head = await runGit(options.cwd, ['rev-parse', '--verify', '--quiet', 'HEAD'], options);
-    if (head.code === 0) return gitEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
+    if (head.code === 0) return getCachedEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
     const failure = new GspotError('selection', [
         'Cannot read committed Git history. Restore HEAD before checking migrations.',
     ]);
@@ -217,37 +217,37 @@ export async function committedEntries(root: string, cancelSignal?: AbortSignal)
  * @param cancelSignal command cancellation
  * @returns the operation result
  */
-export async function useRevision<Result>(
+export async function checkOutRevision<Result>(
     root: string,
     source: Revision,
     action: (revisionRoot: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {
-    const printedRoot = await gitOutput(root, ['rev-parse', '--show-toplevel'], cancelSignal);
+    const printedRoot = await gitText(root, ['rev-parse', '--show-toplevel'], cancelSignal);
     const gitRoot = printedRoot.replace(/\n$/u, '');
     const directory = relative(realpathSync(gitRoot), realpathSync(root));
-    const entries = await gitEntries(gitRoot, source, cancelSignal);
+    const entries = await getCachedEntries(gitRoot, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
     using revisionRootFolder = scratchFolder('gspot-revision-');
     const revisionRoot = revisionRootFolder.path;
-    await gitOutput(
+    await gitText(
         gitRoot,
         ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
         cancelSignal,
     );
     // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
     if (source.kind === 'commit')
-        await gitOutput(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
-    await gitOutput(revisionRoot, ['read-tree', '--empty'], cancelSignal);
-    await gitOutput(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
-    const tree = await gitOutput(revisionRoot, ['write-tree'], cancelSignal);
-    const objects = await gitBlobs(
+        await gitText(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
+    await gitText(revisionRoot, ['read-tree', '--empty'], cancelSignal);
+    await gitText(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
+    const tree = await gitText(revisionRoot, ['write-tree'], cancelSignal);
+    const objects = await getBlobs(
         revisionRoot,
         entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
         cancelSignal,
     );
     await populateRevision(revisionRoot, entries, objects, cancelSignal);
-    copyProsePackages(
+    copyValePackages(
         gitRoot,
         revisionRoot,
         entries.map((entry) => entry.path),

@@ -1,5 +1,5 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
-import { isOwned } from '#cli/kits/takeover.ts';
+import { isReplaced } from '#cli/kits/takeover.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/repository.ts';
@@ -35,7 +35,7 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
  */
 export function getReplaced(root: string, tooling: Tooling, selected: Set<string>): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [] };
-    const owned = tooling.configs.filter(({ tool }) => isOwned(tool, selected));
+    const owned = tooling.configs.filter(({ tool }) => isReplaced(tool, selected));
     captureOwned(root, owned, replaced);
     for (const entry of owned) if (replaced.read.has(entry.path)) recordOutcome(entry, replaced);
     return replaced;

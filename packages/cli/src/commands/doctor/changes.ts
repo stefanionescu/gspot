@@ -4,14 +4,14 @@ import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import { readPrefix } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
-import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
+import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Changes, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
@@ -31,7 +31,7 @@ function recommendedKits(session: Session, selected: Set<string>): Changes['reco
 }
 
 function buildFileRow(session: Session, config: ToolFile, selected: Set<string>): ChangeRow {
-    if (isOwned(config.tool, selected))
+    if (isReplaced(config.tool, selected))
         return {
             path: config.path,
             note: `beside the generated ${config.tool} configuration`,
@@ -80,7 +80,7 @@ function getUnownedOutputs(session: Session): ChangeRow[] {
 export function getChanges(session: Session): Changes {
     const fields = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
-    const tooling = existingTooling(session.root, session.repository.files, fields);
+    const tooling = getTooling(session.root, session.repository.files, fields);
     const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
@@ -113,7 +113,7 @@ export function getChanges(session: Session): Changes {
                   ]),
         ],
         authored: [
-            ...ciLintJobs(
+            ...getLintJobs(
                 session.root,
                 tooling.ci.filter((path) => !generated.has(path)),
             ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' })),

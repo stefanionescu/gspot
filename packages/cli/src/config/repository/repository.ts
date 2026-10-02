@@ -122,7 +122,7 @@ export const VENDORED_DIRECTORIES = [
     'Carthage',
     '.build',
 ];
-export const LINT_FOLDER_NAMES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'];
+export const LINT_DIRECTORIES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'];
 export const LINT_TOOL_PACKAGE_PREFIXES = [
     'eslint',
     '@eslint',
@@ -159,8 +159,8 @@ export const LINT_TOOL_PACKAGE_PREFIXES = [
     'supabase',
     'sqlfluff',
 ];
-export const AGENT_FILE_NAMES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'];
-export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
+export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'];
+export const RULES_DIRECTORIES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
 
 /** License and notice files are another party's text, kept as written: the name alone or with a suffix such as -MIT. */
 export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING|NOTICE)(?:$|[.-])/iu;
@@ -202,7 +202,7 @@ export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 // Two-word lint commands, and the package managers whose lint task counts.
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
 export const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
-export const OTHER_CI_FILES = new Set([
+export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',
     '.circleci/config.yml',

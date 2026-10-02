@@ -5,9 +5,9 @@ import { checkPush } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { useRevision } from '#cli/execution/checkout/revision.ts';
-import { stagedFiles } from '#cli/repository/revisions/changes.ts';
+import { getStaged } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 // Checks an exact snapshot of the staged index, with the report published to the repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
@@ -16,10 +16,10 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
             'Staged checks do not run fixers. Run gspot check --fix and stage the reviewed changes.',
         ]);
     if (options.changed !== undefined) throw new GspotError('selection', ['Choose --staged or --changed, not both.']);
-    const set = await stagedFiles(root, signal);
+    const set = await getStaged(root, signal);
     const refusal = refusalFor(options, options.stage ?? 'commit', set.staged);
     if (refusal !== undefined) return refusal;
-    return useRevision(
+    return checkOutRevision(
         root,
         { kind: 'index' },
         async (revisionRoot, tree) => {

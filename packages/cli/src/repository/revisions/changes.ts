@@ -2,10 +2,10 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { WORKTREE_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { runGit, gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
+import { runGit, gitLines, gitPaths, isShallow, gitTrimmed } from '#cli/platform/git.ts';
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
-async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
+async function getRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
     const lines = await gitLines(
         root,
         ['for-each-ref', '--format=%(refname)%09%(symref)', 'refs/remotes'],
@@ -19,18 +19,18 @@ async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[s
 }
 
 // The upstream or remote default branch, or an empty string when neither exists.
-async function defaultReference(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const head = await gitValue(root, ['rev-parse', '--symbolic-full-name', 'HEAD'], cancelSignal);
-    const upstream = await gitValue(root, ['for-each-ref', '--format=%(upstream)', '--', head], cancelSignal);
+async function getDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const head = await gitTrimmed(root, ['rev-parse', '--symbolic-full-name', 'HEAD'], cancelSignal);
+    const upstream = await gitTrimmed(root, ['for-each-ref', '--format=%(upstream)', '--', head], cancelSignal);
     if (upstream !== '') return upstream;
-    const heads = await remoteHeads(root, cancelSignal);
+    const heads = await getRemoteHeads(root, cancelSignal);
     const preferred =
         heads.find(([name]) => name === 'refs/remotes/origin/HEAD') ?? (heads.length === 1 ? heads[0] : undefined);
     return preferred?.[1] ?? '';
 }
 
 // The merge base of a ref and HEAD, with a note about cut history when the repository is shallow.
-async function mergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
+async function getMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
     const base = await runGit(root, ['merge-base', '--', compared, 'HEAD'], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
@@ -45,7 +45,7 @@ async function mergeBase(root: string, compared: string, cancelSignal?: AbortSig
  * @param cancelSignal cancellation for the Git commands
  * @returns the staged paths, sorted, and the unstaged count
  */
-export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
+export async function getStaged(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
     const cached = await gitPaths(
         root,
         ['diff', '--relative', '--cached', '--name-only', '--no-renames', '-z'],
@@ -64,11 +64,11 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
  * @returns the selected reference, the sorted paths, and the commits after the merge base, oldest first
  */
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedPaths> {
-    const compared = reference === '' ? await defaultReference(root, cancelSignal) : reference;
+    const compared = reference === '' ? await getDefaultRef(root, cancelSignal) : reference;
     if (compared === '') {
         throw new GspotError('selection', ['No upstream or default branch is available; use --changed=<ref>.']);
     }
-    const merged = await mergeBase(root, compared, cancelSignal);
+    const merged = await getMergeBase(root, compared, cancelSignal);
     const committed = await gitPaths(root, [...WORKTREE_DIFF_ARGV, merged, '--'], cancelSignal);
     const working = await gitPaths(root, WORKTREE_DIFF_ARGV, cancelSignal);
     const commits = await gitLines(root, ['rev-list', '--reverse', `${merged}..HEAD`, '--'], cancelSignal);
@@ -85,9 +85,9 @@ export async function changedFiles(root: string, reference: string, cancelSignal
  * @param cancelSignal cancellation for the Git commands
  * @returns the commit the pushed range starts after
  */
-export async function pushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await defaultReference(root, cancelSignal);
-    if (compared !== '') return mergeBase(root, compared, cancelSignal);
+export async function getPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const compared = await getDefaultRef(root, cancelSignal);
+    if (compared !== '') return getMergeBase(root, compared, cancelSignal);
     const roots = await gitLines(root, ['rev-list', '--max-parents=0', 'HEAD'], cancelSignal);
     const first = roots.at(-1);
     if (first === undefined || first === '') throw new Error('Git did not return a root commit for HEAD.');

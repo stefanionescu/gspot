@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { iniSection } from '#cli/kits/takeover.ts';
+import { getIniSection } from '#cli/kits/takeover.ts';
 import { gixyRules } from '#cli/lifecycle/preview/gixy.ts';
 import { javascriptRules } from '#cli/lifecycle/preview/javascript.ts';
 import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/preview/sqlfluff.ts';
@@ -7,16 +7,16 @@ import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/preview/sql
 test('INI selection retains exact section text and treats malformed headings as content', () => {
     const selected =
         '[tool] # selected\r\nkey = value\r\n[other] trailing text\r\n[]\r\n[tool:child]; nested\r\nvalue = 2\r';
-    expect(iniSection(`[unrelated]\r\nvalue = 1\r\n${selected}\n[toolbox]\nvalue = 3\n`, 'tool')).toBe(selected);
-    expect(iniSection('[toolbox]\nvalue = 3\n', 'tool')).toBeUndefined();
-    expect(iniSection('[tool\nvalue = 3\n', 'tool')).toBeUndefined();
+    expect(getIniSection(`[unrelated]\r\nvalue = 1\r\n${selected}\n[toolbox]\nvalue = 3\n`, 'tool')).toBe(selected);
+    expect(getIniSection('[toolbox]\nvalue = 3\n', 'tool')).toBeUndefined();
+    expect(getIniSection('[tool\nvalue = 3\n', 'tool')).toBeUndefined();
 });
 
 test('INI selection rejects duplicate selected headings and accepts repeated unrelated sections', () => {
-    expect(() => iniSection('[tool:child]\nx = 1\n[other]\n[tool:child] ; repeated\nx = 2', 'tool')).toThrow(
+    expect(() => getIniSection('[tool:child]\nx = 1\n[other]\n[tool:child] ; repeated\nx = 2', 'tool')).toThrow(
         'Duplicate configuration section: tool:child',
     );
-    expect(iniSection('[other]\n[other]\n[tool:child]\nx = 1\n', 'tool')).toBe('[tool:child]\nx = 1\n');
+    expect(getIniSection('[other]\n[other]\n[tool:child]\nx = 1\n', 'tool')).toBe('[tool:child]\nx = 1\n');
 });
 
 test('Gixy selection preserves root aliases, section-independent flags, and plugin boundaries', () => {

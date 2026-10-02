@@ -2,9 +2,9 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
-import { useRevision } from '#cli/execution/checkout/revision.ts';
-import { pushedRevisions } from '#cli/repository/revisions/push.ts';
+import { selectPush } from '#cli/repository/revisions/push.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
 import type { Checked, PushReport, CheckOptions, PushRevision, CheckCommandResult } from '#cli/types/commands/check.ts';
 
@@ -30,7 +30,7 @@ async function checkRevision(
     revision: PushRevision,
 ): Promise<CheckCommandResult | undefined> {
     try {
-        return await useRevision(
+        return await checkOutRevision(
             root,
             { kind: 'commit', hash: revision.object },
             (checkout) =>
@@ -82,7 +82,7 @@ export async function checkPush(
     signal: AbortSignal,
 ): Promise<CommandResult> {
     assertPushOptions(options);
-    const selected = await pushedRevisions(root, input.input, input.remote, signal);
+    const selected = await selectPush(root, input.input, input.remote, signal);
     const revisions: Checked[] = [];
     const rendered: string[] = [];
     for (const revision of selected.revisions) {

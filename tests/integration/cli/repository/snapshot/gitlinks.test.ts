@@ -7,10 +7,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { pushedRevisions } from '#cli/repository/revisions/push.ts';
+import { selectPush } from '#cli/repository/revisions/push.ts';
 import { buildReport, formatReport } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { gitBlobs, gitEntries, useRevision, committedEntries } from '#cli/execution/checkout/revision.ts';
+import { getBlobs, getHeadEntries, checkOutRevision, getCachedEntries } from '#cli/execution/checkout/revision.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s snapshot retains gitlinks without reading submodule contents',
@@ -39,7 +39,7 @@ test.each(['index', 'commit'] as const)(
         expect(formatReport(report).split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = gitOutput(sandbox.path, ['write-tree']);
         const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
-        await useRevision(sandbox.path, source, async (snapshot, tree) => {
+        await checkOutRevision(sandbox.path, source, async (snapshot, tree) => {
             expect(tree).toBe(expected);
             expect(gitOutput(snapshot, ['write-tree'])).toBe(expected);
             expect(readdirSync(join(snapshot, path))).toStrictEqual([]);
@@ -70,12 +70,12 @@ test('nested policies retain repository context with policy-relative index and c
     await Bun.write(join(project, 'source.txt'), 'indexed');
     gitOutput(sandbox.path, ['add', '.']);
     await Bun.write(join(project, 'source.txt'), 'working');
-    const afterWrite = await committedEntries(project);
+    const afterWrite = await getHeadEntries(project);
     expect(afterWrite.map((entry) => entry.path)).toStrictEqual(['source.txt']);
-    const entries = await gitEntries(project, { kind: 'index' });
+    const entries = await getCachedEntries(project, { kind: 'index' });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {
-        await useRevision(project, source, async (snapshot, tree) => {
+        await checkOutRevision(project, source, async (snapshot, tree) => {
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe(
                 source.kind === 'index' ? 'indexed' : 'pushed',
             );
@@ -84,12 +84,12 @@ test('nested policies retain repository context with policy-relative index and c
         });
     }
     const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
-    const updated = await pushedRevisions(project, protocol);
+    const updated = await selectPush(project, protocol);
     expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
     gitOutput(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
     const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
-    const created = await pushedRevisions(project, createdRef, 'example');
+    const created = await selectPush(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
@@ -99,23 +99,23 @@ if (onPosix)
     test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
         await using sandbox = await testdir();
         gitOutput(sandbox.path, ['init']);
-        expect(await committedEntries(sandbox.path)).toStrictEqual([]);
+        expect(await getHeadEntries(sandbox.path)).toStrictEqual([]);
         const path = 'a\n"é.sql';
         await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
         gitOutput(sandbox.path, ['add', '.']);
         gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
-        const entries = await committedEntries(sandbox.path);
+        const entries = await getHeadEntries(sandbox.path);
         expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
-        const blobs = await gitBlobs(
+        const blobs = await getBlobs(
             sandbox.path,
             entries.map((entry) => entry.hash),
         );
         expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
-        await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+        await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
             expect(await Bun.file(join(snapshot, path)).text()).toBe('select 1;\n');
         });
         writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-        await rejects(gitEntries(sandbox.path, { kind: 'index' }), { message: /Cannot read the Git index/u });
+        await rejects(getCachedEntries(sandbox.path, { kind: 'index' }), { message: /Cannot read the Git index/u });
         writeFileSync(join(sandbox.path, '.git', 'HEAD'), 'broken');
-        await rejects(committedEntries(sandbox.path));
+        await rejects(getHeadEntries(sandbox.path));
     });

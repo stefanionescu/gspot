@@ -4,8 +4,8 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { useRevision } from '#cli/execution/checkout/revision.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
 import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
@@ -22,7 +22,7 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'), 'dir');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
-    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/owned/value.js')).text()).toContain('value = 2');
         await Bun.write(join(snapshot, 'node_modules/owned/value.js'), 'snapshot change');
     });
@@ -31,9 +31,9 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     );
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
     symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'external link',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('external link');
 });
 
 test('a workspace bin into untracked build output leaves the snapshot, and a broken link stops it', async () => {
@@ -50,15 +50,15 @@ test('a workspace bin into untracked build output leaves the snapshot, and a bro
     symlinkSync('../cli/dist/cli.js', join(sandbox.path, 'node_modules/.bin/cli'));
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
-    await useRevision(sandbox.path, { kind: 'index' }, (snapshot) => {
+    await checkOutRevision(sandbox.path, { kind: 'index' }, (snapshot) => {
         expect(existsSync(join(snapshot, 'node_modules/cli/package.json'))).toBe(true);
         expect(lstatSync(join(snapshot, 'node_modules/.bin/cli'), { throwIfNoEntry: false })).toBeUndefined();
         return Promise.resolve(undefined);
     });
     symlinkSync('../missing/tool.js', join(sandbox.path, 'node_modules/.bin/broken'));
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'cannot be resolved',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('cannot be resolved');
 });
 
 test('revision dependencies reject external manifest and installation links before copying', async () => {
@@ -75,17 +75,17 @@ test('revision dependencies reject external manifest and installation links befo
     gitOutput(sandbox.path, ['add', '.']);
     unlinkSync(join(sandbox.path, 'package.json'));
     symlinkSync(join(external.path, 'package.json'), join(sandbox.path, 'package.json'));
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'Source link leaves',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('Source link leaves');
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'external link',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('external link');
     unlinkSync(join(sandbox.path, 'node_modules/external'));
-    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
     });
     expect(await Bun.file(join(external.path, 'private.txt')).text()).toBe('outside bytes');
@@ -105,13 +105,13 @@ test('a nested revision refuses its incomplete managed dependency installation',
     runOwnedLifecycle(project, (owner) => {
         owner.beginInstallation('npm');
     });
-    expect(await rejection(useRevision(project, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+    expect(await rejection(checkOutRevision(project, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'Tool installation is incomplete',
     );
     runOwnedLifecycle(project, (owner) => {
         owner.finishInstallation('npm');
     });
-    await useRevision(project, { kind: 'index' }, async (snapshot) => {
+    await checkOutRevision(project, { kind: 'index' }, async (snapshot) => {
         // The private tools run in place, so the snapshot links them instead of copying them.
         expect(lstatSync(join(snapshot, '.gspot/node_modules')).isSymbolicLink()).toBe(true);
         expect(await Bun.file(join(snapshot, '.gspot/node_modules/example/index.js')).text()).toContain('value = 1');
@@ -130,16 +130,16 @@ test.each(['', 'nested/'])('revision prose checks reuse the installed packages u
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, prefix);
-    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         const copied = join(snapshot, prefix, packagePath);
         expect(await Bun.file(copied).text()).toBe('extends: existence\n');
         await Bun.write(copied, 'snapshot-only edit');
     });
     expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'do not match the revision configuration',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('do not match the revision configuration');
 });
 
 test('a snapshot leaves the virtual environment in the working tree and still checks its lock', async () => {
@@ -155,14 +155,14 @@ test('a snapshot leaves the virtual environment in the working tree and still ch
     });
     gitOutput(root, ['init', '-q']);
     gitOutput(root, ['add', '.']);
-    await useRevision(root, { kind: 'index' }, (snapshot) => {
+    await checkOutRevision(root, { kind: 'index' }, (snapshot) => {
         expect(existsSync(join(snapshot, '.venv'))).toBe(false);
         expect(readFileSync(join(snapshot, 'source.py'), 'utf8')).toBe('selected = True\n');
         return Promise.resolve();
     });
     expect(readFileSync(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
     await Bun.write(join(root, 'uv.lock'), 'version = 2\n');
-    expect(await rejection(useRevision(root, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+    expect(await rejection(checkOutRevision(root, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'do not match the revision manifests',
     );
 });
@@ -201,7 +201,7 @@ test('cancellation drains dependency copies before removing the snapshot and pre
     try {
         expect(
             await rejection(
-                useRevision(
+                checkOutRevision(
                     sandbox.path,
                     { kind: 'index' },
                     () => {
@@ -236,11 +236,11 @@ test('a manifest checked out with CRLF matches its LF blob when Git converts lin
     gitOutput(sandbox.path, ['config', 'core.autocrlf', 'true']);
     gitOutput(sandbox.path, ['add', '.']);
     await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "crlf"\r\n}\r\n');
-    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
     });
     await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'do not match the revision manifests',
-    );
+    expect(
+        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
+    ).toContain('do not match the revision manifests');
 });

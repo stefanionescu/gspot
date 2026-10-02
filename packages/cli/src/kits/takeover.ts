@@ -22,7 +22,7 @@ const PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
 };
 
-function selectedValue(value: unknown, selector: Parameters<typeof kitSection>[2]): { parsed: unknown } | undefined {
+function select(value: unknown, selector: Parameters<typeof getSection>[2]): { parsed: unknown } | undefined {
     const parts = selector.key === undefined ? (selector.table?.split('.') ?? []) : [selector.key];
     let parsed = value;
     for (const part of parts) {
@@ -32,7 +32,7 @@ function selectedValue(value: unknown, selector: Parameters<typeof kitSection>[2
     return { parsed };
 }
 
-function sectionName(line: string): string | undefined {
+function parseHeader(line: string): string | undefined {
     const trimmed = line.trim();
     const close = trimmed.indexOf(']');
     const tail = close === -1 ? '' : trimmed.slice(close + 1).trim();
@@ -50,28 +50,28 @@ function sectionName(line: string): string | undefined {
  * @param selector.table the table.
  * @returns the section's text and parsed value, or undefined when the file has none.
  */
-function kitSection(
+function getSection(
     text: string,
     path: string,
     selector: { key?: string; table?: string },
 ): { text: string; parsed: unknown } | undefined {
     const extension = extname(path);
     if (selector.table !== undefined && (extension === '.ini' || extension === '.cfg')) {
-        const selected = iniSection(text, selector.table);
+        const selected = getIniSection(text, selector.table);
         return selected === undefined ? undefined : { text: selected, parsed: {} };
     }
     const parse = PARSERS[extension];
     if (parse === undefined) throw new Error(`${path}: shared configuration format is unsupported.`);
-    const selected = selectedValue(parse(text), selector);
+    const selected = select(parse(text), selector);
     return selected === undefined ? undefined : { text, ...selected };
 }
 
-function hasConfigurationSection(files: Root, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
+function hasSection(files: Root, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
     if (replace.table === undefined && replace.key === undefined) return true;
     const source = files.read(path);
     if (source === undefined) return false;
     return (
-        kitSection(source.bytes.toString('utf8'), path, {
+        getSection(source.bytes.toString('utf8'), path, {
             ...(replace.table === undefined ? {} : { table: replace.table }),
             ...(replace.key === undefined ? {} : { key: replace.key }),
         }) !== undefined
@@ -79,7 +79,7 @@ function hasConfigurationSection(files: Root, path: string, replace: NonNullable
 }
 
 // The tool configurations one replace row finds among the tracked files.
-function replaceTools(
+function getReplacedConfigs(
     files: Root,
     inventory: Set<string>,
     tool: string,
@@ -91,7 +91,7 @@ function replaceTools(
         candidates.add(replace.file);
     return [...candidates]
         .filter((candidate) => matches(candidate))
-        .filter((path) => hasConfigurationSection(files, path, replace))
+        .filter((path) => hasSection(files, path, replace))
         .map((path) => ({
             tool,
             path,
@@ -107,14 +107,14 @@ function replaceTools(
  * @param paths the tracked file paths
  * @returns tool configurations with their containing files and sections
  */
-function declaredKits(root: string, paths: Iterable<string>): ToolFile[] {
+function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT)),
     );
     using files = openRoot(root);
     return [...kitManifests().values()].flatMap((manifest) =>
         manifest.tools.flatMap((tool) =>
-            (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
+            (tool.replace ?? []).flatMap((replace) => getReplacedConfigs(files, inventory, tool.name, replace)),
         ),
     );
 }
@@ -125,11 +125,11 @@ function declaredKits(root: string, paths: Iterable<string>): ToolFile[] {
  * @param section the section name
  * @returns the section text, or undefined when the file has no such section
  */
-export function iniSection(text: string, section: string): string | undefined {
+export function getIniSection(text: string, section: string): string | undefined {
     const seen = new Set<string>();
     let included = false;
     const selected = text.split('\n').flatMap((line) => {
-        const header = sectionName(line);
+        const header = parseHeader(line);
         if (header === undefined) return included ? [line] : [];
         included = header === section || header.startsWith(`${section}:`);
         if (!included) return [];
@@ -146,7 +146,7 @@ export function iniSection(text: string, section: string): string | undefined {
  * @param selected the ids of the selected kits
  * @returns whether init replaces the tool's configuration
  */
-export function isOwned(tool: string, selected: Set<string>): boolean {
+export function isReplaced(tool: string, selected: Set<string>): boolean {
     const manifests = kitManifests();
     return [...selected].some(
         (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.replace !== undefined) === true,
@@ -160,8 +160,8 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * @param fields the manifests read from the tree
  * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function existingTooling(root: string, files: TrackedFile[], fields: Fields[]): Tooling {
-    const configurations = declaredKits(
+export function getTooling(root: string, files: TrackedFile[], fields: Fields[]): Tooling {
+    const configurations = getToolConfigs(
         root,
         files.filter((file) => file.kind === 'source').map((file) => file.path),
     );

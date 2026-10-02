@@ -7,7 +7,7 @@ import type { Refspec, RefRules } from '#cli/types/repository/revisions.ts';
 const REFSPEC_FIELDS = 2;
 
 // The text a wildcard pattern captures from a ref, '' for an exact match, or undefined when the ref does not match.
-function capturedRef(pattern: string, ref: string): string | undefined {
+function captureRef(pattern: string, ref: string): string | undefined {
     const star = pattern.indexOf('*');
     if (star === -1) return pattern === ref ? '' : undefined;
     const prefix = pattern.slice(0, star);
@@ -17,7 +17,7 @@ function capturedRef(pattern: string, ref: string): string | undefined {
 }
 
 // A fetch mapping split into its source and destination, or why it cannot be used.
-function splitMapping(raw: string): Refspec {
+function parseRefspec(raw: string): Refspec {
     const fields = raw.replace(/^\+/u, '').split(':');
     const [source, destination] = fields;
     if (destination === undefined || destination === '') return { kind: 'skip' };
@@ -43,7 +43,7 @@ async function addMapping(
     rules: RefRules,
     cancelSignal?: AbortSignal,
 ): Promise<boolean> {
-    const parsed = splitMapping(raw);
+    const parsed = parseRefspec(raw);
     if (parsed.kind === 'skip') return true;
     if (parsed.kind === 'unusable') return false;
     await gitText(root, ['check-ref-format', '--refspec-pattern', parsed.source], cancelSignal);
@@ -55,7 +55,7 @@ async function addMapping(
 }
 
 // The rules a remote's fetch configuration declares, or undefined when any entry cannot be used.
-async function remoteRefRules(
+async function getRules(
     root: string,
     remote: string,
     entries: string[],
@@ -74,19 +74,15 @@ async function remoteRefRules(
 // Whether a local ref is one a fetch mapping writes and no exclusion takes back.
 function isFetched(rules: RefRules, ref: string): boolean {
     return rules.mappings.some(({ source, destination }) => {
-        const capture = capturedRef(destination, ref);
+        const capture = captureRef(destination, ref);
         if (capture === undefined) return false;
         const original = source.replace('*', () => capture);
-        return !rules.excluded.some((pattern) => capturedRef(pattern, original) !== undefined);
+        return !rules.excluded.some((pattern) => captureRef(pattern, original) !== undefined);
     });
 }
 
 // The remote's fetch configuration entries, or undefined when it declares none.
-async function remoteRefEntries(
-    root: string,
-    remote: string,
-    cancelSignal?: AbortSignal,
-): Promise<string[] | undefined> {
+async function getRefspecs(root: string, remote: string, cancelSignal?: AbortSignal): Promise<string[] | undefined> {
     const configured = await runGit(root, ['config', '--null', '--get-all', `remote.${remote}.fetch`], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
@@ -103,20 +99,20 @@ async function remoteRefEntries(
  * @param cancelSignal cancellation for the Git commands
  * @returns the fetched objects, or none when the mappings cannot be read as a whole
  */
-export async function fetchedRevisions(
+export async function getFetchedObjects(
     root: string,
     remote: string | undefined,
     cancelSignal?: AbortSignal,
 ): Promise<string[]> {
     if (remote === undefined) return [];
-    const entries = await remoteRefEntries(root, remote, cancelSignal);
+    const entries = await getRefspecs(root, remote, cancelSignal);
     if (entries === undefined) return [];
-    const rules = await remoteRefRules(root, remote, entries, cancelSignal);
+    const rules = await getRules(root, remote, entries, cancelSignal);
     if (rules === undefined || rules.mappings.length === 0) return [];
     const refs = await gitLines(root, ['for-each-ref', '--format=%(refname)%09%(objectname)'], cancelSignal);
-    const objects = refs.flatMap((line) => {
-        const [ref, revisionId] = line.split('\t');
-        return ref !== undefined && revisionId !== undefined && isFetched(rules, ref) ? [revisionId] : [];
+    const hashes = refs.flatMap((line) => {
+        const [ref, hash] = line.split('\t');
+        return ref !== undefined && hash !== undefined && isFetched(rules, ref) ? [hash] : [];
     });
-    return [...new Set(objects)];
+    return [...new Set(hashes)];
 }

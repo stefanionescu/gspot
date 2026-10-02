@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/tools/tools.ts';
 import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { pushBase } from '#cli/repository/revisions/changes.ts';
+import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 /**
@@ -39,7 +39,7 @@ export async function checkSecretHistory(session: Session, planned: PlannedCheck
         '{root}',
     ];
     let selections: string[] = [];
-    if (planned.commits === undefined) selections = [`${await pushBase(session.root, session.cancelSignal)}..HEAD`];
+    if (planned.commits === undefined) selections = [`${await getPushBase(session.root, session.cancelSignal)}..HEAD`];
     else if (planned.commits.length > 0)
         selections = fileBatches(
             planned.commits,

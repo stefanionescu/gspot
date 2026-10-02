@@ -8,8 +8,8 @@ import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { gitBlobs } from '#cli/execution/checkout/revision.ts';
-import { pushBase } from '#cli/repository/revisions/changes.ts';
+import { getBlobs } from '#cli/execution/checkout/revision.ts';
+import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA } from '#cli/config/checks/general/secrets.ts';
@@ -20,7 +20,7 @@ const PAIR = 2;
 // The commits under review: the ones the run supplies, or every commit after the push base.
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
-    const base = await pushBase(session.root, session.cancelSignal);
+    const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
         cancelSignal: session.cancelSignal,
     });
@@ -55,7 +55,7 @@ function changedObjects(fields: string[]): Map<string, string> {
 // Appends every changed blob of a commit to the enumerator input.
 async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const entries = changedObjects(await changeFields(scan.session, commit));
-    const blobs = await gitBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
+    const blobs = await getBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
     for (const [file, blobId] of entries) {
         const blob = blobs.get(blobId);
         if (blob === undefined) throw new GspotError('selection', ['A selected history blob is missing.']);

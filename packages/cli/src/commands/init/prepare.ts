@@ -9,9 +9,9 @@ import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readManifests } from '#cli/repository/packages.ts';
 import { getReplaced } from '#cli/commands/init/replaced.ts';
+import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
-import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import type { Tooling } from '#cli/types/repository/repository.ts';
 import type { Policy, TomlTable } from '#cli/types/policy/policy.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
@@ -46,7 +46,7 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
     const tools = [...new Set(tooling.configs.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
     const owned: string[] = [];
     const unowned: string[] = [];
-    for (const tool of tools) (isOwned(tool, detected.selectedIds) ? owned : unowned).push(tool);
+    for (const tool of tools) (isReplaced(tool, detected.selectedIds) ? owned : unowned).push(tool);
     print(
         detectionText({
             files: repo.files,
@@ -92,7 +92,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     );
     const inputs = { root, repo, fields, workspace: workspace.scopes, manifests };
     const detected = selectForInit({ ...inputs, options });
-    const tooling = existingTooling(root, repo.files, fields);
+    const tooling = getTooling(root, repo.files, fields);
     if (!options.json) printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
     const replaced = getReplaced(root, tooling, selection.selectedIds);
