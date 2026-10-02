@@ -5,7 +5,7 @@ import type { packageManifestSchema } from '#cli/repository/packages.ts';
 
 type Kind = 'source' | 'generated' | 'vendored' | 'binary';
 
-export type ExistingTool = {
+export type ToolFile = {
     tool: string;
     path: string;
     shared?: boolean;
@@ -43,8 +43,8 @@ export type Verdict = { kind: Kind; source: string; producedBy?: string };
 /** The runners that install and run gspot. */
 export type Runner = 'mise' | 'npm' | 'bun' | 'pnpm' | 'yarn';
 
-export type ExistingTooling = {
-    configs: ExistingTool[];
+export type Tooling = {
+    configs: ToolFile[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
         path: string;

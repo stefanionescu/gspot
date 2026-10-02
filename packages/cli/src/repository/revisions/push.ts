@@ -5,13 +5,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
-import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/config/repository/revisions.ts';
+import { LOG_ARGV, ABSENT_HASH, HASH_PATTERN, COMMIT_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
 import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
 function isHashPair(localHash: string | undefined, remoteHash: string | undefined): boolean {
     if (localHash === undefined || remoteHash === undefined) return false;
-    if (!GIT_HASH.test(localHash) || !GIT_HASH.test(remoteHash)) return false;
+    if (!HASH_PATTERN.test(localHash) || !HASH_PATTERN.test(remoteHash)) return false;
     return localHash.length === remoteHash.length;
 }
 
@@ -60,12 +60,12 @@ async function comparison(context: PushSearch, gitHash: string, remoteHash: stri
     if (!ABSENT_HASH.test(remoteHash)) {
         const previous = await commitOf(context, remoteHash);
         if (previous === undefined) return { changed: undefined, excluded: [] };
-        const changed = await gitPaths(root, [...DIFF_PATHS, previous, gitHash, '--'], cancelSignal);
+        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, gitHash, '--'], cancelSignal);
         return { changed, excluded: [previous] };
     }
     if (fetched.length === 0 || shallow) return { changed: undefined, excluded: [] };
     const excluded = [...new Set(fetched)];
-    const changed = await gitPaths(root, [...LOG_PATHS, gitHash, '--not', ...excluded, '--'], cancelSignal);
+    const changed = await gitPaths(root, [...LOG_ARGV, gitHash, '--not', ...excluded, '--'], cancelSignal);
     return { changed, excluded };
 }
 

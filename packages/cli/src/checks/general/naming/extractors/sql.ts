@@ -1,6 +1,6 @@
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import { SQL_LABELS } from '#cli/config/checks/general/naming.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlNamed, Identifier } from '#cli/types/checks/general/naming.ts';
 import type { SqlFile, SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -68,7 +68,7 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
  * @param reads optional execution reads shared by SQL checks
  * @returns the identifiers
  */
-export async function sqlIdentifiers(file: string, source: string, reads?: SourceReads): Promise<Identifier[]> {
+export async function sqlIdentifiers(file: string, source: string, reads?: ReadCache): Promise<Identifier[]> {
     const parsed = await sqlFile(source, reads);
     if (parsed.error !== undefined)
         throw new Error(

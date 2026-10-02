@@ -54,7 +54,7 @@ export const ROOT_SEARCH_DEPTH = 6;
 
 export const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 
-export const NEAR_DISTANCE_LIMIT = 3;
+export const SUGGESTION_LIMIT = 3;
 export const TYPO_MIN = 2;
 export const TYPO_FRACTION = 3;
 

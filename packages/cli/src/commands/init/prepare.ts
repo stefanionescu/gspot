@@ -12,10 +12,10 @@ import { getReplaced } from '#cli/commands/init/replaced.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
+import type { Tooling } from '#cli/types/repository/repository.ts';
 import type { Policy, TomlTable } from '#cli/types/policy/policy.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { askKits, askQuestions } from '#cli/commands/init/questions.ts';
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -41,7 +41,7 @@ async function chosenSelection(
 }
 
 // Prints what init found, unless the caller reads JSON.
-function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelection, tooling: ExistingTooling): void {
+function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelection, tooling: Tooling): void {
     const { repo, manifests } = inputs;
     const tools = [...new Set(tooling.configs.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
     const owned: string[] = [];

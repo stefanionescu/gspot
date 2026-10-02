@@ -1,7 +1,7 @@
 import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { pathTokens, proseLines } from '#cli/parsers/references.ts';
 import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';
@@ -83,7 +83,7 @@ function licenseFindings(input: EngineInput): Finding[] {
         const exceptions = (table.tools?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
-            if (path.split('/').includes(GSPOT_FOLDER)) return false;
+            if (path.split('/').includes(DOT_GSPOT)) return false;
             if (
                 ![
                     'package-lock.json',

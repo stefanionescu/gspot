@@ -7,9 +7,9 @@ import type { Read } from '#cli/types/platform/platform.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
+import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/apply.ts';
 import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
-import type { Log, OwnershipState } from '#cli/types/lifecycle/ownership.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { installTree, removeInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
@@ -135,7 +135,7 @@ export function runOwnedLifecycle<Result>(root: string, action: (owner: Owner) =
  * @param stateDirectory the directory under the root that holds the log
  * @returns the recorded ownership, empty when nothing was recorded
  */
-export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): OwnershipState {
+export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): Ownership {
     using files = openRoot(root);
     const record = files.read(`${stateDirectory}/ownership.json`);
     return record === undefined

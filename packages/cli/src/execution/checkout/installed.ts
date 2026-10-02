@@ -8,12 +8,12 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
+import { LOCKS, VALE_INI, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
-import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY, VALE_CONFIGURATION } from '#cli/config/execution/checkout.ts';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
 
@@ -50,7 +50,7 @@ async function validateCopiedLinks(
 }
 
 function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
-    if (basename(folder) === GSPOT_FOLDER && pending.includes('npm'))
+    if (basename(folder) === DOT_GSPOT && pending.includes('npm'))
         throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
@@ -65,8 +65,8 @@ function assertDependencyReady(revisionRoot: string, folder: string, pending: st
 
 // Refuses a snapshot whose Vale configuration differs from the one the packages were installed for.
 function assertSameValeConfiguration(installed: Root, destination: Root): void {
-    const current = installed.read(VALE_CONFIGURATION);
-    const selected = destination.read(VALE_CONFIGURATION);
+    const current = installed.read(VALE_INI);
+    const selected = destination.read(VALE_INI);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
@@ -167,7 +167,7 @@ async function copyDirectory(
     { folder, dependency }: Directory,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const isPrivate = basename(folder) === GSPOT_FOLDER;
+    const isPrivate = basename(folder) === DOT_GSPOT;
     const pending = isPrivate ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
     assertDependencyReady(revisionRoot, folder, pending);
     const source = join(root, folder, dependency);
@@ -187,7 +187,7 @@ async function copyDirectory(
  * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
 export function copyProsePackages(root: string, revisionRoot: string, paths: string[]): void {
-    const configs = paths.filter((path) => path === VALE_CONFIGURATION || path.endsWith(`/${VALE_CONFIGURATION}`));
+    const configs = paths.filter((path) => path === VALE_INI || path.endsWith(`/${VALE_INI}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
         const installed = openRoot(join(root, folder));
@@ -229,6 +229,6 @@ export async function copyDependencies(
     for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
     // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
     const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
-    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== GSPOT_FOLDER))
+    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== DOT_GSPOT))
         await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
 }

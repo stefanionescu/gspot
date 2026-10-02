@@ -1,7 +1,7 @@
 // The objects a remote's fetch mappings already brought into the repository, which a push need not re-check.
 import { GspotError } from '#cli/platform/errors.ts';
 import { runGit, gitText, gitLines } from '#cli/platform/git.ts';
-import type { RefRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
+import type { Refspec, RefRules } from '#cli/types/repository/revisions.ts';
 
 // A refspec is a source and a destination.
 const REFSPEC_FIELDS = 2;
@@ -17,7 +17,7 @@ function capturedRef(pattern: string, ref: string): string | undefined {
 }
 
 // A fetch mapping split into its source and destination, or why it cannot be used.
-function splitMapping(raw: string): ParsedMapping {
+function splitMapping(raw: string): Refspec {
     const fields = raw.replace(/^\+/u, '').split(':');
     const [source, destination] = fields;
     if (destination === undefined || destination === '') return { kind: 'skip' };

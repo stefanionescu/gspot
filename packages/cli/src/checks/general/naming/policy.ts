@@ -12,7 +12,7 @@ import type {
     ShippedRule,
     ShippedPolicy,
     NamingSettings,
-    ExposedSettings,
+    SettingSurface,
     ShippedLanguage,
 } from '#cli/types/policy/policy.ts';
 
@@ -45,7 +45,7 @@ function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<stri
 
 function limitsReader(
     shipped: ShippedPolicy,
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     scope: string,
 ): EffectivePolicy['limitsFor'] {
@@ -83,7 +83,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
  * @returns the effective policy
  */
 export function effectivePolicy(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     scope: string,
     manifests: Pick<Manifest, 'kit' | 'naming'>[] = [],

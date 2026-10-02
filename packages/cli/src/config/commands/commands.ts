@@ -1,7 +1,7 @@
 // The literal values commands reads: names, patterns, limits, and tables.
 import type { ErrorCode } from '#cli/types/platform/platform.ts';
 
-export const SET_NEAR_LIMIT = 12;
+export const KEY_SUGGESTION_LIMIT = 12;
 export const RULE_KEY_DEPTH = 3;
 export const INTEGER = /^-?\d+$/u;
 export const DECIMAL = /^-?\d+\.\d+$/u;

@@ -1,12 +1,12 @@
 // The types of lifecycle/merge in this package.
 import type { z } from 'zod';
 import type { Read } from '#cli/types/platform/platform.ts';
+import type { MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 import type { ConfigurationFormat } from '#cli/types/generation/generation.ts';
-import type { ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';
 import type { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 
-export type ConfigurationWriteRequest = {
+export type MergeRequest = {
     changes: { path: KeyPath; value: unknown }[];
     path: string;
     format: ConfigurationFormat;
@@ -19,9 +19,9 @@ export type ConfigurationWriteRequest = {
 export type KeyPath = (string | number)[];
 export type Field = z.infer<typeof configurationFieldsSchema>[number];
 
-export type KitPlan = {
+export type MergePlan = {
     next: Read;
-    configuration: ConfigurationOwnership;
+    configuration: MergeRecord;
     status: 'changed' | 'unchanged';
 };
 

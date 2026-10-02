@@ -6,7 +6,7 @@ import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { CI_SETUP, HOOKS_ROW } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling, ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands/init.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePlan['change'] {
@@ -31,7 +31,7 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePla
 
 // What stops running once gspot runs the same tools: lint folders, lint-only manifests, and duplicate pins.
 function noLongerRuns(
-    tooling: ExistingTooling,
+    tooling: Tooling,
     duplicatePins: { tool: string; version: string; place: string }[],
 ): { path: string; note: string }[] {
     const list = tooling.lintFolders.map((folder) => ({

@@ -1,7 +1,7 @@
 // The types of commands/doctor in this package.
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 
-export type ChangeReport = {
+export type Changes = {
     detected: { kit: string; evidence: string; command: string }[];
     recommended: { kit: string; evidence: string; command: string }[];
     unowned: { path: string; note: string; command: string }[];
@@ -11,7 +11,7 @@ export type ChangeReport = {
 export type DoctorReport = {
     submodules: string[];
     tools: ToolInspection[];
-    changes: ChangeReport;
+    changes: Changes;
     hooks: string;
     ci: string;
     rules: { files: number };

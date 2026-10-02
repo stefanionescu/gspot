@@ -10,7 +10,7 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
-import { STAGES, DIRECTIONS } from '#cli/config/commands/explain.ts';
+import { STAGES, DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/checks.ts';
 import type { ListingRow, Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 
@@ -105,7 +105,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         '',
         first.spec.summary,
         '',
-        `Direction: ${DIRECTIONS[first.spec.direction] ?? first.spec.direction}`,
+        `Direction: ${DIRECTION_TEXTS[first.spec.direction] ?? first.spec.direction}`,
         ...scopes.flatMap((entry) => scopeLines(key, first.spec, entry)),
     ];
     return {

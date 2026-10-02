@@ -8,7 +8,7 @@ import { miseHome } from '#cli/platform/environment.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
@@ -29,7 +29,7 @@ function searchDirectories(
     // A snapshot links the private tools of gspot instead of copying them, so they are searched in the working tree.
     return [...new Set(roots)].flatMap((searched) => [
         join(
-            basename(searched) === GSPOT_FOLDER ? join(installedRoot, relative(root, searched)) : searched,
+            basename(searched) === DOT_GSPOT ? join(installedRoot, relative(root, searched)) : searched,
             'node_modules',
             '.bin',
         ),

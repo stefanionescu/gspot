@@ -1,5 +1,5 @@
 // The literal values repository reads: names, patterns, limits, and tables.
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling } from '#cli/types/repository/repository.ts';
 
 /** The package-lock format that carries both the packages table and the old dependencies tree. */
 const HYBRID_LOCKFILE = 2;
@@ -8,7 +8,7 @@ const HYBRID_LOCKFILE = 2;
 const PACKAGES_LOCKFILE = 3;
 
 /** Repository-relative paths shared by generation, execution, and lifecycle storage. */
-export const GSPOT_FOLDER = '.gspot';
+export const DOT_GSPOT = '.gspot';
 
 export const SHEBANG_INTERPRETERS: Record<string, string> = {
     bash: 'shell',
@@ -210,7 +210,7 @@ export const OTHER_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 export const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
-export const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
+export const RUNNER_LOCKS: { file: string; runner: Tooling['runner'] }[] = [
     { file: 'bun.lock', runner: 'bun' },
     { file: 'bun.lockb', runner: 'bun' },
     { file: 'pnpm-lock.yaml', runner: 'pnpm' },

@@ -11,7 +11,7 @@ import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
-import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
+import type { Changes, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
@@ -58,7 +58,7 @@ function toolLines(tools: ToolInspection[], colors: Colors): string[] {
     });
 }
 
-function changeLines(changes: ChangeReport): string[] {
+function changeLines(changes: Changes): string[] {
     const sections = CHANGE_SECTIONS.map(({ key, title }) => {
         const rows = changes[key].map((entry) => {
             const name = ('kit' in entry ? entry.kit : entry.path).padEnd(COLUMN_WIDTHS.name);

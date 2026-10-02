@@ -7,14 +7,14 @@ import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/merge/plan.ts';
-import type { Planned, ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Planned, MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
 function fieldRestoration(
     existing: OwnershipEntry,
     current: Read | undefined,
-): { current: Read; configuration: ConfigurationOwnership } | undefined {
+): { current: Read; configuration: MergeRecord } | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
     const applies = configuration.edited || !configuration.created || !isRecorded(current, existing.installed);
@@ -22,7 +22,7 @@ function fieldRestoration(
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreConfiguration(current: Read, configuration: ConfigurationOwnership): Read | undefined {
+function restoreConfiguration(current: Read, configuration: MergeRecord): Read | undefined {
     const text = current.bytes.toString('utf8');
     if (!Buffer.from(text).equals(current.bytes)) return undefined;
     const document = configurationDocument(text, configuration.format);

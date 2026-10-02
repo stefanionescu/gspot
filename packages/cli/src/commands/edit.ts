@@ -11,8 +11,8 @@ import { proposePolicy } from '#cli/policy/mutations.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Mutation, Proposal } from '#cli/types/policy/policy.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 import type { CommandResult, PreparedPolicy } from '#cli/types/commands/commands.ts';
 
 /**
@@ -36,7 +36,7 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
  * @param plan the prepared policy
  * @returns what was written
  */
-export function writePolicy(root: string, plan: PreparedPolicy): WriteResult {
+export function writePolicy(root: string, plan: PreparedPolicy): Proposal {
     if (plan.changed)
         runOwnedLifecycle(root, (owner) => {
             const previous = owner.read('gspot.toml');

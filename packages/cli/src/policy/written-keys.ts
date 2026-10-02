@@ -1,7 +1,7 @@
 // The setting keys a policy table writes, spelled the way the surface exposes them.
 import { asRecord } from '#cli/policy/settings.ts';
 import { NAMING_SCALARS } from '#cli/config/policy/policy.ts';
-import type { Policy, ExposedSettings, NamingCategoryTable } from '#cli/types/policy/policy.ts';
+import type { Policy, NamingTable, SettingSurface } from '#cli/types/policy/policy.ts';
 
 function limitKeys(policy: Partial<Policy>): string[] {
     if (!policy.limits) return [];
@@ -11,7 +11,7 @@ function limitKeys(policy: Partial<Policy>): string[] {
     return keys;
 }
 
-function scalarKeys(prefix: string, table: NamingCategoryTable): string[] {
+function scalarKeys(prefix: string, table: NamingTable): string[] {
     return NAMING_SCALARS.filter((key) => table[key] !== undefined).map((key) => `${prefix}.${key}`);
 }
 
@@ -27,7 +27,7 @@ function namingKeys(policy: Partial<Policy>): string[] {
 }
 
 // Whether a written tool table is a group of exposed keys rather than one exposed key.
-function isKeyGroup(surface: ExposedSettings, key: string, value: unknown): value is Record<string, unknown> {
+function isKeyGroup(surface: SettingSurface, key: string, value: unknown): value is Record<string, unknown> {
     if (surface.specs.has(key) || Array.isArray(value) || asRecord(value) === undefined) return false;
     return [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`));
 }
@@ -38,7 +38,7 @@ function isKeyGroup(surface: ExposedSettings, key: string, value: unknown): valu
  * @param surface the selected manifest settings, including nested tool keys
  * @returns the keys under limits, naming, tools, and format
  */
-export function writtenKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
+export function writtenKeys(policy: Partial<Policy>, surface: SettingSurface): string[] {
     const keys: string[] = [];
     const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
         Object.entries(table)

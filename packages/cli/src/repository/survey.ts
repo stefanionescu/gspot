@@ -5,7 +5,7 @@ import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
-import type { Fields, TrackedFile, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Fields, Tooling, TrackedFile } from '#cli/types/repository/repository.ts';
 
 import {
     LINT_PAIRS,
@@ -44,14 +44,14 @@ function listDir(root: string, rel: string): string[] {
     return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
 }
 
-function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
+function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['hooks'][number] | undefined {
     if (hooksPath === dir) return undefined;
     const files = listDir(root, dir);
     if (files.length === 0) return undefined;
     return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
 }
 
-function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; runnerFile?: string } {
+function runnerFound(paths: Set<string>): { runner: Tooling['runner']; runnerFile?: string } {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
@@ -97,7 +97,7 @@ function isLintJob(name: string, job: unknown): boolean {
  * @param root the repository root
  * @returns each set of hooks with where it lives
  */
-export function existingHooks(root: string): ExistingTooling['hooks'] {
+export function existingHooks(root: string): Tooling['hooks'] {
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
     using files = openRoot(root);
@@ -125,11 +125,7 @@ export function existingHooks(root: string): ExistingTooling['hooks'] {
  * @param fields the manifests read from the tree
  * @returns everything init lists except the tool configurations, which need the kits
  */
-export function surveyRepository(
-    root: string,
-    files: TrackedFile[],
-    fields: Fields[],
-): Omit<ExistingTooling, 'configs'> {
+export function surveyRepository(root: string, files: TrackedFile[], fields: Fields[]): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
     const lintOnlyManifests = fields
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))

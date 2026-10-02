@@ -8,12 +8,12 @@ import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import { eslintRuleDiff } from '#cli/lifecycle/preview/eslint/diff.ts';
-import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Drift, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Program, ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
-function driftText(drift: DriftEntry[]): string {
+function driftText(drift: Drift[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
     const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
     for (const entry of drift) {

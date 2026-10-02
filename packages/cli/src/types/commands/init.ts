@@ -3,12 +3,12 @@ import type { Read } from '#cli/types/platform/platform.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { Manifest, KitEvidence as Plan } from '#cli/types/kits.ts';
 import type { Policy, RawPolicy, TomlTable } from '#cli/types/policy/policy.ts';
-import type { Fields, Repository, ScopeEntry, TrackedFile, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Fields, Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
 
 export type Planning = {
     root: string;
     options: InitOptions;
-    tooling: ExistingTooling;
+    tooling: Tooling;
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
@@ -26,7 +26,7 @@ export type DetectionSummary = {
     files: TrackedFile[];
     plans: Plan[];
     scopes: ScopeEntry[];
-    tooling: ExistingTooling;
+    tooling: Tooling;
     owned: string[];
     unowned: string[];
     manifests: Map<string, Manifest>;

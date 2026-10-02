@@ -3,9 +3,9 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
-import type { WorkflowShape } from '#cli/types/generation/generation.ts';
+import type { Pipeline } from '#cli/types/generation/generation.ts';
 
-const SHAPE: WorkflowShape = {
+const SHAPE: Pipeline = {
     version: '1.2.3',
     platforms: ['ubuntu'],
     swiftScope: undefined,

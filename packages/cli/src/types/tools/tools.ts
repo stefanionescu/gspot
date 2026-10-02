@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import type { Read, SourceReads } from '#cli/types/platform/platform.ts';
+import type { Read, ReadCache } from '#cli/types/platform/platform.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 import type { PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
@@ -12,7 +12,7 @@ type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 export type InstallationKind = 'npm' | 'python';
 
 export type Session = ToolSearch & {
-    reads: SourceReads;
+    reads: ReadCache;
     resources?: DisposableStack;
     packageClient?: z.infer<typeof packageToolSchema>;
     cancelSignal?: AbortSignal;

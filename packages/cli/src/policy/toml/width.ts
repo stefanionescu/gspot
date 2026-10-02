@@ -3,7 +3,7 @@ import { parseDocument } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { expandLongTables } from '#cli/policy/toml/tables.ts';
 import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/toml.ts';
-import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/config/policy/toml.ts';
+import { INDENT_WIDTH, POLICY_LINE_WIDTH } from '#cli/config/policy/toml.ts';
 import { isValue, isComment, isKeyValue, isInlineArray } from '#cli/policy/toml/nodes.ts';
 
 function getPairs(blocks: TomlBlock[]): KeyValue[] {
@@ -33,11 +33,7 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
  * @param width the most characters a line may hold
  * @returns the text with those arrays wrapped
  */
-export function wrapLongArrays(
-    text: string,
-    indent = ' '.repeat(DEFAULT_INDENT_WIDTH),
-    width = POLICY_LINE_WIDTH,
-): string {
+export function wrapLongArrays(text: string, indent = ' '.repeat(INDENT_WIDTH), width = POLICY_LINE_WIDTH): string {
     const expanded = expandLongTables(text, width);
     const lines = expanded.split('\n');
     const edits = getPairs(parseDocument(expanded).cst)
@@ -56,9 +52,9 @@ export function wrapLongArrays(
  */
 export function getIndent(raw: TomlTable): string {
     const format = raw['format'];
-    if (typeof format !== 'object' || format === null || Array.isArray(format)) return ' '.repeat(DEFAULT_INDENT_WIDTH);
+    if (typeof format !== 'object' || format === null || Array.isArray(format)) return ' '.repeat(INDENT_WIDTH);
     const table = format as TomlTable;
     if (table['indent_style'] === 'tab') return '\t';
     const width = table['indent_width'];
-    return ' '.repeat(typeof width === 'number' && Number.isInteger(width) && width > 0 ? width : DEFAULT_INDENT_WIDTH);
+    return ' '.repeat(typeof width === 'number' && Number.isInteger(width) && width > 0 ? width : INDENT_WIDTH);
 }

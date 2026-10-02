@@ -18,7 +18,7 @@ import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Program, SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/mutations.ts';
-import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/config/commands/commands.ts';
+import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, KEY_SUGGESTION_LIMIT } from '#cli/config/commands/commands.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -51,7 +51,7 @@ function buildSettingError(session: Session, selection: ScopeSelection, key: str
     const all = selection.surface.specs.keys().toArray();
     const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
     return new GspotError('policy', [
-        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, SET_NEAR_LIMIT)),
+        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, KEY_SUGGESTION_LIMIT)),
     ]);
 }
 
@@ -208,7 +208,7 @@ async function setCommand(o: SetOptions): Promise<CommandResult> {
     const match = specFor(selection.surface, o.key);
     if (!match) throw buildSettingError(session, selection, o.key);
     assertRuleNotOff(match.spec, o);
-    if (!o.toDefault) return commitSetting(root, session, selection, o, match.spec);
+    if (!o.reset) return commitSetting(root, session, selection, o, match.spec);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(
         root,
@@ -250,7 +250,7 @@ export function registerSet(program: Program): void {
                         items,
                         replace: flags.replace === true,
                         remove: flags.remove === true,
-                        toDefault: flags.default === true,
+                        reset: flags.default === true,
                         ...compact({ reason: flags.reason, scope: flags.scope }),
                     }),
                 global,

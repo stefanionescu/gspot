@@ -8,9 +8,9 @@ import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/changes.ts';
-import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
+import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 
 function isReadable(path: string): boolean {
@@ -106,7 +106,7 @@ export async function revisionSelection(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
-): Promise<ChangedSet | undefined> {
+): Promise<ChangedPaths | undefined> {
     if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
         throw new GspotError('selection', ['Revision selection requires a Git repository.']);
     return options.changed === undefined ? undefined : changedFiles(session.root, options.changed, signal);

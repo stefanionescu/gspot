@@ -11,9 +11,9 @@ import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/generation.ts';
@@ -63,7 +63,7 @@ function attributePattern(path: string): string {
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
 function attributesBlock(files: Generated['files']): string {
-    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
         .map((path) => `${attributePattern(path)} text eol=lf`);

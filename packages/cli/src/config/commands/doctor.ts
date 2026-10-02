@@ -12,4 +12,4 @@ export const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
     { key: 'authored', title: 'changed outside gspot' },
 ];
 
-export const CHANGE_HEAD_BYTES = 600;
+export const HEADER_BYTES = 600;

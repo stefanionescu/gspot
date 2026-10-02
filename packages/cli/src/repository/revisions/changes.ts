@@ -1,7 +1,7 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { GspotError } from '#cli/platform/errors.ts';
-import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
-import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
+import { WORKTREE_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
+import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
@@ -45,14 +45,14 @@ async function mergeBase(root: string, compared: string, cancelSignal?: AbortSig
  * @param cancelSignal cancellation for the Git commands
  * @returns the staged paths, sorted, and the unstaged count
  */
-export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Promise<StagedSet> {
+export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
     const cached = await gitPaths(
         root,
         ['diff', '--relative', '--cached', '--name-only', '--no-renames', '-z'],
         cancelSignal,
     );
     const staged = cached.toSorted((a, b) => a.localeCompare(b));
-    const dirty = new Set(await gitPaths(root, CHANGED_PATHS, cancelSignal));
+    const dirty = new Set(await gitPaths(root, WORKTREE_DIFF_ARGV, cancelSignal));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
 
@@ -63,14 +63,14 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
  * @param cancelSignal cancellation for the Git commands
  * @returns the selected reference, the sorted paths, and the commits after the merge base, oldest first
  */
-export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
+export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedPaths> {
     const compared = reference === '' ? await defaultReference(root, cancelSignal) : reference;
     if (compared === '') {
         throw new GspotError('selection', ['No upstream or default branch is available; use --changed=<ref>.']);
     }
     const merged = await mergeBase(root, compared, cancelSignal);
-    const committed = await gitPaths(root, [...CHANGED_PATHS, merged, '--'], cancelSignal);
-    const working = await gitPaths(root, CHANGED_PATHS, cancelSignal);
+    const committed = await gitPaths(root, [...WORKTREE_DIFF_ARGV, merged, '--'], cancelSignal);
+    const working = await gitPaths(root, WORKTREE_DIFF_ARGV, cancelSignal);
     const commits = await gitLines(root, ['rev-list', '--reverse', `${merged}..HEAD`, '--'], cancelSignal);
     return {
         reference: compared,

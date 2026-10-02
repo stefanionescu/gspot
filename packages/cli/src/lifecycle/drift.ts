@@ -6,9 +6,9 @@ import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { currentBlock } from '#cli/generation/markers.ts';
 import { ruleDiff } from '#cli/lifecycle/preview/compare.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
@@ -26,8 +26,8 @@ function patch(path: string, before: string, after: string, beforeName: string):
     });
 }
 
-function fileDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
+function fileDrift(root: string, rendered: Generated): Drift[] {
+    const entries: Drift[] = [];
     const files = openRoot(root);
     for (const file of rendered.files) {
         const current = files.read(file.path);
@@ -49,8 +49,8 @@ function fileDrift(root: string, rendered: Generated): DriftEntry[] {
     return entries;
 }
 
-function blockDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
+function blockDrift(root: string, rendered: Generated): Drift[] {
+    const entries: Drift[] = [];
     const files = openRoot(root);
     for (const block of rendered.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
@@ -68,7 +68,7 @@ function blockDrift(root: string, rendered: Generated): DriftEntry[] {
 }
 
 // The merged and configuration outputs whose fields are gone: missing when the file is gone, changed otherwise.
-function otherDrift(root: string, rendered: Generated): DriftEntry[] {
+function otherDrift(root: string, rendered: Generated): Drift[] {
     using files = openRoot(root);
     return [...rendered.merges, ...rendered.configurations]
         .filter((output) => !hasConfiguration(root, output))
@@ -82,7 +82,7 @@ function otherDrift(root: string, rendered: Generated): DriftEntry[] {
  * @param rendered the generated files as rendered now
  * @returns the drift entries in path order
  */
-export function computeDrift(root: string, policy: Policy, rendered: Generated): DriftEntry[] {
+export function computeDrift(root: string, policy: Policy, rendered: Generated): Drift[] {
     const known = new Set([
         ...rendered.files.map((file) => file.path),
         ...rendered.blocks.map((block) => block.path),
@@ -101,7 +101,7 @@ export function computeDrift(root: string, policy: Policy, rendered: Generated):
                 !known.has(entry.path) &&
                 isStrayCandidate(entry.path, policy),
         )
-        .map((entry): DriftEntry => ({ path: entry.path, kind: 'stray' }));
+        .map((entry): Drift => ({ path: entry.path, kind: 'stray' }));
     return [
         ...(python?.kind === undefined ? [] : [{ path: python.path, kind: python.kind }]),
         ...(lock?.kind === undefined ? [] : [{ path: lock.path, kind: lock.kind }]),

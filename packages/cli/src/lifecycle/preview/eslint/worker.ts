@@ -6,8 +6,8 @@ import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { ACTIVE_LEVELS } from '#cli/config/lifecycle/preview.ts';
 import { ARGUMENT_START } from '#cli/config/platform/platform.ts';
+import { ACTIVE_SEVERITIES } from '#cli/config/lifecycle/preview.ts';
 import { runEslintPreview } from '#cli/lifecycle/preview/eslint/declarations.ts';
 import type { eslintCoverageRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
@@ -60,7 +60,7 @@ export async function runRuleCoverage(
         if (config === undefined) throw new Error(`ESLint did not resolve a configuration for ${path}.`);
         result[path] = Object.entries(config.rules ?? {}).flatMap(([name, entry]) => {
             const level = Array.isArray(entry) ? (entry[0] as unknown) : entry;
-            return ACTIVE_LEVELS.has(level) ? [name] : [];
+            return ACTIVE_SEVERITIES.has(level) ? [name] : [];
         });
     }
     return result;

@@ -6,14 +6,7 @@ import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-
-import type {
-    Log,
-    Identity,
-    OwnershipEntry,
-    OwnershipState,
-    PendingOwnership,
-} from '#cli/types/lifecycle/ownership.ts';
+import type { Log, Identity, Ownership, OwnershipEntry, PendingOwnership } from '#cli/types/lifecycle/ownership.ts';
 
 // Settles one interrupted mutation: accepted when it completed, left unwritten when the file is as before or gone,
 // refused when edited. A Windows replacement removes a read-only file before its rename, so a crash can leave none.
@@ -31,7 +24,7 @@ function recoverPending(files: Root, pending: PendingOwnership, accept: (pending
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function readState(recorded: Read | undefined): OwnershipState {
+function readState(recorded: Read | undefined): Ownership {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }

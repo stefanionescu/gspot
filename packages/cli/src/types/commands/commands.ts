@@ -1,8 +1,8 @@
 // The types of commands in this package.
 import type { Command } from '@commander-js/extra-typings';
+import type { Proposal } from '#cli/types/policy/policy.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
-import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 
 type SettingRow = {
     key: string;
@@ -20,7 +20,7 @@ export type SetOptions = {
     scope?: string;
     replace: boolean;
     remove: boolean;
-    toDefault: boolean;
+    reset: boolean;
 };
 
 export type CommandResult = { text: string; json: unknown; exitCode: number };
@@ -54,11 +54,11 @@ export type ApplyOptions = {
 export type ApplyPreviewJson = {
     dryRun: true;
     pin: { from: string | undefined; to: string };
-    drift: DriftEntry[];
+    drift: Drift[];
     notes: string[];
 };
 
-export type PreparedPolicy = WriteResult & { original: Read };
+export type PreparedPolicy = Proposal & { original: Read };
 
 /** One `[tools.<tool>.extra]` table: the keys it sets and why. */
 export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };

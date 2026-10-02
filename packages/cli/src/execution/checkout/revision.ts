@@ -5,16 +5,16 @@ import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
 import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
-import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
-import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
+import type { Root, ReadCache } from '#cli/types/platform/platform.ts';
+import type { GitEntry, Revision } from '#cli/types/execution/checkout.ts';
+import { NEWLINE, ENTRY_MODES, WRITE_BATCH } from '#cli/config/execution/checkout.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
-import { NEWLINE, ENTRY_MODES, MATERIALIZATION_BATCH_SIZE } from '#cli/config/execution/checkout.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;
 
-const entryReads = new WeakMap<SourceReads, Map<string, Promise<GitEntry[]>>>();
+const entryReads = new WeakMap<ReadCache, Map<string, Promise<GitEntry[]>>>();
 
 async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
     const result = await runGit(root, [...args], {
@@ -55,7 +55,7 @@ async function populateRevision(
     ];
     try {
         for (const [index, entry] of ordered.entries()) {
-            if (index % MATERIALIZATION_BATCH_SIZE === 0) {
+            if (index % WRITE_BATCH === 0) {
                 await setImmediate();
                 cancelSignal?.throwIfAborted();
             }
@@ -82,7 +82,7 @@ function blobFrame(output: Buffer, cursor: number, gitHash: string): { end: numb
     return { end, size };
 }
 
-function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
+function parseEntry(line: string, kind: Revision['kind']): GitEntry {
     const pattern =
         kind === 'index'
             ? /^(100644|100755|120000|160000) ([a-f0-9]{40}|[a-f0-9]{64}) 0\t([\s\S]+)$/u
@@ -102,7 +102,7 @@ function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
  * @param cancelSignal command cancellation
  * @returns validated entries
  */
-async function readEntries(root: string, source: RevisionSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+async function readEntries(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const argv = source.kind === 'index' ? ['ls-files', '--stage', '-z'] : ['ls-tree', '-r', '-z', source.hash];
     const read = await runGitBinary(root, argv, { ...(cancelSignal === undefined ? {} : { cancelSignal }) });
     if (read.code !== 0)
@@ -165,9 +165,9 @@ export async function gitBlobs(
  */
 export function gitEntries(
     root: string,
-    source: RevisionSource,
+    source: Revision,
     cancelSignal?: AbortSignal,
-    reads?: SourceReads,
+    reads?: ReadCache,
 ): Promise<GitEntry[]> {
     if (reads === undefined) return readEntries(root, source, cancelSignal);
     let entries = entryReads.get(reads);
@@ -219,7 +219,7 @@ export async function committedEntries(root: string, cancelSignal?: AbortSignal)
  */
 export async function useRevision<Result>(
     root: string,
-    source: RevisionSource,
+    source: Revision,
     action: (revisionRoot: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {

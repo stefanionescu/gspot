@@ -7,8 +7,8 @@ import { jsoncValue } from '#cli/repository/jsonc.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import { gixyRules } from '#cli/lifecycle/preview/gixy.ts';
 import { valeRules } from '#cli/lifecycle/preview/vale.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import { sqlfluffRules } from '#cli/lifecycle/preview/sqlfluff.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { javascriptRules } from '#cli/lifecycle/preview/javascript.ts';
 import { shellcheckRules } from '#cli/lifecycle/preview/shellcheck.ts';
 import { swiftformatRules } from '#cli/lifecycle/preview/swiftformat.ts';
@@ -93,7 +93,7 @@ function rulesAt(parsed: unknown, path: string): Map<string, unknown> {
  * @param proposed the document as generated
  * @returns the rules added, removed, and changed under each path that differs
  */
-export function compareRules(paths: string[], previous: unknown, proposed: unknown): NonNullable<DriftEntry['rules']> {
+export function compareRules(paths: string[], previous: unknown, proposed: unknown): NonNullable<Drift['rules']> {
     return paths.flatMap((path) => {
         const previousRules = rulesAt(previous, path);
         const next = rulesAt(proposed, path);
@@ -116,7 +116,7 @@ export function compareRules(paths: string[], previous: unknown, proposed: unkno
  * @param before the file's text as it is now, or undefined when it does not exist
  * @returns the rule differences, or the reason they cannot be read
  */
-export function ruleDiff(file: GeneratedFile, before: string | undefined): Pick<DriftEntry, 'rules' | 'ruleError'> {
+export function ruleDiff(file: GeneratedFile, before: string | undefined): Pick<Drift, 'rules' | 'ruleError'> {
     if (file.rulesPath === undefined) return {};
     try {
         const previous = before === undefined ? {} : document(file.path, before);

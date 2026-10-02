@@ -1,7 +1,7 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import { compareRules } from '#cli/lifecycle/preview/compare.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
@@ -19,7 +19,7 @@ export async function eslintRuleDiff(
     view: MergedView | undefined,
     signal: AbortSignal | undefined,
     plan: Generated,
-    drift: DriftEntry[],
+    drift: Drift[],
 ): Promise<void> {
     const selected = plan.files.flatMap((file) => {
         if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) return [];

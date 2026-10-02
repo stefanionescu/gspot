@@ -1,11 +1,11 @@
 // The types of execution in this package.
 import type { z } from 'zod';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import type { ToolInvocation } from '#cli/types/execution/tool.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { PlanOptions } from '#cli/types/execution/planning.ts';
 import type { Session, ToolSearch } from '#cli/types/tools/tools.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
-import type { Defined, SourceReads } from '#cli/types/platform/platform.ts';
+import type { Defined, ReadCache } from '#cli/types/platform/platform.ts';
 import type { findingSchema, checkResultSchema } from '#cli/execution/finding.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { MergedView, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -118,12 +118,12 @@ export type EngineInput = {
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;
-    reads: SourceReads;
+    reads: ReadCache;
     resources?: DisposableStack;
     cancelSignal?: AbortSignal;
     scopeRoot: string;
     repositoryFiles?: TrackedFile[];
-    generatedDrift?: () => DriftEntry[];
+    generatedDrift?: () => Drift[];
     /** Every scope's selection, for a check that runs once. */
     selections?: ScopeSelection[];
     root: string;

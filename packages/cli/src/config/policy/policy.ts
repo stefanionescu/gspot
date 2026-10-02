@@ -197,7 +197,7 @@ export const REFUSED_REASONS = [
     'wip',
     '.',
 ];
-export const MINIMUM_REASON_WORDS = 2;
+export const REASON_WORDS_MIN = 2;
 
 /** The structure table with nothing written: no re-exports and no allowances. */
 export const STRUCTURE_DEFAULTS: Policy['structure'] = {

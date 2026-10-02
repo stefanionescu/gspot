@@ -9,8 +9,8 @@ import type {
     RawLimits,
     RawNaming,
     RawPolicy,
+    NamingTable,
     NamingSettings,
-    NamingCategoryTable,
     NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
@@ -18,8 +18,8 @@ function isReasonedForm(value: unknown): value is { value: unknown; reason: stri
     return isRecord(value) && 'value' in value && 'reason' in value;
 }
 
-function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
-    const table: NamingCategoryTable = {};
+function normalizeCategory(raw: Record<string, unknown>): NamingTable {
+    const table: NamingTable = {};
     if (raw['max_chars'] !== undefined) table.max_chars = toReasoned(raw['max_chars'] as number);
     if (raw['max_words'] !== undefined) table.max_words = toReasoned(raw['max_words'] as number);
     if (raw['case'] !== undefined) table.case = toReasoned(raw['case'] as string[]);

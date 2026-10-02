@@ -8,8 +8,8 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
-import type { Found, OwnCheck, Explanation, ExplainFields } from '#cli/types/commands/explain.ts';
+import { TOOL_TIMEOUT_MS, SWIFTLINT_LINE_LIMIT } from '#cli/config/commands/explain.ts';
+import type { Found, CheckFacts, Explanation, DeclaredCheck } from '#cli/types/commands/explain.ts';
 
 const RULE_SUMMARIZERS: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {
@@ -27,7 +27,9 @@ const RULE_SUMMARIZERS: Record<string, (rule: string, path: string) => string | 
     },
     swiftlint: (rule, path) => {
         const result = runBlocking([path, 'rules', rule], { cwd: process.cwd(), timeoutMs: TOOL_TIMEOUT_MS });
-        return result.code === 0 ? result.stdout.split('\n').slice(0, SWIFTLINT_LINES).join('\n').trim() : undefined;
+        return result.code === 0
+            ? result.stdout.split('\n').slice(0, SWIFTLINT_LINE_LIMIT).join('\n').trim()
+            : undefined;
     },
 };
 
@@ -60,7 +62,7 @@ function getTool(check: CheckSpec): string | undefined {
 }
 
 // The settings that change the check, and the rules and crash pattern its kit carries.
-function getFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
+function getFacts(check: CheckSpec, kit: Found['kit']): CheckFacts {
     const toolPrefix = `tools.${getTool(check) ?? '~'}.`;
     const settings = (kit?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
@@ -71,7 +73,7 @@ function getFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
 }
 
 // The lines about this repository: a [[check]] entry's command and paths, or whether the kit is selected.
-function repositoryLines(session: Session | undefined, own: OwnCheck | undefined, kit: Found['kit']): string[] {
+function repositoryLines(session: Session | undefined, own: DeclaredCheck | undefined, kit: Found['kit']): string[] {
     const lines: string[] = [];
     if (own !== undefined)
         lines.push(
@@ -91,8 +93,8 @@ function describeCheck(
     session: Session | undefined,
     checkName: string,
     found: Found,
-    own: OwnCheck | undefined,
-    fields: ExplainFields,
+    own: DeclaredCheck | undefined,
+    fields: CheckFacts,
     owner: string,
 ): string {
     const { check, kit } = found;
@@ -124,7 +126,7 @@ function buildCheckExplanation(
     session: Session | undefined,
     checkName: string,
     found: Found,
-    own: OwnCheck | undefined,
+    own: DeclaredCheck | undefined,
     owner: string,
 ): Explanation {
     const { check, kit } = found;

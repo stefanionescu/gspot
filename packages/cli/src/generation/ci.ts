@@ -1,7 +1,7 @@
 import { Scalar, Document, stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
-import type { WorkflowShape } from '#cli/types/generation/generation.ts';
+import type { Pipeline } from '#cli/types/generation/generation.ts';
 
 import {
     MISE,
@@ -21,7 +21,7 @@ function pinned(action: string, version: string): Scalar {
     return node;
 }
 
-function setupSteps(shape: WorkflowShape): Record<string, unknown>[] {
+function setupSteps(shape: Pipeline): Record<string, unknown>[] {
     if (shape.isMise)
         return [
             { uses: pinned(MISE, 'v3.2.0'), with: { version: MISE_MIN_VERSION, cache: false } },
@@ -64,7 +64,7 @@ const CACHED_PATHS = [
     '~/.yarn/berry/cache',
 ];
 
-function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
+function checkJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
     const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
@@ -114,7 +114,7 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
  * @param shape what the workflow covers: platforms, the Swift scope, and the runner
  * @returns the GitHub workflow file
  */
-export function workflowFile(shape: WorkflowShape): GeneratedFile {
+export function workflowFile(shape: Pipeline): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
     const workflow = new Document({
         name: 'gspot',
@@ -144,7 +144,7 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
  * @param shape what the pipeline covers: platforms, the Swift scope, and the runner
  * @returns the GitLab include file
  */
-export function gitlabFile(shape: WorkflowShape): GeneratedFile {
+export function gitlabFile(shape: Pipeline): GeneratedFile {
     const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';
     const setup = shape.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']

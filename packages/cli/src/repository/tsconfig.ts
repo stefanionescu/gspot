@@ -5,7 +5,7 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { NO_INPUTS, EMPTY_FILES, GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT, NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {
@@ -14,7 +14,7 @@ function configurationText(root: string, path: string): string | undefined {
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf('node_modules');
-        if (dependency !== -1 && segments[0] !== GSPOT_FOLDER) {
+        if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
             mutationPath(local);
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');

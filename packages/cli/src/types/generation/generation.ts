@@ -9,7 +9,7 @@ import type { SelectorGroup, EslintRuleBlock, EslintConfiguration } from '#cli/t
 
 type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
-export type WorkflowShape = {
+export type Pipeline = {
     version: string;
     run?: NonNullable<Policy['ci']>['run'];
     platforms: string[];

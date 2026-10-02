@@ -1,5 +1,5 @@
 import type { SettingSpec } from '#cli/types/kits.ts';
-import { REFUSED_REASONS, MINIMUM_REASON_WORDS } from '#cli/config/policy/policy.ts';
+import { REFUSED_REASONS, REASON_WORDS_MIN } from '#cli/config/policy/policy.ts';
 
 function isNumberLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;
@@ -15,7 +15,7 @@ export function isReasonAccepted(reason: string | undefined): boolean {
     if (reason === undefined) return false;
     const trimmed = reason.trim();
     if (REFUSED_REASONS.includes(trimmed.toLowerCase())) return false;
-    return trimmed.split(/\s+/u).filter((word) => word !== '').length >= MINIMUM_REASON_WORDS;
+    return trimmed.split(/\s+/u).filter((word) => word !== '').length >= REASON_WORDS_MIN;
 }
 
 /**

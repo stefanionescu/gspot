@@ -2,9 +2,9 @@ import type { Manifest } from '#cli/types/kits.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { ciLintJobs } from '#cli/repository/survey.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Tooling } from '#cli/types/repository/repository.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askChoice, askChoices, askConfirmation } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -17,7 +17,7 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'none', label: 'none' },
 ];
 
-function detectCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
+function detectCi(root: string, tooling: Tooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
     using files = openRoot(root);
@@ -26,7 +26,7 @@ function detectCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | u
     return undefined;
 }
 
-function proposeCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
+function proposeCi(root: string, tooling: Tooling): InitAnswers['ci'] {
     const existing = detectCi(root, tooling);
     if (existing !== undefined) return existing;
     if (tooling.ci.length > 0) return 'none';
@@ -41,7 +41,7 @@ async function askHooks(options: InitOptions): Promise<InitAnswers['hooks']> {
     return askChoice('Install Git hooks?', '--no-hooks', HOOK_CHOICES, 'gspot', options.yes);
 }
 
-async function askCi(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['ci']> {
+async function askCi(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers['ci']> {
     if (options.ci === 'none' || ciLintJobs(root, tooling.ci).length > 0) return 'none';
     if (options.ci !== undefined) return options.ci;
     return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes);
@@ -52,7 +52,7 @@ async function askRules(options: InitOptions): Promise<boolean> {
     return askConfirmation('Install the agent rules?', '--no-rules', true, options.yes);
 }
 
-async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
+async function askRunner(options: InitOptions, tooling: Tooling): Promise<InitAnswers['runner']> {
     if (options.runner !== undefined) return options.runner;
     return askChoice('Task runner?', '--no-runner', RUNNER_CHOICES, tooling.runner, options.yes);
 }
@@ -91,7 +91,7 @@ export async function askKits(
  * @param tooling the configuration files, hooks and runner found
  * @returns the answers
  */
-export async function askQuestions(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers> {
+export async function askQuestions(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers> {
     const hooks = await askHooks(options);
     const ci = await askCi(root, options, tooling);
     const hasRules = await askRules(options);

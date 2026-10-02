@@ -16,12 +16,12 @@ import type {
     WrittenValue,
     PolicyProblem,
     ShippedPolicy,
-    ExposedSettings,
+    SettingSurface,
 } from '#cli/types/policy/policy.ts';
 
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
-function unknownKeyProblem(surface: ExposedSettings, key: string): string {
+function unknownKeyProblem(surface: SettingSurface, key: string): string {
     const all = surface.specs.keys().toArray();
     if (key.startsWith(LIMITS_PREFIX)) {
         const limits = all.filter((candidate) => candidate.startsWith(LIMITS_PREFIX));
@@ -102,7 +102,7 @@ function listProblems(key: string, written: WrittenValue, match: SpecMatch, requ
 
 // The problem of a written scalar that loosens the shipped default without an accepted reason.
 function scalarProblems(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     key: string,
     written: WrittenValue,
     match: SpecMatch,
@@ -115,7 +115,7 @@ function scalarProblems(
 }
 
 function keyProblems(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     table: Partial<Policy>,
     scope: string | undefined,
     key: string,
@@ -131,7 +131,7 @@ function keyProblems(
     return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
 }
 
-function extraProblems(surface: ExposedSettings, table: Partial<Policy>): PolicyProblem[] {
+function extraProblems(surface: SettingSurface, table: Partial<Policy>): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
     const tools = table.tools ?? {};
     for (const [tool, toolTable] of Object.entries(tools)) {
@@ -146,9 +146,9 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): Policy
 
 // Unresolved surface problems in the root selection and each scope.
 function unwrittenSurfaceProblems(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
-    scopeSurfaces: Map<string, ExposedSettings>,
+    scopeSurfaces: Map<string, SettingSurface>,
 ): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
     const surfaces = [
@@ -186,14 +186,14 @@ export function shippedPolicy(): ShippedPolicy {
  * @returns the problems in plain English, empty when the policy is sound.
  */
 export function validateAgainstSurface(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
-    scopeSurfaces = new Map<string, ExposedSettings>(),
+    scopeSurfaces = new Map<string, SettingSurface>(),
 ): PolicyProblem[] {
     const problems = unwrittenSurfaceProblems(surface, policy, scopeSurfaces);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const later = [surface, ...scopeSurfaces.values()].toReversed();
-    const everywhere: ExposedSettings = {
+    const everywhere: SettingSurface = {
         specs: new Map(later.flatMap((entry) => entry.specs.entries().toArray())),
         defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
         problems: surface.problems,

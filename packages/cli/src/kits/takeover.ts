@@ -10,8 +10,8 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
-import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import type { Fields, Tooling, ToolFile, TrackedFile } from '#cli/types/repository/repository.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {
     '.json': (text) => JSON.parse(text) as unknown,
@@ -84,7 +84,7 @@ function replaceTools(
     inventory: Set<string>,
     tool: string,
     replace: NonNullable<ToolPin['replace']>[number],
-): ExistingTool[] {
+): ToolFile[] {
     const matches = pathMatcher([replace.file, `**/${replace.file}`]);
     const candidates = new Set(inventory);
     if (!picomatch.scan(replace.file).isGlob && !candidates.has(replace.file) && files.stat(replace.file) !== undefined)
@@ -107,9 +107,9 @@ function replaceTools(
  * @param paths the tracked file paths
  * @returns tool configurations with their containing files and sections
  */
-function declaredKits(root: string, paths: Iterable<string>): ExistingTool[] {
+function declaredKits(root: string, paths: Iterable<string>): ToolFile[] {
     const inventory = new Set(
-        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER)),
+        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT)),
     );
     using files = openRoot(root);
     return [...kitManifests().values()].flatMap((manifest) =>
@@ -160,7 +160,7 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * @param fields the manifests read from the tree
  * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function existingTooling(root: string, files: TrackedFile[], fields: Fields[]): ExistingTooling {
+export function existingTooling(root: string, files: TrackedFile[], fields: Fields[]): Tooling {
     const configurations = declaredKits(
         root,
         files.filter((file) => file.kind === 'source').map((file) => file.path),

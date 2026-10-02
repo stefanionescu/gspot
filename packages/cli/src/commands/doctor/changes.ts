@@ -10,15 +10,15 @@ import type { GeneratedFile } from '#cli/types/kits.ts';
 import { readPrefix } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
+import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
+import type { Changes, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling, ToolFile } from '#cli/types/repository/repository.ts';
 
-function recommendedKits(session: Session, selected: Set<string>): ChangeReport['recommended'] {
-    const rows = new Map<string, ChangeReport['recommended'][number]>();
+function recommendedKits(session: Session, selected: Set<string>): Changes['recommended'] {
+    const rows = new Map<string, Changes['recommended'][number]>();
     for (const manifest of everyManifest(session.scopes))
         for (const id of manifest.kit.recommends)
             if (!selected.has(id) && !rows.has(id))
@@ -30,7 +30,7 @@ function recommendedKits(session: Session, selected: Set<string>): ChangeReport[
     return rows.values().toArray();
 }
 
-function buildFileRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
+function buildFileRow(session: Session, config: ToolFile, selected: Set<string>): ChangeRow {
     if (isOwned(config.tool, selected))
         return {
             path: config.path,
@@ -49,7 +49,7 @@ function buildFileRow(session: Session, config: ExistingTool, selected: Set<stri
 
 function unownedConfigs(
     session: Session,
-    tooling: ExistingTooling,
+    tooling: Tooling,
     selected: Set<string>,
     files: GeneratedFile[],
 ): ChangeRow[] {
@@ -57,7 +57,7 @@ function unownedConfigs(
     const rendered = new Set(files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
-        .filter((config) => !hasHeader(readPrefix(session.root, config.path, CHANGE_HEAD_BYTES).toString('utf8')))
+        .filter((config) => !hasHeader(readPrefix(session.root, config.path, HEADER_BYTES).toString('utf8')))
         .map((config) => buildFileRow(session, config, selected));
 }
 
@@ -77,7 +77,7 @@ function getUnownedOutputs(session: Session): ChangeRow[] {
  * @param session the session
  * @returns what changed after init, by kind
  */
-export function getChanges(session: Session): ChangeReport {
+export function getChanges(session: Session): Changes {
     const fields = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
     const tooling = existingTooling(session.root, session.repository.files, fields);

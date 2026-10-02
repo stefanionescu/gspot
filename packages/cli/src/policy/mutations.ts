@@ -5,7 +5,7 @@ import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import { getIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import type { Mutation, TomlTable, WriteResult } from '#cli/types/policy/policy.ts';
+import type { Mutation, Proposal, TomlTable } from '#cli/types/policy/policy.ts';
 import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function splitKey(key: string): { path: string[]; name: string } {
@@ -44,7 +44,7 @@ export function getTable(raw: TomlTable, path: string[], canCreate: boolean): To
  * @param mutate the change to apply to the parsed document
  * @returns the new text, the parsed policy, and whether the text changed
  */
-export function proposePolicy(root: string, text: string, mutate: Mutation): WriteResult {
+export function proposePolicy(root: string, text: string, mutate: Mutation): Proposal {
     const raw = parseTomlText(text, 'gspot.toml');
     const before = new Set(Object.keys(raw));
     mutate(raw);

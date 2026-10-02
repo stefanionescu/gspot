@@ -24,8 +24,8 @@ export type PathExplanation = {
     remedy?: string;
 };
 export type Found = { check: CheckSpec; kit: Manifest | undefined };
-export type OwnCheck = Session['policyFiles']['policy']['checks'][number];
-export type ExplainFields = { settings: string[]; rules: string[]; crashPattern: string | undefined };
+export type DeclaredCheck = Session['policyFiles']['policy']['checks'][number];
+export type CheckFacts = { settings: string[]; rules: string[]; crashPattern: string | undefined };
 
 export type ListingRow = {
     name: string;

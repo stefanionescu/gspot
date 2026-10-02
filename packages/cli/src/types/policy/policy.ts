@@ -126,7 +126,7 @@ export type ResolvedSetting = {
     source: string;
     scope?: string;
 };
-export type ExposedSettings = {
+export type SettingSurface = {
     specs: Map<string, SettingSpec>;
     defaults: Map<string, { value: unknown; kit: string }>;
     problems: { key: string; message: string }[];
@@ -145,7 +145,7 @@ export type SpecMatch = { spec: SettingSpec; language?: string; category?: strin
 export type SettingState = { value: unknown; source: string; reason: string | undefined };
 
 /** What resolving a value for one scope needs. */
-export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };
+export type PolicyScopeLayer = { surface: SettingSurface; policy: Policy; scope: string };
 
 /** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
 export type SchemaNode = {
@@ -167,13 +167,13 @@ export type Limits = {
     root: LimitTable;
     groups: Record<string, LimitTable>;
 };
-export type NamingCategoryTable = {
+export type NamingTable = {
     max_chars?: Reasoned<number>;
     max_words?: Reasoned<number>;
     case?: Reasoned<string[]>;
 };
-export type NamingLanguageTable = NamingCategoryTable & {
-    categories: Record<string, NamingCategoryTable>;
+export type NamingLanguageTable = NamingTable & {
+    categories: Record<string, NamingTable>;
 };
 
 export type NamingSettings = {
@@ -201,11 +201,11 @@ export type RawLimits = NonNullable<RawPolicy['limits']>;
 /** The [naming] table as written. */
 export type RawNaming = NonNullable<RawPolicy['naming']>;
 export type Mutation = (raw: TomlTable) => void;
-export type WriteResult = { text: string; policy: Policy; changed: boolean };
+export type Proposal = { text: string; policy: Policy; changed: boolean };
 export type ScopeSelection = {
     scope: ScopeEntry;
     selected: Manifest[];
-    surface: ExposedSettings;
+    surface: SettingSurface;
     view: MergedView;
 };
 export type MergedView = {

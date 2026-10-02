@@ -6,14 +6,7 @@ import { useRevision } from '#cli/execution/checkout/revision.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
-
-import type {
-    Checked,
-    PushReport,
-    CheckOptions,
-    PushedRevision,
-    CheckCommandResult,
-} from '#cli/types/commands/check.ts';
+import type { Checked, PushReport, CheckOptions, PushRevision, CheckCommandResult } from '#cli/types/commands/check.ts';
 
 // Refuses the options that select or change files, which a push of exact objects cannot honor.
 function assertPushOptions(options: CheckOptions): void {
@@ -34,7 +27,7 @@ async function checkRevision(
     root: string,
     options: CheckOptions,
     signal: AbortSignal,
-    revision: PushedRevision,
+    revision: PushRevision,
 ): Promise<CheckCommandResult | undefined> {
     try {
         return await useRevision(

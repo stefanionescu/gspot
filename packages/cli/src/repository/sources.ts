@@ -1,6 +1,6 @@
 // Reading the bytes of a repository file: a bounded prefix, its text, or the whole file a run may hold once.
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
 
 /**
@@ -35,7 +35,7 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
  * @param reads optional run-owned bytes; isolated generated output remains fresh
  * @returns the file bytes
  */
-export function readSource(root: string, path: string, reads?: SourceReads): Buffer {
+export function readSource(root: string, path: string, reads?: ReadCache): Buffer {
     const read = reads?.root === root ? reads.sources : undefined;
     const held = read?.get(path);
     if (held !== undefined) return held;

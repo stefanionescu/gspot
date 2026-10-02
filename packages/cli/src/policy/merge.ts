@@ -10,7 +10,7 @@ import type {
     MergedView,
     IgnoreEntry,
     FormatSettings,
-    ExposedSettings,
+    SettingSurface,
     PolicyScopeLayer,
 } from '#cli/types/policy/policy.ts';
 
@@ -79,7 +79,7 @@ function toolSlots(
  * @returns the view the templates read
  */
 export function mergeForScope(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     selected: Manifest[],
     scope: string,

@@ -6,8 +6,8 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
 
 import {
+    DOT_GSPOT,
     BANNER_BYTES,
-    GSPOT_FOLDER,
     LICENSE_FILE,
     LICENSE_TAGS,
     EXTENSION_TAGS,
@@ -68,7 +68,7 @@ function isLicenseFile(path: string): boolean {
 function managedKind(path: string): Verdict | undefined {
     if (isLicenseFile(path)) return { kind: 'vendored', source: 'license' };
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
-    return path.startsWith(`${GSPOT_FOLDER}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
+    return path.startsWith(`${DOT_GSPOT}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
 }
 
 /**
