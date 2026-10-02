@@ -30,7 +30,8 @@ const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = [
     "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
     "**/tests/**",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "scripts/**"
 ];
 const SCRIPTS = [
     "scripts/**",

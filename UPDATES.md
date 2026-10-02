@@ -22,8 +22,8 @@ approved it on October 1, 2026.
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
-  own. Stages 15 to 20 are pull request #17, branch `refactor/stages-15-to-20`.
-- The next stage to start is stage 21.
+  own. Stages 15 to 21 are pull request #17, branch `refactor/stages-15-to-20`.
+- The next stage to start is stage 22.
 
 ### Stages
 
@@ -51,7 +51,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | pull request #17 |
 | 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | pull request #17 |
 | 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | pull request #17 |
-| 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | not started      |
+| 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | pull request #17 |
 | 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | not started      |
 | 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | not started      |
 | 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | not started      |
@@ -276,7 +276,7 @@ The owner and the work settled these while implementing:
   attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
   request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
-- The quarantine list: 51 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
+- The quarantine list: 51 acceptance files skip on Windows (`WINDOWS_PENDING` in `scripts/acceptance.ts`) until
   stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journey runs in
   CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 

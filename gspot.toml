@@ -489,7 +489,10 @@ env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
+# The root scripts run the test suites and the local plugin, so they take the test overrides.
+test_files = ["**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}", "**/tests/**", "**/__tests__/**", "scripts/**"]
 script_files = [
+    "scripts/**",
     "packages/cli/scripts/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**",
@@ -571,10 +574,7 @@ entry = [
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
     "docs/src/route-metadata.ts",
-    "tests/support/cli/swiftformat.ts",
-    "tests/support/registry/workspace-command.ts",
-    "tests/support/package/run.ts",
-    "tests/support/acceptance.ts",
+    "scripts/*.ts",
 ]
 
 [[tools.knip.ignore_dependencies]]

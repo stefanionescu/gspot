@@ -7,6 +7,6 @@ export const INSTALLED_MODULES = join(import.meta.dir, '../../../node_modules');
 export const PLANTED_MODULES = join(import.meta.dir, '../../node_modules');
 /** The source launcher of gspot, then the executable folders of both stores, planted packages first, as the head of a PATH. */
 export const INSTALLED_BIN_PATH = [
-    join(import.meta.dir, '../../../packages/cli/bin'),
+    join(import.meta.dir, '../../../scripts'),
     ...[PLANTED_MODULES, INSTALLED_MODULES].map((store) => join(store, '.bin')),
 ].join(delimiter);

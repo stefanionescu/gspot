@@ -30,6 +30,6 @@
             "#plugin-package": ["./packages/eslint-plugin/package.json"]
         }
     },
-    "include": ["packages/**/*.ts", "tests/**/*.ts"],
+    "include": ["packages/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
     "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/.build"]
 }

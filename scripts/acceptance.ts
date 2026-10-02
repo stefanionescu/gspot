@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 import { runSourceCommand } from '#tests/support/registry/plugin.ts';
 
-const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
 const ACCEPTANCE = join(TESTS, 'acceptance/source');
 const TEST_MS = 90 * 60_000;

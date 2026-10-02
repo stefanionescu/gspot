@@ -13,7 +13,7 @@ package_manager = "npm"
 
 # The hooks of this checkout run `mise exec -- gspot`; the package bin resolves it to the source CLI.
 [env]
-_.path = ["{{config_root}}/packages/cli/bin"]
+_.path = ["{{config_root}}/scripts"]
 
 # Runtimes. Every kit tool the tests need comes from the manifests through `mise run repo:tools`.
 [tools]
@@ -35,11 +35,11 @@ run = "bun packages/cli/src/main.ts"
 [tasks.apply]
 description = "Generate repository configuration using gspot source and the workspace plugin."
 dir = "{{config_root}}"
-run = "bun tests/support/registry/workspace-command.ts apply"
+run = "bun scripts/plugin.ts apply"
 
 [tasks."repo:tools"]
 description = "Write the mise pins of every kit tool from the manifests."
-run = "bun packages/cli/scripts/test-tools.ts"
+run = "bun scripts/test-tools.ts"
 
 [tasks."repo:pins"]
 description = "Check that every tool pin of the kit manifests exists in its registry."
@@ -52,7 +52,7 @@ depends_post = ["docs:sync", "build:plugin"]
 
 [tasks."repo:install-checks"]
 description = "Install locked repository checks with the current workspace plugin."
-run = "bun tests/support/registry/workspace-command.ts install"
+run = "bun scripts/plugin.ts install"
 
 [tasks.build]
 depends = ["prepare:grammar"]
@@ -91,13 +91,13 @@ run = "bun test --timeout 60000 ./integration/tools"
 depends = ["prepare:grammar"]
 description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
 dir = "{{config_root}}/tests"
-run = "bun support/acceptance.ts"
+run = "bun {{config_root}}/scripts/acceptance.ts"
 
 [tasks."test:package"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Build and publish both packages to an isolated registry, then test consumers that install them."
 dir = "{{config_root}}/tests"
-run = "bun support/package/run.ts"
+run = "bun {{config_root}}/scripts/package.ts"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."
@@ -123,7 +123,7 @@ run = "bun --bun astro dev"
 
 [tasks."ci:swiftformat"]
 description = "Prepare and exercise SwiftFormat on Windows."
-run = "bun tests/support/cli/swiftformat.ts"
+run = "bun scripts/swiftformat.ts"
 
 [tasks."site:verify-release"]
 description = "Verify that documentation describes a published stable release."

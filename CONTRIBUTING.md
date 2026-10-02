@@ -23,8 +23,8 @@ checks.
 ## Run gspot from source
 
 In this checkout, `mise run gspot -- <command>` runs gspot from source, without a build. The
-checkout's Git hooks reach the same source through `packages/cli/bin`, which mise puts on
-`PATH`. Activate mise in your shell before you commit, or run Git through `mise exec -- git`. To
+checkout's Git hooks reach the same source through `scripts/gspot`, and mise puts the `scripts`
+folder on `PATH`. Activate mise in your shell before you commit, or run Git through `mise exec -- git`. To
 check which gspot the hooks find:
 
 ```sh
@@ -138,7 +138,7 @@ A failed job names its task. Run that task locally with the same arguments to re
 failure. A failed shard of the suite runs the same files again with
 `mise run test:acceptance -- --shard=<k>/<n>`, with the shard numbers of the job. On Windows, a
 full acceptance run leaves out the files that still fail there; the list and the reason for
-each sit in `tests/support/acceptance.ts`.
+each sit in `scripts/acceptance.ts`.
 
 ## Release
 
