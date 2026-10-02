@@ -52,7 +52,7 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['kits/framework/nextjs/delegation.test.ts', 'the sandbox install fails on Windows'],
     ['kits/framework/nextjs/selection.test.ts', 'times out on the Windows runner'],
     ['kits/tool/nginx.test.ts', 'the Windows runner has no nginx container'],
-    ['kits/platform/platforms.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/platform/supabase.test.ts', 'the setup hook times out on the Windows runner'],
     ['kits/tool/pytest.test.ts', 'the setup hook times out on the Windows runner'],
     ['kits/language/python/docstrings.test.ts', 'the sandbox install runs past five minutes on the Windows runner'],
     ['kits/language/python/tools.test.ts', 'the sandbox install fails on Windows'],
