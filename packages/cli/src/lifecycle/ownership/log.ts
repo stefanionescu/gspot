@@ -5,6 +5,7 @@ import type { Read, Root } from '#cli/types/platform/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
+import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
 import type {
     Log,
@@ -68,6 +69,24 @@ export function matches(file: Read | undefined, expected: Identity | undefined):
     if (expected === undefined) return false;
     const found = identity(file);
     return found.hash === expected.hash && found.mode === expected.mode && found.isLink === expected.isLink;
+}
+
+/**
+ * Whether a file is the one gspot recorded. A Git checkout of a read-only file counts: it holds the same bytes
+ * with mode 0644 where gspot wrote 0444.
+ * @param file the file as it is now, or undefined when it does not exist
+ * @param recorded the recorded identity, or undefined when none was recorded
+ * @returns whether the file is unedited
+ */
+export function isRecorded(file: Read | undefined, recorded: Identity | undefined): boolean {
+    if (matches(file, recorded)) return true;
+    if (file === undefined || recorded === undefined || file.isLink === true || recorded.isLink === true) return false;
+    const found = identity(file);
+    return (
+        found.hash === recorded.hash &&
+        recorded.mode === READ_ONLY_FILE &&
+        found.mode === fileMode({ mode: OWNER_WRITABLE_FILE })
+    );
 }
 
 /**
