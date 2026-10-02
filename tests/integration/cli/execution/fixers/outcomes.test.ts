@@ -4,9 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { runOptions } from '#tests/harness/cli/command.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import type { RunReport } from '#cli/types/execution/execution.ts';
+import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/harness/cli/correction.ts';
 
 test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', async (code) => {
@@ -137,4 +138,25 @@ test('fails the run when a correction exits nonzero even though its check passes
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/correction');
     expect(outcome.fixes?.results[0]?.status).toBe('failed');
+});
+
+test('a fixer that fails midway leaves the later fixers to run in order and keep their edits', async () => {
+    const entries = ['first', 'second', 'third'].map((name, index) => {
+        const script = String.raw`const fs = require('node:fs'); fs.appendFileSync('order.log', '${name}\n'); fs.writeFileSync('${name}.txt', 'fixed\n'); process.exitCode = ${index === 0 ? '3' : '0'};`;
+        return `[[check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["${name}.txt"]\nstage = "commit"\n`;
+    });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `kits = []\n${entries.join('')}`,
+        'first.txt': 'original\n',
+        'second.txt': 'original\n',
+        'third.txt': 'original\n',
+    });
+    const fixed = await runGspot(sandbox.path, ['check', '--fix', '--json']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
+    expect((JSON.parse(fixed.stdout) as RunReport).failed).toStrictEqual(['sandbox/first']);
+    // A second pass reruns the fixers whose files the first pass changed; the failed fixer does not run again.
+    expect(readFileSync(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\nsecond\nthird\n');
+    for (const name of ['first', 'second', 'third'])
+        expect(readFileSync(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');
 });
