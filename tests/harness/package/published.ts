@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import type { Registry } from '#tests/types/registry.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { root, environment } from '#tests/harness/package/packages.ts';

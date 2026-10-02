@@ -4,10 +4,29 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
+import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/samples/swift.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { STRUCTURAL } from '#tests/inputs/acceptance/source/kits/swift.ts';
-import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+
+const SWITCHED =
+    'import Foundation\n\nprivate func label(_ count: Int) -> String {\n    switch count {\n    case 0:\n        "none"\n    case 1:\n        "one"\n    default:\n        "many"\n    }\n}\n\n/// The label of a pair.\nfunc pairLabel() -> String {\n    let text = label(2)\n    return text + "!"\n}\n';
+
+const NEGATED =
+    'import Foundation\n\n/// Whether a name is new.\nfunc isNew(_ name: String) -> Bool {\n    !["a", "b"].contains(name)\n}\n';
+
+const STRUCTURAL: FindingCase[] = [
+    {
+        check: 'swift/trivial-function',
+        files: { 'Sources/App/Label.swift': SWITCHED },
+        expected: { file: 'Sources/App/Label.swift', rule: 'trivial-function', line: 15 },
+    },
+    {
+        check: 'swift/trivial-function',
+        files: { 'Sources/App/Fresh.swift': NEGATED },
+        expected: { file: 'Sources/App/Fresh.swift', rule: 'trivial-function', line: 4 },
+    },
+];
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
 const CASES: FindingCase[] = [

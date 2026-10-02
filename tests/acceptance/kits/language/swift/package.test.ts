@@ -1,7 +1,12 @@
 // The swift configuration over a package: the build, the analyzer, and Periphery report their planted defects.
 import { onMac } from '#tests/harness/cli/platforms.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
-import { LIBRARY, SWIFT_PACKAGE } from '#tests/inputs/acceptance/source/kits/swift.ts';
+
+const SWIFT_PACKAGE =
+    '// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "App",\n    products: [.library(name: "App", targets: ["App"])],\n    targets: [.target(name: "App")]\n)\n';
+
+const LIBRARY =
+    '/// Builds the greeting for a person.\npublic func greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
 
 const PAIR = '/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n';
 

@@ -1,6 +1,5 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,6 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
+import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
@@ -34,7 +34,7 @@ test('an npm package version does not hide a failed executable', async () => {
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         '.gspot/node_modules/teller/run.sh': '#!/bin/sh\necho 5.0.1\nexit 7\n',
     });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     const inspection = inspectTool(
@@ -117,7 +117,7 @@ test.each([
             '.gspot/node_modules/wrapper/package.json': JSON.stringify({ name: packageName, version: '0.7.0' }),
             '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho 0.9.0\nexit 1\n',
         });
-        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), RUNS);
+        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), EXECUTABLE_FILE);
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
         const tool = commandPin('wrapped', '0.10.0');

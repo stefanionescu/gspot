@@ -4,7 +4,27 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { NESTED_SCOPES_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const NESTED_SCOPES_POLICY = `kits = ["formatting"]
+[limits]
+file_lines = 250
+[format]
+indent_width = 4
+[guides]
+install = false
+[[scope]]
+path = "api"
+kits = ["bash"]
+[scope.limits]
+file_lines = 200
+[scope.format]
+indent_width = 2
+[[scope]]
+path = "api/worker"
+kits = ["sql"]
+[scope.limits]
+function_lines = 30
+`;
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();

@@ -1,15 +1,21 @@
 // Planted repository for the pytest configuration: coverage under the floor.
 import { test, expect } from 'bun:test';
+import { QUIET_INIT } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
-import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { MATH, FASTAPI_TESTS } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const FASTAPI_TESTS =
+    '"""Tests of the arithmetic."""\n\nfrom planted.math import double, triple\n\n\ndef test_multiplication() -> None:\n    """Both functions multiply."""\n    assert double(2) == 4\n    assert triple(2) == 6\n';
+
+const MATH =
+    '"""Arithmetic."""\n\n\ndef double(value: int) -> int:\n    """Double a number."""\n    return value * 2\n\n\ndef triple(value: int) -> int:\n    """Triple a number."""\n    return value * 3\n';
 
 const PROJECT = `[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
 

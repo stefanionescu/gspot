@@ -4,10 +4,13 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
-import { FORMATTED } from '#tests/inputs/acceptance/source/kits/component-files.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/samples/components.ts';
+
+const FORMATTED =
+    '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p class="greeting">{name}</p>\n';
 
 const LOOSE = FORMATTED.replace('<p class=', () => '<p     class=');
 

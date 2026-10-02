@@ -6,7 +6,25 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { ROUTE, ROUTES_POLICY, ROUTES_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
+
+const ROUTES_POLICY = `level = "all"
+kits = ["express"]
+[tools.express]
+route_files = ["routes/*.ts"]
+[[scope]]
+path = "api"
+kits = ["express"]
+`;
+
+const ROUTES_OPTIONS = {
+    stage: 'all' as const,
+    skips: [],
+    only: ['express/routes-tested'],
+    fix: false,
+    isDryRun: false,
+};
+
+const ROUTE = 'export const users = () => [];\n';
 
 test('route imports must resolve to the route in the same scope', async () => {
     await using sandbox = await testdir();

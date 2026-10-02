@@ -4,7 +4,9 @@ import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
-import { READERS_HEADERS } from '#tests/inputs/integration/cli/execution/scopes.ts';
+
+const READERS_HEADERS =
+    '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n';
 
 const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] = [
     {

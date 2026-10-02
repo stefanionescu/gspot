@@ -1,12 +1,12 @@
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve, relative, isAbsolute } from 'node:path';
+import { ACCEPTANCE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { runSourceCommand } from '#tests/harness/registry/plugin.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
 const ACCEPTANCE = join(TESTS, 'acceptance');
-const TEST_MS = 90 * 60_000;
 // The Bun option that splits a run across CI jobs, by file count.
 const SHARDING = /^--shard=[1-9]\d*\/[1-9]\d*$/u;
 // Acceptance files that fail on Windows today, with the cause. A full Windows run leaves them out until the stage that
@@ -121,7 +121,7 @@ async function main(): Promise<void> {
         return;
     }
     const selected = acceptanceArguments(args);
-    await runSourceCommand([process.execPath, 'test', ...selected], TESTS, TEST_MS);
+    await runSourceCommand([process.execPath, 'test', ...selected], TESTS, ACCEPTANCE_TIMEOUT_MS);
 }
 
 if (import.meta.main) await main();

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { InstalledConsumer } from '#tests/types/package.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { createConsumer } from '#tests/harness/package/consumer.ts';

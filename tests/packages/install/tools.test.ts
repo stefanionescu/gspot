@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, relative, delimiter } from 'node:path';
-import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environment } from '#tests/harness/package/packages.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';

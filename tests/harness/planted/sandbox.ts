@@ -1,7 +1,7 @@
 // A planted repository with its private tools installed: the files, the selected kits, and the level each framework test starts from.
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
-import { QUIET_INIT } from '#tests/inputs/cli.ts';
+import { QUIET_INIT } from '#tests/config/cli.ts';
 import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';

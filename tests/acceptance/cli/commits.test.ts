@@ -8,12 +8,13 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
-import { COMMITS_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
+
+const COMMITS_INIT = ['init', '--yes', '--kits', 'commits', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {

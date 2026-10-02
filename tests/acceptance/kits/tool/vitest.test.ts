@@ -1,6 +1,16 @@
 // Planted repository for the vitest configuration: a function no test calls, and a focused test.
 import { plantedCases } from '#tests/harness/planted/cases.ts';
-import { TEST, UNTESTED, VITEST_SOURCE, VITEST_PACKAGE } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const VITEST_SOURCE =
+    '// Arithmetic the planted tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
+
+const VITEST_PACKAGE =
+    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
+
+const UNTESTED = `${VITEST_SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;
+
+const TEST =
+    "import { test, expect } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";
 
 const TRIPLED =
     TEST.replace('{ positiveTotal }', '{ positiveTotal, triple }') +

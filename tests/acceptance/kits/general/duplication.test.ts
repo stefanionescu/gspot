@@ -4,11 +4,26 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-import { DUPLICATION_INIT, DUPLICATION_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
+
+const DUPLICATION_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'bash',
+    'duplication',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+/** The kits the duplication sandbox leaves out after init. */
+const DUPLICATION_LEFT_OUT = ['naming'];
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 const STEPS = Array.from(

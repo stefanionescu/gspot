@@ -11,7 +11,13 @@ import { openSession } from '#cli/execution/session.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
-import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
+
+const PLANTED = {
+    'package.json': '{"name":"planted","private":true,"type":"module"}\n',
+    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
+    'pyproject.toml': '[project]\nname = "planted"\nversion = "1.0.0"\n',
+    'src/index.ts': 'export const answer = 42;\n',
+};
 
 const PARSERS: Record<string, Parser> = {
     '.json': parseJson,

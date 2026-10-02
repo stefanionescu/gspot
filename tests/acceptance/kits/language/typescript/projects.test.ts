@@ -4,18 +4,35 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
-import {
-    PROJECTS_POLICY,
-    TSCONFIG_PROJECT,
-    AUTHORED_TSCONFIG,
-} from '#tests/inputs/acceptance/source/kits/typescript.ts';
+const PROJECTS_POLICY = `level = "all"
+kits = ["typescript"]
+[guides]
+install = false
+`;
+
+const TSCONFIG_PROJECT =
+    '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
+
+const AUTHORED_TSCONFIG = `{
+    // The application owns its build and module settings.
+    "compilerOptions": {
+        "strict": false,
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": [],
+        "incremental": true,
+        "tsBuildInfoFile": %BUILD_INFO%
+    },
+    "include": ["src"],
+}\n`;
 
 for (const scope of ['', 'api/']) {
     test(

@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { CHECKS } from '#cli/checks/registry.ts';
-import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/harness/cli/command.ts';
@@ -9,6 +8,7 @@ import { siteInput } from '#tests/harness/cli/site.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
+import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';

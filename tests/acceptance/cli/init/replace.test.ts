@@ -6,13 +6,26 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { PLAN_INIT } from '#tests/inputs/acceptance/source/cli/init-replace.ts';
+
+const PLAN_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'bash',
+    'javascript',
+    'spelling',
+    'markdown',
+    '--no-runner',
+    '--no-ci',
+    '--no-guides',
+    '--no-install',
+];
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',

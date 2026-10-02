@@ -5,16 +5,26 @@ import { readdirSync, symlinkSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
+import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/samples/typescript.ts';
 
-import {
-    LOOSE,
-    CONFIGURATION_ARRIVAL_INIT,
-    CONFIGURATION_ARRIVAL_PACKAGE,
-} from '#tests/inputs/acceptance/source/cli/cli.ts';
+const CONFIGURATION_ARRIVAL_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'typescript',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+const LOOSE =
+    "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 describe('gspot add', () => {

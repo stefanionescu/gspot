@@ -1,6 +1,23 @@
 import { test, expect, describe } from 'bun:test';
 import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
-import { NGINX_TEST_PLAN_CONFIG } from '#tests/inputs/unit/cli/checks/checks.ts';
+
+const NGINX_TEST_PLAN_CONFIG = `events {}
+http {
+    upstream backend {
+        server api:3000;
+        server 10.0.0.2:3000;
+    }
+    server {
+        listen 443 ssl;
+        server_name example.test;
+        ssl_certificate /etc/nginx/ssl/fullchain.pem;
+        ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+}
+`;
 
 describe('nginxTestArguments', () => {
     test('mounts the file, a certificate and a key where the file opens them, and resolves the names it uses', () => {

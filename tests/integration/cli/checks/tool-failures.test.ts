@@ -4,11 +4,29 @@ import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { WORKFLOW_HEAD } from '#tests/samples/files.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
-import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
+
+const TOOL_FAILURES_POLICY = policyOf(['files'], '[runner]\ntool = "mise"\n[guides]\ninstall = false\n', 'all');
+
+const PINACT_STUB = `#!/usr/bin/env bun
+const args = process.argv.slice(2);
+if (args.includes('--version')) {
+    console.log('pinact 5.0.0');
+    process.exit(0);
+}
+if (!args.includes('--verify')) process.exit(0);
+const file = Bun.file(args.at(-1));
+const content = await file.text();
+if (!args.includes('--check')) await Bun.write(file, 'rewritten by pinact');
+if (content.includes('actions/checkout@0000000000000000000000000000000000000000')) {
+    console.error('invalid action pin: broken.yml');
+    process.exit(3);
+}
+`;
 
 test(
     'the Taplo adapter reports both output streams and its exit code',

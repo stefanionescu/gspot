@@ -10,7 +10,31 @@ import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { ESLINT_OVERRIDE_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const ESLINT_OVERRIDE_POLICY = `kits = ["javascript"]
+[guides]
+install = false
+[tools.eslint.rules]
+eqeqeq = ["error", "smart"]
+[[tools.eslint.overrides]]
+paths = ["tests"]
+rules = {eqeqeq = ["error", "always"]}
+[[tools.eslint.overrides]]
+paths = ["tests/exempt.js"]
+rules = {eqeqeq = ["error", "smart"]}
+[[scope]]
+path = "apps/web"
+[scope.tools.eslint.rules]
+eqeqeq = ["warn", "always"]
+[[scope.tools.eslint.overrides]]
+paths = ["**/*", "!apps/web/exempt.js"]
+rules = {eqeqeq = ["error", "smart"]}
+[[scope]]
+path = "apps/web/admin"
+[[scope.tools.eslint.overrides]]
+paths = ["**/*"]
+rules = {eqeqeq = ["error", "always"]}
+`;
 
 const ESLINT_COMMAND = [
     join(INSTALLED_MODULES, '.bin/eslint'),

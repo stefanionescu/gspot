@@ -4,9 +4,13 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
-import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
+
+const DEPENDENCIES_POLICY = policyOf(['dependencies']);
+
+const MANIFEST = '{"private":true,"packageManager":"bun@1.3.11"}\n';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

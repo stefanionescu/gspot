@@ -5,10 +5,23 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { ENTRY } from '#tests/inputs/acceptance/source/cli/checks.ts';
+
+const ENTRY = String.raw`
+[[check]]
+name = "notes/no-fixme"
+command = ["grep", "-n", "-H", "FIXME", "{files}"]
+paths = ["notes/**"]
+stage = "commit"
+count_regex = "FIXME"
+summary = "Finds FIXME notes left in the notes folder."
+
+[check.output]
+format = "regex"
+pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
+`;
 
 test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
     const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];

@@ -3,11 +3,12 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
+import { NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installedNextProject } from '#tests/harness/cli/nextjs.ts';
-import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { OWNER_WRITES } from '#tests/inputs/acceptance/source/kits/nextjs.ts';
 
 test(
     'Next.js framework rules reject a disabled requirement and accept its restoration',
@@ -19,7 +20,7 @@ test(
         // A later block that turns a required rule off is what integrity/required-rules exists to see.
         const held = await run(sandbox.path, ['check', '--only', 'integrity/required-rules', '--json'], environment);
         expect(held.code, held.stdout + held.stderr).toBe(0);
-        chmodSync(join(sandbox.path, '.gspot/config/eslint.config.mjs'), OWNER_WRITES);
+        chmodSync(join(sandbox.path, '.gspot/config/eslint.config.mjs'), OWNER_WRITABLE_FILE);
         const loosened = written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'");
         await Bun.write(join(sandbox.path, '.gspot/config/eslint.config.mjs'), loosened);
         const seen = await run(sandbox.path, ['check', '--only', 'integrity/required-rules', '--json'], environment);

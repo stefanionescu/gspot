@@ -1,6 +1,5 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -11,6 +10,7 @@ import { onPosix } from '#tests/harness/cli/platforms.ts';
 import * as environment from '#cli/platform/environment.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
+import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
@@ -24,7 +24,7 @@ if (onPosix)
             'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
         });
         for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
-            chmodSync(join(sandbox.path, path), RUNS);
+            chmodSync(join(sandbox.path, path), EXECUTABLE_FILE);
         const env = { PATH: join(sandbox.path, 'unrelated') };
         const tool = { ...commandPin('teller', '3.8.1'), env };
         const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
@@ -42,8 +42,8 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
         'mise/shims/teller': '#!/bin/sh\necho 1.0.0\n',
     });
     const active = join(sandbox.path, 'active/teller');
-    chmodSync(active, RUNS);
-    chmodSync(join(sandbox.path, 'mise/shims/teller'), RUNS);
+    chmodSync(active, EXECUTABLE_FILE);
+    chmodSync(join(sandbox.path, 'mise/shims/teller'), EXECUTABLE_FILE);
     const which = spyOn(executables, 'sync').mockReturnValue(active);
     const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
     try {
@@ -64,7 +64,7 @@ test('the tool inspection > a managed npm inspection refuses a linked manifest b
     });
     await createFileTree(outside.path, { 'package.json': '{"name":"teller","version":"5.0.1"}' });
     const manifest = join(sandbox.path, '.gspot/node_modules/teller/package.json');
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     symlinkSync(join(outside.path, 'package.json'), manifest);
@@ -85,7 +85,7 @@ test('the tool inspection > an npm tool is the version its package holds, whatev
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         '.gspot/node_modules/teller/run.sh': '#!/bin/sh\necho 4.4.2\n',
     });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
+    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     const inspection = inspectTool(
@@ -107,7 +107,7 @@ test.each([
             '.gspot/node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
             '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho "$WRAPPER_NATIVE_VERSION"\n',
         });
-        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), RUNS);
+        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), EXECUTABLE_FILE);
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
         const tool = commandPin('wrapped', '0.10.0');
@@ -125,7 +125,7 @@ test('the tool inspection > a shim that no configuration gives a version is miss
     await createFileTree(sandbox.path, {
         'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
-    chmodSync(join(sandbox.path, 'node_modules/.bin/shimmed'), RUNS);
+    chmodSync(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
     const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, commandPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
@@ -136,7 +136,7 @@ test('the tool inspection > color codes around a version are no part of it', asy
     await createFileTree(sandbox.path, {
         'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
     });
-    chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), RUNS);
+    chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
     const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, commandPin('painter', '26.8.0'));
     expect(inspection.found).toBe('26.8.0');
     expect(inspection.state).toBe('ok');
@@ -184,10 +184,10 @@ test.each(['mise', 'npm'])(
             '.gspot/node_modules/.bin/ec': '#!/bin/sh\nexit 99\n',
             '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         });
-        chmodSync(join(sandbox.path, 'node_modules/.bin/teller'), RUNS);
-        chmodSync(join(sandbox.path, 'node_modules/.bin/ec'), RUNS);
-        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/teller'), RUNS);
-        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/ec'), RUNS);
+        chmodSync(join(sandbox.path, 'node_modules/.bin/teller'), EXECUTABLE_FILE);
+        chmodSync(join(sandbox.path, 'node_modules/.bin/ec'), EXECUTABLE_FILE);
+        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/teller'), EXECUTABLE_FILE);
+        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/ec'), EXECUTABLE_FILE);
         runOwnedLifecycle(sandbox.path, (owner) => {
             owner.beginInstallation('npm');
         });

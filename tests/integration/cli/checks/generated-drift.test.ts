@@ -8,7 +8,16 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
+
+const GENERATED_DRIFT_OPTIONS = {
+    stage: 'all' as const,
+    skips: [],
+    only: ['integrity/generated-drift'],
+    fix: false,
+    isDryRun: false,
+};
+
+const GENERATED = '.gspot/config/shellcheckrc';
 
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();

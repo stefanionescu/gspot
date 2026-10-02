@@ -13,9 +13,14 @@ import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/harness/registry/python.ts';
 import { onPosix, venvExecutable } from '#tests/harness/cli/platforms.ts';
 import { preparePythonInstallation } from '#tests/harness/tools/python.ts';
-import { PYTHON_PROJECTS } from '#tests/inputs/integration/tools/python.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { pythonLockDrift, pythonInstallSteps, installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
+
+const PYTHON_PROJECTS = [
+    ['uv.toml', 'none'],
+    ['pyproject.toml', 'mise'],
+    ['pyproject.toml', 'none'],
+] as const;
 
 // A Windows virtual environment has launchers and no interpreter links; the windows-launcher tests cover it.
 

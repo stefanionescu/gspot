@@ -1,7 +1,13 @@
 // Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { IGNORES, CARELESS, DOCKER_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const DOCKER_CLEAN =
+    'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nCOPY package.json ./\nUSER node\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
+
+const CARELESS = 'FROM node:latest\nCOPY . .\nCMD ["node", "index.js"]\n';
+
+const IGNORES = '.git\nnode_modules\n.env*\n';
 
 plantedCases(
     'the docker configuration',

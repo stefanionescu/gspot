@@ -6,7 +6,19 @@ import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { EXPLAIN_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const EXPLAIN_POLICY = `kits = []
+
+[[scope]]
+path = "api"
+kits = ["bash"]
+
+[[ignore]]
+check = "bash/shellcheck"
+rule = "SC2086"
+paths = ["api/build.sh"]
+reason = "The script deliberately splits a list of arguments."
+`;
 
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
     await using sandbox = await testdir();

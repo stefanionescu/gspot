@@ -6,10 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { BASH_CASES } from '#tests/harness/cli/bash-cases.ts';
-import { BASH_CASES_MAIN as MAIN } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/harness/planted/cases.ts';
+import { BASH_CASES, BASH_CASES_MAIN as MAIN } from '#tests/samples/bash.ts';
 
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
 // What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.

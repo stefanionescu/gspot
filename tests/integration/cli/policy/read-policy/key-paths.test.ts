@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlinkSync, readFileSync } from 'node:fs';
-import { MINIMAL_POLICY } from '#tests/inputs/cli.ts';
+import { MINIMAL_POLICY } from '#tests/config/cli.ts';
 import { policyProblems } from '#tests/harness/cli/policy.ts';
 
 test.each([

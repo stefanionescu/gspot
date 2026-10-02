@@ -6,15 +6,19 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
-import { SCOPES_SOURCE } from '#tests/inputs/acceptance/source/cli/cli.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
+
+// The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
+
+const SCOPES_SOURCE =
+    '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
 
 test(
     'typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none',

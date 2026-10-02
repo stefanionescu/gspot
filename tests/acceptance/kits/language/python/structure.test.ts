@@ -1,6 +1,9 @@
 // Planted repository for the Python structure checks: one module shaped wrong for each check.
+import { STRUCTURE_PROJECT } from '#tests/samples/python.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
-import { STRUCTURE_CLEAN, STRUCTURE_PROJECT } from '#tests/inputs/acceptance/source/kits/python.ts';
+
+const STRUCTURE_CLEAN =
+    '"""Prices."""\n\n\ndef _rounded(amount: float) -> float:\n    """Round to cents, half up."""\n    shifted = amount * 100\n    whole = int(shifted + 0.5)\n    return whole / 100\n\n\ndef total(prices: list[float]) -> float:\n    """Add prices and round the sum."""\n    summed = sum(prices)\n    checked = max(summed, 0.0)\n    return _rounded(checked) + _rounded(0.0)\n\n\n__all__ = ["total"]\n';
 
 const LONG_BODY = Array.from({ length: 61 }, (_, index) => `    step_${String(index)} = ${String(index)}`).join('\n');
 const LONG_FILE = Array.from({ length: 301 }, (_, index) => `VALUE_${String(index)} = ${String(index)}`).join('\n');

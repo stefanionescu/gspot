@@ -5,10 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/samples/swift.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 test(
     'the swift configuration inside a scope > SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',

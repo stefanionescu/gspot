@@ -5,10 +5,11 @@ import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/samples/components.ts';
 
 const SHAPES = [
     {

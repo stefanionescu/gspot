@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };

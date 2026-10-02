@@ -12,7 +12,22 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { drizzleMigrations } from '#cli/checks/library/drizzle.ts';
 import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { statSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
+
+const DRIZZLE_MIGRATIONS_GENERATOR = String.raw`import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+const schema = readFileSync('schema.txt', 'utf8');
+if (schema !== 'current') {
+    mkdirSync('migrations/meta', { recursive: true });
+    writeFileSync('migrations/0001_change.sql', 'ALTER TABLE records ADD name text;\n');
+    writeFileSync('migrations/meta/log.json', '{"version":2}\n');
+}
+
+if (schema === 'failure') {
+    console.error('Migration generation failed');
+    process.exitCode = 1;
+}
+`;
+
+const DRIZZLE_MIGRATIONS_SCOPES = ['', 'packages/db'];
 
 // A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
 async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Planted> {

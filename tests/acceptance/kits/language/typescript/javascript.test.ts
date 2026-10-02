@@ -4,12 +4,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/samples/typescript.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/harness/cli/typescript.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 

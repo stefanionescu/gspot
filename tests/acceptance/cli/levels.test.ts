@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 // Recommended keeps syntax enforcement while leaving naming preferences inactive.

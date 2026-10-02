@@ -6,8 +6,8 @@ import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 

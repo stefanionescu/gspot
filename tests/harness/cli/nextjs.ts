@@ -15,8 +15,8 @@ import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
-import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/inputs/cli.ts';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
 import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */

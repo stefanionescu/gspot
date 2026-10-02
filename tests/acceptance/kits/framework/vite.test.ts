@@ -4,12 +4,26 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installPrivateTools } from '#tests/harness/tools/install.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
-import { START, VITE_POLICY } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const VITE_POLICY = `level = "all"
+kits = ["javascript"]
+[guides]
+install = false
+[tools.knip]
+entry = []
+[[scope]]
+path = "api"
+kits = ["javascript"]
+[scope.tools.knip]
+entry = []
+`;
+
+const START = "import { start } from './start.js';\nstart();\n";
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));

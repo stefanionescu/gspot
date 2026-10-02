@@ -2,11 +2,15 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { QUIET_INIT } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { COMPONENT, SELECTION_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+
+const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json'];
+
+const COMPONENT = '<script setup>\nconst name = 1;\n</script>\n<template><p>{{ name }}</p></template>\n';
 
 async function selected(root: string): Promise<string[]> {
     const result = await run(root, [...SELECTION_INIT, ...QUIET_INIT]);

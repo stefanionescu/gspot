@@ -2,9 +2,9 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { LOCKS } from '#cli/config/tools/packages.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { RegistryPackage } from '#tests/types/registry.ts';
-import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PackageClient } from '#tests/types/integration/tools.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -117,3 +117,13 @@ export async function createPackageProject(
         throw error;
     }
 }
+
+/** The package clients, manifest paths, and runners a package project test covers. */
+export const PACKAGE_PROJECTS = [
+    ['npm', 'package.json', 'mise'],
+    ['bun', 'package.json', 'mise'],
+    ['pnpm', 'package.json', 'mise'],
+    ['yarn', 'package.json', 'mise'],
+    ['npm', 'apps/web/package.json', 'mise'],
+    ['npm', 'package.json', 'none'],
+] as const;

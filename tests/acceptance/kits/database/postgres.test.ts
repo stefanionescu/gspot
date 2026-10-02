@@ -1,7 +1,23 @@
 // Planted repository for the postgres configuration: a locking migration, a repeated version, an edited migration, and a schema with holes.
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
-import { FIRST, TEAMS, FOLDER } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const FOLDER = 'supabase/migrations';
+
+const FIRST = `${FOLDER}/20240101000000_create_teams.sql`;
+
+const TEAMS = `-- The teams of the application.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
+CREATE TABLE IF NOT EXISTS public.teams (
+    id UUID PRIMARY KEY,
+    title TEXT NOT NULL
+);
+ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
+COMMIT;
+`;
 
 plantedCases(
     'the postgres configuration',

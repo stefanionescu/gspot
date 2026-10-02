@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/harness/cli/command.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installPrivateTools } from '#tests/harness/tools/install.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';

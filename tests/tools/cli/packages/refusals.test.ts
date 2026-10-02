@@ -8,8 +8,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
-import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
+import { PACKAGE_PROJECTS, readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each([PACKAGE_PROJECTS[0]])(
     '%s from %s with %s refuses lifecycle scripts before contacting the registry',

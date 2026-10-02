@@ -9,7 +9,27 @@ import { containing } from '#tests/harness/expectations.ts';
 import { writeSwiftlint } from '#tests/harness/cli/swift.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { onPosix, keptMode } from '#tests/harness/cli/platforms.ts';
-import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
+
+const SWIFT_DOCS_SOURCE =
+    '/** Parses a fixture value. */\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n\n/// The literal /** example */ is documentation syntax.\npublic let example = "/** not documentation */"\n\n/* Ordinary comment with a nested /** comment */ inside. */\n';
+
+const SWIFT_INLINE_DOCS = [
+    '/// A choice.',
+    'public enum Choice {',
+    '    /// The first choice.',
+    '    case one /** Inline documentation. */',
+    '}',
+    '/// A literal.',
+    'public let example = "/** literal */" /** After a string. */',
+    '/* Ordinary comment. */ /** After a comment. */',
+    '/// An inline /** example */ remains documentation.',
+    'public let value = "safe"',
+    '/* Ordinary /** nested */ comment. */',
+    '// swiftlint:disable:next doc_comment_style - An external declaration retains its layout.',
+    '/** A retained declaration. */',
+    'public let preserved = "fixed"',
+    '',
+].join('\n');
 
 async function documentationFindings(root: string, code: 0 | 1) {
     const result = await run(root, ['check', '--only', 'swift/swiftlint', '--json']);

@@ -12,7 +12,10 @@ import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
-import { DEFECT, CORRECT } from '#tests/inputs/integration/tools/generation.ts';
+
+const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
+
+const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n';
 
 // Configuration edits change the findings, and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {

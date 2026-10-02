@@ -8,7 +8,8 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
-import { PAGE } from '#tests/inputs/integration/cli/execution/execution.ts';
+
+const PAGE = '<script>\n    let count = 0;\n</script>\n<p>{count}</p>\n';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
     await using sandbox = await testdir();

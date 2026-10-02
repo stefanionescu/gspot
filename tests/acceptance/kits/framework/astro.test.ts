@@ -5,9 +5,10 @@ import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/samples/components.ts';
 
 const CLEAN = `---\nconst title: string = 'Home';\n---\n\n<h1>{title}</h1>\n<img src="logo.png" alt="The logo" />\n`;
 const PAGE = 'src/pages/index.astro';

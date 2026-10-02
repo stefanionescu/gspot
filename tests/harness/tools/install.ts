@@ -8,10 +8,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { run, gspot } from '#tests/harness/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));

@@ -2,9 +2,20 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environment } from '#tests/harness/package/packages.ts';
 import type { CreateConsumerResult } from '#tests/types/results.ts';
-import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/inputs/package.ts';
+
+const OFFLINE_ENVIRONMENT = {
+    HTTP_PROXY: 'http://127.0.0.1:1',
+    HTTPS_PROXY: 'http://127.0.0.1:1',
+    ALL_PROXY: 'http://127.0.0.1:1',
+    NO_PROXY: '',
+    http_proxy: undefined,
+    https_proxy: undefined,
+    all_proxy: undefined,
+    no_proxy: undefined,
+};
 
 // The authored configuration the consumer starts from.
 const EDITORCONFIG = 'root = true\n[*]\nindent_size = 2\n[*.json]\nindent_size = 4\n';

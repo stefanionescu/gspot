@@ -4,7 +4,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { generatedEslint } from '#tests/harness/cli/generated.ts';
-import { VITEST_FILES } from '#tests/inputs/integration/cli/generation/plugin-levels.ts';
+
+const VITEST_FILES = {
+    'package.json': '{"private":true,"type":"module"}\n',
+    'tests/fixtures/helpers.js': 'export const value = 1;\n',
+    'tests/fixtures/example.test.js': '',
+    'tests/unit/helpers.js': 'export const value = 1;\n',
+    'tests/unit/example.test.js': '',
+    'src/runtime.js': 'import { value } from "../tests/fixtures/helpers.js"; export const result = value + 1;\n',
+};
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<{ message: string }[]> {
     const results = await eslint.lintFiles([file]);

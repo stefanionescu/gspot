@@ -11,7 +11,12 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { sessionInput } from '#tests/harness/cli/input.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
-import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/inputs/integration/cli/checks.ts';
+
+const POSTGRES_HISTORY_POLICY = policyOf(['postgres'], '[tools.squawk]\nfrozen_through = "all"\n');
+
+const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
+
+const PATH = 'migrations/20240201_teams.sql';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

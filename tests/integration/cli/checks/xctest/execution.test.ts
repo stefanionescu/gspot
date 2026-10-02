@@ -6,8 +6,23 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, expect, describe, afterEach } from 'bun:test';
-import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
 import { rmSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+
+const XCTEST_EXECUTION_POLICY = `kits = ["xctest", "xcode"]
+[tools.xcode]
+project = "Example.xcodeproj"
+scheme = "Example"
+[tools.xctest]
+coverage = [{ target = "Example", percent = 80 }]
+`;
+
+const XCTEST_EXECUTION_OPTIONS = {
+    stage: 'push' as const,
+    skips: [],
+    only: ['xctest/coverage'],
+    fix: false,
+    isDryRun: false,
+};
 
 const caches = new Set<string>();
 afterEach(() => {

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { LOCKS } from '#cli/config/tools/packages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
@@ -12,8 +13,7 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { LOCKS, PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
-import { readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
+import { PACKAGE_PROJECTS, readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s refuses stale locks without changing ownership and reports drift',

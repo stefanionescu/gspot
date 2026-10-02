@@ -4,11 +4,23 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { generatedFile } from '#tests/harness/cli/generated.ts';
 
-import {
-    PYTHON,
-    TAILWIND_AT_RULES,
-    SHARED_SETTINGS_PACKAGE,
-} from '#tests/inputs/integration/cli/generation/generation.ts';
+const SHARED_SETTINGS_PACKAGE = '{"private":true,"type":"module"}\n';
+
+const TAILWIND_AT_RULES = [
+    'tailwind',
+    'apply',
+    'layer',
+    'theme',
+    'utility',
+    'variant',
+    'custom-variant',
+    'source',
+    'plugin',
+    'config',
+    'reference',
+];
+
+const PYTHON = policyOf(['python']);
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases read the generated knip configuration; one owner parses it.
 async function knipConfiguration(

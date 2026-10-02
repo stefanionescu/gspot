@@ -3,7 +3,10 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
-import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT, NEXT_TRANSLATIONS } from '#tests/inputs/cli.ts';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
+
+/** The i18n settings naming the message directory and base locale. */
+const NEXT_TRANSLATIONS = '[tools.i18n]\ntranslations = {directory = "messages", base = "en"}\n';
 
 const ROUTE =
     '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n';

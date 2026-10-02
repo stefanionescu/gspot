@@ -4,10 +4,32 @@ import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
-import { GUIDE, README, LICENSE } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const README = `# Planted
+
+A planted repository that holds documents and nothing else.
+
+## Requirements
+
+- git
+
+## Setup
+
+\`\`\`bash
+git clone https://example.com/planted.git
+\`\`\`
+
+## Usage
+
+Open the guide and read it from the top.
+`;
+
+const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
+
+const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
 
 // What each check accepts in place of its planted document; the guide for the rest.
 const CORRECTIONS: Record<string, string> = {

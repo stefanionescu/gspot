@@ -7,7 +7,36 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
-import { FORMAT_OVERRIDES_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const FORMAT_OVERRIDES_POLICY = `level = "all"
+kits = ["formatting"]
+[guides]
+install = false
+[format]
+indent_width = 2
+quotes = "double"
+semicolons = false
+[[format.overrides]]
+paths = ["tests"]
+quotes = "single"
+semicolons = true
+[[scope]]
+path = "apps/web"
+[scope.format]
+indent_width = 4
+[[scope.format.overrides]]
+paths = ["**/*", "!apps/web/exempt.js"]
+quotes = "single"
+[[scope]]
+path = "apps/web/admin"
+[scope.format]
+indent_width = 8
+[[scope.format.overrides]]
+paths = ["**/*"]
+quotes = "double"
+semicolons = true
+line_ending = "crlf"
+`;
 
 const CASES = [
     { file: 'source.js', tabWidth: 2, singleQuote: false, semi: false, endOfLine: 'lf' },

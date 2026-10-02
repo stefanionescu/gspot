@@ -3,12 +3,26 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-import { ANSIBLE_INIT, ANSIBLE_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
+
+const ANSIBLE_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'ansible',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+/** The kits the ansible sandbox leaves out after init. */
+const ANSIBLE_LEFT_OUT = ['spelling'];
 
 const CLEAN = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n`;
 const SHELLED = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.command: systemctl restart planted\n      changed_when: true\n`;

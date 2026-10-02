@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { installAtLevel } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
@@ -12,10 +12,12 @@ import {
     TOOLS_CLEAN,
     TOOLS_MODULE,
     STRUCTURE_INIT,
-    NUMPY_DOCSTRING,
     STRUCTURE_PROJECT,
     STRUCTURE_LEFT_OUT,
-} from '#tests/inputs/acceptance/source/kits/python.ts';
+} from '#tests/samples/python.ts';
+
+const NUMPY_DOCSTRING =
+    '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Parameters\n    ----------\n    value : int\n        The number.\n\n    Returns\n    -------\n    int\n        Twice the number.\n    """\n    return value * 2\n';
 
 test.each([
     ['Google from Ruff', '[tool.ruff.lint.pydocstyle]\nconvention = "google"\n', TOOLS_CLEAN],

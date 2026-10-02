@@ -1,10 +1,11 @@
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { XCTEST_TESTS } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const XCTEST_TESTS = 'AppTests/HomeTests.swift';
 
 const CLEAN = `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        XCTAssertEqual("Home", "Home")\n    }\n}\n`;
 

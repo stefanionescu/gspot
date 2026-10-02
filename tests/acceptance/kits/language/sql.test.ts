@@ -1,7 +1,12 @@
 // Planted repository for the sql configuration: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
 import { run } from '#tests/harness/cli/command.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
-import { PSQL, SQL_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const SQL_CLEAN =
+    '-- The accounts of the application.\nCREATE TABLE user_accounts (\n    id UUID PRIMARY KEY,\n    display_name TEXT NOT NULL\n);\n';
+
+// A script for psql: a meta-command and two kinds of variable, which the server never sees.
+const PSQL = "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
 
 plantedCases(
     'the sql configuration',

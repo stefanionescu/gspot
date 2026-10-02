@@ -2,8 +2,8 @@
 // expected finding, then the corrected repository passes.
 import { testdir } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plant } from '#tests/harness/planted/preservation.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';

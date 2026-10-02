@@ -6,20 +6,17 @@ import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
+import { TOOLS_CLEAN, TOOLS_MODULE, STRUCTURE_INIT, STRUCTURE_LEFT_OUT } from '#tests/samples/python.ts';
 
-import {
-    TOOLS_CLEAN,
-    TOOLS_MODULE,
-    TOOLS_PROJECT,
-    STRUCTURE_INIT,
-    STRUCTURE_LEFT_OUT,
-} from '#tests/inputs/acceptance/source/kits/python.ts';
+// The docstrings are Google style, and pydoclint reads that from the project, not from gspot.
+const TOOLS_PROJECT =
+    '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
 
 // What each check accepts beside the clean module.
 const CORRECTIONS: Record<string, Record<string, string>> = {

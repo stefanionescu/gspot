@@ -6,9 +6,9 @@ import { git } from '#tests/harness/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/harness/cli/command.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { preparePushRepository } from '#tests/harness/planted/push.ts';
 
 test(

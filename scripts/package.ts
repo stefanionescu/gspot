@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { root } from '#tests/harness/package/packages.ts';
+import { PACKAGE_RUN_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { publishRelease } from '#tests/harness/package/published.ts';
 import { startRegistry, settleRegistry } from '#tests/harness/registry/lifecycle.ts';
 
@@ -25,7 +26,7 @@ try {
                 cwd: join(root, 'tests'),
                 env: { GSPOT_RELEASE_FIXTURE: JSON.stringify(release) },
                 cancelSignal: controller.signal,
-                timeoutMs: 30 * 60_000,
+                timeoutMs: PACKAGE_RUN_TIMEOUT_MS,
                 onStdout: (chunk) => {
                     process.stdout.write(chunk);
                 },

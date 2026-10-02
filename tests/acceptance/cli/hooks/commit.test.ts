@@ -5,8 +5,8 @@ import { join, delimiter } from 'node:path';
 import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/harness/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { leaveOut, toolsPath } from '#tests/harness/tools/install.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.

@@ -12,7 +12,25 @@ import { containing } from '#tests/harness/expectations.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { checkJavascript } from '#cli/checks/language/javascript/tsc.ts';
-import { JAVASCRIPT_AUTHORED_FILES } from '#tests/inputs/integration/tools/generation.ts';
+
+const JAVASCRIPT_AUTHORED_FILES = {
+    'jsconfig.json': '{"extends":"./base.json"}\n',
+    'base.json': JSON.stringify({
+        compilerOptions: {
+            target: 'ES2022',
+            module: 'ESNext',
+            moduleResolution: 'Bundler',
+            baseUrl: '.',
+            paths: { '@shape/*': ['source/*'] },
+            types: ['domain'],
+            incremental: true,
+            tsBuildInfoFile: 'authored/cache.tsbuildinfo',
+        },
+        include: ['source/**/*.js'],
+        exclude: ['excluded'],
+    }),
+    'excluded/source.js': 'UnknownDependency();\n',
+};
 
 test('JavaScript checking includes authored build directories at all', async () => {
     await using sandbox = await testdir();

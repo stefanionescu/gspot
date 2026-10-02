@@ -3,20 +3,25 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/harness/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { LIBRARIES_CLEAN } from '#tests/samples/components.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
-import { LIBRARIES_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
-import {
-    TESTED,
-    WEB_TSCONFIG,
-    NATIVE_TSCONFIG,
-    WEB_DEPENDENCIES,
-    NATIVE_DEPENDENCIES,
-} from '#tests/inputs/acceptance/source/kits/react.ts';
+const NATIVE_DEPENDENCIES = { expo: '54.0.0', react: '19.1.1', 'react-native': '0.81.4' };
+
+const WEB_DEPENDENCIES = { react: '19.1.1', 'react-dom': '19.1.1' };
+
+const NATIVE_TSCONFIG =
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx"\n    },\n    "include": ["src"]\n}\n';
+
+const WEB_TSCONFIG =
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "ES2022"]\n    },\n    "include": ["src"]\n}\n';
+
+const TESTED =
+    "// A planted test.\nimport { render, screen } from '@testing-library/react';\n\nrender(<p>hello</p>);\nscreen.getByText('hello');\n";
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every planted component opens with the same header comment and import.
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;

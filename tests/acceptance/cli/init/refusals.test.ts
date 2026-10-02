@@ -7,10 +7,11 @@ import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/harness/planted/cases.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
-import { INIT_REFUSALS_QUIET } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const INIT_REFUSALS_QUIET = ['--no-runner', '--no-ci', '--no-guides', '--no-install'];
 
 test(
     'init refusals > a nonterminal preview names its accepted configuration list and keeps JSON output parseable',

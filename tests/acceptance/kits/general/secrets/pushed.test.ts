@@ -6,9 +6,9 @@ import { join, delimiter } from 'node:path';
 import { git } from '#tests/harness/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { gspot } from '#tests/harness/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { toolsPath } from '#tests/harness/tools/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 import {

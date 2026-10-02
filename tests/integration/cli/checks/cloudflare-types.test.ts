@@ -11,7 +11,15 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/platform/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
+
+const CLOUDFLARE_TYPES_GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
+const content = readFileSync('bindings.txt', 'utf8');
+writeFileSync(process.argv[2], content);
+writeFileSync('generated-note.txt', 'Generator output');
+if (content === 'failure') { console.error('Types generation failed'); process.exitCode = 1; }
+`;
+
+const CLOUDFLARE_TYPES_SCOPES = ['', 'workers/api'];
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
 async function plant(scope: string, bindings: string): Promise<Planted> {

@@ -1,6 +1,65 @@
 import { test, expect, describe } from 'bun:test';
 import { identifiersOf } from '#cli/checks/general/naming/identifiers.ts';
-import { TS, SWIFT_EXTRACTOR_SOURCE, PYTHON_EXTRACTOR_SOURCE } from '#tests/inputs/unit/cli/checks/naming.ts';
+
+const SWIFT_EXTRACTOR_SOURCE = String.raw`import Foundation
+
+protocol Greeter { func greet(name: String) -> String }
+enum Mood { case happy, sad; case veryAngry(level: Int) }
+struct UserProfile: Greeter {
+    static let maxCount = 3
+    var display_name: String
+    func greet(name userName: String) -> String { let local_value = 1; return "\(local_value)" }
+    init(id: Int) { self.display_name = "" }
+}
+typealias Handler = () -> Void
+extension UserProfile { var short: String { "" } }
+func top_level(_ value: Int, with label: String) {}
+let globalConstant = 1
+`;
+
+const PYTHON_EXTRACTOR_SOURCE = `"""Orders."""
+
+MAX_ITEMS = 3
+default_name = "x"
+
+type OrderId = int
+
+
+class OrderError(ValueError):
+    """Raised for a bad order."""
+
+
+class Order_Book:
+    """Holds orders."""
+
+    limit = 10
+
+    def __init__(self, owner: str, *extra: int, **flags: bool) -> None:
+        self.owner = owner
+
+    def addItem(self, item_name: str = "a", count=1) -> None:
+        local_total = count
+
+
+def make_order(name, /, size: int) -> None:
+    """Make one."""
+`;
+
+const TS = `
+export function parseHttpUrl(rawInput: string, { retries = 3, ...rest }: Options, [first, second]: string[]): void {}
+const enhancedHandler = (event) => {};
+let { data: payload } = source;
+class HttpClient extends Base {
+    #secret = 1;
+    static readonly DEFAULT_PORT = 80;
+    constructor(private readonly baseUrl: string) {}
+    async send(body: Body): Promise<void> {}
+}
+interface Options { retries?: number; 'Content-Type': string }
+type Verdict = 'ok';
+enum Mode { Fast, Slow = 2 }
+const table = { keyOne: 1 };
+`;
 
 describe('identifiersOf', () => {
     test('collects TypeScript declarations by category and skips object literal keys', async () => {

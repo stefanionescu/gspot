@@ -1,17 +1,26 @@
-// The planted Bash scripts of the bash configuration tests: one defect per check, each with a corrected script.
+// The planted Bash scripts of the bash kit tests: one defect per check, each with a corrected script.
 import type { FindingCase } from '#tests/types/cli.ts';
-import { HEAD, NESTED, BASH_CASES_MAIN } from '#tests/inputs/cli.ts';
+
+const NESTED =
+    '    if [[ -n "$1" ]]; then\n        for item in "$@"; do\n            while true; do\n                if [[ -n "${item}" ]]; then\n                    case "${item}" in\n                        a) echo a ;;\n                    esac\n                fi\n                break\n            done\n        done\n    fi';
+
+const HEAD =
+    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
 
 const BRANCHES = Array.from(
     { length: 12 },
     (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo ${String(index)}; fi`,
 ).join('\n');
+
 const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
 
 const LONG_BODY = Array.from({ length: 70 }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
+
 const LONG_FILE = Array.from({ length: 320 }, (_, index) => `readonly VALUE_${String(index)}=${String(index)}`).join(
     '\n',
 );
+
+export const BASH_CASES_MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 
 export const BASH_CASES: FindingCase[] = [
     {

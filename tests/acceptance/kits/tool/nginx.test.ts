@@ -5,13 +5,24 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/harness/planted/cases.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-import { NGINX_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
+
+const NGINX_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'nginx',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
 
 const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
 const FORGED = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;

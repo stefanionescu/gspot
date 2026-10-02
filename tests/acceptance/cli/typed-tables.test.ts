@@ -4,10 +4,26 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
-import { TABLE, TYPED_TABLES_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
+
+const REASON = 'The report names the folders the move deleted, which is what it is for.';
+
+const TYPED_TABLES_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'markdown',
+    'docs',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 
 describe('gspot set', () => {
     test(

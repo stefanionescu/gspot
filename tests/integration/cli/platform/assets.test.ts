@@ -5,12 +5,26 @@ import { testdir, createFileTree } from 'testdirs';
 import { GRAMMAR_FILES } from '#cli/config/platform/platform.ts';
 import { symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
-import {
-    SOURCES,
-    CHECKOUT,
-    ASSET_READER_SCRIPT,
-    ASSETS_CONFIGURATION,
-} from '#tests/inputs/integration/cli/platform.ts';
+const ASSETS_CONFIGURATION = '[kit]\nname = "bash"\n';
+
+const CHECKOUT = 'workspace % café';
+
+const SOURCES = [
+    'packages/cli/package.json',
+    'packages/cli/src/platform/assets.ts',
+    'packages/cli/src/platform/paths.ts',
+    'packages/cli/src/platform/environment.ts',
+    'packages/cli/src/config/platform/platform.ts',
+];
+
+const ASSET_READER_SCRIPT = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
+for (const name of GRAMMAR_NAMES) {
+    if (!WebAssembly.validate(await Bun.file(grammarPath(name)).arrayBuffer())) throw new Error(name);
+}
+try { grammarPath('undeclared.wasm'); throw new Error('Undeclared asset was accepted.'); }
+catch (error) { if (!String(error).includes('No grammar is called')) throw error; }
+console.log(JSON.stringify({ text: readAsset('kits/language/bash/manifest.toml'), files: listAssets('kits') }));
+`;
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('development assets', () => {

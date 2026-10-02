@@ -4,12 +4,31 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/harness/cli/command.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
-import { SECURITY_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
-import { OWN_RULE, EVALUATED, SECURITY_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
+
+const SECURITY_INIT = [
+    'init',
+    '--yes',
+    '--kits',
+    'typescript',
+    'security',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-guides',
+    '--no-install',
+];
+
+const SECURITY_CLEAN = 'export function double(value: number): number {\n    return value * 2;\n}\n';
+
+const EVALUATED =
+    'export function run(code: string): unknown {\n    // eslint-disable-next-line no-eval -- planted\n    return eval(code);\n}\n';
+
+const OWN_RULE =
+    'rules:\n    - id: planted-no-double\n      pattern: double(...)\n      message: The planted rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
 
 test(
     'the security configuration > the shipped pack and repository rules reject defects and accept corrected files',
