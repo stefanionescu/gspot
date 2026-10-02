@@ -3,6 +3,7 @@ import which from 'which';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
@@ -23,6 +24,15 @@ async function detectedTool(
         if (detected !== undefined) return detected;
     }
     return undefined;
+}
+
+// The declared client at its version, refusing a range, which the tool project cannot pin.
+function exactTool(name: string, version: string): z.infer<typeof packageToolSchema> {
+    if (semver.valid(version) === null)
+        throw new GspotError('installation', [
+            `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
+        ]);
+    return packageToolSchema.parse({ name, version });
 }
 
 /**
@@ -56,7 +66,7 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
         name: which.sync('bun', { nothrow: true }) === null ? 'npm' : 'bun',
         version: undefined,
     };
-    if (version !== undefined) return packageToolSchema.parse({ name, version });
+    if (version !== undefined) return exactTool(name, version);
     const current = files.read('.gspot/package.json');
     if (current !== undefined) {
         const held = z.object({ packageManager: z.string() }).parse(JSON.parse(current.bytes.toString('utf8')));
