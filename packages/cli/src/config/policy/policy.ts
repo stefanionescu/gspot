@@ -148,8 +148,6 @@ export const RUFF_PREVIEW_RULES = new Set([
     null,
 ]);
 
-export const FULL_PERCENTAGE = 100;
-
 /** The execution deadline applies independently of selected language kits. */
 export const TOOL_DEADLINE = {
     name: 'limits.tool_seconds',

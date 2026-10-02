@@ -5,12 +5,13 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
+import { SITEMAP_LOCATION } from '#cli/config/checks/general/static-site.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { SiteBuild, SizeLimit } from '#cli/types/checks/general/static-site.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/general/static-site/build.ts';
-import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/config/checks/general/static-site.ts';
 
 function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
     const path = toPosix(relativePath(build.cwd, absolute));

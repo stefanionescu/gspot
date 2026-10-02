@@ -1,7 +1,6 @@
 // The literal values checks/general/static-site reads: names, patterns, limits, and tables.
 
 export const DEFAULT_BUILD_OUTPUT = 'dist';
-export const BYTES_PER_KB = 1024;
 export const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
 
 // Below the all level, svgo must save a tenth of the file before the saving is reported.

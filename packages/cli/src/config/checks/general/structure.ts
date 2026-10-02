@@ -2,7 +2,6 @@
 import { TOML_STRINGS } from '#cli/config/checks/checks.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
 
-export const KILOBYTE = 1024;
 export const POLICY_FILE = 'gspot.toml';
 export const LANGUAGE_BY_EXTENSION: Record<string, string> = {
     '.ts': 'typescript',

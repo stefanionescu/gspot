@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { reasoned } from '#cli/policy/fields.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
-import { ESLINT_WARN, ESLINT_ERROR, FULL_PERCENTAGE } from '#cli/config/policy/policy.ts';
+import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/policy/policy.ts';
 
 const text = z.string();
 

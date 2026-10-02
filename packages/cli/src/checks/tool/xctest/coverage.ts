@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
-import { PERCENT } from '#cli/config/checks/tool/xctest.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
@@ -66,7 +66,7 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
             (entry) => entry.name === floor.target || entry.name === `${floor.target}.app`,
         );
         if (target === undefined) return [`The coverage report holds no target named ${floor.target}.`];
-        const covered = Math.floor(target.lineCoverage * PERCENT);
+        const covered = Math.floor(target.lineCoverage * FULL_PERCENTAGE);
         return covered >= floor.percent
             ? []
             : [`${floor.target} covers ${String(covered)} of 100 lines, under the floor of ${String(floor.percent)}.`];

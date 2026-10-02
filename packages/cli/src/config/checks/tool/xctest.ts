@@ -11,4 +11,3 @@ export const SLEEP_CALLS = new Set([
     'Thread.sleep',
     'Task.sleep',
 ]);
-export const PERCENT = 100;

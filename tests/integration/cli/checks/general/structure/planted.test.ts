@@ -5,10 +5,9 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/harness/planted/cases.ts';
-
-const KILOBYTE = 1024;
 
 const OVER_LIMIT_KB = 1100;
 
@@ -89,7 +88,7 @@ plantedCases(
         },
         {
             check: 'integrity/large-files',
-            files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * KILOBYTE) },
+            files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * BYTES_PER_KB) },
             expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
         },
     ],

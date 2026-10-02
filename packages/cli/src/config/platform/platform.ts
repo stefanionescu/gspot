@@ -63,3 +63,12 @@ export const LIST_LIMIT = 8;
 
 /** The exit of a command that did not finish: an error, a refusal, an unreadable input, or a cancellation. */
 export const ERROR_EXIT = 2;
+
+/** Milliseconds in a second, for durations shown in seconds. */
+export const MS_PER_SECOND = 1000;
+
+/** Bytes in a kilobyte, for sizes shown in kilobytes. */
+export const BYTES_PER_KB = 1024;
+
+/** A whole share, for ratios shown as percentages. */
+export const FULL_PERCENTAGE = 100;

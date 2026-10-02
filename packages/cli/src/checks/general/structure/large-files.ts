@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { KILOBYTE } from '#cli/config/checks/general/structure.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
@@ -16,7 +16,7 @@ export function largeFiles(input: EngineInput): Finding[] {
     return input.repositoryFiles
         .filter(
             (file) =>
-                file.size > limitKb * KILOBYTE &&
+                file.size > limitKb * BYTES_PER_KB &&
                 !isDeclared(file.path) &&
                 !input.attributes.some(
                     (rule) =>
@@ -29,7 +29,7 @@ export function largeFiles(input: EngineInput): Finding[] {
                 input,
                 { file: file.path, line: 1 },
                 'over-limit',
-                `${String(Math.round(file.size / KILOBYTE))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
+                `${String(Math.round(file.size / BYTES_PER_KB))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
             ),
         );
 }
