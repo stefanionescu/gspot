@@ -5,10 +5,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import example from '#docs/src/components/home/example.json';
-import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { installPrivateTools } from '#tests/harness/tools/install.ts';
+import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 // The fields a recorded finding holds, in one order, so a run compares with the record whatever order it reports in.
 function recorded(
@@ -67,5 +67,6 @@ test(
         const passed = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     },
-    INSTALL_TIMEOUT_MS,
+    // The journey installs the private tools, then runs apply and two full staged checks.
+    INSTALL_TIMEOUT_MS + PLANTED_TIMEOUT_MS * 3,
 );
