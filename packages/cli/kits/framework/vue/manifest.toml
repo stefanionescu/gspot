@@ -49,7 +49,7 @@ fragment = true
 components = ["**/*.vue"]
 
 [[check]]
-name = "vue/eslint"
+name = "eslint"
 title = "ESLint"
 example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
@@ -66,7 +66,7 @@ why = "A component file is markup and code in one, and a plain JavaScript parser
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "vue/tsc"
+name = "tsc"
 title = "Check Vue types"
 example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"

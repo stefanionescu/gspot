@@ -25,23 +25,6 @@ test('two kits that declare one setting must give it one meaning and may differ 
     }).not.toThrow();
 });
 
-test('loading two configurations refuses duplicate executable check ownership', () => {
-    const definition =
-        '\n[[check]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "project/parse"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool"]\nsummary = "Parses the project input."\nwhy = "Invalid input cannot run."\nhelp = "Correct the reported input."\n';
-    const manifests = new Map(
-        ['first', 'second'].map((name) => [
-            name,
-            parseManifest(
-                `[kit]\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
-                `kits/tool/${name}`,
-            ),
-        ]),
-    );
-    expect(() => {
-        validateManifests(manifests);
-    }).toThrow('check project/parse is already owned by first');
-});
-
 test('manifest collection rejects an invalid replacement and accepts a different check', () => {
     const project = parseManifest(
         `[kit]\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
@@ -50,7 +33,7 @@ test('manifest collection rejects an invalid replacement and accepts a different
     const checks = `
 [[check]]
 example = "A rejected input is corrected before rerunning the parser."
-name = "project/parse"
+name = "parse"
 level = "recommended"
 stage = "commit"
 command = ["tool"]
@@ -75,7 +58,7 @@ help = "Correct the reported input."
     expect(() => {
         validateManifests(manifests);
     }).toThrow('different check');
-    project.checks[0]!.replaces = 'project/parse';
+    project.checks[0]!.replaces = 'owner/parse';
     expect(() => {
         validateManifests(manifests);
     }).not.toThrow();
@@ -150,7 +133,7 @@ const header = '[kit]\ntitle = "Waiting"\ndescription = "Reads a setting for the
 const setting =
     '[[setting]]\nname = "tools.waiting.target"\ntype = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
 function waitingManifest(waits: string): void {
-    const check = `[[check]]\nexample = "A wrong target is corrected before the tool runs again."\nname = "waiting/run"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${waits}summary = "Runs the tool."\nwhy = "The target matters."\nhelp = "Set the target."\n`;
+    const check = `[[check]]\nexample = "A wrong target is corrected before the tool runs again."\nname = "run"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${waits}summary = "Runs the tool."\nwhy = "The target matters."\nhelp = "Set the target."\n`;
     const manifest = parseManifest(`${header}${setting}${check}`, 'kits/tool/waiting');
     validateManifests(new Map([['waiting', manifest]]));
 }

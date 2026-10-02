@@ -51,7 +51,7 @@ fragment = true
 components = ["**/*.svelte"]
 
 [[check]]
-name = "svelte/eslint"
+name = "eslint"
 title = "ESLint"
 example = "A Svelte template containing `<div>{@html html}</div>` reports `svelte/no-at-html-tags`. Render text with interpolation, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
@@ -68,7 +68,7 @@ why = "A component file is markup and code in one, and a plain JavaScript parser
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "svelte/check"
+name = "check"
 title = "Check Svelte components"
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 level = "recommended"

@@ -19,7 +19,7 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[check]]
-name = "i18n/locales"
+name = "locales"
 title = "Locales"
 example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
 level = "recommended"

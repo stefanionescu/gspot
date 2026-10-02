@@ -63,7 +63,7 @@ scoped = true
 header = false
 
 [[check]]
-name = "docker/hadolint"
+name = "hadolint"
 title = "Dockerfile lint"
 example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
 level = "recommended"
@@ -76,7 +76,7 @@ why = "An unpinned base image or a cache left in a layer makes a build nobody ca
 help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason."
 
 [[check]]
-name = "docker/compose"
+name = "compose"
 title = "Validate Docker Compose files"
 example = "A Compose service with an unknown key such as `bogus` fails configuration validation. Remove the key or replace it with the supported setting for the intended behavior."
 level = "recommended"
@@ -91,7 +91,7 @@ why = "A Compose file that is valid YAML can still name a key Compose refuses, a
 help = "Read the message Compose prints; it names the key and the service."
 
 [[check]]
-name = "docker/dockerignore"
+name = "dockerignore"
 title = "Exclude private files from Docker builds"
 example = "A Dockerfile without a neighboring `.dockerignore` reports the missing context exclusions. Add `.dockerignore` with the required entries named in the finding, such as `.git` and dependency directories."
 level = "recommended"
@@ -102,7 +102,7 @@ why = "Without it the whole folder goes to the daemon, and copying the folder pu
 help = "Add a .dockerignore beside the Dockerfile with the entries the message names."
 
 [[check]]
-name = "docker/trivy-config"
+name = "trivy-config"
 title = "Audit container configuration"
 example = "A Dockerfile whose final application stage runs as root can report a container-security finding. Create an unprivileged user, grant it only required file access, and select it with `USER` before running the application."
 level = "recommended"
@@ -118,7 +118,7 @@ why = "A container that runs as root turns any bug in the service into control o
 help = "Change the file the way the message says. Accept one id with a reason under tools.trivy.ignore."
 
 [[check]]
-name = "docker/trivy-image"
+name = "trivy-image"
 title = "Scan container images"
 example = "A configured image containing a package with a known advisory reports that advisory. Move to a reviewed image version containing the package fix, then rerun the image scan. Results depend on the advisory database and available image."
 level = "recommended"

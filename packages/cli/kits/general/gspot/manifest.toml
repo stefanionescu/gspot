@@ -3,7 +3,7 @@ title = "gspot"
 description = "The checks gspot runs on its own output: every generated file matches what the policy renders."
 
 [[check]]
-name = "gspot/drift"
+name = "drift"
 title = "Generated files match the policy"
 example = "A file under `.gspot/config/` edited by hand differs from what gspot.toml renders and reports drift. Change the policy in gspot.toml and run gspot apply, or move the edited file aside so apply writes it again."
 level = "recommended"

@@ -28,7 +28,7 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[check]]
-name = "nextjs/tsc"
+name = "tsc"
 title = "Check Next.js types"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
@@ -40,7 +40,7 @@ why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc r
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[check]]
-name = "nextjs/build"
+name = "build"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
 level = "recommended"
@@ -53,7 +53,7 @@ why = "Some mistakes show only at build time: a server import in a client file, 
 help = "Run next build and read the first error it prints."
 
 [[check]]
-name = "nextjs/route-segments"
+name = "route-segments"
 title = "Route segments"
 example = "A Next.js segment containing both `page.tsx` and `route.ts` reports conflicting route ownership. Move the route handler into a separate segment, such as `api`, and update its callers."
 level = "recommended"
@@ -64,7 +64,7 @@ why = "One address is served by one file, and the framework refuses the build wh
 help = "Move the route handler into a segment of its own, such as an api folder."
 
 [[check]]
-name = "nextjs/config"
+name = "config"
 title = "Check Next.js configuration"
 example = "Setting `typescript.ignoreBuildErrors` to `true` in Next.js configuration reports a disabled type gate. Remove the switch and correct the type errors before building."
 level = "recommended"
@@ -75,7 +75,7 @@ why = "A build that ignores lint and type errors ships them, and a key under env
 help = "Remove the switch, and read the secret on the server."
 
 [[check]]
-name = "nextjs/version-pairs"
+name = "version-pairs"
 title = "Dependency alignment"
 example = "Different declared versions of `react` and `react-dom` report an alignment finding. Select the same compatible version for both and update the lockfile with the package manager."
 level = "recommended"

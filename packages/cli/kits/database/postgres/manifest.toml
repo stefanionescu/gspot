@@ -30,7 +30,7 @@ scoped = true
 rules_path = ["excluded_rules"]
 
 [[check]]
-name = "postgres/squawk"
+name = "squawk"
 title = "Squawk"
 example = "A migration adding a constraint that requires a disruptive table scan can report a migration-safety finding. Follow the reported rule to separate creation and validation or otherwise reduce the lock, then review the migration against the deployment database."
 level = "recommended"
@@ -42,7 +42,7 @@ why = "A migration that takes an exclusive lock on a large table stops the appli
 help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason."
 
 [[check]]
-name = "postgres/migration-order"
+name = "migration-order"
 title = "Migration order"
 example = "A new migration numbered before the latest committed migration reports an ordering finding. Give the new migration a version later than the committed maximum without renaming already applied migrations."
 level = "recommended"
@@ -53,7 +53,7 @@ why = "A migration that sorts before one already applied never runs on the datab
 help = "Rename the new migration with a version later than the newest committed one."
 
 [[check]]
-name = "postgres/migrations-frozen"
+name = "migrations-frozen"
 title = "Preserve frozen migrations"
 example = "Editing an already committed migration reports a frozen-history finding. Preserve the intended change as a new migration, restore the original migration bytes, and rerun. Do not rewrite a migration already applied to shared databases."
 level = "recommended"
@@ -64,7 +64,7 @@ why = "A migration that ran never runs again, so an edit to it changes new datab
 help = "Restore the file with git checkout, and write the change as a new migration."
 
 [[check]]
-name = "postgres/rls"
+name = "rls"
 title = "Require row level security"
 example = "A newly created table without row-level security reports a missing-RLS finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for the actual table and define its intended policies in the migration set."
 level = "recommended"
@@ -75,7 +75,7 @@ why = "A table in an exposed schema with no row security is readable and writabl
 help = "Enable row level security on the table, and add its policies in the same or a later migration."
 
 [[check]]
-name = "postgres/grants"
+name = "grants"
 title = "Explicit grants"
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
 level = "recommended"
@@ -86,7 +86,7 @@ why = "Granting everything includes truncating the table, adding triggers, and e
 help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[check]]
-name = "postgres/definer-search-path"
+name = "definer-search-path"
 title = "Security definer search path"
 example = "A `SECURITY DEFINER` function without an explicit safe search path reports a finding. Add `SET search_path = ''` to the definition and schema-qualify the objects used in its body."
 level = "recommended"
@@ -97,7 +97,7 @@ why = "A definer function runs with its owner's rights, and a caller who control
 help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
 
 [[check]]
-name = "postgres/foreign-key-indexes"
+name = "foreign-key-indexes"
 title = "Index foreign key columns"
 example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
 level = "recommended"
@@ -108,7 +108,7 @@ why = "Deleting a parent row scans the whole child table when the foreign key ha
 help = "Create an index that starts with the foreign key column."
 
 [[check]]
-name = "postgres/migration-docs"
+name = "migration-docs"
 title = "Document database migrations"
 example = "A migration without its required purpose header and statement sections reports documentation findings. Add a purpose-specific header and organize statements under the sections named by the diagnostic."
 level = "all"

@@ -28,7 +28,7 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[check]]
-name = "jest/coverage"
+name = "coverage"
 title = "Check Jest coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `tools.jest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"

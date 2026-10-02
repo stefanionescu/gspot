@@ -38,7 +38,7 @@ scoped = true
 when = {kit = "security"}
 
 [[check]]
-name = "supabase/config"
+name = "config"
 title = "Validate the Supabase project"
 example = "A function entry in `supabase/config.toml` naming a function absent from the repository reports a stale function configuration. Restore the function source or remove its obsolete configuration table."
 level = "recommended"
@@ -49,7 +49,7 @@ why = "The CLI reads this file at every deploy, and a function it configures wit
 help = "Correct the file at the place the message names, or remove the table of a function the repository does not hold."
 
 [[check]]
-name = "supabase/migration-names"
+name = "migration-names"
 title = "Migration names"
 example = "A Supabase migration named `add_users.sql` lacks the required timestamp prefix. Create it with `supabase migration new add_users`, then move the intended SQL into the generated migration file."
 level = "recommended"
@@ -60,7 +60,7 @@ why = "The CLI orders and records migrations by this name, and it skips a file i
 help = "Create the migration with supabase migration new <name>, which writes the name."
 
 [[check]]
-name = "supabase/storage-policies"
+name = "storage-policies"
 title = "Storage policies"
 example = "A declared storage bucket with no matching policy on `storage.objects` reports missing access policy. Add a migration defining the intended access policy for that bucket and rerun."
 level = "recommended"
@@ -71,7 +71,7 @@ why = "A bucket with no policy is closed to everyone or, when it is public, open
 help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
-name = "supabase/admin-key"
+name = "admin-key"
 title = "Admin key containment"
 example = "A client source reading the Supabase service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
 level = "recommended"
@@ -82,7 +82,7 @@ why = "The service role key bypasses row level security, so one client bundle th
 help = "Move the code to a server path, or add the path to tools.supabase.admin_key_files when it never reaches a client."
 
 [[check]]
-name = "supabase/deno-lint"
+name = "deno-lint"
 title = "Deno lint"
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` when the value does not change, then rerun with the pinned Deno tool available."
 level = "recommended"
@@ -94,7 +94,7 @@ why = "Edge functions run under Deno, and its linter knows the runtime the Node 
 help = "Change the code the way the rule says; deno lint --rules explains each one."
 
 [[check]]
-name = "supabase/deno-check"
+name = "deno-check"
 title = "Deno check"
 example = "An Edge Function assigning a string to a number-typed variable reports a Deno type error. Correct the value or type to match the intended contract, then rerun."
 level = "recommended"
@@ -106,7 +106,7 @@ why = "The project compiler does not resolve the import map of a function, so on
 help = "Fix the first error Deno prints; later ones are often the same mistake."
 
 [[check]]
-name = "supabase/types-fresh"
+name = "types-fresh"
 title = "Keep Supabase database types current"
 example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
 level = "recommended"

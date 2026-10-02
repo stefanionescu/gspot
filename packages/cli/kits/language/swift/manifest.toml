@@ -86,7 +86,7 @@ target = ".gspot/config/periphery.yml"
 scoped = true
 
 [[check]]
-name = "swift/swiftlint"
+name = "swiftlint"
 title = "SwiftLint"
 example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 level = "recommended"
@@ -102,7 +102,7 @@ why = "A force unwrap, a retain cycle through a delegate, or a function nobody c
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason."
 
 [[check]]
-name = "swift/swiftformat"
+name = "swiftformat"
 title = "SwiftFormat"
 example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
 level = "recommended"
@@ -117,7 +117,7 @@ why = "One layout everywhere keeps a diff about the change and not about where a
 help = "Run gspot check --fix."
 
 [[check]]
-name = "swift/build"
+name = "build"
 title = "Build the Swift project"
 example = "A Swift assignment of a string to an `Int` variable fails compilation. Correct the value or declared type and rerun with the required compiler and project settings available."
 level = "recommended"
@@ -130,7 +130,7 @@ why = "Swift has no type check without a build, so the build is the type check."
 help = "Fix the first compiler error; later ones are often the same mistake."
 
 [[check]]
-name = "swift/swiftlint-analyze"
+name = "swiftlint-analyze"
 title = "Analyze Swift compiler output"
 example = "An import unused by the compiled Swift sources reports an analyzer finding. Remove the import and rerun the build-backed analysis. A missing build log does not establish a clean result."
 level = "recommended"
@@ -144,7 +144,7 @@ why = "These rules need the compiler's view of the code, which a file-by-file li
 help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
 
 [[check]]
-name = "swift/periphery"
+name = "periphery"
 title = "Periphery"
 example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
 level = "recommended"
@@ -159,7 +159,7 @@ help = "Delete the declaration, or mark it with a periphery:ignore comment that 
 
 
 [[check]]
-name = "swift/trivial-functions"
+name = "trivial-functions"
 title = "Trivial function"
 example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
 level = "all"
@@ -171,7 +171,7 @@ why = "Unnecessary functions add names and indirection without substantial behav
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-functions --paths <file> --reason <why>`."
 
 [[check]]
-name = "swift/duplicate-functions"
+name = "duplicate-functions"
 title = "Duplicate functions"
 example = "Two Swift functions with the same executable body report duplication. Keep the implementation that owns the behavior, replace calls to the duplicate, and remove it."
 level = "all"
@@ -183,7 +183,7 @@ why = "Two copies of one body drift apart, and a fix made in one never reaches t
 help = "Keep one of the functions and call it from both places."
 
 [[check]]
-name = "swift/private-before-public"
+name = "private-before-public"
 title = "Private before public"
 example = "A file-local private declaration below a public declaration reports an ordering finding. Move the private declaration above the first internal or public declaration without changing its behavior."
 level = "all"
@@ -195,7 +195,7 @@ why = "A file that opens with its own pieces and ends with what it offers reads 
 help = "Move the file-local declarations above the first internal, public, or open one."
 
 [[check]]
-name = "swift/import-comments"
+name = "import-comments"
 title = "No comments among imports"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `// swiftlint:` or `// swiftformat:` directive stays."
 level = "all"
@@ -207,7 +207,7 @@ why = "An import block is a list, and a note inside a list is read as part of th
 help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
-name = "swift/env-owner"
+name = "env-owner"
 title = "Environment access owner"
 example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
 level = "all"

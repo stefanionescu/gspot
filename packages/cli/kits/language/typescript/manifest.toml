@@ -44,7 +44,7 @@ target = ".gspot/config/tsconfig.check.json"
 scoped = true
 
 [[check]]
-name = "typescript/tsc"
+name = "tsc"
 title = "TypeScript"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
@@ -58,7 +58,7 @@ why = "A file that does not type-check can crash at run time in a way the editor
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[check]]
-name = "typescript/eslint"
+name = "eslint"
 title = "ESLint"
 example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
 level = "recommended"
@@ -74,7 +74,7 @@ why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsaf
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "typescript/tsconfig"
+name = "tsconfig"
 title = "Keep strict TypeScript options"
 example = "An authored TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the resulting type errors rather than disabling the integrity check."
 level = "recommended"

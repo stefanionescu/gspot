@@ -5,7 +5,7 @@ test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
     'parseManifest > file isolation refuses an incomplete command declaration %s',
     (command) => {
         const source =
-            '[kit]\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[check]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "x/y"\nlevel = "recommended"\nstage = "commit"\nisolated_files = true\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n';
+            '[kit]\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[check]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "y"\nlevel = "recommended"\nstage = "commit"\nisolated_files = true\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n';
         expect(() => parseManifest(`${source}${command}\n`, 'kits/tool/x')).toThrow('isolates files');
         expect(() => parseManifest(`${source}command = ["x", "{files}"]\n`, 'kits/tool/x')).not.toThrow();
         expect(() =>
@@ -22,7 +22,7 @@ title = "Project input"
 description = "Checks project input before execution."
 [[check]]
 example = "A rejected input is corrected before rerunning the parser."
-name = "x/parse"
+name = "parse"
 level = "recommended"
 stage = "commit"
 ${execution}

@@ -20,7 +20,7 @@ brew = "ansible-lint"
 platforms = ["macos", "linux"]
 
 [[check]]
-name = "ansible/lint"
+name = "lint"
 title = "Lint Ansible projects"
 example = "A task using `ansible.builtin.command: systemctl restart planted` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: planted` and `state: restarted` to express the intended service operation."
 level = "recommended"

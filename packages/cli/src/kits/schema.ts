@@ -92,7 +92,8 @@ const stringListTable = z.record(z.string(), z.array(z.string()));
 
 const checkFields = z.strictObject({
     title: z.string().min(1).optional(),
-    name: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
+    // The name inside the kit; the check's ID is the kit's name, a slash, and this, as python/ruff.
+    name: z.string().regex(/^[a-z0-9-]+$/),
     level: z.enum(['recommended', 'all']),
     stage: z.enum(['commit', 'push', 'manual', 'message']),
     runs: z.enum(['files', 'scope', 'once']).default('files'),

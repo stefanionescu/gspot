@@ -23,7 +23,7 @@ npm = "ajv"
 target = ".gspot/config/spectral.yaml"
 
 [[check]]
-name = "openapi/spectral"
+name = "spectral"
 title = "Validate the OpenAPI document"
 example = "An OpenAPI document whose operation references an undefined schema reports a validation finding. Define the schema or correct the reference in the source that produces the document, then regenerate it."
 level = "recommended"
@@ -36,7 +36,7 @@ why = "Clients are written from this document, so an operation with no id or an 
 help = "Change the document the way the rule says, or the code that writes it."
 
 [[check]]
-name = "openapi/fresh"
+name = "fresh"
 title = "Keep the OpenAPI document current"
 example = "A committed OpenAPI document that differs from the configured generator output reports drift. Run the declared generator, inspect the changed document, and retain the corrected output before rerunning."
 level = "recommended"

@@ -58,23 +58,15 @@ function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Mani
             throw manifestError(manifest.kit.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
-// Records the manifest as the owner of a check name, refusing a name another manifest already owns.
-function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Manifest['checks'][number]): void {
-    const previous = owners.get(check.name);
-    if (previous !== undefined)
-        throw manifestError(manifest.kit.name, [`check ${check.name} is already owned by ${previous}.`]);
-    owners.set(check.name, manifest.kit.name);
-}
-
-// The configuration that owns each check name, refusing a name two manifests declare.
+// The kit that declares each check, by check ID; a reference to another kit's check names no owner.
 function checkOwners(manifests: Map<string, Manifest>): Map<string, string> {
-    const owners = new Map<string, string>();
-    for (const manifest of manifests.values()) {
-        const references = manifest.kit.check_references ?? [];
-        for (const check of manifest.checks.filter((entry) => !references.includes(entry.name)))
-            claimOwner(owners, manifest, check);
-    }
-    return owners;
+    return new Map(
+        [...manifests.values()].flatMap((manifest) =>
+            manifest.checks
+                .filter((check) => !(manifest.kit.check_references ?? []).includes(check.name))
+                .map((check) => [check.name, manifest.kit.name] as const),
+        ),
+    );
 }
 
 // Whether a check is built in, runs once per repository, and names no command or tool.
@@ -230,7 +222,7 @@ export function manifestProblems(raw: RawManifest): string[] {
 }
 
 /**
- * Validate required kits, tool pins, setting waits, shared setting meanings, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * Validate required kits, tool pins, setting waits, shared setting meanings, and executable reporting and replacement owners before accepting a manifest collection.
  * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {

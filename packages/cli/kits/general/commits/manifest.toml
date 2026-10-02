@@ -49,7 +49,7 @@ target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
 
 [[check]]
-name = "commits/commitlint"
+name = "commitlint"
 title = "Commitlint"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
 level = "all"
@@ -62,7 +62,7 @@ why = "A history of typed, scoped subjects is what release notes, blame and bise
 help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
 
 [[check]]
-name = "commits/commitlint-range"
+name = "commitlint-range"
 title = "Check pushed commit messages"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
 level = "all"

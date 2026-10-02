@@ -30,7 +30,7 @@ message = "Raw SQL skips the types of the schema. Use the query builder, or allo
 allowed = "tools.drizzle.raw_sql_allowed"
 
 [[check]]
-name = "drizzle/relations"
+name = "relations"
 title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
 level = "all"
@@ -41,7 +41,7 @@ why = "The query builder joins through relations, so a reference without one wor
 help = "Add a relations call for the table."
 
 [[check]]
-name = "drizzle/migrations-fresh"
+name = "migrations-fresh"
 title = "Keep Drizzle migrations current"
 example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
 level = "recommended"

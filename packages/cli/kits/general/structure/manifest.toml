@@ -19,7 +19,7 @@ github = {name = "ast-grep/ast-grep", version = "0.45.3"}
 file = ".qlty"
 
 [[check]]
-name = "structure/lone-files"
+name = "lone-files"
 title = "Single file folder"
 example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
 runs = "scope"
@@ -31,7 +31,7 @@ why = "A folder of one file adds a level to every path and promises siblings tha
 help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.lone_files_allowed."
 
 [[check]]
-name = "structure/prefix-collisions"
+name = "prefix-collisions"
 title = "Prefix collisions"
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
 runs = "scope"
@@ -44,7 +44,7 @@ why = "Files that share a prefix are one concept split by suffix; they belong in
 help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
 
 [[check]]
-name = "structure/stem-collisions"
+name = "stem-collisions"
 title = "File directory collision"
 example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
 runs = "scope"
@@ -56,7 +56,7 @@ why = "An import of ./turn names both, and a reader cannot tell which one loads.
 help = "Rename the file or the folder so their stems differ."
 
 [[check]]
-name = "structure/folder-names"
+name = "folder-names"
 title = "Folder names"
 example = "A folder containing `helpers/first.sh` and `helpers/second.sh` reports `container-name` because `helpers` does not name its responsibility. Rename the folder after the operation it owns, such as `deployment`, and update every source path. A required ecosystem name needs a specific allowance."
 level = "all"
@@ -67,7 +67,7 @@ why = "A folder with no owner collects everything nobody wanted to place, and gr
 help = "Name the folder after what it holds, or allow it with a reason under structure.folder_names_allowed."
 
 [[check]]
-name = "structure/config-logic"
+name = "config-logic"
 title = "Keep configuration modules declarative"
 example = "A module in the configuration role that contains executable application logic reports a purity finding. Move that logic into its source owner and retain the literal configuration in the configuration module."
 level = "all"
@@ -78,7 +78,7 @@ why = "A configuration module with logic in it is code nobody tests, hidden wher
 help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
 
 [[check]]
-name = "structure/suppressions"
+name = "suppressions"
 title = "Suppressions"
 example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
 level = "recommended"
@@ -89,7 +89,7 @@ why = "The suppression census makes hidden findings visible for review."
 help = "Write the reason in the comment (after two dashes for eslint-disable, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[check]]
-name = "structure/stale-allowlists"
+name = "stale-allowlists"
 title = "Allowlists match"
 example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
 level = "recommended"
@@ -100,7 +100,7 @@ why = "An ignore, declaration, or package allowance that matches nothing mislead
 help = "Remove the entry, correct its path or exact package version, or restore the project lockfile."
 
 [[check]]
-name = "structure/large-files"
+name = "large-files"
 title = "Large files"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `over-limit`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
 level = "recommended"
@@ -111,7 +111,7 @@ why = "A large file in plain git history stays in every clone for good."
 help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_kb with a reason."
 
 [[check]]
-name = "structure/tracked-dependencies"
+name = "tracked-dependencies"
 title = "Tracked dependencies"
 example = "A tracked `node_modules` directory reports committed dependency output. Add `node_modules/` to `.gitignore` and run `git rm -r --cached node_modules` to remove it from the index while preserving local installed files."
 level = "recommended"

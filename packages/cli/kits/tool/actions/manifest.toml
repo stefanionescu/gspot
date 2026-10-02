@@ -35,7 +35,7 @@ brew = "zizmor"
 cargo = "zizmor"
 
 [[check]]
-name = "actions/actionlint"
+name = "actionlint"
 title = "Validate GitHub Actions workflows"
 example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
 level = "recommended"
@@ -49,7 +49,7 @@ why = "A workflow error surfaces on the first push after the change, in CI, wher
 help = "Fix the line actionlint names."
 
 [[check]]
-name = "actions/pinact"
+name = "pinact"
 title = "Verify GitHub Actions pins"
 example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
 level = "recommended"
@@ -63,7 +63,7 @@ why = "A nonexistent action commit prevents the workflow from starting."
 help = "Replace the invalid action pin with a verified commit and its matching version comment."
 
 [[check]]
-name = "actions/zizmor"
+name = "zizmor"
 title = "Audit GitHub Actions security"
 example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
 level = "recommended"

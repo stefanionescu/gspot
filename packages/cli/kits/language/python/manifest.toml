@@ -94,7 +94,7 @@ scoped = true
 header = false
 
 [[check]]
-name = "python/ruff"
+name = "ruff"
 title = "Ruff"
 example = "The expression `eval(user_input)` reports S307 when that rule is selected. Replace dynamic evaluation with parsing and explicit operations appropriate to the input contract."
 level = "recommended"
@@ -109,7 +109,7 @@ why = "Ruff holds the rules of a dozen older tools in one pass fast enough to ru
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason, and add --paths to limit it."
 
 [[check]]
-name = "python/ruff-format"
+name = "ruff-format"
 title = "Ruff format"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
 level = "recommended"
@@ -124,7 +124,7 @@ why = "One layout everywhere keeps a diff about the change."
 help = "Run gspot check --fix."
 
 [[check]]
-name = "python/basedpyright"
+name = "basedpyright"
 title = "Check Python types"
 example = "The annotated assignment `count: int = \"one\"` reports an incompatible value type. Use `count: int = 1` when the value is a number, or correct the annotation if the contract requires text."
 level = "recommended"
@@ -140,7 +140,7 @@ why = "A type error found here is a crash that never reaches a user."
 help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
 [[check]]
-name = "python/import-linter"
+name = "import-linter"
 title = "Import linter"
 example = "A module importing from a layer forbidden by the configured import contract reports that dependency. Move the shared behavior to an allowed owner and update the import, then rerun against the same contract."
 level = "recommended"
@@ -154,7 +154,7 @@ why = "A layer that imports the layer above it turns an architecture into a diag
 help = "Move the import to the side the contract allows, or change the contract with a reason in its name."
 
 [[check]]
-name = "python/pydoclint"
+name = "pydoclint"
 title = "Pydoclint"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
 level = "recommended"
@@ -169,7 +169,7 @@ why = "A docstring that disagrees with the signature is worse than none, because
 help = "Bring the docstring in line with the signature. An explicit [tool.pydoclint] style wins. Otherwise, gspot carries a Google or NumPy convention from [tool.ruff.lint.pydocstyle], or keeps the native default."
 
 [[check]]
-name = "python/deptry"
+name = "deptry"
 title = "Deptry"
 example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare and lock that dependency with the project package manager, or remove the unused import."
 level = "recommended"
@@ -184,7 +184,7 @@ why = "An import that works through somebody else's dependency breaks the day th
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason."
 
 [[check]]
-name = "python/vulture"
+name = "vulture"
 title = "Vulture"
 example = "An unused `import colorsys` reports `unused import 'colorsys'`. Remove the unused import and rerun. Dynamically used names need exact entries in the configured allowlist."
 level = "recommended"
@@ -200,7 +200,7 @@ why = "Dead code is read and maintained by people who cannot tell it is dead."
 help = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
 
 [[check]]
-name = "python/pyproject"
+name = "pyproject"
 title = "Validate Python project metadata"
 example = "The project metadata `version = 7` in `pyproject.toml` reports an invalid version value. Use a valid version string, such as `version = \"1.0.0\"`, and rerun before updating the lockfile."
 level = "recommended"
@@ -215,7 +215,7 @@ why = "A key the build backend does not know is ignored without a word."
 help = "Correct the key the message names."
 
 [[check]]
-name = "python/pip-installs"
+name = "pip-installs"
 title = "Dependency ownership"
 example = "An authored `requirements.txt` beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
 level = "all"
@@ -227,7 +227,7 @@ why = "Two owners of the dependency list drift apart, and the image installs wha
 help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.pip.installs_allowed with a reason."
 
 [[check]]
-name = "python/stale-exclusions"
+name = "stale-exclusions"
 title = "Type checking membership"
 example = "An entry `missing/**` under `tools.basedpyright.exclude` reports a stale exclusion when no selected file matches it. Remove the obsolete entry or correct its path. This check verifies exclusion membership; it does not ban every exclusion."
 level = "recommended"
@@ -238,7 +238,7 @@ why = "An exclusion that outlives its file hides the next file that takes the na
 help = "Remove the entry from tools.basedpyright.exclude."
 
 [[check]]
-name = "python/file-lines"
+name = "file-lines"
 title = "File length"
 example = "A Python module whose code-line count exceeds the configured file ceiling reports its count and limit. Move an independent responsibility to its owner and update imports, then verify both modules fit the limit."
 level = "all"
@@ -250,7 +250,7 @@ why = "A long module holds more than one job, and the second job is the one nobo
 help = "Split the module by the job, or raise limits.file_lines for python with a reason."
 
 [[check]]
-name = "python/function-lines"
+name = "function-lines"
 title = "Function length"
 example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
 level = "all"
@@ -262,7 +262,7 @@ why = "A function that fills a screen does several things, and a reader has to h
 help = "Move one job of the function into a function of its own."
 
 [[check]]
-name = "python/trivial-functions"
+name = "trivial-functions"
 title = "Trivial function"
 example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
 level = "all"
@@ -275,7 +275,7 @@ help = "Inline unnecessary functions. For one an external API requires, run `gsp
 
 
 [[check]]
-name = "python/placeholder-docstrings"
+name = "placeholder-docstrings"
 title = "Replace placeholder docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
 level = "all"
@@ -287,7 +287,7 @@ why = "A docstring that says nothing passes the docstring rule and wastes the li
 help = "Say what the function does that its name does not, or for whom it exists."
 
 [[check]]
-name = "python/private-prefix"
+name = "private-prefix"
 title = "Private prefix"
 example = "A file-local function with no leading underscore and no public export reports a naming finding. Add the underscore and update its local callers, or declare the actual public contract in the export list."
 level = "all"
@@ -299,7 +299,7 @@ why = "A name that is public by accident gets imported, and then it cannot chang
 help = "Add the underscore, or list the name in the export list."
 
 [[check]]
-name = "python/private-before-public"
+name = "private-before-public"
 title = "Private before public"
 example = "A private `_parse` function below an exported public function reports declaration order. Move `_parse` before the public function without changing either body."
 level = "all"
@@ -311,7 +311,7 @@ why = "A reader who meets the parts first understands what is built from them."
 help = "Move the private functions above the first public one."
 
 [[check]]
-name = "python/exports-at-bottom"
+name = "exports-at-bottom"
 title = "Exports at bottom"
 example = "A module with `__all__` before later declarations reports an export-list position finding. Move the export list after those declarations."
 level = "all"
@@ -323,7 +323,7 @@ why = "A reader looks for the public surface in one place."
 help = "Move the export list to the end of the module."
 
 [[check]]
-name = "python/lazy-exports"
+name = "lazy-exports"
 title = "No lazy exports"
 example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
 level = "all"
@@ -335,7 +335,7 @@ why = "A name that appears only at run time hides from the type checker, the edi
 help = "Import the names and list them."
 
 [[check]]
-name = "python/package-exports"
+name = "package-exports"
 title = "Package exports"
 example = "A package export list larger than its configured limit reports the export count. Split unrelated public responsibilities into separate packages or remove unnecessary exports and update consumers."
 level = "all"
@@ -347,7 +347,7 @@ why = "A package that exports everything has no surface, so every change to it i
 help = "Split the package, or export fewer names."
 
 [[check]]
-name = "python/import-comments"
+name = "import-comments"
 title = "No comments among imports"
 example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `# noqa` or `# type:` directive stays."
 level = "all"
@@ -359,7 +359,7 @@ why = "An import block is a list, and a note inside a list is read as part of th
 help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
-name = "python/export-order"
+name = "export-order"
 title = "Export order"
 example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
 level = "all"
@@ -371,7 +371,7 @@ why = "One order for every export list means a reader never searches it."
 help = "Reorder the names shortest first."
 
 [[check]]
-name = "python/singletons"
+name = "singletons"
 title = "No singletons"
 example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."
 level = "all"

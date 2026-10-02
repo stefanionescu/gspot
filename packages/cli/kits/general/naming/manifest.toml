@@ -6,7 +6,7 @@ description = "The naming engine: banned terms, case rules, length and word ceil
 languages = true
 
 [[check]]
-name = "naming/identifiers"
+name = "identifiers"
 title = "Check identifier names"
 example = "With the JavaScript and naming configurations at level `all`, `export const shellCommand = 1;` reports the banned term `shell`. Rename the declaration to `command` and update its references. A legitimate required name needs an exact allowance with a reason."
 level = "all"
@@ -17,7 +17,7 @@ why = "Slop announces itself in the name: `enhancedHandler`, `ensureConfigIfNeed
 help = "Rename after what the thing is or does. Set naming.allowed to an entry with name and reason, or adjust a ceiling with gspot set naming.<language>.max_words."
 
 [[check]]
-name = "naming/paths"
+name = "paths"
 title = "Check file and folder names"
 example = "With the JavaScript and naming configurations at level `all`, `shell.js` and `shell/port.js` report the banned term `shell`. Rename the file to `entry.js` and the folder to `app`, then update imports and other references."
 level = "all"
@@ -28,7 +28,7 @@ why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the ca
 help = "Rename the file or folder, or add a path rule under [[naming.rules]] with a reason."
 
 [[check]]
-name = "naming/policy"
+name = "policy"
 title = "Validate naming policy"
 example = "A naming allowance for an identifier that no selected source contains reports an unmatched policy entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
 level = "recommended"

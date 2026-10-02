@@ -58,7 +58,7 @@ target = ".gspot/config/markdownlint-cli2.mjs"
 scoped = true
 
 [[check]]
-name = "markdown/markdownlint"
+name = "markdownlint"
 title = "Markdownlint"
 example = "A Markdown document with two top-level headings can report MD025. Keep one document title and change the later section heading to level two."
 isolated_files = true
@@ -74,7 +74,7 @@ why = "Markdown that lints the same everywhere renders the same everywhere."
 help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
 [[check]]
-name = "markdown/fences"
+name = "fences"
 title = "Check code block syntax"
 example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
 level = "recommended"

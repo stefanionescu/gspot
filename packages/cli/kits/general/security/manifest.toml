@@ -54,7 +54,7 @@ target = ".semgrepignore"
 scoped = true
 
 [[check]]
-name = "security/semgrep"
+name = "semgrep"
 title = "Semgrep"
 example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
 level = "recommended"
@@ -69,7 +69,7 @@ why = "An injection or a logged secret reads like ordinary code, and a pattern r
 help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason."
 
 [[check]]
-name = "security/semgrep-registry"
+name = "semgrep-registry"
 title = "Semgrep registry"
 example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
 level = "recommended"
@@ -86,7 +86,7 @@ why = "The registry packs cover the common vulnerability classes, and their lice
 help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule <id> --reason."
 
 [[check]]
-name = "security/codeql"
+name = "codeql"
 title = "CodeQL"
 example = "A query constructed by concatenating request input into SQL reports a SQL-injection finding when the selected language query pack detects the flow. Use a parameterized database query and rerun with the language build prerequisites satisfied."
 level = "recommended"

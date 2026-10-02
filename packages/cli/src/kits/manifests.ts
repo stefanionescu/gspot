@@ -79,7 +79,12 @@ export function parseManifest(text: string, dir: string): Manifest {
     const kitName = result.success ? result.data.kit.name : dir;
     if (!result.success)
         throw manifestError(kitName, [...new Set(result.error.issues.flatMap((issue) => issueLines(issue)))]);
-    const raw = result.data;
+    const declared = result.data;
+    // A check's ID is the kit's name, a slash, and the check's own name.
+    const raw = {
+        ...declared,
+        checks: declared.checks.map((check) => ({ ...check, name: `${declared.kit.name}/${check.name}` })),
+    };
     const problems = [
         ...manifestProblems(raw),
         ...raw.configs

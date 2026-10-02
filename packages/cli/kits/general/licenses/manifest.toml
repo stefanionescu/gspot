@@ -31,7 +31,7 @@ target = ".gspot/config/licenses.json"
 scoped = true
 
 [[check]]
-name = "licenses/packages"
+name = "packages"
 title = "Check dependency licenses"
 example = "A locked package whose declared license is outside the allowed license policy reports a finding for that exact package version. Replace the dependency with an acceptable one or record a reviewed package-and-license exception with a reason. An exception for another version does not apply."
 level = "recommended"

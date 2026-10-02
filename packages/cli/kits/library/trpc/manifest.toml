@@ -17,7 +17,7 @@ message = "Give the procedure an input schema before its resolver, even when the
 files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]
 
 [[check]]
-name = "trpc/boundaries"
+name = "boundaries"
 title = "Router boundaries"
 example = "A client module importing a server router as a runtime value reports a boundary finding. Import only the router type with `import type`, and make requests through the tRPC client."
 level = "recommended"

@@ -53,7 +53,7 @@ files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
 
 [[check]]
-name = "astro/eslint"
+name = "eslint"
 title = "ESLint"
 example = "A component containing `<div set:html={html} />` reports `astro/no-set-html-directive`. Render text with an expression, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
 level = "recommended"
@@ -70,7 +70,7 @@ why = "A component file is frontmatter, markup, and scripts in one, and a plain 
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
-name = "astro/check"
+name = "check"
 title = "Check Astro components"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 level = "recommended"

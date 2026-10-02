@@ -31,7 +31,7 @@ target = ".gspot/config/typos.toml"
 scoped = true
 
 [[check]]
-name = "spelling/typos"
+name = "typos"
 title = "Spelling"
 example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
 level = "recommended"

@@ -30,7 +30,7 @@ version = "7.0.2"
 npm = "purgecss"
 
 [[check]]
-name = "site/build"
+name = "build"
 title = "Build the site"
 example = "If the configured site build imports a missing template, the build check reports the command failure. Correct the template import or restore the template, then rerun the same configured build."
 level = "recommended"
@@ -42,7 +42,7 @@ why = "Every other output check reads what the build wrote, so a broken build hi
 help = "Run the build command by hand and fix what it prints. Name the command under tools.site.build."
 
 [[check]]
-name = "site/build-reproducible"
+name = "build-reproducible"
 title = "Check reproducible site builds"
 example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from generated output or derive it from a stable declared input, then rerun the reproducibility check."
 level = "all"
@@ -54,7 +54,7 @@ why = "A build that differs from run to run cannot be cached, compared, or trust
 help = "Take the timestamp, the random value, or the unordered list out of the build."
 
 [[check]]
-name = "site/html-validate"
+name = "html-validate"
 title = "Validate built HTML"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
 level = "recommended"
@@ -66,7 +66,7 @@ why = "Templates can each be valid and still join into a page with two main elem
 help = "Fix the template or the content that writes the markup the rule names."
 
 [[check]]
-name = "site/purgecss"
+name = "purgecss"
 title = "Dead selectors"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
 level = "recommended"
@@ -78,7 +78,7 @@ why = "A selector nobody uses is downloaded by every visitor and read by every m
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
 
 [[check]]
-name = "site/linkinator"
+name = "linkinator"
 title = "Check internal site links"
 example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
 level = "recommended"
@@ -90,7 +90,7 @@ why = "A broken internal link is a dead end a visitor finds before the author do
 help = "Fix the link, or the page it points at."
 
 [[check]]
-name = "site/linkinator-external"
+name = "linkinator-external"
 title = "Check external site links"
 example = "A built link to an external URL that responds with HTTP 404 reports a link failure. Replace it with the verified destination or remove the obsolete link, then rerun with network access."
 level = "recommended"
@@ -102,7 +102,7 @@ why = "Other sites move their pages, and a link nobody rechecks rots."
 help = "Update the link. Skip a host that refuses crawlers under tools.linkinator.exclude_urls with a reason."
 
 [[check]]
-name = "site/size"
+name = "size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
@@ -115,7 +115,7 @@ why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
 [[check]]
-name = "site/sitemap"
+name = "sitemap"
 title = "Sitemap"
 example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
 level = "recommended"
@@ -127,7 +127,7 @@ why = "A page outside the sitemap is found late by search engines, and a listed 
 help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_exclude."
 
 [[check]]
-name = "site/dead-assets"
+name = "dead-assets"
 title = "Dead assets"
 example = "An image in the output directory that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
 level = "recommended"
@@ -139,7 +139,7 @@ why = "An asset nobody references ships with every deploy and is kept by everyon
 help = "Delete the file."
 
 [[check]]
-name = "site/svgo"
+name = "svgo"
 title = "Optimize SVG assets"
 example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
 level = "recommended"
@@ -152,7 +152,7 @@ why = "An SVG straight from an editor carries metadata and precision a browser n
 help = "Run svgo over the file."
 
 [[check]]
-name = "site/webmanifest"
+name = "webmanifest"
 title = "Validate the web app manifest"
 example = "A web manifest referencing `icon-192.png` reports a missing icon when that output file is absent. Add the icon to the build or correct the manifest path, then rebuild."
 level = "recommended"
@@ -163,7 +163,7 @@ why = "A manifest with a missing icon installs an app with a blank tile."
 help = "Correct the manifest, or add the icon."
 
 [[check]]
-name = "site/security-headers"
+name = "security-headers"
 title = "Security headers"
 example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
 level = "recommended"
