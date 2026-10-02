@@ -600,8 +600,8 @@ paths = [
     "tests/acceptance/kits/language/python",
     "tests/acceptance/kits/language/swift",
     "tests/acceptance/kits/language/typescript",
-    "tests/integration/cli/checks/swift",
-    "tests/unit/cli/checks/python",
+    "tests/integration/cli/checks/language/swift",
+    "tests/unit/cli/checks/language/python",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
@@ -704,8 +704,8 @@ rule = "js/file-system-race"
 paths = [
     "tests/acceptance/cli/agents.test.ts",
     "tests/acceptance/cli/lifecycle/clone.test.ts",
-    "tests/integration/cli/checks/nextjs-build.test.ts",
-    "tests/integration/cli/checks/swift/build/isolation.test.ts",
+    "tests/integration/cli/checks/framework/nextjs-build.test.ts",
+    "tests/integration/cli/checks/language/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/resource-reads.test.ts",
     "tests/tools/cli/packages/project.test.ts",
     "tests/harness/planted/preservation.ts",
