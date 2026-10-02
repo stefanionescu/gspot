@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import { isRecord } from '#cli/platform/text.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { jsoncValue } from '#cli/repository/jsonc.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 import {
@@ -48,13 +49,10 @@ function wranglerTable(
     const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
-        const errors: ParseError[] = [];
-        const parsed = parseJsonc(text, errors) as Record<string, unknown> | undefined;
-        const isBroken = parsed === undefined || errors.length > 0;
-        return {
-            table: parsed ?? {},
-            problem: isBroken ? 'The file does not parse as JSON with comments.' : undefined,
-        };
+        const parsed = jsoncValue(text);
+        return isRecord(parsed)
+            ? { table: parsed, problem: undefined }
+            : { table: {}, problem: 'The file does not parse as JSON with comments.' };
     } catch (error) {
         return { table: {}, problem: error instanceof Error ? error.message : 'The file does not parse.' };
     }

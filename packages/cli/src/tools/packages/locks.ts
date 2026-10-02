@@ -4,7 +4,8 @@ import semver from 'semver';
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
-import { modify, applyEdits, parse as parseJsonc } from 'jsonc-parser';
+import { modify, applyEdits } from 'jsonc-parser';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/config/tools/packages.ts';
 import type { LockName, BunPackage, Dependencies } from '#cli/types/tools/packages.ts';
 

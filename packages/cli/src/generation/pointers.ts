@@ -1,18 +1,17 @@
 import { dirname, relative } from 'node:path';
+import { isRecord } from '#cli/platform/text.ts';
 import { toPosix } from '#cli/platform/paths.ts';
+import { jsoncValue } from '#cli/repository/jsonc.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
-import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { TARGET_PLACEHOLDER } from '#cli/config/generation/generation.ts';
 import type { PointerSpec, ConfigurationOutput } from '#cli/types/generation/generation.ts';
 
 function parsePointer(text: string, pointerPath: string): Record<string, unknown> {
-    const errors: ParseError[] = [];
-    const parsed: unknown = parseJsonc(text, errors, { allowTrailingComma: true });
-    if (errors.length > 0 || parsed === null || typeof parsed !== 'object' || Array.isArray(parsed))
-        throw new Error(`Shared configuration must be a valid JSON object: ${pointerPath}`);
-    return parsed as Record<string, unknown>;
+    const parsed = jsoncValue(text);
+    if (!isRecord(parsed)) throw new Error(`Shared configuration must be a valid JSON object: ${pointerPath}`);
+    return parsed;
 }
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
