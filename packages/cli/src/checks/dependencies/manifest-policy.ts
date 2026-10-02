@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/packages.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
 import { NPM_MANIFEST, EXACT_VERSION, DEPENDENCY_TABLES, NON_REGISTRY_VERSION } from '#cli/config/checks/repository.ts';
 

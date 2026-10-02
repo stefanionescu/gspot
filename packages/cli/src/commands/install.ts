@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
 import { compact } from '#cli/policy/normalize.ts';
 import { everyManifest } from '#cli/kits/select.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { directoryOf } from '#cli/platform/arguments.ts';
 import { installProsePackages } from '#cli/tools/vale.ts';
 import { installTools } from '#cli/tools/installation.ts';
 import { printCommand } from '#cli/commands/print-result.ts';

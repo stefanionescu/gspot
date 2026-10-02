@@ -15,7 +15,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
 import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
 function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {

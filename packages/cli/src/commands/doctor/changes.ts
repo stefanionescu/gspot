@@ -2,19 +2,20 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
-import { head } from '#cli/repository/tracked.ts';
+import { head } from '#cli/repository/sources.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { ciLintJobs } from '#cli/repository/survey.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
 import type { ChangeRow, ChangeReport } from '#cli/types/commands.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
-import { isOwned, ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
     const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();

@@ -5,13 +5,14 @@ import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
+import { listFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { CommandResult, IgnoreOptions } from '#cli/types/commands.ts';
-import { listFlag, textEntry, directoryOf, quoteArgument } from '#cli/platform/arguments.ts';
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {

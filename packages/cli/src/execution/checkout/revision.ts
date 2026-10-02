@@ -8,7 +8,7 @@ import { run, runBinary } from '#cli/platform/spawn.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
 import type { SourceReads } from '#cli/types/repository/repository.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.ts';
-import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
+import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
 
 import {
     NEWLINE,

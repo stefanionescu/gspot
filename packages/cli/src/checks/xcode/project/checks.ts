@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, TestPlan, EngineInput } from '#cli/types/checks.ts';
-import { gitBlobs, gitEntries } from '#cli/repository/revisions/contents.ts';
+import { gitBlobs, gitEntries } from '#cli/execution/checkout/revision.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/swift.ts';
 import { readProject, projectTestTargets } from '#cli/checks/xcode/project/reader.ts';
 

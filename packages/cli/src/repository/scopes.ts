@@ -8,7 +8,7 @@ import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
-import { packageManifestSchema } from '#cli/repository/manifests.ts';
+import { packageManifestSchema } from '#cli/repository/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/patterns.ts';
 import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';

@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { useRevision } from '#cli/repository/revisions/contents.ts';
+import { useRevision } from '#cli/execution/checkout/revision.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 

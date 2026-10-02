@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
+import { iniSection } from '#cli/kits/takeover.ts';
 import { gixyRules } from '#cli/lifecycle/rules/gixy.ts';
 import { javascriptRules } from '#cli/lifecycle/rules/javascript.ts';
-import { iniSection } from '#cli/repository/configuration-section.ts';
 import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/rules/sqlfluff.ts';
 
 test('INI selection retains exact section text and treats malformed headings as content', () => {

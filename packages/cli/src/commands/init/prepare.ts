@@ -8,14 +8,14 @@ import { readRepository } from '#cli/repository/tree.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
+import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
-import { isOwned, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands.ts';
 

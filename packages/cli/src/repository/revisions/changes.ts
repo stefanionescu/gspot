@@ -3,8 +3,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
 import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
+import { gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
-import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
 async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {

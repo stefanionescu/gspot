@@ -3,7 +3,7 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import type { EngineInput } from '#cli/types/checks.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { SHARED_PREFIX, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/config/checks/platforms.ts';
 
 const projectSchema = z.object({

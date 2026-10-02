@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { sep, relative, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 
 const artifactLocation = z.object({

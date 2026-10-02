@@ -1,6 +1,6 @@
 import { sourceKits } from '#cli/kits/select.ts';
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { IGNORED_FOLDERS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';

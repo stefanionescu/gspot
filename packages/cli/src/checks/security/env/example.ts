@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { KEY_GROUP } from '#cli/config/checks/security.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 

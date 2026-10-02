@@ -1,6 +1,6 @@
 import { ownerOf } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands.ts';

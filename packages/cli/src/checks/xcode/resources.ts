@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { trackedEnding } from '#cli/checks/xcode/project/checks.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/swift.ts';
 import type { Finding, EngineInput, StringsFile, AssetContents } from '#cli/types/checks.ts';

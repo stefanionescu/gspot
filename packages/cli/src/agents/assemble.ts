@@ -5,7 +5,7 @@ import type { RuleFile } from '#cli/types/agents.ts';
 import { detectConditions } from '#cli/kits/detect.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectedSections } from '#cli/agents/sections.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';

@@ -11,7 +11,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
+import { stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `kits = []

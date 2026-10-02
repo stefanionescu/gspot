@@ -1,8 +1,8 @@
 import type { Manifest } from '#cli/types/kits.ts';
+import { readGitSetting } from '#cli/platform/git.ts';
+import { ciLintJobs } from '#cli/repository/survey.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { readGitSetting } from '#cli/repository/git-config.ts';
-import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askMany, askChoice, askConfirmation } from '#cli/commands/prompts.ts';

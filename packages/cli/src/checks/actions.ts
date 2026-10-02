@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/repository.ts';

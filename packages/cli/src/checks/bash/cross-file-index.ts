@@ -1,4 +1,4 @@
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { functionAt, scriptFunctions } from '#cli/checks/bash/parser.ts';
 import { IDENTIFIER, TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/structure.ts';

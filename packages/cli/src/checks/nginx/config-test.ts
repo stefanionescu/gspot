@@ -2,7 +2,7 @@ import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';

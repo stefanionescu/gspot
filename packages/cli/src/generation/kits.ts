@@ -2,8 +2,8 @@
 import { posix } from 'node:path';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';

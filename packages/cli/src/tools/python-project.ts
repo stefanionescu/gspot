@@ -10,8 +10,8 @@ import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform.ts';
+import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 
 import {

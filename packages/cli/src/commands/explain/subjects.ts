@@ -3,7 +3,7 @@ import { allChecks } from '#cli/kits/listing.ts';
 import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { explainPath } from '#cli/commands/explain/file.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';

@@ -11,8 +11,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { installTools } from '#cli/tools/installation.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { textEntry, directoryOf } from '#cli/platform/arguments.ts';
 import type { AddOptions, CommandResult, RemoveOptions } from '#cli/types/commands.ts';
 
 async function installChangedSelection(

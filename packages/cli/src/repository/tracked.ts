@@ -4,18 +4,13 @@ import type { Dirent } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
+import { statSync, lstatSync, readdirSync } from 'node:fs';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
-import type { RawEntry, PathIgnore, SourceReads } from '#cli/types/repository/repository.ts';
-import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
-
-import {
-    EXECUTABLE_BITS,
-    NATURE_HEAD_BYTES,
-    DEPENDENCY_FOLDERS,
-    NOT_REPOSITORY_CODE,
-} from '#cli/config/repository/repository.ts';
+import type { RawEntry, PathIgnore } from '#cli/types/repository/repository.ts';
+import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS, NOT_REPOSITORY_CODE } from '#cli/config/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
     const files = openRoot(root, 'native');
@@ -240,68 +235,4 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
         .toSorted((a, b) => a.localeCompare(b))
         .map((path) => entryFor(root, path))
         .filter((entry) => entry !== undefined);
-}
-
-/**
- * Reads a bounded prefix, closing the descriptor even when reading fails.
- * @param root the repository root
- * @param path the root-relative file
- * @param bytes the maximum byte count
- * @returns the bytes read
- */
-export function readPrefix(root: string, path: string, bytes: number): Buffer {
-    const buffer = Buffer.alloc(bytes);
-    const files = openRoot(root, 'native');
-    let source: string;
-    try {
-        source = files.source(path);
-    } finally {
-        files.close();
-    }
-    const descriptor = openSync(source, 'r');
-    let offset = 0;
-    try {
-        while (offset < bytes) {
-            const count = readSync(descriptor, buffer, { offset, length: bytes - offset, position: offset });
-            if (count === 0) break;
-            offset += count;
-        }
-        return buffer.subarray(0, offset);
-    } finally {
-        closeSync(descriptor);
-    }
-}
-
-/**
- * Required file prefixes decoded as text for shebang and banner checks.
- * @param root the repository root
- * @param path the file, relative to the root
- * @param bytes how many bytes to read
- * @returns the text
- * @throws when required content cannot be read
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the tracked-file tests read the opening bytes of a file as text through this.
-export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
-    return readPrefix(root, path, bytes).toString('utf8');
-}
-
-/**
- * Read required content, reusing source bytes only within the read repository.
- * @param root the directory being read
- * @param path the source path relative to that directory
- * @param reads optional run-owned bytes; isolated generated output remains fresh
- * @returns the file bytes
- */
-export function readSource(root: string, path: string, reads?: SourceReads): Buffer {
-    const read = reads?.root === root ? reads.sources : undefined;
-    const held = read?.get(path);
-    if (held !== undefined) return held;
-    const files = openRoot(root, 'native');
-    try {
-        const bytes = readFileSync(files.source(path));
-        read?.set(path, bytes);
-        return bytes;
-    } finally {
-        files.close();
-    }
 }

@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { trackedEnding } from '#cli/checks/xcode/project/checks.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/swift.ts';

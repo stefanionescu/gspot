@@ -4,8 +4,8 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import { useRevision } from '#cli/repository/revisions/contents.ts';
-import { stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { useRevision } from '#cli/execution/checkout/revision.ts';
+import { stagedFiles } from '#cli/repository/revisions/changes.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 // Checks an exact snapshot of the staged index, with the report published to the repository.

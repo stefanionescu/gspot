@@ -4,7 +4,7 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { pushBase } from '#cli/repository/revisions/selection.ts';
+import { pushBase } from '#cli/repository/revisions/changes.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {

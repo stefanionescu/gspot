@@ -4,7 +4,7 @@ import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput, ShapeProblem } from '#cli/types/checks.ts';
 import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/config/checks/docs.ts';
 

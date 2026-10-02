@@ -5,11 +5,10 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readdirSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { readGitSetting } from '#cli/repository/git-config.ts';
+import { existingHooks } from '#cli/repository/survey.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
-import { hooksDirectory } from '#cli/repository/hook-location.ts';
-import { existingHooks } from '#cli/repository/existing-tooling.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
+import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.

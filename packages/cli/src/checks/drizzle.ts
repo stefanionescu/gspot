@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises';
 import { findingAt } from '#cli/checks/result.ts';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { TABLE } from '#cli/config/checks/repository.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';

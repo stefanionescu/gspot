@@ -1,6 +1,6 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Manifest, KitEvidence } from '#cli/types/kits.ts';

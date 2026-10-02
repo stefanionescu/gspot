@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { FULL_PERCENTAGE } from '#cli/config/checks/typescript.ts';
 import { rmSync, statSync, mkdtempSync, writeFileSync } from 'node:fs';

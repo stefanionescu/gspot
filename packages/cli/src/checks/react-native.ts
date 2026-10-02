@@ -5,7 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { FAILED_CHECK } from '#cli/config/checks/repository.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/packages.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

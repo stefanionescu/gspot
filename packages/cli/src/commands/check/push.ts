@@ -2,10 +2,10 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { CANCELED_EXIT } from '#cli/config/commands/check.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
+import { useRevision } from '#cli/execution/checkout/revision.ts';
 import type { PushReport } from '#cli/types/execution/execution.ts';
-import { useRevision } from '#cli/repository/revisions/contents.ts';
+import { pushedRevisions } from '#cli/repository/revisions/push.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
-import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
 import type { Checked, CheckOptions, CommandResult, PushedRevision, CheckCommandResult } from '#cli/types/commands.ts';
 
 // Refuses the options that select or change files, which a push of exact objects cannot honor.

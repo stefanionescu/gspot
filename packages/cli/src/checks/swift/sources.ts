@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput, SwiftSource, SwiftFunction } from '#cli/types/checks.ts';
 

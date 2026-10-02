@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/swift.ts';
 

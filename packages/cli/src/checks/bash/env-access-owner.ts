@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { withoutComment } from '#cli/checks/bash/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 

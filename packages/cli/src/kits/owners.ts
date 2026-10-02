@@ -3,7 +3,7 @@ import { GLOB_CHARS } from '#cli/config/kits.ts';
 import { sourceKits } from '#cli/kits/select.ts';
 import type { Owners, Manifest } from '#cli/types/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 function isFilenameClaimed(owners: Owners, base: string): boolean {

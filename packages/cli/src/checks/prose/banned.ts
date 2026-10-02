@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/result.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/config/checks/docs.ts';
 

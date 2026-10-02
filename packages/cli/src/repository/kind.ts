@@ -1,7 +1,7 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
 import { GSPOT_FOLDER } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Verdict, Attribute } from '#cli/types/repository/repository.ts';
 

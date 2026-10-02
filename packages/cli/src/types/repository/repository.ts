@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import type { packageManifestSchema } from '#cli/repository/manifests.ts';
+import type { packageManifestSchema } from '#cli/repository/packages.ts';
 
 type Kind = 'source' | 'generated' | 'vendored' | 'binary';
 export type ScopeEntry = {

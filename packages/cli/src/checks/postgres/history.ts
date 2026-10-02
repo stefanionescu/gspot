@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/result.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/platforms.ts';
-import { gitBlobs, committedEntries } from '#cli/repository/revisions/contents.ts';
+import { gitBlobs, committedEntries } from '#cli/execution/checkout/revision.ts';
 
 const history = new WeakMap<object, Promise<Map<string, string>>>();
 

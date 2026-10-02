@@ -4,8 +4,8 @@ import { detectKits } from '#cli/kits/detect.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('Python workspace detection uses captured manifest fields', async () => {

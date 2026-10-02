@@ -2,7 +2,7 @@ import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
 import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { BANNED_HEADINGS } from '#cli/config/checks/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 

@@ -1,7 +1,7 @@
 // NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 

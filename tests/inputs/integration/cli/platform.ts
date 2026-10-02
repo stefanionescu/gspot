@@ -7,7 +7,6 @@ export const SOURCES = [
     'packages/cli/src/platform/assets.ts',
     'packages/cli/src/platform/paths.ts',
     'packages/cli/src/platform/environment.ts',
-    'packages/cli/src/repository/hooks.ts',
     'packages/cli/src/config/platform.ts',
     'packages/cli/src/config/repository/repository.ts',
 ];

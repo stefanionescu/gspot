@@ -1,4 +1,4 @@
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { visibilityOf } from '#cli/checks/swift/sources.ts';
 import type { SwiftSource, StructureProblem } from '#cli/types/checks.ts';
 import { COMMENTS, DIRECTIVE, FILE_LOCAL, DECLARATIONS, ENVIRONMENT_READ } from '#cli/config/checks/swift.ts';

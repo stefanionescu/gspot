@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Pruning } from '#cli/types/checks.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Read, Root } from '#cli/types/platform.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';

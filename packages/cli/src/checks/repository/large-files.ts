@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { KILOBYTE } from '#cli/config/checks/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 

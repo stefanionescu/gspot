@@ -1,6 +1,6 @@
 // The [[ignore]] filter: findings an entry of gspot.toml covers are dropped and counted.
 import type { Finding } from '#cli/types/checks.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import type { IgnoreUse } from '#cli/types/execution/execution.ts';
 

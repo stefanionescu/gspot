@@ -3,7 +3,7 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { shippedFormat } from '#cli/kits/listing.ts';
-import { expandedPaths } from '#cli/repository/paths.ts';
+import { expandedPaths } from '#cli/repository/selectors.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';

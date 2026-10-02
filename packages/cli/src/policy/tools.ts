@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { reasoned } from '#cli/policy/fields.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 

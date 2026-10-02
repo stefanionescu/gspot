@@ -1,6 +1,6 @@
 import { join, dirname } from 'node:path';
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { SHOWN_LINES } from '#cli/config/checks/platforms.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';

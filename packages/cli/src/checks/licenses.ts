@@ -9,7 +9,7 @@ import { targetInScope } from '#cli/kits/targets.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { rmSync, statSync, mkdtempSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/repository.ts';
 import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks.ts';
 

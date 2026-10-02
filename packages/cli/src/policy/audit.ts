@@ -1,8 +1,8 @@
 import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';

@@ -6,7 +6,7 @@ import { detectPackageManager } from 'nypm';
 import type { Root } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/packages.ts';
 
 // The first package manager a candidate manifest declares, reading each manifest that exists on the way.
 async function detectedTool(

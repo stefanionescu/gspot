@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import type { Finding, EngineInput, Translations } from '#cli/types/checks.ts';
 

@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { harnessFolders } from '#cli/policy/settings.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { directoryOf } from '#cli/checks/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/structure.ts';

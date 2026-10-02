@@ -1,7 +1,34 @@
-// Questions the revision code asks Git, each answered by one command whose failure names the command.
-import { run } from '#cli/platform/spawn.ts';
+// The Git commands gspot runs: configuration reads, the hooks folder, and the queries of the revision code.
+import { resolve } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
+import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
+
+/**
+ * Reads a Git configuration value, distinguishing an unset key from a failed command.
+ * @param root the working directory
+ * @param key the configuration key
+ * @returns the exact value, or undefined when the key is unset
+ */
+export function readGitSetting(root: string, key: string): string | undefined {
+    const result = runBlocking(['git', 'config', '--null', '--get', key], { cwd: root });
+    if (result.code === 0) return result.stdout.slice(0, -1);
+    if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
+    throw new Error(
+        `Git configuration ${key} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+    );
+}
+
+/**
+ * The folder Git runs hooks from: core.hooksPath when set, otherwise the hooks folder of the Git directory.
+ * @param root the repository root
+ * @returns the absolute path
+ */
+export function hooksDirectory(root: string): string {
+    const result = runBlocking(['git', 'rev-parse', '--git-path', 'hooks'], { cwd: root });
+    if (result.code !== 0) throw new Error(`Cannot resolve the Git hooks folder: ${result.stderr.trim()}`);
+    return resolve(root, result.stdout.replace(/\n$/u, ''));
+}
 
 /**
  * What a Git command prints, or the selection error it failed with.

@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
+import { directoryOf } from '#cli/commands/flags.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { directoryOf } from '#cli/platform/arguments.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';

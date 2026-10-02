@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS, REPORTED_SAVINGS_SHARE } from '#cli/config/checks/platforms.ts';

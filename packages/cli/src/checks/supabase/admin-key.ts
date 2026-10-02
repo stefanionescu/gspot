@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/platforms.ts';
 

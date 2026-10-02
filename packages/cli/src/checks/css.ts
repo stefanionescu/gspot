@@ -3,7 +3,7 @@ import { parse } from 'postcss';
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/result.ts';
 import selectorParser from 'postcss-selector-parser';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, Importer, EngineInput } from '#cli/types/checks.ts';
 import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/repository.ts';
 

@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';

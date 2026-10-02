@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { toolsSchema } from '#cli/policy/tools.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
 import { outputSchema } from '#cli/kits/output-format.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/kits/command-schema.ts';
@@ -165,6 +164,13 @@ const checkSchema = z.strictObject({
 });
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
+
+const hooksSchema = z.strictObject({
+    push: z
+        .enum(['changed', 'all'])
+        .default('changed')
+        .describe('Check affected paths or the full tree of each pushed revision.'),
+});
 
 const guidesSchema = z.strictObject({
     install: flag.default(true).describe('Install guide files and agent instructions.'),

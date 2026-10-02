@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { trivialFunctionText } from '#cli/checks/structure/statements.ts';

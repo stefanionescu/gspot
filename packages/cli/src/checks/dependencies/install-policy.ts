@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';

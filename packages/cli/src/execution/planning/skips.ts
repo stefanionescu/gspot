@@ -1,5 +1,5 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { waitingSetting } from '#cli/policy/check-state.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { PLATFORM_LABELS } from '#cli/config/execution/execution.ts';

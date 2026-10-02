@@ -8,7 +8,7 @@ import { Option, Command, InvalidArgumentError } from 'commander';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
 import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/config/commands/check.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 
 // Git gives the pre-push hook the remote name and the remote URL.
 const PUSH_ARGUMENTS = 2;

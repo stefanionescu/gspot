@@ -3,9 +3,9 @@ import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/checks/result.ts';
 import { globPaths } from '#cli/platform/paths.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import type { Finding, PathIndex, ProseLine, EngineInput } from '#cli/types/checks.ts';
 

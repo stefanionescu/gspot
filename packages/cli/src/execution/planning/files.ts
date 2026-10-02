@@ -3,7 +3,7 @@ import { ownedBy } from '#cli/kits/owners.ts';
 import { kitName } from '#cli/kits/targets.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/execution/execution.ts';
 

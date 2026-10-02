@@ -2,9 +2,9 @@ import ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
-import { isInScope } from '#cli/repository/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { SOURCE } from '#cli/config/checks/structure.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { Edge, EdgeSource, EngineInput, ImportIndex } from '#cli/types/checks.ts';
 

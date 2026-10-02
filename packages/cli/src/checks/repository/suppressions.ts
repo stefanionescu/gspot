@@ -3,7 +3,7 @@ import { ownedBy } from '#cli/kits/owners.ts';
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';

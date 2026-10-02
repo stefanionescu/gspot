@@ -1,11 +1,11 @@
 import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/checks/result.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { POLICY_FILE } from '#cli/config/checks/repository.ts';
 import { referencedPaths } from '#cli/checks/docs/stale-paths.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
-import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import type { Finding, EngineInput, PathPattern, LicenseException } from '#cli/types/checks.ts';
 
 function listed(value: unknown, key: string): string[] {

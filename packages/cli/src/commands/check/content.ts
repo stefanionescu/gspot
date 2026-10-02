@@ -8,7 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { stagedFiles } from '#cli/repository/revisions/changes.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands.ts';
 import type { Session, FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/execution.ts';

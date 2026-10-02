@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { hasPackages } from '#cli/tools/vale.ts';
 import { findingAt } from '#cli/checks/result.ts';
 import { join, relative, isAbsolute } from 'node:path';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { SCRIPT_GRAMMAR } from '#cli/config/checks/docs.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/structure.ts';

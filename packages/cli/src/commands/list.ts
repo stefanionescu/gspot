@@ -1,14 +1,14 @@
 import { detectKits } from '#cli/kits/detect.ts';
 import { Argument, type Command } from 'commander';
 import { everyManifest } from '#cli/kits/select.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { directoryOf } from '#cli/platform/arguments.ts';
 import type { CommandResult } from '#cli/types/commands.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
 import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
