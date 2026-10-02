@@ -168,7 +168,7 @@ title = "Duplicate functions"
 example = "Two shell functions with the same executable body report duplication even when their names differ. Keep the function that owns the behavior, replace calls to the duplicate, and delete the duplicate definition."
 level = "all"
 stage = "commit"
-limit = "limits.bash.duplicate_min_lines"
+limit = "limits.bash.duplicate_lines"
 searched = ["jscpd", "shellcheck"]
 summary = "Finds shell functions with the same body in the same scope."
 why = "Two copies drift apart; the fix lands in one and the bug stays in the other."
@@ -256,7 +256,7 @@ help = "Inline unnecessary functions. For one an external API requires, run `gsp
 [[checks]]
 name = "structure/bash-limits"
 title = "Bash limits"
-example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.function_branches`, `limits.bash.function_nesting`, or `limits.bash.mutable_assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
+example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
 level = "all"
 stage = "commit"
 searched = ["shellcheck", "shfmt"]

@@ -1,4 +1,4 @@
-# Compound statements nested deeper than limits.bash.function_nesting.
+# Compound statements nested deeper than limits.bash.nesting.
 id: bash-nesting
 language: bash
 rule:

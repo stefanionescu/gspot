@@ -103,7 +103,7 @@ plantedCases(
         {
             check: 'python/package-exports',
             files: { 'planted/__init__.py': `"""A planted module."""\n\n\n__all__ = ["a", "b", "c"]\n` },
-            policy: '[structure.python]\nmax_package_exports = 2\n',
+            policy: '[limits.python]\npackage_exports = 2\n',
             expected: { file: 'planted/__init__.py', rule: 'package-exports', line: 4 },
         },
         {

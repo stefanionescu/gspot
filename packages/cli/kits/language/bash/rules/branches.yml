@@ -1,4 +1,4 @@
-# Counts branch keywords per function; the engine compares the count with limits.bash.function_branches.
+# Counts branch keywords per function; the engine compares the count with limits.bash.branches.
 id: bash-branches
 language: bash
 rule:

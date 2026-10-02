@@ -126,7 +126,7 @@ default = true
 summary = "Whether the root must carry a LICENSE file."
 
 [[settings]]
-name = "tools.docs.contents_threshold"
+name = "limits.docs.contents_headings"
 kind = "number"
 direction = "ceiling"
 default = 6

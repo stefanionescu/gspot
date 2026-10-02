@@ -5,13 +5,13 @@ import type { ScriptFunction } from '#cli/types/checks/language/bash.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 /**
- * Reports matching normalized function bodies that meet `limits.bash.duplicate_min_lines`.
+ * Reports matching normalized function bodies that meet `limits.bash.duplicate_lines`.
  * @param context the check context
  * @param scripts the shell index
  * @returns the findings
  */
 export const duplicateFunctions: Analysis = async (context, scripts) => {
-    const minimum = context.limit('duplicate_min_lines', 'bash') ?? DEFAULT_MIN_LINES;
+    const minimum = context.limit('duplicate_lines', 'bash') ?? DEFAULT_MIN_LINES;
     const index = await scripts();
     const groups = new Map<string, { file: string; name: string; line: number }[]>();
     const add = (file: string, entry: ScriptFunction): void => {

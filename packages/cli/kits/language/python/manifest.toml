@@ -395,7 +395,7 @@ default = []
 summary = "Module variables that may hold an object built at import time: the paths, the names, and the reason."
 
 [[settings]]
-name = "structure.python.max_package_exports"
+name = "limits.python.package_exports"
 kind = "number"
 direction = "ceiling"
 default = 20

@@ -48,7 +48,7 @@ const SWIFT_STRUCTURE: Record<string, Engine> = {
         ];
     }),
     'swift/duplicate-functions': analysis(({ functions }, input) =>
-        duplicateFunctions(functions, input.view.limit('duplicate_min_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
+        duplicateFunctions(functions, input.view.limit('duplicate_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
     ),
     'swift/private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
     'swift/env-access-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),

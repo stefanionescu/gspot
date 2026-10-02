@@ -120,7 +120,7 @@ stage = "commit"
 runs = "once"
 summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
 why = "A large file in plain git history stays in every clone for good."
-help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_size_kb with a reason."
+help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_kb with a reason."
 
 [[checks]]
 name = "integrity/tracked-dependencies"
@@ -174,7 +174,7 @@ languages = ["typescript", "javascript", "python", "swift", "bash"]
 summary = "How many paths run through one function."
 
 [[settings]]
-name = "limits.nested_blocks"
+name = "limits.nesting"
 kind = "number"
 direction = "ceiling"
 default = 3
@@ -221,7 +221,7 @@ languages = ["python"]
 summary = "The most local variables one function may declare."
 
 [[settings]]
-name = "limits.boolean_expressions"
+name = "limits.boolean_operators"
 kind = "number"
 direction = "ceiling"
 default = 4
@@ -237,7 +237,7 @@ languages = ["python"]
 summary = "The most public methods one class may have."
 
 [[settings]]
-name = "limits.nested_callbacks"
+name = "limits.callback_nesting"
 kind = "number"
 direction = "ceiling"
 default = 3
@@ -245,7 +245,7 @@ languages = ["typescript", "javascript"]
 summary = "How deep callbacks may nest."
 
 [[settings]]
-name = "limits.identical_functions"
+name = "limits.duplicate_lines"
 kind = "number"
 direction = "ceiling"
 default = 3
@@ -276,7 +276,7 @@ languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.<language>."
 
 [[settings]]
-name = "limits.file_size_kb"
+name = "limits.file_kb"
 kind = "number"
 direction = "ceiling"
 default_all = 1024
@@ -297,28 +297,28 @@ default = 40
 summary = "The most code lines one shell function may have."
 
 [[settings]]
-name = "limits.bash.function_branches"
+name = "limits.bash.branches"
 kind = "number"
 direction = "ceiling"
 default = 8
 summary = "The most branches one shell function may have."
 
 [[settings]]
-name = "limits.bash.function_nesting"
+name = "limits.bash.nesting"
 kind = "number"
 direction = "ceiling"
 default = 3
 summary = "How deep blocks may nest in one shell function."
 
 [[settings]]
-name = "limits.bash.mutable_assignments"
+name = "limits.bash.assignments"
 kind = "number"
 direction = "ceiling"
 default = 8
 summary = "The most variable assignments one shell function may make."
 
 [[settings]]
-name = "limits.bash.duplicate_min_lines"
+name = "limits.bash.duplicate_lines"
 kind = "number"
 direction = "ceiling"
 default = 3
@@ -332,14 +332,14 @@ default = 60
 summary = "The most lines one SQL function body may have."
 
 [[settings]]
-name = "limits.swift.type_body_length"
+name = "limits.swift.type_lines"
 kind = "number"
 direction = "ceiling"
 default = 300
 summary = "The most lines one Swift type body may have."
 
 [[settings]]
-name = "limits.swift.closure_body_length"
+name = "limits.swift.closure_lines"
 kind = "number"
 direction = "ceiling"
 default = 60

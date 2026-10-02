@@ -1,4 +1,4 @@
-# Assignments per function; the engine compares the count with limits.bash.mutable_assignments.
+# Assignments per function; the engine compares the count with limits.bash.assignments.
 id: bash-mutable-assignments
 language: bash
 rule:

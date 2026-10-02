@@ -225,7 +225,7 @@ help = "Read the environment in the file that architecture.roles.env names, and 
 
 
 [[settings]]
-name = "limits.swift.duplicate_min_lines"
+name = "limits.swift.duplicate_lines"
 kind = "number"
 direction = "ceiling"
 default = 4

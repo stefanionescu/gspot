@@ -1,11 +1,11 @@
 // The literal values checks/language/bash reads: names, patterns, limits, and tables.
 
 export const RULES: Record<string, { asset: string; limit: string; noun: string; isDepth: boolean }> = {
-    'bash-branches': { asset: 'branches.yml', limit: 'function_branches', noun: 'branches', isDepth: false },
-    'bash-nesting': { asset: 'nesting.yml', limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
+    'bash-branches': { asset: 'branches.yml', limit: 'branches', noun: 'branches', isDepth: false },
+    'bash-nesting': { asset: 'nesting.yml', limit: 'nesting', noun: 'levels of nesting', isDepth: true },
     'bash-mutable-assignments': {
         asset: 'mutable-assignments.yml',
-        limit: 'mutable_assignments',
+        limit: 'assignments',
         noun: 'assignments',
         isDepth: false,
     },

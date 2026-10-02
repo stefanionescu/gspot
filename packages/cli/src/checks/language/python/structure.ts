@@ -113,7 +113,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
         ),
     ),
     'python/package-exports': analysis(({ modules }, input) => {
-        const ceiling = input.view.settings['structure.python.max_package_exports'];
+        const ceiling = input.view.settings['limits.python.package_exports'];
         return packageExports(modules, typeof ceiling === 'number' ? ceiling : DEFAULT_PACKAGE_EXPORTS);
     }),
     'python/import-comments': analysis(({ modules }) => importComments(modules)),
