@@ -174,11 +174,6 @@ word = "IIFEs"
 reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/types/commands.ts"
-names = ["min_release_age_days", "security_scanner"]
-reason = "Installer settings keep their public TOML keys."
-
-[[naming.contract_properties]]
 file = "packages/cli/src/types/kits.ts"
 names = [
     "check_references",
@@ -260,24 +255,9 @@ names = ["404"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.contract_properties]]
-file = "tests/acceptance/source/cli/init/selection.test.ts"
-names = ["types_directory"]
-reason = "The public architecture.types_directory key."
-
-[[naming.contract_properties]]
 file = "tests/integration/cli/generation/format-width.test.ts"
 names = ["MD007"]
 reason = "The markdownlint rule name."
-
-[[naming.contract_properties]]
-file = "tests/integration/tools/hooks/pre-commit.test.ts"
-names = ["fail_fast"]
-reason = "The pre-commit YAML key."
-
-[[naming.contract_properties]]
-file = "tests/types/integration/cli/lifecycle/lifecycle.ts"
-names = ["fail_fast"]
-reason = "The pre-commit YAML key."
 
 [[naming.contract_properties]]
 file = "tests/integration/tools/parameter-limits.test.ts"
@@ -291,8 +271,8 @@ reason = "The license scanner policy keys."
 
 [[naming.contract_properties]]
 file = "tests/types/acceptance/source/cli.ts"
-names = ["with", "when"]
-reason = "GitHub Actions inputs and GitLab CI artifact retention keys."
+names = ["with"]
+reason = "The GitHub Actions inputs key."
 
 [architecture]
 types_directory = "types"
