@@ -1,10 +1,10 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Generated } from '#cli/types/generation.ts';
-import { compareRules } from '#cli/lifecycle/rules/diff.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import { eslintPreviewResponse } from '#cli/native/protocol.ts';
-import { runConfiguration } from '#cli/native/configuration.ts';
+import { compareRules } from '#cli/lifecycle/preview/compare.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
+import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 /**
  * Enrich an explicit apply preview with imported and computed ESLint rule data.

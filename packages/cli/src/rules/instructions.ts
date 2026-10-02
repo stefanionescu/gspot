@@ -1,7 +1,7 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
+import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/agents.ts';
 

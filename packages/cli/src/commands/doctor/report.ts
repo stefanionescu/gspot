@@ -4,7 +4,7 @@ import { colors } from '#cli/output/messages.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';

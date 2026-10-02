@@ -7,7 +7,7 @@ import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import type { configurationRequest } from '#cli/native/protocol.ts';
+import type { configurationRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 /**
  * Evaluate authored configuration with captured logs and a separate structured result.
@@ -22,7 +22,7 @@ export async function runConfiguration(
     cancelSignal?: AbortSignal,
 ): Promise<unknown> {
     // The program is the TypeScript module in the source tree, or its build beside the bundle.
-    const program = import.meta.url.endsWith('.ts') ? 'process.ts' : 'configuration.js';
+    const program = import.meta.url.endsWith('.ts') ? 'worker.ts' : 'configuration.js';
     const work = mkdtempSync(join(tmpdir(), 'gspot-configuration-'));
     const files = openRoot(work);
     try {

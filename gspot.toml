@@ -242,7 +242,7 @@ names = ["FunctionParameter"]
 reason = "The libpg-query AST tag for a function parameter."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/lifecycle/rules/vale.ts"
+file = "packages/cli/src/lifecycle/preview/vale.ts"
 names = ["BasedOnStyles"]
 reason = "The Vale setting the rule preview reads."
 
@@ -360,7 +360,7 @@ entry = [
     "**/build.ts",
     "packages/eslint-plugin/src/plugin.ts",
     "packages/cli/scripts/inputs.ts",
-    "packages/cli/src/native/process.ts",
+    "packages/cli/src/lifecycle/preview/eslint/worker.ts",
     "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
@@ -462,8 +462,8 @@ reason = "A permissive license with no conditions; it arrives through a test too
 check = "security/semgrep"
 rule = "node-no-configured-require"
 paths = [
-    "packages/cli/src/native/eslint-preview.ts",
-    "packages/cli/src/native/process.ts",
+    "packages/cli/src/lifecycle/preview/eslint/declarations.ts",
+    "packages/cli/src/lifecycle/preview/eslint/worker.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 

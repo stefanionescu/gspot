@@ -3,7 +3,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { managedBlock } from '#cli/agents/instructions.ts';
+import { managedBlock } from '#cli/rules/instructions.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 describe('the managed block', () => {

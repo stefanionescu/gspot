@@ -2,9 +2,9 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
-import { assembleRules } from '#cli/agents/assemble.ts';
+import { assembleRules } from '#cli/rules/assemble.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
-import { managedBlock } from '#cli/agents/instructions.ts';
+import { managedBlock } from '#cli/rules/instructions.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { bunConfiguration } from '#cli/generation/bunfig.ts';
 import { emitConfigurations } from '#cli/generation/kits.ts';

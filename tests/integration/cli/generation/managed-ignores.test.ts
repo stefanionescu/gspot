@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
+import { applyBlock } from '#cli/generation/markers.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 import { MANAGED_IGNORES_CONFIGURATION } from '#tests/inputs/integration/cli/generation/generation.ts';
 
@@ -19,17 +19,17 @@ test.each([true, false])(
             'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
             ...(authored ? { '.gitignore': original } : {}),
         });
-        await applyAll(await openSession(repository.path));
+        await writeOutputs(await openSession(repository.path));
         const path = join(repository.path, '.gitignore');
         // Without Git there is nothing to manage: an authored file is untouched and none is created.
         expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(authored ? original : undefined);
         const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
         expect(initialized.code, initialized.stderr).toBe(0);
-        await applyAll(await openSession(repository.path));
+        await writeOutputs(await openSession(repository.path));
         const installed = readFileSync(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/state/');
-        await applyAll(await openSession(repository.path));
+        await writeOutputs(await openSession(repository.path));
         expect(readFileSync(path, 'utf8')).toBe(installed);
     },
 );

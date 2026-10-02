@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { applyCommand } from '#cli/commands/apply/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {

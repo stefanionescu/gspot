@@ -4,9 +4,9 @@ import { run } from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
@@ -20,7 +20,7 @@ test.each(PACKAGE_PROJECTS)(
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, registry } = fixture;
         const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
-        const first = await applyAll(await openSession(root));
+        const first = await writeOutputs(await openSession(root));
         expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         const { lockPath, lock, ownershipPath, ownership } = readPackageInputs(root, client);
         const preview = await run([process.execPath, CLI, 'install', '--dry-run', '--json'], {
@@ -66,7 +66,7 @@ test.each(PACKAGE_PROJECTS)(
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, rootPackage } = fixture;
-        const first = await applyAll(await openSession(root));
+        const first = await writeOutputs(await openSession(root));
         expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         const { manifest, lockPath, lock, ownershipPath, ownership } = readPackageInputs(root, client);
         const stale = lock.toString('utf8').replaceAll('3.8.1', '0.0.0');
@@ -82,14 +82,14 @@ ${lock.toString('utf8')}
             join(root, projectPath),
             JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${client}@99.0.0` }),
         );
-        expect(await rejection(applyAll(await openSession(root)))).toContain(
+        expect(await rejection(writeOutputs(await openSession(root)))).toContain(
             'Install that package manager version first',
         );
         expect(readFileSync(lockPath, 'utf8')).toBe(conflict);
         expect(readFileSync(join(root, '.gspot/package.json'))).toStrictEqual(manifest);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         writeFileSync(join(root, projectPath), rootPackage);
-        const repaired = await applyAll(await openSession(root));
+        const repaired = await writeOutputs(await openSession(root));
         expect(repaired.written).toContain(`.gspot/${LOCKS[client]}`);
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(readFileSync(lockPath, 'utf8')).not.toContain('<<<<<<<');

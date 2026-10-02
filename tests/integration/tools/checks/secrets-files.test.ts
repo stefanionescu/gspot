@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/inputs/integration/tools/checks.ts';
@@ -21,7 +21,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     if (Bun.which('gitleaks') === null) throw new Error('The native secrets test requires gitleaks.');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': SECRETS_FILES_POLICY, 'src/config.js': PLANTED_TOKEN });
-    await applyAll(await openSession(sandbox.path));
+    await writeOutputs(await openSession(sandbox.path));
     const withoutGit = await secretChecks(sandbox.path);
     expect(withoutGit).toContainEqual(
         containing({

@@ -4,8 +4,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { readdirSync, readFileSync } from 'node:fs';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
@@ -13,7 +13,7 @@ import { readPackageInputs, createPackageProject } from '#tests/support/cli/pack
 test('CLI installation records the npm tools as one install with the native wrapper binary, and reports a usable tool', async () => {
     await using fixture = await createPackageProject('npm', 'package.json', 'none');
     const { root, rootPackage } = fixture;
-    await applyAll(await openSession(root));
+    await writeOutputs(await openSession(root));
     const { lockPath, lock, manifest } = readPackageInputs(root, 'npm');
     const installed = await run([process.execPath, CLI, 'install'], { cwd: root });
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

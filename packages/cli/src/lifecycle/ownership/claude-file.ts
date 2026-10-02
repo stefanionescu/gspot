@@ -1,8 +1,8 @@
 // Moving `CLAUDE.md` into `AGENTS.md`: its own text goes to the end of `AGENTS.md`, and the file goes.
 import type { Read } from '#cli/types/platform.ts';
 import { MOVED_HEADING } from '#cli/config/agents.ts';
+import { blockSpan } from '#cli/generation/markers.ts';
 import { identity } from '#cli/lifecycle/ownership/log.ts';
-import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import type { Log, Planned } from '#cli/types/lifecycle/lifecycle.ts';
 

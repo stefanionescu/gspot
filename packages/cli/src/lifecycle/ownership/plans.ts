@@ -3,8 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
+import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {

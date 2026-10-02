@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'import-meta-resolve';
 import { join, resolve as resolvePath } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/native/protocol.ts';
+import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 function moduleSource(path: string, text: string): string {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);

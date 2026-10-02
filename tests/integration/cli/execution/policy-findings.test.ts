@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/inputs/integration/cli/execution/execution.ts';
 
@@ -34,5 +34,5 @@ test('apply refuses a policy with a wrong entry, because it writes from the poli
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': BROKEN, '.gitignore': '.gspot/\n' });
     const session = await openSession(sandbox.path);
-    expect(await rejection(applyAll(session))).toContain('gspot.toml: ignore.0.reason:');
+    expect(await rejection(writeOutputs(session))).toContain('gspot.toml: ignore.0.reason:');
 });

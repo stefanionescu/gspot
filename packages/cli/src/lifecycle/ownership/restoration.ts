@@ -2,8 +2,8 @@
 // gspot adopted it.
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
+import { blockSpan } from '#cli/generation/markers.ts';
 import { matches } from '#cli/lifecycle/ownership/log.ts';
-import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';

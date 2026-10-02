@@ -6,10 +6,15 @@ import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
 import { ACTIVE_LEVELS } from '#cli/config/native.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { runEslintPreview } from '#cli/native/eslint-preview.ts';
-import type { eslintCoverageRequest } from '#cli/native/protocol.ts';
 import { PRIVATE_FILE, ARGUMENT_START } from '#cli/config/platform.ts';
-import { configurationRequest, eslintPreviewResponse, eslintCoverageResponse } from '#cli/native/protocol.ts';
+import { runEslintPreview } from '#cli/lifecycle/preview/eslint/declarations.ts';
+import type { eslintCoverageRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
+
+import {
+    configurationRequest,
+    eslintPreviewResponse,
+    eslintCoverageResponse,
+} from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 // Evaluates the operation the request names and checks the answer against its response shape.
 async function evaluate(request: z.infer<typeof configurationRequest>, output: string): Promise<unknown> {

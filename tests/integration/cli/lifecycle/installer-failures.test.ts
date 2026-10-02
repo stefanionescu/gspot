@@ -2,15 +2,15 @@ import { join, delimiter } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { installCommand } from '#cli/commands/install.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { installCommand } from '#cli/commands/install/command.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -159,7 +159,7 @@ if (onPosix) {
             });
             const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
             expect(ran.code).toBe(0);
-            await applyAll(await openSession(repository.path));
+            await writeOutputs(await openSession(repository.path));
             const launcher = join(repository.path, 'bin/gspot');
             if (condition === 'missing') rmSync(launcher);
             else chmodSync(launcher, 0o644);

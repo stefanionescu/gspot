@@ -20,7 +20,7 @@ validateManifests(kitManifests());
 rmSync(distribution, { recursive: true, force: true });
 for (const [entry, name, banner] of [
     ['src/main.ts', 'gspot.js', '#!/usr/bin/env node'],
-    ['src/native/process.ts', 'configuration.js', ''],
+    ['src/lifecycle/preview/eslint/worker.ts', 'configuration.js', ''],
 ] as const) {
     const result = await Bun.build({
         entrypoints: [join(root, entry)],

@@ -4,8 +4,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
@@ -16,7 +16,7 @@ test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'pa
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, artifacts } = fixture;
         const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
-        const first = await applyAll(await openSession(root));
+        const first = await writeOutputs(await openSession(root));
         expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         const { manifest, lock } = readPackageInputs(root, client);
         const clone = join(artifacts, 'clone');

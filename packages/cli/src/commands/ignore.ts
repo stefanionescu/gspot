@@ -9,8 +9,8 @@ import { quoteArgument } from '#cli/platform/quoting.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
+import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
 import { listFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { CommandResult, IgnoreOptions } from '#cli/types/commands.ts';
 

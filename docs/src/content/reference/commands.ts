@@ -11,9 +11,7 @@ const COMMAND_OWNERS = new Map([
     ['doctor', 'commands/doctor/command.ts'],
     ['check', 'commands/check/command.ts'],
     ['explain', 'commands/explain/command.ts'],
-    ['apply', 'commands/apply/command.ts'],
-    ['add', 'commands/kits.ts'],
-    ['remove', 'commands/kits.ts'],
+    ['install', 'commands/install/command.ts'],
 ]);
 
 function commandPage(command: Command, name: string): ReferencePage {

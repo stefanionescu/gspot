@@ -1,18 +1,19 @@
+import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
 import { GspotError } from '#cli/platform/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
+import { registerApply } from '#cli/commands/apply.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
+import { registerRemove } from '#cli/commands/remove.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
-import { registerInstall } from '#cli/commands/install.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { registerInit } from '#cli/commands/init/command.ts';
-import { registerApply } from '#cli/commands/apply/command.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
-import { registerAdd, registerRemove } from '#cli/commands/kits.ts';
+import { registerInstall } from '#cli/commands/install/command.ts';
 import { ERROR_EXIT, HELP_CODES } from '#cli/config/commands/commands.ts';
 import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 

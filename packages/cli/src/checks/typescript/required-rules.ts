@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { runConfiguration } from '#cli/native/configuration.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { eslintCoverageResponse } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
+import { eslintCoverageResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 import { ESLINT_FILE, LINT_CHECKS, ESLINT_RULE_LEVELS } from '#cli/config/checks/typescript.ts';
 
 // The rules the selected kits require, for each file ending they name.

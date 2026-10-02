@@ -15,7 +15,7 @@ import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';
-import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
+import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import type { SetOptions, CommandResult } from '#cli/types/commands.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/write.ts';

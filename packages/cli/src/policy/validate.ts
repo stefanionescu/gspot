@@ -2,7 +2,7 @@ import { similar } from '#cli/policy/similar.ts';
 import { selectForScope } from '#cli/kits/select.ts';
 import { unknownKit } from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { excludeProblems } from '#cli/agents/assemble.ts';
+import { excludeProblems } from '#cli/rules/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/python.ts';

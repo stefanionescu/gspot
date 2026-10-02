@@ -4,9 +4,9 @@ import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
+import { currentBlock } from '#cli/generation/markers.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { rmSync, statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 const INIT = ['init', '--yes', '--json', '--kits', 'bash', '--no-runner', '--no-hooks', '--no-ci', '--no-install'];

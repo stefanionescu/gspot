@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
+import { applyBlock } from '#cli/generation/markers.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
-import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 

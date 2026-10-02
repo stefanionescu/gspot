@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
@@ -26,7 +26,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
         'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         '.gspot/authored.json': original,
     });
-    await applyAll(await openSession(sandbox.path));
+    await writeOutputs(await openSession(sandbox.path));
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.json).toMatchObject({
         changes: { configurationNotOwned: [containing({ path: '.gspot/authored.json' })] },

@@ -39,7 +39,7 @@ function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read>
  * @param replace reviewed originals authorized for replacement
  * @returns generated changes and preserved files
  */
-export async function applyAll(session: Session, replace?: ReadonlyMap<string, Read>): Promise<ApplyReport> {
+export async function writeOutputs(session: Session, replace?: ReadonlyMap<string, Read>): Promise<ApplyReport> {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoProblems(session.policyFiles);
     return runOwnedLifecycle(session.root, async (owner) => {

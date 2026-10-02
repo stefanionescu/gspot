@@ -1,17 +1,17 @@
 import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { gixyRules } from '#cli/lifecycle/rules/gixy.ts';
-import { valeRules } from '#cli/lifecycle/rules/vale.ts';
+import { gixyRules } from '#cli/lifecycle/preview/gixy.ts';
+import { valeRules } from '#cli/lifecycle/preview/vale.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { GENERATED_JSON_KEY } from '#cli/config/generation.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { sqlfluffRules } from '#cli/lifecycle/rules/sqlfluff.ts';
+import { sqlfluffRules } from '#cli/lifecycle/preview/sqlfluff.ts';
 import { type ParseError, parse as parseJson } from 'jsonc-parser';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { javascriptRules } from '#cli/lifecycle/rules/javascript.ts';
-import { shellcheckRules } from '#cli/lifecycle/rules/shellcheck.ts';
-import { swiftformatRules } from '#cli/lifecycle/rules/swiftformat.ts';
+import { javascriptRules } from '#cli/lifecycle/preview/javascript.ts';
+import { shellcheckRules } from '#cli/lifecycle/preview/shellcheck.ts';
+import { swiftformatRules } from '#cli/lifecycle/preview/swiftformat.ts';
 
 function jsonDocument(text: string): unknown {
     const errors: ParseError[] = [];

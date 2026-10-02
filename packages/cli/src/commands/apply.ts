@@ -3,13 +3,13 @@ import { directoryOf } from '#cli/commands/flags.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { eslintRuleDiff } from '#cli/lifecycle/rules/eslint-diff.ts';
+import { eslintRuleDiff } from '#cli/lifecycle/preview/eslint/diff.ts';
 import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands.ts';
 
@@ -105,6 +105,6 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const root = findRoot(options.cwd);
     const session = await openSession(root);
     if (options.isDryRun) return previewApply(session);
-    const report = await applyAll(session);
+    const report = await writeOutputs(session);
     return { text: reportText(report), json: report, exitCode: 0 };
 }
