@@ -36,6 +36,6 @@ export type ListingRow = {
     checks: { check: string; stage: string }[];
     settings: string[];
     rules: string[];
-    default: boolean;
+    auto: boolean;
     proposed: boolean;
 };

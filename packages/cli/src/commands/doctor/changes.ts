@@ -91,7 +91,7 @@ export function changeReport(session: Session): ChangeReport {
             .filter((plan) => !selected.has(plan.kit))
             .filter((plan) => {
                 const manifest = session.manifests.get(plan.kit);
-                return manifest?.kit.default !== true && manifest?.kit.kind !== 'general';
+                return manifest?.kit.auto !== true && manifest?.kit.kind !== 'general';
             })
             .map((plan) => ({
                 kit: plan.kit,

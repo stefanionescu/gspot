@@ -2,7 +2,7 @@
 name = "files"
 kind = "general"
 title = "Configuration Files"
-default = true
+auto = true
 requires = ["formatting"]
 recommends = ["spelling"]
 description = "Checks JSON, YAML, TOML, workflows, environment files, XML, and related formats. Its templates configure the tools that inspect these files."

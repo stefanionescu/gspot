@@ -36,7 +36,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         rules: Object.values(manifest.guides)
             .flat()
             .map((entry) => entry.path),
-        default: manifest.kit.default,
+        auto: manifest.kit.auto,
         proposed: manifest.kit.proposed,
     };
     const { detect, owners } = manifest;

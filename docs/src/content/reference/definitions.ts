@@ -115,7 +115,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
     const opening = [
         `${configuration.description}\n\nKind: ${configuration.kind}.`,
         requires === '' ? '' : ` Requires: ${requires}.`,
-        configuration.default ? ' Selected by default.' : '',
+        configuration.auto ? ' Selected by default.' : '',
         '\n',
     ].join('');
     const body = [

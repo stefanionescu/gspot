@@ -2,7 +2,7 @@
 name = "docs"
 kind = "general"
 title = "Docs"
-default = true
+auto = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
 
 [owners]

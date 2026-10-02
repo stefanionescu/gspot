@@ -107,7 +107,7 @@ function planFor(manifest: Manifest, tree: Layout): KitEvidence | undefined {
         const evidence = source(manifest.detect, tree);
         if (evidence !== undefined) return { kit: configuration.name, kind: configuration.kind, evidence };
     }
-    const evidence = configuration.default && tree.scope === '' ? 'every repository' : undefined;
+    const evidence = configuration.auto && tree.scope === '' ? 'every repository' : undefined;
     return evidence === undefined ? undefined : { kit: configuration.name, kind: configuration.kind, evidence };
 }
 

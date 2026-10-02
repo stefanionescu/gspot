@@ -185,7 +185,7 @@ export const manifestSchema = z.strictObject({
         requires: stringList,
         check_references: z.array(z.string().min(1)).default([]),
         recommends: stringList,
-        default: z.boolean().default(false),
+        auto: z.boolean().default(false),
         proposed: z.boolean().default(false),
         // A configuration whose checks all read git is not proposed in a folder with no .git.
         needs_git: z.boolean().default(false),
