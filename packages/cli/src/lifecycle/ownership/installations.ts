@@ -54,7 +54,9 @@ export function recoverInstallations(log: Log): void {
 export function installTree(log: Log, kind: InstallationKind, outputs: InstalledOutput[]): void {
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
-    if (state.installs?.includes(kind) !== true && files.list(folder).length > 0)
+    // An install still in progress made the folder: a crash after its swap and before its record leaves it there.
+    const isOwned = state.installs?.includes(kind) === true || state.installations?.includes(kind) === true;
+    if (!isOwned && files.list(folder).length > 0)
         throw new Error(`Preserved unowned ${folder}. Move it aside before installing.`);
     setInProgress(log, kind, true);
     files.removeTree(staging);
