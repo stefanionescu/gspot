@@ -9,10 +9,10 @@ import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
-import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { finishInstall } from '#cli/commands/install/steps.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { Written, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 

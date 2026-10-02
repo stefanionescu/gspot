@@ -40,7 +40,7 @@
     },
     "imports": {
         "#cli/*": "./src/*",
-        "#package": "./package.json"
+        "#cli-package": "./package.json"
     },
     "dependencies": {
         "@clack/prompts": "1.8.0",
