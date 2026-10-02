@@ -1,14 +1,11 @@
 import { patch } from '@decimalturn/toml-patch';
+import { isRecord } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 import type { Mutation, TomlTable, WriteResult } from '#cli/types/policy/policy.ts';
 import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
-
-function isTable(value: unknown): value is TomlTable {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function splitKey(key: string): { path: string[]; name: string } {
     const path = key.split('.');
@@ -33,7 +30,7 @@ export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): Tom
             next = {};
             current[part] = next;
         }
-        if (!isTable(next)) return undefined;
+        if (!isRecord(next)) return undefined;
         current = next;
     }
     return current;
@@ -140,7 +137,7 @@ export function deleteKey(key: string): Mutation {
         let table = raw;
         for (const part of path) {
             const next = table[part];
-            if (!isTable(next)) return;
+            if (!isRecord(next)) return;
             tables.push(next);
             table = next;
         }

@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { valueAt, isRecord } from '#cli/platform/text.ts';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import type { KeyPath, KitDocument } from '#cli/types/lifecycle/merge.ts';
 import { isMap, isNode, isAlias, isCollection, parseDocument } from 'yaml';
@@ -13,21 +14,6 @@ function jsonDocument(text: string) {
     if (errors.length > 0 || tree?.type !== 'object')
         throw new Error('Shared configuration must be a valid JSON object.');
     return tree;
-}
-
-// The value at a key path inside a parsed object, or undefined when any key is absent.
-function valueAt(root: unknown, path: KeyPath): unknown {
-    let value: unknown = root;
-    for (const key of path) {
-        if (value === null || typeof value !== 'object' || !Object.hasOwn(value, key)) return undefined;
-        value = (value as Record<string, unknown>)[key];
-    }
-    return value;
-}
-
-// Whether a parsed TOML value can hold keys: a table, not a list, a date, or a scalar.
-function isTable(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
 }
 
 // The TOML table a key path's parent names, created on the way when a value is being set.
@@ -43,7 +29,7 @@ function tomlTable(
             Object.defineProperty(table, key, { value: {}, enumerable: true, writable: true, configurable: true });
         }
         const child = table[key];
-        if (!isTable(child)) throw new Error(`TOML configuration field is not a table: ${String(key)}`);
+        if (!isRecord(child)) throw new Error(`TOML configuration field is not a table: ${String(key)}`);
         table = child;
     }
     return table;

@@ -1,4 +1,4 @@
-import { compact } from '#cli/platform/text.ts';
+import { compact, isRecord } from '#cli/platform/text.ts';
 import type { Defined } from '#cli/types/platform/platform.ts';
 import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/config/policy/policy.ts';
 
@@ -15,12 +15,8 @@ import type {
     NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
-function isTable(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function isReasonedForm(value: unknown): value is { value: unknown; reason: string } {
-    return isTable(value) && 'value' in value && 'reason' in value;
+    return isRecord(value) && 'value' in value && 'reason' in value;
 }
 
 function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
@@ -34,7 +30,7 @@ function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
 function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable {
     const language: NamingLanguageTable = { ...normalizeCategory(table), categories: {} };
     for (const [inner, entry] of Object.entries(table))
-        if (!CATEGORY_KEYS.has(inner) && isTable(entry)) language.categories[inner] = normalizeCategory(entry);
+        if (!CATEGORY_KEYS.has(inner) && isRecord(entry)) language.categories[inner] = normalizeCategory(entry);
     return language;
 }
 
@@ -90,7 +86,7 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
-        if (!isTable(value) || 'value' in value) {
+        if (!isRecord(value) || 'value' in value) {
             limits.root[key] = toReasoned(value as number | { value: number; reason: string });
             continue;
         }
@@ -129,7 +125,7 @@ function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
     };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries)
-        if (!NAMING_LIST_KEYS.has(key) && isTable(value)) naming.languages[key] = normalizeLanguage(value);
+        if (!NAMING_LIST_KEYS.has(key) && isRecord(value)) naming.languages[key] = normalizeLanguage(value);
     return naming;
 }
 
@@ -206,5 +202,5 @@ export function normalize(raw: RawPolicy): Policy {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The init proposal reads twelve TOML values as tables; one owner keeps the table test in one place.
 export function asRaw(value: unknown): Record<string, unknown> | undefined {
-    return isTable(value) ? value : undefined;
+    return isRecord(value) ? value : undefined;
 }
