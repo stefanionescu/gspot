@@ -64,49 +64,6 @@ function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefi
     }
 }
 
-function scriptProblems(root: Node): MarkupProblem[] {
-    const inline = root.descendantsOfType('script_element').flatMap((element): MarkupProblem[] => {
-        const held = attributes(element);
-        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
-        const body = element.namedChildren.find((child) => child.type === 'raw_text')?.text.trim() ?? '';
-        const isInert = INERT_SCRIPT_TYPES.has(kind) || held.some((entry) => entry.name === 'src');
-        return isInert || body === ''
-            ? []
-            : [
-                  {
-                      node: element,
-                      rule: 'inline-script',
-                      text: 'Move executable inline script to a script file.',
-                  },
-              ];
-    });
-    const handlers = root.descendantsOfType(['element', 'script_element']).flatMap((element) => {
-        const held = attributes(element);
-        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
-        return held.flatMap((entry): MarkupProblem[] => {
-            if (/^on[a-z]+$/u.test(entry.name))
-                return [
-                    {
-                        node: entry.node,
-                        rule: 'handler-attribute',
-                        text: `The ${entry.name} attribute is inline script. Attach the handler from a script file.`,
-                    },
-                ];
-            const scheme = scriptScheme(entry, kind);
-            return scheme === undefined
-                ? []
-                : [
-                      {
-                          node: entry.node,
-                          rule: 'script-link',
-                          text: `A ${scheme} URL embeds executable content. Use an external file.`,
-                      },
-                  ];
-        });
-    });
-    return [...inline, ...handlers];
-}
-
 // The text with the first placeholder of one kind cut out, or undefined when it holds none that closes.
 function firstCut(text: string, open: string, close: string): string | undefined {
     const start = text.indexOf(open);
@@ -201,6 +158,54 @@ function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const isExcluded = pathMatcher(excluded);
     const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
     return findings(input, paths, copyProblems);
+}
+
+/**
+ * Inline script, handler attributes, and script links in one parsed HTML document.
+ * @param root the root node of the document
+ * @returns the problems, each at its node
+ */
+export function scriptProblems(root: Node): MarkupProblem[] {
+    const inline = root.descendantsOfType('script_element').flatMap((element): MarkupProblem[] => {
+        const held = attributes(element);
+        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+        const body = element.namedChildren.find((child) => child.type === 'raw_text')?.text.trim() ?? '';
+        const isInert = INERT_SCRIPT_TYPES.has(kind) || held.some((entry) => entry.name === 'src');
+        return isInert || body === ''
+            ? []
+            : [
+                  {
+                      node: element,
+                      rule: 'inline-script',
+                      text: 'Move executable inline script to a script file.',
+                  },
+              ];
+    });
+    const handlers = root.descendantsOfType(['element', 'script_element']).flatMap((element) => {
+        const held = attributes(element);
+        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+        return held.flatMap((entry): MarkupProblem[] => {
+            if (/^on[a-z]+$/u.test(entry.name))
+                return [
+                    {
+                        node: entry.node,
+                        rule: 'handler-attribute',
+                        text: `The ${entry.name} attribute is inline script. Attach the handler from a script file.`,
+                    },
+                ];
+            const scheme = scriptScheme(entry, kind);
+            return scheme === undefined
+                ? []
+                : [
+                      {
+                          node: entry.node,
+                          rule: 'script-link',
+                          text: `A ${scheme} URL embeds executable content. Use an external file.`,
+                      },
+                  ];
+        });
+    });
+    return [...inline, ...handlers];
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */

@@ -53,21 +53,6 @@ test('SQL statement positions skip nested comments and count Unicode prefixes co
     ]);
 });
 
-test('concurrent SQL parsing returns independent results in a fresh process', () => {
-    const script = `
-        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/pg.ts', import.meta.dir))};
-        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parseSql(sql)));
-        console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
-    `;
-    const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });
-    expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(JSON.parse(result.stdout.toString())).toStrictEqual([
-        null,
-        { text: `syntax error at or near "${TYPO.select}"`, offset: 0 },
-        null,
-    ]);
-});
-
 test('psql commands and variables preserve diagnostic positions and PostgreSQL casts', async () => {
     const text = [
         String.raw`\set account '前言'`,

@@ -1,29 +1,21 @@
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { run as runCli } from '#tests/harness/cli/command.ts';
-import type { RunReport } from '#cli/types/execution/execution.ts';
-import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
+// One JavaScript and one Python lockfile: the parsing of every format is a unit test.
 const LOCKS: [string, string][] = [
     [
         'package-lock.json',
         JSON.stringify({ lockfileVersion: 3, packages: { 'node_modules/example': { version: '1.2.3' } } }),
     ],
-    ['bun.lock', '{"lockfileVersion":1,"packages":{"example":["example@1.2.3","",{},"sha512-fixture"]}}'],
-    ['pnpm-lock.yaml', 'lockfileVersion: "9.0"\npackages:\n  example@1.2.3(peer@2.0.0): {}\n'],
-    [
-        'yarn.lock',
-        '__metadata:\n  version: 8\n  cacheKey: 10c0\n"example@npm:^1.0.0":\n  version: 1.2.3\n  resolution: "example@npm:1.2.3"\n',
-    ],
     ['uv.lock', 'version = 1\n[[package]]\nname = "example"\nversion = "1.2.3"\n'],
-    ['poetry.lock', '[[package]]\nname = "example"\nversion = "1.2.3"\n'],
-    ['pdm.lock', '[[package]]\nname = "example"\nversion = "1.2.3"\n'],
 ];
 
 const POLICY = policyOf(
@@ -61,10 +53,6 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
     expect(await check()).toStrictEqual([]);
 });
 
-test.each(['package-lock.json', 'uv.lock'])('malformed %s cannot prove exception membership', (filename) => {
-    expect(() => lockedPackages(filename, '{ broken lockfile')).toThrow();
-});
-
 test('scoped license exceptions use ancestor workspace locks but not sibling or private tool locks', async () => {
     await using repository = await testdir();
     const root = repository.path;
@@ -97,44 +85,6 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     expect(await check()).toStrictEqual([]);
 });
 
-test('npm lockfiles retain resolved alias names, scoped names, and nested versions', () => {
-    const classic = JSON.stringify({
-        lockfileVersion: 1,
-        dependencies: {
-            '@types/is-number': { version: '7.0.5' },
-            'named-alias': { version: 'npm:is-number@7.0.0', dependencies: { example: { version: '2.0.0' } } },
-            example: { version: '1.0.0' },
-        },
-    });
-    const modern = JSON.stringify({
-        lockfileVersion: 3,
-        packages: {
-            'node_modules/@types/is-number': { version: '7.0.5' },
-            'node_modules/named-alias': { name: 'is-number', version: '7.0.0' },
-            'node_modules/named-alias/node_modules/example': { version: '2.0.0' },
-            'node_modules/example': { version: '1.0.0' },
-        },
-    });
-    const identities = lockedPackages('package-lock.json', classic);
-    expect(identities).toStrictEqual(lockedPackages('package-lock.json', modern));
-    expect(identities.has('is-number@7.0.0')).toBe(true);
-    expect(identities.has('named-alias@7.0.0')).toBe(false);
-    expect(identities.has('example@1.0.0')).toBe(true);
-    expect(identities.has('example@2.0.0')).toBe(true);
-});
-
-test('Yarn classic aliases retain resolved names instead of installation names', () => {
-    const lock = `# yarn lockfile v1
-"named-alias@npm:is-number@7.0.0":
-  version "7.0.0"
-"types-alias@npm:@types/is-number@7.0.5":
-  version "7.0.5"
-"@types/is-number@7.0.5":
-  version "7.0.5"
-`;
-    expect(lockedPackages('yarn.lock', lock)).toStrictEqual(new Set(['is-number@7.0.0', '@types/is-number@7.0.5']));
-});
-
 test.each(['root', 'nested', 'combined'])(
     'license selection %s runs its referenced integrity check once without adding structure',
     async (selection) => {
@@ -160,9 +110,17 @@ test.each(['root', 'nested', 'combined'])(
             .flatMap((scope) => scope.selected)
             .some((manifest) => manifest.kit.name === 'structure');
         expect(selectsStructure).toBe(selection === 'combined');
-        const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--json']);
-        expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect((JSON.parse(result.stdout) as RunReport).checks).toMatchObject([
+        const options = {
+            checks: CHECKS,
+            stage: 'all' as const,
+            skips: [],
+            only: ['integrity/allowlists-match'],
+            fix: false,
+            isDryRun: false,
+        };
+        const result = await executeRun(session, options);
+        expect(result.report.exitCode).toBe(1);
+        expect(result.report.checks).toMatchObject([
             {
                 check: 'integrity/allowlists-match',
                 status: 'fail',
@@ -172,16 +130,10 @@ test.each(['root', 'nested', 'combined'])(
         const path = `${root}/gspot.toml`;
         const policyText = await Bun.file(path).text();
         await Bun.write(path, policyText.replace('example@2.0.0', 'example@1.2.3'));
-        const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--json']);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        const corrected = await executeRun(await openSession(root), options);
+        expect(corrected.report.exitCode).toBe(0);
+        expect(corrected.report.checks).toMatchObject([
             { check: 'integrity/allowlists-match', status: 'ok', findings: [] },
         ]);
     },
 );
-
-test.each(['unknown.lock', '__proto__'])('unsupported lock format %s retains the format error', (filename) => {
-    expect(() => lockedPackages(filename, '{}')).toThrow(
-        'This lockfile format does not support package exception verification.',
-    );
-});
