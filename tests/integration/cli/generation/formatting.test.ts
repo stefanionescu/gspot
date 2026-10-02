@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import prettier, { type Options } from 'prettier';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -9,6 +10,7 @@ import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
+import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/samples/formatting.ts';
 
 test('the format width reaches editors and generated tool configurations', async () => {
     const width = 6;
@@ -86,4 +88,35 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     const source = await Bun.file(path).text();
     expect(await prettier.format(source, { ...editor, filepath: path })).toBe('parent:\n  child: value\n');
     expect(await prettier.format(source, { ...native, filepath: path })).toBe('parent:\n  child: value\n');
+});
+
+test('formatter overrides agree for explicit configuration and editor discovery', async () => {
+    await using directory = await testdir();
+    const root = directory.path;
+    await createFileTree(root, {
+        'gspot.toml': FORMAT_OVERRIDES_POLICY,
+        'package.json': '{"private":true}\n',
+        ...Object.fromEntries(FORMAT_CASES.map(({ file }) => [file, 'const greeting="hello";'])),
+    });
+    for (const file of emitted(await openSession(root)).files) await Bun.write(join(root, file.path), file.content);
+    for (const { file, ...expected } of FORMAT_CASES) {
+        for (const config of ['.gspot/config/prettier.json', '.prettierrc.json']) {
+            const resolved = await prettier.resolveConfig(join(root, file), {
+                config: join(root, config),
+                editorconfig: true,
+                useCache: false,
+            });
+            expect(resolved, `${file} via ${config}`).toMatchObject(expected);
+        }
+        expect(await prettier.resolveConfig(join(root, file), { editorconfig: true, useCache: false })).toMatchObject(
+            expected,
+        );
+    }
+    writeFileSync(join(root, 'tests/future.js'), 'const greeting="hello";');
+    expect(
+        await prettier.resolveConfig(join(root, 'tests/future.js'), {
+            config: join(root, '.gspot/config/prettier.json'),
+            useCache: false,
+        }),
+    ).toMatchObject({ singleQuote: true, semi: true });
 });

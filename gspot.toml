@@ -267,7 +267,7 @@ names = ["404"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.contract_properties]]
-file = "tests/integration/cli/generation/format-width.test.ts"
+file = "tests/integration/cli/generation/formatting.test.ts"
 names = ["MD007"]
 reason = "The markdownlint rule name."
 
