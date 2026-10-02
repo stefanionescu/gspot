@@ -1,8 +1,8 @@
 // A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
 import { isInside } from '#cli/platform/paths.ts';
+import { join, posix, relative } from 'node:path';
 import { decodedText } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { writeLink, afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
@@ -89,10 +89,17 @@ function makeDirectory(bounds: Bounds, path: string, mode: number): void {
     chmodSync(target, mode);
 }
 
-// Releases every lock this root still holds, leaving a lock another writer took over.
+// Releases every lock this root still holds, leaving a lock another writer took over. The folders only a lock kept
+// go too, so a writer that wrote nothing leaves nothing.
 function releaseLocks(bounds: Bounds): void {
-    for (const [path, holder] of bounds.locks)
-        if (readEntry(bounds, path, false)?.bytes.toString('utf8') === holder) unlinkSync(parentPath(bounds, path));
+    for (const [path, holder] of bounds.locks) {
+        if (readEntry(bounds, path, false)?.bytes.toString('utf8') !== holder) continue;
+        unlinkSync(parentPath(bounds, path));
+        for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
+            if (listOf(bounds, folder).length > 0) break;
+            rmdirSync(parentPath(bounds, folder));
+        }
+    }
     bounds.locks.clear();
 }
 
