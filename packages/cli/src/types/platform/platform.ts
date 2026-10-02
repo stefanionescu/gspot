@@ -87,6 +87,7 @@ export type Root = {
     readEntry(path: string): Read | undefined;
     read(path: string): Read | undefined;
     write(path: string, value: Read, expected: Read | undefined): void;
+    link(path: string, value: Read): void;
     remove(path: string, expected: Read): void;
     mkdir(path: string, mode: number): void;
     rmdir(path: string): void;

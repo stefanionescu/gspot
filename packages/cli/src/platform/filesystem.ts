@@ -5,7 +5,7 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/platform/paths.ts';
 import { decodedText } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
-import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
+import { writeLink, afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
 import type { Read, Root, Bounds, PathFormat, ScratchFolder } from '#cli/types/platform/platform.ts';
 
@@ -130,6 +130,9 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         readEntry: (path) => readEntry(bounds, path, true),
         write: (path, value, expected) => {
             afterWrite(bounds, path, value, expected);
+        },
+        link: (path, value) => {
+            writeLink(parentPath(bounds, path, true), value.bytes, value);
         },
         remove: (path, expected) => {
             removeEntry(bounds, path, expected);

@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -46,7 +45,7 @@ test('opening a session reads less than one megabyte with a two-megabyte source'
     }
 });
 
-test('source discovery rejects external file and directory links before content inspection', async () => {
+test('source discovery leaves out external file and directory links before content inspection', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'project/local.ts': 'export const local = true;\n',
@@ -60,7 +59,8 @@ test('source discovery rejects external file and directory links before content 
     ] as const) {
         fs.symlinkSync(target, join(root, name));
         expect(processes.runBlocking(['git', 'add', '--', name], { cwd: root }).code).toBe(0);
-        await rejects(readRepository(root, [], [], []), { message: /Source link leaves the repository/u });
+        const repository = await readRepository(root, [], [], []);
+        expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
         expect(() => readPrefix(root, name, 64)).toThrow('Source link leaves the repository');
         fs.unlinkSync(join(root, name));
         expect(processes.runBlocking(['git', 'rm', '--cached', '--', name], { cwd: root }).code).toBe(0);

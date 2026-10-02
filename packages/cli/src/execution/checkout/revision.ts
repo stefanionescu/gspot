@@ -37,8 +37,9 @@ function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>):
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
     const mode = ENTRY_MODES[entry.mode] ?? OWNER_WRITABLE_FILE;
-    const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
-    files.write(entry.path, content, undefined);
+    // A tracked link keeps its target, wherever it points, as a Git checkout keeps it.
+    if (entry.mode === '120000') files.link(entry.path, { bytes, mode, isLink: true });
+    else files.write(entry.path, { bytes, mode }, undefined);
 }
 
 async function populateRevision(
