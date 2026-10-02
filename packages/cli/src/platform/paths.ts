@@ -11,7 +11,8 @@ import type { GlobWalk, GlobOptions } from '#cli/types/platform/platform.ts';
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {
     const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;
-    const climbs = bare.startsWith('/') || /(?:^|[/{,])\.\.(?=[/},]|$)/u.test(bare);
+    // An absolute path starts with a slash, or on Windows with a drive letter.
+    const climbs = bare.startsWith('/') || /^[a-z]:/iu.test(bare) || /(?:^|[/{,])\.\.(?=[/},]|$)/u.test(bare);
     if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
 }
 
