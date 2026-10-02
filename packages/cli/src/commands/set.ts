@@ -108,17 +108,25 @@ function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     };
 }
 
+// What set did: the new value, or the items it added to or removed from a list.
+function changeText(o: SetOptions, isList: boolean, shown: string, value: unknown): string {
+    const items = JSON.stringify(value);
+    if (!isList || o.replace) return `${shown} = ${items}`;
+    return `${o.remove ? 'removed from' : 'added to'} ${shown}: ${items}`;
+}
+
 function describeSet(
     session: Session,
     selection: ScopeSelection,
     o: SetOptions,
     shown: string,
     value: unknown,
+    isList: boolean,
 ): string {
     const current = settingValue(selection.surface, session.policyFiles.policy, o.key, o.scope);
     const reason = o.reason === undefined ? '' : `  # ${o.reason}`;
     const was = current === undefined ? '' : `  (was ${JSON.stringify(current.value)} from ${current.source})`;
-    return `${shown} = ${JSON.stringify(value)}${reason}${was}`;
+    return `${changeText(o, isList, shown, value)}${reason}${was}`;
 }
 
 function refuseRuleOff(spec: SettingSpec, o: SetOptions): void {
@@ -179,7 +187,12 @@ function writeValue(
     );
     validateSetReason(session, selection, o, spec, value);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));
+    return commitPolicy(
+        root,
+        setMutation(o, isList, value),
+        false,
+        describeSet(session, selection, o, shown, value, isList),
+    );
 }
 
 /**
