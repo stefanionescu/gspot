@@ -151,3 +151,23 @@ test.each([
         which.mockRestore();
     }
 });
+
+test('an npm tool behind a shim file takes the version of its package', async () => {
+    await using sandbox = await testdir();
+    // npm and Bun write a shim file on Windows, where a symlink into the package serves on other systems.
+    const binEntry =
+        process.platform === 'win32'
+            ? { '.gspot/node_modules/.bin/teller.cmd': '@echo unknown\r\n' }
+            : { '.gspot/node_modules/.bin/teller': '#!/bin/sh\necho unknown\n' };
+    await createFileTree(sandbox.path, {
+        '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
+        ...binEntry,
+    });
+    for (const path of Object.keys(binEntry)) chmodSync(join(sandbox.path, path), EXECUTABLE_FILE);
+    const inspection = inspectTool(
+        { root: sandbox.path, inspections: new Map() },
+        commandPin('teller', '5.0.1', 'teller'),
+    );
+    expect(inspection.state, inspection.note).toBe('ok');
+    expect(inspection.found).toBe('5.0.1');
+});

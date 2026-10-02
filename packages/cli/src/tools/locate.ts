@@ -131,12 +131,11 @@ export function packageVersion(root: string, path: string, name: string | undefi
     if (name === undefined) return undefined;
     const files = toPosix(relative(root, path)).startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
     try {
-        return versionAbove(
-            files,
-            root,
-            dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path)))),
-            name,
-        );
+        const folder = dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path))));
+        // A Windows shim in node_modules/.bin is a file of its own, not a link into its package, so the package is
+        // found by name beside that folder.
+        const start = basename(folder) === '.bin' ? join(dirname(folder), name) : folder;
+        return versionAbove(files, root, start, name);
     } finally {
         files?.close();
     }
