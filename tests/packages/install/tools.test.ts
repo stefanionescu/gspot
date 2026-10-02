@@ -175,7 +175,7 @@ test(
         expect(toolLock.toString('utf8')).not.toContain(release.registry.work);
         const preview = await run([...command, 'install', '--dry-run', '--json'], toolOptions);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InstallJson).isDryRun).toBe(true);
+        expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
         // The planted mise is older than the runner pin, so install exits 2 after it installs the npm tools.
         const installed = await run([...command, 'install', '--json'], toolOptions);
         expect(installed.code, installed.stdout + installed.stderr).toBe(2);

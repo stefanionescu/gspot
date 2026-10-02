@@ -18,8 +18,8 @@ export type ApplyReport = {
     written: string[];
     unchanged: string[];
     removed: string[];
-    blocks: string[];
-    packages: string[];
+    /** Authored files gspot changed in place: a managed block, or the scripts of a package.json. */
+    updated: string[];
     notes: string[];
 };
 

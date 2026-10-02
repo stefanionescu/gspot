@@ -50,8 +50,7 @@ export async function writeOutputs(session: Session, replace?: ReadonlyMap<strin
             written: [],
             unchanged: [],
             removed: [],
-            blocks: [],
-            packages: [],
+            updated: [],
             notes: [],
         };
         const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

@@ -52,7 +52,7 @@ export type ApplyOptions = {
 
 /** The JSON a dry-run apply prints: the version pin, the drifted files, and the notes of the plan. */
 export type ApplyPreviewJson = {
-    isDryRun: true;
+    dryRun: true;
     pin: { from: string | undefined; to: string };
     drift: DriftEntry[];
     notes: string[];

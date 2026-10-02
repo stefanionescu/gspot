@@ -28,7 +28,7 @@ test.each(PACKAGE_PROJECTS)(
             cwd: root,
         });
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InstallJson).isDryRun).toBe(true);
+        expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         expect(lock.toString('utf8')).not.toContain(registry.token);
         // Yarn 1 writes resolved URLs into its lock; the private registry must not be among them.

@@ -51,15 +51,14 @@ async function previewApply(session: Session): Promise<CommandResult> {
     const summary = drift.length === 0 ? 'every generated file matches its plan\n' : driftText(drift);
     const text = summary + plan.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
-    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: plan.notes };
+    const json: ApplyPreviewJson = { dryRun: true, pin, drift, notes: plan.notes };
     return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }
 
 function reportText(report: ApplyReport): string {
     const lines = [
         ...report.written.map((path) => `wrote    ${path}`),
-        ...report.blocks.map((path) => `block    ${path}`),
-        ...report.packages.map((path) => `scripts  ${path}`),
+        ...report.updated.map((path) => `updated  ${path}`),
         ...report.removed.map((path) => `removed  ${path}`),
         ...report.notes.map((note) => `note     ${note}`),
     ];

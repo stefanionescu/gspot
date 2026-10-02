@@ -49,8 +49,8 @@ test('apply previews missing outputs without writing and rejects obsolete mutati
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const result = JSON.parse(preview.stdout) as { isDryRun: boolean; drift: { path: string; kind: string }[] };
-    expect(result.isDryRun).toBe(true);
+    const result = JSON.parse(preview.stdout) as { dryRun: boolean; drift: { path: string; kind: string }[] };
+    expect(result.dryRun).toBe(true);
     expect(result.drift).toContainEqual(containing({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);

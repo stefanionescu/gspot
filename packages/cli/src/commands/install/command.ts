@@ -49,7 +49,7 @@ function previewInstallation(steps: string[][], failures: string[], hooks: strin
     ];
     return {
         text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
-        json: { isDryRun: true, steps, ...compact({ hooks }) } satisfies InstallJson,
+        json: { dryRun: true, steps, ...compact({ hooks }) } satisfies InstallJson,
         exitCode: 0,
     };
 }

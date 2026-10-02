@@ -42,7 +42,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     const { plan, policyText } = prepared;
     if (options.isDryRun) {
         if (!options.json) print('--dry-run: nothing written.\n');
-        return { text: '', json: { root, plan, policy: policyText, isDryRun: true }, exitCode: 0 };
+        return { text: '', json: { root, plan, policy: policyText, dryRun: true }, exitCode: 0 };
     }
     if (plan.unread.length === 0) return undefined;
     return {

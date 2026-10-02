@@ -55,7 +55,7 @@ export type InitJson = {
     root?: string;
     plan?: ReplacePlan;
     policy?: string;
-    isDryRun?: boolean;
+    dryRun?: boolean;
     written?: boolean;
     error?: string;
     install?: string;

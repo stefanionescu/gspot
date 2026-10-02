@@ -93,9 +93,9 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
-    report.blocks.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
+    report.updated.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     for (const { plan, package: isPackage } of configurations) {
-        if (plan.status === 'changed') (isPackage ? report.packages : report.written).push(plan.path);
+        if (plan.status === 'changed') (isPackage ? report.updated : report.written).push(plan.path);
     }
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
 }

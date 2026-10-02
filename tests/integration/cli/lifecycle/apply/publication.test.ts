@@ -16,7 +16,7 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
     const policy = policyOf([], '[rules]\ninstall = true\n');
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect(preview.json).toMatchObject({ isDryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
+    expect(preview.json).toMatchObject({ dryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
     expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
