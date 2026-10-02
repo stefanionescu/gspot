@@ -8,20 +8,6 @@ import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
 import type { Checked, PushReport, CheckOptions, PushRevision, CheckCommandResult } from '#cli/types/commands/check.ts';
 
-// Refuses the options that select or change files, which a push of exact objects cannot honor.
-function assertPushOptions(options: CheckOptions): void {
-    const hasConflict =
-        options.staged ||
-        options.changed !== undefined ||
-        options.fix ||
-        options.stage !== undefined ||
-        options.messageFile !== undefined;
-    if (hasConflict)
-        throw new GspotError('selection', [
-            'Pre-push object checks cannot be combined with --staged, --changed, --fix, --hook, or --message-file.',
-        ]);
-}
-
 // Checks one pushed commit in a snapshot of it, or undefined when the run was canceled.
 async function checkRevision(
     root: string,
@@ -63,6 +49,23 @@ function buildReport(selected: PushSelection, revisions: Checked[], signal: Abor
         exitCode,
         ...(signal.aborted ? { canceled: { pendingRefs } } : {}),
     };
+}
+
+/**
+ * Refuses the options that select or change files, which a push of exact objects cannot honor.
+ * @param options the parsed flags
+ */
+export function assertPushOptions(options: CheckOptions): void {
+    const hasConflict =
+        options.staged ||
+        options.changed !== undefined ||
+        options.fix ||
+        options.stage !== undefined ||
+        options.messageFile !== undefined;
+    if (hasConflict)
+        throw new GspotError('selection', [
+            'Pre-push object checks cannot be combined with --staged, --changed, --fix, --hook, or --message-file.',
+        ]);
 }
 
 /**

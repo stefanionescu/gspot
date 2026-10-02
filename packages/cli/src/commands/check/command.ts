@@ -6,6 +6,7 @@ import { HOOKS } from '#cli/config/commands/check.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
+import { assertPushOptions } from '#cli/commands/check/push.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import type { Program, GlobalFlags, CommandResult } from '#cli/types/commands/commands.ts';
@@ -46,6 +47,8 @@ async function readPushInput(signal: AbortSignal): Promise<string> {
 async function pushOptions(options: CheckOptions, paths: string[], signal: AbortSignal): Promise<CheckOptions> {
     if (paths.length > 0 && paths.length !== PUSH_ARGUMENTS)
         throw new InvalidArgumentError('Pre-push expects the remote name and URL supplied by Git.');
+    // A refused flag stops the run before it waits for input that a terminal may never send.
+    assertPushOptions(options);
     const input = await readPushInput(signal);
     return { ...options, paths: [], push: { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
 }
