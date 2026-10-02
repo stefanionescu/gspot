@@ -120,7 +120,6 @@ export type InitPlan = {
     commitScopes?: string[];
 };
 export type Written = { lines: string[]; installNote: string; exitCode: number };
-export type Installed = { installNote: string; exitCode: number };
 export type ReplacePlan = {
     ci?: { commands: string[] };
     profile?: { name: string; digest: string; selection: string; detected: string[] };

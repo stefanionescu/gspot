@@ -1,9 +1,11 @@
-// gspot remove: the kit leaves the selection and its outputs go, unless another kit needs it or it was never listed.
+// gspot add and remove: the kit joins or leaves the selection, and a failed install keeps the policy and says what to run.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import * as steps from '#cli/commands/install/steps.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 
 const BASH_IN_API = `kits = []
@@ -41,4 +43,25 @@ test.each([
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toContain(expected);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+});
+
+test.each([
+    ['add', ['add', 'bash', '--scope', 'api']],
+    ['remove', ['remove', 'bash', '--scope', 'api']],
+])('%s keeps the written policy and says to run gspot install when the install fails', async (_, argv) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': argv[0] === 'add' ? BASH_IN_API.replace('kits = ["bash"]', 'kits = []') : BASH_IN_API,
+        'api/entry.sh': 'echo api\n',
+    });
+    commitAll(sandbox.path);
+    using failing = spyOn(steps, 'installTools').mockRejectedValue(
+        new AggregateError([new GspotError('installation', 'npm install failed')], 'npm install failed'),
+    );
+    const result = await runGspot(sandbox.path, argv);
+    expect(failing).toHaveBeenCalled();
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stdout).toContain('tool installation is incomplete. Run: gspot install');
+    const policy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
+    expect(policy).toContain(argv[0] === 'add' ? 'path = "api"\nkits = ["bash"]' : 'path = "api"\nkits = []');
 });

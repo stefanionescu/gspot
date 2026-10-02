@@ -10,7 +10,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { proposePolicy } from '#cli/policy/mutations.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { installTools } from '#cli/commands/install/steps.ts';
+import { finishInstall } from '#cli/commands/install/steps.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Mutation, Proposal } from '#cli/types/policy/policy.ts';
 import type { CommandResult, PreparedPolicy } from '#cli/types/commands/commands.ts';
@@ -117,7 +117,8 @@ export async function installSelection(
     const { applied, ...result } = changed;
     if (applied === undefined) return result;
     const session = await openSession(root);
-    const installed = await installTools(session, true);
-    const note = installed === '' ? '' : `${installed}\n`;
-    return { ...result, text: `${result.text}${note}Run gspot check to check the selected kits.\n` };
+    const { installNote, exitCode } = await finishInstall(session, true);
+    const note = installNote === '' ? '' : `${installNote}\n`;
+    const next = exitCode === 0 ? 'Run gspot check to check the selected kits.\n' : '';
+    return { ...result, text: `${result.text}${note}${next}`, exitCode };
 }
