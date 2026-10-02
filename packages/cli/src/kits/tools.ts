@@ -80,6 +80,8 @@ export const toolSchema = z.strictObject({
                 .default([]),
         })
         .optional(),
+    // The file types an ESLint plugin or parser lints; a kit whose files take plugins owns them while it is selected.
+    eslint: z.strictObject({ extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).min(1) }).optional(),
     replace: z
         .array(
             z

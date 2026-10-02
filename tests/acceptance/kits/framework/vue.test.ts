@@ -35,7 +35,7 @@ plantedCases(
     [
         {
             // The shared TypeScript rules reach the component script.
-            check: 'vue/eslint',
+            check: 'javascript/eslint',
             files: {
                 'src/SharedPolicy.vue':
                     '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n',
@@ -99,7 +99,7 @@ test(
         const outcome = await runPlanted(
             sandbox.path,
             {
-                check: 'vue/eslint',
+                check: 'javascript/eslint',
                 files: {
                     'src/SharedPolicy.vue': '<script>\nfunction forward(value) { return build(value); }\n</script>\n',
                 },

@@ -40,7 +40,7 @@ plantedCases(
     },
     [
         {
-            check: 'typescript/eslint',
+            check: 'javascript/eslint',
             files: { 'src/greeting.controller.ts': MISMATCHED },
             expected: {
                 file: 'src/greeting.controller.ts',
@@ -54,7 +54,7 @@ plantedCases(
             'the lint, type, and compiler option checks accept the clean Nest module',
             async () => {
                 const { root, environment } = planted();
-                for (const id of ['typescript/eslint', 'typescript/tsc', 'typescript/tsconfig']) {
+                for (const id of ['javascript/eslint', 'typescript/tsc', 'typescript/tsconfig']) {
                     const clean = await spawnGspot(root, ['check', '--only', id], environment);
                     expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 }

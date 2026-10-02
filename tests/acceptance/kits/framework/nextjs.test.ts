@@ -39,6 +39,7 @@ const TSCONFIG = {
 const MANIFEST = {
     name: 'planted',
     version: '1.0.0',
+    description: 'A planted Next.js app for the tests.',
     private: true,
     type: 'module',
     dependencies: { next: '16.3.5', 'next-intl': '4.3.9', react: '19.1.1', 'react-dom': '19.1.1' },
@@ -124,14 +125,14 @@ async function literalMarkup(planted: InstalledRepository): Promise<void> {
     // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
     await Bun.write(layout, NEXT_LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>'));
     try {
-        const literal = await checked(planted, ['typescript/eslint'], 1);
+        const literal = await checked(planted, ['javascript/eslint'], 1);
         expect(literal.checks[0]!.findings).toContainEqual(
             containing({ rule: 'i18next/no-literal-string', file: 'app/layout.tsx', line: 13 }),
         );
     } finally {
         await Bun.write(layout, NEXT_LAYOUT);
     }
-    const corrected = await checked(planted, ['typescript/eslint'], 0);
+    const corrected = await checked(planted, ['javascript/eslint'], 0);
     expect(corrected.checks[0]!.findings).toStrictEqual([]);
 }
 

@@ -50,7 +50,7 @@ describe('gspot add', () => {
             await installAtLevel(sandbox.path, CONFIGURATION_ARRIVAL_INIT, environment);
             const before = await spawnGspot(
                 sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--json'],
+                ['check', '--only', 'javascript/eslint', '--json'],
                 environment,
             );
             expect(before.code, before.stdout + before.stderr).toBe(0);
@@ -58,15 +58,15 @@ describe('gspot add', () => {
             expect(added.code, added.stdout + added.stderr).toBe(0);
             const after = await spawnGspot(
                 sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--json'],
+                ['check', '--only', 'javascript/eslint', '--json'],
                 environment,
             );
             expect(after.code, after.stdout + after.stderr).toBe(1);
             const report = JSON.parse(after.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
+            expect(report.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
             expect(report.checks[0]?.findings).toContainEqual(
                 containing({
-                    check: 'typescript/eslint',
+                    check: 'javascript/eslint',
                     file: 'schema.ts',
                     line: 6,
                     rule: 'zod/no-any-schema',
@@ -75,12 +75,12 @@ describe('gspot add', () => {
             await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
             const correctedCheck = await spawnGspot(
                 sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--json'],
+                ['check', '--only', 'javascript/eslint', '--json'],
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
-                { check: 'typescript/eslint', status: 'ok', findings: [] },
+                { check: 'javascript/eslint', status: 'ok', findings: [] },
             ]);
         },
         // Init and add each install the private tools.

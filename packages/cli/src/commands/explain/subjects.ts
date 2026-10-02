@@ -53,6 +53,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         ...listLine('Files', [...files.extensions, ...files.filenames, ...files.paths]),
         ...(files.languages ? ['Files: every file a language kit owns'] : []),
         ...(files.prettier_plugins ? ['Files: the file types of the selected Prettier plugins'] : []),
+        ...(files.eslint_plugins ? ['Files: the file types of the selected ESLint plugins'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>

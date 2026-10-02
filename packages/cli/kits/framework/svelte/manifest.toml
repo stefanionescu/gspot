@@ -15,6 +15,7 @@ kinds = ["source"]
 
 [[tool]]
 name = "eslint-plugin-svelte"
+eslint = {extensions = [".svelte"]}
 kind = "library"
 version = "3.23.0"
 npm = "eslint-plugin-svelte"
@@ -49,23 +50,6 @@ target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 components = ["**/*.svelte"]
-
-[[check]]
-name = "eslint"
-title = "ESLint"
-example = "A Svelte template containing `<div>{@html html}</div>` reports `svelte/no-at-html-tags`. Render text with interpolation, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
-level = "recommended"
-stage = "commit"
-runs = "files"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-exit_codes = [1]
-tool = "eslint"
-files = {extensions = [".svelte"]}
-output = {format = "eslint"}
-summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
-why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
-help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
 name = "check"

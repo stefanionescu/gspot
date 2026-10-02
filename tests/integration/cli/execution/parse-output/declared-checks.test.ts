@@ -92,7 +92,7 @@ test('source text naming module errors stays an ESLint finding', async () => {
         [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [], only: ['typescript/eslint'] });
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['javascript/eslint'] });
     const planned = plans[0]!;
     const stdout = JSON.stringify([
         {

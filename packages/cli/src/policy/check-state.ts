@@ -58,6 +58,7 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
             paths,
             languages: false,
             prettier_plugins: false,
+            eslint_plugins: false,
             kinds: ['source', 'generated'],
         },
     };

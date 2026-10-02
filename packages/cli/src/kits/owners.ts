@@ -14,12 +14,15 @@ function isFilenameClaimed(owners: Owners, base: string): boolean {
     return globs.length > 0 && pathMatcher(globs)(base);
 }
 
-// The owners with the file types of the selected Prettier plugins, when the table takes them.
+// The owners with the file types of the selected Prettier or ESLint plugins, when the table takes them.
 function effectiveOwners(owners: Owners, selected: Manifest[]): Owners {
-    if (!owners.prettier_plugins) return owners;
+    if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
     const extensions = selected
         .flatMap((manifest) => manifest.tools)
-        .flatMap((tool) => tool.prettier?.extensions ?? []);
+        .flatMap((tool) => [
+            ...(owners.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
+            ...(owners.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
+        ]);
     return { ...owners, extensions: [...owners.extensions, ...extensions] };
 }
 

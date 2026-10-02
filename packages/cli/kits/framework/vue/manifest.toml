@@ -14,6 +14,7 @@ kinds = ["source"]
 
 [[tool]]
 name = "eslint-plugin-vue"
+eslint = {extensions = [".vue"]}
 kind = "library"
 version = "10.11.0"
 npm = "eslint-plugin-vue"
@@ -47,23 +48,6 @@ target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 components = ["**/*.vue"]
-
-[[check]]
-name = "eslint"
-title = "ESLint"
-example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
-level = "recommended"
-stage = "commit"
-runs = "files"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-exit_codes = [1]
-tool = "eslint"
-files = {extensions = [".vue"]}
-output = {format = "eslint"}
-summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
-why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
-help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
 name = "tsc"

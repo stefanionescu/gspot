@@ -22,7 +22,7 @@ plantedCases(
     },
     [
         {
-            check: 'typescript/eslint',
+            check: 'javascript/eslint',
             files: { 'src/Counter.tsx': COUNTER },
             expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 13 },
             corrected: { files: { 'src/Counter.tsx': CLEAN_COMPONENT.replaceAll('Greeting', 'Counter') } },
@@ -39,7 +39,7 @@ plantedCases(
     },
     [
         {
-            check: 'typescript/eslint',
+            check: 'javascript/eslint',
             files: {
                 'src/Box.tsx': `// A planted file.\n\n/**\n * Draws a box.\n * @returns the box\n */\nexport function Box(): unknown {\n    return <View style={{ padding: 8 }} />;\n}\n`,
             },

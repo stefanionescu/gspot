@@ -31,6 +31,7 @@ export const OPTIONAL_TOOL_KEYS = [
     'replace',
     'query_packs',
     'prettier',
+    'eslint',
 ] as const;
 
 /** The platforms a tool pin may name as having a build: an operating system alone, or one with an architecture. */

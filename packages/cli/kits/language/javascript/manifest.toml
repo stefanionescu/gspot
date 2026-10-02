@@ -210,7 +210,7 @@ runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
-files = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"]}
+files = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"], eslint_plugins = true}
 output = {format = "eslint"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file and every package.json."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."

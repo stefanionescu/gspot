@@ -27,7 +27,7 @@ test(
             dependencies: { astro: '7.3.2' },
             files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, [PAGE]: CLEAN },
         });
-        const linted = await runPlanted(root, { check: 'astro/eslint', files: { [PAGE]: BUNDLED } }, environment);
+        const linted = await runPlanted(root, { check: 'javascript/eslint', files: { [PAGE]: BUNDLED } }, environment);
         expect(linted.code, linted.stdout + linted.stderr).toBe(1);
         const findings = (JSON.parse(linted.stdout) as RunReport).checks[0]!.findings;
         expect(findings).toContainEqual(containing({ rule: 'astro/no-set-html-directive', file: PAGE, line: 8 }));
@@ -50,7 +50,11 @@ test(
         const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(root, PAGE)).text()).toBe(CLEAN);
-        const clean = await spawnGspot(root, ['check', '--json', '--only', 'astro/eslint', 'astro/check'], environment);
+        const clean = await spawnGspot(
+            root,
+            ['check', '--json', '--only', 'javascript/eslint', 'astro/check'],
+            environment,
+        );
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 8,

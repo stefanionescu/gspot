@@ -21,6 +21,7 @@ version_command = ["--version"]
 
 [[tool]]
 name = "typescript-eslint"
+eslint = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 rule_url = "https://typescript-eslint.io/rules/{rule}"
 kind = "library"
 version = "8.70.0"
@@ -56,22 +57,6 @@ output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
-
-[[check]]
-name = "eslint"
-title = "ESLint"
-example = "An unused variable such as `const unused = 1;` reports the configured unused-variable rule in a selected source file. Remove the unused declaration and rerun. Component files must also retain valid framework syntax."
-level = "recommended"
-stage = "commit"
-runs = "files"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-exit_codes = [1]
-files = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
-output = {format = "eslint"}
-summary = "Runs ESLint with the shipped rule set over every TypeScript file."
-why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
-help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[check]]
 name = "tsconfig"

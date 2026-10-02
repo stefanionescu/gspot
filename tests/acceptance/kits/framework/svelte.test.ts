@@ -33,7 +33,7 @@ plantedCases(
     [
         {
             // The shared TypeScript rules reach the component script.
-            check: 'svelte/eslint',
+            check: 'javascript/eslint',
             files: {
                 'src/SharedPolicy.svelte':
                     '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n',

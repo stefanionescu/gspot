@@ -72,7 +72,7 @@ test('package rule exceptions retain neighboring violations and corrected succes
         'gspot.toml': `level = "all"
 kits = ["typescript"]
 [[ignore]]
-check = "typescript/eslint"
+check = "javascript/eslint"
 rule = "package-json/require-exports"
 paths = ["cli/package.json"]
 reason = "The command package exposes no module API."

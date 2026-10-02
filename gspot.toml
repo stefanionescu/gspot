@@ -609,13 +609,13 @@ paths = [
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 
 [[ignore]]
-check = "typescript/eslint"
+check = "javascript/eslint"
 rule = "gspot/no-trivial-functions"
 paths = ["packages/cli/src/kits/messages.ts", "packages/cli/src/policy/messages.ts"]
 reason = "Every message has one builder in its catalog, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalogs move out of functions."
 
 [[ignore]]
-check = "typescript/eslint"
+check = "javascript/eslint"
 rule = "package-json/require-exports"
 paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."

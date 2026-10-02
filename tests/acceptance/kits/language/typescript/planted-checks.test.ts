@@ -67,7 +67,7 @@ const CASES: FindingCase[] = [
         corrected: { files: { 'src/orders/wrong.ts': WRONG.replace("'three'", '3') } },
     },
     {
-        check: 'typescript/eslint',
+        check: 'javascript/eslint',
         files: {
             'src/orders/paused.ts':
                 '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
@@ -75,7 +75,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
     },
     {
-        check: 'typescript/eslint',
+        check: 'javascript/eslint',
         files: {
             'src/orders/back.ts':
                 "// An order module that reaches back into the entry.\nimport { receipt } from '../main.js';\n\n/** The receipt again. */\nexport const again = receipt;\n",

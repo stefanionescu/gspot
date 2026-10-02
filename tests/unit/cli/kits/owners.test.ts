@@ -24,6 +24,7 @@ describe('owners', () => {
                     paths: [],
                     languages: false,
                     prettier_plugins: false,
+                    eslint_plugins: false,
                     kinds: ['source'],
                 },
                 trackedFile('public/_headers'),

@@ -16,6 +16,8 @@ const filesSchema = z.strictObject({
     languages: z.boolean().default(false),
     // The file types the Prettier plugins of the selected kits format, such as .astro, join the owned ones.
     prettier_plugins: z.boolean().default(false),
+    // The file types the ESLint plugins of the selected kits lint, such as .vue, join the owned ones.
+    eslint_plugins: z.boolean().default(false),
     kinds: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
@@ -221,6 +223,7 @@ export const manifestSchema = z
             paths: [],
             languages: false,
             prettier_plugins: false,
+            eslint_plugins: false,
             kinds: ['source'],
         }),
         tool: z.array(toolSchema).default([]),

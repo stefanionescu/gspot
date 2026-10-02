@@ -70,6 +70,7 @@ export type ToolPin = {
     replace?: NonNullable<RawTool['replace']>;
     query_packs?: NonNullable<RawTool['query_packs']>;
     prettier?: NonNullable<RawTool['prettier']>;
+    eslint?: NonNullable<RawTool['eslint']>;
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };
