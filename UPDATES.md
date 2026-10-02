@@ -18,10 +18,9 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `cb680bab`. Stages 1 to 12 are merged as pull requests #2 to #8 and #10 to #14. Stage 7 also deleted
+- `main` is at `5a8e6f14`. Stages 1 to 13 are merged as pull requests #2 to #8 and #10 to #15. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 13 is pull request #15, branch `refactor/ship-no-repository-defaults`.
 - Stage 14 is pull request #16, branch `refactor/remove-self-lint-code`.
 - The next stage to start is stage 15.
 
@@ -43,7 +42,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | merged, #12            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | merged, #13            |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | merged, #14            |
-| 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | pull request #15       |
+| 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | merged, #15            |
 | 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | pull request #16       |
 | 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | `architecture` deleted |
 | 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | not started            |
