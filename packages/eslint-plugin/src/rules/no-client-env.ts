@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { NoClientEnvOptions } from '#plugin/types/rules.ts';
+import type { ClientEnvOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 
@@ -12,7 +12,7 @@ function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allow
     return allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
 }
 
-export const noClientEnv = createRule<NoClientEnvOptions, 'private'>({
+export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
     name: 'no-client-env',
     meta: {
         type: 'problem',

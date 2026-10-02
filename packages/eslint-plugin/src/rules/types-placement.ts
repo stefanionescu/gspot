@@ -15,7 +15,7 @@ function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TS
 }
 
 // A value union explicitly derives an enum domain from its readonly record.
-function isEnumValueReference(identifier: TSESTree.Identifier | TSESTree.JSXIdentifier): boolean {
+function isEnumReference(identifier: TSESTree.Identifier | TSESTree.JSXIdentifier): boolean {
     const query = identifier.parent;
     if (query.type !== AST_NODE_TYPES.TSTypeQuery) return false;
     const indexed = query.parent;
@@ -54,7 +54,7 @@ function isEnumReplacement(declarator: TSESTree.VariableDeclarator, source: TSES
         return false;
     if (expression.properties.every((property) => isIdentityMember(property))) return true;
     const variables = source.getDeclaredVariables(declarator);
-    return variables.some((variable) => variable.references.some(({ identifier }) => isEnumValueReference(identifier)));
+    return variables.some((variable) => variable.references.some(({ identifier }) => isEnumReference(identifier)));
 }
 
 function declarationName(
@@ -65,7 +65,7 @@ function declarationName(
     return first?.id.type === AST_NODE_TYPES.Identifier ? first.id.name : 'this export';
 }
 
-function isTypeOnlyImport(node: TSESTree.ImportDeclaration): boolean {
+function isTypeOnly(node: TSESTree.ImportDeclaration): boolean {
     if (node.importKind === 'type') return true;
     return (
         node.specifiers.length > 0 &&
@@ -84,8 +84,8 @@ function insideListeners(
             report(node, 'defaultInside');
         },
         ImportDeclaration(node: TSESTree.ImportDeclaration) {
-            if (isTypeOnlyImport(node) || node.source.value.endsWith('.css')) return;
-            report(node, 'valueImportInside', { source: node.source.value });
+            if (isTypeOnly(node) || node.source.value.endsWith('.css')) return;
+            report(node, 'valueImport', { source: node.source.value });
         },
         ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
             const { declaration } = node;
@@ -152,7 +152,7 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
                 'An as-const object that stands in for an enum lives under {{directory}} beside its type. Move {{name}} there.',
             runtimeInside: 'Files under {{directory}} hold types only; {{name}} is a runtime value. Move it out.',
             defaultInside: 'Files under {{directory}} export no default. Export named types.',
-            valueImportInside: 'Files under {{directory}} import types only. Write import type for "{{source}}".',
+            valueImport: 'Files under {{directory}} import types only. Write import type for "{{source}}".',
         },
     },
     defaultOptions: [{ allowInterface: false, allowed: [] }],

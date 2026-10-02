@@ -1,11 +1,11 @@
 import { isImportLike } from '#plugin/imports.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { LayoutOptions } from '#plugin/types/rules.ts';
 import type { LayoutMessages } from '#plugin/types/plugin.ts';
-import type { ImportLayoutOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { runsOf, reportRun, reportNames } from '#plugin/layout.ts';
 
-export const importLayout = createRule<ImportLayoutOptions, LayoutMessages>({
+export const importLayout = createRule<LayoutOptions, LayoutMessages>({
     name: 'import-layout',
     meta: {
         type: 'layout',

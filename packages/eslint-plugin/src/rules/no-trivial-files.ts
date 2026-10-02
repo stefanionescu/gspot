@@ -5,7 +5,7 @@ import type { ContentCheck } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS, DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
+import { FORWARDING_NODES, TRIVIAL_STATEMENTS, STRUCTURED_EXPRESSIONS } from '#plugin/config/rules.ts';
 
 // Declarations own their schemas or the implementations they contain.
 function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
@@ -120,7 +120,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
     },
     defaultOptions: [{ maxStatements: 2 }],
     create(context, [options]) {
-        const max = options.maxStatements ?? DEFAULT_TRIVIAL_STATEMENTS;
+        const max = options.maxStatements ?? TRIVIAL_STATEMENTS;
         let hasImplementation = false;
         const substantial: ContentCheck = (node) => {
             if (FORWARDING_NODES.has(node.type) || FUNCTIONS.has(node.type)) return false;

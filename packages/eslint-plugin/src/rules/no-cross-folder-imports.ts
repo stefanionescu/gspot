@@ -20,7 +20,7 @@ function topFolder(file: string, root: string): string | undefined {
     return path.includes('/') ? path.split('/', 1)[0] : undefined;
 }
 
-export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross' | 'crossNoAlias'>({
+export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'alias' | 'escape'>({
     name: 'no-cross-folder-imports',
     meta: {
         type: 'problem',
@@ -29,7 +29,7 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
             level: 'all',
             title: 'Keep imports within folder boundaries',
             example:
-                'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `cross`. Correct the import to `import { a } from "@/turn/a.js";`.',
+                'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`.',
             summary: 'Finds relative imports that leave their top-level folder under a source root.',
             why: 'A path of ../../ ties the importer to the tree shape; the alias names the folder and survives a move.',
             fix: 'Keep relative imports within a top-level folder. gspot check --fix uses a configured alias when one exists.',
@@ -41,8 +41,8 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
             }),
         ],
         messages: {
-            cross: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
-            crossNoAlias: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',
+            alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
+            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',
         },
     },
     defaultOptions: [{ roots: [], aliases: {} }],
@@ -72,11 +72,11 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
             const literal = node as TSESTree.Literal;
             const quote = literal.raw.startsWith('"') ? '"' : "'";
             if (alias === undefined) {
-                context.report({ node: literal, messageId: 'crossNoAlias', data: { source, folder } });
+                context.report({ node: literal, messageId: 'escape', data: { source, folder } });
             } else {
                 context.report({
                     node: literal,
-                    messageId: 'cross',
+                    messageId: 'alias',
                     data: { alias, source },
                     fix: (fixer) => fixer.replaceText(literal, `${quote}${alias}${quote}`),
                 });

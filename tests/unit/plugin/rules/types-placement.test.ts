@@ -102,7 +102,7 @@ tester().run('types-placement', typesPlacement, {
             options: [{ directory: 'types' }],
             code: "import { b } from './b';\nexport type A = typeof b;",
             filename: '/repo/types/a.ts',
-            errors: [{ messageId: 'valueImportInside', data: { directory: 'types', source: './b' } }],
+            errors: [{ messageId: 'valueImport', data: { directory: 'types', source: './b' } }],
         },
     ],
 });

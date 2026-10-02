@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import type { TestFoldersOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/config/rules.ts';
+import { TEST_PATTERN, CODE_EXTENSION } from '#plugin/config/rules.ts';
 import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 export const testFolders = createRule<TestFoldersOptions, 'misplaced'>({
@@ -30,7 +30,7 @@ export const testFolders = createRule<TestFoldersOptions, 'misplaced'>({
     },
     defaultOptions: [
         {
-            pattern: DEFAULT_TEST,
+            pattern: TEST_PATTERN,
             directories: ['**/tests/**', '**/__tests__/**', '**/test/**'],
             allowed: [],
         },
@@ -39,7 +39,7 @@ export const testFolders = createRule<TestFoldersOptions, 'misplaced'>({
         const file = lintedFile(context);
         if (file === undefined) return {};
         const relative = relativeToRoot(lintedRoot(context), file);
-        const test = new RegExp(options.pattern ?? DEFAULT_TEST, 'u');
+        const test = new RegExp(options.pattern ?? TEST_PATTERN, 'u');
         const name = posix.basename(relative);
         const harness = options.harness;
         if (harness === undefined) return {};

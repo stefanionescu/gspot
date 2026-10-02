@@ -12,7 +12,7 @@ export const NO_ROLES: Required<ImportDirectionRoles> = {
     runtime: [],
 };
 
-export const DEFAULT_CONTRACTS = ['index', 'public', 'contracts'];
+export const CONTRACTS = ['index', 'public', 'contracts'];
 
 export const ROLE_ORDER: ImportDirectionRole[] = ['harness', 'tests', 'types', 'env', 'config', 'runtime'];
 
@@ -56,21 +56,21 @@ export const TYPE_DECLARATIONS = new Set([
 export const WHITESPACE = /[\t\n\r ]/u;
 
 // File discovery and import resolution.
-export const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
+export const TEST_PATTERN = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
 export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
 export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
-export const DEFAULT_PREFIXES = ['./', '../', '@/', '#'];
-export const DEFAULT_PATTERNS = [
+export const INTERNAL_PREFIXES = ['./', '../', '@/', '#'];
+export const INDEX_PATTERNS = [
     String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,
     String.raw`^\.{1,2}(?:/[^/]+)*/index(?:\.[cm]?[jt]sx?)?$`,
     String.raw`^\.{1,2}/index(?:\.[cm]?[jt]sx?)?$`,
 ];
 
 // Barrel size and trivial statement limits.
-export const DEFAULT_MAX = 20;
+export const MAX_REEXPORTS = 20;
 
 /** The statement count at or under which a function is trivial, when no option is set. */
-export const DEFAULT_TRIVIAL_STATEMENTS = 2;
+export const TRIVIAL_STATEMENTS = 2;
 
 /** Lines a comment may sit above its declaration: one, or two when a blank line is allowed. */
 export const ATTACHED_DISTANCE = 1;

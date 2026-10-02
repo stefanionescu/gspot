@@ -5,7 +5,7 @@ export type ContentCheck = (node: TSESTree.Node) => boolean;
 
 export type ImportStyleName = 'js' | 'ts' | 'extensionless';
 export type ImportStyleOptions = [{ style: ImportStyleName; internalPrefixes?: string[] }];
-export type HeaderCommentsOptions = [{ allowRequire?: boolean }];
+export type LayoutOptions = [{ allowRequire?: boolean }];
 export type EnvOwnerOptions = [{ owners?: string[] }];
 export type TypesPlacementMessages =
     | 'interface'
@@ -13,7 +13,7 @@ export type TypesPlacementMessages =
     | 'enumOutside'
     | 'runtimeInside'
     | 'defaultInside'
-    | 'valueImportInside';
+    | 'valueImport';
 export type TypesPlacementReporter = (
     node: TSESTree.Node,
     messageId: TypesPlacementMessages,
@@ -23,7 +23,6 @@ export type TypesPlacementOptions = [{ directory?: string; allowInterface?: bool
 export type CrossScopeImportsOptions = [{ scopes?: string[]; allowedEscapes?: string[] }];
 export type TestFoldersOptions = [{ pattern?: string; directories?: string[]; harness?: string; allowed?: string[] }];
 
-export type ImportLayoutOptions = [{ allowRequire?: boolean }];
 export type ImportDirectionRoles = {
     types?: string[];
     tests?: string[];
@@ -33,7 +32,7 @@ export type ImportDirectionRoles = {
     runtime?: string[];
 };
 export type ImportDirectionRole = 'types' | 'tests' | 'harness' | 'config' | 'env' | 'runtime' | 'other';
-export type ImportDirectionMessages = 'typesOnlyTypes' | 'runtimeToTests' | 'testsToInternals' | 'configToRuntime';
+export type ImportDirectionMessages = 'typesToRuntime' | 'runtimeToTests' | 'testsToInternals' | 'configToRuntime';
 export type ImportEdge = {
     role: ImportDirectionRole;
     targetRole: ImportDirectionRole;
@@ -48,9 +47,9 @@ export type ImportDirectionOptions = [
 ];
 
 export type MaxBarrelReexportsOptions = [{ max?: number }];
-export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];
+export type TrivialFunctionsOptions = [{ maxStatements?: number }];
 export type RegistryInstancesOptions = [{ files?: string[] }];
-export type NoClientEnvOptions = [{ isClient?: boolean; publicPrefixes?: string[]; allowed?: string[] }];
-export type NoIndexImportsOptions = [{ allowed?: string[]; patterns?: string[] }];
+export type ClientEnvOptions = [{ isClient?: boolean; publicPrefixes?: string[]; allowed?: string[] }];
+export type IndexImportsOptions = [{ allowed?: string[]; patterns?: string[] }];
 export type CrossFolderImportsOptions = [{ roots?: string[]; aliases?: Record<string, string> }];
-export type NoReexportsOptions = [{ allowIndex?: boolean }];
+export type ReexportsOptions = [{ allowIndex?: boolean }];

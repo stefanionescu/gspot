@@ -26,7 +26,7 @@ export type ImplementedFunction =
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression;
 
-export type ImportLayoutEntry = {
+export type LayoutLine = {
     node: TSESTree.Statement;
     start: number;
     end: number;

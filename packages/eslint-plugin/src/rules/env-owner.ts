@@ -5,7 +5,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
-function isEnvironmentRead(
+function isEnvRead(
     context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
     node: TSESTree.MemberExpression,
 ): boolean {
@@ -43,7 +43,7 @@ export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
         if (owners.length === 0 || isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), owners)) return {};
         return {
             MemberExpression(node) {
-                if (!isEnvironmentRead(context, node)) return;
+                if (!isEnvRead(context, node)) return;
                 const { parent } = node;
                 if (
                     parent.type === AST_NODE_TYPES.MemberExpression &&

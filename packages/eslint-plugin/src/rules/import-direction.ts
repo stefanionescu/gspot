@@ -4,15 +4,8 @@ import { importFile, isRequireCall } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
+import { NO_ROLES, CONTRACTS, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES, CODE_EXTENSION } from '#plugin/config/rules.ts';
 
-import {
-    NO_ROLES,
-    ROLE_ORDER,
-    TEST_ROLES,
-    CONFIG_ROLES,
-    CODE_EXTENSION,
-    DEFAULT_CONTRACTS,
-} from '#plugin/config/rules.ts';
 import type {
     ImportEdge,
     ImportNode,
@@ -43,7 +36,7 @@ function testsVerdict(edge: ImportEdge, contracts: string[]): ImportVerdict | un
 
 function typesVerdict(edge: ImportEdge): ImportVerdict | undefined {
     if (edge.isTypeOnly || edge.targetRole === 'types') return undefined;
-    return { messageId: 'typesOnlyTypes', data: { source: edge.source, role: edge.targetRole } };
+    return { messageId: 'typesToRuntime', data: { source: edge.source, role: edge.targetRole } };
 }
 
 function verdict(edge: ImportEdge, contracts: string[]): ImportVerdict | undefined {
@@ -64,7 +57,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             level: 'all',
             title: 'Import direction',
             example:
-                'With the types role on `types/**`, the runtime role on `src/**`, and `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesOnlyTypes`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
+                'With the types role on `types/**`, the runtime role on `src/**`, and `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesToRuntime`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
             summary:
                 'Checks the four import directions between the roles the options name: types import only types, runtime never imports tests, tests reach runtime only through contracts, and config never imports runtime.',
             why: 'An import against the direction makes a test part of the product, or a type file part of the runtime, and the build carries it.',
@@ -86,7 +79,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             }),
         ],
         messages: {
-            typesOnlyTypes:
+            typesToRuntime:
                 'A types file imports only types. "{{source}}" brings in {{role}} code; use import type or move the type.',
             runtimeToTests: 'Runtime code imports test code through "{{source}}". Move what it needs into the runtime.',
             testsToInternals:
@@ -95,7 +88,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                 'Configuration imports runtime code through "{{source}}". Configuration holds values; the runtime reads them.',
         },
     },
-    defaultOptions: [{ roles: NO_ROLES, aliases: {}, contracts: DEFAULT_CONTRACTS, scope: '' }],
+    defaultOptions: [{ roles: NO_ROLES, aliases: {}, contracts: CONTRACTS, scope: '' }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined) return {};
@@ -112,12 +105,12 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         };
         const { role } = placed(file);
         if (role === 'other') return {};
-        const contracts = options.contracts ?? DEFAULT_CONTRACTS;
-        const rootOfScope = scope === '' ? root : `${root}/${scope}`;
+        const contracts = options.contracts ?? CONTRACTS;
+        const scopeRoot = scope === '' ? root : `${root}/${scope}`;
         const check = (node: TSESTree.Node, sourceNode: TSESTree.Node | null | undefined, typeOnly = false): void => {
             const source = staticString(sourceNode);
             const resolved =
-                source === undefined ? undefined : importFile(file, source, rootOfScope, options.aliases ?? {});
+                source === undefined ? undefined : importFile(file, source, scopeRoot, options.aliases ?? {});
             if (source === undefined || resolved === undefined) return;
             const target = placed(resolved);
             const found = verdict(

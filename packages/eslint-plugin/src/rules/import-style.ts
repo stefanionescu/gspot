@@ -1,7 +1,7 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { DEFAULT_PREFIXES } from '#plugin/config/rules.ts';
+import { INTERNAL_PREFIXES } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImportStyleName, ImportStyleOptions } from '#plugin/types/rules.ts';
 
@@ -41,9 +41,9 @@ export const importStyle = createRule<ImportStyleOptions, 'js' | 'ts' | 'extensi
             extensionless: 'Internal imports keep no suffix here: "{{source}}".',
         },
     },
-    defaultOptions: [{ style: 'js', internalPrefixes: DEFAULT_PREFIXES }],
+    defaultOptions: [{ style: 'js', internalPrefixes: INTERNAL_PREFIXES }],
     create(context, [options]) {
-        const prefixes = options.internalPrefixes ?? DEFAULT_PREFIXES;
+        const prefixes = options.internalPrefixes ?? INTERNAL_PREFIXES;
         const check = (node: TSESTree.Node | null | undefined, attributes: TSESTree.ImportAttribute[] = []): void => {
             const source = staticString(node);
             if (!node || source === undefined) return;

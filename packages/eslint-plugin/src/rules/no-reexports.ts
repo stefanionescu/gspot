@@ -1,8 +1,8 @@
 import { lintedFile, isIndexFile } from '#plugin/files.ts';
-import type { NoReexportsOptions } from '#plugin/types/rules.ts';
+import type { ReexportsOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
-export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'local'>({
+export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local'>({
     name: 'no-reexports',
     meta: {
         type: 'problem',
