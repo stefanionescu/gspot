@@ -139,10 +139,6 @@ word = "udid"
 reason = "Apple's device identifier API name."
 
 [[tools.typos.words]]
-word = "certifi"
-reason = "The Python certificate package name."
-
-[[tools.typos.words]]
 word = "axe"
 reason = "The axe-core accessibility package name."
 
