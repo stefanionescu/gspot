@@ -22,16 +22,6 @@ function seconds(ms: number): string {
     return `${(ms / MS_PER_SECOND).toFixed(1)}s`;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines count files; inlining it nests a template inside a template.
-function fileCount(count: number): string {
-    return `${String(count)} file${count === 1 ? '' : 's'}`;
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two readers name the root scope; the caller sits at the complexity limit.
-function scopeName(scope: string): string {
-    return scope === '' ? 'root' : scope;
-}
-
 function statusWord(result: CheckResult, colors: Colors): string {
     const { red, green, yellow } = colors;
     switch (result.status) {
@@ -73,7 +63,7 @@ function findingLines(finding: Finding, colors: Colors, next?: Finding): string[
 
 function checkTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    return `${fileCount(check.files).padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
+    return `${counted(check.files, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
 }
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
@@ -88,7 +78,7 @@ function failureLines(check: CheckResult, options: ReporterOptions, colors: Colo
 }
 
 function checkLines(check: CheckResult, columns: Columns, options: ReporterOptions, colors: Colors): string[] {
-    const scope = scopeName(check.scope).padEnd(columns.scope);
+    const scope = (check.scope === '' ? 'root' : check.scope).padEnd(columns.scope);
     const word = statusWord(check, colors);
     const status = word.padEnd(STATUS_WIDTH + word.length - stripVTControlCharacters(word).length);
     const lines = [`${scope}  ${check.check.padEnd(columns.check)}  ${status}  ${checkTail(check)}`.trimEnd()];
@@ -171,7 +161,10 @@ function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): st
 export function runText(report: RunReport, options: ReporterOptions): string {
     const shown = report.checks.filter((check) => !QUIET_HIDES.has(check.status));
     const columns: Columns = {
-        scope: Math.max(SCOPE_WIDTH_MIN, ...report.checks.map((check) => scopeName(check.scope).length)),
+        scope: Math.max(
+            SCOPE_WIDTH_MIN,
+            ...report.checks.map((check) => (check.scope === '' ? 'root' : check.scope).length),
+        ),
         check: Math.max(ID_WIDTH_MIN, ...report.checks.map((check) => check.check.length)),
     };
     const body = shown.flatMap((check) => checkLines(check, columns, options, colors));
