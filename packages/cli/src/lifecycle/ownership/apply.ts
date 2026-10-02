@@ -1,4 +1,5 @@
 // Applying plans: each batch is logged before a byte moves, so an interruption can be recovered.
+import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
@@ -33,6 +34,14 @@ function assertPlansCurrent(log: Log, plans: Planned[], proposed: ReadonlyMap<st
     }
 }
 
+// Removes the folders a removed file leaves empty, from its own up to the repository root.
+function removeEmptyFolders(log: Log, path: string): void {
+    for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
+        if (log.files.list(folder).length > 0) return;
+        log.files.rmdir(folder);
+    }
+}
+
 // Writes the pending records, writes every file, and settles the log.
 function write(log: Log, prepared: Planned[]): void {
     log.state.pending = prepared.map(({ path, current, next, entry }) => ({
@@ -48,7 +57,10 @@ function write(log: Log, prepared: Planned[]): void {
     );
     for (const { path, current, next } of ordered) {
         if (next === undefined) {
-            if (current !== undefined) log.files.remove(path, current);
+            if (current !== undefined) {
+                log.files.remove(path, current);
+                removeEmptyFolders(log, path);
+            }
         } else if (!matches(current, identity(next))) log.files.write(path, next, current);
     }
     log.finish();

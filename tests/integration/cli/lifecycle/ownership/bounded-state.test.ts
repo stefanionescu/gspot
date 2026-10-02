@@ -91,6 +91,20 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
     expect(existsSync(join(directory.path, 'config.txt'))).toBe(false);
 });
 
+test('giving back the last file of a folder removes the folders it leaves empty', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'guides/kept.md': 'authored\n' });
+    const owner = openOwner(directory.path);
+    try {
+        owner.replace('guides/agent/rules/WORKING.md', { bytes: Buffer.from('guide\n'), mode: 0o644 }, 'config', true);
+        expect(owner.applyPlan(owner.proposeRestoration('guides/agent/rules/WORKING.md'))).toBe('changed');
+    } finally {
+        owner.close();
+    }
+    expect(existsSync(join(directory.path, 'guides/agent'))).toBe(false);
+    expect(readdirSync(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
+});
+
 test.each([true, false])(
     'an adopted file stays when given back, until gspot writes other bytes into it (%s)',
     async (isChanged) => {
