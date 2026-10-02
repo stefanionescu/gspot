@@ -1,4 +1,5 @@
-// The generated CI files: one check and one manual job per platform, and Swift on macOS.
+// The generated CI files, read as YAML: one check and one manual job per platform, and Swift on macOS.
+import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import type { WorkflowShape } from '#cli/types/generation/generation.ts';
@@ -7,31 +8,34 @@ const SHAPE: WorkflowShape = { version: '1.2.3', platforms: ['ubuntu'], swiftSco
 
 test('the GitHub workflow has a check and a manual job per platform and only reads the repository', () => {
     const file = workflowFile(SHAPE);
+    const workflow = parse(file.content) as { name: string; permissions: Record<string, string>; jobs: object };
     expect(file.path).toBe('.github/workflows/gspot.yml');
     expect(file.readOnly).toBe(true);
-    expect(file.content).toContain('name: gspot');
-    expect(file.content).toContain('  check-ubuntu:');
-    expect(file.content).toContain('  manual-ubuntu:');
-    expect(file.content).not.toContain('security-events');
-    expect(file.content).not.toContain('upload-artifact');
+    expect(workflow.name).toBe('gspot');
+    expect(workflow.permissions).toStrictEqual({ contents: 'read' });
+    expect(Object.keys(workflow.jobs)).toStrictEqual(['check-ubuntu', 'manual-ubuntu']);
 });
 
 test('a Swift scope adds the macOS jobs', () => {
-    const swift = workflowFile({ ...SHAPE, swiftScope: 'ios' }).content;
-    expect(swift).toContain('  check-macos:');
-    expect(swift).toContain('  manual-macos:');
+    const workflow = parse(workflowFile({ ...SHAPE, swiftScope: 'ios' }).content) as { jobs: object };
+    expect(Object.keys(workflow.jobs)).toContain('check-macos');
+    expect(Object.keys(workflow.jobs)).toContain('manual-macos');
 });
 
 test('the GitLab include runs through mise when the runner is mise, and installs gspot from npm otherwise', () => {
-    expect(gitlabFile(SHAPE).content).toContain('mise exec -- gspot');
-    const plain = gitlabFile({ ...SHAPE, isMise: false }).content;
+    const [mise, plain] = [SHAPE, { ...SHAPE, isMise: false }].map(
+        (shape) => (parse(gitlabFile(shape).content) as { gspot: { script: string[] } }).gspot.script,
+    );
+    expect(mise).toContain('mise exec -- gspot install');
     expect(plain).toContain('npm install --global @gspothq/cli@1.2.3');
-    expect(plain).not.toContain('mise exec');
+    expect(plain!.some((line) => line.includes('mise exec'))).toBe(false);
 });
 
 test('the GitHub workflow without mise sets up Node and installs the pinned gspot from npm', () => {
-    const plain = workflowFile({ ...SHAPE, isMise: false }).content;
-    expect(plain).toContain('actions/setup-node@');
-    expect(plain).toContain('npm install --global @gspothq/cli@1.2.3');
-    expect(plain).not.toContain('releases/download');
+    const workflow = parse(workflowFile({ ...SHAPE, isMise: false }).content) as {
+        jobs: Record<string, { steps: { uses?: string; run?: string }[] }>;
+    };
+    const steps = workflow.jobs['check-ubuntu']!.steps;
+    expect(steps.some((step) => step.uses?.startsWith('actions/setup-node@') === true)).toBe(true);
+    expect(steps.map((step) => step.run)).toContain('npm install --global @gspothq/cli@1.2.3');
 });

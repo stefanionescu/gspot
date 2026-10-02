@@ -51,13 +51,13 @@ const kits = [...kitManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
     .map((manifest) => manifest.kit.name);
 
-test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
-    'the %s configuration renders files their readers parse at level %s',
-    async (name, level) => {
+test.each(['recommended', 'all'])(
+    'every configuration renders files their readers parse at level %s',
+    async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `level = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `level = "${level}"\nkits = ${JSON.stringify(kits)}\n`,
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
@@ -66,7 +66,14 @@ test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, le
             packageClient: session.packageClient,
         });
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
-        expect(generated.length).toBeGreaterThan(0);
+        const written = new Set(
+            session.scopes
+                .flatMap((scope) => scope.selected)
+                .filter((manifest) => kits.includes(manifest.kit.name))
+                .map((manifest) => manifest.kit.name),
+        );
+        expect(written).toStrictEqual(new Set(kits));
+        expect(generated.length).toBeGreaterThan(kits.length);
         for (const file of generated) {
             const parser = PARSERS[extname(file.path)];
             if (parser !== undefined) parser(file.content, file.path);
