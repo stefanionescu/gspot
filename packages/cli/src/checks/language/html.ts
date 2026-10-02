@@ -149,9 +149,9 @@ function htmlScripts(input: EngineInput): Promise<Finding[]> {
  */
 function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
-    const templates = (tool['template_files'] as string[] | undefined) ?? [];
+    const templates = (tool['templates'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
-    const excluded = ((tool['copy_allowed'] as { paths: string[] }[] | undefined) ?? []).flatMap(
+    const excluded = ((tool['literals_allowed'] as { paths: string[] }[] | undefined) ?? []).flatMap(
         (entry) => entry.paths,
     );
     const isTemplate = pathMatcher(templates);
@@ -211,5 +211,5 @@ export function scriptProblems(root: Node): MarkupProblem[] {
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const HTML_ANALYSES: Record<string, Engine> = {
     'html/scripts': htmlScripts,
-    'html/text': htmlText,
+    'html/literals': htmlText,
 };

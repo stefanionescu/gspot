@@ -13,15 +13,15 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
             '_private() {\n echo first\n}\nhelper() {\n echo second\n}\nshared() {\n echo third\n}\nmain() {\n shared\n}\n',
         'caller.sh': '_private\nshared\n',
     });
-    const options = runOptions({ only: ['structure/private-prefix'] });
+    const options = runOptions({ only: ['bash/private-prefix'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
-    expect(broken.report.checks).toMatchObject([{ check: 'structure/private-prefix', status: 'fail' }]);
+    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'failed' }]);
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
-        { file: 'owner.sh', line: 1, rule: 'private-called-outside' },
-        { file: 'owner.sh', line: 4, rule: 'file-local' },
+        { file: 'owner.sh', line: 1, rule: 'called-outside' },
+        { file: 'owner.sh', line: 4, rule: 'unprefixed' },
     ]);
     await createFileTree(sandbox.path, {
         'owner.sh':
@@ -30,7 +30,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
     });
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'structure/private-prefix', status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'passed', findings: [] }]);
 });
 
 test('shell declaration order resets between files and requires main last', async () => {
@@ -42,14 +42,14 @@ test('shell declaration order resets between files and requires main last', asyn
         'second.sh': '_local() {\n echo local\n}\nmain() {\n _local\n}\n',
         'empty.sh': '# No declarations.\n',
     });
-    const options = runOptions({ only: ['structure/private-before-public'] });
+    const options = runOptions({ only: ['bash/private-before-public'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
-    expect(broken.report.checks).toMatchObject([{ check: 'structure/private-before-public', status: 'fail' }]);
+    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-before-public', status: 'failed' }]);
     expect(
         broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual([
-        { file: 'first.sh', line: 7, rule: 'private-below-public' },
+        { file: 'first.sh', line: 7, rule: 'private-before-public' },
         { file: 'first.sh', line: 10, rule: 'main-not-last' },
     ]);
     await createFileTree(sandbox.path, {
@@ -59,7 +59,7 @@ test('shell declaration order resets between files and requires main last', asyn
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([
-        { check: 'structure/private-before-public', status: 'ok', findings: [] },
+        { check: 'bash/private-before-public', status: 'passed', findings: [] },
     ]);
 });
 
@@ -78,14 +78,14 @@ test('Swift declaration order identifies private types and extensions and accept
         {
             file: 'Declarations.swift',
             line: 2,
-            rule: 'private-below-shared',
+            rule: 'private-before-public',
             message:
                 'Hidden is private and sits below a declaration other files see. File-local declarations come first.',
         },
         {
             file: 'Declarations.swift',
             line: 3,
-            rule: 'private-below-shared',
+            rule: 'private-before-public',
             message:
                 'The extension of Shared is private and sits below a declaration other files see. File-local declarations come first.',
         },
@@ -93,5 +93,5 @@ test('Swift declaration order identifies private types and extensions and accept
     await Bun.write(`${sandbox.path}/Declarations.swift`, hidden + shared);
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });

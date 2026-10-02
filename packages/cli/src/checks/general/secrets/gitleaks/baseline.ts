@@ -24,7 +24,7 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
                   findingAt(
                       input,
                       { file: BASELINE, line: 1 },
-                      'no-reason',
+                      'missing-reason',
                       `The baseline entry ${entry.Fingerprint} has no reason.`,
                   ),
               ]),

@@ -16,9 +16,9 @@ test.each([
     // Windows has no zsh to install, and it runs no Bats, a Bash script, from PATH; Linux and macOS have both.
     ...(onPosix
         ? [
-              { check: 'bash/zsh-syntax', path: 'script.zsh', files: 2, broken: 'if then\n' },
+              { check: 'bash/zsh', path: 'script.zsh', files: 2, broken: 'if then\n' },
               {
-                  check: 'bash/bats-syntax',
+                  check: 'bash/bats',
                   path: 'script.bats',
                   files: 1,
                   broken: '@test "broken" {\n    if then\n}\n',
@@ -42,9 +42,9 @@ test.each([
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const clean = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        const report = JSON.parse(clean.stdout) as { checks: { files: number; status: string }[] };
-        expect(report.checks[0]?.status).toBe('ok');
-        expect(report.checks[0]?.files).toBe(entry.files);
+        const report = JSON.parse(clean.stdout) as { checks: { fileCount: number; status: string }[] };
+        expect(report.checks[0]?.status).toBe('passed');
+        expect(report.checks[0]?.fileCount).toBe(entry.files);
         const path = join(sandbox.path, entry.path);
         const original = readFileSync(path);
         try {
@@ -52,12 +52,12 @@ test.each([
             const broken = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);
             const failed = JSON.parse(broken.stdout) as RunReport;
-            expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
+            expect(failed.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
             expect(failed.checks[0]!.findings).toContainEqual(
                 containing({
                     file: entry.path,
                     line: entry.check === 'bash/syntax' ? 1 : 2,
-                    message: textContaining(entry.check === 'bash/zsh-syntax' ? 'parse error' : 'syntax'),
+                    message: textContaining(entry.check === 'bash/zsh' ? 'parse error' : 'syntax'),
                 }),
             );
         } finally {
@@ -66,7 +66,7 @@ test.each([
         const corrected = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: entry.check, status: 'ok', files: entry.files, findings: [] },
+            { check: entry.check, status: 'passed', fileCount: entry.files, findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

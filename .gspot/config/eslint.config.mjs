@@ -28,9 +28,15 @@ const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
 const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = [
-    "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
+    "**/test/**",
     "**/tests/**",
     "**/__tests__/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/test_*.py",
+    "**/*_test.py",
+    "**/conftest.py",
+    "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
     "scripts/**"
 ];
 const SCRIPTS = [

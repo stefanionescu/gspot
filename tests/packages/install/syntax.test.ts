@@ -14,7 +14,7 @@ const release = getPublishedRelease();
 // Explicit naming selection runs in the installed consumer and preserves authored files.
 async function expectInstalledNaming(installation: InstalledConsumer): Promise<void> {
     const { consumer, command, options } = installation;
-    const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
+    const optIn = await run([...command, 'set', 'enable', 'naming/identifiers'], options);
     expect(optIn.code, optIn.stdout + optIn.stderr).toBe(0);
     writeFileSync(join(consumer, 'broken.sh'), 'command=example\n');
     const renamed = await run([...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--json'], options);
@@ -24,8 +24,8 @@ async function expectInstalledNaming(installation: InstalledConsumer): Promise<v
     expect(acceptedName.checks).toHaveLength(1);
     expect(acceptedName.checks[0]).toMatchObject({
         check: 'naming/identifiers',
-        status: 'ok',
-        files: 1,
+        status: 'passed',
+        fileCount: 1,
         findings: [],
     });
     expect(readFileSync(join(consumer, 'authored.txt'), 'utf8')).toBe('Preserve this authored file.\n');
@@ -44,7 +44,7 @@ test(
         expect(report.exitCode).toBe(1);
         expect(report.skips).toStrictEqual([]);
         expect(report.checks).toHaveLength(1);
-        expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'fail', files: 1 });
+        expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'failed', fileCount: 1 });
         expect(
             report.checks[0]!.findings.map(({ check, file, line, message: text }) => ({
                 check,
@@ -68,7 +68,7 @@ test(
         expect(clean.exitCode).toBe(0);
         expect(clean.skips).toStrictEqual([]);
         expect(clean.checks).toHaveLength(1);
-        expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });
+        expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] });
         await expectInstalledNaming(installation);
     },
     RELEASE_TIMEOUT_MS,

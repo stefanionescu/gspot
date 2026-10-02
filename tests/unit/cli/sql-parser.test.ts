@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/harness/spelling.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
-    const reads: SourceReads = { root: '/repository', sources: new Map() };
+    const reads: ReadCache = { root: '/repository', sources: new Map() };
     const source = 'CREATE TABLE user_accounts (display_name text);';
     const first = sqlFile(source, reads);
     expect(sqlFile(source, reads)).toBe(first);

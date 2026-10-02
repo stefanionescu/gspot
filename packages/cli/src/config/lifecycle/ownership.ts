@@ -11,7 +11,7 @@ export const MOVED_HEADING = '## Other instructions';
 export const ADOPTED_KINDS = new Set(['config', 'hook', 'pin', 'lock']);
 
 /** The folder each private installation kind is written to. */
-export const INSTALLATION_FOLDERS = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;
+export const INSTALLATION_DIRECTORIES = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;
 
 /** The kinds of file a gspot write owns. */
 export const OWNED_KINDS = ['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'export'] as const;

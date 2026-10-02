@@ -50,16 +50,16 @@ export const toolSchema = z.strictObject({
     kind: z.enum(['binary', 'library']).default('binary'),
     version: z.string().optional(),
     floor: z.string().optional(),
-    provider: z.literal('host').optional(),
+    host: z.boolean().optional(),
     // The platforms the tool has a build for; unset means every platform.
     platforms: z.array(z.enum(TOOL_PLATFORMS)).min(1).optional(),
     version_command: commandSchema.optional(),
     version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
-    version_regex: z.string().optional(),
+    version_pattern: z.string().optional(),
     // Output that means the tool fell over rather than found something, for every check that runs it.
     crash_pattern: suppressionPattern.optional(),
     // Where the tool documents one rule; explain prints it with the rule name in place of `{rule}`.
-    rule_page: z.string().includes('{rule}', { message: 'A rule page names where {rule} goes.' }).optional(),
+    rule_url: z.string().includes('{rule}', { message: 'A rule page names where {rule} goes.' }).optional(),
     suppression: z
         .strictObject({
             marker: suppressionPattern,
@@ -73,13 +73,15 @@ export const toolSchema = z.strictObject({
     prettier: z
         .strictObject({
             entry: z.string().min(1),
-            // The file types the plugin formats; a kit whose owners take plugins owns them while this tool is selected.
+            // The file types the plugin formats; a kit whose files take plugins owns them while this tool is selected.
             extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).default([]),
             overrides: z
                 .array(z.strictObject({ files: z.string().min(1), options: z.record(z.string(), z.unknown()) }))
                 .default([]),
         })
         .optional(),
+    // The file types an ESLint plugin or parser lints; a kit whose files take plugins owns them while it is selected.
+    eslint: z.strictObject({ extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).min(1) }).optional(),
     replace: z
         .array(
             z

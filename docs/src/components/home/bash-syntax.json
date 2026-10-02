@@ -4,6 +4,6 @@
     "cache": "disabled",
     "broken": "if then\n",
     "corrected": "printf \"%s\\n\" \"Hello\"\n",
-    "failed": "root  bash/syntax  fail\nroot  bash/syntax  fail       1 file      0.0s\n  greet.sh:1  bash/syntax  syntax error near unexpected token `then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  greet.sh:1  bash/syntax  `if then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  reproduce: gspot check --only bash/syntax\n\n0 checks passed, 1 check failed, 0 checks skipped, 2 findings, 0.0s (failed)\n",
+    "failed": "root  bash/syntax  failed\nroot  bash/syntax  failed     1 file      0.0s\n  greet.sh:1  bash/syntax  syntax error near unexpected token `then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  greet.sh:1  bash/syntax  `if then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  reproduce: gspot check --only bash/syntax\n\n0 checks passed, 1 check failed, 0 checks skipped, 2 findings, 0.0s (failed)\n",
     "passed": "1 check passed, 0 checks failed, 0 checks skipped, 0 findings, 0.0s\n"
 }

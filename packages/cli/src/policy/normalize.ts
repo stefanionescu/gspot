@@ -9,8 +9,8 @@ import type {
     RawLimits,
     RawNaming,
     RawPolicy,
+    NamingTable,
     NamingSettings,
-    NamingCategoryTable,
     NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
@@ -18,8 +18,8 @@ function isReasonedForm(value: unknown): value is { value: unknown; reason: stri
     return isRecord(value) && 'value' in value && 'reason' in value;
 }
 
-function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
-    const table: NamingCategoryTable = {};
+function normalizeCategory(raw: Record<string, unknown>): NamingTable {
+    const table: NamingTable = {};
     if (raw['max_chars'] !== undefined) table.max_chars = toReasoned(raw['max_chars'] as number);
     if (raw['max_words'] !== undefined) table.max_words = toReasoned(raw['max_words'] as number);
     if (raw['case'] !== undefined) table.case = toReasoned(raw['case'] as string[]);
@@ -34,12 +34,17 @@ function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable 
 }
 
 function normalizeScopeTables(raw: RawScope): Partial<Policy> {
-    const table: Partial<Policy> = {};
+    // The tables a scope holds as written.
+    const table: Partial<Policy> = compact({
+        tools: raw.tools as Policy['tools'] | undefined,
+        install: raw.install,
+        tests: raw.tests,
+        timeout: raw.timeout,
+    });
     if (raw.limits) table.limits = normalizeLimits(raw.limits);
     if (raw.naming) table.naming = normalizeNaming(raw.naming);
     if (raw.architecture) table.architecture = normalizeArchitecture(raw.architecture);
     if (raw.structure) table.structure = defaulted<Policy['structure']>(raw.structure, STRUCTURE_DEFAULTS);
-    if (raw.tools) table.tools = raw.tools as Policy['tools'];
     if (raw.format) table.format = compact(raw.format);
     return table;
 }
@@ -95,20 +100,20 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
  */
 function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
     const lists = defaulted(raw, {
-        banned_terms: [],
+        banned: [],
         allowed: [],
         external: [],
         reserved: [],
-        remove_groups: [],
-        contract_properties: [],
+        dropped_groups: [],
+        protocol_keys: [],
     });
     const naming: NamingSettings = {
-        banned_terms: lists.banned_terms,
+        banned: lists.banned,
         allowed: lists.allowed,
         external: lists.external,
         reserved: lists.reserved,
-        remove_groups: lists.remove_groups,
-        contract_properties: lists.contract_properties,
+        dropped_groups: lists.dropped_groups,
+        protocol_keys: lists.protocol_keys,
         languages: {},
         rules: (raw?.rules ?? []).map((entry) => compact(entry)),
     };
@@ -141,7 +146,7 @@ export function normalize(raw: RawPolicy): Policy {
     return {
         level: raw.level,
         requireReasons: raw.require_reasons,
-        extraChecks: raw.extra_checks,
+        extraChecks: raw.enable,
         exclude: raw.exclude,
         kits: raw.kits ?? [],
         scopes: scopes.map((scope) => ({
@@ -155,6 +160,9 @@ export function normalize(raw: RawPolicy): Policy {
         format: compact({ ...raw.format }),
         prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [] }),
         tools: { ...raw.tools } as Policy['tools'],
+        install: { ...raw.install },
+        tests: raw.tests,
+        ...compact({ timeout: raw.timeout }),
         ignores: (raw.ignore ?? []).map((entry) => compact(entry)),
         declarations: [
             ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),
@@ -163,8 +171,8 @@ export function normalize(raw: RawPolicy): Policy {
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
         ...compact({ hooks: raw.hooks, ci: raw.ci }),
-        guides: defaulted<Policy['guides']>(raw.guides, { install: true, directory: '.gspot/guides', exclude: [] }),
-        ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
+        rules: defaulted<Policy['rules']>(raw.rules, { install: true, path: '.gspot/rules', exclude: [] }),
+        ...(raw.runner === undefined ? {} : { runner: raw.runner }),
         scopeTables,
     };
 }

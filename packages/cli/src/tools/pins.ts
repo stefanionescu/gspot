@@ -10,7 +10,7 @@ export function privateToolInstallation(
     tool: ToolPin,
     runner?: string,
 ): { kind: 'npm' | 'python'; name: string; version: string } | undefined {
-    if (tool.provider === 'host') return undefined;
+    if (tool.host === true) return undefined;
     const python = tool.installers['pypi'];
     if (python?.version !== undefined) return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];

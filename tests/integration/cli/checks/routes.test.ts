@@ -17,7 +17,7 @@ path = "api"
 kits = ["express"]
 `;
 
-const ROUTES_OPTIONS = runOptions({ only: ['express/routes-tested'] });
+const ROUTES_OPTIONS = runOptions({ only: ['express/untested-routes'] });
 
 const ROUTE = 'export const users = () => [];\n';
 
@@ -64,6 +64,6 @@ test.each([
         'users.test.ts': `import { test } from 'uninstalled-test-runner';\n${source}\ntest('users', users);\n`,
     });
     const outcome = await executeRun(await openSession(sandbox.path), { ...ROUTES_OPTIONS, checks: CHECKS });
-    expect(outcome.report.checks[0]?.status, JSON.stringify(outcome.report.checks)).toBe('ok');
+    expect(outcome.report.checks[0]?.status, JSON.stringify(outcome.report.checks)).toBe('passed');
     expect(outcome.report.exitCode).toBe(0);
 });

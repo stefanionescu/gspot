@@ -40,7 +40,7 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     if (result.code !== 0 && report.diagnostics.length === 0 && report.errors.length === 0)
         throw new Error(`Deno lint failed without diagnostics: ${result.stderr.trim()}`);
     const broken = report.errors.map((entry) =>
-        findingAt(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
+        findingAt(input, { file: relative(input.root, entry.file_path), line: 1 }, 'syntax', entry.message),
     );
     const found = report.diagnostics.map((entry) =>
         findingAt(
@@ -59,7 +59,7 @@ function firstError(input: EngineInput, folder: string, stderr: string): Finding
     const place = CHECK_LOCATION.exec(said)?.groups;
     const file = place?.['file'] === undefined ? `${folder}/index.ts` : relative(input.root, place['file']);
     const first = said.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
-    return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'deno-check', first.trim());
+    return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
 
 async function typed(input: EngineInput, folder: string): Promise<Finding[]> {

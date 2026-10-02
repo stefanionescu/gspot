@@ -14,11 +14,11 @@ import { TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Program, SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
-import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/mutations.ts';
-import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/config/commands/commands.ts';
+import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/mutations.ts';
+import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, KEY_SUGGESTION_LIMIT } from '#cli/config/commands/commands.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -34,7 +34,7 @@ function parseStructured(text: string): unknown {
     }
 }
 
-function parseValue(text: string): unknown {
+function parseItem(text: string): unknown {
     if (text === 'true') return true;
     if (text === 'false') return false;
     if (INTEGER.test(text) || DECIMAL.test(text)) return Number(text);
@@ -42,7 +42,7 @@ function parseValue(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
-function unknownSetting(session: Session, selection: ScopeSelection, key: string): GspotError {
+function buildSettingError(session: Session, selection: ScopeSelection, key: string): GspotError {
     // A setting of a configuration that lives in a scope is set in that scope; say which one.
     const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
     if (holder !== undefined) return new GspotError('policy', [messages.settingInScope(key, holder.scope.path)]);
@@ -51,7 +51,7 @@ function unknownSetting(session: Session, selection: ScopeSelection, key: string
     const all = selection.surface.specs.keys().toArray();
     const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
     return new GspotError('policy', [
-        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, SET_NEAR_LIMIT)),
+        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, KEY_SUGGESTION_LIMIT)),
     ]);
 }
 
@@ -62,7 +62,7 @@ function shaped(parsed: unknown[], isList: boolean): unknown {
     return Array.isArray(only) ? (only as unknown[]) : parsed;
 }
 
-function declarationPaths(key: string, value: unknown): value is string[] {
+function isPathList(key: string, value: unknown): value is string[] {
     return (
         (key === 'generated' || key === 'vendored') &&
         Array.isArray(value) &&
@@ -71,7 +71,7 @@ function declarationPaths(key: string, value: unknown): value is string[] {
 }
 
 // The reason given on the command line goes into every table item that has none.
-function reasonsFilled(value: unknown, reason: string | undefined): unknown {
+function fillReasons(value: unknown, reason: string | undefined): unknown {
     if (reason === undefined || !Array.isArray(value)) return value;
     return (value as unknown[]).map((item) =>
         item !== null && typeof item === 'object' && !('reason' in item) ? { ...item, reason } : item,
@@ -79,7 +79,7 @@ function reasonsFilled(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.kind !== 'list') return isWeaker(spec, value, shipped);
+    if (spec.type !== 'list') return isLoosening(spec, value, shipped);
     if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items: unknown[] = Array.isArray(value) ? value : [];
@@ -90,20 +90,20 @@ function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped:
         )
     )
         return false;
-    return o.replace ? spec.direction !== 'neutral' : isWeaker(spec, value, shipped);
+    return o.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
 }
 
-function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
+function buildMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
     return (raw) => {
-        const holder = scopeHolder(raw, o.scope);
-        if (o.remove && declarationPaths(o.key, value)) {
+        const holder = getScopeTable(raw, o.scope);
+        if (o.remove && isPathList(o.key, value)) {
             const entries = (holder[o.key] ?? []) as NonNullable<RawPolicy['generated']>;
             holder[o.key] = entries
                 .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
                 .filter((entry) => entry.paths.length > 0);
         } else if (isList && o.remove) removeFromList(o.key, value as unknown[])(holder);
-        else if (isList && !o.replace) appendList(o.key, value as unknown[])(holder);
+        else if (isList && !o.replace) addToList(o.key, value as unknown[])(holder);
         else setKey(o.key, written)(holder);
     };
 }
@@ -129,21 +129,21 @@ function describeSet(
     return `${changeText(o, isList, shown, value)}${reason}${was}`;
 }
 
-function refuseRuleOff(spec: SettingSpec, o: SetOptions): void {
+function assertRuleNotOff(spec: SettingSpec, o: SetOptions): void {
     if (spec.direction !== 'per-rule' || !o.items.includes('off')) return;
     const tool = o.key.split('.', TOOL_KEY_DEPTH)[1] ?? '';
     const rule = o.key.split('.').slice(RULE_KEY_DEPTH).join('.');
     throw new GspotError('policy', [messages.ruleOffRefused(`<the check that runs ${tool}>`, rule)]);
 }
 
-function selectionFor(session: Session, scope: string | undefined): ScopeSelection {
+function getSelection(session: Session, scope: string | undefined): ScopeSelection {
     const selection = session.scopes.find((entry) => entry.scope.path === (scope ?? '')) ?? session.scopes[0];
     if (!selection) throw new GspotError('policy', [messages.scopeMissing(scope ?? '')]);
     return selection;
 }
 
 // Quote policy values and preserve the mutation flags in the missing-reason command hint.
-function setReasonCommand(options: SetOptions): string {
+function buildReasonHint(options: SetOptions): string {
     const command = ['gspot', 'set', quoteArgument(options.key), ...options.items.map((item) => quoteArgument(item))];
     if (options.scope !== undefined) command.push('--scope', quoteArgument(options.scope));
     if (options.replace) command.push('--replace');
@@ -152,7 +152,7 @@ function setReasonCommand(options: SetOptions): string {
     return command.join(' ');
 }
 
-function validateSetReason(
+function assertReason(
     session: Session,
     selection: ScopeSelection,
     o: SetOptions,
@@ -162,12 +162,12 @@ function validateSetReason(
     if (!session.policyFiles.policy.requireReasons) return;
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
-    if (isReasonOwed(spec, o, value, shipped)) requireReason(o.reason, where, setReasonCommand(o));
+    if (isReasonOwed(spec, o, value, shipped)) requireReason(o.reason, where, buildReasonHint(o));
     else if (o.reason !== undefined && !isReasonAccepted(o.reason))
         throw new GspotError('policy', [messages.refusedReason(where, o.reason)]);
 }
 
-function writeValue(
+function commitSetting(
     root: string,
     session: Session,
     selection: ScopeSelection,
@@ -176,20 +176,20 @@ function writeValue(
 ): Promise<CommandResult> {
     if (o.items.length === 0)
         throw new GspotError('policy', [`The setting ${o.key} needs a value; pass one, or --default to remove yours.`]);
-    const isList = spec.kind === 'list';
+    const isList = spec.type === 'list';
     const parsed = shaped(
-        o.items.map((item) => parseValue(item)),
+        o.items.map((item) => parseItem(item)),
         isList,
     );
-    const value = reasonsFilled(
-        declarationPaths(o.key, parsed) && !o.remove ? [{ paths: parsed }] : parsed,
+    const value = fillReasons(
+        isPathList(o.key, parsed) && !o.remove ? [{ paths: parsed }] : parsed,
         isList ? o.reason : undefined,
     );
-    validateSetReason(session, selection, o, spec, value);
+    assertReason(session, selection, o, spec, value);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(
         root,
-        setMutation(o, isList, value),
+        buildMutation(o, isList, value),
         false,
         describeSet(session, selection, o, shown, value, isList),
     );
@@ -204,16 +204,16 @@ async function setCommand(o: SetOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const session = await openSession(root);
-    const selection = selectionFor(session, o.scope);
+    const selection = getSelection(session, o.scope);
     const match = specFor(selection.surface, o.key);
-    if (!match) throw unknownSetting(session, selection, o.key);
-    refuseRuleOff(match.spec, o);
-    if (!o.toDefault) return writeValue(root, session, selection, o, match.spec);
+    if (!match) throw buildSettingError(session, selection, o.key);
+    assertRuleNotOff(match.spec, o);
+    if (!o.reset) return commitSetting(root, session, selection, o, match.spec);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(
         root,
         (raw) => {
-            deleteKey(o.key)(scopeHolder(raw, o.scope));
+            deleteKey(o.key)(getScopeTable(raw, o.scope));
         },
         false,
         `${shown} back to the shipped default`,
@@ -228,10 +228,12 @@ export function registerSet(program: Program): void {
     program
         .command('set <key> [value...]')
         .summary('Change a setting')
-        .description('Write one setting to gspot.toml and apply it')
+        .description(
+            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nChecks the value, writes it to gspot.toml, and applies the configuration. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.\n\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
+            '\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
         )
         .option('--reason <text>', 'Say why; required to loosen a setting when require_reasons is true')
         .option('--scope <path>', 'Write the setting in this scope instead of the root')
@@ -248,7 +250,7 @@ export function registerSet(program: Program): void {
                         items,
                         replace: flags.replace === true,
                         remove: flags.remove === true,
-                        toDefault: flags.default === true,
+                        reset: flags.default === true,
                         ...compact({ reason: flags.reason, scope: flags.scope }),
                     }),
                 global,

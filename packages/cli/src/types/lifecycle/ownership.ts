@@ -6,7 +6,7 @@ import type { identitySchema, ownershipSchema } from '#cli/lifecycle/ownership/s
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 
-export type PendingOwnership = NonNullable<OwnershipState['pending']>[number];
+export type PendingOwnership = NonNullable<Ownership['pending']>[number];
 
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
 
@@ -14,14 +14,14 @@ export type Restoration = { next?: Read };
 
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
 
-export type OwnershipState = z.infer<typeof ownershipSchema>;
-export type OwnershipEntry = OwnershipState['files'][number];
+export type Ownership = z.infer<typeof ownershipSchema>;
+export type OwnershipEntry = Ownership['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
 
 /** The open log: the locked root, the recorded state, and the operations that read and write it. */
 export type Log = {
     files: Root;
-    state: OwnershipState;
+    state: Ownership;
     save(): void;
     entryFor(path: string): OwnershipEntry | undefined;
     finish(): void;

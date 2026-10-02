@@ -1,14 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { valueAt, isRecord } from '#cli/platform/text.ts';
 import { patch as patchToml } from '@decimalturn/toml-patch';
-import type { KeyPath, KitDocument } from '#cli/types/lifecycle/merge.ts';
+import { isRecord, valueAt as getValue } from '#cli/platform/text.ts';
 import { isMap, isNode, isAlias, isCollection, parseDocument } from 'yaml';
 import type { ConfigurationFormat } from '#cli/types/generation/generation.ts';
+import type { KeyPath, KitDocument as Document } from '#cli/types/lifecycle/merge.ts';
 import { modify, parseTree, applyEdits, getNodeValue, type ParseError, findNodeAtLocation } from 'jsonc-parser';
 
-function jsonDocument(text: string) {
+function parseJsonTree(text: string) {
     const errors: ParseError[] = [];
     const tree = parseTree(text, errors, { allowTrailingComma: true });
     if (errors.length > 0 || tree?.type !== 'object')
@@ -17,7 +17,7 @@ function jsonDocument(text: string) {
 }
 
 // The TOML table a key path's parent names, created on the way when a value is being set.
-function tomlTable(
+function getTomlTable(
     document: Record<string, unknown>,
     path: KeyPath,
     create: boolean,
@@ -36,16 +36,16 @@ function tomlTable(
 }
 
 // A TOML document edited in memory and printed by patching the source, so comments and layout survive.
-function tomlDocument(source: string): KitDocument {
+function tomlDocument(source: string): Document {
     const document: Record<string, unknown> = parseToml(source);
     return {
-        value: (path) => valueAt(document, path),
+        value: (path) => getValue(document, path),
         set(path, value) {
             if (path.some((key) => typeof key !== 'string'))
                 throw new Error('TOML configuration fields require table keys.');
             const key = path.at(-1);
             if (key === undefined) throw new Error('A configuration key path cannot be empty.');
-            const table = tomlTable(document, path.slice(0, -1), value !== undefined);
+            const table = getTomlTable(document, path.slice(0, -1), value !== undefined);
             if (table === undefined) return;
             if (value === undefined) Reflect.deleteProperty(table, key);
             else Object.defineProperty(table, key, { value, enumerable: true, writable: true, configurable: true });
@@ -60,7 +60,7 @@ function tomlDocument(source: string): KitDocument {
 }
 
 // A YAML mapping edited through its own document model.
-function yamlDocument(source: string, created: boolean): KitDocument {
+function yamlDocument(source: string, created: boolean): Document {
     const document = parseDocument(source);
     if (document.errors.length > 0 || !isMap(document.contents))
         throw new Error('Shared configuration must be a valid YAML mapping.');
@@ -70,7 +70,7 @@ function yamlDocument(source: string, created: boolean): KitDocument {
             let node: unknown = document.contents;
             for (const [index, key] of path.entries()) {
                 // Alias expansion needs the document anchors, but only the selected subtree is converted.
-                if (isAlias(node)) return valueAt(node.toJS(document), path.slice(index));
+                if (isAlias(node)) return getValue(node.toJS(document), path.slice(index));
                 if (!isCollection(node)) return undefined;
                 node = node.get(key, true);
             }
@@ -85,12 +85,12 @@ function yamlDocument(source: string, created: boolean): KitDocument {
 }
 
 // A JSON object edited by text edits, so comments and layout survive.
-function jsoncDocument(source: string, created: boolean): KitDocument {
-    jsonDocument(source);
+function jsoncDocument(source: string, created: boolean): Document {
+    parseJsonTree(source);
     let text = source;
     return {
         value(path) {
-            const node = findNodeAtLocation(jsonDocument(text), path);
+            const node = findNodeAtLocation(parseJsonTree(text), path);
             return node === undefined ? undefined : (getNodeValue(node) as unknown);
         },
         set(path, value) {
@@ -108,7 +108,7 @@ function jsoncDocument(source: string, created: boolean): KitDocument {
  * @param created whether the file is new, so an empty document gets no leading blank line.
  * @returns a document that reads, sets, and prints values by key path.
  */
-export function configurationDocument(source: string, format: ConfigurationFormat, created = false): KitDocument {
+export function openDocument(source: string, format: ConfigurationFormat, created = false): Document {
     if (format === 'toml') return tomlDocument(source);
     if (format === 'yaml') return yamlDocument(source, created);
     return jsoncDocument(source, created);
@@ -123,7 +123,7 @@ export function configurationDocument(source: string, format: ConfigurationForma
  * @param output.changes the keys and the values they must hold.
  * @returns whether the file exists and holds every installed value.
  */
-export function hasConfiguration(
+export function hasFields(
     root: string,
     output: {
         path: string;
@@ -134,6 +134,6 @@ export function hasConfiguration(
     using files = openRoot(root);
     const current = files.read(output.path);
     if (current === undefined) return false;
-    const document = configurationDocument(current.bytes.toString('utf8'), output.format);
+    const document = openDocument(current.bytes.toString('utf8'), output.format);
     return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), field.value));
 }

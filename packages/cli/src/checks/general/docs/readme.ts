@@ -62,7 +62,7 @@ function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: b
  * @returns the findings
  */
 export function readmePresent(input: EngineInput): Finding[] {
-    const isLicenseRequired = input.view.tool('docs')['require_license'] !== false;
+    const isLicenseRequired = input.view.tool('docs')['license'] !== false;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
@@ -89,8 +89,8 @@ export function readmePresent(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function readmeShape(input: EngineInput): Finding[] {
-    const docs = input.view.tool('docs');
-    const threshold = typeof docs['contents_threshold'] === 'number' ? docs['contents_threshold'] : CONTENTS_THRESHOLD;
+    const headings = input.view.settings['limits.docs.contents_headings'];
+    const threshold = typeof headings === 'number' ? headings : CONTENTS_THRESHOLD;
     const roots = new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
     return input.files
         .filter(

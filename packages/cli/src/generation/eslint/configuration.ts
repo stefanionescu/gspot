@@ -140,7 +140,7 @@ function limitsOf(view: MergedView, language: string, keys: Record<string, strin
 function eslintSettings(view: MergedView) {
     const { settings } = view;
     return {
-        testFiles: (settings['tools.eslint.test_files'] ?? []) as string[],
+        testFiles: (settings['tests'] ?? []) as string[],
         scriptFiles: (settings['tools.eslint.script_files'] ?? []) as string[],
         nodeVersion: (settings['tools.eslint.node_version'] ?? DEFAULT_NODE_VERSION) as string,
         restrictedImports: (settings['tools.eslint.restricted_imports'] ?? []) as unknown[],
@@ -168,7 +168,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
     const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
     const importStyle = (tool['import_style'] ?? {}) as Record<string, string>;
-    const globals = (tool['globals'] ?? {}) as Record<string, string>;
+    const globals = (tool['runtimes'] ?? {}) as Record<string, string>;
     return {
         aliases,
         ...eslintSettings(view),

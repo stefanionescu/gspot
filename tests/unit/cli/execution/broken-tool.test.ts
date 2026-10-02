@@ -7,7 +7,7 @@ const base = {
     command: ['tool'],
     level: 'recommended',
     stage: 'commit',
-    runs: 'per-file-list',
+    runs: 'files',
     summary: '',
     why: '',
     help: '',
@@ -54,8 +54,8 @@ describe('isToolBroken', () => {
         } satisfies CheckSpec;
         const links = {
             ...base,
-            name: 'docs/links',
-            output: { format: 'regex', file_is: 'link', pattern: '(?<file>.+)' },
+            name: 'docs/lychee',
+            output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
         } satisfies CheckSpec;
         const lines = { ...base, name: 'dependencies/syncpack', output: { format: 'lines' } } satisfies CheckSpec;
         for (const spec of [floor, links, lines]) expect(isToolBroken(spec, [], [here])).toBe(false);
@@ -73,7 +73,7 @@ describe('hasToolError', () => {
     });
 
     test("a check's own pattern comes before the tool's", () => {
-        const spec = { ...base, tool_errors: '^Fatal:' } satisfies CheckSpec;
+        const spec = { ...base, crash_pattern: '^Fatal:' } satisfies CheckSpec;
         expect(hasToolError(spec, eslint, output)).toBe(false);
         expect(hasToolError(spec, eslint, { ...output, stderr: 'Fatal: cannot write\n' })).toBe(true);
     });

@@ -20,11 +20,11 @@ async function storageSession(root: string, status: number, stage: Stage = 'comm
             checks: [
                 {
                     level: 'recommended',
-                    runs: 'per-scope',
+                    runs: 'scope',
                     summary: 'Reports the planted storage finding.',
                     why: 'Storage failures preserve the check result.',
                     help: 'Fix the planted finding.',
-                    owners: manifest.owners,
+                    files: manifest.files,
                     name: 'sandbox/storage',
                     stage,
                     cwd: 'root',
@@ -39,11 +39,7 @@ async function storageSession(root: string, status: number, stage: Stage = 'comm
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
-    [
-        'xcode/asset-catalogs',
-        'App/Assets.xcassets/Logo.imageset/Contents.json',
-        '{"images":[{"filename":"logo.png"}]}\n',
-    ],
+    ['xcode/assets', 'App/Assets.xcassets/Logo.imageset/Contents.json', '{"images":[{"filename":"logo.png"}]}\n'],
 ] as const)(
     'a failed resource read is an execution error for %s; malformed JSON remains a finding',
     async (check, path, content) => {
@@ -68,7 +64,7 @@ test.each([
         fs.writeFileSync(target, '{');
         const malformed = await executeRun(session, options);
         expect(malformed.report.exitCode).toBe(1);
-        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'parse' }]);
+        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'syntax' }]);
         expect(fs.readFileSync(target, 'utf8')).toBe('{');
         fs.writeFileSync(target, content);
         const corrected = await executeRun(session, options);
@@ -89,7 +85,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
     const session = await openSession(sandbox.path);
-    const options = runOptions({ stage: 'commit', only: ['xcode/asset-catalogs'] });
+    const options = runOptions({ stage: 'commit', only: ['xcode/assets'] });
     const target = join(sandbox.path, image);
     const original = fs.statSync;
     const read = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
@@ -128,7 +124,7 @@ test('a dry run creates no files', async () => {
         runOptions({ stage: 'commit', isDryRun: true }),
     );
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]!.status).toBe('ok');
+    expect(outcome.report.checks[0]!.status).toBe('passed');
     expect(fs.readdirSync(sandbox.path, { recursive: true })).toStrictEqual(before);
     expect(fs.readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
 });

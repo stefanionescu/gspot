@@ -54,10 +54,10 @@ test(
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
-        await leaveOut(sandbox.path, ['formatting'], {});
+        await leaveOut(sandbox.path, ['format'], {});
         const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
@@ -88,7 +88,7 @@ test('a hook selects configuration below the Git root and checks its exact index
     chmodSync(join(launcher.path, 'gspot'), 0o755);
     await createFileTree(sandbox.path, {
         'nested config/gspot.toml': `kits = []
-[guides]
+[rules]
 install = false
 [hooks]
 [[check]]

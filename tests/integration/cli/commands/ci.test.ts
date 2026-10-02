@@ -35,7 +35,7 @@ async function prepareCiProject(
             ? 'stages: [test]\napplication:\n  script: echo authored-job\n'
             : 'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo authored-job\n';
     const policy = `kits = []
-[guides]
+[rules]
 install = false
 [ci]
 provider = "${provider}"
@@ -46,6 +46,11 @@ paths = ["*.sh"]
 command = ${JSON.stringify([process.execPath, '-e', 'for (const path of process.argv.slice(1)) { const result = Bun.spawnSync(["bash", "-n", path]); if (result.exitCode !== 0) { console.log(path + ": syntax error"); process.exitCode = 1; } }', '{files}'])}
 [check.output]
 format = "lines"
+[[check]]
+name = "project/audit"
+stage = "manual"
+paths = ["*.sh"]
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 `;
     await createFileTree(root, {
         'gspot.toml': policy,
@@ -129,7 +134,7 @@ async function runCiJob(
     });
 }
 
-// Whether the GitHub manual job alone runs the manual stage.
+// Whether the GitHub manual job alone runs the manual check, by name.
 function runsManualStageAlone(generated: {
     gspot: { script: string[] };
     jobs: Record<string, { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }>;
@@ -137,8 +142,8 @@ function runsManualStageAlone(generated: {
     const check = generated.jobs['check-ubuntu']!.steps;
     const manual = generated.jobs['manual-ubuntu']!.steps;
     return (
-        manual.some((step) => step.run?.includes('--stage manual') === true) &&
-        !check.some((step) => step.run?.includes('--stage manual') === true)
+        manual.some((step) => step.run?.includes('--only project/audit') === true) &&
+        !check.some((step) => step.run?.includes('--only') === true)
     );
 }
 
@@ -275,7 +280,7 @@ test.each([
             'none',
             '--no-runner',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);

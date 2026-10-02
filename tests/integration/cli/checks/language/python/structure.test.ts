@@ -26,33 +26,33 @@ plantedCases(
     },
     [
         {
-            check: 'python/file-length',
+            check: 'python/file-lines',
             files: { 'planted/big.py': `"""A planted module."""\n\n\n${LONG_FILE}\n` },
             expected: { file: 'planted/big.py', rule: 'file-lines', line: 1 },
         },
         {
-            check: 'python/function-length',
+            check: 'python/function-lines',
             files: {
                 'planted/long.py': `"""A planted module."""\n\n\ndef long_one() -> None:\n    """Hold many steps."""\n${LONG_BODY}\n`,
             },
             expected: { file: 'planted/long.py', rule: 'function-lines', line: 4 },
         },
         {
-            check: 'python/trivial-function',
+            check: 'python/trivial-functions',
             files: {
                 'planted/tiny.py': `"""A planted module."""\n\n\ndef tiny(value: int) -> int:\n    """Add one to a number."""\n    return value + 1\n\n\ndef caller() -> int:\n    """Call the tiny one, then do more."""\n    first = tiny(1)\n    second = first * 2\n    return second - 1\n`,
             },
             expected: { file: 'planted/tiny.py', rule: 'trivial-function', line: 4 },
         },
         {
-            check: 'python/trivial-function',
+            check: 'python/trivial-functions',
             files: {
                 'planted/forward.py': `"""A planted module."""\n\n\ndef forward(left: int, right: int) -> int:\n    """Forward to the builtin."""\n    return max(left, right)\n`,
             },
             expected: { file: 'planted/forward.py', rule: 'trivial-function', line: 4 },
         },
         {
-            check: 'python/placeholder-docstring',
+            check: 'python/placeholder-docstrings',
             files: {
                 'planted/empty.py': `"""A planted module."""\n\n\ndef load_orders() -> None:\n    """Load orders."""\n    first = 1\n    second = first\n    third = second\n    print(third)\n`,
             },
@@ -94,24 +94,24 @@ plantedCases(
             expected: { file: 'planted/listed.py', rule: 'export-order', line: 14 },
         },
         {
-            check: 'python/no-lazy-exports',
+            check: 'python/lazy-exports',
             files: {
                 'planted/lazy.py': `"""A planted module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,
             },
-            expected: { file: 'planted/lazy.py', rule: 'no-lazy-exports', line: 4 },
+            expected: { file: 'planted/lazy.py', rule: 'lazy-export', line: 4 },
         },
         {
             check: 'python/package-exports',
             files: { 'planted/__init__.py': `"""A planted module."""\n\n\n__all__ = ["a", "b", "c"]\n` },
-            policy: '[structure.python]\nmax_package_exports = 2\n',
+            policy: '[limits.python]\npackage_exports = 2\n',
             expected: { file: 'planted/__init__.py', rule: 'package-exports', line: 4 },
         },
         {
-            check: 'python/no-singletons',
+            check: 'python/singletons',
             files: {
                 'planted/shared.py': `"""A planted module."""\n\n\nclass Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
             },
-            expected: { file: 'planted/shared.py', rule: 'no-singletons', line: 8 },
+            expected: { file: 'planted/shared.py', rule: 'singleton', line: 8 },
         },
     ],
 );

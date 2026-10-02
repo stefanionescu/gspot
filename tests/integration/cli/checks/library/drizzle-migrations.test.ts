@@ -131,12 +131,12 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
                 {
                     check: planted.spec.name,
                     file: toPosix(planted.path('migrations/0001_change.sql')),
-                    rule: 'missing-migration',
+                    rule: 'stale',
                 },
                 {
                     check: planted.spec.name,
                     file: toPosix(planted.path('migrations/meta/log.json')),
-                    rule: 'missing-migration',
+                    rule: 'stale',
                 },
             ]);
             expect(

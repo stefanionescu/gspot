@@ -29,7 +29,7 @@ describe('clone findings', () => {
                     check: 'duplication/jscpd',
                     file: 'scripts/café.sh',
                     line: 3,
-                    rule: 'copied-block',
+                    rule: 'clone',
                     message:
                         '30 lines repeat scripts/original.sh:7. The duplicated share is 12.0 of 100, over the ceiling of 4.',
                     fixable: false,

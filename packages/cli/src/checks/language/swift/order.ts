@@ -26,7 +26,7 @@ export function privateBeforePublic(sources: SwiftSource[]): StructureProblem[] 
                 return {
                     file: source.path,
                     line: node.startPosition.row + 1,
-                    rule: 'private-below-shared',
+                    rule: 'private-before-public',
                     text: `${title} is ${visibilityOf(node)} and sits below a declaration other files see. File-local declarations come first.`,
                 };
             });

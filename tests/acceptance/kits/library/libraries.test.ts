@@ -29,7 +29,7 @@ const LINT: [string, string, string][] = [
 
 const CASES: FindingCase[] = [
     ...LINT.map(([rule, path, text]) => ({
-        check: 'typescript/eslint',
+        check: 'javascript/eslint',
         files: { [path]: text },
         expected: { file: path, rule, line: rule === 'no-restricted-imports' ? 3 : 6 },
     })),

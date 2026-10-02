@@ -1,4 +1,5 @@
 import { stringify } from 'smol-toml';
+import { TOOLS_PROJECT } from '#cli/config/tools/tools.ts';
 import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
 import { pythonPins, pythonConstraints } from '#cli/tools/pins.ts';
 
@@ -15,7 +16,7 @@ export function toolEnvironment(manifests: Manifest[]): GeneratedFile[] {
         {
             path: '.gspot/pyproject.toml',
             content: stringify({
-                project: { name: 'gspot-tools', version: '0.0.0', 'requires-python': '>=3.11', dependencies },
+                project: { name: TOOLS_PROJECT, version: '0.0.0', 'requires-python': '>=3.11', dependencies },
                 tool: {
                     uv: {
                         package: false,

@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { decodedText } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { GSPOT_FOLDER, SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT, SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {
@@ -244,7 +244,7 @@ export function readManifests(root: string, files: TrackedFile[]): Fields[] {
         .filter(
             (file) =>
                 file.kind === 'source' &&
-                !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER || part === 'node_modules'),
+                !file.path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT || part === 'node_modules'),
         )
         .flatMap((file) => {
             const base = posix.basename(file.path);

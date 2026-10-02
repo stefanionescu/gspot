@@ -4,8 +4,8 @@ import { isRecord } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import type { Mutation, TomlTable, WriteResult } from '#cli/types/policy/policy.ts';
+import { getIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
+import type { Mutation, Proposal, TomlTable } from '#cli/types/policy/policy.ts';
 import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function splitKey(key: string): { path: string[]; name: string } {
@@ -22,7 +22,7 @@ function splitKey(key: string): { path: string[]; name: string } {
  * @param canCreate when true, missing tables are created on the way.
  * @returns the table at the end of the path, or undefined when the path is missing or runs through a value.
  */
-export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): TomlTable | undefined {
+export function getTable(raw: TomlTable, path: string[], canCreate: boolean): TomlTable | undefined {
     let current: TomlTable = raw;
     for (const part of path) {
         let next = current[part];
@@ -44,7 +44,7 @@ export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): Tom
  * @param mutate the change to apply to the parsed document
  * @returns the new text, the parsed policy, and whether the text changed
  */
-export function proposePolicy(root: string, text: string, mutate: Mutation): WriteResult {
+export function proposePolicy(root: string, text: string, mutate: Mutation): Proposal {
     const raw = parseTomlText(text, 'gspot.toml');
     const before = new Set(Object.keys(raw));
     mutate(raw);
@@ -56,7 +56,7 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     // Taplo requires TOML 1.0 inline tables, which cannot have trailing commas.
     const next = wrapLongArrays(
         patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false, trailingComma: false }),
-        policyIndent(raw),
+        getIndent(raw),
     );
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete({ policy, text: next, path: 'gspot.toml' });
@@ -69,7 +69,7 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
  * @param entry the ignore as the command built it
  * @returns the mutation
  */
-export function appendIgnore(entry: TomlTable): Mutation {
+export function addIgnore(entry: TomlTable): Mutation {
     return (raw) => {
         const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
         const same = list.find((existing) =>
@@ -97,7 +97,7 @@ export function appendIgnore(entry: TomlTable): Mutation {
  * @param counter.removed the count, written by the mutation
  * @returns the mutation
  */
-export function removeEntries(
+export function removeMatching(
     table: string,
     isMatch: (entry: TomlTable) => boolean,
     counter: { removed: number },
@@ -120,7 +120,7 @@ export function removeEntries(
 export function setKey(key: string, value: unknown): Mutation {
     return (raw) => {
         const { path, name } = splitKey(key);
-        const table = tableAt(raw, path, true);
+        const table = getTable(raw, path, true);
         if (!table) throw new Error(`\`${key}\` runs through a value that is not a table.`);
         table[name] = value;
     };
@@ -159,10 +159,10 @@ export function deleteKey(key: string): Mutation {
  * @param entries the entries to append
  * @returns the mutation
  */
-export function appendList(key: string, entries: unknown[]): Mutation {
+export function addToList(key: string, entries: unknown[]): Mutation {
     return (raw) => {
         const { path, name } = splitKey(key);
-        const table = tableAt(raw, path, true);
+        const table = getTable(raw, path, true);
         if (!table) throw new Error(`\`${key}\` runs through a value that is not a table.`);
         const existing = table[name];
         const list: unknown[] = Array.isArray(existing) ? [...(existing as unknown[])] : [];
@@ -180,7 +180,7 @@ export function appendList(key: string, entries: unknown[]): Mutation {
 export function removeFromList(key: string, entries: unknown[]): Mutation {
     return (raw) => {
         const { path, name } = splitKey(key);
-        const table = tableAt(raw, path, false);
+        const table = getTable(raw, path, false);
         const existing = table?.[name];
         if (!table || !Array.isArray(existing)) return;
         const gone = new Set(entries.map((value) => JSON.stringify(value)));
@@ -198,7 +198,7 @@ export function removeFromList(key: string, entries: unknown[]): Mutation {
  * @param scope the scope path, if any
  * @returns the required table
  */
-export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTable {
+export function getScopeTable(raw: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return raw;
     const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
     const holder = scopes.find((entry) => entry['path'] === scope);

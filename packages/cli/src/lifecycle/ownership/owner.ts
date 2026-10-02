@@ -7,23 +7,17 @@ import type { Read } from '#cli/types/platform/platform.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
+import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/apply.ts';
 import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
-import type { Log, OwnershipState } from '#cli/types/lifecycle/ownership.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import { installTree, removeInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
+import { installTree, deleteInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
+import { proposeBlock, proposeMerge, proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 
-import {
-    proposeBlock,
-    proposeRetirement,
-    proposeReplacement,
-    proposeConfiguration,
-} from '#cli/lifecycle/ownership/plans.ts';
-
-const activeMutation = new AsyncLocalStorage<Map<string, Owner>>();
+const activeOwners = new AsyncLocalStorage<Map<string, Owner>>();
 // The owner's operations over an open log.
-function lifecycleOwner(log: Log): Owner {
+function buildOwner(log: Log): Owner {
     const { state, files } = log;
     return {
         beginInstallation(kind) {
@@ -41,10 +35,9 @@ function lifecycleOwner(log: Log): Owner {
             installTree(log, kind, outputs);
         },
         removeInstallation: (kind) => {
-            removeInstallation(log, kind);
+            deleteInstallation(log, kind);
         },
-        proposeConfiguration: (path, format, changes, replace) =>
-            proposeConfiguration(log, path, format, changes, replace),
+        proposeConfiguration: (path, format, changes, replace) => proposeMerge(log, path, format, changes, replace),
         applyPlan: (plan) => applyPlan(log, plan),
         applyPlans: (plans) => applyPlans(log, plans),
         proposeBlock: (path, body, style) => proposeBlock(log, path, body, style),
@@ -96,7 +89,7 @@ export function openOwner(root: string): Owner {
         files.lock(`${STATE_DIRECTORY}/writer.lock`);
         const log = openLog(files, STATE_DIRECTORY);
         recoverInstallations(log);
-        return lifecycleOwner(log);
+        return buildOwner(log);
     } catch (error) {
         files.close();
         throw error;
@@ -109,14 +102,14 @@ export function openOwner(root: string): Owner {
  * @param action the work to do with the owner open.
  * @returns what the action returns.
  */
-export function runOwnedLifecycle<Result>(root: string, action: (owner: Owner) => Result): Result {
+export function asOwner<Result>(root: string, action: (owner: Owner) => Result): Result {
     const canonical = realpathSync(root);
-    const active = activeMutation.getStore();
+    const active = activeOwners.getStore();
     const existing = active?.get(canonical);
     if (existing !== undefined) return action(existing);
     const owner = openOwner(canonical);
     try {
-        const result = activeMutation.run(new Map([...(active ?? []), [canonical, owner]]), () => action(owner));
+        const result = activeOwners.run(new Map([...(active ?? []), [canonical, owner]]), () => action(owner));
         if (result instanceof Promise)
             return result.finally(() => {
                 owner.close();
@@ -135,7 +128,7 @@ export function runOwnedLifecycle<Result>(root: string, action: (owner: Owner) =
  * @param stateDirectory the directory under the root that holds the log
  * @returns the recorded ownership, empty when nothing was recorded
  */
-export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): OwnershipState {
+export function getOwnership(root: string, stateDirectory = STATE_DIRECTORY): Ownership {
     using files = openRoot(root);
     const record = files.read(`${stateDirectory}/ownership.json`);
     return record === undefined

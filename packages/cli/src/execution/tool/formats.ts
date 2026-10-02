@@ -131,7 +131,7 @@ function parseEslintJson(check: string, text: string, help: string, root: string
     try {
         files = eslintFiles.parse(JSON.parse(text));
     } catch (error) {
-        throw new GspotError('tool-output', 'ESLint returned invalid structured findings.', { cause: error });
+        throw new GspotError('output', 'ESLint returned invalid structured findings.', { cause: error });
     }
     const prefix = `${toolPath(root).replace(/\/$/u, '')}/`;
     return files.flatMap((file) => {
@@ -146,7 +146,7 @@ function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
     } catch (error) {
-        throw new GspotError('tool-output', 'The tool returned an invalid JSON report.', { cause: error });
+        throw new GspotError('output', 'The tool returned an invalid JSON report.', { cause: error });
     }
 }
 
@@ -155,9 +155,9 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
     none: () => [],
     json: jsonFindings,
     'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
-    'typos-json': ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
-    'markdownlint-json': ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
-    'eslint-json': ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
+    typos: ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
+    markdownlint: ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
+    eslint: ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
     lines: ({ spec, text }) =>
         text
             .split('\n')
@@ -198,7 +198,7 @@ export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, roo
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
-        fixable: spec.fix_command !== undefined && finding.fixable,
+        fixable: spec.fix !== undefined && finding.fixable,
         file: relativeTo(toolPath(root), toPosix(finding.file)),
     }));
 }

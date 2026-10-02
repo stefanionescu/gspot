@@ -11,7 +11,7 @@ import type { CreatePackageProjectResult } from '#tests/types/tools.ts';
 import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createPackageRegistry } from '#tests/harness/registry/packages.ts';
 
-const QUIET_GUIDES = '[guides]\ninstall = false\n';
+const QUIET_RULES = '[rules]\ninstall = false\n';
 
 // The authored files every package project starts from.
 const AUTHORED_FILES = {
@@ -39,7 +39,7 @@ const PACKAGES: Record<'mise' | 'none', RegistryPackage[]> = {
     ],
 };
 
-const RUNNER_POLICY = { mise: '[runner]\ntool = "mise"\n', none: '' };
+const RUNNER_POLICY = { mise: 'runner = "mise"\n', none: '' };
 
 /** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
 export function readPackageInputs(
@@ -99,7 +99,7 @@ export async function createPackageProject(
             [projectPath]: rootPackage,
             ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
             '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
-            'gspot.toml': policyOf(['formatting'], RUNNER_POLICY[runner] + QUIET_GUIDES, 'recommended'),
+            'gspot.toml': policyOf(['format'], RUNNER_POLICY[runner] + QUIET_RULES, 'recommended'),
             ...AUTHORED_FILES,
         });
         const yarnConfiguration =

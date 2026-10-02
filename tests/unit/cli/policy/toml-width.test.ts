@@ -2,7 +2,7 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { setKey, proposePolicy } from '#cli/policy/mutations.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
+import { getIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 
 const WORDS = Array.from(
     { length: 6 },
@@ -38,9 +38,9 @@ test('an array under a scope entry keeps the indentation of its key', () => {
 });
 
 test('the indentation follows the format table of the policy', () => {
-    expect(policyIndent({ format: { indent_width: 2 } })).toBe('  ');
-    expect(policyIndent({ format: { indent_style: 'tab' } })).toBe('\t');
-    expect(policyIndent({})).toBe(' '.repeat(4));
+    expect(getIndent({ format: { indent_width: 2 } })).toBe('  ');
+    expect(getIndent({ format: { indent_style: 'tab' } })).toBe('\t');
+    expect(getIndent({})).toBe(' '.repeat(4));
 });
 
 test('oversized table lists retain comments, quoted keys, sibling values, and repeated scope ownership', () => {

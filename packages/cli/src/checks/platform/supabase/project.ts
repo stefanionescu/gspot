@@ -62,7 +62,7 @@ export function projectValid(input: EngineInput): Finding[] {
     const config = readProject(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
-    if (typeof config === 'string') return [findingAt(input, at, 'parse', config)];
+    if (typeof config === 'string') return [findingAt(input, at, 'syntax', config)];
     const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return missing.map((name) =>

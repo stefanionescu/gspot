@@ -1,34 +1,34 @@
 import { test, expect } from 'bun:test';
-import { iniSection } from '#cli/kits/takeover.ts';
-import { gixyRules } from '#cli/lifecycle/preview/gixy.ts';
-import { javascriptRules } from '#cli/lifecycle/preview/javascript.ts';
-import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/preview/sqlfluff.ts';
+import { getIniSection } from '#cli/kits/takeover.ts';
+import { parseGixy } from '#cli/lifecycle/preview/gixy.ts';
+import { parseJavascript } from '#cli/lifecycle/preview/javascript.ts';
+import { parseIni, parseSqlfluff } from '#cli/lifecycle/preview/sqlfluff.ts';
 
 test('INI selection retains exact section text and treats malformed headings as content', () => {
     const selected =
         '[tool] # selected\r\nkey = value\r\n[other] trailing text\r\n[]\r\n[tool:child]; nested\r\nvalue = 2\r';
-    expect(iniSection(`[unrelated]\r\nvalue = 1\r\n${selected}\n[toolbox]\nvalue = 3\n`, 'tool')).toBe(selected);
-    expect(iniSection('[toolbox]\nvalue = 3\n', 'tool')).toBeUndefined();
-    expect(iniSection('[tool\nvalue = 3\n', 'tool')).toBeUndefined();
+    expect(getIniSection(`[unrelated]\r\nvalue = 1\r\n${selected}\n[toolbox]\nvalue = 3\n`, 'tool')).toBe(selected);
+    expect(getIniSection('[toolbox]\nvalue = 3\n', 'tool')).toBeUndefined();
+    expect(getIniSection('[tool\nvalue = 3\n', 'tool')).toBeUndefined();
 });
 
 test('INI selection rejects duplicate selected headings and accepts repeated unrelated sections', () => {
-    expect(() => iniSection('[tool:child]\nx = 1\n[other]\n[tool:child] ; repeated\nx = 2', 'tool')).toThrow(
+    expect(() => getIniSection('[tool:child]\nx = 1\n[other]\n[tool:child] ; repeated\nx = 2', 'tool')).toThrow(
         'Duplicate configuration section: tool:child',
     );
-    expect(iniSection('[other]\n[other]\n[tool:child]\nx = 1\n', 'tool')).toBe('[tool:child]\nx = 1\n');
+    expect(getIniSection('[other]\n[other]\n[tool:child]\nx = 1\n', 'tool')).toBe('[tool:child]\nx = 1\n');
 });
 
 test('Gixy selection preserves root aliases, section-independent flags, and plugin boundaries', () => {
     expect(
-        gixyRules(
+        parseGixy(
             '# comment\n---\n--tests: ssrf, aliastraversal ; selected\n[plugin_name]\nchecks = ignored\n--skips\n',
         ),
     ).toStrictEqual({
         checks: ['ssrf', 'aliastraversal'],
         skips: ['true'],
     });
-    expect(gixyRules('checks = ssrf\n')).toStrictEqual({ checks: ['ssrf'] });
+    expect(parseGixy('checks = ssrf\n')).toStrictEqual({ checks: ['ssrf'] });
 });
 
 test.each([
@@ -39,13 +39,13 @@ test.each([
     'export = {};',
     'module.exports = () => ({});',
 ])('static JavaScript configuration refuses %s and accepts a literal export', (source) => {
-    expect(() => javascriptRules('configuration.js', source)).toThrow(
+    expect(() => parseJavascript('configuration.js', source)).toThrow(
         'JavaScript rule comparison requires a static object export.',
     );
-    expect(javascriptRules('configuration.js', 'module.exports = {rules: {flag: false}};')).toStrictEqual({
+    expect(parseJavascript('configuration.js', 'module.exports = {rules: {flag: false}};')).toStrictEqual({
         rules: { flag: false },
     });
-    expect(javascriptRules('configuration.js', 'export default {rules: {flag: false}};')).toStrictEqual({
+    expect(parseJavascript('configuration.js', 'export default {rules: {flag: false}};')).toStrictEqual({
         rules: { flag: false },
     });
 });
@@ -57,12 +57,12 @@ test.each([
     { input: 'TRUE', expected: true },
     { input: 'None', expected: null },
 ])('SQLFluff preserves the native value type for "$input"', ({ input, expected }) => {
-    const rules = sqlfluffRules(`[sqlfluff:rules]\nvalue = ${input}\n`);
+    const rules = parseSqlfluff(`[sqlfluff:rules]\nvalue = ${input}\n`);
     expect(rules['sqlfluff:rules']).toStrictEqual({ value: expected });
 });
 
 test('SQLFluff continuation preserves blank lines, indented headings, and case-sensitive sections', () => {
-    const sections = sqlfluffConfiguration(
+    const sections = parseIni(
         '\n# comment\n[SQLFluff]\nRule = first\n    [continued]\n\n; comment\n  last\nNext = final\n[sqlfluff] trailing\nrule = separate\n',
     );
     expect([...sections.keys()]).toStrictEqual(['SQLFluff', 'sqlfluff']);
@@ -74,12 +74,10 @@ test('SQLFluff continuation preserves blank lines, indented headings, and case-s
 });
 
 test('SQLFluff refuses a repeated section on its original physical line', () => {
-    expect(() => sqlfluffConfiguration('[sqlfluff]\nvalue = first\n[sqlfluff]\n')).toThrow(
-        'Duplicate SQLFluff section on line 3.',
-    );
+    expect(() => parseIni('[sqlfluff]\nvalue = first\n[sqlfluff]\n')).toThrow('Duplicate SQLFluff section on line 3.');
 });
 
 test('SQLFluff preserves the initial newline of an empty continued option', () => {
-    const sections = sqlfluffConfiguration('[sqlfluff]\nvalue =\n    continued\n');
+    const sections = parseIni('[sqlfluff]\nvalue =\n    continued\n');
     expect(sections.get('sqlfluff')?.get('value')).toBe('\ncontinued\n');
 });

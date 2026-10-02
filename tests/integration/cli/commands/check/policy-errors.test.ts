@@ -34,14 +34,14 @@ test.each([
 test('a nested unknown setting is a finding at its key path, and its correction clears it', async () => {
     const policy = policyOf(
         ['bash'],
-        '[guides]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+        '[rules]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
     const invalid = await runGspot(sandbox.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     const report = JSON.parse(invalid.stdout) as { checks: { check: string; findings: { message: string }[] }[] };
-    expect(report.checks.find((check) => check.check === 'integrity/policy')?.findings).toMatchObject([
+    expect(report.checks.find((check) => check.check === 'gspot/policy')?.findings).toMatchObject([
         { message: textContaining('scope.0.limits.file_linse:') },
     ]);
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('file_linse', 'file_lines'));
@@ -49,10 +49,10 @@ test('a nested unknown setting is a finding at its key path, and its correction 
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test('a loosening without a reason is a finding of integrity/policy, and the rest of the policy runs', async () => {
+test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
     const policy = policyOf(
         ['bash'],
-        'require_reasons = true\n[guides]\ninstall = false\n[limits]\nfile_lines = 1000\n',
+        'require_reasons = true\n[rules]\ninstall = false\n[limits]\nfile_lines = 1000\n',
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
@@ -60,10 +60,10 @@ test('a loosening without a reason is a finding of integrity/policy, and the res
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as { checks: { check: string; status: string; findings: unknown[] }[] };
     expect(report.checks).toMatchObject([
-        { check: 'bash/syntax', status: 'ok' },
+        { check: 'bash/syntax', status: 'passed' },
         {
-            check: 'integrity/policy',
-            status: 'fail',
+            check: 'gspot/policy',
+            status: 'failed',
             findings: [{ file: 'gspot.toml', message: textContaining('limits.file_lines: ') }],
         },
     ]);

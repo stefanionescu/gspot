@@ -67,7 +67,7 @@ const CASES: FindingCase[] = [
         corrected: { files: { 'src/orders/wrong.ts': WRONG.replace("'three'", '3') } },
     },
     {
-        check: 'typescript/eslint',
+        check: 'javascript/eslint',
         files: {
             'src/orders/paused.ts':
                 '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
@@ -75,7 +75,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
     },
     {
-        check: 'typescript/eslint',
+        check: 'javascript/eslint',
         files: {
             'src/orders/back.ts':
                 "// An order module that reaches back into the entry.\nimport { receipt } from '../main.js';\n\n/** The receipt again. */\nexport const again = receipt;\n",
@@ -100,14 +100,14 @@ const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'formatting/prettier',
+        check: 'format/prettier',
         files: {
             'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
         },
         expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
     },
     {
-        check: 'formatting/editorconfig-checker',
+        check: 'format/editorconfig-checker',
         files: {
             'src/orders/trailing.ts':
                 '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',
@@ -126,7 +126,7 @@ const CASES: FindingCase[] = [
         corrected: { files: { 'src/orders/typo.ts': TYPO.replace(MISSPELLED, 'The') } },
     },
     {
-        check: 'javascript/checkjs',
+        check: 'javascript/tsc',
         files: { 'src/orders/legacy.js': PLAIN_JS },
         expected: { file: 'src/orders/legacy.js', rule: 'TS2345', line: 13, column: 28 },
         corrected: { files: { 'src/orders/legacy.js': PLAIN_JS.replace('twice("x")', 'twice(3)') } },

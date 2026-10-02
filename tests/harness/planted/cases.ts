@@ -19,7 +19,7 @@ async function expectDefect(
     const outcome = await runPlanted(planted.root, entry, planted.environment, planted.isInProcess);
     expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
     const failed = JSON.parse(outcome.stdout) as RunReport;
-    expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
+    expect(failed.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
     expect(failed.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
 }
 
@@ -68,7 +68,7 @@ async function expectCorrection(
     );
     expect(outcome.code, `${entry.check} corrected: ${outcome.stdout}${outcome.stderr}`).toBe(0);
     const accepted = JSON.parse(outcome.stdout) as RunReport;
-    expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'ok', findings: [] }]);
+    expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 }
 
 /** A clean bash script every planted repository starts from. Its main holds enough statements not to be trivial. */

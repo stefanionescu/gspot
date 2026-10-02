@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
 import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
-import type { ExposedSettings } from '#cli/types/policy/policy.ts';
+import type { SettingSurface } from '#cli/types/policy/policy.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/policy.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 
@@ -15,10 +15,10 @@ function isScalarConflict(previous: { value: unknown; kit: string }, manifest: M
     return !OVERRIDING_KINDS.has(manifest.kit.kind);
 }
 
-function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingSpec): void {
+function addDefault(surface: SettingSurface, manifest: Manifest, spec: SettingSpec): void {
     if (spec.default === undefined) return;
     const previous = surface.defaults.get(spec.name);
-    const isList = surface.specs.get(spec.name)?.kind === 'list';
+    const isList = surface.specs.get(spec.name)?.type === 'list';
     if (!isList && previous !== undefined && isScalarConflict(previous, manifest, spec)) {
         surface.problems.push({
             key: spec.name,
@@ -34,7 +34,7 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
 
 // Adds one kit's settings and their defaults, then its [defaults] for settings other kits declare; those apply
 // only while such a kit is selected.
-function addManifest(surface: ExposedSettings, manifest: Manifest, level: 'recommended' | 'all'): void {
+function addManifest(surface: SettingSurface, manifest: Manifest, level: 'recommended' | 'all'): void {
     const isAll = level === 'all';
     for (const declared of manifest.settings) {
         const spec =
@@ -47,14 +47,14 @@ function addManifest(surface: ExposedSettings, manifest: Manifest, level: 'recom
 }
 
 // One [defaults] entry, applied when a selected kit declares the setting it names.
-function addOverride(surface: ExposedSettings, manifest: Manifest, name: string, value: unknown): void {
+function addOverride(surface: SettingSurface, manifest: Manifest, name: string, value: unknown): void {
     const spec = surface.specs.get(name);
     if (spec === undefined) return;
     addDefault(surface, manifest, { ...spec, default: value });
 }
 
 // The kind of a setting from the shape of its default.
-function kindOf(value: unknown): SettingSpec['kind'] {
+function typeOf(value: unknown): SettingSpec['type'] {
     if (Array.isArray(value)) return 'list';
     return typeof value === 'boolean' ? 'boolean' : 'string';
 }
@@ -65,8 +65,8 @@ function kindOf(value: unknown): SettingSpec['kind'] {
  * @param level the enforcement level whose defaults apply.
  * @returns the specs, their defaults and the conflicts found on the way
  */
-export function exposedSettings(selected: Manifest[], level: 'recommended' | 'all' = 'recommended'): ExposedSettings {
-    const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
+export function exposedSettings(selected: Manifest[], level: 'recommended' | 'all' = 'recommended'): SettingSurface {
+    const surface: SettingSurface = { specs: new Map(), defaults: new Map(), problems: [] };
     for (const spec of [
         TOOL_DEADLINE,
         ...Object.entries({ ...rootSettingSchemas, ...integrationSettingSchemas }).map<SettingSpec>(
@@ -74,7 +74,7 @@ export function exposedSettings(selected: Manifest[], level: 'recommended' | 'al
                 const value = schema.parse(undefined);
                 return {
                     name,
-                    kind: kindOf(value),
+                    type: typeOf(value),
                     direction: 'neutral',
                     default: value,
                     summary: schema.description ?? '',

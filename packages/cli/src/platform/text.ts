@@ -3,7 +3,7 @@ import { isUtf8 } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { distance } from 'fastest-levenshtein';
 import type { Defined } from '#cli/types/platform/platform.ts';
-import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, NEAR_DISTANCE_LIMIT } from '#cli/config/platform/platform.ts';
+import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, SUGGESTION_LIMIT } from '#cli/config/platform/platform.ts';
 
 /**
  * Up to three candidates within an edit distance that reads as a typo, closest first.
@@ -21,7 +21,7 @@ export function similar(name: string, candidates: string[]): string[] {
                 score <= limit || candidate.toLowerCase().includes(lower) || lower.includes(candidate.toLowerCase()),
         )
         .toSorted((a, b) => a.score - b.score)
-        .slice(0, NEAR_DISTANCE_LIMIT)
+        .slice(0, SUGGESTION_LIMIT)
         .map(({ candidate }) => candidate);
 }
 

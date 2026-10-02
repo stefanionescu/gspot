@@ -8,10 +8,10 @@ import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { gspot as CLI } from '#tests/harness/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { PACKAGE_PROJECTS, readPackageInputs, createPackageProject } from '#tests/harness/tools/npm.ts';
 
@@ -28,7 +28,7 @@ test.each(PACKAGE_PROJECTS)(
             cwd: root,
         });
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InstallJson).isDryRun).toBe(true);
+        expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         expect(lock.toString('utf8')).not.toContain(registry.token);
         // Yarn 1 writes resolved URLs into its lock; the private registry must not be among them.
@@ -41,10 +41,10 @@ test.each(PACKAGE_PROJECTS)(
             cwd: root,
         });
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect((JSON.parse(refused.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-        expect(
-            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
-        ).toContain('Run: gspot apply, then gspot install');
+        expect((JSON.parse(refused.stdout) as InstallJson).message).toContain('Run: gspot apply, then gspot install');
+        expect(await rejection(asOwner(root, (owner) => installPackageProject(root, owner, tools)))).toContain(
+            'Run: gspot apply, then gspot install',
+        );
         expect(readFileSync(lockPath, 'utf8')).toBe(stale);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         const read = await openSession(root);

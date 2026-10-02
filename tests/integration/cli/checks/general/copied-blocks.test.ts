@@ -59,7 +59,7 @@ test.each([
         expect(directories.every((path) => !existsSync(path))).toBe(true);
         isCorrected = true;
         const result = await runEngineCheck(session, copiedBlocks, planned!);
-        expect(result.status).toBe('ok');
+        expect(result.status).toBe('passed');
         expect(directories.every((path) => !existsSync(path))).toBe(true);
     } finally {
         spawn.mockRestore();

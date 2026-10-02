@@ -5,8 +5,8 @@ import { extensionOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 import { commentText, sourceComments } from '#cli/checks/general/structure/comments.ts';
@@ -32,7 +32,7 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
     const readers = new Set(
         selected.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
-                ownedBy(check.owners ?? manifest.owners, selected, [file], selection.scope.path).length === 0
+                ownedBy(check.files ?? manifest.files, selected, [file], selection.scope.path).length === 0
                     ? []
                     : [check.tool ?? check.command?.[0]],
             ),
@@ -67,7 +67,7 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
 export async function suppressionComments(
     root: string,
     selections: ScopeSelection[],
-    reads: SourceReads,
+    reads: ReadCache,
     files: TrackedFile[],
 ): Promise<SuppressionComment[]> {
     const scopes = selections.map((selection) => selection.scope);

@@ -8,19 +8,19 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
+import { LOCKS, VALE_INI, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
-import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY, VALE_CONFIGURATION } from '#cli/config/execution/checkout.ts';
 
-const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
+const INPUTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
 
 // Checks one copied link. Some links point at files the revision does not track, such as the build output of a
 // workspace package. Such a link resolves only in the working tree, and nothing in the revision can run it, so it is
 // removed. A link that is broken in the working tree too, or that leaves the copy, is refused.
-async function checkCopiedLink(roots: { revision: string; working: string }, path: string): Promise<void> {
+async function assertLink(roots: { revision: string; working: string }, path: string): Promise<void> {
     const resolved = await realpath(path).catch(() => undefined);
     const target =
         resolved ?? (await realpath(join(roots.working, relative(roots.revision, path))).catch(() => undefined));
@@ -36,7 +36,7 @@ async function checkCopiedLink(roots: { revision: string; working: string }, pat
     if (resolved === undefined) await unlink(path);
 }
 
-async function validateCopiedLinks(
+async function assertLinks(
     roots: { revision: string; working: string },
     directory: string,
     cancelSignal?: AbortSignal,
@@ -44,13 +44,13 @@ async function validateCopiedLinks(
     for (const entry of await readdir(directory, { withFileTypes: true })) {
         cancelSignal?.throwIfAborted();
         const path = join(directory, entry.name);
-        if (entry.isDirectory()) await validateCopiedLinks(roots, path, cancelSignal);
-        else if (entry.isSymbolicLink()) await checkCopiedLink(roots, path);
+        if (entry.isDirectory()) await assertLinks(roots, path, cancelSignal);
+        else if (entry.isSymbolicLink()) await assertLink(roots, path);
     }
 }
 
 function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
-    if (basename(folder) === GSPOT_FOLDER && pending.includes('npm'))
+    if (basename(folder) === DOT_GSPOT && pending.includes('npm'))
         throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
@@ -64,9 +64,9 @@ function assertDependencyReady(revisionRoot: string, folder: string, pending: st
 }
 
 // Refuses a snapshot whose Vale configuration differs from the one the packages were installed for.
-function assertSameValeConfiguration(installed: Root, destination: Root): void {
-    const current = installed.read(VALE_CONFIGURATION);
-    const selected = destination.read(VALE_CONFIGURATION);
+function assertValeMatches(installed: Root, destination: Root): void {
+    const current = installed.read(VALE_INI);
+    const selected = destination.read(VALE_INI);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
@@ -84,7 +84,7 @@ function copyPackageFile(installed: Root, destination: Root, path: string): void
 
 // The dependency folders the snapshot's projects own, when the working tree has them installed. Python
 // environments are not copied: their tools run in place, against the snapshot's files.
-function dependencyDirectories(installed: Root, projects: string[]): Directory[] {
+function getDependencies(installed: Root, projects: string[]): Directory[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         const dependency = basename(path) === 'package.json' ? 'node_modules' : '.venv';
@@ -161,14 +161,14 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
 
 // Copies one package folder into the snapshot. The private tools of gspot run in place, like its Python environment:
 // the manifest and lock guard has matched them, and no check writes into them.
-async function copyDirectory(
+async function copyDependency(
     root: string,
     revisionRoot: string,
     { folder, dependency }: Directory,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const isPrivate = basename(folder) === GSPOT_FOLDER;
-    const pending = isPrivate ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
+    const isPrivate = basename(folder) === DOT_GSPOT;
+    const pending = isPrivate ? (getOwnership(join(root, dirname(folder))).installations ?? []) : [];
     assertDependencyReady(revisionRoot, folder, pending);
     const source = join(root, folder, dependency);
     const target = join(revisionRoot, folder, dependency);
@@ -186,8 +186,8 @@ async function copyDirectory(
  * @param revisionRoot the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
-export function copyProsePackages(root: string, revisionRoot: string, paths: string[]): void {
-    const configs = paths.filter((path) => path === VALE_CONFIGURATION || path.endsWith(`/${VALE_CONFIGURATION}`));
+export function copyValePackages(root: string, revisionRoot: string, paths: string[]): void {
+    const configs = paths.filter((path) => path === VALE_INI || path.endsWith(`/${VALE_INI}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
         const installed = openRoot(join(root, folder));
@@ -195,7 +195,7 @@ export function copyProsePackages(root: string, revisionRoot: string, paths: str
         try {
             const packages = styleFiles(installed).filter((path) => isValePackageFile(path));
             if (packages.length === 0) continue;
-            assertSameValeConfiguration(installed, destination);
+            assertValeMatches(installed, destination);
             for (const path of packages) copyPackageFile(installed, destination, path);
         } finally {
             installed.close();
@@ -218,17 +218,17 @@ export async function copyDependencies(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     using installed = openRoot(root, 'native');
-    const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
+    const inputs = entries.filter((entry) => INPUTS.has(basename(entry.path)));
     const projects = inputs
         .map((entry) => entry.path)
         .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
-    const directories = dependencyDirectories(installed, projects);
+    const directories = getDependencies(installed, projects);
     if (directories.length === 0) return;
     await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
     const packages = directories.filter((directory) => directory.dependency === 'node_modules');
-    for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
+    for (const directory of packages) await copyDependency(root, revisionRoot, directory, cancelSignal);
     // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
     const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
-    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== GSPOT_FOLDER))
-        await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
+    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== DOT_GSPOT))
+        await assertLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
 }

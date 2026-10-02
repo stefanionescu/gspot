@@ -25,7 +25,7 @@ if (toolShipsHere('ansible-lint'))
             await using sandbox = await testdir();
             const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
             await createFileTree(sandbox.path, {
-                'gspot.toml': policyOf(['ansible', 'structure'], '[limits]\ntool_seconds = 1\n', 'all'),
+                'gspot.toml': policyOf(['ansible', 'structure'], 'timeout = 1\n', 'all'),
                 'deploy/ansible.cfg': '[defaults]\n',
                 'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
                 '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0', true),
@@ -56,7 +56,7 @@ if (toolShipsHere('ansible-lint'))
                 writeFileSync(executable, versionScript('26.8.0'));
                 const corrected = await executeRun(await openSession(sandbox.path), options);
                 expect(corrected.report.exitCode).toBe(0);
-                expect(corrected.report.checks[0]!.status).toBe('ok');
+                expect(corrected.report.checks[0]!.status).toBe('passed');
             } finally {
                 controller.abort();
                 await running;
@@ -78,7 +78,7 @@ if (toolShipsHere('ansible-lint'))
         chmodSync(executable, 0o755);
         const options = runOptions({ stage: 'commit', only: ['ansible/lint'] });
         const initial = await executeRun(await openSession(sandbox.path), options);
-        expect(initial.report.checks[0]!.status).toBe('ok');
+        expect(initial.report.checks[0]!.status).toBe('passed');
         writeFileSync(executable, versionScript('23.0.0'));
         const changed = await executeRun(await openSession(sandbox.path), options);
         expect(changed.report.exitCode).toBe(2);
@@ -108,11 +108,11 @@ if (onPosix)
         const executed = await executeRun(session, options);
         expect(executed.report.exitCode).toBe(0);
         const repeated = await executeRun(session, options);
-        expect(repeated.report.checks[0]!.status).toBe('ok');
+        expect(repeated.report.checks[0]!.status).toBe('passed');
         writeFileSync(executable, FAILING_SCRIPT);
         const changed = await executeRun(session, options);
         expect(changed.report.exitCode).toBe(1);
-        expect(changed.report.checks[0]!.status).toBe('fail');
+        expect(changed.report.checks[0]!.status).toBe('failed');
         chmodSync(executable, 0o644);
         const unexecutable = await executeRun(session, options);
         expect(unexecutable.report.exitCode).toBe(2);

@@ -8,7 +8,7 @@ export const CORRECTION_POLICY = `kits = []
 [[check]]
 name = "sandbox/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-fix_command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}
+fix = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}
 paths = ["source.txt"]
 stage = "commit"
 `;
@@ -22,5 +22,5 @@ stage = "commit"
 export function plannedCorrection(session: Session, script: string): PlannedCheck {
     const [planned] = planRun(session, { stage: 'all', skips: [] });
     if (planned === undefined) throw new Error('The sandbox has no planned correction.');
-    return { ...planned, spec: { ...planned.spec, fix_command: [process.execPath, '-e', script] } };
+    return { ...planned, spec: { ...planned.spec, fix: [process.execPath, '-e', script] } };
 }

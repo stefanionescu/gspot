@@ -16,7 +16,7 @@ function uncheckedNote(file: TrackedFile): string | undefined {
     return undefined;
 }
 
-function ignoreLine(entry: PathExplanation['ignores'][number]): string {
+function formatIgnore(entry: PathExplanation['ignores'][number]): string {
     const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
     const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
     return `  ${entry.check}${rule}${reason}`;
@@ -26,7 +26,7 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
     const unchecked = uncheckedNote(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.kind === 'source') {
-        report.unchecked = 'no enabled check owners this file';
+        report.unchecked = 'no enabled check owns this file';
         report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <kit>';
     }
     return report;
@@ -38,7 +38,7 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
  * @param path the file, relative to the root
  * @returns the report, or an error when git does not track the path
  */
-function pathReport(session: Session, path: string): PathExplanation | { error: string } {
+function buildReport(session: Session, path: string): PathExplanation | { error: string } {
     const file = session.repository.files.find((entry) => entry.path === path);
     if (!file) return { error: `${path} is not a file git tracks or would track here.` };
     const scope = scopeOf(path, session.repository.scopes);
@@ -47,7 +47,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
     const report: PathExplanation = {
         path,
         scope: scope.path === '' ? 'root' : scope.path,
-        file: file.kind,
+        fileKind: file.kind,
         tags: file.tags,
         kits: owners.map((manifest) => manifest.kit.name),
         checks: configuredChecks(session)
@@ -65,7 +65,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
                 ...(entry.reason === undefined ? {} : { reason: entry.reason }),
             })),
     };
-    if (file.kindSource !== undefined) report.fileSource = file.kindSource;
+    if (file.kindSource !== undefined) report.fileKindSource = file.kindSource;
     return annotated(report, file);
 }
 
@@ -74,14 +74,14 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
  * @param report the report
  * @returns the text for stdout
  */
-function pathText(report: PathExplanation): string {
-    const by = report.fileSource === undefined ? '' : ` by ${report.fileSource}`;
+function formatReport(report: PathExplanation): string {
+    const by = report.fileKindSource === undefined ? '' : ` by ${report.fileKindSource}`;
     const checks = report.checks.map(
         (check) => `  ${check.check}  ${check.stage}  (${check.kit ?? 'repository command'})`,
     );
-    const ignores = report.ignores.map((entry) => ignoreLine(entry));
+    const ignores = report.ignores.map((entry) => formatIgnore(entry));
     const lines = [
-        `${report.path}  (scope ${report.scope}, ${report.file}${by})`,
+        `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
         ...(report.kits.length === 0 ? [] : [`owned by: ${report.kits.join(', ')}`]),
@@ -106,7 +106,7 @@ export function explainPath(
     const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
     const isTracked = session.repository.files.some((file) => file.path === path);
     if (!isTracked && !subject.startsWith('./')) return undefined;
-    const report = pathReport(session, path);
+    const report = buildReport(session, path);
     if ('error' in report) return report;
-    return { kind: 'path', subject: path, text: pathText(report), data: report };
+    return { kind: 'path', subject: path, text: formatReport(report), data: report };
 }

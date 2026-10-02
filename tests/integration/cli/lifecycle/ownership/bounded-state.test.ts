@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
-import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
 test('an installation is one record, and removing it deletes the folder', async () => {
     await using directory = await testdir();
@@ -13,10 +13,10 @@ test('an installation is one record, and removing it deletes the folder', async 
     const owner = openOwner(directory.path);
     try {
         owner.installTree('npm', installedOutputs(staged.path, 'npm'));
-        expect(readOwnership(directory.path)).toMatchObject({ files: [], installs: ['npm'] });
+        expect(getOwnership(directory.path)).toMatchObject({ files: [], installs: ['npm'] });
         owner.removeInstallation('npm');
         expect(existsSync(join(directory.path, '.gspot/node_modules'))).toBe(false);
-        expect(readOwnership(directory.path).installs).toBeUndefined();
+        expect(getOwnership(directory.path).installs).toBeUndefined();
     } finally {
         owner.close();
     }
@@ -33,7 +33,7 @@ test('an installation refuses a folder gspot did not install and leaves it as it
             owner.installTree('npm', installedOutputs(staged.path, 'npm'));
         }).toThrow('Preserved unowned .gspot/node_modules');
         expect(existsSync(join(directory.path, '.gspot/node_modules/authored/index.js'))).toBe(true);
-        expect(readOwnership(directory.path).installations).toBeUndefined();
+        expect(getOwnership(directory.path).installations).toBeUndefined();
     } finally {
         owner.close();
     }
@@ -54,7 +54,7 @@ test.each([true, false])(
         expect(readFileSync(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe(kept);
         expect(existsSync(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
         expect(existsSync(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
-        expect(readOwnership(directory.path).installations).toStrictEqual(['npm']);
+        expect(getOwnership(directory.path).installations).toStrictEqual(['npm']);
     },
 );
 
@@ -66,7 +66,7 @@ test.each([true, false])(
         const owner = openOwner(directory.path);
         try {
             owner.applyPlan(owner.proposeBlock('NOTES.md', 'managed text', 'markdown'));
-            expect(readOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
+            expect(getOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
             expect(owner.applyPlan(owner.proposeRestoration('NOTES.md'))).toBe('changed');
         } finally {
             owner.close();
@@ -115,13 +115,13 @@ test.each([true, false])(
         try {
             const mode = owner.read(path)!.mode;
             expect(owner.replace(path, { bytes: Buffer.from('{"v":1}\n'), mode }, 'config')).toBe('unchanged');
-            expect(readOwnership(directory.path).files[0]?.adopted).toBe(true);
+            expect(getOwnership(directory.path).files[0]?.adopted).toBe(true);
             if (isChanged) owner.replace(path, { bytes: Buffer.from('{"v":2}\n'), mode }, 'config');
             expect(owner.applyPlan(owner.proposeRestoration(path))).toBe('changed');
         } finally {
             owner.close();
         }
         expect(existsSync(join(directory.path, path))).toBe(!isChanged);
-        expect(readOwnership(directory.path).files).toStrictEqual([]);
+        expect(getOwnership(directory.path).files).toStrictEqual([]);
     },
 );

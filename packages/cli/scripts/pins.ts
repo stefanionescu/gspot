@@ -14,9 +14,7 @@ const RELEASE_URLS = new Map([
     ['github', (name: string, version: string) => `https://api.github.com/repos/${name}/releases/tags/${version}`],
 ]);
 
-const tools = [...kitManifests().values()]
-    .flatMap((manifest) => manifest.tools)
-    .filter(({ provider }) => provider !== 'host');
+const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools).filter(({ host }) => host !== true);
 const eslintPin = tools.find((tool) => tool.name === 'eslint')?.version;
 // The ESLint plugin of gspot reaches npm in the same release as its pin, so npm cannot know it before.
 const pins = tools.flatMap((tool) =>

@@ -36,7 +36,7 @@ plantedCases(
             },
         },
         {
-            check: 'xctest/no-sleep',
+            check: 'xctest/sleep',
             files: { [XCTEST_TESTS]: CLEAN.replace(BODY, '        Thread.sleep(forTimeInterval: 2)\n') },
             expected: { file: XCTEST_TESTS, rule: 'sleep', line: 7 },
         },
@@ -47,7 +47,7 @@ plantedCases(
             corrected: { files: { [XCTEST_TESTS]: CLEAN.replace(BODY, '        isRecording = false\n') } },
         },
         {
-            check: 'xctest/reference-images',
+            check: 'xctest/references',
             files: { 'AppTests/__Snapshots__/GoneTests/testTitle.1.png': 'png' },
             expected: { file: 'AppTests/__Snapshots__/GoneTests/testTitle.1.png', rule: 'orphan-reference', line: 1 },
             corrected: {
@@ -60,7 +60,7 @@ plantedCases(
             'the commit stage leaves the coverage run to its own stage',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('xctest/coverage');
             },

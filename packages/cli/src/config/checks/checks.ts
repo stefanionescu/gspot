@@ -1,5 +1,5 @@
 // The literal values checks reads: names, patterns, limits, and tables.
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 
 const CONFLICT_HELP = 'Run gspot apply to write the file again, then gspot install to install what it records.';
 const MOVE_HELP =
@@ -12,13 +12,13 @@ export const TOML_STRINGS = /"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'
 
 export const SHOWN_LINES = 3;
 
-export const MESSAGES: Record<DriftEntry['kind'], string> = {
+export const MESSAGES: Record<Drift['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
     missing: 'This generated file is missing.',
     stray: 'This file carries the gspot header but nothing in the selection renders it.',
     conflict: 'This generated file holds merge conflict markers, so no tool can read it.',
 };
-export const DRIFT_HELP: Record<DriftEntry['kind'], string> = {
+export const DRIFT_HELP: Record<Drift['kind'], string> = {
     changed: MOVE_HELP,
     missing: MOVE_HELP,
     stray: STRAY_HELP,

@@ -1,0 +1,77 @@
+[kit]
+title = "GitHub Actions"
+requires = ["files"]
+recommends = ["spelling"]
+description = "GitHub Actions workflows: actionlint for syntax and expressions, pinact for the commits actions are pinned to, and zizmor for security audits."
+
+[detect]
+paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+
+[files]
+paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+kinds = ["source"]
+
+[[tool]]
+name = "actionlint"
+version = "1.7.12"
+mise = "actionlint"
+brew = "actionlint"
+github = {name = "rhysd/actionlint", version = "v1.7.12"}
+
+[[tool]]
+name = "pinact"
+crash_pattern = '(?:ERROR|FATAL).*?(?:\b(?:401|403|408|429|5[0-9]{2})\b|dial tcp|TLS handshake|x509:|context deadline exceeded|connection reset|no such host)'
+version = "5.0.0"
+mise = "pinact"
+brew = "pinact"
+github = {name = "suzuki-shunsuke/pinact", version = "v5.0.0"}
+
+[[tool]]
+name = "zizmor"
+version = "1.30.1"
+mise = "zizmor"
+pypi = "zizmor"
+brew = "zizmor"
+cargo = "zizmor"
+
+[[check]]
+name = "actionlint"
+title = "Validate GitHub Actions workflows"
+example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
+level = "recommended"
+stage = "commit"
+runs = "files"
+tool = "actionlint"
+exit_codes = [1]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$"}
+summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
+why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
+help = "Fix the line actionlint names."
+
+[[check]]
+name = "pinact"
+title = "Verify GitHub Actions pins"
+example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
+level = "recommended"
+stage = "push"
+runs = "files"
+needs = ["network"]
+command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
+output = {format = "lines"}
+summary = "Verifies GitHub action commits and version comments without changing workflow files."
+why = "A nonexistent action commit prevents the workflow from starting."
+help = "Replace the invalid action pin with a verified commit and its matching version comment."
+
+[[check]]
+name = "zizmor"
+title = "Audit GitHub Actions security"
+example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
+exit_codes = [11, 12, 13, 14]
+output = {format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$"}
+summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
+why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
+help = "Apply the fix zizmor names, or turn one audit off with gspot ignore actions/zizmor --rule <audit> and a reason."

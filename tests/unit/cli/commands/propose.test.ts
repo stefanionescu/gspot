@@ -16,7 +16,7 @@ const CONFIGURATIONS = [
     'commits',
     'files',
     'naming',
-    'formatting',
+    'format',
     'docs',
     'secrets',
     'dependencies',
@@ -62,12 +62,12 @@ test('profile settings survive beside the commit scopes init adds', () => {
 
 test('initialization keeps the profile runner while honoring disabled integrations', () => {
     const text = proposeText({
-        kits: ['formatting'],
+        kits: ['format'],
         scopes: [],
         profileTables: {
             hooks: { push: 'all' },
             ci: { provider: 'github' },
-            runner: { tool: 'mise' },
+            runner: 'mise',
             coverage: { strict: true },
         },
         hooks: 'none',
@@ -77,9 +77,9 @@ test('initialization keeps the profile runner while honoring disabled integratio
     });
     const document = parse(text);
     expect(document).toMatchObject({
-        runner: { tool: 'mise' },
+        runner: 'mise',
         coverage: { strict: true },
-        guides: { directory: '.gspot/guides', install: false },
+        rules: { path: '.gspot/rules', install: false },
     });
     expect(document).not.toHaveProperty('hooks');
     expect(document).not.toHaveProperty('ci');

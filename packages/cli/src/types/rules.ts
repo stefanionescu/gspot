@@ -2,13 +2,16 @@
 
 export type RuleFile = { source: string; target: string; layer: string; kit: string; title: string };
 
-/** The [guides] table of gspot.toml: whether and where the rules install, and which to leave out. */
+/** A rule file before selection: its asset path, and its path inside the rules folder. */
+export type RuleSource = Omit<RuleFile, 'target' | 'title'> & { path: string };
+
+/** The [rules] table of gspot.toml: whether and where the rules install, and which to leave out. */
 export type RuleSettings = {
     install: boolean;
-    directory: string;
-    project?: string;
+    path: string;
+    local?: string;
     exclude: string[];
-    agents?: string[];
+    instructions?: string[];
 };
 
 /** The level of a check, a rule, or the whole policy. */

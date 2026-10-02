@@ -10,9 +10,9 @@ import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/general
  * @param context the check context
  * @returns the findings
  */
-export const folderNames: Analysis = (context) => {
+export const getDirectories: Analysis = (context) => {
     const allowed = pathMatcher(
-        context.input.policyFiles.policy.structure.folder_name_allowed.flatMap((entry) => entry.paths),
+        context.input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),
     );
     const { input } = context;
     const harnesses = new Set(

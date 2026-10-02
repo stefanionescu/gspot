@@ -29,7 +29,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);
@@ -48,7 +48,7 @@ test(
         expect(outcome.stdout.includes('swiftlint has no Windows build')).toBe(isWindows);
         const failed = JSON.parse(outcome.stdout) as RunReport;
         expect(failed.checks).toMatchObject([
-            { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'fail' },
+            { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'failed' },
         ]);
         const cast: Finding = containing({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 });
         const expectedFindings: Finding[] = containingAll([cast]);
@@ -60,7 +60,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'ok', findings: [] },
+            { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 4,

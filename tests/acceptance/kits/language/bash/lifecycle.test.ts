@@ -24,7 +24,7 @@ test(
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         expect(init.code, init.stdout + init.stderr).toBe(0);
@@ -37,14 +37,14 @@ test(
         const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(check.code).toBe(0);
         expect((JSON.parse(check.stdout) as RunReport).checks).toStrictEqual([
-            containing({ check: 'bash/shellcheck', status: 'ok' }),
+            containing({ check: 'bash/shellcheck', status: 'passed' }),
         ]);
-        const selected = await spawnGspot(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
+        const selected = await spawnGspot(sandbox.path, ['set', 'enable', 'bash/shfmt']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const json = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shfmt', '--json']);
         const record = JSON.parse(json.stdout) as { checks: { check: string; status: string }[]; exitCode: number };
         expect(json.code, json.stdout + json.stderr).toBe(0);
-        expect(record.checks).toMatchObject([{ check: 'bash/shfmt', status: 'ok' }]);
+        expect(record.checks).toMatchObject([{ check: 'bash/shfmt', status: 'passed' }]);
         expect(record.exitCode).toBe(0);
         const drift = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(drift.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
@@ -81,7 +81,7 @@ test(
         };
         const initialized = await spawnGspot(
             sandbox.path,
-            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
             environment,
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -92,14 +92,14 @@ test(
         expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'structure/bash-limits'], environment);
+        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'bash/limits'], environment);
         expect(missing.code).toBe(2);
         expect(missing.stdout).toContain('missing');
         expect(missing.stdout).toContain('Run: gspot install');
         const available = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(available.code, available.stdout + available.stderr).toBe(0);
         expect((JSON.parse(available.stdout) as RunReport).checks).toMatchObject([
-            { check: 'bash/shellcheck', status: 'ok', findings: [] },
+            { check: 'bash/shellcheck', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -118,7 +118,7 @@ test(
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
         ]);
         const originalVersion = readFileSync(join(sandbox.path, '.gspot', 'version'));
@@ -135,7 +135,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'bash/shellcheck', status: 'ok', findings: [] },
+            { check: 'bash/shellcheck', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

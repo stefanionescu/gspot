@@ -37,14 +37,14 @@ extend-ignore-names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
 [lint.pylint]
 max-args = <%= at('function_parameters', 7) %>
 max-positional-args = <%= at('positional_arguments', at('function_parameters', 7)) %>
-max-bool-expr = <%= at('boolean_expressions', 4) %>
+max-bool-expr = <%= at('boolean_operators', 4) %>
 max-branches = <%= at('branches', 8) %>
 max-locals = <%= at('locals', 10) %>
 max-public-methods = <%= at('public_methods', 12) %>
 max-returns = <%= at('returns', 4) %>
 max-statements = <%= at('statements', 30) %>
-max-nested-blocks = <%= at('nested_blocks', 3) %>
-<% const testRules = settings['tools.ruff.test_ignores']; const testFiles = testRules.length > 0 ? settings['tools.ruff.test_files'] : []; if (perFile.length > 0 || testFiles.length > 0) { -%>
+max-nested-blocks = <%= at('nesting', 3) %>
+<% const testRules = settings['tools.ruff.test_ignores']; const testFiles = testRules.length > 0 ? settings['tests'] : []; if (perFile.length > 0 || testFiles.length > 0) { -%>
 
 [lint.per-file-ignores]
 <% const byPath = new Map(testFiles.map((path) => [path, testRules])); for (const entry of perFile) for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]); -%>

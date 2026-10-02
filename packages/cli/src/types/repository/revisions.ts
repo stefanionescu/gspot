@@ -4,11 +4,11 @@ type RefMapping = { source: string; destination: string };
 
 export type PushSelection = {
     revisions: PushRevision[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
 };
 
-export type ChangedSet = { reference: string; paths: string[]; commits?: string[] };
-export type StagedSet = { staged: string[]; unstaged: number };
+export type ChangedPaths = { reference: string; paths: string[]; commits?: string[] };
+export type StagedPaths = { staged: string[]; unstaged: number };
 
 export type PushRevision = {
     object: string;
@@ -30,4 +30,4 @@ export type PushSearch = {
     boundaries: Set<string>;
 };
 export type RefRules = { mappings: RefMapping[]; excluded: string[] };
-export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);
+export type Refspec = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);

@@ -1,8 +1,8 @@
 // The types of lifecycle in this package.
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { ToolOwner, InstallationKind } from '#cli/types/tools/tools.ts';
-import type { Outcome, OwnedKind, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
-import type { Generated, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
+import type { Outcome, OwnedKind, OwnershipEntry as OwnedFile } from '#cli/types/lifecycle/ownership.ts';
+import type { Generated, BlockStyle, ConfigurationFormat as Format } from '#cli/types/generation/generation.ts';
 
 export type WriteRequest = {
     root: string;
@@ -18,14 +18,14 @@ export type ApplyReport = {
     written: string[];
     unchanged: string[];
     removed: string[];
-    blocks: string[];
-    packages: string[];
+    /** Authored files gspot changed in place: a managed block, or the scripts of a package.json. */
+    updated: string[];
     notes: string[];
 };
 
-export type ConfigurationOwnership = NonNullable<OwnershipEntry['configuration']>;
+export type MergeRecord = NonNullable<OwnedFile['configuration']>;
 
-export type DriftEntry = {
+export type Drift = {
     path: string;
     kind: 'changed' | 'missing' | 'stray' | 'conflict';
     diff?: string;
@@ -37,10 +37,10 @@ export type DriftEntry = {
 export type Planned = {
     path: string;
     current: Read | undefined;
-    previous: OwnershipEntry | undefined;
+    previous: OwnedFile | undefined;
     status: 'changed' | 'unchanged' | 'preserved';
     next?: Read;
-    entry?: OwnershipEntry;
+    entry?: OwnedFile;
 };
 
 export type Owner = ToolOwner & {
@@ -49,7 +49,7 @@ export type Owner = ToolOwner & {
     removeInstallation(kind: InstallationKind): void;
     proposeConfiguration(
         path: string,
-        format: ConfigurationFormat,
+        format: Format,
         changes: { path: (string | number)[]; value: unknown }[],
         replace?: boolean,
     ): Planned;

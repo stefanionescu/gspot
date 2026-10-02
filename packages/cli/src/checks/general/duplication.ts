@@ -29,7 +29,7 @@ export const cloneReportSchema = z.object({
  * @param shape.check the check id.
  * @param shape.root the repository root.
  * @param shape.ceiling the largest duplicated share accepted, out of 100.
- * @param shape.owned the paths the check owners.
+ * @param shape.owned the paths the check owns.
  * @returns the findings.
  */
 export function cloneFindings(
@@ -56,7 +56,7 @@ export function cloneFindings(
                 check: shape.check,
                 file,
                 line: clone.secondFile.start,
-                rule: 'copied-block',
+                rule: 'clone',
                 message: `${String(clone.lines)} lines repeat ${other}. The duplicated share is ${share.toFixed(1)} of 100, over the ceiling of ${String(shape.ceiling)}.`,
                 fixable: false,
             },
@@ -87,7 +87,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const path = join(work, 'jscpd-report.json');
     if (statSync(path, { throwIfNoEntry: false }) === undefined)
         throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    const named = input.view.settings['limits.duplication.threshold_percent'];
+    const named = input.view.settings['limits.duplication.percent'];
     return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
         check: input.spec.name,
         root: input.root,

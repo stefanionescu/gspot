@@ -1,15 +1,14 @@
 // The types of commands/check in this package.
-import type { Stage } from '#cli/types/execution/planning.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/execution.ts';
-import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
+import type { StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
-export type PushedRevision = PushSelection['revisions'][number];
+export type PushRevision = PushSelection['revisions'][number];
 export type Checked = PushReport['revisions'][number];
 export type Selections = {
     paths: string[];
-    changed: ChangedSet | undefined;
-    set: StagedSet | { staged: undefined; unstaged: number };
+    changed: ChangedPaths | undefined;
+    set: StagedPaths | { staged: undefined; unstaged: number };
     stage: StageFilter;
 };
 
@@ -21,7 +20,7 @@ export type Revision = {
     installedRoot: string;
     reference: string;
     reportRoot?: string;
-    staged?: StagedSet;
+    staged?: StagedPaths;
     changed?: string[];
 };
 /** The flags of check, as commander parses them. */
@@ -32,7 +31,7 @@ export type CheckFlags = {
     changed?: string | true;
     fix?: true;
     dryRun?: true;
-    stage?: Stage;
+    hook?: 'commit' | 'push';
     skip?: string[];
     messageFile?: string;
 };
@@ -58,6 +57,6 @@ export type CheckCommandResult = CommandResult & { report?: RunReport };
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
     exitCode: number;
 };

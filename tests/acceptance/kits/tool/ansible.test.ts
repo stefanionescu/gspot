@@ -17,7 +17,7 @@ const ANSIBLE_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -58,8 +58,8 @@ describe('the ansible configuration', () => {
             });
             const expectedFindings: Finding[] = containingAll([commandInsteadOfModule]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
-            expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'fail' }]);
-            expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.source === 'platform')).toBe(
+            expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'failed' }]);
+            expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.cause === 'platform')).toBe(
                 isWindows,
             );
             expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : expectedFindings);
@@ -70,7 +70,7 @@ describe('the ansible configuration', () => {
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                { check: 'ansible/lint', status: isWindows ? 'skipped' : 'ok', findings: [] },
+                { check: 'ansible/lint', status: isWindows ? 'skipped' : 'passed', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS * 4,

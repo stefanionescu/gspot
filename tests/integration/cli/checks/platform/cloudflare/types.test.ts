@@ -53,9 +53,7 @@ async function plant(
     writeFileSync(target, edited);
     chmodSync(target, 0o640);
     const session = await openSession(directory.path);
-    const spec = session.manifests
-        .get('cloudflare')!
-        .checks.find((entry) => entry.name === 'cloudflare/env-types-fresh')!;
+    const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/types-fresh')!;
     const input = scopeInput(session, spec);
     const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
@@ -122,7 +120,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
                     check: planted.spec.name,
                     file: toPosix(planted.path('cloudflare-env.d.ts')),
                     line: 1,
-                    rule: 'stale-types',
+                    rule: 'stale',
                     message: 'wrangler types writes this file differently. Run it and commit the result.',
                     fixable: false,
                 },
@@ -144,9 +142,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });
     const session = await openSession(directory.path);
-    const spec = session.manifests
-        .get('cloudflare')!
-        .checks.find((entry) => entry.name === 'cloudflare/headers-syntax')!;
+    const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
     const input = scopeInput(session, spec);
     const found = headersSyntax(input);
     expect(found).toStrictEqual([
@@ -154,7 +150,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
             check: spec.name,
             file: '_headers',
             line: 1,
-            rule: 'headers-syntax',
+            rule: 'syntax',
             message: 'This header sits under no path.',
             fixable: false,
         },

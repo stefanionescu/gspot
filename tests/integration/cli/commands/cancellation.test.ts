@@ -52,7 +52,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'])(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -66,7 +66,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'])(
         mkdirSync(binaryDirectory);
         writeFileSync(
             join(binaryDirectory, 'git'),
-            `#!${process.execPath}\nconst args = process.argv.slice(2);\nif (args[0] === ${JSON.stringify(operation)}) {\nawait Bun.write(${JSON.stringify(marker)}, JSON.stringify({pid:process.pid,snapshot:args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined}));\nawait Bun.sleep(60_000);\n} else {\nconst child=Bun.spawn([${JSON.stringify(nativeGit)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n}\n`,
+            `#!${process.execPath}\nconst args = process.argv.slice(2);\nif (args[0] === ${JSON.stringify(operation)}) {\nawait Bun.write(${JSON.stringify(marker)}, JSON.stringify({pid:process.pid,checkout:args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined}));\nawait Bun.sleep(60_000);\n} else {\nconst child=Bun.spawn([${JSON.stringify(nativeGit)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n}\n`,
             { mode: 0o755 },
         );
         const child = Bun.spawn([process.execPath, CLI, 'check', '--staged', '--only', 'bash/syntax', '--json'], {
@@ -79,18 +79,18 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'])(
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;
-        const started = (await waitForJson(marker)) as { pid: number; snapshot?: string };
+        const started = (await waitForJson(marker)) as { pid: number; checkout?: string };
         child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
         expect(await child.exited, await errors).toBe(2);
         expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
         await waitForExit(started.pid);
         // A snapshot the run had started is gone with it.
-        expect(started.snapshot !== undefined && existsSync(started.snapshot)).toBe(false);
+        expect(started.checkout !== undefined && existsSync(started.checkout)).toBe(false);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
         const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
+        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
     },
     20_000,
 );
@@ -100,7 +100,7 @@ test.skipIf(isWindows)(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo first\n',
         });
         for (const args of [
@@ -121,7 +121,7 @@ test.skipIf(isWindows)(
         mkdirSync(binaryDirectory);
         writeFileSync(
             join(binaryDirectory, 'git'),
-            `#!${process.execPath}\nconst args=process.argv.slice(2);\nif(args[0]==='clone'){\nconst file=Bun.file(${JSON.stringify(counter)});\nconst count=await file.exists()?Number(await file.text()):0;\nawait Bun.write(file,String(count+1));\nif(count===1){await Bun.write(${JSON.stringify(marker)},JSON.stringify({pid:process.pid,snapshot:args.at(-1)}));await Bun.sleep(60_000);}\n}\nconst child=Bun.spawn([${JSON.stringify(nativeGit)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n`,
+            `#!${process.execPath}\nconst args=process.argv.slice(2);\nif(args[0]==='clone'){\nconst file=Bun.file(${JSON.stringify(counter)});\nconst count=await file.exists()?Number(await file.text()):0;\nawait Bun.write(file,String(count+1));\nif(count===1){await Bun.write(${JSON.stringify(marker)},JSON.stringify({pid:process.pid,checkout:args.at(-1)}));await Bun.sleep(60_000);}\n}\nconst child=Bun.spawn([${JSON.stringify(nativeGit)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n`,
             { mode: 0o755 },
         );
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(40)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(40)}\n`;
@@ -136,16 +136,16 @@ test.skipIf(isWindows)(
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;
-        const started = (await waitForJson(marker)) as { pid: number; snapshot: string };
+        const started = (await waitForJson(marker)) as { pid: number; checkout: string };
         child.kill('SIGINT');
         expect(await child.exited, await errors).toBe(2);
         const report = JSON.parse(await output) as PushReport;
         expect(report).toMatchObject({
-            revisions: [{ object: first, report: { checks: [{ status: 'ok' }] } }],
+            revisions: [{ object: first, report: { checks: [{ status: 'passed' }] } }],
             canceled: { pendingRefs: ['refs/heads/second'] },
             exitCode: 2,
         });
-        expect(existsSync(started.snapshot)).toBe(false);
+        expect(existsSync(started.checkout)).toBe(false);
         await waitForExit(started.pid);
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
     },
@@ -157,7 +157,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -186,7 +186,7 @@ await import(${JSON.stringify(CLI)});
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
+            expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
         } finally {
             await child.stdin.end();
         }
@@ -199,7 +199,7 @@ test.skipIf(isWindows)(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
             '.gitignore': 'node_modules/\n',
             'package.json': '{"name":"snapshot-consumer","private":true}\n',
             'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',
@@ -241,7 +241,7 @@ await import(${JSON.stringify(CLI)});
         expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
         const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
+        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
     },
     20_000,
 );

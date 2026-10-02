@@ -45,7 +45,7 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    if (planned.spec.requires === 'docker' && inspectTool(session, DOCKER).state === 'missing')
+    if (planned.spec.needs?.includes('docker') === true && inspectTool(session, DOCKER).state === 'missing')
         return { ...base, status: 'missing', note: 'this check needs a Docker daemon and docker is not installed' };
     return undefined;
 }
@@ -57,8 +57,8 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
     const base: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
-        files: planned.files.length,
+        status: 'passed',
+        fileCount: planned.files.length,
         duration: 0,
         findings: [],
     };
@@ -77,10 +77,10 @@ function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     }
 }
 
-// The command that reruns one failed check with its original stage and staged flags.
-function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOptions): string {
+// The command that reruns one failed check with its message file and staged flag.
+function reproduceFor(result: CheckResult, options: RunOptions): string {
     const commitOptions = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
-    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...commitOptions });
+    const line = reproduceLine(result.check, result.scope, commitOptions);
     return options.comparison?.content === 'index' ? `${line} --staged` : line;
 }
 
@@ -91,21 +91,21 @@ function applyIgnoresTo(
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
 ): void {
-    const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
+    const countedFailure = check.spec.count_pattern !== undefined && result.status === 'failed';
     const ignored = applyIgnores(
         result.findings,
         ignores.filter((entry) => entry.check === check.check),
     );
     mergeUses(uses, ignored.uses);
     result.findings = ignored.kept;
-    result.status = countedFailure || result.findings.length > 0 ? 'fail' : 'ok';
+    result.status = countedFailure || result.findings.length > 0 ? 'failed' : 'passed';
 }
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.
 function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
     const { ignores } = pass.session.policyFiles.policy;
     if (RAN_STATUSES.has(result.status)) applyIgnoresTo(check, result, ignores, pass.uses);
-    if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
+    if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(result, pass.options);
 }
 
 // Runs every active check under the job limit and reports each result as it settles.

@@ -85,7 +85,7 @@ function planOne(context: PlanInputs, entry: PlanEntry, isWholeCheck: boolean): 
         scope: isWholeCheck ? rootScope : scope,
         spec,
         ...filesFor(context, entry, isWholeCheck),
-        projectWide: spec.runs !== 'per-file-list',
+        projectWide: spec.runs !== 'files',
         ...(manifest === undefined ? {} : { manifest }),
         ...(tool === undefined ? {} : { tool }),
         ...(options.commits === undefined ? {} : { commits: options.commits }),
@@ -113,7 +113,7 @@ function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     return planned.map((check) => {
         const taker = takers.get(check.check);
         if (taker === undefined || check.skip) return check;
-        return { ...check, skip: { source: 'rules', note: `${taker} runs it here` } };
+        return { ...check, skip: { cause: 'replaced', note: `${taker} runs it here` } };
     });
 }
 
@@ -178,7 +178,7 @@ function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
     const matcher = ignore().add(read.bytes.toString('utf8'));
     const files = check.files.filter((file) => !matcher.ignores(file.path));
     return files.length === 0
-        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+        ? { ...check, skip: { cause: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
         : { ...check, files };
 }
 /**
@@ -205,8 +205,8 @@ export function configuredChecks(session: Session): PlannedCheck[] {
  * @returns the files the check's owners select
  */
 export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
-    const owners = check.spec.owners ?? check.manifest?.owners;
-    const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
+    const owners = check.spec.files ?? check.manifest?.files;
+    const children = check.spec.runs === 'scope' ? childScopes(session, check.scope) : [];
     const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
 }
@@ -222,8 +222,8 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
     const resolved = planned.map((checks) =>
         yielded(
             checks.map((check) =>
-                check.manifest?.kit.name === 'formatting' &&
-                check.check === 'formatting/prettier' &&
+                check.manifest?.kit.name === 'format' &&
+                check.check === 'format/prettier' &&
                 check.skip === undefined &&
                 check.files.length > 0
                     ? prettierInputs(session, check)

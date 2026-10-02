@@ -1,113 +1,109 @@
 [kit]
-name = "css"
-kind = "language"
 title = "CSS"
-requires = ["formatting"]
+requires = ["format"]
 recommends = ["spelling"]
 description = "Stylesheets and the style blocks of Vue and Svelte components: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
 
 [detect]
 extensions = [".css"]
 
-[owners]
+[files]
 extensions = [".css"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "stylelint"
 suppression = {marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S.*)"}
 version = "16.23.1"
 floor = "16.0.0"
 npm = "stylelint"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".stylelintrc.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "stylelint.config.mjs"
 
-[[tools]]
+[[tool]]
 name = "stylelint-config-standard"
 kind = "library"
 version = "39.0.0"
 npm = "stylelint-config-standard"
 
-[[tools]]
+[[tool]]
 name = "postcss-html"
 kind = "library"
 version = "2.0.0"
 npm = "postcss-html"
 
-[[configs]]
-template = "stylelint.json.tmpl"
+[[config]]
 target = ".gspot/config/stylelint.json"
 rules_path = ["rules"]
-per_scope = true
+scoped = true
 header = false
 pointer = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n"}
 
-[[checks]]
-name = "css/stylelint"
-title = "Stylelint"
+[[check]]
+name = "stylelint"
+title = "Lint stylesheets"
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 level = "recommended"
 stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
-fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
-findings_exit_codes = [2]
-owners = {extensions = [".css", ".vue", ".svelte"]}
+fix = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
+exit_codes = [2]
+files = {extensions = [".css", ".vue", ".svelte"]}
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
 
-[[checks]]
-name = "integrity/css-usage"
-title = "CSS usage"
+[[check]]
+name = "module-classes"
+title = "Match CSS module classes to their use"
 example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
-owners = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
+runs = "scope"
+files = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
 help = "Delete the class nobody reads, or define the class the code reads."
 
-[[settings]]
+[[setting]]
 name = "tools.stylelint.ignore_at_rules"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
 
-[[settings]]
+[[setting]]
 name = "tools.stylelint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 default = {}
 summary = "Enabled Stylelint rules and their native options. Disable a rule with gspot ignore css/stylelint --rule."
 
-[guides]
-tool = [{path = "tool/tailwind/TAILWIND.md", when = {dependencies = ["tailwindcss"]}}]
-language = [{path = "language/CSS.md"}, {path = "language/naming/CSS.md"}]
+[rules]
+"TAILWIND.md" = {dependencies = ["tailwindcss"]}

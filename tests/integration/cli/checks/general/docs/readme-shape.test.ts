@@ -16,7 +16,7 @@ describe('readme shape', () => {
         await createFileTree(sandbox.path, { 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
         const found = readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']));
         expect(found.map((finding) => finding.rule)).toStrictEqual(['one-h1', 'opening-paragraph', 'start-section']);
-        const headings = docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md']));
+        const headings = docsHeadings(await checkInput(sandbox.path, 'docs/headings', ['README.md']));
         expect(headings.map((finding) => finding.line)).toStrictEqual([3]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
@@ -27,10 +27,8 @@ describe('readme shape', () => {
             'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
         });
         expect(readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']))).toStrictEqual([]);
-        expect(docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md']))).toStrictEqual(
-            [],
-        );
-        const found = docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['guide.md']));
+        expect(docsHeadings(await checkInput(sandbox.path, 'docs/headings', ['README.md']))).toStrictEqual([]);
+        const found = docsHeadings(await checkInput(sandbox.path, 'docs/headings', ['guide.md']));
         expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([[5, 'banned-heading']]);
     });
 

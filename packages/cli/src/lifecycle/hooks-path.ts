@@ -3,8 +3,8 @@
 import { relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readdirSync } from 'node:fs';
+import { getHooks } from '#cli/repository/survey.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { existingHooks } from '#cli/repository/survey.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/generation/generation.ts';
@@ -20,7 +20,7 @@ function ownHooksPath(root: string): string {
 // in the default Git hooks folder.
 function foreignHooks(root: string): string[] {
     const own = ownHooksPath(root);
-    const found = existingHooks(root)
+    const found = getHooks(root)
         .filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own))
         .map((hook) => hook.path);
     const directory = hooksDirectory(root);
@@ -48,7 +48,7 @@ export function installHooks({
     if (policy.hooks === undefined || !repository.hasGit) return '';
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0) {
-        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.runner?.tool)}`);
+        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.runner)}`);
         return `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
     }
     const path = ownHooksPath(repository.root);

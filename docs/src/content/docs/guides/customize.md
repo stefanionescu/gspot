@@ -48,7 +48,7 @@ gspot set level all
 This example lets scripts print to the terminal:
 
 ```bash
-gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
+gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
 The ignore turns off one rule, `no-console`, for the paths under `scripts/`. Leave out `--rule`
@@ -58,7 +58,7 @@ reason.
 When the cause is gone, remove the ignore and run the check again:
 
 ```bash
-gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --remove
+gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --remove
 ```
 
 Reports list every ignore, and `--verbose` prints each one with how many findings it matched.

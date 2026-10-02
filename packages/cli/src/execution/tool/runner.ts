@@ -30,7 +30,7 @@ import type {
 
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
-    const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
+    const isInScope = spec.cwd === 'scope' || (spec.runs === 'scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
 }
 
@@ -62,11 +62,11 @@ function finished(
     started: number,
 ): CheckResult {
     const isEveryFindingKept =
-        state.isFailed || spec.count_regex !== undefined || spec.output?.format === 'trufflehog-json';
+        state.isFailed || spec.count_pattern !== undefined || spec.output?.format === 'trufflehog-json';
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
-    const status = state.isFailed || findings.length > 0 ? 'fail' : 'ok';
+    const status = state.isFailed || findings.length > 0 ? 'failed' : 'passed';
     return { ...base, status, duration: performance.now() - started, findings, command: argv };
 }
 
@@ -79,7 +79,7 @@ function parsedFindings(
     try {
         return { findings: checkedFindings(planned, result, roots) };
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'tool-output') return { note: error.message };
+        if (error instanceof GspotError && error.code === 'output') return { note: error.message };
         throw error;
     }
 }
@@ -96,7 +96,7 @@ async function runCommands(
     const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const invocation of prepared.commands) {
-        const seconds = planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default;
+        const seconds = Number(planned.scope.view.settings['timeout'] ?? TOOL_DEADLINE.default);
         const result = await runToolCommand(planned.scope.view, invocation.argv, prepared, session.cancelSignal);
         const failure = executionFailure(result, tool.name, seconds);
         if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
@@ -127,7 +127,7 @@ function adapterTool(
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
     if (inspection.state === 'error') throw new Error(inspection.note ?? `${name} version inspection failed.`);
     if (inspection.state === 'missing' || inspection.state === 'outdated' || inspection.path === undefined) {
-        throw new GspotError('missing-tool', missingNote(tool, inspection, inspection.state));
+        throw new GspotError('tool', missingNote(tool, inspection, inspection.state));
     }
     return { path: inspection.path, env };
 }
@@ -176,7 +176,7 @@ function unrunnableResult(
     if (tool === undefined) return undefined;
     const own = missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, inspection);
     if (own !== undefined) return own;
-    for (const name of planned.spec.requires_tools ?? []) {
+    for (const name of planned.spec.other_tools ?? []) {
         const required = toolPin(session.manifests.values(), name);
         const unavailable = unavailableTool(base, required, inspectTool(session, required));
         if (unavailable !== undefined) return unavailable;
@@ -259,8 +259,8 @@ export async function runToolCheck(
     const base: CheckResult = {
         check: spec.name,
         scope: scope.scope.path,
-        status: 'ok',
-        files: planned.files.length,
+        status: 'passed',
+        fileCount: planned.files.length,
         duration: 0,
         findings: [],
     };
@@ -295,8 +295,8 @@ export async function runCheckCommand(
         { ...options, env },
         input.cancelSignal,
     );
-    const failure = executionFailure(result, name, input.view.limit('tool_seconds') ?? TOOL_DEADLINE.default);
-    if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
+    const failure = executionFailure(result, name, Number(input.view.settings['timeout'] ?? TOOL_DEADLINE.default));
+    if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     // Tools on Windows end their lines with CRLF; every reader of check output splits on LF.
     return {

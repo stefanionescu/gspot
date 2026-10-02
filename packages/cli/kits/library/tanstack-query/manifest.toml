@@ -1,6 +1,4 @@
 [kit]
-name = "tanstack-query"
-kind = "library"
 title = "TanStack Query"
 requires = ["javascript"]
 description = "TanStack Query: the query rules of ESLint for dependency lists, stable clients, and query options in order."
@@ -8,17 +6,14 @@ description = "TanStack Query: the query rules of ESLint for dependency lists, s
 [detect]
 dependencies = ["@tanstack/react-query", "@tanstack/query-core"]
 
-[[tools]]
+[[tool]]
 name = "@tanstack/eslint-plugin-query"
 kind = "library"
 version = "5.91.2"
 npm = "@tanstack/eslint-plugin-query"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
-
-[guides]
-library = [{path = "library/tanstack-query/TANSTACKQUERY.md"}]

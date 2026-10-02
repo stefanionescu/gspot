@@ -17,12 +17,12 @@ const NEGATED =
 
 const STRUCTURAL: FindingCase[] = [
     {
-        check: 'swift/trivial-function',
+        check: 'swift/trivial-functions',
         files: { 'Sources/App/Label.swift': SWITCHED },
         expected: { file: 'Sources/App/Label.swift', rule: 'trivial-function', line: 15 },
     },
     {
-        check: 'swift/trivial-function',
+        check: 'swift/trivial-functions',
         files: { 'Sources/App/Fresh.swift': NEGATED },
         expected: { file: 'Sources/App/Fresh.swift', rule: 'trivial-function', line: 4 },
     },
@@ -80,7 +80,7 @@ plantedCases(
             'the commit stage leaves the build, the analyzer, and the dead code scan to their own stages',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('swift/build');
                 expect(ids).not.toContain('swift/swiftlint-analyze');

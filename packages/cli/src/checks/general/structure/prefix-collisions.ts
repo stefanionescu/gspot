@@ -43,7 +43,7 @@ export const prefixCollisions: Analysis = (context) => {
     const { input } = context;
     const threshold = context.limit('prefix_collisions') ?? DEFAULT_THRESHOLD;
     const isAllowed = pathMatcher(
-        input.policyFiles.policy.structure.prefix_collision_allowed.flatMap((entry) => entry.paths),
+        input.policyFiles.policy.structure.prefix_collisions_allowed.flatMap((entry) => entry.paths),
     );
     const isNest = input.selection.selected.some((manifest) => manifest.kit.name === 'nestjs');
     const tree = directoryTree(input.files);

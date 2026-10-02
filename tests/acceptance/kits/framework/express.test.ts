@@ -1,7 +1,7 @@
 // Planted repository for the express configuration: an OpenAPI document with a hole, a stale document, and a route with no test.
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 
-const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
+const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\ngenerate = "bun write-document.js"\n';
 
 const EXPRESS_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "express": "5.1.0"\n    }\n}\n';
@@ -60,7 +60,7 @@ plantedCases(
     },
     [
         {
-            check: 'openapi/lint',
+            check: 'openapi/spectral',
             files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
             policy: EXPRESS_POLICY,
             expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },

@@ -4,7 +4,8 @@ import { stripVTControlCharacters } from 'node:util';
 import { HOOK_FILES } from '#cli/config/generation/generation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
-import { ERROR_EXIT, MS_PER_SECOND } from '#cli/config/platform/platform.ts';
+import { FAILED_STATUSES } from '#cli/config/execution/execution.ts';
+import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/platform.ts';
 import type { Finding, RunReport, CheckResult } from '#cli/types/execution/execution.ts';
 
 import {
@@ -25,11 +26,11 @@ function seconds(ms: number): string {
 function statusWord(result: CheckResult, colors: Colors): string {
     const { red, green, yellow } = colors;
     switch (result.status) {
-        case 'ok': {
-            return green('ok');
+        case 'passed': {
+            return green('passed');
         }
-        case 'fail': {
-            return red('fail');
+        case 'failed': {
+            return red('failed');
         }
         case 'missing': {
             return red('missing');
@@ -38,7 +39,7 @@ function statusWord(result: CheckResult, colors: Colors): string {
             return red('error');
         }
         case 'skipped': {
-            return yellow('skip');
+            return yellow('skipped');
         }
     }
 }
@@ -63,7 +64,7 @@ function findingLines(finding: Finding, colors: Colors, next?: Finding): string[
 
 function checkTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    return `${counted(check.files, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
+    return `${counted(check.fileCount, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
 }
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
@@ -86,7 +87,7 @@ function checkLines(check: CheckResult, columns: Columns, options: ReporterOptio
         const command = `$ ${check.command.join(' ')}`;
         lines.push(`  ${colors.dim(command)}`);
     }
-    if (check.status === 'fail') lines.push(...failureLines(check, options, colors));
+    if (check.status === 'failed') lines.push(...failureLines(check, options, colors));
     if (check.reproduce !== undefined) lines.push(`  ${colors.dim('reproduce:')} ${check.reproduce}`);
     return lines;
 }
@@ -106,14 +107,14 @@ function tailLines(report: RunReport, options: ReporterOptions, colors: Colors):
     const lines = [
         ...ignoreLines(report, options, colors),
         ...report.skips.map((skip) => {
-            const source = colors.dim(`(${skip.source})`);
-            return `skipped    ${skip.check}  ${source}`;
+            const cause = colors.dim(`(${skip.cause})`);
+            return `skipped    ${skip.check}  ${cause}`;
         }),
     ];
-    if (report.unstaged > 0) {
-        const verb = report.unstaged === 1 ? ' has' : 's have';
+    if (report.unstagedChanges > 0) {
+        const verb = report.unstagedChanges === 1 ? ' has' : 's have';
         lines.push(
-            `checked ${report.comparison?.content === 'index' ? 'index' : 'working tree'}; ${String(report.unstaged)} file${verb} unstaged changes`,
+            `checked ${report.comparison?.content === 'index' ? 'index' : 'working tree'}; ${String(report.unstagedChanges)} file${verb} unstaged changes`,
         );
     }
     return lines;
@@ -125,12 +126,12 @@ function counted(value: number, noun: string): string {
 }
 
 function summaryLine(report: RunReport, colors: Colors): string {
-    const passed = report.checks.filter((check) => check.status === 'ok').length;
-    const failed = report.checks.filter((check) => ['fail', 'missing', 'error'].includes(check.status)).length;
+    const passed = report.checks.filter((check) => check.status === 'passed').length;
+    const failed = report.checks.filter((check) => FAILED_STATUSES.has(check.status)).length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
     const findings = report.checks.reduce((count, check) => count + check.findings.length, 0);
     const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
-    if (report.exitCode === ERROR_EXIT) return colors.red(`${summary} (incomplete)`);
+    if (report.exitCode === EXIT_ERROR) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
@@ -189,7 +190,7 @@ export function progress(
     quiet: boolean,
 ): (result: CheckResult) => void {
     return (result) => {
-        const failed = ['fail', 'missing', 'error'].includes(result.status);
+        const failed = FAILED_STATUSES.has(result.status);
         if (!failed && (quiet || stream.isTTY !== true)) return;
         stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${result.status}\n`);
     };

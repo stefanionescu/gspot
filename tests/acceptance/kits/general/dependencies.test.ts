@@ -18,7 +18,7 @@ const DEPENDENCIES_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -44,17 +44,17 @@ test(
             join(sandbox.path, 'bun.lock'),
             '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
         );
-        const args = ['check', '--only', 'integrity/lockfile-fresh', '--json'];
+        const args = ['check', '--only', 'dependencies/lockfile-fresh', '--json'];
         const stale = await spawnGspot(sandbox.path, args, environment);
         expect(stale.code, stale.stdout + stale.stderr).toBe(1);
         expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
-                check: 'integrity/lockfile-fresh',
-                status: 'fail',
+                check: 'dependencies/lockfile-fresh',
+                status: 'failed',
                 findings: [
                     containing({
                         file: 'bun.lock',
-                        rule: 'stale-lockfile',
+                        rule: 'stale',
                         line: 1,
                         message: textContaining('refuses this lockfile'),
                     }),
@@ -70,9 +70,9 @@ test(
         const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
+            { check: 'dependencies/lockfile-fresh', status: 'passed', findings: [] },
         ]);
-        const checked = await spawnGspot(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'commit', '--json'], environment);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);
         expect(ids).not.toContain('dependencies/osv');
         expect(ids).not.toContain('dependencies/syncpack');

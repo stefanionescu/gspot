@@ -25,14 +25,14 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
         'other/requirements.txt': 'unlocked-dependency\n',
         'other/main.py': 'value = 2\n',
     });
-    const command = ['check', '--only', 'integrity/dependency-ownership', '--json'];
+    const command = ['check', '--only', 'python/pip-installs', '--json'];
     const checked = await runGspot(sandbox.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: 'locked/requirements.txt', rule: 'requirements-file' },
     ]);
-    expect(report.checks.filter((check) => check.status === 'fail').map((check) => check.scope)).toStrictEqual([
+    expect(report.checks.filter((check) => check.status === 'failed').map((check) => check.scope)).toStrictEqual([
         'locked',
     ]);
     rmSync(join(sandbox.path, 'locked/requirements.txt'));

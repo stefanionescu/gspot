@@ -33,7 +33,7 @@ test('init deletes a replaced file, and apply preserves later edits and unowned 
 test('a generated plan cannot write into the lifecycle state folder', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ndirectory = ".gspot/state/notes"\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\npath = ".gspot/state/notes"\n'),
         '.gspot/state/notes/authored.txt': 'preserve notes\n',
     });
     const refused = await runGspot(directory.path, ['apply']);
@@ -45,12 +45,12 @@ test('a generated plan cannot write into the lifecycle state folder', async () =
 
 test('apply previews missing outputs without writing and rejects obsolete mutation flags', async () => {
     await using directory = await testdir();
-    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
+    const policy = policyOf(['bash'], '[rules]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const result = JSON.parse(preview.stdout) as { isDryRun: boolean; drift: { path: string; kind: string }[] };
-    expect(result.isDryRun).toBe(true);
+    const result = JSON.parse(preview.stdout) as { dryRun: boolean; drift: { path: string; kind: string }[] };
+    expect(result.dryRun).toBe(true);
     expect(result.drift).toContainEqual(containing({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);

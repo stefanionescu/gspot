@@ -9,7 +9,7 @@ file_length:
     ignore_comment_only_lines: true
 
 type_body_length:
-<%~ pair(settings['limits.swift.type_body_length'] ?? 300) %>
+<%~ pair(settings['limits.swift.type_lines'] ?? 300) %>
 
 function_parameter_count:
 <%~ pair(at('function_parameters', 7)) %>
@@ -22,7 +22,7 @@ cyclomatic_complexity:
 <%~ pair(at('cyclomatic_complexity', 8)) %>
 
 closure_body_length:
-<%~ pair(settings['limits.swift.closure_body_length'] ?? 60) %>
+<%~ pair(settings['limits.swift.closure_lines'] ?? 60) %>
 
 # The case and length of types, variables, parameters, and enum cases; naming/identifiers keeps functions and methods.
 identifier_name:

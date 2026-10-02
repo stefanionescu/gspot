@@ -1,4 +1,4 @@
-untracked = [
+ignored = [
     ".gspot/config/vale/styles/Google/",
     ".gspot/config/vale/styles/Microsoft/",
     ".gspot/config/vale/styles/write-good/",
@@ -12,17 +12,15 @@ untracked = [
 ]
 
 [kit]
-name = "prose"
-kind = "general"
 title = "Prose"
 requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
 
-[owners]
+[files]
 extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".css", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
 tags = ["shebang:shell"]
 
-[[tools]]
+[[tool]]
 name = "vale"
 version = "3.21.0"
 mise = "vale"
@@ -31,23 +29,22 @@ winget = "errata-ai.Vale"
 scoop = "vale"
 github = {name = "errata-ai/vale", version = "v3.21.0"}
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".vale.ini"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "_vale.ini"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "vale.ini"
 
-[[configs]]
-template = "vale.ini.tmpl"
+[[config]]
 target = ".gspot/config/vale.ini"
 rules_path = ["*.rules", "*.BasedOnStyles"]
 
-[[checks]]
-name = "prose/vale"
-title = "Vale"
+[[check]]
+name = "vale"
+title = "Lint prose"
 example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Project names belong in the vocabulary only when they are legitimate names."
 level = "recommended"
 stage = "commit"
@@ -55,8 +52,8 @@ summary = "Checks ambiguous dates with bundled Vale styles at recommended; all a
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
 help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or use gspot ignore prose/vale --rule <rule>."
 
-[[checks]]
-name = "prose/banned"
+[[check]]
+name = "hidden"
 title = "Keep prose visible to checks"
 example = "A prose-linter disable directive in source reports a bypass finding. Remove the directive and correct the text, or record the narrowly scoped policy exception with its reason."
 level = "all"
@@ -65,9 +62,9 @@ summary = "Finds Vale directives inside Markdown and block comments in SQL, whic
 why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
 help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
-[[settings]]
+[[setting]]
 name = "prose.vocabulary"
-kind = "list"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Names Vale accepts as written: products, tools, people."

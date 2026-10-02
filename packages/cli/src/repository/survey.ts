@@ -5,18 +5,18 @@ import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
-import type { Fields, TrackedFile, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Fields, Tooling, TrackedFile } from '#cli/types/repository/repository.ts';
 
 import {
     LINT_PAIRS,
     LINT_WORDS,
     MISE_FILES,
+    AGENT_FILES,
     RUNNER_LOCKS,
     TASK_RUNNERS,
-    OTHER_CI_FILES,
-    AGENT_FILE_NAMES,
-    LINT_FOLDER_NAMES,
-    RULES_DIRECTORY_NAMES,
+    FOREIGN_CI_FILES,
+    LINT_DIRECTORIES,
+    RULES_DIRECTORIES,
     FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/config/repository/repository.ts';
 
@@ -24,7 +24,7 @@ import {
 const TASK_AFTER_RUN = 2;
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
-function runsLint(command: string): boolean {
+function isLintCommand(command: string): boolean {
     const words = command.split(/[\s;&|]+/u).filter((word) => word !== '');
     return words.some((word, index) => {
         if (word === 'eslint') return true;
@@ -37,21 +37,21 @@ function runsLint(command: string): boolean {
 }
 
 // The files in a folder under a root, without dot files; none when the folder does not exist.
-function listDir(root: string, rel: string): string[] {
+function getFiles(root: string, rel: string): string[] {
     if (!existsSync(join(root, rel))) return [];
     using files = openRoot(root);
     if (files.stat(rel)?.isDirectory() !== true) return [];
     return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
 }
 
-function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
+function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['hooks'][number] | undefined {
     if (hooksPath === dir) return undefined;
-    const files = listDir(root, dir);
+    const files = getFiles(root, dir);
     if (files.length === 0) return undefined;
     return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
 }
 
-function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; runnerFile?: string } {
+function detectRunner(paths: Set<string>): { runner: Tooling['runner']; runnerFile?: string } {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
@@ -88,7 +88,7 @@ function isLintJob(name: string, job: unknown): boolean {
         name
             .toLowerCase()
             .split(/[-_: ]/u)
-            .some((word) => LINT_WORDS.has(word)) || commands.some((command) => runsLint(command))
+            .some((word) => LINT_WORDS.has(word)) || commands.some((command) => isLintCommand(command))
     );
 }
 
@@ -97,7 +97,7 @@ function isLintJob(name: string, job: unknown): boolean {
  * @param root the repository root
  * @returns each set of hooks with where it lives
  */
-export function existingHooks(root: string): ExistingTooling['hooks'] {
+export function getHooks(root: string): Tooling['hooks'] {
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
     using files = openRoot(root);
@@ -108,7 +108,13 @@ export function existingHooks(root: string): ExistingTooling['hooks'] {
     return [
         ...(location === undefined
             ? []
-            : [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(dirname(location), basename(location)) }]),
+            : [
+                  {
+                      kind: 'hooksPath' as const,
+                      path: hooksPath,
+                      files: getFiles(dirname(location), basename(location)),
+                  },
+              ]),
         ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes('.pre-commit-config.yaml')
@@ -125,34 +131,30 @@ export function existingHooks(root: string): ExistingTooling['hooks'] {
  * @param fields the manifests read from the tree
  * @returns everything init lists except the tool configurations, which need the kits
  */
-export function surveyRepository(
-    root: string,
-    files: TrackedFile[],
-    fields: Fields[],
-): Omit<ExistingTooling, 'configs'> {
+export function surveyRepository(root: string, files: TrackedFile[], fields: Fields[]): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
     const lintOnlyManifests = fields
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
     return {
-        hooks: existingHooks(root),
+        hooks: getHooks(root),
         ci: [...paths]
             .filter(
                 (path) =>
-                    OTHER_CI_FILES.has(path) ||
+                    FOREIGN_CI_FILES.has(path) ||
                     path === '.gitlab-ci.yml' ||
                     ((path.startsWith('.github/workflows/') || path.startsWith('.gitlab/ci/')) &&
                         (path.endsWith('.yml') || path.endsWith('.yaml'))),
             )
             .toSorted((a, b) => a.localeCompare(b)),
-        agentFiles: AGENT_FILE_NAMES.filter((name) => paths.has(name)),
-        rulesDirectories: RULES_DIRECTORY_NAMES.filter((name) =>
-            listDir(root, name).some((entry) => entry.endsWith('.md')),
+        agentFiles: AGENT_FILES.filter((name) => paths.has(name)),
+        rulesDirectories: RULES_DIRECTORIES.filter((name) =>
+            getFiles(root, name).some((entry) => entry.endsWith('.md')),
         ),
-        lintFolders: LINT_FOLDER_NAMES.filter((name) => listDir(root, name).length > 0),
+        lintFolders: LINT_DIRECTORIES.filter((name) => getFiles(root, name).length > 0),
         lintOnlyManifests,
-        ...runnerFound(paths),
+        ...detectRunner(paths),
     };
 }
 
@@ -162,10 +164,10 @@ export function surveyRepository(
  * @param paths the CI files to read
  * @returns the names of the jobs that already run a linter
  */
-export function ciLintJobs(root: string, paths: string[]): string[] {
+export function getLintJobs(root: string, paths: string[]): string[] {
     using files = openRoot(root);
     return paths
-        .filter((path) => !OTHER_CI_FILES.has(path))
+        .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
             const source = files.read(path);
             if (source === undefined) return [];

@@ -16,9 +16,9 @@ export const findingSchema = z.strictObject({
 export const checkResultSchema = z.strictObject({
     check: z.string(),
     scope: z.string(),
-    status: z.enum(['ok', 'fail', 'missing', 'skipped', 'error']),
-    files: z.number().int(),
-    checkedFiles: z
+    status: z.enum(['passed', 'failed', 'missing', 'skipped', 'error']),
+    fileCount: z.number().int(),
+    files: z
         .array(z.string())
         .optional()
         .describe('Repository-relative files whose analysis was confirmed by the engine.'),

@@ -1,5 +1,5 @@
 // The literal values repository reads: names, patterns, limits, and tables.
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling } from '#cli/types/repository/repository.ts';
 
 /** The package-lock format that carries both the packages table and the old dependencies tree. */
 const HYBRID_LOCKFILE = 2;
@@ -8,7 +8,7 @@ const HYBRID_LOCKFILE = 2;
 const PACKAGES_LOCKFILE = 3;
 
 /** Repository-relative paths shared by generation, execution, and lifecycle storage. */
-export const GSPOT_FOLDER = '.gspot';
+export const DOT_GSPOT = '.gspot';
 
 export const SHEBANG_INTERPRETERS: Record<string, string> = {
     bash: 'shell',
@@ -122,7 +122,7 @@ export const VENDORED_DIRECTORIES = [
     'Carthage',
     '.build',
 ];
-export const LINT_FOLDER_NAMES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'];
+export const LINT_DIRECTORIES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'];
 export const LINT_TOOL_PACKAGE_PREFIXES = [
     'eslint',
     '@eslint',
@@ -159,8 +159,8 @@ export const LINT_TOOL_PACKAGE_PREFIXES = [
     'supabase',
     'sqlfluff',
 ];
-export const AGENT_FILE_NAMES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'];
-export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
+export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'];
+export const RULES_DIRECTORIES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
 
 /** License and notice files are another party's text, kept as written: the name alone or with a suffix such as -MIT. */
 export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING|NOTICE)(?:$|[.-])/iu;
@@ -202,7 +202,7 @@ export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 // Two-word lint commands, and the package managers whose lint task counts.
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
 export const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
-export const OTHER_CI_FILES = new Set([
+export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',
     '.circleci/config.yml',
@@ -210,7 +210,7 @@ export const OTHER_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 export const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
-export const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
+export const RUNNER_LOCKS: { file: string; runner: Tooling['runner'] }[] = [
     { file: 'bun.lock', runner: 'bun' },
     { file: 'bun.lockb', runner: 'bun' },
     { file: 'pnpm-lock.yaml', runner: 'pnpm' },
@@ -300,4 +300,13 @@ export const SHEBANG_TAGS: Record<string, string[]> = {
 };
 
 /** Where a test file lives: in a test folder, or named for a test runner. */
-export const TEST_FILE_GLOBS = ['**/test/**', '**/tests/**', '**/__tests__/**', '**/*.test.*', '**/*.spec.*'];
+export const TEST_FILE_GLOBS = [
+    '**/test/**',
+    '**/tests/**',
+    '**/__tests__/**',
+    '**/*.test.*',
+    '**/*.spec.*',
+    '**/test_*.py',
+    '**/*_test.py',
+    '**/conftest.py',
+];

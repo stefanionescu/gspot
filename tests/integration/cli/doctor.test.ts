@@ -23,13 +23,13 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         '.gspot/authored.json': original,
     });
     await writeOutputs(await openSession(sandbox.path));
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.json).toMatchObject({
-        changes: { configurationNotOwned: [containing({ path: '.gspot/authored.json' })] },
+        changes: { unowned: [containing({ path: '.gspot/authored.json' })] },
     });
     expect(result.text).toContain('not recorded as owned');
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
@@ -53,17 +53,17 @@ test('doctor excludes private tool manifests from language detection and detects
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
         '.gspot/pyproject.toml': python,
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });
     const privateOnly = await doctorCommand({ cwd: sandbox.path });
-    expect(privateOnly.json).toMatchObject({ changes: { detectedNotSelected: [] } });
+    expect(privateOnly.json).toMatchObject({ changes: { detected: [] } });
     writeFileSync(join(sandbox.path, 'pyproject.toml'), python);
     const authored = await doctorCommand({ cwd: sandbox.path });
     expect(authored.json).toMatchObject({
         changes: {
-            detectedNotSelected: containingAll([containing({ kit: 'python', evidence: 'pyproject.toml' })]),
+            detected: containingAll([containing({ kit: 'python', evidence: 'pyproject.toml' })]),
         },
     });
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);

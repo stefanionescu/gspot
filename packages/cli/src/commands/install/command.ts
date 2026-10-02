@@ -32,7 +32,7 @@ function preparation(session: Session): { steps: string[][]; failures: string[];
                 return [];
             }
         });
-    const runner = session.policyFiles.policy.runner?.tool;
+    const runner = session.policyFiles.policy.runner;
     if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
     const hooks =
         session.repository.hasGit && session.policyFiles.policy.hooks !== undefined ? HOOKS_DIRECTORY : undefined;
@@ -49,7 +49,7 @@ function previewInstallation(steps: string[][], failures: string[], hooks: strin
     ];
     return {
         text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
-        json: { isDryRun: true, steps, ...compact({ hooks }) } satisfies InstallJson,
+        json: { dryRun: true, steps, ...compact({ hooks }) } satisfies InstallJson,
         exitCode: 0,
     };
 }
@@ -74,10 +74,12 @@ export function registerInstall(program: Program): void {
     program
         .command('install')
         .summary('Install the locked tools')
-        .description('Install the locked tools and the Git hooks for this clone')
+        .description(
+            'Install the tools gspot.toml selects, at the versions in the committed locks, and the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nInstalls the tools gspot.toml selects, at the versions in the committed locks, and installs the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.\n\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
+            '\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
         )
         .option('--dry-run', 'Print the install commands and write nothing')
         .action(async (flags, command) => {
@@ -107,6 +109,10 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         };
     } catch (error) {
         const text = error instanceof Error ? error.message : 'Tool installation failed.';
-        return { text: `${text}\n`, json: { installed: false, error: text } satisfies InstallJson, exitCode: 2 };
+        return {
+            text: `${text}\n`,
+            json: { installed: false, error: 'installation', message: text } satisfies InstallJson,
+            exitCode: 2,
+        };
     }
 }

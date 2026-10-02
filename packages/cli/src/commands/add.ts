@@ -3,12 +3,12 @@ import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { scopeHolder } from '#cli/policy/mutations.ts';
 import { compact, similar } from '#cli/platform/text.ts';
+import { getScopeTable } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
+import { commitPolicy, installSelection } from '#cli/commands/edit.ts';
 import type { Program, AddOptions, CommandResult } from '#cli/types/commands/commands.ts';
 
 /**
@@ -26,14 +26,14 @@ async function addCommand(o: AddOptions): Promise<CommandResult> {
             throw new GspotError('policy', [unknownKit(id, similar(id, known))]);
         }
     const mutation: Mutation = (raw) => {
-        const holder = scopeHolder(raw, o.scope);
+        const holder = getScopeTable(raw, o.scope);
         const list = (holder['kits'] as string[] | undefined) ?? [];
         for (const id of o.kits) if (!list.includes(id)) list.push(id);
         holder['kits'] = list;
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
     const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.kits.join(', ')}${where}`);
-    return installChangedSelection(root, result);
+    return installSelection(root, result);
 }
 
 /**
@@ -44,10 +44,12 @@ export function registerAdd(program: Program): void {
     program
         .command('add <kit...>')
         .summary('Add kits')
-        .description('Add kits to the root selection or to one scope')
+        .description(
+            'Add kits to the root selection or to one scope, apply the configuration, and install the tools the change needs. Kits that a selected kit requires stay selected. --dry-run prints the change and writes nothing.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nAdds the kits to the root or --scope selection, applies the configuration, and installs the tools the change needs. Kits that a selected kit requires stay selected. --dry-run prints the change and writes nothing.\n\nExit codes:\n- 0: the kits were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
+            '\nExit codes:\n- 0: the kits were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
         )
         .option('--scope <path>', 'Add the kits to this scope')
         .option('--dry-run', 'Print the change and write nothing')

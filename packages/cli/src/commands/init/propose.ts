@@ -3,8 +3,8 @@ import { asRecord } from '#cli/policy/settings.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { InitPlan } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
+import { getIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -54,16 +54,16 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     else document['hooks'] = { ...asRecord(document['hooks']) };
     if (plan.ci === 'none') delete document['ci'];
     else document['ci'] = { ...asRecord(document['ci']), provider: plan.ci };
-    document['guides'] = { directory: '.gspot/guides', ...asRecord(document['guides']), install: plan.rules };
+    document['rules'] = { path: '.gspot/rules', ...asRecord(document['rules']), install: plan.rules };
     if (plan.runner === 'none') delete document['runner'];
-    else document['runner'] = { tool: plan.runner };
+    else document['runner'] = plan.runner;
 }
 
 // The policy body, with arrays in the layout the TOML formatter keeps, so the first format check of the policy passes.
 function bodyText(document: TomlTable): string {
     const tight = stringify(document).replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
     const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
-    return wrapLongArrays(seed, policyIndent(document));
+    return wrapLongArrays(seed, getIndent(document));
 }
 
 /**

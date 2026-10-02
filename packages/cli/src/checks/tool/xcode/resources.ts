@@ -33,7 +33,7 @@ function symbolOf(name: string): string {
 function imageFindings(input: EngineInput, path: string): Finding[] {
     const read = parsed(input, path);
     const at = { file: path, line: 1 };
-    if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
+    if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
     if (!path.endsWith(IMAGE_SET)) return [];
     const contents = read.value as AssetContents;
     const names = (contents.images ?? []).flatMap((image) => (image.filename === undefined ? [] : [image.filename]));
@@ -69,7 +69,7 @@ export function stringFiles(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => {
         const read = parsed(input, path);
         const at = { file: path, line: 1 };
-        if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
+        if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
         const strings = read.value as StringsFile;
         const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
         const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));

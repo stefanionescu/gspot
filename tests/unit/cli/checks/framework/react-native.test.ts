@@ -24,7 +24,7 @@ describe('doctorFindings', () => {
                 check: 'react-native/expo-doctor',
                 file: 'apps/mobile/package.json',
                 line: 1,
-                rule: 'expo-doctor',
+                rule: 'failed-check',
                 message:
                     'Check that packages match versions required by installed Expo SDK The following packages should be updated for best compatibility with the installed expo version: react-native@0.81.4 - expected version: 0.81.5',
                 fixable: false,
@@ -33,7 +33,7 @@ describe('doctorFindings', () => {
                 check: 'react-native/expo-doctor',
                 file: 'apps/mobile/package.json',
                 line: 1,
-                rule: 'expo-doctor',
+                rule: 'failed-check',
                 message:
                     'Check for app config fields that may not be synced in a non-CNG project This project contains native project folders but also has native configuration properties in app.json.',
                 fixable: false,

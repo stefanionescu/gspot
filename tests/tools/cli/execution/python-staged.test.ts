@@ -8,10 +8,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { createPythonRegistry } from '#tests/harness/registry/python.ts';
 import { preparePythonInstallation } from '#tests/harness/tools/python.ts';
 
@@ -23,7 +23,7 @@ if (onPosix)
         await using artifacts = await testdir();
         await using registry = await createPythonRegistry(artifacts.path);
         await using prepared = await preparePythonInstallation(repository.path, 'pyproject.toml', 'none', registry.url);
-        await runOwnedLifecycle(prepared.root, (owner) => installPythonProject(prepared.root, owner));
+        await asOwner(prepared.root, (owner) => installPythonProject(prepared.root, owner));
         // The fixture installs Ruff alone, so only its generated configuration is written and committed.
         const session = await openSession(repository.path);
         const generated = emitted(session).files.filter((file) => file.path.startsWith('.gspot/config/ruff'));
@@ -46,7 +46,7 @@ if (onPosix)
         expect(report.checks).toMatchObject([
             {
                 check: 'python/ruff',
-                status: 'fail',
+                status: 'failed',
                 findings: [
                     containing({ file: 'source.py', line: 1, rule: 'F401' }),
                     containing({ file: 'source.py', line: 2, rule: 'F401' }),
@@ -56,6 +56,6 @@ if (onPosix)
         const working = await spawnGspot(repository.path, command);
         expect(working.code, working.stdout + working.stderr).toBe(0);
         expect((JSON.parse(working.stdout) as RunReport).checks).toMatchObject([
-            { check: 'python/ruff', status: 'ok' },
+            { check: 'python/ruff', status: 'passed' },
         ]);
     }, 180_000);

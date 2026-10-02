@@ -8,10 +8,10 @@ import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -68,16 +68,16 @@ function ownerOf(
     tool: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }['tool'],
 ): typeof context {
     if (privateToolInstallation(tool, 'mise') !== undefined) return privateContext;
-    return tool.provider === 'host' || tool.version === undefined ? hostContext : context;
+    return tool.host === true || tool.version === undefined ? hostContext : context;
 }
 
 const commands: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }[] = [];
 const checks = manifests.flatMap((manifest) => manifest.checks.map((check) => ({ manifest, check })));
 for (const { manifest, check } of checks)
-    for (const argv of [check.command, check.fix_command]) {
+    for (const argv of [check.command, check.fix]) {
         if (argv === undefined) continue;
         const tool = manifest.tools.find((entry) => entry.name === (check.tool ?? argv[0]));
-        if (tool === undefined || tool.provider === 'host') continue;
+        if (tool === undefined || tool.host === true) continue;
         const flags = flagsOf(argv);
         if (flags.length > 0) commands.push({ tool, argv, subcommands: subcommandsOf(argv), flags });
     }
@@ -103,19 +103,19 @@ beforeAll(async () => {
         ...manifest,
         tools: manifest.tools.filter((tool) => names.has(tool.name)),
     }));
-    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[runner]\ntool = "mise"\n') });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], 'runner = "mise"\n') });
     privateContext.policyFiles = readPolicy(sandbox.path);
     const files = [
         ...toolEnvironment(selected),
         ...toolPackages(selected, { name: 'bun', version: Bun.version }, 'mise'),
     ];
-    await runOwnedLifecycle(sandbox.path, async (owner) => {
+    await asOwner(sandbox.path, async (owner) => {
         await preparePythonProject(sandbox.path, files, owner);
         await preparePackageProject(sandbox.path, files, owner);
     });
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
-    await runOwnedLifecycle(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
-    await runOwnedLifecycle(sandbox.path, (owner) =>
+    await asOwner(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
+    await asOwner(sandbox.path, (owner) =>
         installPackageProject(
             sandbox.path,
             owner,

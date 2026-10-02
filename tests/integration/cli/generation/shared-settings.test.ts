@@ -4,13 +4,14 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { generatedFile } from '#tests/harness/cli/generated.ts';
+import { TEST_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 
 // What the kits declare, read from their manifests so the test pins no copy of shipped lists.
 const MANIFESTS = kitManifests();
-const ENTRY = MANIFESTS.get('javascript')!.entry_files[0]!;
+const ENTRY = MANIFESTS.get('javascript')!.entry[0]!;
 const TAILWIND_AT_RULES = MANIFESTS.get('nextjs')!.defaults['tools.stylelint.ignore_at_rules'];
 const PYTEST = MANIFESTS.get('pytest')!.defaults;
-const TEST_FILES = PYTEST['tools.ruff.test_files'] as string[];
+const TEST_FILES = TEST_FILE_GLOBS;
 const TEST_IGNORES = PYTEST['tools.ruff.test_ignores'] as string[];
 const KNIP = '.gspot/config/knip.json';
 const STYLELINT = '.gspot/config/stylelint.json';

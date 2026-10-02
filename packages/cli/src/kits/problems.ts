@@ -14,30 +14,30 @@ const CHECK_RULES: CheckRule[] = [
     },
     {
         applies: (check) =>
-            check.file_prefix !== undefined &&
-            (check.runs !== 'per-file-list' || check.command?.includes('{files}') !== true),
+            check.file_prefix !== undefined && (check.runs !== 'files' || check.command?.includes('{files}') !== true),
         problem: (check) =>
-            `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`,
+            `check ${check.name} prefixes file arguments and requires runs = "files" with {files} in its command.`,
     },
     {
         applies: (check) => {
             if (check.isolated_files !== true) return false;
-            const perFile = check.runs === 'per-file-list' && check.command?.includes('{files}') === true;
-            const perScope = check.runs === 'per-scope' && check.command?.includes('{root}') === true;
+            const perFile = check.runs === 'files' && check.command?.includes('{files}') === true;
+            const perScope = check.runs === 'scope' && check.command?.includes('{root}') === true;
             return !perFile && !perScope;
         },
         problem: (check) =>
-            `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`,
+            `check ${check.name} isolates files and requires runs = "files" with {files} or runs = "scope" with {root}.`,
     },
     {
-        applies: (check) => check.requires !== undefined && check.stage === 'commit',
-        problem: (check) => `check ${check.name} requires ${check.requires ?? ''} and cannot run at the commit stage.`,
+        applies: (check) => check.needs !== undefined && check.stage === 'commit',
+        problem: (check) =>
+            `check ${check.name} needs ${check.needs?.join(', ') ?? ''} and cannot run at the commit stage.`,
     },
     {
         applies: (check) =>
             check.stage === 'manual' &&
-            check.requires === undefined &&
-            check.runs === 'per-file-list' &&
+            check.needs === undefined &&
+            check.runs === 'files' &&
             check.command === undefined,
         problem: (check) => `check ${check.name} is manual with nothing that makes it slow.`,
     },
@@ -46,11 +46,7 @@ const CHECK_RULES: CheckRule[] = [
 function configurationReaders(checks: RawCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
-        for (const argument of [
-            ...(check.command ?? []),
-            ...(check.fix_command ?? []),
-            ...Object.values(check.env ?? {}),
-        ])
+        for (const argument of [...(check.command ?? []), ...(check.fix ?? []), ...Object.values(check.env ?? {})])
             for (const match of argument.matchAll(MANIFEST_CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
@@ -62,23 +58,15 @@ function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Mani
             throw manifestError(manifest.kit.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
-// Records the manifest as the owner of a check name, refusing a name another manifest already owns.
-function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Manifest['checks'][number]): void {
-    const previous = owners.get(check.name);
-    if (previous !== undefined)
-        throw manifestError(manifest.kit.name, [`check ${check.name} is already owned by ${previous}.`]);
-    owners.set(check.name, manifest.kit.name);
-}
-
-// The configuration that owns each check name, refusing a name two manifests declare.
+// The kit that declares each check, by check ID; a reference to another kit's check names no owner.
 function checkOwners(manifests: Map<string, Manifest>): Map<string, string> {
-    const owners = new Map<string, string>();
-    for (const manifest of manifests.values()) {
-        const references = manifest.kit.check_references ?? [];
-        for (const check of manifest.checks.filter((entry) => !references.includes(entry.name)))
-            claimOwner(owners, manifest, check);
-    }
-    return owners;
+    return new Map(
+        [...manifests.values()].flatMap((manifest) =>
+            manifest.checks
+                .filter((check) => !(manifest.kit.check_references ?? []).includes(check.name))
+                .map((check) => [check.name, manifest.kit.name] as const),
+        ),
+    );
 }
 
 // Whether a check is built in, runs once per repository, and names no command or tool.
@@ -166,7 +154,7 @@ function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): voi
 
 // The settings a check's commands read through `{setting:...}` placeholders.
 function settingsRead(check: Manifest['checks'][number]): string[] {
-    const parts = [...(check.command ?? []), ...(check.fix_command ?? [])];
+    const parts = [...(check.command ?? []), ...(check.fix ?? [])];
     const names = parts.flatMap((part) =>
         [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? ''),
     );
@@ -175,12 +163,13 @@ function settingsRead(check: Manifest['checks'][number]): string[] {
 
 // Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
 function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number], settings: Settings): void {
-    if (check.waits_for !== undefined && !settings.has(check.waits_for))
+    const awaited = check.when?.setting;
+    if (awaited !== undefined && !settings.has(awaited))
         throw manifestError(manifest.kit.name, [
-            `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
+            `check ${check.name} waits for ${awaited}, which no configuration declares.`,
         ]);
     const missing = settingsRead(check).filter((name) => {
-        if (name === check.waits_for) return false;
+        if (name === awaited) return false;
         const spec = settings.get(name);
         if (spec === undefined) return false;
         const value = spec.default;
@@ -217,7 +206,7 @@ export function manifestProblems(raw: RawManifest): string[] {
     if (hasBuiltInCheck) return checks;
     // A config that needs another kit is read by that kit's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
-        .filter((config) => !config.fragment && config.pointer === undefined && config.needs === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined && config.when === undefined)
         .filter((config) => {
             const name = kitName(config.target);
             const isReadByTemplate = raw.configs.some(
@@ -233,7 +222,7 @@ export function manifestProblems(raw: RawManifest): string[] {
 }
 
 /**
- * Validate required kits, tool pins, setting waits, shared setting meanings, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * Validate required kits, tool pins, setting waits, shared setting meanings, and executable reporting and replacement owners before accepting a manifest collection.
  * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {
@@ -243,7 +232,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     assertSettingsAgree(manifests);
     for (const manifest of manifests.values()) {
         assertRequirementsExist(manifest, manifests);
-        for (const tool of manifest.tools.filter((entry) => entry.provider !== 'host')) assertToolPin(manifest, tool);
+        for (const tool of manifest.tools.filter((entry) => entry.host !== true)) assertToolPin(manifest, tool);
         for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
         assertDefaultsDeclared(manifest, settings);
     }

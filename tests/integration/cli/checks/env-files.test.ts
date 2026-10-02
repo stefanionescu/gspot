@@ -2,10 +2,10 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/harness/cli/input.ts';
+import { envExample } from '#cli/checks/general/files.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
-import { envExample } from '#cli/checks/general/files/env-example.ts';
 
 test('staged refusal and tracked-file checks agree on environment files and templates in nested folders', async () => {
     await using directory = await testdir();
@@ -17,9 +17,9 @@ test('staged refusal and tracked-file checks agree on environment files and temp
     );
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-f', '.']).code).toBe(0);
-    const input = await checkInput(directory.path, 'integrity/env-files', [], { kits: ['secrets'] });
+    const input = await checkInput(directory.path, 'secrets/env-files', [], { kits: ['secrets'] });
     expect(envFiles(input).map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
-        privateFiles.map((file) => ({ file, rule: 'tracked-environment-file' })),
+        privateFiles.map((file) => ({ file, rule: 'tracked-env' })),
     );
     const options: CheckOptions = {
         cwd: directory.path,
@@ -33,7 +33,7 @@ test('staged refusal and tracked-file checks agree on environment files and temp
     };
     const refused = refusalFor(options, 'commit', [...privateFiles, ...templates]);
     expect(refused?.exitCode).toBe(1);
-    expect(refused?.json).toStrictEqual({ failed: ['integrity/env-files'], files: privateFiles });
+    expect(refused?.json).toStrictEqual({ failed: ['secrets/env-files'], files: privateFiles });
     expect(refusalFor(options, 'commit', templates)).toBeUndefined();
 });
 

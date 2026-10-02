@@ -11,7 +11,7 @@ test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
     async (required) => {
         await using directory = await testdir();
-        const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
+        const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
         const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
@@ -38,7 +38,7 @@ test.each([false, true])(
     async (required) => {
         {
             await using directory = await testdir();
-            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
+            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[rules]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
             const entry = '{"name":"helper_command"}';
             const allowed = await runGspot(directory.path, ['set', 'naming.allowed', entry]);
@@ -75,15 +75,15 @@ test.each([false, true])(
 test.each([false, true])('inline suppression reasons follow require_reasons=%s', async (required) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`,
         'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
     });
-    const command = ['check', '--only', 'integrity/suppressions', '--json'];
+    const command = ['check', '--only', 'structure/suppressions', '--json'];
     const missing = await runGspot(directory.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
     const report = JSON.parse(missing.stdout) as RunReport;
     const unexplained: Finding = containing({
-        check: 'integrity/suppressions',
+        check: 'structure/suppressions',
         file: 'entry.sh',
         line: 1,
         rule: 'shellcheck-no-reason',
@@ -105,11 +105,11 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'level = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[guides]\ninstall = false\n',
+            'level = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[rules]\ninstall = false\n',
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await runGspot(directory.path, ['check', '--only', 'integrity/suppressions', '--json']);
+    const result = await runGspot(directory.path, ['check', '--only', 'structure/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]!.findings).toStrictEqual(
@@ -126,7 +126,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[rules]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
         const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
@@ -141,7 +141,7 @@ test.each([false, true])(
         const findings = (
             JSON.parse(checked.stdout) as { checks: { check: string; findings: { file: string }[] }[] }
         ).checks
-            .filter((check) => check.check === 'integrity/policy')
+            .filter((check) => check.check === 'gspot/policy')
             .flatMap((check) => check.findings);
         const aboutExtra = { file: 'gspot.toml', message: textContaining('extra') };
         expect(findings).toMatchObject(required ? [aboutExtra] : []);
@@ -152,23 +152,23 @@ test.each([false, true])(
 );
 
 test.each([
-    { key: 'naming.banned_terms', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
-    { key: 'naming.banned_terms', flag: '--remove', item: 'original', expected: [], code: 2 },
-    { key: 'naming.banned_terms', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
-    { key: 'tools.bash.architecture_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
-    { key: 'tools.bash.architecture_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
-    { key: 'tools.bash.architecture_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
+    { key: 'naming.banned', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'naming.banned', flag: '--remove', item: 'original', expected: [], code: 2 },
+    { key: 'naming.banned', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
+    { key: 'tools.bash.boundary_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'tools.bash.boundary_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
+    { key: 'tools.bash.boundary_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
 ])('list edits preserve reason requirements for $key $flag', async ({ key, flag, item, expected, code }) => {
     await using directory = await testdir();
     const policy = [
         'require_reasons = true',
         'kits = ["bash", "naming"]',
-        '[guides]',
+        '[rules]',
         'install = false',
         '[naming]',
-        'banned_terms = ["original"]',
+        'banned = ["original"]',
         '[tools.bash]',
-        'architecture_roots = ["original"]',
+        'boundary_roots = ["original"]',
     ].join('\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['set', key, item, ...[flag].filter((value) => value !== '')];

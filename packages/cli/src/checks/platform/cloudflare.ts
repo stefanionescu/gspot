@@ -119,7 +119,7 @@ function redirectProblems(entries: { text: string; number: number }[]): { number
 function redirectsSyntax(input: EngineInput): Finding[] {
     return named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
-            findingAt(input, { file: path, line: entry.number }, 'redirects-syntax', entry.text),
+            findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
 }
@@ -133,11 +133,11 @@ function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
-        if (problem !== undefined) return [findingAt(input, { file: path, line: 1 }, 'parse', problem)];
+        if (problem !== undefined) return [findingAt(input, { file: path, line: 1 }, 'syntax', problem)];
         const unnamed =
             typeof table['name'] === 'string'
                 ? []
-                : [findingAt(input, { file: path, line: 1 }, 'name', 'The configuration names no worker.')];
+                : [findingAt(input, { file: path, line: 1 }, 'missing-name', 'The configuration names no worker.')];
         const date = table['compatibility_date'];
         const undated =
             typeof date === 'string' && COMPATIBILITY_DATE.test(date)
@@ -161,7 +161,7 @@ function wranglerFile(input: EngineInput): Finding[] {
 export function headersSyntax(input: EngineInput): Finding[] {
     return named(input, '_headers').flatMap((path) =>
         headerProblems(lines(input, path)).map((entry) =>
-            findingAt(input, { file: path, line: entry.number }, 'headers-syntax', entry.text),
+            findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
 }
@@ -188,7 +188,7 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
                 findingAt(
                     input,
                     { file: path, line: 1 },
-                    'stale-types',
+                    'stale',
                     'wrangler types writes this file differently. Run it and commit the result.',
                 ),
             );
@@ -197,8 +197,8 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const CLOUDFLARE_ANALYSES: Record<string, Engine> = {
-    'cloudflare/headers-syntax': headersSyntax,
-    'cloudflare/redirects-syntax': redirectsSyntax,
-    'cloudflare/wrangler-config': wranglerFile,
-    'cloudflare/env-types-fresh': envTypesFresh,
+    'cloudflare/headers': headersSyntax,
+    'cloudflare/redirects': redirectsSyntax,
+    'cloudflare/wrangler': wranglerFile,
+    'cloudflare/types-fresh': envTypesFresh,
 };

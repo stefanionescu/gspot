@@ -15,7 +15,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         nested: [containing({ file: 'apps/backend/supabase/config.toml', rule: 'function' })],
     },
     {
-        check: 'supabase/admin-key-containment',
+        check: 'supabase/admin-key',
         root: [],
         nested: [containing({ file: 'apps/backend/client.ts', rule: 'admin-key' })],
     },
@@ -25,7 +25,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         nested: [containing({ file: 'apps/backend/messages/de.json' })],
     },
     {
-        check: 'integrity/security-headers',
+        check: 'site/security-headers',
         root: [],
         nested: [
             containing({ file: 'apps/backend/_headers', rule: 'missing-header' }),
@@ -33,7 +33,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         ],
     },
     {
-        check: 'static-site/dead-assets',
+        check: 'site/dead-assets',
         root: [containing({ file: 'assets/unused.png', rule: 'dead-asset' })],
         nested: [],
     },
@@ -43,8 +43,8 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
-            ['static-site', 'supabase', 'i18n'],
-            '[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+            ['site', 'supabase', 'i18n'],
+            '[tools.i18n]\nlocales = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
         ),
         _headers: READERS_HEADERS,
         'messages/en.json': '{"title":"Home"}',
@@ -91,7 +91,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
     await using sandbox = await testdir();
     const policy = policyOf(
         ['bash'],
-        '[tools.bash.safety]\nowners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash.safety]\nowners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        '[tools.bash]\nsafety_owners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash]\nsafety_owners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
     );
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
     await createFileTree(sandbox.path, {
@@ -101,7 +101,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
         'app/child/cleanup.sh': source,
         'sibling/cleanup.sh': source,
     });
-    const command = ['check', '--only', 'structure/bash-safety', '--json'];
+    const command = ['check', '--only', 'bash/safety', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
@@ -120,7 +120,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
 test.each([
     {
         configuration: 'supabase',
-        check: 'supabase/admin-key-containment',
+        check: 'supabase/admin-key',
         setting: '[tools.supabase]\nadmin_key_files = ["trusted/**"]\n',
         path: 'trusted/key.ts',
         source: 'const key = "SUPABASE_SERVICE_ROLE_KEY";\n',
@@ -129,9 +129,9 @@ test.each([
     },
     {
         configuration: 'html',
-        check: 'html/text',
+        check: 'html/literals',
         setting:
-            '[tools.html]\ntemplate_files = ["**/*.html"]\ncopy_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
+            '[tools.html]\ntemplates = ["**/*.html"]\nliterals_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
         path: 'trusted/page.html',
         source: '<p>Private template copy</p>\n',
         correction: '<p>{{ title }}</p>\n',

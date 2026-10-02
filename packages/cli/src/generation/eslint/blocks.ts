@@ -2,6 +2,7 @@
 // and the selector groups of framework fragments.
 import { isDeepStrictEqual } from 'node:util';
 import { policyValue } from '#cli/policy/settings.ts';
+import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
 import { pathExpressions } from '#cli/repository/selectors.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { ResolvedSelector } from '#cli/types/generation/generation.ts';
@@ -38,7 +39,7 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
         (settings.overrides ?? []).map(({ paths, rules }) => ({ scope, ...pathExpressions(paths), rules })),
     );
     const ignores = policy.ignores.flatMap((entry): EslintRuleBlock[] =>
-        entry.rule === undefined || !['javascript/eslint', 'typescript/eslint'].includes(entry.check)
+        entry.rule === undefined || entry.check !== LINT_CHECK
             ? []
             : [
                   {

@@ -17,7 +17,7 @@ const LICENSES_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -77,7 +77,7 @@ test(
                 policy,
                 exception === undefined
                     ? before
-                    : `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
+                    : `${before}\n[[tools.licenses.exceptions]]\npackage = "strict@1.0.0"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
             );
             const applied = await spawnGspot(root, ['apply'], environment);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -88,7 +88,13 @@ test(
             expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toStrictEqual(
                 finding === undefined
                     ? []
-                    : [containing({ file: 'package.json', rule: 'license', message: textContaining(finding) })],
+                    : [
+                          containing({
+                              file: 'package.json',
+                              rule: 'disallowed-license',
+                              message: textContaining(finding),
+                          }),
+                      ],
             );
         }
     },

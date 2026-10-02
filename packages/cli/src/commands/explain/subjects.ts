@@ -1,6 +1,7 @@
 // Explain a check, tool rule, kit, setting, or file path.
 import { similar } from '#cli/platform/text.ts';
 import { allChecks } from '#cli/kits/listing.ts';
+import { kitFiles } from '#cli/rules/assemble.ts';
 import { unknownKit } from '#cli/kits/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
@@ -9,16 +10,16 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
-import { STAGES, DIRECTIONS } from '#cli/config/commands/explain.ts';
-import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
+import { STAGES, DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
+import { explainCheck, explainToolRule } from '#cli/commands/explain/checks.ts';
 import type { ListingRow, Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven rows of the subject listing share this shape; one owner keeps the label format.
-function listLine(label: string, items: string[]): string[] {
+function formatList(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function kitExplanation(kitName: string): Explanation | { error: string } {
+function explainKit(kitName: string): Explanation | { error: string } {
     const manifest = kitManifests().get(kitName);
     if (!manifest)
         return {
@@ -33,36 +34,35 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
-        rules: Object.values(manifest.guides)
-            .flat()
-            .map((entry) => entry.path),
-        default: manifest.kit.default,
+        rules: kitFiles(manifest).map((file) => file.path),
+        auto: manifest.kit.auto,
         proposed: manifest.kit.proposed,
     };
-    const { detect, owners } = manifest;
+    const { detect, files } = manifest;
     const lines = [
         `${row.title} (${row.kind} kit)`,
         '',
         row.description,
         '',
-        ...listLine('Detected by', [
+        ...formatList('Detected by', [
             ...detect.extensions,
             ...detect.filenames,
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
-        ...listLine('Owners', [...owners.extensions, ...owners.filenames, ...owners.paths]),
-        ...(owners.from_languages ? ['Owners: every file a language kit owners'] : []),
-        ...(owners.from_prettier_plugins ? ['Owners: the file types of the selected Prettier plugins'] : []),
-        ...listLine('Requires', row.requires),
-        ...listLine('Tools it pins', row.tools),
+        ...formatList('Files', [...files.extensions, ...files.filenames, ...files.paths]),
+        ...(files.languages ? ['Files: every file a language kit owns'] : []),
+        ...(files.prettier_plugins ? ['Files: the file types of the selected Prettier plugins'] : []),
+        ...(files.eslint_plugins ? ['Files: the file types of the selected ESLint plugins'] : []),
+        ...formatList('Requires', row.requires),
+        ...formatList('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>
-            listLine(
+            formatList(
                 `Checks at ${stage}`,
                 row.checks.filter((check) => check.stage === stage).map((check) => check.check),
             ),
         ),
-        ...listLine('Settings', row.settings),
-        ...listLine('Guides', row.rules),
+        ...formatList('Settings', row.settings),
+        ...formatList('Guides', row.rules),
     ];
     return { kind: 'kit', subject: kitName, text: `${lines.join('\n')}\n`, data: row };
 }
@@ -84,7 +84,7 @@ function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string
     ];
 }
 
-function settingExplanation(session: Session | undefined, key: string): Explanation | undefined {
+function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const scopes = session.scopes.flatMap((selection) => {
         const match = specFor(selection.surface, key);
@@ -105,7 +105,7 @@ function settingExplanation(session: Session | undefined, key: string): Explanat
         '',
         first.spec.summary,
         '',
-        `Direction: ${DIRECTIONS[first.spec.direction] ?? first.spec.direction}`,
+        `Direction: ${DIRECTION_TEXTS[first.spec.direction] ?? first.spec.direction}`,
         ...scopes.flatMap((entry) => scopeLines(key, first.spec, entry)),
     ];
     return {
@@ -132,18 +132,18 @@ function explainSlashed(
     subject: string,
     file: Explanation | { error: string } | undefined,
 ): Explanation | { error: string } {
-    const check = checkExplanation(session, subject);
+    const check = explainCheck(session, subject);
     if (check) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    const toolRule = toolRuleExplanation(session, subject.slice(0, slash), subject.slice(slash + 1));
+    const toolRule = explainToolRule(session, subject.slice(0, slash), subject.slice(slash + 1));
     if (toolRule) return toolRule;
     const known = [...allChecks().keys(), ...(session?.policyFiles.policy.checks.map((check) => check.name) ?? [])];
     return { error: messages.unknownCheck(subject, similar(subject, known)) };
 }
 
-function explainDotted(session: Session | undefined, subject: string): Explanation | { error: string } {
-    const setting = settingExplanation(session, subject);
+function explainKey(session: Session | undefined, subject: string): Explanation | { error: string } {
+    const setting = explainSetting(session, subject);
     if (setting) return setting;
     const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]))];
     return { error: messages.settingNotExposed(subject, similar(subject, known)) };
@@ -160,8 +160,8 @@ export function explain(session: Session | undefined, subject: string): Explanat
     if (file !== undefined && subject.startsWith('./')) return file;
     let named: Explanation | { error: string };
     if (subject.includes('/')) named = explainSlashed(session, subject, file);
-    else if (subject.includes('.')) named = explainDotted(session, subject);
-    else named = kitExplanation(subject);
+    else if (subject.includes('.')) named = explainKey(session, subject);
+    else named = explainKit(subject);
     if (!('error' in named)) return named;
     return file ?? named;
 }

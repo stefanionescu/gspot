@@ -2,11 +2,11 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { decodedText } from '#cli/platform/text.ts';
+import { openDocument } from '#cli/lifecycle/merge/document.ts';
+import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
+import type { MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
-import { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
-import type { ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';
-import type { Field, KeyPath, KitPlan, KitDocument, ConfigurationWriteRequest } from '#cli/types/lifecycle/merge.ts';
+import type { Field, KeyPath, MergePlan, KitDocument, MergeRequest } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
 function isEmptyContainer(value: unknown): boolean {
@@ -17,7 +17,7 @@ function isEmptyContainer(value: unknown): boolean {
 }
 
 // The file text, which must be UTF-8, or the empty document of the format for a file that does not exist.
-function sourceText(request: ConfigurationWriteRequest): string {
+function decodeText(request: MergeRequest): string {
     const { current, format, path } = request;
     if (current === undefined) return format === 'toml' ? '' : '{}\n';
     const text = decodedText(current.bytes);
@@ -26,7 +26,7 @@ function sourceText(request: ConfigurationWriteRequest): string {
 }
 
 // Whether the recorded ownership rules out a plan: another format, or an edited file with no recorded fields.
-function isUnplannable(request: ConfigurationWriteRequest): boolean {
+function isUnplannable(request: MergeRequest): boolean {
     const { existing, format, current, matchesInstalled } = request;
     if (existing?.configuration !== undefined && existing.configuration.format !== format) return true;
     return existing !== undefined && existing.configuration === undefined && current !== undefined && !matchesInstalled;
@@ -45,9 +45,9 @@ function retireFields(document: KitDocument, recorded: Field[], requested: Field
 }
 
 // The field as it will be recorded, or undefined when the developer's value stands in the way of installing it.
-function plannedField(
+function planField(
     document: KitDocument,
-    request: ConfigurationWriteRequest,
+    request: MergeRequest,
     field: Field,
     previous: Field | undefined,
 ): Field | undefined {
@@ -73,7 +73,7 @@ function recordParents(document: KitDocument, path: KeyPath, parents: KeyPath[])
 // Installs every requested field, returning the recorded fields, or undefined when one cannot be installed.
 function installFields(
     document: KitDocument,
-    request: ConfigurationWriteRequest,
+    request: MergeRequest,
     recorded: Field[],
     requested: Field[],
     parents: KeyPath[],
@@ -82,7 +82,7 @@ function installFields(
     if (fields === undefined) return undefined;
     for (const field of requested) {
         const index = fields.findIndex((entry) => isDeepStrictEqual(entry.path, field.path));
-        const entry = plannedField(document, request, field, fields[index]);
+        const entry = planField(document, request, field, fields[index]);
         if (entry === undefined) return undefined;
         if (index === -1) fields.push(entry);
         else fields[index] = entry;
@@ -93,12 +93,12 @@ function installFields(
 }
 
 // The ownership record of a plan that changed the fields or the text.
-function nextRecord(
-    request: ConfigurationWriteRequest,
-    recorded: ConfigurationOwnership | undefined,
+function buildRecord(
+    request: MergeRequest,
+    recorded: MergeRecord | undefined,
     fields: Field[],
     parents: KeyPath[],
-): ConfigurationOwnership {
+): MergeRecord {
     const { existing, current, matchesInstalled } = request;
     const edited = recorded?.edited === true || (existing !== undefined && current !== undefined && !matchesInstalled);
     return {
@@ -112,35 +112,31 @@ function nextRecord(
 
 // The ownership to record after the plan: unchanged when the fields and the text are what was recorded.
 function planned(
-    request: ConfigurationWriteRequest,
+    request: MergeRequest,
     text: string,
     nextText: string,
     fields: Field[],
     parents: KeyPath[],
-): KitPlan {
+): MergePlan {
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
     const isRecorded = recorded !== undefined && isDeepStrictEqual(fields, recorded.fields) && status === 'unchanged';
     if (isRecorded) return { next, configuration: recorded, status };
-    return { next, status, configuration: nextRecord(request, recorded, fields, parents) };
+    return { next, status, configuration: buildRecord(request, recorded, fields, parents) };
 }
 
 /**
  * Remove empty containers only when this owner created them for managed fields.
  * @param document the parsed document
  * @param parents the container paths this owner created, deepest last
- * @param protectedFields the key paths whose containers stay whatever they hold
+ * @param keptPaths the key paths whose containers stay whatever they hold
  * @returns the created containers that still exist
  */
-export function pruneConfigurationParents(
-    document: KitDocument,
-    parents: KeyPath[],
-    protectedFields: KeyPath[] = [],
-): KeyPath[] {
+export function pruneParents(document: KitDocument, parents: KeyPath[], keptPaths: KeyPath[] = []): KeyPath[] {
     for (const parent of parents.toSorted((left, right) => right.length - left.length)) {
         if (
-            protectedFields.some(
+            keptPaths.some(
                 (field) => field.length <= parent.length && field.every((part, index) => part === parent[index]),
             )
         )
@@ -155,19 +151,19 @@ export function pruneConfigurationParents(
  * @param request the destination, requested fields, and read ownership
  * @returns the next snapshot with its ownership, or undefined when the recorded format differs
  */
-export function planConfiguration(request: ConfigurationWriteRequest): KitPlan | undefined {
+export function planMerge(request: MergeRequest): MergePlan | undefined {
     const { format, changes, current, existing } = request;
-    const text = sourceText(request);
-    const document = configurationDocument(text, format, current === undefined);
+    const text = decodeText(request);
+    const document = openDocument(text, format, current === undefined);
     if (isUnplannable(request)) return undefined;
-    const requested = configurationFieldsSchema.parse(
+    const requested = fieldsSchema.parse(
         changes.map((change) => ({ path: change.path, installed: z.json().parse(change.value) })),
     );
     const recorded = existing?.configuration;
     const parents = [...(recorded?.parents ?? [])];
     const fields = installFields(document, request, recorded?.fields ?? [], requested, parents);
     if (fields === undefined) return undefined;
-    const remaining = pruneConfigurationParents(
+    const remaining = pruneParents(
         document,
         parents,
         requested.map((field) => field.path),

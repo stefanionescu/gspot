@@ -18,7 +18,7 @@ const SECURITY_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -54,7 +54,7 @@ test(
         expect((JSON.parse(found.stdout) as RunReport).checks).toMatchObject([
             isWindows
                 ? { check: 'security/semgrep', status: 'skipped' }
-                : { check: 'security/semgrep', status: 'fail', findings: [evaluated] },
+                : { check: 'security/semgrep', status: 'failed', findings: [evaluated] },
         ]);
         await Bun.write(join(sandbox.path, 'security/own.yml'), OWN_RULE);
         await Bun.write(
@@ -62,12 +62,12 @@ test(
             "import { double } from './index.ts';\n\nexport const four = double(2);\n",
         );
         const policy = join(sandbox.path, 'gspot.toml');
-        await Bun.write(policy, `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`);
+        await Bun.write(policy, `${await Bun.file(policy).text()}\n[tools.semgrep]\nconfigs = ["security/own.yml"]\n`);
         commitAll(sandbox.path);
         const own = await spawnGspot(sandbox.path, command, environment);
         expect(own.code, own.stdout + own.stderr).toBe(isWindows ? 0 : 1);
         const report = JSON.parse(own.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: isWindows ? 'skipped' : 'fail' }]);
+        expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: isWindows ? 'skipped' : 'failed' }]);
         expect(report.checks[0]!.findings).toStrictEqual(
             isWindows ? [] : containingAll([containing({ rule: 'planted-no-double', file: 'src/use.ts', line: 3 })]),
         );
@@ -76,7 +76,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'security/semgrep', status: isWindows ? 'skipped' : 'ok', findings: [] },
+            { check: 'security/semgrep', status: isWindows ? 'skipped' : 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 3,

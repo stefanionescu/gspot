@@ -3,6 +3,9 @@
 // The files the generated ESLint configuration treats as code, before framework component files join them.
 export const ESLINT_CODE_FILES = '**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}';
 
+// The check that runs ESLint, whose ignores with a rule become blocks of the generated configuration.
+export const LINT_CHECK = 'javascript/eslint';
+
 // The Node.js range the Node rules assume when the policy names none.
 export const DEFAULT_NODE_VERSION = '>=22.0.0';
 
@@ -13,10 +16,10 @@ export const ESLINT_LIMITS: Record<string, string> = {
     parameters: 'function_parameters',
     cyclomatic: 'cyclomatic_complexity',
     cognitive: 'cognitive_complexity',
-    depth: 'nested_blocks',
+    depth: 'nesting',
     statements: 'statements',
-    nestedCallbacks: 'nested_callbacks',
-    identicalFunctions: 'identical_functions',
+    nestedCallbacks: 'callback_nesting',
+    identicalFunctions: 'duplicate_lines',
     barrelReexports: 'barrel_reexports',
     trivialStatements: 'trivial_statements',
 };

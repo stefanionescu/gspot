@@ -30,9 +30,9 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
                     {
                         name: 'project/native',
                         command: [executable, 'lint', ...args, '--format', 'json', '{files}'],
-                        fix_command: [executable, 'fix', ...args, '{files}'],
-                        findings_exit_codes: spec.findings_exit_codes!,
-                        tool_errors: crashPattern,
+                        fix: [executable, 'fix', ...args, '{files}'],
+                        exit_codes: spec.exit_codes!,
+                        crash_pattern: crashPattern,
                         output: spec.output!,
                         paths: ['source/*.sql'],
                         stage: 'commit',
@@ -109,8 +109,8 @@ test.each([
                 {
                     name: 'project/native',
                     command: [executable, ...entry.command.slice(1)],
-                    fix_command: [executable, ...entry.fix.slice(1)],
-                    findings_exit_codes: spec.findings_exit_codes!,
+                    fix: [executable, ...entry.fix.slice(1)],
+                    exit_codes: spec.exit_codes!,
                     output: spec.output!,
                     paths: [entry.path],
                     stage: 'commit',

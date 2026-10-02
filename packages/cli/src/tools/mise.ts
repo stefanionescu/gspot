@@ -27,7 +27,7 @@ function miseOs(tool: ToolPin): string[] | undefined {
  * @returns the installer pin with its backend prefix, or undefined for a host tool
  */
 function misePin(tool: ToolPin): InstallerPin | undefined {
-    if (tool.provider === 'host' || HOST_ONLY.has(tool.name)) return undefined;
+    if (tool.host === true || HOST_ONLY.has(tool.name)) return undefined;
     const backend = MISE_BACKENDS.find(({ installer }) => tool.installers[installer] !== undefined);
     if (backend === undefined) return undefined;
     const pin = tool.installers[backend.installer];
@@ -57,7 +57,7 @@ function pinOf(tool: ToolPin, isPackagePinned: boolean): MisePin | undefined {
 export function misePins(manifests: Manifest[], isPackagePinned: boolean): MisePin[] {
     const tools = collectPins(manifests);
     const pins = tools.flatMap((tool) => pinOf(tool, isPackagePinned) ?? []);
-    if (tools.some((tool) => tool.provider !== 'host' && tool.installers['pypi']?.version !== undefined))
+    if (tools.some((tool) => tool.host !== true && tool.installers['pypi']?.version !== undefined))
         pins.push(UV_INSTALLER);
     return pins;
 }

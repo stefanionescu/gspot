@@ -91,7 +91,7 @@ export function selectForScope(
  * @param selected the selected manifests
  * @returns the source policy owners
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Kit owners and the single-file-folder check count the same kits as source.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Kit files and the single-file-folder check count the same kits as source.
 export function sourceKits(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.kit.kind === 'language' || manifest.kit.kind === 'framework');
 }

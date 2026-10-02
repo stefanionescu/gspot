@@ -9,11 +9,10 @@ import type { PathRule, Identifier, CategoryLimits, EffectivePolicy } from '#cli
 
 import type {
     Policy,
-    NamingRule,
     ShippedRule,
     ShippedPolicy,
     NamingSettings,
-    ExposedSettings,
+    SettingSurface,
     ShippedLanguage,
 } from '#cli/types/policy/policy.ts';
 
@@ -30,40 +29,23 @@ function compileRule(rule: ShippedRule, source: string): PathRule {
         categories: toSet(rule.categories),
         names: toSet(rule.names),
         isExcluding: rule.exclude === true,
-        isDigitsAllowed: rule.allowDigits === true,
-        isDuplicatesAllowed: rule.allowDuplicateWords === true,
-        structuralPrefix: rule.structuralPrefix === undefined ? undefined : new RegExp(rule.structuralPrefix, 'u'),
+        isDigitsAllowed: rule.allow_digits === true,
+        isDuplicatesAllowed: rule.allow_duplicate_words === true,
+        structuralPrefix: rule.structural_prefix === undefined ? undefined : new RegExp(rule.structural_prefix, 'u'),
         caseNames: rule.case,
         source,
     };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Kit and policy naming rules use snake_case keys and rename to the shipped shape the same way.
-function writtenRule(rule: NamingRule, source: string): PathRule {
-    const shaped: ShippedRule = {
-        paths: rule.paths,
-        languages: rule.languages,
-        categories: rule.categories,
-        names: rule.names,
-        exclude: rule.exclude,
-        allowDigits: rule.allow_digits,
-        allowDuplicateWords: rule.allow_duplicate_words,
-        structuralPrefix: rule.structural_prefix,
-        case: rule.case,
-    };
-    return compileRule(shaped, source);
-}
-
 function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<string, string[]> {
     const reserved = new Map<string, string[]>();
-    for (const entry of shipped.reserved) reserved.set(entry.term.toLowerCase(), entry.allowedFor);
-    for (const entry of naming.reserved) reserved.set(entry.term.toLowerCase(), entry.allowed_for);
+    for (const entry of [...shipped.reserved, ...naming.reserved]) reserved.set(entry.term.toLowerCase(), entry.uses);
     return reserved;
 }
 
 function limitsReader(
     shipped: ShippedPolicy,
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     scope: string,
 ): EffectivePolicy['limitsFor'] {
@@ -81,8 +63,8 @@ function limitsReader(
         const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
         return {
             caseNames: Array.isArray(cases) ? (cases as string[]) : shippedCase(table, category, parent),
-            maxChars: ceiling('max_chars', table?.maxChars),
-            maxWords: ceiling('max_words', table?.maxWords),
+            maxChars: ceiling('max_chars', table?.max_chars),
+            maxWords: ceiling('max_words', table?.max_words),
         };
     };
 }
@@ -101,7 +83,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
  * @returns the effective policy
  */
 export function effectivePolicy(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     scope: string,
     manifests: Pick<Manifest, 'kit' | 'naming'>[] = [],
@@ -110,44 +92,44 @@ export function effectivePolicy(
     const tables = policyTables(policy, scope).map(({ table }) => table.naming);
     const naming: NamingSettings = {
         ...policy.naming,
-        banned_terms: [...new Set(tables.flatMap((table) => table?.banned_terms ?? []))],
+        banned: [...new Set(tables.flatMap((table) => table?.banned ?? []))],
         allowed: tables.flatMap((table) => table?.allowed ?? []),
         external: [...new Set(tables.flatMap((table) => table?.external ?? []))],
         reserved: tables.flatMap((table) => table?.reserved ?? []),
-        remove_groups: tables.flatMap((table) => table?.remove_groups ?? []),
-        contract_properties: tables.flatMap((table) => table?.contract_properties ?? []),
+        dropped_groups: tables.flatMap((table) => table?.dropped_groups ?? []),
+        protocol_keys: tables.flatMap((table) => table?.protocol_keys ?? []),
         rules: tables.flatMap((table) => table?.rules ?? []),
     };
     const removed = new Set(
-        naming.remove_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
+        naming.dropped_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
     );
     const terms = [
         ...Object.entries(shipped.groups)
             .filter(([group]) => !removed.has(group))
             .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
-        ...compileTerms(naming.banned_terms, 'naming.banned_terms'),
+        ...compileTerms(naming.banned, 'naming.banned'),
     ];
     // The shipped rules first, then what the selected kits know about their own files, then the repository's.
     const rules = [
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
             (manifest.naming?.rules ?? []).map((rule) =>
-                writtenRule(compact(rule), `the ${manifest.kit.name} configuration`),
+                compileRule(compact(rule), `the ${manifest.kit.name} configuration`),
             ),
         ),
-        ...naming.rules.map((rule, index) => writtenRule(rule, `[[naming.rules]] entry ${String(index + 1)}`)),
+        ...naming.rules.map((rule, index) => compileRule(rule, `[[naming.rules]] entry ${String(index + 1)}`)),
     ];
     return {
         terms,
         reserved: reservedTerms(shipped, naming),
         external: new Set([...shipped.external, ...naming.external]),
         allowed: new Map(naming.allowed.map((entry) => [entry.name, entry.reason])),
-        contractProperties: new Map(naming.contract_properties.map((entry) => [entry.file, new Set(entry.names)])),
+        contractProperties: new Map(naming.protocol_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         languages: shipped.languages,
         limitsFor: limitsReader(shipped, surface, policy, scope),
-        isDigitsBanned: shipped.banDigits,
-        isDuplicatesBanned: shipped.banDuplicateWords,
+        isDigitsBanned: shipped.ban_digits,
+        isDuplicatesBanned: shipped.ban_repeats,
     };
 }
 

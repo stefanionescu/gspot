@@ -73,7 +73,7 @@ export function hookFiles(root: string, policy: Policy, version: string): Genera
     const prefix = hookPrefix(root);
     return HOOK_FILES.map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
-        content: hookScript(name, policy.runner?.tool, prefix, version),
+        content: hookScript(name, policy.runner, prefix, version),
         readOnly: true,
         executable: true,
         kind: 'hook',

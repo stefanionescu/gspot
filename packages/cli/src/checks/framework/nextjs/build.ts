@@ -76,7 +76,7 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * Builds the app, for a repository that set tools.next.build_in_gate.
+ * Builds the app, for a repository that set tools.next.build_on_push.
  * @param input the engine input
  * @returns one finding for a build that fails
  */

@@ -5,16 +5,16 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { currentBlock } from '#cli/generation/markers.ts';
-import { ruleDiff } from '#cli/lifecycle/preview/compare.ts';
+import { hasFields } from '#cli/lifecycle/merge/document.ts';
+import { diffRules } from '#cli/lifecycle/preview/compare.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;
+    if (path.startsWith(`${policy.rules.path}/`) && !policy.rules.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
     return !NEVER_STRAY.has(path);
 }
@@ -26,13 +26,13 @@ function patch(path: string, before: string, after: string, beforeName: string):
     });
 }
 
-function fileDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
+function fileDrift(root: string, rendered: Generated): Drift[] {
+    const entries: Drift[] = [];
     const files = openRoot(root);
     for (const file of rendered.files) {
         const current = files.read(file.path);
         if (current === undefined) {
-            entries.push({ path: file.path, kind: 'missing', ...ruleDiff(file, undefined) });
+            entries.push({ path: file.path, kind: 'missing', ...diffRules(file, undefined) });
             continue;
         }
         const disk = current.bytes.toString('utf8');
@@ -43,14 +43,14 @@ function fileDrift(root: string, rendered: Generated): DriftEntry[] {
                 path: file.path,
                 kind: 'changed',
                 diff: patch(file.path, disk, file.content, 'on disk'),
-                ...ruleDiff(file, disk),
+                ...diffRules(file, disk),
             });
     }
     return entries;
 }
 
-function blockDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
+function blockDrift(root: string, rendered: Generated): Drift[] {
+    const entries: Drift[] = [];
     const files = openRoot(root);
     for (const block of rendered.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
@@ -68,10 +68,10 @@ function blockDrift(root: string, rendered: Generated): DriftEntry[] {
 }
 
 // The merged and configuration outputs whose fields are gone: missing when the file is gone, changed otherwise.
-function otherDrift(root: string, rendered: Generated): DriftEntry[] {
+function otherDrift(root: string, rendered: Generated): Drift[] {
     using files = openRoot(root);
     return [...rendered.merges, ...rendered.configurations]
-        .filter((output) => !hasConfiguration(root, output))
+        .filter((output) => !hasFields(root, output))
         .map((output) => ({ path: output.path, kind: files.read(output.path) === undefined ? 'missing' : 'changed' }));
 }
 
@@ -82,7 +82,7 @@ function otherDrift(root: string, rendered: Generated): DriftEntry[] {
  * @param rendered the generated files as rendered now
  * @returns the drift entries in path order
  */
-export function computeDrift(root: string, policy: Policy, rendered: Generated): DriftEntry[] {
+export function computeDrift(root: string, policy: Policy, rendered: Generated): Drift[] {
     const known = new Set([
         ...rendered.files.map((file) => file.path),
         ...rendered.blocks.map((block) => block.path),
@@ -93,7 +93,7 @@ export function computeDrift(root: string, policy: Policy, rendered: Generated):
     if (lock !== undefined) known.add(lock.path);
     const python = pythonLockDrift(root, rendered.files);
     if (python !== undefined) known.add(python.path);
-    const strays = readOwnership(root)
+    const strays = getOwnership(root)
         .files.filter(
             (entry) =>
                 !['hook', 'export'].includes(entry.kind) &&
@@ -101,7 +101,7 @@ export function computeDrift(root: string, policy: Policy, rendered: Generated):
                 !known.has(entry.path) &&
                 isStrayCandidate(entry.path, policy),
         )
-        .map((entry): DriftEntry => ({ path: entry.path, kind: 'stray' }));
+        .map((entry): Drift => ({ path: entry.path, kind: 'stray' }));
     return [
         ...(python?.kind === undefined ? [] : [{ path: python.path, kind: python.kind }]),
         ...(lock?.kind === undefined ? [] : [{ path: lock.path, kind: lock.kind }]),

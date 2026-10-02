@@ -50,19 +50,19 @@ test(
                     () => '',
                 ),
             },
-            policy: '[tools.pytest]\ncoverage = 95\n',
+            policy: '[tools.pytest.coverage]\nlines = 95\n',
             expected: { message: textContaining('Required test coverage of 95%') },
         };
         const outcome = await runPlanted(sandbox.path, untested, environment);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         expect(outcome.stdout).toContain('Required test coverage of 95%');
         const failed = JSON.parse(outcome.stdout) as RunReport;
-        expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
+        expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'failed' }]);
         expect(failed.checks[0]!.findings).toContainEqual(containing(untested.expected));
         const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'pytest/coverage', status: 'ok', findings: [] },
+            { check: 'pytest/coverage', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS * 5,

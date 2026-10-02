@@ -1,14 +1,9 @@
 // The literal values checks/language/bash reads: names, patterns, limits, and tables.
 
 export const RULES: Record<string, { asset: string; limit: string; noun: string; isDepth: boolean }> = {
-    'bash-branches': { asset: 'branches.yml', limit: 'function_branches', noun: 'branches', isDepth: false },
-    'bash-nesting': { asset: 'nesting.yml', limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
-    'bash-mutable-assignments': {
-        asset: 'mutable-assignments.yml',
-        limit: 'mutable_assignments',
-        noun: 'assignments',
-        isDepth: false,
-    },
+    'bash-branches': { asset: 'branches.yml', limit: 'branches', noun: 'branches', isDepth: false },
+    'bash-nesting': { asset: 'nesting.yml', limit: 'nesting', noun: 'levels of nesting', isDepth: true },
+    'bash-assignments': { asset: 'assignments.yml', limit: 'assignments', noun: 'assignments', isDepth: false },
 };
 export const OUTER_LEVELS = 2;
 
@@ -16,7 +11,7 @@ export const DEFAULT_MIN_LINES = 3;
 export const IDENTIFIER = /[A-Za-z_]\w*/gu;
 export const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
 export const WORD = /[A-Za-z0-9]+/gu;
-export const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-mutable-assignments']);
+export const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-assignments']);
 
 export const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 export const OPERATORS = [' && ', ' || ', ' | ', ';'];

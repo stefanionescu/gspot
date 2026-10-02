@@ -50,10 +50,10 @@ test.each([
     const [planned] = planRun(session, {
         stage: 'push',
         skips: [],
-        only: ['integrity/lockfile-fresh'],
+        only: ['dependencies/lockfile-fresh'],
     });
     const input = engineInput(session, planned!);
-    expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale-lockfile' }));
+    expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale' }));
     expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
     await Bun.write(join(directory.path, 'package.json'), manifest);

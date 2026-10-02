@@ -1,6 +1,4 @@
 [kit]
-name = "i18n"
-kind = "library"
 title = "Translations"
 requires = ["javascript"]
 description = "Translated interfaces: no literal text in components, and message files that parse and stay complete in every locale."
@@ -8,35 +6,31 @@ description = "Translated interfaces: no literal text in components, and message
 [detect]
 dependencies = ["next-intl", "react-i18next", "i18next", "react-intl", "@lingui/core"]
 
-[[tools]]
+[[tool]]
 name = "eslint-plugin-i18next"
 kind = "library"
 version = "6.1.5"
 npm = "eslint-plugin-i18next"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[checks]]
-name = "i18n/locales"
-title = "Locales"
+[[check]]
+name = "locales"
+title = "Check message files"
 example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
 level = "recommended"
 stage = "push"
-runs = "per-scope"
-summary = "Checks the message files under tools.i18n.translations: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
+runs = "scope"
+summary = "Checks the message files under tools.i18n.locales: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
 why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
 help = "Correct the message, or add the missing key to the locale."
 
-[[settings]]
-name = "tools.i18n.translations"
-kind = "table"
+[[setting]]
+name = "tools.i18n.locales"
+type = "table"
 direction = "neutral"
 summary = "Where the message files live and which locale is the base: directory and base."
-
-[guides]
-shared = [{path = "shared/i18n/I18N.md"}]
-library = [{path = "library/next-intl/NEXTINTL.md"}]

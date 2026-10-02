@@ -1,17 +1,17 @@
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { Edit, Value, KeyValue, TomlBlock } from '#cli/types/policy/toml.ts';
-import { isKeyValue, isTomlValue, isInlineArray, isInlineTable } from '#cli/policy/toml/nodes.ts';
+import { isValue, isKeyValue, isInlineArray, isInlineTable } from '#cli/policy/toml/nodes.ts';
 
-function tableItems(value: Value): Extract<Value, { type: 'InlineTable' }>[] {
+function getInlineTables(value: Value): Extract<Value, { type: 'InlineTable' }>[] {
     if (!isInlineArray(value)) return [];
     const items = value.items.map(({ item }) => item);
-    const tables = items.filter(isTomlValue).filter(isInlineTable);
+    const tables = items.filter(isValue).filter(isInlineTable);
     return tables.length === items.length ? tables : [];
 }
 
-function needsBlocks(value: Value, width: number): boolean {
-    if (isInlineTable(value)) return value.items.some(({ item }) => needsBlocks(item.value, width));
-    return tableItems(value).some((item) => item.loc.end.column - item.loc.start.column > width);
+function isTooWide(value: Value, width: number): boolean {
+    if (isInlineTable(value)) return value.items.some(({ item }) => isTooWide(item.value, width));
+    return getInlineTables(value).some((item) => item.loc.end.column - item.loc.start.column > width);
 }
 
 function range(node: { range?: readonly [number, number] }): readonly [number, number] {
@@ -37,15 +37,15 @@ function comments(text: string): string {
 }
 
 function blocks(text: string, key: string, value: Value, pad: string): string {
-    const tables = tableItems(value);
+    const tables = getInlineTables(value);
     let previous = range(value)[0];
     const output = tables.map((table) => {
         const start = range(table)[0];
         const leading = comments(text.slice(previous + 1, start));
         previous = range(table)[1];
         const assignments = table.items.flatMap(({ item }) => fields(item, ''));
-        const ordinary = assignments.filter((entry) => tableItems(entry.value).length === 0);
-        const nested = assignments.filter((entry) => tableItems(entry.value).length > 0);
+        const ordinary = assignments.filter((entry) => getInlineTables(entry.value).length === 0);
+        const nested = assignments.filter((entry) => getInlineTables(entry.value).length > 0);
         return [
             leading,
             `${pad}[[${key}]]`,
@@ -64,12 +64,12 @@ function sectionEdits(text: string, rows: TomlBlock[], prefix: string, end: numb
     const edits: Edit[] = [];
     const additions: string[] = [];
     for (const pair of rows) {
-        if (!isKeyValue(pair) || !needsBlocks(pair.value, width)) continue;
+        if (!isKeyValue(pair) || !isTooWide(pair.value, width)) continue;
         const [start, stop] = range(pair);
         const pad = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
         const assignments = fields(pair, '');
-        const ordinary = assignments.filter((entry) => !needsBlocks(entry.value, width));
-        for (const entry of assignments.filter((entry) => needsBlocks(entry.value, width)))
+        const ordinary = assignments.filter((entry) => !isTooWide(entry.value, width));
+        for (const entry of assignments.filter((entry) => isTooWide(entry.value, width)))
             additions.push(blocks(text, `${prefix}${entry.key}`, entry.value, pad));
         edits.push({
             start,

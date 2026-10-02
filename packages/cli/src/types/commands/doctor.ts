@@ -1,17 +1,17 @@
 // The types of commands/doctor in this package.
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 
-export type ChangeReport = {
-    detectedNotSelected: { kit: string; evidence: string; command: string }[];
-    recommendedNotSelected: { kit: string; evidence: string; command: string }[];
-    configurationNotOwned: { path: string; note: string; command: string }[];
-    changedOutsideGspot: { path: string; note: string; command: string }[];
+export type Changes = {
+    detected: { kit: string; evidence: string; command: string }[];
+    recommended: { kit: string; evidence: string; command: string }[];
+    unowned: { path: string; note: string; command: string }[];
+    authored: { path: string; note: string; command: string }[];
     pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
 };
 export type DoctorReport = {
     submodules: string[];
     tools: ToolInspection[];
-    changes: ChangeReport;
+    changes: Changes;
     hooks: string;
     ci: string;
     rules: { files: number };

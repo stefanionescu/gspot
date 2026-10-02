@@ -23,9 +23,9 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 25 to 28 are on `refactor/shared-helpers` and become pull request #20.
-- The next stage to start is stage 29. Stages 29 to 35 rename keys, fields, checks, flags, and identifiers, and make
-  one batch.
+- Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
+  flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
+- Stages 29 to 35 are done on that branch. The batch suites run next, then the pull request.
 
 ### Stages
 
@@ -61,13 +61,13 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | pull request #20 |
 | 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | pull request #20 |
 | 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | pull request #20 |
-| 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | not started      |
-| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | not started      |
-| 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | not started      |
-| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | not started      |
-| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | not started      |
-| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | not started      |
-| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | not started      |
+| 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | in the batch     |
+| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | in the batch     |
+| 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | in the batch     |
+| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | in the batch     |
+| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | in the batch     |
+| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | in the batch     |
+| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | in the batch     |
 | 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | not started      |
 | 37    | Rename plugin rules and options                        | A.12                                                                                                    | not started      |
 | 38    | Add the missing scenario tests, part one               | D.5 rows 1 to 17, with fixes for the bugs they confirm                                                  | not started      |
@@ -329,6 +329,82 @@ The owner and the work settled these while implementing:
       the callers the code has.
     - The React kit turns both tiny rules off for `.tsx` and `.jsx` files and the NestJS kit for module files, so the
       planted clean sources carry no suppression.
+- Stage 29 renamed the `gspot.toml` keys of A.3:
+    - Checks say `fix`, `exit_codes`, `count_pattern`, `crash_pattern`, and `platforms`. `runner = "mise"` is one
+      key, `extra_checks` is `enable`, and a generated file names its `generator`.
+    - The limits, the structure allowances, the naming lists, and about 30 tool settings take the names of A.3.
+    - The coverage floors of each test runner sit in one `coverage` table, such as `tools.pytest.coverage.lines`.
+    - New root keys: `[install]` holds the release age and the scanner, and one `timeout` in seconds bounds every tool
+      run. `tests` lists the test files that ESLint, Ruff, and Express share.
+    - The Xcode project settings belong to the xcode kit. `harness_directory` was already gone.
+    - Left for later stages: `tools.site` follows the kit name that stage 31 settles.
+- Stage 30 renamed the kit manifest fields of A.4:
+    - The folder gives a kit its name and kind. A kit chosen without detection says `auto`, its `.gitignore` lines are
+      `ignored`, and the files a kit or check covers are a `files` table.
+    - Each entry is one `[[tool]]`, `[[config]]`, `[[check]]`, or `[[setting]]` table. A setting has a `type`, and a
+      tool gspot does not install says `host = true`.
+    - One `when` table replaces the check and config `needs`, `waits_for`, `needs_git`, and the separate conditions
+      of the ESLint exclusions and the guides. Checks in kits and in `gspot.toml` list `needs = ["network"]`, and
+      `tool = ["bats", "bash"]` replaces `requires_tools`.
+    - `exclude_setting` is gone: the planner reads `tools.<tool>.exclude`, which now holds paths in every tool table.
+      Lychee's and jscpd's path lists moved there, and linkinator's URL patterns are `exclude_urls`.
+    - A config that is not a fragment reads the template named after its target unless it names another.
+    - Left for stage 31: a check `name` without the kit prefix, because the checks whose prefix is not their kit get
+      renamed there. `guides` becomes `rules` in stage 32.
+- Stage 31 renamed the kits and checks of A.5 and the finding rules of A.6:
+    - The `formatting` kit is `format`, and `static-site` is `site`, the word its `tools.site` settings use.
+    - A new `actions` kit holds actionlint, pinact, and zizmor and the GitHub Actions guide. A new `gspot` kit holds
+      `gspot/drift`, and the structure kit requires it, so the check runs where it ran before.
+    - About 100 checks were renamed after their kit and their tool. A manifest check now writes only its own name,
+      and its ID is `<kit>/<name>`.
+    - One `javascript/eslint` check lints the file types the ESLint plugins of the selected kits declare, in place of
+      the four `*/eslint` checks.
+    - The finding rules name what they found, and every check title is a short imperative.
+    - `xcode/plist` and the `analysis` field were already gone.
+- Stage 32 renamed guides to rules (B.3):
+    - The base rules live in `packages/cli/rules/agent`, `code`, and `prose`. Each kit keeps its rules in a `rules`
+      folder beside its manifest and installs every file there. Its `[rules]` table names only the five files with a
+      condition: Tailwind, Bun, SwiftUI, UIKit, and Playwright.
+    - The installed copies sit in `.gspot/rules/agent`, `code`, and `prose`, and in `.gspot/rules/<category>/<kit>`.
+      The front matter keeps only the title.
+    - `gspot.toml` has `[rules]` with `install`, `path`, `local`, `instructions`, and `exclude`; init takes
+      `--no-rules`.
+    - The kit templates take the name of the file they write, so most configs drop their `template` line. The Semgrep
+      packs sit under `semgrep/` in each kit, and the bash ast-grep folder is `ast-grep`.
+    - The shipped rule against subagents is gone, as decided. This repository's own `AGENTS.md` keeps its line.
+    - The `.gspot/guides` copies that a clone had adopted stayed behind after the move, because apply hands back an
+      adopted file instead of deleting it. They were deleted by hand.
+- Stage 33 renamed the flags, output words, and JSON fields of A.2, A.7, and A.8:
+    - `check --hook commit|push` replaces `--stage`. A message file alone selects the message checks, so `--hook`
+      takes no `message`. A manual check runs when `--only` names it, and the generated CI job lists the selected
+      manual checks by name. This repository's CI lists its three.
+    - Each command's description holds what the `Effects:` heading repeated. `-C` says directory.
+    - `tsconfig.check.json`, `hadolint.yaml`, and `trivy.yaml` are `tsconfig.json`, `hadolint.yml`, and `trivy.yml`.
+      `gspot-tools` is one constant, `GSPOT_JOBS` is documented, and the site workflow reads `PAGES_ENABLED`, which
+      the repository does not set yet.
+    - Five Vale styles, the bash ast-grep rule, and the keys of the shipped naming policy have plain names.
+    - Results say passed, failed, skipped, missing, or error everywhere. `fileCount` and `files`, `partial`,
+      `unstagedChanges`, and a skip `cause` of replaced, setting, condition, flag, platform, or ignore replace the
+      old fields. The exit codes are `EXIT_FINDINGS`, `EXIT_ERROR`, and `TRIVY_EXIT`.
+    - Error codes are nouns: tool, output, skip, and pin join policy and the rest. A failed install prints `error` and
+      `message`. doctor says detected, recommended, unowned, and authored; a push report says skipped; list says
+      `selectedKits`; apply says updated.
+    - Kept apart from A.8: the report's `failed` list stays, because it also names a check whose fixer failed while
+      the check passed. explain names the file's kind `fileKind`, because the explanation's own `kind` is path.
+    - Nineteen more generated files that a clone had adopted were deleted by hand, and five old Vale styles.
+- Stages 34 and 35 renamed the A.10 identifiers through the TypeScript language service, so every reference followed
+  its declaration:
+    - About 230 functions, types, and constants in seven folders now carry the names of A.10.
+    - Where a proposed name was banned or reserved, a near one replaced it: `buildFileRow`, `ToolFile`, `asOwner`,
+      and `hash` for a git object ID.
+    - Left for later: about 110 generic local names, such as `entry`, `raw`, and `current`. Their rows point at
+      lines that moved, and a blind rename risks shadowing a name in the same scope.
+    - Also left: about 30 pairs whose new name already exists in the file, and the pattern rows, such as
+      `cancelSignal` to `signal` and folder to directory.
+    - This repository allows `snapshot` in its tests, the name of the revision copies gspot checks.
+- Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
+  from the ownership log. Every layout change leaves such files in an existing clone.
+- The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions

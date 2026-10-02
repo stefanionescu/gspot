@@ -3,9 +3,7 @@ import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
 
-// The help text splits into the usage and the effects.
-const HELP_PARTS = 2;
-
+// The file that registers each command, which its reference page links to.
 const COMMAND_OWNERS = new Map([
     ['init', 'commands/init/command.ts'],
     ['doctor', 'commands/doctor/command.ts'],
@@ -13,6 +11,22 @@ const COMMAND_OWNERS = new Map([
     ['explain', 'commands/explain/command.ts'],
     ['install', 'commands/install/command.ts'],
 ]);
+
+// The help after the options as Markdown: the levels of set, then the exit codes and an example of every command.
+function helpSections(name: string, help: string): string {
+    const starts = ['\nLevels:\n', '\nExit codes:\n'].map((heading) => help.indexOf(heading)).filter((at) => at !== -1);
+    const contractText = help.slice(Math.min(...starts));
+    if (!contractText.includes('\nExit codes:\n') || !contractText.includes('\n\nExample:\n'))
+        throw new Error(`Command ${name} has no exits or example documentation.`);
+    return `\n${contractText
+        .replace('\nLevels:\n', '\n## Levels\n\n')
+        .replace('\nExit codes:\n', '\n## Exit codes\n\n')
+        .replace(
+            '\n\nExample:\n',
+            '\n\n## Example\n\nRun from the repository root, or select it with `-C <dir>`.\n\n```shell\n',
+        )
+        .trim()}\n\`\`\`\n`;
+}
 
 function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
     const [rootCommand = name] = name.split(' ', 1);
@@ -46,27 +60,21 @@ function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
     } finally {
         command.configureOutput(output);
     }
-    const contractText = help.split('\nEffects:\n', HELP_PARTS)[1];
-    if (
-        contractText === undefined ||
-        !contractText.includes('\n\nExit codes:\n') ||
-        !contractText.includes('\n\nExample:\n')
-    )
-        throw new Error(`Command ${name} has no effects, exits, or example documentation.`);
-    const behavior = `\n## Effects and prerequisites\n\n${contractText
-        .replace('\n\nExit codes:\n', '\n\n## Exit codes\n\n')
-        .replace(
-            '\n\nExample:\n',
-            '\n\n## Example\n\nRun from the repository root, or select it with `-C <dir>`.\n\n```shell\n',
-        )
-        .trim()}\n\`\`\`\n`;
+    const behavior = helpSections(name, help);
     const sections = [
-        `${command.description()}.\n\n\`\`\`text\n${usage}\n\`\`\`\n`,
+        `${command.description()}\n\n\`\`\`text\n${usage}\n\`\`\`\n`,
         behavior,
         section('Arguments', argumentRows.length === 0 ? '' : table(['Argument', 'Meaning'], argumentRows)),
         section('Options', options.length === 0 ? '' : table(['Flag', 'Meaning'], options)),
     ];
-    return referencePage(command.summary(), command.description(), sections.join(''), `packages/cli/src/${owner}`);
+    // The page's summary line is the description's first sentence.
+    const [opening = ''] = command.description().split('. ');
+    return referencePage(
+        command.summary(),
+        opening.replace(/\.$/u, ''),
+        sections.join(''),
+        `packages/cli/src/${owner}`,
+    );
 }
 
 /**

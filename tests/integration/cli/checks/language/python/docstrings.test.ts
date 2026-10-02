@@ -30,8 +30,8 @@ test.each([
         Promise.resolve({
             check: check.spec.name,
             scope: check.scope.scope.path,
-            status: 'ok',
-            files: 0,
+            status: 'passed',
+            fileCount: 0,
             duration: 0,
             findings: [],
             ...(argv === undefined ? {} : { command: argv }),

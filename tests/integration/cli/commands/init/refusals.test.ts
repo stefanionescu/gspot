@@ -9,7 +9,7 @@ import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { treeContents } from '#tests/harness/planted/preservation.ts';
 
-const QUIET = ['--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 const PREVIEW = ['init', '--yes', '--no-hooks', ...QUIET, '--dry-run', '--json'];
 
 test('a preview writes nothing and prints parseable JSON', async () => {
@@ -25,7 +25,7 @@ test('a preview writes nothing and prints parseable JSON', async () => {
 test.each([
     ['a choice outside its list', ['init', '--yes', '--ci', 'foo']],
     ['an unknown kit', ['init', '--yes', '--kits', 'bassh', ...QUIET]],
-    ['an unknown stage', ['check', '--stage', 'later']],
+    ['an unknown hook', ['check', '--hook', 'later']],
 ])('%s exits 2 and writes nothing', async (_name, argv) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -59,7 +59,7 @@ test('a named kit brings its recommended kits, and one --scope flag proposes bot
     expect(named.code, named.stdout + named.stderr).toBe(0);
     const { plan } = JSON.parse(named.stdout) as { plan: { kits: { kit: string }[] } };
     const kits = plan.kits.map(({ kit }) => kit);
-    for (const kit of ['bash', 'formatting', 'naming']) expect(kits).toContain(kit);
+    for (const kit of ['bash', 'format', 'naming']) expect(kits).toContain(kit);
     const twoScopes = await runGspot(sandbox.path, [...PREVIEW, '--scope', 'tools=bash', 'jobs=bash']);
     expect(twoScopes.code, twoScopes.stdout + twoScopes.stderr).toBe(0);
     const parsed = parsePolicyText((JSON.parse(twoScopes.stdout) as { policy: string }).policy, 'gspot.toml');

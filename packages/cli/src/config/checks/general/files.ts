@@ -1,7 +1,5 @@
 // The literal values checks/general/files reads: names, patterns, limits, and tables.
 
-export const ACTIONLINT_COMMAND = ['actionlint', '-no-color', '{files}'];
-
 export const KEY_GROUP = 1;
 
 /** How code reads an environment variable, by language; the first group is the key. */

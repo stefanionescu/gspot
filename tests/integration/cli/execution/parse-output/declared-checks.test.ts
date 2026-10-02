@@ -16,11 +16,11 @@ test('pin verification treats a rate limit as an execution error and accepts a c
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['files']),
+        'gspot.toml': policyOf(['actions']),
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'push', skips: [], only: ['files/actions-pins'] });
+    const plans = planRun(session, { stage: 'push', skips: [], only: ['actions/pinact'] });
     const planned = plans[0]!;
     const result = {
         code: 1,
@@ -37,7 +37,7 @@ test('pin verification treats a rate limit as an execution error and accepts a c
         ]),
     ).toStrictEqual([
         containing({
-            check: 'files/actions-pins',
+            check: 'actions/pinact',
             message: 'invalid action pin: .github/workflows/check.yml:4',
         }),
     ]);
@@ -92,7 +92,7 @@ test('source text naming module errors stays an ESLint finding', async () => {
         [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [], only: ['typescript/eslint'] });
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['javascript/eslint'] });
     const planned = plans[0]!;
     const stdout = JSON.stringify([
         {
@@ -134,7 +134,7 @@ name = "notes/no-pending"
 command = ${JSON.stringify([process.execPath, '-e', PENDING, '{files}'])}
 paths = ["notes/**"]
 stage = "commit"
-count_regex = "PENDING"
+count_pattern = "PENDING"
 summary = "Finds pending notes left in the notes folder."
 
 [check.output]
@@ -160,18 +160,18 @@ stage = "commit"
     });
     const failed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failed.code).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
     const passed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(passed.code).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'passed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
     const failedAgain = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failedAgain.code).toBe(1);
     expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/state', status: 'fail' },
+        { check: 'notes/state', status: 'failed' },
     ]);
 });
 
@@ -183,7 +183,7 @@ test('a [[check]] entry > runs the command of the repository and reports file an
     expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
         {
             check: 'notes/no-pending',
-            status: 'fail',
+            status: 'failed',
             findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
         },
     ]);
@@ -191,7 +191,7 @@ test('a [[check]] entry > runs the command of the repository and reports file an
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/no-pending', status: 'ok', findings: [] },
+        { check: 'notes/no-pending', status: 'passed', findings: [] },
     ]);
 });
 
@@ -231,7 +231,7 @@ message = "text"
     const result = await runGspot(sandbox.path, ['check', '--json']);
     expect(result.code).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
-    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
+    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'failed' }]);
     expect(report.checks[0]?.findings).toMatchObject([
         {
             check: 'sandbox/json',
@@ -246,6 +246,6 @@ message = "text"
     const corrected = await runGspot(sandbox.path, ['check', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'sandbox/json', status: 'ok', findings: [] },
+        { check: 'sandbox/json', status: 'passed', findings: [] },
     ]);
 });

@@ -29,7 +29,7 @@
     "files": [
         "dist",
         "kits",
-        "guides",
+        "rules",
         "grammars"
     ],
     "sideEffects": [

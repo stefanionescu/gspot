@@ -18,7 +18,7 @@ const DUPLICATION_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -59,13 +59,13 @@ describe('the duplication configuration', () => {
             );
             expect(found.code, found.stdout + found.stderr).toBe(1);
             const report = JSON.parse(found.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'fail' }]);
+            expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'failed' }]);
             expect(report.checks[0]!.findings, found.stdout).toStrictEqual([
                 containing({
                     check: 'duplication/jscpd',
                     file: 'scripts/second.sh',
                     line: 4,
-                    rule: 'copied-block',
+                    rule: 'clone',
                     message: textContaining('lines repeat scripts/first.sh:4.'),
                 }),
             ]);
@@ -80,7 +80,7 @@ describe('the duplication configuration', () => {
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
-                { check: 'duplication/jscpd', status: 'ok', findings: [] },
+                { check: 'duplication/jscpd', status: 'passed', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS * 2,

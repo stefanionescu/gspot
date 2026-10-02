@@ -58,7 +58,7 @@ function parseSections(logical: SqlfluffLine[]): Map<string, Map<string, string>
  * @param text the configuration text
  * @returns the keys and values of each section, by section name
  */
-export function sqlfluffConfiguration(text: string): Map<string, Map<string, string>> {
+export function parseIni(text: string): Map<string, Map<string, string>> {
     const lines = text
         .split(/\r?\n/u)
         .map((original, index) => ({
@@ -78,8 +78,8 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
  * @param text the configuration text
  * @returns the rule lists and per-rule tables the configuration declares
  */
-export function sqlfluffRules(text: string): Record<string, unknown> {
-    const sections = sqlfluffConfiguration(text);
+export function parseSqlfluff(text: string): Record<string, unknown> {
+    const sections = parseIni(text);
     const defaults = sections.get('DEFAULT') ?? new Map<string, string>();
     const mainSection = new Map([...defaults, ...(sections.get('sqlfluff') ?? [])]);
     const options: Record<string, unknown> = Object.fromEntries([

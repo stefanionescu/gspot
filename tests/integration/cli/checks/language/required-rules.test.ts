@@ -24,7 +24,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
     const selected = session.scopes[0]!;
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'integrity/required-rules')!;
+        .find((check) => check.name === 'javascript/rules-off')!;
     const input: EngineInput = scopeInput(session, spec);
     const generated = emitted(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
@@ -37,7 +37,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
     );
     expect(await requiredRules(input)).toStrictEqual([
         {
-            check: 'integrity/required-rules',
+            check: 'javascript/rules-off',
             file: '.gspot/config/eslint.config.mjs',
             line: 1,
             rule: 'rule-off',

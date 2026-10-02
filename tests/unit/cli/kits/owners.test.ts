@@ -12,9 +12,9 @@ const manifests = kitManifests();
 describe('owners', () => {
     test('match by extension, filename at any depth, tag and glob', () => {
         const bash = manifests.get('bash')!;
-        expect(isOwned(bash.owners, trackedFile('scripts/build.sh'))).toBe(true);
-        expect(isOwned(bash.owners, trackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
-        expect(isOwned(bash.owners, trackedFile('README.md'))).toBe(false);
+        expect(isOwned(bash.files, trackedFile('scripts/build.sh'))).toBe(true);
+        expect(isOwned(bash.files, trackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
+        expect(isOwned(bash.files, trackedFile('README.md'))).toBe(false);
         expect(
             isOwned(
                 {
@@ -22,8 +22,9 @@ describe('owners', () => {
                     filenames: ['_headers'],
                     tags: [],
                     paths: [],
-                    from_languages: false,
-                    from_prettier_plugins: false,
+                    languages: false,
+                    prettier_plugins: false,
+                    eslint_plugins: false,
                     kinds: ['source'],
                 },
                 trackedFile('public/_headers'),
@@ -31,17 +32,17 @@ describe('owners', () => {
         ).toBe(true);
     });
 
-    test('a repository configuration with from_languages owners what the language kits claim', () => {
+    test('a repository configuration with languages owners what the language kits claim', () => {
         const selected = selectKits(['bash'], manifests);
         const structure = manifests.get('structure')!;
-        const owned = ownedBy(structure.owners, selected, [trackedFile('a.sh'), trackedFile('README.md')], '');
+        const owned = ownedBy(structure.files, selected, [trackedFile('a.sh'), trackedFile('README.md')], '');
         expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
     });
 
     test('a scope narrows the file set', () => {
         const selected = selectKits(['bash'], manifests);
         expect(
-            ownedBy(manifests.get('bash')!.owners, selected, [trackedFile('api/a.sh'), trackedFile('b.sh')], 'api').map(
+            ownedBy(manifests.get('bash')!.files, selected, [trackedFile('api/a.sh'), trackedFile('b.sh')], 'api').map(
                 (entry) => entry.path,
             ),
         ).toStrictEqual(['api/a.sh']);
@@ -73,16 +74,16 @@ describe('detection', () => {
 });
 
 test('owners > Prettier formats a plugin file type only while the kit with that plugin is selected', () => {
-    const formatting = manifests.get('formatting')!.owners;
+    const formatting = manifests.get('format')!.files;
     const files = [trackedFile('src/Page.astro'), trackedFile('src/App.svelte'), trackedFile('src/index.ts')];
     for (const [kits, expected] of [
-        [['formatting', 'typescript'], ['src/index.ts']],
+        [['format', 'typescript'], ['src/index.ts']],
         [
-            ['formatting', 'typescript', 'astro'],
+            ['format', 'typescript', 'astro'],
             ['src/Page.astro', 'src/index.ts'],
         ],
         [
-            ['formatting', 'typescript', 'svelte'],
+            ['format', 'typescript', 'svelte'],
             ['src/App.svelte', 'src/index.ts'],
         ],
     ] as const)

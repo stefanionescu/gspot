@@ -2,7 +2,7 @@ import type { JSONSchema } from 'zod/v4/core';
 import { isDeepStrictEqual } from 'node:util';
 import { cell, table, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { policyJsonSchema } from '@gspothq/cli/src/policy/json-schema.ts';
+import { buildJsonSchema } from '@gspothq/cli/src/policy/json-schema.ts';
 import type { Manifest, SettingSpec } from '@gspothq/cli/src/types/kits.ts';
 import { exposedSettings } from '@gspothq/cli/src/policy/setting-surface.ts';
 
@@ -84,7 +84,7 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
  * @returns Markdown reference tables
  */
 export function kitReference(): string {
-    const schema: JSONSchema.JSONSchema = policyJsonSchema();
+    const schema: JSONSchema.JSONSchema = buildJsonSchema();
     const sections = Object.entries(schema.properties ?? {}).map(
         ([name, node]) =>
             `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
@@ -134,7 +134,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
             const all = setting.default_all ?? recommended;
             return [
                 `\`${setting.name}\``,
-                setting.kind,
+                setting.type,
                 setting.direction,
                 `recommended: \`${recommended === undefined ? 'unset' : cell(JSON.stringify(recommended))}\`; all: \`${all === undefined ? 'unset' : cell(JSON.stringify(all))}\``,
                 cell(setting.summary),
@@ -143,7 +143,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
         });
     return referencePage(
         'Settings',
-        'Settings exposed by gspot set, with their kinds, directions, defaults, and owners.',
-        `${SETTINGS_INTRO}${table(['Key', 'Kind', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
+        'Settings exposed by gspot set, with their types, directions, defaults, and owners.',
+        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
     );
 }

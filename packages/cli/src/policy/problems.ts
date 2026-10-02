@@ -79,14 +79,14 @@ function namingProblems(policy: Policy): PolicyProblem[] {
         );
         return located(['naming', 'allowed', index, 'reason'], text);
     });
-    const removed = policy.naming.remove_groups.flatMap((entry, index) => {
-        const where = `naming.remove_groups ${entry.group}`;
+    const removed = policy.naming.dropped_groups.flatMap((entry, index) => {
+        const where = `naming.dropped_groups ${entry.group}`;
         const text = needReason(
             where,
             entry.reason,
-            `gspot set naming.remove_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
+            `gspot set naming.dropped_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
         );
-        return located(['naming', 'remove_groups', index, 'reason'], text);
+        return located(['naming', 'dropped_groups', index, 'reason'], text);
     });
     const excluded = policy.naming.rules.flatMap((rule, index) => {
         if (rule.exclude !== true) return [];

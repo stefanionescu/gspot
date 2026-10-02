@@ -82,16 +82,16 @@ root or in a scope.
 
 Checks that read project files look inside the scope only. Supabase reads
 `supabase/config.toml` in each scope, and the settings `tools.supabase.functions_directory`,
-`tools.supabase.admin_key_files`, and `tools.i18n.translations.directory` are relative to the
+`tools.supabase.admin_key_files`, and `tools.i18n.locales.directory` are relative to the
 scope. Locale messages and static site files in a child scope do not count for the parent
 scope.
 
-With the `static-site` kit, `static-site/svg-optimized` reports an SVG file when optimizing it
+With the `site` kit, `site/svgo` reports an SVG file when optimizing it
 saves more than 10% of its size at `recommended`, or any bytes at `all`. To optimize the
 files, run:
 
 ```bash
-gspot check --only static-site/svg-optimized --fix
+gspot check --only site/svgo --fix
 ```
 
 ## A policy below the Git root

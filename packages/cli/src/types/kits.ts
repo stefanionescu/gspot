@@ -31,7 +31,7 @@ export type PolicyScope = { path: string; kits: string[] };
 
 export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
 
-export type Owners = RawManifest['owners'];
+export type Owners = RawManifest['files'];
 export type ConfigurationTarget = RawManifest['configs'][number];
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */
@@ -40,10 +40,10 @@ export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string 
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;
 
-/** One [[tools]] entry as written. */
+/** One [[tool]] entry as written. */
 export type RawTool = RawManifest['tools'][number];
 
-/** One [[checks]] entry as written. */
+/** One [[check]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
 export type SelectionWalk = {
     manifests: Map<string, Manifest>;
@@ -58,18 +58,19 @@ export type ToolPin = {
     kind?: 'binary' | 'library';
     version?: string;
     floor?: string;
-    provider?: 'host';
+    host?: boolean;
     /** The platforms the tool has a build for; unset means every platform. */
     platforms?: readonly ToolPlatform[];
     version_command?: string[];
     version_exit_code?: number;
-    version_regex?: string;
+    version_pattern?: string;
     crash_pattern?: string;
-    rule_page?: string;
+    rule_url?: string;
     suppression?: NonNullable<RawTool['suppression']>;
     replace?: NonNullable<RawTool['replace']>;
     query_packs?: NonNullable<RawTool['query_packs']>;
     prettier?: NonNullable<RawTool['prettier']>;
+    eslint?: NonNullable<RawTool['eslint']>;
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };

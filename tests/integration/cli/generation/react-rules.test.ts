@@ -67,7 +67,7 @@ async function reported(
 ): Promise<{ rule: string | null; file: string; line: number }[]> {
     const web = kit === 'react';
     await createFileTree(root, {
-        'gspot.toml': policyOf(['typescript', kit], '[guides]\ninstall = false\n', level),
+        'gspot.toml': policyOf(['typescript', kit], '[rules]\ninstall = false\n', level),
         'package.json': JSON.stringify({
             name: 'planted',
             private: true,

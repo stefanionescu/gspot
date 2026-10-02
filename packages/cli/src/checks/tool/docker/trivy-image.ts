@@ -9,7 +9,7 @@ import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/config/checks/tool/docker.ts';
+import { TRIVY_EXIT, COMPOSE_FILES, SHOWN_FINDINGS } from '#cli/config/checks/tool/docker.ts';
 
 // The Trivy JSON report version this reader understands.
 const TRIVY_SCHEMA_VERSION = 2;
@@ -64,9 +64,9 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
             'image',
             '--quiet',
             '--config',
-            join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'trivy.yaml'),
+            join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'trivy.yml'),
             '--exit-code',
-            String(FINDINGS_EXIT),
+            String(TRIVY_EXIT),
             '--format',
             'json',
             '--scanners',
@@ -75,7 +75,7 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
         ],
         { cwd: input.root },
     );
-    if (result.code !== 0 && result.code !== FINDINGS_EXIT) {
+    if (result.code !== 0 && result.code !== TRIVY_EXIT) {
         const detail = toolOutputDetail(result, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
@@ -86,7 +86,7 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
         ),
         ...(entry.Secrets ?? []).map((secret) => `${secret.RuleID}: ${secret.Title}`),
     ]);
-    if ((result.code === FINDINGS_EXIT) !== messages.length > 0)
+    if ((result.code === TRIVY_EXIT) !== messages.length > 0)
         throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
     return messages;
 }
@@ -108,7 +108,7 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
                 findingAt(
                     input,
                     { file: file.path, line: 1 },
-                    'image',
+                    'vulnerability',
                     `${image}: ${messages.slice(0, SHOWN_FINDINGS).join(' | ')}`,
                 ),
             );

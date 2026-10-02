@@ -17,10 +17,10 @@ const FORMATTER_INIT = [
     '--json',
     '--yes',
     '--kits',
-    'formatting',
+    'format',
     '--no-ci',
     '--no-hooks',
-    '--no-guides',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -79,7 +79,7 @@ async function prepareFormatterConsumer(
     };
     const toolInit = await run([...command, ...FORMATTER_INIT], toolOptions);
     if (toolInit.code !== 0) throw new Error(`Formatter fixture init failed: ${toolInit.stdout}${toolInit.stderr}`);
-    const selectedFormatter = await run([...command, 'set', 'extra_checks', 'formatting/prettier'], toolOptions);
+    const selectedFormatter = await run([...command, 'set', 'enable', 'format/prettier'], toolOptions);
     if (selectedFormatter.code !== 0)
         throw new Error(`Formatter fixture selection failed: ${selectedFormatter.stdout}${selectedFormatter.stderr}`);
     return { toolConsumer, toolOptions, authoredPackage };
@@ -108,7 +108,7 @@ async function prepareNativeConsumer(installation: InstalledConsumer): Promise<{
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-guides',
+            '--no-rules',
             '--no-install',
             '--json',
         ],
@@ -149,7 +149,7 @@ async function expectInstalledCheck(
     const [checked] = (JSON.parse(failed.stdout) as RunReport).checks;
     expect(checked).toMatchObject({
         check: check.only,
-        status: 'fail',
+        status: 'failed',
         findings: [{ file: check.path, ...check.finding }],
     });
     const executable = toPosix(relative(realpathSync(consumer), checked!.command![0]!));
@@ -175,17 +175,17 @@ test(
         expect(toolLock.toString('utf8')).not.toContain(release.registry.work);
         const preview = await run([...command, 'install', '--dry-run', '--json'], toolOptions);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InstallJson).isDryRun).toBe(true);
+        expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
         // The planted mise is older than the runner pin, so install exits 2 after it installs the npm tools.
         const installed = await run([...command, 'install', '--json'], toolOptions);
         expect(installed.code, installed.stdout + installed.stderr).toBe(2);
         expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
         expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);
-        const formatter = [...command, 'check', 'source.js', '--only', 'formatting/prettier', '--json'];
+        const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
         const invalid = await run(formatter, toolOptions);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'formatting/prettier', status: 'fail', findings: [{ file: 'source.js' }] },
+            { check: 'format/prettier', status: 'failed', findings: [{ file: 'source.js' }] },
         ]);
         const fixed = await run([...formatter, '--fix'], toolOptions);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -204,14 +204,14 @@ test(
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'files/toml-format',
+            only: 'files/taplo-format',
             path: 'settings.toml',
             isNpm: false,
             finding: { fixable: true },
         });
         expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'files/toml',
+            only: 'files/taplo',
             path: 'settings.toml',
             isNpm: false,
             defect: 'a = [\n',
@@ -219,7 +219,7 @@ test(
             finding: { line: 2, column: 1, fixable: false },
         });
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'formatting/editorconfig-checker',
+            only: 'format/editorconfig-checker',
             path: 'notes.json',
             isNpm: true,
             corrected: '"text"\n',

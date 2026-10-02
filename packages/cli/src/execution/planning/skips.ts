@@ -9,15 +9,15 @@ import type { Host, Skip, RuleSkip, PlanOptions } from '#cli/types/execution/pla
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
 const RULE_SKIPS: RuleSkip[] = [
     {
-        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.kits.includes(spec.needs),
-        note: (spec) => `needs the ${spec.needs ?? ''} configuration, which this scope does not select`,
+        applies: (spec, check) => spec.when?.kit !== undefined && !check.scope.view.kits.includes(spec.when.kit),
+        note: (spec) => `needs the ${spec.when?.kit ?? ''} configuration, which this scope does not select`,
     },
     {
-        applies: (spec, _check, hasGit) => spec.needs_git === true && !hasGit,
+        applies: (spec, _check, hasGit) => spec.when?.git === true && !hasGit,
         note: () => 'this folder is no git repository, so the check has nothing to read',
     },
     {
-        applies: (spec, _check, hasGit) => spec.needs_git === false && hasGit,
+        applies: (spec, _check, hasGit) => spec.when?.git === false && hasGit,
         note: () => 'this folder is a git repository, so the git check covers it',
     },
 ];
@@ -29,16 +29,16 @@ function ignoreSkip(check: PlannedCheck): Skip {
         .find((entry) => entry.rule === undefined && (entry.paths === undefined || entry.paths.length === 0));
     if (ignored === undefined) return undefined;
     const reason = ignored.reason === undefined ? '' : `: ${ignored.reason}`;
-    return { source: 'ignore', note: `disabled by gspot.toml${reason}` };
+    return { cause: 'ignore', note: `disabled by gspot.toml${reason}` };
 }
 
 // The skip the platform imposes: the check names other platforms, or its tool has no build for this host.
 function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): Skip {
-    if (spec.platform && !(spec.platform as readonly string[]).includes(host.platform))
-        return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${host.platform}` };
+    if (spec.platforms && !(spec.platforms as readonly string[]).includes(host.platform))
+        return { cause: 'platform', note: `runs on ${spec.platforms.join(', ')} only; this is ${host.platform}` };
     const missing = tool === undefined ? undefined : missingBuild(tool, host.platform, host.arch);
     if (tool !== undefined && missing !== undefined)
-        return { source: 'platform', note: `${tool.name} has no ${missing} build` };
+        return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
     return undefined;
 }
 
@@ -54,12 +54,12 @@ export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, h
     const ignored = ignoreSkip(check);
     if (ignored !== undefined) return ignored;
     const setting = waitingSetting(check.scope, check.spec);
-    if (setting !== undefined) return { source: 'rules', note: `set ${setting} to turn this on` };
+    if (setting !== undefined) return { cause: 'setting', note: `set ${setting} to turn this on` };
     const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
-    if (rule !== undefined) return { source: 'rules', note: rule.note(check.spec) };
+    if (rule !== undefined) return { cause: 'condition', note: rule.note(check.spec) };
     const byPlatform = platformSkip(check.spec, check.tool, host);
     if (byPlatform !== undefined) return byPlatform;
-    return options.skips.includes(check.spec.name) ? { source: 'flag', note: 'skipped by --skip' } : undefined;
+    return options.skips.includes(check.spec.name) ? { cause: 'flag', note: 'skipped by --skip' } : undefined;
 }
 
 /**
@@ -68,7 +68,7 @@ export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, h
  * @returns the check with its files restricted
  */
 export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.spec.runs !== 'per-file-list' || check.files.length === 0) return check;
+    if (check.skip !== undefined || check.spec.runs !== 'files' || check.files.length === 0) return check;
     const ignored = check.scope.view
         .ignoresFor(check.check)
         .flatMap((entry) =>
@@ -79,7 +79,7 @@ export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
     if (ignored.length === 0) return check;
     const files = check.files.filter((file) => !ignored.some((matches) => matches(file.path)));
     return files.length === 0
-        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
+        ? { ...check, skip: { cause: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
         : { ...check, files };
 }
 

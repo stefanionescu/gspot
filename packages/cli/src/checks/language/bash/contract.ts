@@ -33,7 +33,7 @@ import {
 // The line that must be a bare comment marker.
 const HEADER_LINE = 2;
 
-// The shebang every script opens with, then the four-line header when tools.bash.runtime_header names its platforms.
+// The shebang every script opens with, then the four-line header when tools.bash.platforms names its platforms.
 function headerProblems(file: ScriptFile, platforms: string | undefined, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
@@ -209,7 +209,7 @@ function fileProblems(
  * @returns the findings
  */
 export const scriptInterpreter: Analysis = async (context, scripts) => {
-    const runtime = context.bashSetting('runtime_header');
+    const runtime = context.bashSetting('platforms');
     const platforms = typeof runtime === 'string' ? runtime : undefined;
     const owners = new Set(context.bashList('config_owners'));
     const index = await scripts();

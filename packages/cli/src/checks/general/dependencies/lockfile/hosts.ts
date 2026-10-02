@@ -21,7 +21,7 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
             .flatMap((url) => {
                 const said = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
                 if (said === undefined) return [];
-                return [findingAt(input, { file: path, line: index + 1 }, 'registry', said)];
+                return [findingAt(input, { file: path, line: index + 1 }, 'host', said)];
             })
             .toArray(),
     );

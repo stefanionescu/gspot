@@ -10,20 +10,20 @@ import { runOptions } from '#tests/harness/cli/command.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
-const GENERATED_DRIFT_OPTIONS = runOptions({ only: ['integrity/generated-drift'] });
+const GENERATED_DRIFT_OPTIONS = runOptions({ only: ['gspot/drift'] });
 
 const GENERATED = '.gspot/config/shellcheckrc';
 
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
         '.gitignore': '.gspot/state/\n',
     });
     await writeOutputs(await openSession(sandbox.path));
     const clean = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
-    expect(clean.report.checks).toMatchObject([{ check: 'integrity/generated-drift', status: 'ok', findings: [] }]);
+    expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'passed', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');
     // Generated files are read-only; the edits below stand for a developer who forced one through.
     chmodSync(join(sandbox.path, GENERATED), 0o644);
@@ -51,5 +51,5 @@ test('an edited generated file and one holding merge markers are drift findings,
     ]);
     await writeOutputs(await openSession(sandbox.path));
     const repaired = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
-    expect(repaired.report.checks[0]).toMatchObject({ status: 'ok', findings: [] });
+    expect(repaired.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
 });

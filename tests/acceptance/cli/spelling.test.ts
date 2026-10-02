@@ -16,7 +16,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['spelling'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['spelling'], '[rules]\ninstall = false\n'),
             'sample.txt': `${TYPO.the} ${TYPO.whether}\n`,
         });
         const environment = { PATH: toolsPath(['typos']) };

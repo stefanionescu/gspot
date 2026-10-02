@@ -34,7 +34,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policy
-            .replace('[check.output]', 'count_regex = "A sandbox finding"\n[check.output]')
+            .replace('[check.output]', 'count_pattern = "A sandbox finding"\n[check.output]')
             .replace('format = "lines"', 'format = "none"')
             .replace('process.exitCode = 1', 'process.exitCode = 0'),
         'source.txt': 'original',
@@ -43,7 +43,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     const options = runOptions();
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
-    expect(failed.report.checks[0]).toMatchObject({ status: 'fail', findings: [] });
+    expect(failed.report.checks[0]).toMatchObject({ status: 'failed', findings: [] });
     await Bun.write(join(sandbox.path, '.gspot/version'), GSPOT_VERSION + '\n');
     const cli = Bun.spawnSync(
         [
@@ -58,7 +58,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     );
     expect(cli.exitCode, cli.stderr.toString()).toBe(1);
 
-    session.policyFiles.policy.checks[0]!.count_regex = 'No matching output';
+    session.policyFiles.policy.checks[0]!.count_pattern = 'No matching output';
     const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
 });

@@ -2,11 +2,11 @@
 import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
 import type { ParseReads, GrammarName } from '#cli/types/parsers/parsers.ts';
 
-const reads = new WeakMap<SourceReads, Map<string, Tree>>();
+const reads = new WeakMap<ReadCache, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {
     isReady: undefined,

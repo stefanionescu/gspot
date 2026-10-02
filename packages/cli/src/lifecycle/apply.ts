@@ -1,6 +1,6 @@
 import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
-import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { written, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
@@ -73,7 +73,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     ]);
     // Pruning restores only recorded outputs that no selected owner still needs.
     const recorded = new Set(
-        readOwnership(root)
+        getOwnership(root)
             .files.filter((entry) => ['hook', 'export'].includes(entry.kind))
             .map((entry) => entry.path),
     );
@@ -93,9 +93,9 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
-    report.blocks.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
+    report.updated.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     for (const { plan, package: isPackage } of configurations) {
-        if (plan.status === 'changed') (isPackage ? report.packages : report.written).push(plan.path);
+        if (plan.status === 'changed') (isPackage ? report.updated : report.written).push(plan.path);
     }
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
 }

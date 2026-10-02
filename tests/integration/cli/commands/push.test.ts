@@ -24,7 +24,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
-        expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
         expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(
             0,
         );
@@ -117,14 +117,14 @@ test(
         expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
         const skipped = JSON.parse(deleted.stdout) as PushReport;
         expect(skipped.revisions).toStrictEqual([]);
-        expect(skipped.notApplicable[0]!.reason).toBe('deleted ref');
+        expect(skipped.skipped[0]!.reason).toBe('deleted ref');
         const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
         const nonCommit = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n`,
         });
         expect(nonCommit.code, nonCommit.stdout + nonCommit.stderr).toBe(0);
-        expect((JSON.parse(nonCommit.stdout) as PushReport).notApplicable[0]!.reason).toBe('non-commit object');
+        expect((JSON.parse(nonCommit.stdout) as PushReport).skipped[0]!.reason).toBe('non-commit object');
         expectWorkingTreeKept(sandbox.path, broken);
     },
     PLANTED_TIMEOUT_MS,
@@ -160,8 +160,8 @@ test(
         expect(first).toHaveLength(1);
         const firstReport = first[0]!.report;
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
-        expect(firstReport.checks[0]?.status).toBe('ok');
-        expect(firstReport.checks[0]?.files).toBe(1);
+        expect(firstReport.checks[0]?.status).toBe('passed');
+        expect(firstReport.checks[0]?.fileCount).toBe(1);
         const failing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
@@ -242,7 +242,7 @@ test(
             stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n`,
         });
         expect(forced.code, forced.stdout + forced.stderr).toBe(0);
-        expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
         expectWorkingTreeKept(sandbox.path, broken);
     },
     PLANTED_TIMEOUT_MS,
@@ -253,7 +253,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { broken, command } = await preparePushRepository(sandbox.path);
-        writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash'], '[hooks]\n[guides]\ninstall = false\n'));
+        writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash'], '[hooks]\n[rules]\ninstall = false\n'));
         const configured = await runGspot(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
         expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);

@@ -10,10 +10,10 @@ import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
+import { addIgnore, removeMatching } from '#cli/policy/mutations.ts';
 import type { Program, CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
 
-function knownCheck(checkName: string, repositoryChecks: string[]): void {
+function assertKnownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
         return;
     }
@@ -22,13 +22,13 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
     throw new GspotError('policy', [messages.unknownCheck(checkName, similar(checkName, known))]);
 }
 
-function ignoreCommandLine(o: IgnoreOptions): string {
+function buildReasonHint(o: IgnoreOptions): string {
     const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
     const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map((path) => quoteArgument(path)).join(' ')}`;
     return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
 }
 
-function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
+function buildIgnore(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
     const entry: TomlTable = { check: o.check };
     const lines = ['[[ignore]]', `check  = "${o.check}"`];
     if (o.rule !== undefined) {
@@ -46,11 +46,11 @@ function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
     return { entry, lines };
 }
 
-async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
+async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
     const counter = { removed: 0 };
     const result = await commitPolicy(
         root,
-        removeEntries(
+        removeMatching(
             'ignore',
             (entry: TomlTable): boolean =>
                 entry['check'] === o.check &&
@@ -78,14 +78,14 @@ async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const { policy } = readPolicy(root);
-    knownCheck(
+    assertKnownCheck(
         o.check,
         policy.checks.map((check) => check.name),
     );
-    if (o.remove) return removeIgnore(root, o);
-    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
-    const { entry, lines } = ignoreEntry(o);
-    return commitPolicy(root, appendIgnore(entry), false, lines.join('\n'));
+    if (o.remove) return deleteIgnore(root, o);
+    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, buildReasonHint(o));
+    const { entry, lines } = buildIgnore(o);
+    return commitPolicy(root, addIgnore(entry), false, lines.join('\n'));
 }
 
 /**
@@ -96,10 +96,12 @@ export function registerIgnore(program: Program): void {
     program
         .command('ignore <check>')
         .summary('Ignore a check or a rule')
-        .description('Turn off a check, or one of its rules, for some paths or everywhere')
+        .description(
+            'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and the configuration is applied. Every report lists the ignores, and --verbose prints each reason.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nWrites the ignore to gspot.toml and applies the configuration. Every report lists the ignores, and --verbose prints each reason.\n\nExit codes:\n- 0: the ignore was written and applied.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
+            '\nExit codes:\n- 0: the ignore was written and applied.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
         )
         .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, to the whole scope')
         .option('--rule <rule>', 'Turn off one rule of the check')

@@ -6,9 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/harness/registry/python.ts';
 import { onPosix, venvExecutable } from '#tests/harness/cli/platforms.ts';
@@ -69,8 +69,10 @@ if (onPosix)
                 },
             );
             expect(command.code, command.stdout + command.stderr).toBe(2);
-            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('installed locked Python tools');
+            expect((JSON.parse(command.stdout) as InstallJson).message).toContain(
+                'Run: gspot apply, then gspot install',
+            );
+            expect((JSON.parse(command.stdout) as InstallJson).message).toContain('installed locked Python tools');
             expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
             expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
                 'keep the project environment',
@@ -113,7 +115,7 @@ if (onPosix)
             expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
             expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
             for (let attempt = 0; attempt < 2; attempt++) {
-                expect(await runOwnedLifecycle(clone, (owner) => installPythonProject(clone, owner))).toContain(
+                expect(await asOwner(clone, (owner) => installPythonProject(clone, owner))).toContain(
                     'installed locked Python tools',
                 );
                 const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
@@ -155,17 +157,15 @@ if (onPosix)
             const { scopes, rootConfiguration } = prepared;
             const lockPath = join(repository.path, '.gspot/uv.lock');
             const lock = readFileSync(lockPath);
-            await runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner));
+            await asOwner(repository.path, (owner) => installPythonProject(repository.path, owner));
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
             expect(
-                await rejection(
-                    runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner)),
-                ),
+                await rejection(asOwner(repository.path, (owner) => installPythonProject(repository.path, owner))),
             ).toContain('Run: gspot apply, then gspot install');
             const repaired = toolEnvironment(everyManifest(scopes));
-            await runOwnedLifecycle(repository.path, async (owner) => {
+            await asOwner(repository.path, async (owner) => {
                 await preparePythonProject(repository.path, repaired, owner);
                 for (const file of repaired)
                     owner.replace(
@@ -177,7 +177,7 @@ if (onPosix)
                     );
             });
             expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });
-            await runOwnedLifecycle(repository.path, (owner) => installPythonProject(repository.path, owner));
+            await asOwner(repository.path, (owner) => installPythonProject(repository.path, owner));
             expect(readFileSync(lockPath)).toStrictEqual(lock);
             expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
         },

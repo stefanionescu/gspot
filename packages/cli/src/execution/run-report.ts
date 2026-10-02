@@ -1,7 +1,7 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
 import { problemText } from '#cli/policy/read.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 import { POLICY_CHECK, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/execution.ts';
 
@@ -15,7 +15,7 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
         message: problemText(problem),
         fixable: false,
     }));
-    return { check: POLICY_CHECK, scope: '', status: 'fail', files: 1, duration: 0, findings };
+    return { check: POLICY_CHECK, scope: '', status: 'failed', fileCount: 1, duration: 0, findings };
 }
 
 // Name each failed or unavailable check and failed fixer once.
@@ -34,8 +34,8 @@ function isUnable(session: Session, results: CheckResult[], fixes: FixReport | u
 
 // Return 2 for an incomplete run, 1 for findings, and 0 for a successful run.
 function exitCode(unable: boolean, failed: string[]): number {
-    if (unable) return ERROR_EXIT;
-    return failed.length > 0 ? 1 : 0;
+    if (unable) return EXIT_ERROR;
+    return failed.length > 0 ? EXIT_FINDINGS : 0;
 }
 
 /**
@@ -66,9 +66,9 @@ export function assembleReport(input: ReportInput): RunReport {
                 matched,
             }))
             .toArray(),
-        skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : [])),
-        unstaged: 0,
-        narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
+        skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, cause: check.skip.cause }] : [])),
+        unstagedChanges: 0,
+        partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,
         exitCode: exitCode(isUnable(session, results, fixes), failed),
     };

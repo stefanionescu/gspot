@@ -10,8 +10,8 @@ import type { Root } from '#cli/types/platform/platform.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
@@ -35,7 +35,7 @@ function appendBuildMetadata(
     name: string,
 ): void {
     if (config?.options.incremental !== true && config?.options.composite !== true) return;
-    command.push('--tsBuildInfoFile', join(scratch, GSPOT_FOLDER, name));
+    command.push('--tsBuildInfoFile', join(scratch, DOT_GSPOT, name));
 }
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {
@@ -92,7 +92,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     );
     const scratch = scratchFolder.path;
     if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-    else appendBuildMetadata(command, config, scratch, 'tsconfig.check.tsbuildinfo');
+    else appendBuildMetadata(command, config, scratch, 'tsconfig.tsbuildinfo');
     const result = await runToolCheck(session, planned, command, scratch);
     if (result.command !== undefined)
         result.command = result.command.map((part) => part.replace(scratch, () => session.root));
@@ -120,7 +120,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
     const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
     // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
     if (writeScopeProject(session, scratch, scope, target) === 0)
-        return { check: planned.check, scope, status: 'ok', files: 0, findings: [], duration: 0 };
+        return { check: planned.check, scope, status: 'passed', fileCount: 0, findings: [], duration: 0 };
     const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
     const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
     if (roots !== undefined) command.push('--typeRoots', roots.join(','));

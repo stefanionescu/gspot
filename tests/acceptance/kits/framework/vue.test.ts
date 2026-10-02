@@ -35,7 +35,7 @@ plantedCases(
     [
         {
             // The shared TypeScript rules reach the component script.
-            check: 'vue/eslint',
+            check: 'javascript/eslint',
             files: {
                 'src/SharedPolicy.vue':
                     '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n',
@@ -56,7 +56,7 @@ plantedCases(
             corrected: { files: { 'src/Card.vue': CARD.replace('#ggg', '#abc') } },
         },
         {
-            check: 'vue/typecheck',
+            check: 'vue/tsc',
             files: { 'src/Count.vue': COUNT },
             expected: { file: 'src/Count.vue', rule: 'TS2322', line: 2 },
             corrected: { files: { 'src/Count.vue': COUNT.replace("'one'", '1') } },
@@ -64,17 +64,17 @@ plantedCases(
     ],
     (installed) => {
         test(
-            'vue/typecheck takes over typescript/tsc',
+            'vue/tsc takes over typescript/tsc',
             async () => {
                 const { root, environment } = installed();
                 const both = await spawnGspot(
                     root,
-                    ['check', '--json', '--only', 'typescript/tsc', 'vue/typecheck'],
+                    ['check', '--json', '--only', 'typescript/tsc', 'vue/tsc'],
                     environment,
                 );
                 expect(both.code, both.stdout + both.stderr).toBe(0);
                 expect((JSON.parse(both.stdout) as RunReport).checks).toContainEqual(
-                    containing({ check: 'typescript/tsc', status: 'skipped', note: 'vue/typecheck runs it here' }),
+                    containing({ check: 'typescript/tsc', status: 'skipped', note: 'vue/tsc runs it here' }),
                 );
             },
             PLANTED_TIMEOUT_MS * 2,
@@ -99,7 +99,7 @@ test(
         const outcome = await runPlanted(
             sandbox.path,
             {
-                check: 'vue/eslint',
+                check: 'javascript/eslint',
                 files: {
                     'src/SharedPolicy.vue': '<script>\nfunction forward(value) { return build(value); }\n</script>\n',
                 },
@@ -113,14 +113,14 @@ test(
         expect(lint.map(({ rule }) => rule)).not.toContain('@typescript-eslint/no-explicit-any');
         const result = await spawnGspot(
             sandbox.path,
-            ['check', '--json', '--only', 'vue/typecheck', 'svelte/check'],
+            ['check', '--json', '--only', 'vue/tsc', 'svelte/check'],
             environment,
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const report = JSON.parse(result.stdout) as RunReport;
         expect(report.checks).toContainEqual(
             containing({
-                check: 'vue/typecheck',
+                check: 'vue/tsc',
                 status: 'skipped',
                 note: 'needs the typescript configuration, which this scope does not select',
             }),

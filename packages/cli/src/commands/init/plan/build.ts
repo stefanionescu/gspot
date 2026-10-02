@@ -1,12 +1,12 @@
 import type { Manifest } from '#cli/types/kits.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { CI_SETUP, HOOKS_ROW } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling, ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands/init.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePlan['change'] {
@@ -31,7 +31,7 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePla
 
 // What stops running once gspot runs the same tools: lint folders, lint-only manifests, and duplicate pins.
 function noLongerRuns(
-    tooling: ExistingTooling,
+    tooling: Tooling,
     duplicatePins: { tool: string; version: string; place: string }[],
 ): { path: string; note: string }[] {
     const list = tooling.lintFolders.map((folder) => ({
@@ -58,10 +58,10 @@ function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): strin
 }
 
 // The agent instruction files init writes, when any agent is configured.
-function agentRows(agents: string[]): ReplacePlan['write'] {
+function agentRows(agents: string[], rules: string): ReplacePlan['write'] {
     if (agents.length === 0) return [];
     const files = agents.map((path) => ({ path, note: 'managed instruction block' }));
-    return [...files, { path: '.gspot/guides/', note: 'agent guides' }];
+    return [...files, { path: `${rules}/`, note: 'agent rules' }];
 }
 
 // The CI workflow init writes for the chosen host.
@@ -125,9 +125,9 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                   selection: options.profile.tables.selection,
                   detected: selection.rootPlans.map((plan) => plan.kit).filter((id) => !selection.selectedIds.has(id)),
               };
-    const agents = policy.guides.install ? [...new Set(['AGENTS.md', ...(policy.guides.agents ?? [])])] : [];
+    const agents = policy.rules.install ? [...new Set(['AGENTS.md', ...(policy.rules.instructions ?? [])])] : [];
     const policyLines = policyText.split('\n').length;
-    const lintJobs = ciLintJobs(root, tooling.ci);
+    const lintJobs = getLintJobs(root, tooling.ci);
     return {
         ...(profile ? { profile } : {}),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
@@ -144,7 +144,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                 .map((config) => config.pointer?.path)
                 .filter((path) => path !== undefined)
                 .map((path) => ({ path, note: 'pointer' })),
-            ...agentRows(agents),
+            ...agentRows(agents, policy.rules.path),
             ...ciRows(answers.ci),
         ],
         remove: [

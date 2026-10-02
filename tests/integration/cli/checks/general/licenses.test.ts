@@ -32,7 +32,7 @@ async function input(root: string): Promise<EngineInput> {
 test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
+        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nallowed = ["MIT"]\n'),
         'package.json': '{"name":"example","private":true}',
     });
     expect(await rejection(licensesPackages(await input(sandbox.path)))).toBe(
@@ -48,7 +48,7 @@ test.each([
     async (_failure, stdout, code) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
+            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nallowed = ["MIT"]\n'),
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             [SCANNER.path]: SCANNER.body,
@@ -85,7 +85,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
+            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nallowed = ["MIT"]\n'),
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             [SCANNER.path]: SCANNER.body,
@@ -99,7 +99,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
             await Bun.write(join(outside.path, 'configuration.json'), original);
             unlinkSync(path);
             symlinkSync(join(outside.path, 'configuration.json'), path);
-        } else await Bun.write(path, failure === 'malformed' ? '{' : '{"licenses_allowed":[],"packages_allowed":[]}');
+        } else await Bun.write(path, failure === 'malformed' ? '{' : '{"allowed":[],"exceptions":[]}');
         const spawn = spyOn(processes, 'run').mockResolvedValue({
             code: 0,
             missing: false,
@@ -129,7 +129,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
 test('combined license scans preserve manifest order, license alternatives, and unknown licenses', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
+        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nallowed = ["MIT"]\n'),
         'package.json': '{"name":"example","private":true}',
         'node_modules/installed': 'fixture',
         'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',

@@ -45,7 +45,7 @@ function problem(entry: ScriptFunction, block: string[], style: string): { rule:
     const first = block[0];
     if (first === undefined)
         return {
-            rule: 'missing',
+            rule: 'missing-comment',
             message: `${entry.name} has no comment above it; write "# ${entry.name}${style === 'dash' ? ' - ' : ': '}what it does".`,
         };
     const summary = summaryOf(first, entry.name, style);

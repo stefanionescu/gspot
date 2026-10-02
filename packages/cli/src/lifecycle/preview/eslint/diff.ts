@@ -1,9 +1,9 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
+import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import { compareRules } from '#cli/lifecycle/preview/compare.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import { evaluate } from '#cli/lifecycle/preview/eslint/client.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
-import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
 import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 /**
@@ -14,12 +14,12 @@ import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts
  * @param plan the generated files
  * @param drift the drift entries the rule differences are added to
  */
-export async function eslintRuleDiff(
+export async function diffEslintRules(
     root: string,
     view: MergedView | undefined,
     signal: AbortSignal | undefined,
     plan: Generated,
-    drift: DriftEntry[],
+    drift: Drift[],
 ): Promise<void> {
     const selected = plan.files.flatMap((file) => {
         if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) return [];
@@ -32,7 +32,7 @@ export async function eslintRuleDiff(
             const current = files.read(file.path)?.bytes.toString('utf8');
             const sources = [current, file.content].filter((source) => source !== undefined);
             const resolvedRules = eslintPreviewResponse.length(sources.length).parse(
-                await runConfiguration(
+                await evaluate(
                     {
                         tool: 'eslint',
                         operation: 'preview-rules',

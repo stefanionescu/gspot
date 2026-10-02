@@ -9,11 +9,11 @@ and `gspot install` installs the license scanner.
 
 ## Allow a license or one package
 
-Add a license to `tools.licenses.licenses_allowed` to allow every package under it. To allow
+Add a license to `tools.licenses.allowed` to allow every package under it. To allow
 one package version with a license you reviewed, add an exception:
 
 ```toml
-[[tools.licenses.packages_allowed]]
+[[tools.licenses.exceptions]]
 package = "colorama@0.4.6"
 license = "BSD"
 reason = "Installed metadata reports the reviewed BSD license in its short form."
@@ -38,9 +38,9 @@ do not matter. Versions and licenses must match exactly.
 
 ## Exceptions and the lockfile
 
-Selecting `licenses` also turns on `integrity/allowlists-match` at the commit stage. It checks
+Selecting `licenses` also turns on `structure/stale-allowlists` at the commit stage. It checks
 that each exception names a version that the lockfile of the project or workspace holds. A
 kit that selects the same check does not run it twice.
 
 When init replaces an existing license configuration file, move the exceptions you still need
-into `tools.licenses.packages_allowed`, with exact versions.
+into `tools.licenses.exceptions`, with exact versions.

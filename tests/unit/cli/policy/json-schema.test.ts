@@ -4,7 +4,7 @@ import { test, expect, describe } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { failure } from '#tests/harness/expectations.ts';
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
+import { buildJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 const check = { name: 'project/lint', command: ['lint'], paths: ['src/**'], stage: 'commit' };
@@ -21,17 +21,17 @@ describe('the JSON schema of gspot.toml', () => {
     });
 
     test('the published schema accepts a check with and without its correction command', () => {
-        const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+        const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
         expect(validate({ check: [check] })).toBe(true);
-        expect(validate({ check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(true);
+        expect(validate({ check: [{ ...check, fix: ['lint', '--fix'] }] })).toBe(true);
     });
 });
 
 test.each([
-    { name: 'finding code 2', input: { check: [{ ...check, findings_exit_codes: [2] }] }, valid: true },
-    { name: 'finding code 0', input: { check: [{ ...check, findings_exit_codes: [0] }] }, valid: false },
-    { name: 'finding code 256', input: { check: [{ ...check, findings_exit_codes: [256] }] }, valid: false },
-    { name: 'a text finding code', input: { check: [{ ...check, findings_exit_codes: ['2'] }] }, valid: false },
+    { name: 'finding code 2', input: { check: [{ ...check, exit_codes: [2] }] }, valid: true },
+    { name: 'finding code 0', input: { check: [{ ...check, exit_codes: [0] }] }, valid: false },
+    { name: 'finding code 256', input: { check: [{ ...check, exit_codes: [256] }] }, valid: false },
+    { name: 'a text finding code', input: { check: [{ ...check, exit_codes: ['2'] }] }, valid: false },
     { name: 'an empty command', input: { check: [{ ...check, command: [] }] }, valid: false },
     { name: 'an empty program', input: { check: [{ ...check, command: [''] }] }, valid: false },
     { name: 'an empty argument', input: { check: [{ ...check, command: ['tool', ''] }] }, valid: true },
@@ -50,9 +50,7 @@ test.each([
         input: {
             tools: {
                 licenses: {
-                    packages_allowed: [
-                        { package: '@example/scoped@1.2.3-beta.1', license: 'MIT', reason: 'Verified.' },
-                    ],
+                    exceptions: [{ package: '@example/scoped@1.2.3-beta.1', license: 'MIT', reason: 'Verified.' }],
                 },
             },
         },
@@ -63,7 +61,7 @@ test.each([
         input: {
             tools: {
                 licenses: {
-                    packages_allowed: [{ package: 'example@^1.2.3', license: 'MIT', reason: 'Version range' }],
+                    exceptions: [{ package: 'example@^1.2.3', license: 'MIT', reason: 'Version range' }],
                 },
             },
         },
@@ -92,18 +90,18 @@ test.each([
 ])('runtime and published schemas agree on $name', ({ input, valid }) => {
     const document = { ...input };
     expect(policySchema.safeParse(document).success).toBe(valid);
-    expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(document)).toBe(valid);
+    expect(new Ajv2020({ strict: false }).compile(buildJsonSchema())(document)).toBe(valid);
 });
 
 test('manifest settings validate their kind in root and scope tables', () => {
-    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-    for (const [scoped, translations, valid] of [
+    const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
+    for (const [scoped, locales, valid] of [
         [false, [], false],
         [true, [], false],
         [false, { directory: 'messages', base: 'en' }, true],
         [true, { directory: 'messages', base: 'en' }, true],
     ] as const) {
-        const tools = { i18n: { translations } };
+        const tools = { i18n: { locales } };
         const document = { kits: ['i18n'], ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }) };
         const text = stringify(document);
         const policy = parsePolicyText(text, 'gspot.toml');
@@ -115,8 +113,8 @@ test('manifest settings validate their kind in root and scope tables', () => {
     }
 });
 
-test('nested manifest settings preserve typed leaf values and reject unknown siblings', () => {
-    const source = policyOf(['bash'], '[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n');
+test('manifest settings preserve typed values and reject unknown siblings', () => {
+    const source = policyOf(['bash'], '[tools.bash]\nsafety_owners = ["scripts/cleanup.sh"]\n');
     const path = 'gspot.toml';
     const policy = parsePolicyText(source, path);
     expect(() => {
@@ -126,8 +124,8 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
     const invalidPolicy = parsePolicyText(invalid, path);
     expect(() => {
         assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
-    }).toThrow('gspot.toml: tools.bash.safety.unknown:');
-    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-    expect(validate({ kits: ['bash'], tools: { bash: { safety: { owners: ['scripts/cleanup.sh'] } } } })).toBe(true);
-    expect(validate({ kits: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(false);
+    }).toThrow('gspot.toml: tools.bash.unknown:');
+    const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
+    expect(validate({ kits: ['bash'], tools: { bash: { safety_owners: ['scripts/cleanup.sh'] } } })).toBe(true);
+    expect(validate({ kits: ['bash'], tools: { bash: { unknown: true } } })).toBe(false);
 });

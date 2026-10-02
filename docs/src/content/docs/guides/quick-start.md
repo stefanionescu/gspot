@@ -173,15 +173,15 @@ newer.
     The hook rejects the commit:
 
     ```text
-    root  typescript/eslint                   fail       2 files     1.0s
+    root  javascript/eslint                   failed     2 files     1.0s
       src/utils.ts:1:1  gspot/no-trivial-files  This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.
       src/utils.ts:8:8  gspot/no-trivial-functions  This function has 1 statement. Functions with 2 or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.
       src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
       src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
       src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
         help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means.
-      reproduce: gspot check --only typescript/eslint --staged
-    root  naming/paths                        fail       2 files     0.0s
+      reproduce: gspot check --only javascript/eslint --staged
+    root  naming/paths                        failed     2 files     0.0s
       src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
         help: Rename the file or folder, or add a path rule under [[naming.rules]] with a reason.
       reproduce: gspot check --only naming/paths --staged

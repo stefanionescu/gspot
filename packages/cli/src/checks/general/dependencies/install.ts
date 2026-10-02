@@ -51,9 +51,9 @@ function scannerFindings(input: EngineInput, install: Record<string, unknown>, s
 export function installPolicy(input: EngineInput): Finding[] {
     const isBun = input.files.some((file) => LOCKFILES[posix.basename(file.path)] === 'bun');
     if (!isBun) return [];
-    const tool = input.view.tool('install');
-    const days = (tool['min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
-    const scanner = (tool['security_scanner'] as string | undefined) ?? '';
+    const { settings } = input.view;
+    const days = (settings['install.min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
+    const scanner = (settings['install.scanner'] as string | undefined) ?? '';
     const install = installTable(input.root);
     if (install === undefined)
         return [

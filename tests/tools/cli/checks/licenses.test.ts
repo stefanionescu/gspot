@@ -53,7 +53,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({
             file: 'pyproject.toml',
-            rule: 'license',
+            rule: 'disallowed-license',
             message: textContaining('licensed-example@1.0.0 reports GPL-3.0-only'),
         }),
     ]);
@@ -61,7 +61,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
         join(root, 'gspot.toml'),
         policyOf(
             ['licenses'],
-            '[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
+            '[[tools.licenses.exceptions]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
             'all',
         ),
     );

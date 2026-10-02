@@ -10,8 +10,8 @@ import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { stagedFiles } from '#cli/repository/revisions/changes.ts';
-import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
+import { getStaged } from '#cli/repository/revisions/changes.ts';
+import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import type { FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/execution.ts';
 import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
 import { refusalFor, selectedPaths, unknownSelection, revisionSelection } from '#cli/commands/check/selection.ts';
@@ -54,7 +54,7 @@ async function changedSet(
     options: CheckOptions,
     signal: AbortSignal,
     revision: Revision | undefined,
-): Promise<ChangedSet | undefined> {
+): Promise<ChangedPaths | undefined> {
     if (revision?.content === 'commit' && session.policyFiles.policy.hooks?.push === 'all') return undefined;
     if (revision?.changed !== undefined) return { reference: revision.reference, paths: revision.changed };
     return revisionSelection(session, options, signal);
@@ -66,9 +66,9 @@ async function stagedSet(
     options: CheckOptions,
     signal: AbortSignal,
     revision: Revision | undefined,
-): Promise<StagedSet | { staged: undefined; unstaged: number }> {
+): Promise<StagedPaths | { staged: undefined; unstaged: number }> {
     if (revision?.staged !== undefined) return revision.staged;
-    return options.staged ? stagedFiles(root, signal) : { staged: undefined, unstaged: 0 };
+    return options.staged ? getStaged(root, signal) : { staged: undefined, unstaged: 0 };
 }
 
 // A pushed commit is reproduced through the push options, not through the snapshot the check ran in.
@@ -92,7 +92,7 @@ function resultFor(
     outcome: Awaited<ReturnType<typeof executeRun>>,
     unstaged: number,
 ): CheckCommandResult {
-    outcome.report.unstaged = unstaged;
+    outcome.report.unstagedChanges = unstaged;
     const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };

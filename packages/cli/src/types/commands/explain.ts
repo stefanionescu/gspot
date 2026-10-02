@@ -13,8 +13,9 @@ export type Explanation = {
 export type PathExplanation = {
     path: string;
     scope: string;
-    file: string;
-    fileSource?: string;
+    /** The kind of the file: source, generated, vendored, or binary. The explanation's own kind is path. */
+    fileKind: string;
+    fileKindSource?: string;
     tags: string[];
     kits: string[];
     checks: { check: string; stage: string; kit?: string }[];
@@ -23,8 +24,8 @@ export type PathExplanation = {
     remedy?: string;
 };
 export type Found = { check: CheckSpec; kit: Manifest | undefined };
-export type OwnCheck = Session['policyFiles']['policy']['checks'][number];
-export type ExplainFields = { settings: string[]; rules: string[]; crashPattern: string | undefined };
+export type DeclaredCheck = Session['policyFiles']['policy']['checks'][number];
+export type CheckFacts = { settings: string[]; rules: string[]; crashPattern: string | undefined };
 
 export type ListingRow = {
     name: string;
@@ -36,6 +37,6 @@ export type ListingRow = {
     checks: { check: string; stage: string }[];
     settings: string[];
     rules: string[];
-    default: boolean;
+    auto: boolean;
     proposed: boolean;
 };

@@ -13,15 +13,15 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     const report = JSON.parse(recommended.stdout) as RunReport;
     expect(report.skips).toStrictEqual([]);
     expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'bash/syntax', status: 'ok' },
+        { check: 'bash/syntax', status: 'passed' },
     ]);
     await Bun.write(join(root, 'entry.sh'), 'if then\n');
     const invalid = await runGspot(root, command);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     expect((JSON.parse(invalid.stdout) as RunReport).checks[0]).toMatchObject({
         check: 'bash/syntax',
-        status: 'fail',
-        files: 1,
+        status: 'failed',
+        fileCount: 1,
     });
     await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
 }
@@ -54,7 +54,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['bash', 'naming'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['bash', 'naming'], '[rules]\ninstall = false\n'),
             'entry.sh': 'helper_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--json'];
@@ -66,8 +66,8 @@ test(
         const strictReport = JSON.parse(strict.stdout) as RunReport;
         expect(strictReport.skips).toStrictEqual([]);
         expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-            { check: 'bash/syntax', status: 'ok' },
-            { check: 'naming/identifiers', status: 'fail' },
+            { check: 'bash/syntax', status: 'passed' },
+            { check: 'naming/identifiers', status: 'failed' },
         ]);
         expect(strictReport.checks[1]!.findings).toHaveLength(1);
         expect(strictReport.checks[1]!.findings[0]).toMatchObject({
@@ -79,17 +79,17 @@ test(
         await expectNamingAllowance(sandbox.path, command);
         const reset = await runGspot(sandbox.path, ['set', 'level', '--default']);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-        const extra = await runGspot(sandbox.path, ['set', 'extra_checks', 'naming/identifiers']);
+        const extra = await runGspot(sandbox.path, ['set', 'enable', 'naming/identifiers']);
         expect(extra.code, extra.stdout + extra.stderr).toBe(0);
         const optedIn = await runGspot(sandbox.path, command);
         expect(optedIn.code, optedIn.stdout + optedIn.stderr).toBe(1);
-        expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('fail');
+        expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('failed');
         await Bun.write(join(sandbox.path, 'entry.sh'), 'command=example\n');
         const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'bash/syntax', status: 'ok', findings: [] },
-            { check: 'naming/identifiers', status: 'ok', findings: [] },
+            { check: 'bash/syntax', status: 'passed', findings: [] },
+            { check: 'naming/identifiers', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -97,11 +97,11 @@ test(
 
 test.each([
     ['level', 'strict'],
-    ['extra_checks', 'unknown/check'],
+    ['enable', 'unknown/check'],
 ])('invalid %s value %s preserves the policy', async (key, value) => {
     await using sandbox = await testdir();
     const policyPath = join(sandbox.path, 'gspot.toml');
-    const policy = policyOf(['bash', 'naming'], 'extra_checks = ["naming/identifiers"]\n');
+    const policy = policyOf(['bash', 'naming'], 'enable = ["naming/identifiers"]\n');
     await Bun.write(policyPath, policy);
     const refused = await runGspot(sandbox.path, ['set', key, value]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

@@ -33,11 +33,11 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
                 'authored.txt': 'Preserve this file.\n',
             });
             const environment = { PATH: toolsPath(['codeql']) };
-            const command = ['check', '--stage', 'manual', '--only', 'security/codeql', '--json'];
+            const command = ['check', '--only', 'security/codeql', '--json'];
             const planted = await spawnGspot(directory.path, command, environment);
             expect(planted.code, planted.stdout + planted.stderr).toBe(1);
             const report = JSON.parse(planted.stdout) as RunReport;
-            expect(report.checks).toMatchObject([{ check: 'security/codeql', status: 'fail' }]);
+            expect(report.checks).toMatchObject([{ check: 'security/codeql', status: 'failed' }]);
             expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
                 { check: 'security/codeql', rule, file, line, column },
             ]);
@@ -46,7 +46,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
             const fixed = await spawnGspot(directory.path, command, environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             const fixedReport = JSON.parse(fixed.stdout) as RunReport;
-            expect(fixedReport.checks).toMatchObject([{ check: 'security/codeql', status: 'ok', findings: [] }]);
+            expect(fixedReport.checks).toMatchObject([{ check: 'security/codeql', status: 'passed', findings: [] }]);
             expect(readFileSync(join(directory.path, file), 'utf8')).toBe(corrected);
             expect(readFileSync(join(directory.path, 'authored.txt'), 'utf8')).toBe('Preserve this file.\n');
         },

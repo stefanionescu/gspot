@@ -10,9 +10,9 @@ type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 
 type StructureSettings = {
     reexports: 'none' | 'index-only';
-    single_file_folder_allowed: { paths: string[]; reason?: string }[];
-    prefix_collision_allowed: { paths: string[]; reason?: string }[];
-    folder_name_allowed: { paths: string[]; reason?: string }[];
+    lone_files_allowed: { paths: string[]; reason?: string }[];
+    prefix_collisions_allowed: { paths: string[]; reason?: string }[];
+    folder_names_allowed: { paths: string[]; reason?: string }[];
     python: Record<string, unknown>;
 };
 
@@ -21,11 +21,11 @@ type LimitTable = Record<string, Reasoned<number>>;
 /** The shipped policy file, kits/general/naming/policy.json. */
 export type ShippedPolicy = {
     version: number;
-    matching: { wholeParts: boolean; caseInsensitive: boolean };
-    banDigits: boolean;
-    banDuplicateWords: boolean;
+    matching: { whole_parts: boolean; case_insensitive: boolean };
+    ban_digits: boolean;
+    ban_repeats: boolean;
     groups: Record<string, { removable: boolean; terms: string[] }>;
-    reserved: { term: string; allowedFor: string[] }[];
+    reserved: { term: string; uses: string[] }[];
     external: string[];
     languages: Record<string, ShippedLanguage>;
     rules: ShippedRule[];
@@ -33,8 +33,8 @@ export type ShippedPolicy = {
 
 /** One language's table in the shipped policy. */
 export type ShippedLanguage = {
-    maxChars: number;
-    maxWords: number;
+    max_chars: number;
+    max_words: number;
     acronyms: 'word' | 'initialism' | 'lower';
     categories: Record<string, { case: string[] }>;
 };
@@ -47,9 +47,9 @@ export type ShippedRule = {
     names?: string[] | undefined;
     exclude?: boolean | undefined;
     reason?: string | undefined;
-    allowDigits?: boolean | undefined;
-    allowDuplicateWords?: boolean | undefined;
-    structuralPrefix?: string | undefined;
+    allow_digits?: boolean | undefined;
+    allow_duplicate_words?: boolean | undefined;
+    structural_prefix?: string | undefined;
     case?: string[] | undefined;
 };
 
@@ -91,13 +91,16 @@ export type Policy = {
     format: Defined<NonNullable<RawPolicy['format']>>;
     prose: { vocabulary: string[] };
     tools: Record<string, ToolTable>;
+    install: Record<string, unknown>;
+    tests: string[];
+    timeout?: NonNullable<RawPolicy['timeout']>;
     ignores: IgnoreEntry[];
     declarations: FileDeclaration[];
     checks: RepositoryCheck[];
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
-    guides: RuleSettings;
-    runner?: Defined<NonNullable<RawPolicy['runner']>>;
+    rules: RuleSettings;
+    runner?: NonNullable<RawPolicy['runner']>;
     scopeTables: Record<string, Partial<Policy>>;
 };
 
@@ -123,7 +126,7 @@ export type ResolvedSetting = {
     source: string;
     scope?: string;
 };
-export type ExposedSettings = {
+export type SettingSurface = {
     specs: Map<string, SettingSpec>;
     defaults: Map<string, { value: unknown; kit: string }>;
     problems: { key: string; message: string }[];
@@ -142,7 +145,7 @@ export type SpecMatch = { spec: SettingSpec; language?: string; category?: strin
 export type SettingState = { value: unknown; source: string; reason: string | undefined };
 
 /** What resolving a value for one scope needs. */
-export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };
+export type PolicyScopeLayer = { surface: SettingSurface; policy: Policy; scope: string };
 
 /** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
 export type SchemaNode = {
@@ -164,22 +167,22 @@ export type Limits = {
     root: LimitTable;
     groups: Record<string, LimitTable>;
 };
-export type NamingCategoryTable = {
+export type NamingTable = {
     max_chars?: Reasoned<number>;
     max_words?: Reasoned<number>;
     case?: Reasoned<string[]>;
 };
-export type NamingLanguageTable = NamingCategoryTable & {
-    categories: Record<string, NamingCategoryTable>;
+export type NamingLanguageTable = NamingTable & {
+    categories: Record<string, NamingTable>;
 };
 
 export type NamingSettings = {
-    banned_terms: string[];
+    banned: string[];
     allowed: { name: string; reason?: string }[];
     external: string[];
-    reserved: { term: string; allowed_for: string[] }[];
-    remove_groups: { group: string; reason?: string }[];
-    contract_properties: { file: string; names: string[] }[];
+    reserved: { term: string; uses: string[] }[];
+    dropped_groups: { group: string; reason?: string }[];
+    protocol_keys: { file: string; names: string[] }[];
     languages: Record<string, NamingLanguageTable>;
     rules: NamingRule[];
 };
@@ -198,11 +201,11 @@ export type RawLimits = NonNullable<RawPolicy['limits']>;
 /** The [naming] table as written. */
 export type RawNaming = NonNullable<RawPolicy['naming']>;
 export type Mutation = (raw: TomlTable) => void;
-export type WriteResult = { text: string; policy: Policy; changed: boolean };
+export type Proposal = { text: string; policy: Policy; changed: boolean };
 export type ScopeSelection = {
     scope: ScopeEntry;
     selected: Manifest[];
-    surface: ExposedSettings;
+    surface: SettingSurface;
     view: MergedView;
 };
 export type MergedView = {

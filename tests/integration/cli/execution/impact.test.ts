@@ -13,7 +13,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
-import { stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
+import { getStaged, changedFiles } from '#cli/repository/revisions/changes.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `kits = []
@@ -35,11 +35,15 @@ test('repository checks retain nested inputs and report their defects once at th
     const options = runOptions({ stage: 'push', only: ['project/syntax'], changed: ['api/source.sh'], isDryRun: true });
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
-    expect(failed.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'fail' }]);
+    expect(failed.report.checks).toMatchObject([
+        { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
+    ]);
     await Bun.write(join(sandbox.path, 'api/source.sh'), 'echo corrected\n');
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
+    expect(corrected.report.checks).toMatchObject([
+        { check: 'project/syntax', scope: '', fileCount: 1, status: 'passed' },
+    ]);
 });
 
 function projectChecks(session: Session): void {
@@ -48,17 +52,17 @@ function projectChecks(session: Session): void {
         name: 'sandbox/project',
         level: 'recommended',
         stage: 'commit',
-        runs: 'per-scope',
+        runs: 'scope',
         summary: 'Reports the planted project finding.',
         why: 'Changed files trigger the complete project check.',
         help: 'Fix the planted project finding.',
         cwd: 'root' as const,
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
-        owners: manifest.owners,
-        fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
+        files: manifest.files,
+        fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
-    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'per-file-list' as const };
+    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'files' as const };
     for (const scope of session.scopes) {
         if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [spec, fileCheck] }];
     }
@@ -92,7 +96,7 @@ test.each([
     projectChecks(session);
     const revision =
         selection === 'staged'
-            ? await stagedFiles(sandbox.path).then(({ staged }) => ({ staged }))
+            ? await getStaged(sandbox.path).then(({ staged }) => ({ staged }))
             : await changedFiles(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
     const planned = planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
@@ -156,7 +160,7 @@ test('a check with no command and no built-in check refuses the complete plan be
         name: 'sandbox/command',
         level: 'recommended',
         stage: 'commit',
-        runs: 'per-file-list',
+        runs: 'files',
         summary: 'Inspect the source file.',
         why: 'The input must be valid.',
         help: 'Correct the source file.',

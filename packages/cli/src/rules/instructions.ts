@@ -15,11 +15,11 @@ function guideGroups(files: RuleFile[]): [string, string[]][] {
 }
 
 function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
-    const { directory, project } = rules;
+    const { path, local } = rules;
     const projectRow: [string, string[]][] =
-        project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
+        local === undefined || local === '' ? [] : [['Project rules', [`\`${local}/\``]]];
     return [
-        `Read \`${directory}/general/agent/WORKING.md\` and \`${directory}/general/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
+        `Read \`${path}/agent/WORKING.md\` and \`${path}/prose/WRITING.md\` first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
         '',
         ...[...guideGroups(files), ...projectRow].flatMap(([area, guides]) => [
             `${area}:`,
@@ -35,8 +35,8 @@ function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
  * @param rules the rule policy
  * @param manifests the selected kits.
  * @param level the selected enforcement level.
- * @param repository the source inventory for conditional guide selection.
- * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
+ * @param repository the source inventory for the conditional rules.
+ * @returns the block: a heading, the rule index when rules are installed, and the standing instructions
  */
 export function managedBlock(rules: RuleSettings, manifests: Manifest[], level: Level, repository: Repository): string {
     const files = selectRuleFiles(rules, manifests, repository);
@@ -48,7 +48,7 @@ export function managedBlock(rules: RuleSettings, manifests: Manifest[], level: 
         '',
         `Selected level: \`${level}\`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.`,
         '',
-        'Guide requirements about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.',
+        'Rules about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.',
         '',
         ...index,
         closing,

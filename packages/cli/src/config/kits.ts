@@ -20,17 +20,18 @@ export const OPTIONAL_TOOL_KEYS = [
     'platforms',
     'version',
     'floor',
-    'provider',
+    'host',
     'version_command',
     'version_exit_code',
-    'version_regex',
+    'version_pattern',
     'crash_pattern',
-    'rule_page',
+    'rule_url',
     'suppression',
     'env',
     'replace',
     'query_packs',
     'prettier',
+    'eslint',
 ] as const;
 
 /** The platforms a tool pin may name as having a build: an operating system alone, or one with an architecture. */

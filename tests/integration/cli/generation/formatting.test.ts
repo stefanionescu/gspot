@@ -18,7 +18,7 @@ test('the format width reaches editors and generated tool configurations', async
     await createFileTree(directory.path, {
         'gspot.toml': stringify({
             level: 'all',
-            kits: ['formatting', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'],
+            kits: ['format', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'],
             format: { indent_width: width },
         }),
         'sample.yaml': 'parent:\n child: value\n',
@@ -61,7 +61,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': stringify({
-            kits: ['formatting'],
+            kits: ['format'],
             format: { indent_width: 6, overrides: [{ paths: ['**/*.yaml'], indent_width: 2 }] },
         }),
         'sample.yaml': 'parent:\n child: value\n',

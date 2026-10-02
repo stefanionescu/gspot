@@ -1,9 +1,9 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { compact } from '#cli/platform/text.ts';
 import { INSTALLER_KEYS } from '#cli/kits/tools.ts';
 import { manifestSchema } from '#cli/kits/schema.ts';
+import { compact, isRecord } from '#cli/platform/text.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import { PRIVATE_PATHS, OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { manifestError, manifestProblems } from '#cli/kits/problems.ts';
@@ -30,10 +30,10 @@ function installerPins(raw: RawTool): ToolPin['installers'] {
 }
 
 function toCheck(raw: RawCheck): CheckSpec {
-    const { owners, ...rest } = raw;
+    const { files, ...rest } = raw;
     const check = compact(rest) as CheckSpec;
-    if (owners) {
-        check.owners = { ...owners };
+    if (files) {
+        check.files = { ...files };
     }
     return check;
 }
@@ -50,15 +50,18 @@ function appendReferences(manifests: Map<string, Manifest>): void {
         }
 }
 
-// Parses one embedded manifest and registers it under its folder name, which its declared name must match.
+// The [kit] table with the name and the kind its folder gives, as kits/general/docs gives docs and general.
+function locatedKit(kit: unknown, dir: string): Record<string, unknown> {
+    const declared = isRecord(kit) ? kit : {};
+    if ('name' in declared || 'kind' in declared)
+        throw manifestError(posix.basename(dir), ['[kit] declares a name or a kind, which its folder already gives.']);
+    return { ...declared, name: posix.basename(dir), kind: posix.basename(posix.dirname(dir)) };
+}
+
+// Parses one embedded manifest and registers it under its folder name.
 function registerManifest(manifests: Map<string, Manifest>, path: string): void {
     const dir = path.slice(0, -'/manifest.toml'.length);
     const manifest = parseManifest(readAsset(path), dir);
-    const folder = posix.basename(dir);
-    if (folder !== manifest.kit.name)
-        throw manifestError(manifest.kit.name, [
-            `the folder is \`${folder}\` and the name is \`${manifest.kit.name}\`; they must match.`,
-        ]);
     if (manifests.has(manifest.kit.name))
         throw manifestError(manifest.kit.name, ['The configuration name is already registered.']);
     manifests.set(manifest.kit.name, manifest);
@@ -67,23 +70,28 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
 /**
  * Parses one manifest text into a Manifest. Throws ManifestError.
  * @param text the manifest.toml text
- * @param dir the configuration directory inside the assets
+ * @param dir the kit folder inside the assets, such as kits/general/docs, which gives the kit its name and kind
  * @returns the manifest
  */
 export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
-    const result = manifestSchema.safeParse(parsed);
+    const result = manifestSchema.safeParse({ ...parsed, kit: locatedKit(parsed['kit'], dir) });
     const kitName = result.success ? result.data.kit.name : dir;
     if (!result.success)
         throw manifestError(kitName, [...new Set(result.error.issues.flatMap((issue) => issueLines(issue)))]);
-    const raw = result.data;
+    const declared = result.data;
+    // A check's ID is the kit's name, a slash, and the check's own name.
+    const raw = {
+        ...declared,
+        checks: declared.checks.map((check) => ({ ...check, name: `${declared.kit.name}/${check.name}` })),
+    };
     const problems = [
         ...manifestProblems(raw),
         ...raw.configs
             .filter((config) => config.imports !== undefined && !config.fragment)
             .map((config) => `config ${config.target} declares imports, which only a fragment renders.`),
         ...raw.configs
-            .filter((config) => !config.fragment && (config.code_files.length > 0 || config.selectors.length > 0))
+            .filter((config) => !config.fragment && (config.components.length > 0 || config.selectors.length > 0))
             .map((config) => `config ${config.target} declares code files or selectors, which only a fragment adds.`),
     ];
     if (raw.checks.some((check) => raw.kit.check_references.includes(check.name)))
@@ -91,9 +99,9 @@ export function parseManifest(text: string, dir: string): Manifest {
     if (problems.length > 0) throw manifestError(raw.kit.name, problems);
     return {
         kit: raw.kit,
-        untracked: raw.untracked,
+        ignored: raw.ignored,
         detect: raw.detect,
-        owners: raw.owners,
+        files: raw.files,
         tools: raw.tools.map((tool) => {
             const declared = OPTIONAL_TOOL_KEYS.filter((key) => tool[key] !== undefined).map(
                 (key) => [key, tool[key]] as const,
@@ -110,9 +118,9 @@ export function parseManifest(text: string, dir: string): Manifest {
         settings: raw.settings.map((setting) => compact(setting)),
         defaults: raw.defaults,
         defaults_all: raw.defaults_all,
-        entry_files: raw.entry_files,
+        entry: raw.entry,
         naming: raw.naming,
-        guides: raw.guides,
+        rules: raw.rules,
         required_rules: raw.required_rules,
         rules_off: raw.rules_off,
         dir,
@@ -135,10 +143,10 @@ export function kitManifests(): Map<string, Manifest> {
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.
- * @param manifests the manifests whose untracked paths count, every one by default
+ * @param manifests the manifests whose ignored paths count, every one by default
  * @returns the block body
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and apply write the same .gitignore block of the untracked gspot paths.
-export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = kitManifests().values()): string {
-    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and apply write the same .gitignore block of the ignored gspot paths.
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'ignored'>> = kitManifests().values()): string {
+    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
 }

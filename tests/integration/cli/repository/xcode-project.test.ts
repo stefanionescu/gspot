@@ -43,8 +43,8 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
-        containing({ file: 'Second/Shared.swift', rule: 'no-target' }),
-        containing({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
+        containing({ file: 'Second/Shared.swift', rule: 'untargeted' }),
+        containing({ file: 'Synced/Excluded.swift', rule: 'untargeted' }),
     ]);
     const included = PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B1, B2, B3,);')
         .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
@@ -134,7 +134,7 @@ test('membership combines projects in a scope and checks nested scopes independe
         })),
     ).toStrictEqual([
         { scope: '', findings: [] },
-        { scope: 'nested', findings: [containing({ file: 'nested/Extra.swift', rule: 'no-target' })] },
+        { scope: 'nested', findings: [containing({ file: 'nested/Extra.swift', rule: 'untargeted' })] },
     ]);
     await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
     const corrected = await runGspot(sandbox.path, command);

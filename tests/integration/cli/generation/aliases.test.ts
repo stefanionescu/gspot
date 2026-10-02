@@ -180,8 +180,8 @@ test('generation preserves authored aliases and reports missing authored bases',
         session.version,
     );
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
-    expect(emitted(session).files.some((file) => file.path === '.gspot/config/tsconfig.check.json')).toBe(true);
-    expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);
+    expect(emitted(session).files.some((file) => file.path === '.gspot/config/tsconfig.json')).toBe(true);
+    expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.json')).exists()).toBe(false);
     writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
     expect(() => inputs.importAliases('')).toThrow('missing-base.json');
     writeFileSync(join(sandbox.path, 'missing-base.json'), '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');

@@ -33,7 +33,7 @@ const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
 
 // What each check accepts in place of its planted document; the guide for the rest.
 const CORRECTIONS: Record<string, string> = {
-    'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
+    'docs/lychee': '# A page\n\nRead [the guide](guide.md) first.\n',
 };
 const CASES: FindingCase[] = [
     {
@@ -42,7 +42,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'docs/skipped.md', rule: 'MD001', line: 3 },
     },
     {
-        check: 'docs/links',
+        check: 'docs/lychee',
         files: { 'docs/linked.md': '# A page\n\nRead [the other page](missing-page.md) first.\n' },
         expected: { file: 'docs/linked.md', rule: 'ERROR', line: 3, column: 6 },
     },
@@ -58,7 +58,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
     },
     {
-        check: 'prose/banned',
+        check: 'prose/hidden',
         files: { 'docs/silenced.md': '# A page\n\n<!-- vale off -->\n\nText the prose check no longer reads.\n' },
         expected: { file: 'docs/silenced.md', rule: 'vale-directive', line: 3 },
     },
@@ -87,8 +87,8 @@ plantedCases(
                 const named = await runPlanted(
                     sandbox,
                     {
-                        check: 'integrity/stale-paths',
-                        files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
+                        check: 'docs/stale-paths',
+                        files: { 'docs/checks.md': '# A page\n\nThe check `docs/lychee` reads every link.\n' },
                     },
                     environment,
                 );
@@ -107,11 +107,11 @@ plantedCases(
                 const corrected = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                    { check: 'prose/vale', status: 'ok', findings: [] },
+                    { check: 'prose/vale', status: 'passed', findings: [] },
                 ]);
-                const checked = await spawnGspot(sandbox, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(sandbox, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
-                expect(ids).not.toContain('docs/links-external');
+                expect(ids).not.toContain('docs/lychee-external');
             },
             PLANTED_TIMEOUT_MS * 4,
         );

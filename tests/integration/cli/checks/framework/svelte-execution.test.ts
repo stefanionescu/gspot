@@ -45,7 +45,7 @@ test.each([
             '--output',
             'machine-verbose',
             '--fail-on-warnings',
-            ...(typescript ? ['--tsconfig', join(sandbox.path, '.gspot/config', scope, 'tsconfig.check.json')] : []),
+            ...(typescript ? ['--tsconfig', join(sandbox.path, '.gspot/config', scope, 'tsconfig.json')] : []),
         ]);
         expect(spawn.mock.calls[0]![1].cwd).toBe(join(sandbox.path, scope));
     } finally {

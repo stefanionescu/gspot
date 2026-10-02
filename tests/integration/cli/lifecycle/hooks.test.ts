@@ -33,7 +33,7 @@ test.each([
     ['a script in the Git hooks folder', {}, undefined],
 ] as const)('a repository with %s keeps its hooks and gets the lines to add', async (_kind, files, setting) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[hooks]\n[runner]\ntool = "npm"\n'), ...files });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], 'runner = "npm"\n[hooks]\n'), ...files });
     gitOutput(sandbox.path, ['init', '-q']);
     if (setting !== undefined) gitOutput(sandbox.path, [...setting]);
     if (Object.keys(files).length === 0)

@@ -14,7 +14,7 @@ function foundRead(log: Log, path: string, current: Read | undefined, next: Read
 }
 
 // Refuses a plan whose file or record changed after it was made.
-function assertPlanCurrent(log: Log, plan: Planned, proposed: ReadonlyMap<string, Read | undefined>): void {
+function assertPlanFresh(log: Log, plan: Planned, proposed: ReadonlyMap<string, Read | undefined>): void {
     const { path, current, previous, next } = plan;
     const existing = log.entryFor(path);
     if (next !== undefined) log.files.validate(path, next, proposed);
@@ -30,7 +30,7 @@ function assertPlansCurrent(log: Log, plans: Planned[], proposed: ReadonlyMap<st
         const key = plan.path.normalize('NFC').toLowerCase();
         if (destinations.has(key)) throw new Error(`Duplicate plan destination: ${plan.path}`);
         destinations.add(key);
-        assertPlanCurrent(log, plan, proposed);
+        assertPlanFresh(log, plan, proposed);
     }
 }
 

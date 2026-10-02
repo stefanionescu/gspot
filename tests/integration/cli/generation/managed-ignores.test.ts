@@ -10,7 +10,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 
 const MANAGED_IGNORES_CONFIGURATION =
-    '\n[kit]\nname = "local"\nkind = "general"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
+    '\n[kit]\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -18,7 +18,7 @@ test.each([true, false])(
         await using repository = await testdir();
         const original = '# Authored entries\nprivate.tmp\n';
         await createFileTree(repository.path, {
-            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
             ...(authored ? { '.gitignore': original } : {}),
         });
         await writeOutputs(await openSession(repository.path));
@@ -39,8 +39,8 @@ test.each([true, false])(
 test('manifest-owned tool directories are ignored while generated rules and authored sources remain visible', async () => {
     await using repository = await testdir();
     const manifest = parseManifest(
-        'untracked = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
-        'configurations/local',
+        'ignored = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
+        'kits/general/local',
     );
     const block = gitignoreBlock([...kitManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
@@ -77,15 +77,12 @@ test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downlo
     (path) => {
         expect(() =>
             parseManifest(
-                `untracked = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
-                'configurations/local',
+                `ignored = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
+                'kits/general/local',
             ),
         ).toThrow();
         expect(() =>
-            parseManifest(
-                'untracked = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
-                'configurations/local',
-            ),
+            parseManifest('ignored = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'kits/general/local'),
         ).not.toThrow();
     },
 );

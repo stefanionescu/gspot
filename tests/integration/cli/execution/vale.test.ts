@@ -19,7 +19,7 @@ test.each(['outdated', 'deadline', 'cancellation'])(
         const path = 'sample.md';
         const source = '# Example text\n';
         await createFileTree(directory.path, {
-            'gspot.toml': policyOf(['prose', 'bash', 'markdown'], '[limits]\ntool_seconds = 1\n'),
+            'gspot.toml': policyOf(['prose', 'bash', 'markdown'], 'timeout = 1\n'),
             '.gspot/config/vale.ini': 'Packages =\n',
             [path]: source,
         });
@@ -58,13 +58,13 @@ test.each(['outdated', 'deadline', 'cancellation'])(
                 });
             });
             const corrected = await runEngineCheck(session, valeFindings, planned!);
-            expect(corrected.status).toBe('fail');
+            expect(corrected.status).toBe('failed');
             expect(corrected.findings).toStrictEqual([
                 containing({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
             ]);
             spawn.mockResolvedValue({ code: 0, stdout: '{}', stderr: '', missing: false, duration: 1 });
             const result = await runEngineCheck(session, valeFindings, planned!);
-            expect(result.status).toBe('ok');
+            expect(result.status).toBe('passed');
         } finally {
             spawn.mockRestore();
             inspection.mockRestore();

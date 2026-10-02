@@ -61,7 +61,7 @@ test('runtime names remain data in generated JavaScript', async () => {
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 kits: ['javascript'],
-                tools: { eslint: { globals: { '**/*.js': runtime } } },
+                tools: { eslint: { runtimes: { '**/*.js': runtime } } },
             }),
         });
         const session = await openSession(sandbox.path);

@@ -3,10 +3,10 @@ import { parseDocument } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { expandLongTables } from '#cli/policy/toml/tables.ts';
 import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/toml.ts';
-import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/config/policy/toml.ts';
-import { isComment, isKeyValue, isTomlValue, isInlineArray } from '#cli/policy/toml/nodes.ts';
+import { INDENT_WIDTH, POLICY_LINE_WIDTH } from '#cli/config/policy/toml.ts';
+import { isValue, isComment, isKeyValue, isInlineArray } from '#cli/policy/toml/nodes.ts';
 
-function keyAssignments(blocks: TomlBlock[]): KeyValue[] {
+function getPairs(blocks: TomlBlock[]): KeyValue[] {
     return blocks.flatMap((block) => {
         if (isKeyValue(block)) return [block];
         if (isComment(block)) return [];
@@ -19,7 +19,7 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
     if (!isInlineArray(value) || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
     const items = value.items.map((entry) => entry.item);
-    const ranges = items.flatMap((item) => (item.range === undefined || !isTomlValue(item) ? [] : [item.range]));
+    const ranges = items.flatMap((item) => (item.range === undefined || !isValue(item) ? [] : [item.range]));
     if (items.length === 0 || ranges.length !== items.length) return undefined;
     const pad = ' '.repeat(pair.loc.start.column);
     const body = ranges.map(([start, end]) => `${pad}${indent}${text.slice(start, end)},`).join('\n');
@@ -33,14 +33,10 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
  * @param width the most characters a line may hold
  * @returns the text with those arrays wrapped
  */
-export function wrapLongArrays(
-    text: string,
-    indent = ' '.repeat(DEFAULT_INDENT_WIDTH),
-    width = POLICY_LINE_WIDTH,
-): string {
+export function wrapLongArrays(text: string, indent = ' '.repeat(INDENT_WIDTH), width = POLICY_LINE_WIDTH): string {
     const expanded = expandLongTables(text, width);
     const lines = expanded.split('\n');
-    const edits = keyAssignments(parseDocument(expanded).cst)
+    const edits = getPairs(parseDocument(expanded).cst)
         .map((pair) => wrapped(expanded, pair, lines, indent, width))
         .filter((edit) => edit !== undefined)
         .toSorted((left, right) => right.start - left.start);
@@ -54,11 +50,11 @@ export function wrapLongArrays(
  * @param raw the parsed document
  * @returns the indentation of one nested item
  */
-export function policyIndent(raw: TomlTable): string {
+export function getIndent(raw: TomlTable): string {
     const format = raw['format'];
-    if (typeof format !== 'object' || format === null || Array.isArray(format)) return ' '.repeat(DEFAULT_INDENT_WIDTH);
+    if (typeof format !== 'object' || format === null || Array.isArray(format)) return ' '.repeat(INDENT_WIDTH);
     const table = format as TomlTable;
     if (table['indent_style'] === 'tab') return '\t';
     const width = table['indent_width'];
-    return ' '.repeat(typeof width === 'number' && Number.isInteger(width) && width > 0 ? width : DEFAULT_INDENT_WIDTH);
+    return ' '.repeat(typeof width === 'number' && Number.isInteger(width) && width > 0 ? width : INDENT_WIDTH);
 }

@@ -31,7 +31,7 @@ async function expectIndexReport(root: string, args: string[], report: RunReport
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
@@ -75,7 +75,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
+    const policy = policyOf(['bash'], '[rules]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -98,7 +98,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const passed = await runGspot(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     const passedReport = JSON.parse(passed.stdout) as RunReport;
-    expect(passedReport.checks[0]?.status).toBe('ok');
+    expect(passedReport.checks[0]?.status).toBe('passed');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
     unlinkSync(join(directory.path, 'script with spaces.sh'));
@@ -109,7 +109,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
@@ -119,7 +119,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('version-pin');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('pin');
     expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
     const accepted = await runGspot(directory.path, args);
@@ -160,7 +160,7 @@ stage = "commit"
     chmodSync(join(directory.path, 'task.sh'), 0o644);
     const result = await runGspot(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('ok');
+    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('passed');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(keptMode(0o644));
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);

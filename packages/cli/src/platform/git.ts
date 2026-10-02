@@ -107,7 +107,7 @@ export async function gitText(root: string, argv: string[], cancelSignal?: Abort
  * @returns the trimmed output
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Git queries that return one value trim the output the same way.
-export async function gitValue(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
+export async function gitTrimmed(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
     const text = await gitText(root, argv, cancelSignal);
     return text.trim();
 }
@@ -144,6 +144,6 @@ export async function gitPaths(root: string, argv: string[], cancelSignal?: Abor
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Push selection and its refusal both ask Git whether the history is cut.
 export async function isShallow(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
-    const answer = await gitValue(root, ['rev-parse', '--is-shallow-repository'], cancelSignal);
+    const answer = await gitTrimmed(root, ['rev-parse', '--is-shallow-repository'], cancelSignal);
     return answer === 'true';
 }

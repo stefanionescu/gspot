@@ -54,8 +54,8 @@ test.each([
                 {
                     name: 'project/native',
                     command: [...command, ...entry.formatter, '{files}'],
-                    fix_command: [...command, '--fix', '{files}'],
-                    findings_exit_codes: spec.findings_exit_codes!,
+                    fix: [...command, '--fix', '{files}'],
+                    exit_codes: spec.exit_codes!,
                     output: spec.output!,
                     paths: [entry.path],
                     stage: 'commit',

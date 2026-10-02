@@ -11,7 +11,7 @@ import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();
-    const initial = policyOf([], '[guides]\ninstall = false\n');
+    const initial = policyOf([], '[rules]\ninstall = false\n');
     await createFileTree(sandbox.path, { 'gspot.toml': initial });
     const session = await openSession(sandbox.path);
     const edited = `level = "all"\n${initial}`;
@@ -24,7 +24,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
 test('an npm runner preserves the authored scripts and adds no task of its own', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[runner]\ntool = "bun"\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], 'runner = "bun"\n[rules]\ninstall = false\n'),
         'package.json': '{"private":true,"scripts":{"prepare":"build-app"}}\n',
     });
     await writeOutputs(await openSession(sandbox.path));

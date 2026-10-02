@@ -42,8 +42,8 @@ projects and the hooks you chose. Native tools without an npm or Python package,
 ShellCheck, need a separate install. `gspot doctor` lists the missing tools with their install
 commands.
 
-In `gspot.toml`, a missing `[runner]`, `[hooks]`, or `[ci]` table turns that integration off.
-When a table is present, it names its tool or provider. `--no-runner`, `--no-hooks`, and `--no-ci`
+In `gspot.toml`, a missing `runner` key or a missing `[hooks]` or `[ci]` table turns that
+integration off. When present, each names its tool or provider. `--no-runner`, `--no-hooks`, and `--no-ci`
 leave the tables out during init.
 
 ## Private registries

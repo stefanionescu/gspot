@@ -1,6 +1,4 @@
 [kit]
-name = "nestjs"
-kind = "framework"
 title = "NestJS"
 requires = ["typescript"]
 recommends = ["vitest", "security", "dependencies"]
@@ -10,48 +8,48 @@ description = "A NestJS service: the compiler options decorators need, the NestJ
 dependencies = ["@nestjs/core"]
 filenames = ["nest-cli.json"]
 
-[owners]
+[files]
 filenames = ["nest-cli.json"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "@darraghor/eslint-plugin-nestjs-typed"
 kind = "library"
 version = "7.5.5"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
 
-[[configs]]
+[[config]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "CallExpression[callee.name='forwardRef']"
 message = "forwardRef papers over two modules that import each other. Move what both need into a third module."
 
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
 message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
 
 # A controller turns a request into a call, and a service owns the data.
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]"
 message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
 files = ["**/*.controller.ts"]
 
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]"
 message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
 files = ["**/*.controller.ts"]
 
-[[settings]]
+[[setting]]
 name = "tools.nestjs.swagger"
-kind = "boolean"
+type = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."
@@ -63,12 +61,8 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[guides]
-framework = [{path = "framework/nestjs/NESTJS.md"}]
-
 [required_rules]
 ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]
-
 
 [[rules_off]]
 tool = "eslint"

@@ -1,5 +1,8 @@
 // The literal values tools reads: names, patterns, limits, and tables.
 
+/** The name of the private npm and Python projects that hold the tools: unscoped, because PyPI has no scopes. */
+export const TOOLS_PROJECT = 'gspot-tools';
+
 /** The style directory under .gspot and the style Vale reads from it. */
 export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
 

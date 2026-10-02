@@ -15,7 +15,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
         'Examples/Checks.swift': source,
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
-    const command = ['check', '--only', 'xctest/no-sleep', '--json'];
+    const command = ['check', '--only', 'xctest/sleep', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
@@ -28,7 +28,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/no-sleep', status: 'ok', findings: [] },
+        { check: 'xctest/sleep', status: 'passed', findings: [] },
     ]);
 });
 
@@ -56,7 +56,7 @@ test.each([
     const result = await executeRun(await openSession(sandbox.path), runOptions({ only: ['xctest/disabled'] }));
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(missing ? 1 : 0);
-    expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'fail' : 'ok' }]);
+    expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'failed' : 'passed' }]);
     expect(findings).toMatchObject(missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : []);
 });
 
@@ -72,7 +72,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/sleep', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
         (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
@@ -85,9 +85,9 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     ]);
 });
 test.each([
-    { check: 'xctest/no-sleep', body: 'let example = "Task.sleep(1)"', count: 0 },
-    { check: 'xctest/no-sleep', body: 'Task<Never, Never>.sleep(nanoseconds: 1)', count: 1 },
-    { check: 'xctest/no-sleep', body: 'Thread\n.sleep(forTimeInterval: 1)', count: 1 },
+    { check: 'xctest/sleep', body: 'let example = "Task.sleep(1)"', count: 0 },
+    { check: 'xctest/sleep', body: 'Task<Never, Never>.sleep(nanoseconds: 1)', count: 1 },
+    { check: 'xctest/sleep', body: 'Thread\n.sleep(forTimeInterval: 1)', count: 1 },
     { check: 'xctest/recording', body: 'let example = "isRecording = true"', count: 0 },
     { check: 'xctest/recording', body: 'SnapshotTesting.isRecording = true', count: 1 },
     { check: 'xctest/recording', body: 'withSnapshotTesting(record:\n.all) {}', count: 1 },
@@ -99,7 +99,7 @@ test.each([
     });
     const result = await executeRun(await openSession(sandbox.path), runOptions({ only: [check] }));
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
-    expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
+    expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'failed' : 'passed' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
     // A reported body is corrected and inspected again; a clean body already stands as the corrected run.
     if (count > 0)
@@ -110,7 +110,7 @@ test.each([
     const corrected =
         count > 0 ? await executeRun(await openSession(sandbox.path), runOptions({ only: [check] })) : result;
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check, status: 'passed', findings: [] }]);
 });
 
 test('snapshot layouts match semantic owners by path and respect nested scopes', async () => {
@@ -132,7 +132,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
         'custom/References/Multi-Part-title-dark.png': 'png',
         'custom/References/Missing-title.png': 'png',
     });
-    const command = ['check', '--only', 'xctest/reference-images', '--json'];
+    const command = ['check', '--only', 'xctest/references', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
@@ -162,14 +162,14 @@ test.each([
         'gspot.toml': policyOf(['xctest'], `[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`),
         'Checks.swift': 'import Testing\n',
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/reference-images']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'xctest/references']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('reference_layout');
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['xctest'], '', 'all'));
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/reference-images', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/references', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/reference-images', status: 'ok', findings: [] },
+        { check: 'xctest/references', status: 'passed', findings: [] },
     ]);
 });

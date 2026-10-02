@@ -1,4 +1,4 @@
-// Which selected kit owners which file, per scope.
+// Which selected kit owns which file, per scope.
 import { posix } from 'node:path';
 import { GLOB_CHARS } from '#cli/config/kits.ts';
 import { sourceKits } from '#cli/kits/select.ts';
@@ -14,12 +14,15 @@ function isFilenameClaimed(owners: Owners, base: string): boolean {
     return globs.length > 0 && pathMatcher(globs)(base);
 }
 
-// The owners with the file types of the selected Prettier plugins, when the table takes them.
+// The owners with the file types of the selected Prettier or ESLint plugins, when the table takes them.
 function effectiveOwners(owners: Owners, selected: Manifest[]): Owners {
-    if (!owners.from_prettier_plugins) return owners;
+    if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
     const extensions = selected
         .flatMap((manifest) => manifest.tools)
-        .flatMap((tool) => tool.prettier?.extensions ?? []);
+        .flatMap((tool) => [
+            ...(owners.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
+            ...(owners.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
+        ]);
     return { ...owners, extensions: [...owners.extensions, ...extensions] };
 }
 
@@ -37,9 +40,9 @@ export function isOwned(owners: Owners, file: TrackedFile): boolean {
 }
 
 /**
- * The files selected by a scoped owners table and its `kinds` and `from_languages` constraints.
+ * The files selected by a scoped owners table and its `kinds` and `languages` constraints.
  * @param table the owners table
- * @param selected the selected manifests, for from_languages and the Prettier plugins
+ * @param selected the selected manifests, for languages and the Prettier plugins
  * @param files the tracked files
  * @param scope the scope path
  * @returns the files owned
@@ -47,10 +50,10 @@ export function isOwned(owners: Owners, file: TrackedFile): boolean {
 export function ownedBy(table: Owners, selected: Manifest[], files: TrackedFile[], scope: string): TrackedFile[] {
     const owners = effectiveOwners(table, selected);
     const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
-    if (owners.from_languages) {
+    if (owners.languages) {
         const languages = sourceKits(selected);
         return candidates.filter(
-            (file) => isOwned(owners, file) || languages.some((language) => isOwned(language.owners, file)),
+            (file) => isOwned(owners, file) || languages.some((language) => isOwned(language.files, file)),
         );
     }
     return candidates.filter((file) => isOwned(owners, file));
@@ -65,9 +68,9 @@ export function ownedBy(table: Owners, selected: Manifest[], files: TrackedFile[
 export function ownerOf(file: TrackedFile, selected: Manifest[]): Manifest[] {
     const languages = sourceKits(selected);
     return selected.filter((manifest) => {
-        const owners = effectiveOwners(manifest.owners, selected);
-        if (owners.from_languages)
-            return isOwned(owners, file) || languages.some((language) => isOwned(language.owners, file));
+        const owners = effectiveOwners(manifest.files, selected);
+        if (owners.languages)
+            return isOwned(owners, file) || languages.some((language) => isOwned(language.files, file));
         return isOwned(owners, file);
     });
 }

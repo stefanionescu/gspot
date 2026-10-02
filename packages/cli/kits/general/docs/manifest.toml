@@ -1,15 +1,13 @@
 [kit]
-name = "docs"
-kind = "general"
 title = "Docs"
-default = true
+auto = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
 
-[owners]
+[files]
 extensions = [".md", ".mdx"]
 filenames = ["CLAUDE.md", "AGENTS.md", "README.md"]
 
-[[tools]]
+[[tool]]
 name = "lychee"
 version = "0.24.2"
 mise = "lychee"
@@ -17,47 +15,44 @@ brew = "lychee"
 cargo = "lychee"
 github = {name = "lycheeverse/lychee", version = "lychee-v0.24.2"}
 
-[[tools.replace]]
+[[tool.replace]]
 file = "lychee.toml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".lycheeignore"
 
-[[configs]]
-template = "lychee.toml.tmpl"
+[[config]]
 target = ".gspot/config/lychee.toml"
 
-[[checks]]
-name = "docs/links"
+[[check]]
+name = "lychee"
 title = "Check local documentation links"
 example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
 level = "recommended"
 stage = "commit"
-runs = "per-file-list"
+runs = "files"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
-exclude_setting = "tools.lychee.exclude_paths"
 output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks that every relative link names a tracked file and every anchor names a heading."
 why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
 help = "Point the link at the file or heading that exists, or delete it."
 
-[[checks]]
-name = "docs/links-external"
+[[check]]
+name = "lychee-external"
 title = "Check external documentation links"
 example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
 level = "recommended"
 stage = "manual"
-runs = "per-file-list"
-requires = "network"
+runs = "files"
+needs = ["network"]
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
-exclude_setting = "tools.lychee.exclude_paths"
 output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
-help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude."
+help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude_urls."
 
-[[checks]]
-name = "integrity/docs-headings"
+[[check]]
+name = "headings"
 title = "Check documentation headings"
 example = "A document section using a heading banned by the configured documentation policy reports that heading. Replace the section with content that answers a reader task and give it a descriptive heading, or delete the unnecessary section."
 level = "all"
@@ -66,20 +61,20 @@ summary = "Finds a heading from the banned list, such as Table of contents, or P
 why = "An inventory heading promises a map that goes stale; the reader wanted an explanation."
 help = "Replace the section with prose that explains, or delete it."
 
-[[checks]]
-name = "integrity/stale-paths"
-title = "Stale paths"
+[[check]]
+name = "stale-paths"
+title = "Check the paths and tasks docs name"
 example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
 runs = "once"
 level = "recommended"
 stage = "commit"
 summary = "Checks that every path a Markdown file names is tracked, and every mise run or bun run names a task that exists."
 why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
-help = "Fix the path or the task name, or add the pattern with a reason under tools.docs.paths_allowed."
+help = "Fix the path or the task name, or add the path with a reason under tools.docs.exclude."
 
-[[checks]]
-name = "docs/readme-present"
-title = "README present"
+[[check]]
+name = "readme-present"
+title = "Require a README and a license"
 example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
 level = "all"
 stage = "commit"
@@ -87,9 +82,9 @@ summary = "Checks that every scope has a README.md and the root has a LICENSE."
 why = "A scope with no README is a door with no sign."
 help = "Write the README; the docs rule files say what goes in it."
 
-[[checks]]
-name = "docs/readme-shape"
-title = "README shape"
+[[check]]
+name = "readme-shape"
+title = "Check the shape of each README"
 example = "A README with two H1 headings reports `one-h1`. Keep one title and make the second heading an H2. A scope-root README also needs a getting-started section and an opening paragraph."
 level = "all"
 stage = "commit"
@@ -97,44 +92,44 @@ summary = "Checks the shape of every README: one H1, an opening paragraph, a Con
 why = "A README with the right shape answers what this is and how to start before the reader scrolls."
 help = "Add the missing piece; use a tracked check exception with a reason when the shape does not fit."
 
-[[settings]]
-name = "tools.lychee.exclude_paths"
-kind = "list"
+[[setting]]
+name = "tools.lychee.exclude"
+type = "list"
 direction = "loosening"
 default = []
 summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
 
-[[settings]]
-name = "tools.docs.paths_allowed"
-kind = "list"
+[[setting]]
+name = "tools.docs.exclude"
+type = "list"
 direction = "loosening"
 default = []
-summary = "Path patterns the stale-paths check skips, each with a reason."
+summary = "Paths the stale-paths check skips, each with a reason."
 
-[[settings]]
+[[setting]]
 name = "tools.docs.banned_headings"
-kind = "list"
+type = "list"
 direction = "tightening"
 default = []
 summary = "Headings this repository bans beyond the shipped list."
 
-[[settings]]
-name = "tools.docs.require_license"
-kind = "boolean"
+[[setting]]
+name = "tools.docs.license"
+type = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether the root must carry a LICENSE file."
 
-[[settings]]
-name = "tools.docs.contents_threshold"
-kind = "number"
+[[setting]]
+name = "limits.docs.contents_headings"
+type = "number"
 direction = "ceiling"
 default = 6
 summary = "How many H2 headings a README may have before it needs a Contents list."
 
-[[settings]]
-name = "tools.lychee.exclude"
-kind = "list"
+[[setting]]
+name = "tools.lychee.exclude_urls"
+type = "list"
 direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."

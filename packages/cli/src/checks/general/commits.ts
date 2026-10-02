@@ -5,12 +5,12 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { pushBase } from '#cli/repository/revisions/changes.ts';
+import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
     if (planned.commits !== undefined) return planned.commits;
-    const base = await pushBase(session.root, session.cancelSignal);
+    const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
         cancelSignal: session.cancelSignal,
     });
@@ -29,8 +29,8 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     const result: CheckResult = {
         check: planned.check,
         scope: planned.scope.scope.path,
-        status: 'ok',
-        files: 0,
+        status: 'passed',
+        fileCount: 0,
         findings: [],
         duration: 0,
     };
@@ -74,7 +74,7 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     }
     return {
         ...result,
-        status: statuses.has('fail') ? 'fail' : 'ok',
+        status: statuses.has('failed') ? 'failed' : 'passed',
         duration: performance.now() - started,
         note: `Checked ${String(checked)} commit messages.`,
     };

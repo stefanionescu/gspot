@@ -52,7 +52,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
                     findingAt(
                         input,
                         { file: path, line: text.slice(0, match.index).split('\n').length },
-                        'build-check-off',
+                        'checks-off',
                         `${match.groups?.['name'] ?? ''} lets a build pass with findings the gate stops.`,
                     ),
                 );
@@ -64,7 +64,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
                     findingAt(
                         input,
                         { file: path, line: text.slice(0, env + match.index).split('\n').length },
-                        'secret-in-env',
+                        'env-secret',
                         `${match.groups?.['name'] ?? ''} under env is written into the client bundle. Read it on the server.`,
                     ),
                 );

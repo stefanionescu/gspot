@@ -11,7 +11,7 @@ run `gspot apply` to write them again.
 | Path                             | What it holds                                                                              |
 | -------------------------------- | ------------------------------------------------------------------------------------------ |
 | `.gspot/config/`                 | The configuration of every tool. A scope gets its own folder under it.                     |
-| `.gspot/guides/`                 | The guides for coding agents.                                                              |
+| `.gspot/rules/`                  | The guides for coding agents.                                                              |
 | `.gspot/package.json` and lock   | The npm tools gspot installs, at pinned versions.                                          |
 | `.gspot/pyproject.toml` and lock | The Python tools gspot installs, at pinned versions.                                       |
 | `.gspot/version`                 | The gspot version of the repository.                                                       |
@@ -31,7 +31,7 @@ policy.
 
 ## What to commit
 
-Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/guides/`, the
+Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/rules/`, the
 private manifests and locks at the root of `.gspot/`, the root files, and the managed blocks.
 After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
 

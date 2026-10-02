@@ -1,9 +1,9 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { cp, readdir } from 'node:fs/promises';
 import { isInScope } from '#cli/repository/selectors.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
 import { PERMISSION_BITS } from '#cli/config/platform/platform.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { ScratchFolder } from '#cli/types/platform/platform.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
@@ -168,7 +168,7 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
     try {
         // The private tools of gspot run in place, so their folders stay out of the copy.
         const projects = paths.flatMap((path) =>
-            PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
+            PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
                 ? [posix.dirname(path)]
                 : [],
         );

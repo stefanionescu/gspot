@@ -30,7 +30,7 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
         .filter((file) => file.kind === 'source')
         .map((file) => ({
             file,
-            language: languages.find((manifest) => isOwned(manifest.owners, file))?.kit.name,
+            language: languages.find((manifest) => isOwned(manifest.files, file))?.kit.name,
         }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
@@ -91,7 +91,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
         const scope = scopeOf(file.path, input.scopeEntries);
-        const language = selections.get(scope.path)?.find((manifest) => isOwned(manifest.owners, file));
+        const language = selections.get(scope.path)?.find((manifest) => isOwned(manifest.files, file));
         if (language === undefined) continue;
         const name = language.kit.name;
         const identifiers = await identifiersOf(
@@ -141,11 +141,11 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
                 (name) =>
                     `A [[naming.rules]] entry names the case "${name}", which is not one of camel, pascal, pascal-plus, kebab, snake, upper-snake or snake-migration.`,
             );
-        const groups = naming.remove_groups
+        const groups = naming.dropped_groups
             .filter((entry) => !removable.has(entry.group))
-            .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
+            .map((entry) => `naming.dropped_groups names "${entry.group}", which is not a removable group.`);
         return [...unused, ...dead, ...groups, ...cases].map((text) =>
-            findingAt(input, { file: 'gspot.toml' }, 'configuration', scope === '' ? text : `${text} (scope ${scope})`),
+            findingAt(input, { file: 'gspot.toml' }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
         );
     });
 }
@@ -171,7 +171,7 @@ export const NAMING_ENGINES: Record<string, Engine> = {
     'naming/paths': namingEngine((input, policy) =>
         pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
     ),
-    'naming/policy-schema': namingEngine(schemaFindings),
+    'naming/policy': namingEngine(schemaFindings),
 };
 
 /**

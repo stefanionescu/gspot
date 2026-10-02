@@ -16,7 +16,7 @@ export function envFiles(input: EngineInput): Finding[] {
             findingAt(
                 input,
                 { file: path, line: 1 },
-                'tracked-environment-file',
+                'tracked-env',
                 `${path} is tracked; an environment file holds the values of one machine.`,
             ),
         );

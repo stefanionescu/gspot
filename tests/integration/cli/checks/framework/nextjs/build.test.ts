@@ -14,7 +14,7 @@ import { nextjsBuild, nextjsTypes } from '#cli/checks/framework/nextjs/build.ts'
 import { prepareNextjsBuild, readNextjsCommands } from '#tests/harness/cli/nextjs.ts';
 
 for (const scope of ['', 'apps/web'])
-    for (const check of ['nextjs/typecheck', 'nextjs/build'])
+    for (const check of ['nextjs/tsc', 'nextjs/build'])
         test(`Next.js output preservation in ${scope || 'root'}: ${check} reports a defect, accepts its correction, and preserves source output`, async () => {
             await using directory = await testdir();
             const input = await prepareNextjsBuild(directory.path, scope, check);
@@ -24,20 +24,20 @@ for (const scope of ['', 'apps/web'])
             const mode = statSync(config).mode;
             using read = readNextjsCommands(check);
             const { directories, inspections, routesSeen } = read;
-            const execute = check === 'nextjs/typecheck' ? nextjsTypes : nextjsBuild;
+            const execute = check === 'nextjs/tsc' ? nextjsTypes : nextjsBuild;
             const found = await execute(input);
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
-                file: toPosix(join(scope, check === 'nextjs/typecheck' ? 'src/page.ts' : 'package.json')),
+                file: toPosix(join(scope, check === 'nextjs/tsc' ? 'src/page.ts' : 'package.json')),
                 line: 1,
             });
             expect(found[0]!.message).toBe(
-                check === 'nextjs/typecheck' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
+                check === 'nextjs/tsc' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
             );
             writeFileSync(join(directory.path, join(scope, 'src/page.ts')), 'corrected input\n');
             expect(await execute(input)).toStrictEqual([]);
-            expect(directories).toHaveLength(check === 'nextjs/typecheck' ? 4 : 2);
+            expect(directories).toHaveLength(check === 'nextjs/tsc' ? 4 : 2);
             expect(directories).not.toContain(join(directory.path, scope));
             expect(inspections.every((args) => args.length === 1 && args[0] === '--version')).toBe(true);
             expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
@@ -65,7 +65,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
         'tsconfig.json': '{}\n',
     });
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/typecheck')!;
+    const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/tsc')!;
     const input: EngineInput = scopeInput(session, spec);
     let scratch = '';
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);

@@ -2,10 +2,10 @@
 import { parseSql } from '#cli/parsers/sql/pg.ts';
 import { sqlSource } from '#cli/parsers/sql/source.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-import type { SourceReads } from '#cli/types/platform/platform.ts';
+import type { ReadCache } from '#cli/types/platform/platform.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-const reads = new WeakMap<SourceReads, Map<string, Promise<SqlFile>>>();
+const reads = new WeakMap<ReadCache, Map<string, Promise<SqlFile>>>();
 
 function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
@@ -56,7 +56,7 @@ export function positionAt(text: string, offset: number): { line: number; column
  * @param read the execution reads, omitted for standalone parsing
  * @returns statements and original diagnostic positions
  */
-export function sqlFile(text: string, read?: SourceReads): Promise<SqlFile> {
+export function sqlFile(text: string, read?: ReadCache): Promise<SqlFile> {
     if (read === undefined) return parseFile(text);
     let files = reads.get(read);
     if (files === undefined) {

@@ -10,7 +10,7 @@ function section(title: string, rows: { path: string; note: string }[]): string[
 }
 
 function kitSection(rows: ReplacePlan['kits']): string[] {
-    if (rows.length === 0) return ['kits', '  none: the guides install alone', ''];
+    if (rows.length === 0) return ['kits', '  none: the rules install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
         return `  ${row.kit.padEnd(KIT_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;

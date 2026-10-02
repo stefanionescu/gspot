@@ -36,7 +36,7 @@ test('JavaScript checking includes authored build directories at all', async () 
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['javascript'],
-            '[guides]\ninstall = false\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
+            '[rules]\ninstall = false\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
             'all',
         ),
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
@@ -45,7 +45,7 @@ test('JavaScript checking includes authored build directories at all', async () 
     const session = await openSession(sandbox.path);
     const generated = emitted(session).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
     await Bun.write(join(sandbox.path, generated.path), generated.content);
-    const command = ['check', '--only', 'javascript/checkjs', '--json'];
+    const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const report = JSON.parse(broken.stdout) as RunReport;
@@ -64,7 +64,7 @@ test.each([false, true])(
         const authoredFiles: Record<string, string> = authored ? JAVASCRIPT_AUTHORED_FILES : {};
         const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';\nexport const text = format(42);\nexport const total = accepted;\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n'),
+            'gspot.toml': policyOf(['javascript'], '[rules]\ninstall = false\n'),
             'source/main.js': source,
             'source/value.js':
                 '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
@@ -77,7 +77,7 @@ test.each([false, true])(
         const generated = emitted(session).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         await Bun.write(join(sandbox.path, generated.path), generated.content);
         chmodSync(join(sandbox.path, generated.path), 0o444);
-        const command = ['check', '--only', 'javascript/checkjs', '--json'];
+        const command = ['check', '--only', 'javascript/tsc', '--json'];
         const env = { PATH: toolsPath(['tsc']) };
         const broken = await spawnGspot(sandbox.path, command, env);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -104,7 +104,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     await using sandbox = await testdir();
     const policy = policyOf(
         ['javascript'],
-        '[guides]\ninstall = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        '[rules]\ninstall = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
     );
     const bad = '/** @type {string} */\nexport const name = 42;\n';
     const corrected = bad.replace('42', '"name"');
@@ -131,7 +131,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         '.gspot/config/sibling/jsconfig.json',
     ]);
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
-    const command = ['check', '--only', 'javascript/checkjs', '--json'];
+    const command = ['check', '--only', 'javascript/tsc', '--json'];
     const env = { PATH: toolsPath(['tsc']) };
     const broken = await spawnGspot(sandbox.path, command, env);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);

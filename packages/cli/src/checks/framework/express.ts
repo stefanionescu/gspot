@@ -11,7 +11,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 export async function routesTested(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool('express');
     const routes = tool['route_files'] as string[];
-    const tests = tool['test_files'] as string[];
+    const tests = input.view.settings['tests'] as string[];
     if (routes.length === 0 || tests.length === 0) return [];
     const isRoute = pathMatcher(routes);
     const isTest = pathMatcher(tests);

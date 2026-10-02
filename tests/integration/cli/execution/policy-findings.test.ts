@@ -10,17 +10,17 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
-const POLICY_FINDINGS_OPTIONS = runOptions({ only: ['swift/trivial-function'] });
+const POLICY_FINDINGS_OPTIONS = runOptions({ only: ['swift/trivial-functions'] });
 
 const BROKEN = policyOf(
     ['swift'],
-    'require_reasons = true\n[[ignore]]\ncheck = "swift/trivial-function"\npaths = ["Sources/Other.swift"]\n',
+    'require_reasons = true\n[[ignore]]\ncheck = "swift/trivial-functions"\npaths = ["Sources/Other.swift"]\n',
     'all',
 );
 
 const CORRECTED = `${BROKEN}reason = "The protocol entry point forwards by design."\n`;
 
-test('a wrong entry in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
+test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': BROKEN,
@@ -30,16 +30,16 @@ test('a wrong entry in gspot.toml is a finding of integrity/policy, and the othe
     const broken = await executeRun(await openSession(sandbox.path), { ...POLICY_FINDINGS_OPTIONS, checks: CHECKS });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['swift/trivial-function', 'fail'],
-        ['integrity/policy', 'fail'],
+        ['swift/trivial-functions', 'failed'],
+        ['gspot/policy', 'failed'],
     ]);
     expect(broken.report.checks[1]!.findings).toMatchObject([
         { file: 'gspot.toml', message: textContaining('ignore.0.reason: [[ignore]] entry 1') },
     ]);
-    expect(broken.report.failed).toContain('integrity/policy');
+    expect(broken.report.failed).toContain('gspot/policy');
     writeFileSync(join(sandbox.path, 'gspot.toml'), CORRECTED);
     const corrected = await executeRun(await openSession(sandbox.path), { ...POLICY_FINDINGS_OPTIONS, checks: CHECKS });
-    expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['swift/trivial-function']);
+    expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['swift/trivial-functions']);
 });
 
 test('apply refuses a policy with a wrong entry, because it writes from the policy', async () => {

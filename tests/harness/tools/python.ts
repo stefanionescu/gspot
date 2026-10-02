@@ -5,10 +5,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePythonProject } from '#cli/tools/python.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { PreparePythonInstallationResult } from '#tests/types/tools.ts';
@@ -29,10 +29,10 @@ export async function preparePythonInstallation(
     runner: string,
     url: string,
 ): Promise<PreparePythonInstallationResult> {
-    const runnerTable = runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`;
+    const runnerTable = runner === 'none' ? '' : `runner = "${runner}"\n`;
     await createFileTree(root, {
         '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
-        'gspot.toml': policyOf(['python'], `${runnerTable}[guides]\ninstall = false\n`, 'recommended'),
+        'gspot.toml': policyOf(['python'], `${runnerTable}[rules]\ninstall = false\n`, 'recommended'),
         ...AUTHORED_FILES,
     });
     const session = await openSession(root);
@@ -60,7 +60,7 @@ export async function preparePythonInstallation(
         writeFileSync(join(root, configuration), authored + index);
         const rootProject = readFileSync(join(root, 'pyproject.toml'));
         const rootConfiguration = readFileSync(join(root, configuration));
-        await runOwnedLifecycle(root, async (owner) => {
+        await asOwner(root, async (owner) => {
             await preparePythonProject(root, plans, owner);
             for (const file of plans)
                 owner.replace(

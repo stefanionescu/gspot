@@ -103,7 +103,7 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
     const root = join(sandbox.path, 'project');
     const baseline = join(root, '.gspot/gitleaks-baseline.json');
     fs.symlinkSync('../../baseline.json', baseline);
-    const options = runOptions({ only: ['integrity/gitleaks-baseline'] });
+    const options = runOptions({ only: ['secrets/gitleaks-baseline'] });
     const refused = await executeRun(await openSession(root), options);
     expect(refused.report.exitCode).toBe(2);
     expect(refused.report.checks[0]).toMatchObject({ status: 'error', findings: [] });

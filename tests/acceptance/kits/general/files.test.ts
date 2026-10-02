@@ -2,8 +2,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { WORKFLOW_HEAD } from '#tests/samples/files.ts';
 import { git, commitAll } from '#tests/harness/cli/git.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -12,7 +10,7 @@ import { script, plantedCases } from '#tests/harness/planted/cases.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { install, toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
-const CONFIGS_INIT = ['init', '--yes', '--kits', 'files', '--no-runner', '--no-ci', '--no-guides', '--no-install'];
+const CONFIGS_INIT = ['init', '--yes', '--kits', 'files', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 plantedCases(
     'the configs configuration',
@@ -20,13 +18,13 @@ plantedCases(
         kits: ['files'],
         modules: false,
         without: [],
-        init: ['--no-runner', '--no-ci', '--no-guides', '--no-install', '--no-hooks'],
-        tools: ['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter'],
+        init: ['--no-runner', '--no-ci', '--no-rules', '--no-install', '--no-hooks'],
+        tools: ['taplo', 'yamllint', 'dotenv-linter'],
         files: { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' },
     },
     [
         {
-            check: 'files/toml-format',
+            check: 'files/taplo-format',
             files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
             expected: {
                 file: 'settings/layout.toml',
@@ -35,33 +33,13 @@ plantedCases(
             corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
         },
         {
-            check: 'files/actions',
-            files: {
-                '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n`,
-            },
-            expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
-            corrected: {
-                files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-            },
-        },
-        {
-            check: 'files/actions-security',
-            files: {
-                '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
-            },
-            expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
-            corrected: {
-                files: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-            },
-        },
-        {
-            check: 'files/dotenv',
+            check: 'files/dotenv-linter',
             files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
             expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
             corrected: { files: { '.env.example': 'PORT=3000\n' } },
         },
         {
-            check: 'files/xml',
+            check: 'files/xmllint',
             files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
             expected: {
                 file: 'settings/feed.xml',
@@ -72,7 +50,7 @@ plantedCases(
         },
         // The plist reader is the macOS plutil.
         {
-            check: 'files/plist',
+            check: 'files/plutil',
             files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
             expected: { file: 'app/Info.plist' },
             platforms: ['darwin'],
@@ -89,46 +67,26 @@ plantedCases(
             'the commit stage keeps schema validation for push',
             async () => {
                 const { root, environment } = planted();
-                const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+                const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
-                expect(ids).not.toContain('files/schema');
-                expect(ids).toContain('files/toml');
+                expect(ids).not.toContain('files/v8r');
+                expect(ids).toContain('files/taplo');
             },
             PLANTED_TIMEOUT_MS * 2,
         );
     },
 );
 
-test(
-    'the configs configuration: GitHub initialization writes a workflow accepted by actionlint',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['actionlint']) };
-        await install(sandbox.path, [...CONFIGS_INIT, '--ci', 'github', '--no-hooks'], environment);
-        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
-        const result = await processes.run(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
-            cwd: sandbox.path,
-            env: environment,
-        });
-        expect(result.code, result.stderr + result.stdout).toBe(0);
-    },
-    PLANTED_TIMEOUT_MS,
-);
-
 test.each([
     {
-        check: 'files/toml',
+        check: 'files/taplo',
         path: 'settings.toml',
         broken: 'a = 1\n[x\n',
         corrected: 'a = 1\n',
         expected: { file: 'settings.toml', line: 2 },
     },
     {
-        check: 'files/yaml',
+        check: 'files/yamllint',
         path: 'config.yaml',
         broken: 'key: 1\nkey: 2\n',
         corrected: '---\nkey: 1\n',
@@ -161,13 +119,13 @@ test.each([
         const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
+        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'failed' }]);
         expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
         await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: scenario.check, status: 'ok', findings: [] },
+            { check: scenario.check, status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -200,13 +158,13 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--json'];
+        const command = ['check', '--only', 'files/v8r', '--staged', '--hook', 'push', '--json'];
         const invalid = await spawnGspot(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
             {
-                check: 'files/schema',
-                status: 'fail',
+                check: 'files/v8r',
+                status: 'failed',
                 findings: [
                     containing({
                         file: 'settings/café.json',
@@ -220,7 +178,7 @@ test(
         const valid = await spawnGspot(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/schema', status: 'ok', findings: [] },
+            { check: 'files/v8r', status: 'passed', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -236,10 +194,10 @@ test(
         await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const fixed = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv', '--fix'], environment);
+        const fixed = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter', '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

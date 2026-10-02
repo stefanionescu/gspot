@@ -56,11 +56,8 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
             (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
         )
     )
-        throw new GspotError(
-            'skipped',
-            'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.',
-        );
-    const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
+        throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
+    const allowed = (input.view.tool('pip')['installs_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files.filter(
         (file) => file.kind === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,

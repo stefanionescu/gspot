@@ -3,8 +3,8 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { TestPlan } from '#cli/types/checks/tool/xcode.ts';
-import { gitBlobs, gitEntries } from '#cli/execution/checkout/revision.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { getBlobs, getCachedEntries } from '#cli/execution/checkout/revision.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 import { readProject, projectTestTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
 
@@ -51,7 +51,7 @@ export function orphanSources(input: EngineInput): Finding[] {
                 synced.every(({ prefix, excluded }) => !file.startsWith(prefix) || excluded.has(file)),
         )
         .map((file) =>
-            findingAt(input, { file, line: 1 }, 'no-target', 'This Swift file is in no target of the project.'),
+            findingAt(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
         );
     const gone = references
         .filter(({ path }) => !inTree.has(path))
@@ -103,14 +103,14 @@ export function testPlans(input: EngineInput): Finding[] {
 export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
-    const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);
+    const entries = await getCachedEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&
             scopeOf(entry.path, input.scopeEntries).path === input.scope &&
             folders.some((folder) => entry.path.startsWith(folder)),
     );
-    const targets = await gitBlobs(
+    const targets = await getBlobs(
         input.root,
         links.map((entry) => entry.hash),
         input.cancelSignal,

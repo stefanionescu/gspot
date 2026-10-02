@@ -10,7 +10,7 @@ import { runOptions } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 
-const SECRETS_FILES_POLICY = policyOf(['secrets'], '[guides]\ninstall = false\n');
+const SECRETS_FILES_POLICY = policyOf(['secrets'], '[rules]\ninstall = false\n');
 
 /** A planted token with the shape gitleaks looks for; it belongs to nothing, and this file holds it in two parts. */
 const PLANTED_TOKEN = `const token = "${['ghp', 'Xk92lM3nPq7RsT1vWy4ZaB6cDe8FgH0iJkLmN'].join('_')}";\n`;
@@ -32,7 +32,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     expect(withoutGit).toContainEqual(
         containing({
             check: 'secrets/gitleaks-files',
-            status: 'fail',
+            status: 'failed',
             findings: [containing({ file: 'src/config.js' })],
         }),
     );
@@ -40,5 +40,5 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     commitAll(sandbox.path);
     const isGitRepository = await secretChecks(sandbox.path);
     expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
-    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('ok');
+    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('passed');
 });

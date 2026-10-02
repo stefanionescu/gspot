@@ -1,4 +1,5 @@
 import { test, expect, describe } from 'bun:test';
+import { shippedPolicy } from '#cli/policy/audit.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { hasCase } from '#cli/checks/general/naming/cases.ts';
 import { compileTerms } from '#cli/checks/general/naming/match.ts';
@@ -120,6 +121,18 @@ describe('nameProblems', () => {
             nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false }),
         ).toStrictEqual([]);
     });
+});
+
+test('the words of the shipped tests group pass in a test file and fail elsewhere', () => {
+    const terms = Object.entries(shippedPolicy().groups).flatMap(([group, { terms: words }]) =>
+        compileTerms(words, `${group} group`),
+    );
+    const shipped = { ...policy, terms };
+    const actual = identifier('actualRoot', 'variables');
+    expect(nameProblems(actual, { policy: shipped, isReactFile: false, isTestFile: true })).toStrictEqual([]);
+    expect(nameProblems(actual, { policy: shipped, isReactFile: false, isTestFile: false })[0]?.rule).toBe(
+        'banned-term',
+    );
 });
 
 test('an unknown case never matches an identifier or invokes an inherited object member', () => {

@@ -20,7 +20,7 @@ const LOCKS: [string, string][] = [
 
 const POLICY = policyOf(
     ['structure', 'licenses'],
-    '[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n',
+    '[[tools.licenses.exceptions]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n',
 );
 
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
@@ -31,12 +31,12 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         const scope = session.scopes[0]!;
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
-            .find((check) => check.name === 'integrity/allowlists-match')!;
+            .find((check) => check.name === 'structure/stale-allowlists')!;
         return allowlistsMatch(scopeInput(session, spec));
     };
     expect(await check()).toStrictEqual([
         containing({
-            check: 'integrity/allowlists-match',
+            check: 'structure/stale-allowlists',
             file: 'gspot.toml',
             line: 1,
             rule: 'unlocked-package',
@@ -54,7 +54,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     await createFileTree(root, {
         'gspot.toml': policyOf(
             ['structure', 'licenses'],
-            '[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
+            '[[scope]]\npath = "app"\n[[scope.tools.licenses.exceptions]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
         ),
         'app/source.py': 'selected = True\n',
         'sibling/uv.lock': lock,
@@ -65,7 +65,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const scope = session.scopes[0]!;
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
-            .find((check) => check.name === 'integrity/allowlists-match')!;
+            .find((check) => check.name === 'structure/stale-allowlists')!;
         return allowlistsMatch(scopeInput(session, spec));
     };
     expect(await rejection(check())).toContain('require a dependency lockfile');
@@ -79,7 +79,7 @@ test.each(['root', 'nested', 'combined'])(
         await using repository = await testdir();
         const root = repository.path;
         const exception =
-            '\n[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
+            '\n[[tools.licenses.exceptions]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
         const configurations = selection === 'combined' ? '"licenses", "structure"' : '"licenses"';
         const selected =
             selection === 'nested'
@@ -92,19 +92,19 @@ test.each(['root', 'nested', 'combined'])(
             'uv.lock': 'version = 1\n[[package]]\nname = "example"\nversion = "1.2.3"\n',
         });
         const session = await openSession(root);
-        const plan = planRun(session, { stage: 'commit', only: ['integrity/allowlists-match'], skips: [] });
+        const plan = planRun(session, { stage: 'commit', only: ['structure/stale-allowlists'], skips: [] });
         expect(plan).toHaveLength(1);
         const selectsStructure = session.scopes
             .flatMap((scope) => scope.selected)
             .some((manifest) => manifest.kit.name === 'structure');
         expect(selectsStructure).toBe(selection === 'combined');
-        const options = runOptions({ only: ['integrity/allowlists-match'] });
+        const options = runOptions({ only: ['structure/stale-allowlists'] });
         const result = await executeRun(session, options);
         expect(result.report.exitCode).toBe(1);
         expect(result.report.checks).toMatchObject([
             {
-                check: 'integrity/allowlists-match',
-                status: 'fail',
+                check: 'structure/stale-allowlists',
+                status: 'failed',
                 findings: [{ file: 'gspot.toml', line: 1, rule: 'unlocked-package' }],
             },
         ]);
@@ -114,7 +114,7 @@ test.each(['root', 'nested', 'combined'])(
         const corrected = await executeRun(await openSession(root), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks).toMatchObject([
-            { check: 'integrity/allowlists-match', status: 'ok', findings: [] },
+            { check: 'structure/stale-allowlists', status: 'passed', findings: [] },
         ]);
     },
 );

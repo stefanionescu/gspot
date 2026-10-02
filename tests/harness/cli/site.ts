@@ -7,7 +7,7 @@ import type { EngineInput } from '#cli/types/execution/execution.ts';
 /** Select source files for an isolated site build owned by the test resource stack. */
 export async function siteInput(root: string, paths: string[], resources: DisposableStack): Promise<EngineInput> {
     await createFileTree(root, {
-        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
+        'gspot.toml': policyOf(['site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
     });
     const session = await openSession(root);
     session.resources = resources;
@@ -15,6 +15,6 @@ export async function siteInput(root: string, paths: string[], resources: Dispos
     const selection = session.scopes[0]!;
     const spec = selection.selected
         .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'static-site/build-reproducible')!;
+        .find((check) => check.name === 'site/build-reproducible')!;
     return scopeInput(session, spec);
 }

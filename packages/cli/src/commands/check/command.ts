@@ -2,11 +2,10 @@
 import { addAbortSignal } from 'node:stream';
 import { compact } from '#cli/platform/text.ts';
 import { progress } from '#cli/output/reporter.ts';
+import { HOOKS } from '#cli/config/commands/check.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { Stage } from '#cli/types/execution/planning.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
-import { PUBLIC_STAGES } from '#cli/config/commands/check.ts';
+import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import type { Program, GlobalFlags, CommandResult } from '#cli/types/commands/commands.ts';
@@ -26,13 +25,6 @@ class CheckCommand extends Command<[], Record<string, unknown>, GlobalFlags> {
             ),
         );
     }
-}
-
-function stageArgument(value: string): Stage {
-    if (value === 'message') return value;
-    const stage = PUBLIC_STAGES.find((entry) => entry === value);
-    if (stage === undefined) throw new InvalidArgumentError(`Choose ${PUBLIC_STAGES.join(', ')}.`);
-    return stage;
 }
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
@@ -72,8 +64,8 @@ async function checkedCommand(
         if (!signal.aborted) throw error;
         return {
             text: 'Check canceled before all selected content was checked.\n',
-            json: { error: 'canceled', exitCode: ERROR_EXIT },
-            exitCode: ERROR_EXIT,
+            json: { error: 'canceled', exitCode: EXIT_ERROR },
+            exitCode: EXIT_ERROR,
         };
     }
 }
@@ -101,7 +93,8 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
                 ...compact({
                     only: flags.only,
                     changed: flags.changed === true ? undefined : flags.changed,
-                    stage: flags.stage,
+                    // A message file is what the commit-msg hook passes, so it selects the message checks.
+                    stage: flags.messageFile === undefined ? flags.hook : 'message',
                     messageFile: flags.messageFile,
                     onResult: global.json === true ? undefined : progress(process.stdout, global.quiet === true),
                 }),
@@ -124,10 +117,12 @@ export function registerCheck(program: Program): void {
     command
         .argument('[paths...]')
         .summary('Run the checks')
-        .description('Run checks over the selected files and folders and print findings')
+        .description(
+            'Run the selected checks and print each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nRuns the selected checks and prints each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.\n\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
+            '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
         .option('--only <checks...>', 'Run only these checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
@@ -138,13 +133,9 @@ export function registerCheck(program: Program): void {
         )
         .option('--fix', 'Run every fixer, then run the checks again')
         .option('--dry-run', 'With --fix, print the diff of each fix and write nothing')
-        .addOption(
-            new Option('--stage <stage>', 'Run the checks of one stage')
-                .choices(PUBLIC_STAGES)
-                .argParser(stageArgument),
-        )
+        .addOption(new Option('--hook <hook>', 'Run the checks of one Git hook, as that hook does').choices(HOOKS))
         .option('--skip <checks...>', 'Skip these checks for this run')
-        .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
+        .addOption(new Option('--message-file <path>', 'Check this commit message file, as the commit-msg hook does'))
         .action(async (paths, flags, command) => {
             await runCheck(paths, flags, command.optsWithGlobals());
         });

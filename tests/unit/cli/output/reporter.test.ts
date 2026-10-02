@@ -16,8 +16,8 @@ const report: RunReport = {
         {
             check: 'bash/shellcheck',
             scope: '',
-            status: 'fail',
-            files: 3,
+            status: 'failed',
+            fileCount: 3,
             duration: 120,
             reproduce: 'gspot check --only bash/shellcheck',
             findings: [
@@ -33,23 +33,23 @@ const report: RunReport = {
                 },
             ],
         },
-        { check: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, findings: [] },
+        { check: 'bash/shfmt', scope: '', status: 'passed', fileCount: 3, duration: 20, findings: [] },
         {
-            check: 'formatting/prettier',
+            check: 'format/prettier',
             scope: 'api',
             status: 'missing',
-            files: 1,
+            fileCount: 1,
             duration: 0,
             findings: [],
             note: 'prettier is not installed. Run: mise install',
-            reproduce: 'gspot check api --only formatting/prettier',
+            reproduce: 'gspot check api --only format/prettier',
         },
     ],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
-    unstaged: 0,
-    narrowed: false,
-    failed: ['bash/shellcheck', 'formatting/prettier'],
+    unstagedChanges: 0,
+    partial: false,
+    failed: ['bash/shellcheck', 'format/prettier'],
     exitCode: 1,
 };
 
@@ -64,7 +64,7 @@ describe('the reporter', () => {
                     check: 'example/skipped',
                     scope: '',
                     status: 'skipped',
-                    files: 0,
+                    fileCount: 0,
                     duration: 0,
                     findings: [],
                     note: 'disabled',
@@ -77,17 +77,17 @@ describe('the reporter', () => {
         expect(runText({ ...skipped, checks: [], exitCode: 2 }, { quiet: true, verbose: false })).toEndWith(
             '(incomplete)\n',
         );
-        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'ok' }] };
+        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'passed' }] };
         const text = runText(corrected, { quiet: false, verbose: false });
         expect(text).toEndWith('1 check passed, 0 checks failed, 0 checks skipped, 0 findings, 0.0s\n');
     });
     test('prints one line per check, findings file first with a help line, reproduce lines and the summary', () => {
         const text = runText(report, { quiet: false, verbose: false });
-        expect(text).toContain('root  bash/shellcheck      fail       3 files     0.1s');
+        expect(text).toContain('root  bash/shellcheck  failed     3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
         expect(text).toContain('  reproduce: gspot check --only bash/shellcheck');
-        expect(text).toContain('api   formatting/prettier  missing    prettier is not installed. Run: mise install');
+        expect(text).toContain('api   format/prettier  missing    prettier is not installed. Run: mise install');
         expect(text).toContain('ignores    1 (printed with --verbose)');
         expect(text).toEndWith('1 check passed, 2 checks failed, 0 checks skipped, 1 finding, 0.0s (failed)\n');
     });
@@ -163,9 +163,9 @@ test.each([
     },
 );
 
-test('the reporter names the source of a skipped check', () => {
-    const skipped: RunReport = { ...report, skips: [{ check: 'bash/shellcheck', source: 'rules' }] };
-    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (rules)\n');
+test('the reporter names the cause of a skipped check', () => {
+    const skipped: RunReport = { ...report, skips: [{ check: 'bash/shellcheck', cause: 'condition' }] };
+    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (condition)\n');
 });
 
 test.each([

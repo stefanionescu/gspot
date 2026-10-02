@@ -38,7 +38,7 @@ plantedCases(
                 'supabase/functions/greet/index.ts':
                     'const count: number = "one";\nDeno.serve(() => new Response(String(count)));\n',
             },
-            expected: { file: 'supabase/functions/greet/index.ts', rule: 'deno-check', line: 1 },
+            expected: { file: 'supabase/functions/greet/index.ts', rule: 'type-error', line: 1 },
         },
     ],
 );

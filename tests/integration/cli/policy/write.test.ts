@@ -7,12 +7,12 @@ import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSy
 
 import {
     setKey,
+    addIgnore,
+    addToList,
     deleteKey,
-    appendList,
-    scopeHolder,
-    appendIgnore,
+    getScopeTable,
     proposePolicy,
-    removeEntries,
+    removeMatching,
 } from '#cli/policy/mutations.ts';
 
 const text =
@@ -74,7 +74,7 @@ test('writePolicy > appends an ignore entry and keeps comments and order', async
         sandbox.path,
         preparePolicy(
             sandbox.path,
-            appendIgnore({
+            addIgnore({
                 check: 'bash/shellcheck',
                 rule: 'SC2312',
                 reason: 'set -e interaction on every correct if-function.',
@@ -105,11 +105,11 @@ test('policy edits keep a trailing array comma and write inline tables without o
         paths: ['fixture.js'],
         reason: 'A deliberate fixture owns its temporary files.',
     };
-    const mutate = setKey('tools.codeql.false_positives', [entry]);
+    const mutate = setKey('tools.codeql.ignore', [entry]);
     const proposed = proposePolicy('.', original, mutate);
     expect(proposed.text).toContain('# Authored selection.');
     expect(proposed.text).not.toMatch(/,\s*\}/u);
-    expect(proposed.policy.tools['codeql']?.['false_positives']).toStrictEqual([entry]);
+    expect(proposed.policy.tools['codeql']?.['ignore']).toStrictEqual([entry]);
     const repeated = proposePolicy('.', proposed.text, mutate);
     expect(repeated.changed).toBe(false);
     expect(repeated.text).toBe(proposed.text);
@@ -118,11 +118,8 @@ test('policy edits keep a trailing array comma and write inline tables without o
 test('writePolicy > appends to a list without duplicates and removes matching entries', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': text });
-    writePolicy(
-        sandbox.path,
-        preparePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher', 'orchestrator'])),
-    );
-    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher'])));
+    writePolicy(sandbox.path, preparePolicy(sandbox.path, addToList('naming.banned', ['dispatcher', 'orchestrator'])));
+    writePolicy(sandbox.path, preparePolicy(sandbox.path, addToList('naming.banned', ['dispatcher'])));
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(written.match(/dispatcher/g)).toHaveLength(1);
     // A table entry is the same entry whatever order its keys come in.
@@ -130,18 +127,18 @@ test('writePolicy > appends to a list without duplicates and removes matching en
         { name: 'Ledger', reason: 'A domain term.' },
         { reason: 'A domain term.', name: 'Ledger' },
     ])
-        writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.allowed', [entry])));
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, addToList('naming.allowed', [entry])));
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8').match(/Ledger/g)).toHaveLength(1);
     const counter = { removed: 0 };
     writePolicy(
         sandbox.path,
-        preparePolicy(sandbox.path, appendIgnore({ check: 'bash/shellcheck', reason: 'A sentence that says why.' })),
+        preparePolicy(sandbox.path, addIgnore({ check: 'bash/shellcheck', reason: 'A sentence that says why.' })),
     );
     writePolicy(
         sandbox.path,
         preparePolicy(
             sandbox.path,
-            removeEntries('ignore', (entry) => entry['check'] === 'bash/shellcheck', counter),
+            removeMatching('ignore', (entry) => entry['check'] === 'bash/shellcheck', counter),
         ),
     );
     expect(counter.removed).toBe(1);
@@ -156,14 +153,14 @@ test('writePolicy > an ignore joins the entry with the same check, rule, and rea
         sandbox.path,
         preparePolicy(
             sandbox.path,
-            appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['fixtures/a.sh'], reason }),
+            addIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['fixtures/a.sh'], reason }),
         ),
     );
     writePolicy(
         sandbox.path,
         preparePolicy(
             sandbox.path,
-            appendIgnore({
+            addIgnore({
                 check: 'bash/shellcheck',
                 rule: 'SC2312',
                 paths: ['fixtures/b.sh', 'fixtures/a.sh'],
@@ -173,7 +170,7 @@ test('writePolicy > an ignore joins the entry with the same check, rule, and rea
     );
     const merged = preparePolicy(
         sandbox.path,
-        appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' }),
+        addIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' }),
     );
     writePolicy(sandbox.path, merged);
     expect(merged.policy.ignores).toStrictEqual([
@@ -181,7 +178,7 @@ test('writePolicy > an ignore joins the entry with the same check, rule, and rea
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
     ]);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8').match(/\[\[ignore\]\]/g)).toHaveLength(2);
-    const everywhere = preparePolicy(sandbox.path, appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', reason }));
+    const everywhere = preparePolicy(sandbox.path, addIgnore({ check: 'bash/shellcheck', rule: 'SC2312', reason }));
     expect(everywhere.policy.ignores[0]).toStrictEqual({ check: 'bash/shellcheck', rule: 'SC2312', reason });
 });
 
@@ -192,7 +189,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': `${text}\n${scope}`, 'api/run.sh': '' });
     const result = preparePolicy(sandbox.path, (raw) => {
-        setKey('limits.function_lines', 20)(scopeHolder(raw, 'api'));
+        setKey('limits.function_lines', 20)(getScopeTable(raw, 'api'));
     });
     writePolicy(sandbox.path, result);
     expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({
@@ -217,10 +214,7 @@ test('writePolicy > a refused reason is caught before the file is written', asyn
     const required = text.replace('kits = ["bash"]', 'require_reasons = true\nkits = ["bash"]');
     await createFileTree(sandbox.path, { 'gspot.toml': required });
     expect(() =>
-        writePolicy(
-            sandbox.path,
-            preparePolicy(sandbox.path, appendIgnore({ check: 'bash/shellcheck', reason: 'TBD' })),
-        ),
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, addIgnore({ check: 'bash/shellcheck', reason: 'TBD' }))),
     ).toThrow('needs a reason that says something');
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(required);
 });
@@ -241,7 +235,7 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    writeFileSync(path, policyOf([], '[guides]\ninstall = false\n'));
+    writeFileSync(path, policyOf([], '[rules]\ninstall = false\n'));
     let evaluations = 0;
     const result = await commitPolicy(
         sandbox.path,

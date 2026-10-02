@@ -9,7 +9,7 @@ export const RESERVED_USES: Record<string, string[]> = {
     'identifier word': ['*'],
 };
 export const DIGIT = /\d/u;
-export const TEST_GROUP = 'test group';
+export const TEST_GROUP = 'tests group';
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
 export const SEPARATORS = /[^A-Za-z0-9]+/u;
 export const REACT_FILE = /\.[jt]sx$/u;

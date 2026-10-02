@@ -9,13 +9,15 @@ import type { SelectorGroup, EslintRuleBlock, EslintConfiguration } from '#cli/t
 
 type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
-export type WorkflowShape = {
+export type Pipeline = {
     version: string;
     run?: NonNullable<Policy['ci']>['run'];
     platforms: string[];
     /** The Swift scope path, or undefined when no scope selects swift. */
     swiftScope: string | undefined;
     isMise: boolean;
+    /** The manual checks the selected kits declare, which the manual job runs by name. */
+    manualChecks: string[];
 };
 export type TemplateInputs = {
     /** The parts of the ESLint configuration the policy decides, computed when that template renders. */

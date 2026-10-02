@@ -7,17 +7,17 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
+import { LOCK, SETUP, TOOLS_PROJECT, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 const projectSchema = z.strictObject({
     project: z.strictObject({
-        name: z.literal('gspot-tools'),
+        name: z.literal(TOOLS_PROJECT),
         version: z.literal('0.0.0'),
         'requires-python': z.literal('>=3.11'),
         dependencies: z.array(z.string().regex(/^[a-z0-9._-]+==[a-z0-9.+!_-]+$/iu)),
@@ -141,7 +141,7 @@ async function uv(root: string, owner: ToolOwner, work: string, args: string[], 
             env: { UV_PROJECT_ENVIRONMENT: join(work, '.venv'), UV_VENV_RELOCATABLE: 'true', UV_LINK_MODE: 'copy' },
         },
     );
-    if (result.missing) throw new GspotError('missing-tool', `Install uv, then run: gspot install. ${SETUP}`);
+    if (result.missing) throw new GspotError('tool', `Install uv, then run: gspot install. ${SETUP}`);
     if (result.code !== 0) {
         const text = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
         if (args[0] === 'sync') throw new GspotError('installation', text);
@@ -259,7 +259,7 @@ export function pythonInstallSteps(root: string): string[][] {
     const lock = files.read(LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
-    return [['uv', 'sync', '--locked', '--project', GSPOT_FOLDER]];
+    return [['uv', 'sync', '--locked', '--project', DOT_GSPOT]];
 }
 
 /**

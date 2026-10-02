@@ -14,7 +14,7 @@ function hasPath(value: unknown): boolean {
 }
 
 // Returns the value without the list entries that name a path, and records where each one was.
-function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown {
+function stripPaths(value: unknown, where: string, leftOut: string[]): unknown {
     if (Array.isArray(value)) {
         return value.flatMap((item, index) => {
             const entry = `${where}[${String(index)}]`;
@@ -22,7 +22,7 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
                 leftOut.push(`${entry}: names a repository path`);
                 return [];
             }
-            return [withoutPaths(item, entry, leftOut)];
+            return [stripPaths(item, entry, leftOut)];
         });
     }
     if (!isRecord(value)) return value;
@@ -35,7 +35,7 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
         })
         .map(([key, inner]): [string, unknown] => [
             key,
-            withoutPaths(inner, where === '' ? key : `${where}.${key}`, leftOut),
+            stripPaths(inner, where === '' ? key : `${where}.${key}`, leftOut),
         ])
         .filter(
             ([, inner]) =>
@@ -50,7 +50,7 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
  * @param file the file the profile is written to, which names it
  * @returns the profile text and what was left out
  */
-export function exportedProfile(policyText: string, file: string): ExportedProfile {
+export function exportProfile(policyText: string, file: string): ExportedProfile {
     const raw = parseToml(policyText) as TomlTable;
     const leftOut: string[] = [];
     for (const table of REPOSITORY_TABLES) {
@@ -59,7 +59,7 @@ export function exportedProfile(policyText: string, file: string): ExportedProfi
             for (const index of entries.keys()) leftOut.push(`${table}[${String(index)}]: belongs to this repository`);
         Reflect.deleteProperty(raw, table);
     }
-    const { kits, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
+    const { kits, ...rest } = stripPaths(raw, '', leftOut) as TomlTable;
     const name = basename(file).replace(PROFILE_EXTENSION, '');
     const document = { profile: name, selection: 'exact', kits: kits ?? [], ...rest };
     return { text: stringify(document).trimEnd().concat('\n'), leftOut };

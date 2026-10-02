@@ -1,7 +1,7 @@
 import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { pathTokens, proseLines } from '#cli/parsers/references.ts';
 import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';
@@ -19,14 +19,12 @@ function listed(value: unknown, key: string): string[] {
     });
 }
 
-// Tool exclusions list paths; only the docs path exceptions list patterns that are paths (lychee's exclude is URL regexes).
+// Tool exclusions list their paths under paths; the URL patterns of tools.lychee.exclude_urls are no paths.
 function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPattern[] {
     return Object.entries(tools).flatMap(([tool, table]) =>
-        Object.entries(table).flatMap(([setting, value]) => {
-            const paths = listed(value, 'paths');
-            const patterns = tool === 'docs' && setting === 'paths_allowed' ? listed(value, 'patterns') : [];
-            return [...paths, ...patterns].map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` }));
-        }),
+        Object.entries(table).flatMap(([setting, value]) =>
+            listed(value, 'paths').map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` })),
+        ),
     );
 }
 
@@ -38,17 +36,17 @@ function policyPatterns(input: EngineInput): PathPattern[] {
         ...policy.declarations.flatMap((entry) =>
             entry.paths.map((pattern) => ({ pattern, where: `[[${entry.kind}]]` })),
         ),
-        ...listed(structure.single_file_folder_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.lone_files_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.single_file_folder_allowed',
+            where: 'structure.lone_files_allowed',
         })),
-        ...listed(structure.prefix_collision_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.prefix_collisions_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.prefix_collision_allowed',
+            where: 'structure.prefix_collisions_allowed',
         })),
-        ...listed(structure.folder_name_allowed, 'paths').map((pattern) => ({
+        ...listed(structure.folder_names_allowed, 'paths').map((pattern) => ({
             pattern,
-            where: 'structure.folder_name_allowed',
+            where: 'structure.folder_names_allowed',
         })),
         ...listed(naming.rules, 'paths').map((pattern) => ({ pattern, where: '[[naming.rules]]' })),
         ...toolPatterns(policy.tools),
@@ -82,10 +80,10 @@ function licenseFindings(input: EngineInput): Finding[] {
     const locks = new Map<string, Set<string>>();
     const tables = [['', policy], ...Object.entries(policy.scopeTables)] as const;
     return tables.flatMap(([scope, table]) => {
-        const exceptions = (table.tools?.['licenses']?.['packages_allowed'] ?? []) as LicenseException[];
+        const exceptions = (table.tools?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
-            if (path.split('/').includes(GSPOT_FOLDER)) return false;
+            if (path.split('/').includes(DOT_GSPOT)) return false;
             if (
                 ![
                     'package-lock.json',
@@ -111,7 +109,7 @@ function licenseFindings(input: EngineInput): Finding[] {
             }
             return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
         });
-        const where = scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`;
+        const where = scope === '' ? 'tools.licenses.exceptions' : `scope ${scope}`;
         return exceptions.flatMap((exception): Finding[] => {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];
@@ -139,7 +137,7 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
         .filter((entry) => {
             const matches = pathMatcher([entry.pattern]);
             if (candidates.some((path) => matches(path))) return false;
-            return entry.where !== 'tools.docs.paths_allowed' || ![...references].some((path) => matches(path));
+            return entry.where !== 'tools.docs.exclude' || ![...references].some((path) => matches(path));
         })
         .map((entry) =>
             findingAt(

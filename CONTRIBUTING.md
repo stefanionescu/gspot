@@ -44,7 +44,7 @@ mise run build:plugin
 
 `build` writes the `gspot` package to `packages/cli/dist/`: `gspot.js`, the command, and
 `configuration.js`, which evaluates ESLint configuration in its own process. The package also
-ships `packages/cli/kits/`, `packages/cli/guides/`, and `packages/cli/grammars/`.
+ships `packages/cli/kits/`, `packages/cli/rules/`, and `packages/cli/grammars/`.
 `build:plugin` writes the ESLint plugin to `packages/eslint-plugin/dist/`. The two builds do
 not depend on each other. To run the build under Node:
 
@@ -108,7 +108,7 @@ replays it and checks the recorded findings.
 
 `gspot.toml` is the policy of this repository. Change it with `gspot set`, `gspot ignore`,
 `gspot add`, or `gspot remove`, then run `mise run apply` to write the files under `.gspot/`
-again. Do not edit a generated file by hand. `integrity/generated-drift` reports a generated
+again. Do not edit a generated file by hand. `gspot/drift` reports a generated
 file that differs from the policy.
 
 ## Commits
@@ -166,7 +166,7 @@ npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.
 
 ## Publish the documentation
 
-The site workflow builds from a published release tag, when `GSPOT_PAGES_ENABLED` is `true`.
+The site workflow builds from a published release tag, when `PAGES_ENABLED` is `true`.
 The gspot version must match the tag. The build records the version and the source revision in
 `source.json`, and keeps the site artifact for 90 days. Only the deployment job may write to
 Pages, and a reviewer on the `github-pages` environment approves it.

@@ -7,11 +7,11 @@ import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
+import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -22,7 +22,7 @@ if (onPosix)
     test('mise executes the pinned CLI with its arguments, and install rejects an old runner before corrected setup succeeds', async () => {
         await using repository = await testdir();
         await using state = await testdir();
-        const policy = policyOf([], '[guides]\ninstall = false\n[runner]\ntool = "mise"\n', 'recommended');
+        const policy = policyOf([], 'runner = "mise"\n[rules]\ninstall = false\n', 'recommended');
         await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
         await createFileTree(state.path, {
             'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',
@@ -32,7 +32,7 @@ if (onPosix)
         chmodSync(join(state.path, 'old/mise'), 0o755);
         await writeOutputs(await openSession(repository.path));
         const generated = readFileSync(join(repository.path, MISE_CONFIG_PATH));
-        runOwnedLifecycle(repository.path, (owner) => {
+        asOwner(repository.path, (owner) => {
             owner.replace('.gspot/obsolete.json', { bytes: Buffer.from('{}\n'), mode: 0o444 }, 'config');
         });
         const env = {
@@ -53,7 +53,7 @@ if (onPosix)
             env: { ...env, PATH: `${join(state.path, 'old')}${delimiter}${env.PATH}` },
         });
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect((JSON.parse(refused.stdout) as InstallJson).error).toContain(MISE_MIN_VERSION);
+        expect((JSON.parse(refused.stdout) as InstallJson).message).toContain(MISE_MIN_VERSION);
         expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
         expect(await run(['mise', 'link', `npm:@gspothq/cli@${GSPOT_VERSION}`, state.path], options)).toMatchObject({
             code: 0,

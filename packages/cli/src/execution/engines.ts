@@ -24,9 +24,9 @@ import type {
 const toolCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
 
 // Explicit coverage must stay within the source inventory the engine received.
-function checkCoverage(input: EngineInput, checkedFiles: string[]): void {
+function checkCoverage(input: EngineInput, files: string[]): void {
     const allowedFiles = input.repositoryFiles ?? input.files;
-    if (checkedFiles.some((path) => !allowedFiles.some((file) => file.path === path)))
+    if (files.some((path) => !allowedFiles.some((file) => file.path === path)))
         throw new Error('The engine reported coverage for a file outside its supplied source inventory.');
 }
 
@@ -34,15 +34,15 @@ function checkCoverage(input: EngineInput, checkedFiles: string[]): void {
 function engineResult(
     input: EngineInput,
     outcome: Finding[] | EngineOutcome,
-): Pick<CheckResult, 'findings' | 'checkedFiles' | 'files'> {
-    const result: Pick<CheckResult, 'findings' | 'checkedFiles' | 'files'> = {
+): Pick<CheckResult, 'findings' | 'files' | 'fileCount'> {
+    const result: Pick<CheckResult, 'findings' | 'files' | 'fileCount'> = {
         findings: Array.isArray(outcome) ? outcome : outcome.findings,
-        files: input.files.length,
+        fileCount: input.files.length,
     };
     if (!Array.isArray(outcome)) {
-        result.checkedFiles = [...new Set(outcome.checkedFiles)];
-        checkCoverage(input, result.checkedFiles);
-        result.files = result.checkedFiles.length;
+        result.files = [...new Set(outcome.files)];
+        checkCoverage(input, result.files);
+        result.fileCount = result.files.length;
     }
     for (const finding of result.findings) finding.help ??= input.spec.help;
     return result;
@@ -50,8 +50,8 @@ function engineResult(
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
-    if (error instanceof GspotError && error.code === 'skipped') return { status: 'skipped', note: error.message };
-    if (error instanceof GspotError && error.code === 'missing-tool') return { status: 'missing', note: error.message };
+    if (error instanceof GspotError && error.code === 'skip') return { status: 'skipped', note: error.message };
+    if (error instanceof GspotError && error.code === 'tool') return { status: 'missing', note: error.message };
     return { status: 'error', note: `the ${name} check failed: ${(error as Error).message}` };
 }
 
@@ -115,8 +115,8 @@ export async function runEngineCheck(
     const base: CheckResult = {
         check: spec.name,
         scope: scope.scope.path,
-        status: 'ok',
-        files: planned.files.length,
+        status: 'passed',
+        fileCount: planned.files.length,
         duration: 0,
         findings: [],
     };
@@ -129,7 +129,7 @@ export async function runEngineCheck(
         return {
             ...base,
             ...result,
-            status: result.findings.length > 0 ? 'fail' : 'ok',
+            status: result.findings.length > 0 ? 'failed' : 'passed',
             duration: performance.now() - started,
         };
     } catch (error) {

@@ -11,7 +11,7 @@ import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {
     await using sandbox = await testdir();
-    const policy = policyOf(['swift'], '[guides]\ninstall = false\n', 'all');
+    const policy = policyOf(['swift'], '[rules]\ninstall = false\n', 'all');
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The fixture verifies enabling a previously ignored rule."\n`,
         'Example.swift': 'let example = 1\n',
@@ -51,7 +51,7 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
 
 test('apply preview names a removed suppression without changing installed rules', async () => {
     await using sandbox = await testdir();
-    const policy = policyOf(['bash'], '[guides]\ninstall = false\n', 'all');
+    const policy = policyOf(['bash'], '[rules]\ninstall = false\n', 'all');
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture verifies a removed suppression."\n`,
     });
@@ -79,7 +79,7 @@ test('apply preview names a removed suppression without changing installed rules
 
 test('apply preview names added Vale styles when prose moves from recommended to all', async () => {
     await using sandbox = await testdir();
-    const policy = policyOf(['prose'], '[guides]\ninstall = false\n');
+    const policy = policyOf(['prose'], '[rules]\ninstall = false\n');
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
     const originalSession = await openSession(sandbox.path);
     const original = emitted(originalSession).files.find((file) => file.path === '.gspot/config/vale.ini')!;
@@ -117,7 +117,7 @@ test('apply preview names added Vale styles when prose moves from recommended to
 
 test('apply preview names an enabled rule and preserves installed configuration', async () => {
     await using sandbox = await testdir();
-    const policy = policyOf(['commits'], '[guides]\ninstall = false\n', 'all');
+    const policy = policyOf(['commits'], '[rules]\ninstall = false\n', 'all');
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "commits/commitlint"\nrule = "type-case"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
     });

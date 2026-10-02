@@ -84,7 +84,7 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
         findingAt(
             input,
             { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
-            'missing-migration',
+            'stale',
             'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
         ),
     );
@@ -92,6 +92,6 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const DRIZZLE_ANALYSES: Record<string, Engine> = {
-    'drizzle/relations-complete': drizzleRelations,
+    'drizzle/relations': drizzleRelations,
     'drizzle/migrations-fresh': drizzleMigrations,
 };

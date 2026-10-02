@@ -1,13 +1,17 @@
+import { posix } from 'node:path';
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
+import { kitFiles } from '@gspothq/cli/src/rules/assemble.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import type { Manifest, CheckSpec } from '@gspothq/cli/src/types/kits.ts';
 
 // The indentation of the JSON blocks a reference page shows.
 const JSON_INDENT = 2;
 
-function guideSelection(file: Manifest['guides'][string][number]): string {
-    if (file.when === undefined) return `\`${file.path}\``;
+// A rule file of the kit, with the condition that installs it when it has one.
+function ruleSelection(manifest: Manifest, path: string): string {
+    const condition = manifest.rules[posix.basename(path)];
+    if (condition === undefined) return `\`${path}\``;
     const labels = {
         extensions: 'file extension',
         filenames: 'filename',
@@ -17,10 +21,10 @@ function guideSelection(file: Manifest['guides'][string][number]): string {
         paths: 'file path',
         project_files: 'project file',
     };
-    const conditions = Object.entries(file.when).flatMap(([kind, patterns]) =>
+    const conditions = Object.entries(condition).flatMap(([kind, patterns]) =>
         patterns.map((pattern) => `${labels[kind as keyof typeof labels]} \`${pattern}\``),
     );
-    return `\`${file.path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+    return `\`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
 }
 
 function ruleExclusions(manifest: Manifest): string {
@@ -42,19 +46,19 @@ function checkEnvironment(check: CheckSpec): string[] {
     const tool = check.tool ?? check.command?.[0];
     const attributes: [string, string | undefined][] = [
         ['Tool', tool],
-        ['Platform selection', check.platform?.join(', ')],
-        ['Prerequisite', check.requires],
+        ['Platform selection', check.platforms?.join(', ')],
+        ['Prerequisite', check.needs?.join(', ')],
         [
             'Required setting',
-            check.waits_for === undefined ? undefined : `\`${check.waits_for}\`; skipped until configured.`,
+            check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until configured.`,
         ],
     ];
     return [
         `- Scope: ${
             {
                 once: 'one execution for the repository',
-                'per-scope': 'each selected scope, excluding files owned by child scopes',
-                'per-file-list': 'selected file lists under the applicable scope policy',
+                scope: 'each selected scope, excluding files owned by child scopes',
+                files: 'selected file lists under the applicable scope policy',
             }[check.runs]
         }. See [scope configuration](/guides/scopes/).\n`,
         ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
@@ -99,11 +103,11 @@ export function kitPage(manifest: Manifest): ReferencePage {
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
     const targets = manifest.configs.map((config) =>
-        config.needs === undefined
+        config.when === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.needs} configuration](/reference/kits/${config.needs}/) is selected`,
+            : `\`${config.target}\` when the [${config.when.kit} configuration](/reference/kits/${config.when.kit}/) is selected`,
     );
-    const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
+    const rules = kitFiles(manifest).map((file) => ruleSelection(manifest, file.path));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const defaults = [
         ...Object.entries(manifest.defaults).map(([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``),
@@ -115,7 +119,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
     const opening = [
         `${configuration.description}\n\nKind: ${configuration.kind}.`,
         requires === '' ? '' : ` Requires: ${requires}.`,
-        configuration.default ? ' Selected by default.' : '',
+        configuration.auto ? ' Selected by default.' : '',
         '\n',
     ].join('');
     const body = [
@@ -123,8 +127,8 @@ export function kitPage(manifest: Manifest): ReferencePage {
         section('Tools', tools.map((item) => `- ${item}`).join('\n')),
         section('Generated tool files', targets.map((item) => `- ${item}`).join('\n')),
         section(
-            'Untracked tool files',
-            manifest.untracked
+            'Ignored tool files',
+            manifest.ignored
                 .map((path) => `\`${path}\``)
                 .map((item) => `- ${item}`)
                 .join('\n'),

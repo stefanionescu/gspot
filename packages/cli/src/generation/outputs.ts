@@ -11,9 +11,9 @@ import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
+import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
+import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/generation.ts';
@@ -25,12 +25,22 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
     if (policy.ci === undefined) return;
     const swiftScope = scopes.find((selection) => selection.selected.some((manifest) => manifest.kit.name === 'swift'));
     out.files.push(
-        (policy.ci.provider === 'github' ? workflowFile : gitlabFile)({
+        (policy.ci.provider === 'github' ? githubFile : gitlabFile)({
             version,
             run: policy.ci.run,
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
-            isMise: policy.runner?.tool === 'mise',
+            isMise: policy.runner === 'mise',
+            manualChecks: [
+                ...new Set(
+                    [
+                        ...policy.checks,
+                        ...scopes.flatMap((selection) => selection.selected.flatMap((kit) => kit.checks)),
+                    ]
+                        .filter((check) => check.stage === 'manual')
+                        .map((check) => check.name),
+                ),
+            ].toSorted((left, right) => left.localeCompare(right)),
         }),
     );
 }
@@ -53,7 +63,7 @@ function attributePattern(path: string): string {
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
 function attributesBlock(files: Generated['files']): string {
-    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
         .map((path) => `${attributePattern(path)} text eol=lf`);
@@ -65,9 +75,9 @@ function blockOutputs(repository: Repository, policy: Policy, manifests: Manifes
     out.blocks.push({ path: '.gitattributes', block: attributesBlock(out.files), style: 'hash' });
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         out.notes.push('CLAUDE.md goes; its own text moves to the end of AGENTS.md');
-    if (!policy.guides.install) return;
-    const block = managedBlock(policy.guides, manifests, policy.level, repository);
-    for (const path of new Set(['AGENTS.md', ...(policy.guides.agents ?? [])]))
+    if (!policy.rules.install) return;
+    const block = managedBlock(policy.rules, manifests, policy.level, repository);
+    for (const path of new Set(['AGENTS.md', ...(policy.rules.instructions ?? [])]))
         out.blocks.push({ path, block, style: 'markdown' });
 }
 
@@ -124,12 +134,12 @@ export function emitAll(
     out.configurations.push(...bunConfiguration(root, scopes));
     out.files.push(
         ...hookFiles(root, policy, version),
-        ...toolPackages(manifests, packageClient, policy.runner?.tool),
+        ...toolPackages(manifests, packageClient, policy.runner),
         ...toolEnvironment(manifests),
     );
-    if (policy.runner?.tool === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
+    if (policy.runner === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
     workflowOutput(policy, scopes, version, out);
-    out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));
+    out.files.push(...assembleRules(policy.rules, manifests, policy.level, repository));
     if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))
         out.files.push(...styleFiles(policy, rootView(scopes)));
     blockOutputs(repository, policy, manifests, out);

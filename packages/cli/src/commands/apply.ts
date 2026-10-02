@@ -1,19 +1,19 @@
 import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { getPin } from '#cli/lifecycle/version-pin.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
-import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
-import { eslintRuleDiff } from '#cli/lifecycle/preview/eslint/diff.ts';
-import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import { diffEslintRules } from '#cli/lifecycle/preview/eslint/diff.ts';
+import type { Drift, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Program, ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
-function driftText(drift: DriftEntry[]): string {
+function driftText(drift: Drift[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
     const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
     for (const entry of drift) {
@@ -41,7 +41,7 @@ async function previewApply(session: Session): Promise<CommandResult> {
         packageClient: session.packageClient,
     });
     const drift = computeDrift(session.root, session.policyFiles.policy, plan);
-    await eslintRuleDiff(
+    await diffEslintRules(
         session.root,
         session.scopes.find((selection) => selection.scope.path === '')?.view,
         session.cancelSignal,
@@ -50,16 +50,15 @@ async function previewApply(session: Session): Promise<CommandResult> {
     );
     const summary = drift.length === 0 ? 'every generated file matches its plan\n' : driftText(drift);
     const text = summary + plan.notes.map((note) => `note     ${note}\n`).join('');
-    const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
-    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: plan.notes };
+    const pin = { from: getPin(session.root), to: GSPOT_VERSION };
+    const json: ApplyPreviewJson = { dryRun: true, pin, drift, notes: plan.notes };
     return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }
 
 function reportText(report: ApplyReport): string {
     const lines = [
         ...report.written.map((path) => `wrote    ${path}`),
-        ...report.blocks.map((path) => `block    ${path}`),
-        ...report.packages.map((path) => `scripts  ${path}`),
+        ...report.updated.map((path) => `updated  ${path}`),
         ...report.removed.map((path) => `removed  ${path}`),
         ...report.notes.map((note) => `note     ${note}`),
     ];
@@ -75,10 +74,12 @@ export function registerApply(program: Program): void {
     program
         .command('apply')
         .summary('Write the configuration from gspot.toml')
-        .description('Regenerate the tool configuration, guides, and hooks from gspot.toml')
+        .description(
+            'Regenerate the tool configuration, the rules for coding agents, and the selected integrations from gspot.toml. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nReads gspot.toml and writes the tool configuration, the guides for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
+            '\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
         )
         .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags, command) => {

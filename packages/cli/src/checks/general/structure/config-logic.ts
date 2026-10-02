@@ -77,7 +77,7 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
             findingAt(
                 input,
                 { file: file.path, line: problem.line },
-                'logic-in-config',
+                'config-logic',
                 `${problem.message}; a configuration module holds literals only.`,
             ),
         );

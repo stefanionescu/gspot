@@ -90,8 +90,8 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
  * @returns the findings
  */
 export function stalePaths(input: EngineInput): Finding[] {
-    const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
-    const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
+    const exceptions = (input.view.tool('docs')['exclude'] as { paths: string[] }[] | undefined) ?? [];
+    const isException = pathMatcher(exceptions.flatMap((entry) => entry.paths));
     const index: PathIndex = {
         known: knownPaths(input),
         tasks: new Set([

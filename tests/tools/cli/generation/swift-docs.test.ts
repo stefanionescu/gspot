@@ -36,7 +36,7 @@ async function documentationFindings(root: string, code: 0 | 1) {
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const [checked] = (JSON.parse(result.stdout) as RunReport).checks;
     if (checked === undefined) throw new Error('The report holds no check.');
-    expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'ok' : 'fail' });
+    expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'passed' : 'failed' });
     return checked.findings.filter((finding) => finding.rule === 'doc_comment_style');
 }
 
@@ -47,7 +47,7 @@ if (onPosix) {
         async (level) => {
             await using sandbox = await testdir();
             const root = sandbox.path;
-            const policy = policyOf(['swift'], '[guides]\ninstall = false\n', level);
+            const policy = policyOf(['swift'], '[rules]\ninstall = false\n', level);
             await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
             await writeSwiftlint(root);
             const broken = await runProcess(
@@ -94,7 +94,7 @@ if (onPosix) {
     test('Swift inline documentation retains native exceptions and original source positions', async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const policy = policyOf(['swift'], '[guides]\ninstall = false\n', 'all');
+        const policy = policyOf(['swift'], '[rules]\ninstall = false\n', 'all');
         const text = SWIFT_INLINE_DOCS;
         await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': text });
         await writeSwiftlint(root);
@@ -130,7 +130,7 @@ if (onPosix) {
     test('nested Swift documentation settings retain their own native exclusions', async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const policy = policyOf(['swift'], '[guides]\ninstall = false\n', 'all');
+        const policy = policyOf(['swift'], '[rules]\ninstall = false\n', 'all');
         const policyExceptionText = SWIFT_INLINE_DOCS.replace(
             '// swiftlint:disable:next doc_comment_style - An external declaration retains its layout.\n/** A retained declaration. */',
             '/// A retained declaration.',

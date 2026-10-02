@@ -28,7 +28,7 @@ export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpe
  * @returns the setting the check waits for, or undefined when it can run
  */
 export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
-    const setting = spec.waits_for;
+    const setting = spec.when?.setting;
     if (setting === undefined) return undefined;
     const value = scope.view.settings[setting];
     const isEmpty =
@@ -47,17 +47,18 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     return {
         ...definition,
         level: 'recommended',
-        runs: 'per-file-list',
+        runs: 'files',
         summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',
-        owners: {
+        files: {
             extensions: [],
             filenames: [],
             tags: [],
             paths,
-            from_languages: false,
-            from_prettier_plugins: false,
+            languages: false,
+            prettier_plugins: false,
+            eslint_plugins: false,
             kinds: ['source', 'generated'],
         },
     };

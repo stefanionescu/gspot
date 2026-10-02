@@ -14,7 +14,7 @@ levels. For a test runner without a kit, write a [custom check](/guides/custom-c
 Select the `jest` kit, then run the coverage check:
 
 ```bash
-gspot check --stage push --only jest/coverage
+gspot check --only jest/coverage
 ```
 
 The check runs Jest in a copy of your sources, so your working tree and reports stay as they
@@ -24,14 +24,14 @@ report, exits with `2`.
 To require full function coverage:
 
 ```bash
-gspot set tools.jest.coverage_functions 100
+gspot set tools.jest.coverage.functions 100
 ```
 
 Add `--scope app` to set it for the scope `app` only. The
 [policy reference](/reference/configuration/) lists every coverage setting.
 
 The JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both
-levels. When your tests import from `bun:test`, set `tools.jest.global_package = "bun:test"`
+levels. When your tests import from `bun:test`, set `tools.jest.test_module = "bun:test"`
 so the lint rules recognize them. That setting changes linting only; the coverage check still
 runs Jest.
 
@@ -41,22 +41,22 @@ Select the `vitest` kit, with Vitest and its coverage provider installed in your
 run:
 
 ```bash
-gspot check --stage push --only vitest/coverage
+gspot check --only vitest/coverage
 ```
 
-Set the floors with `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`,
-and `coverage_statements`. When your Vitest configuration lives outside the usual paths, set
-`tools.vitest.coverage_file`. Paths are relative to the scope.
+Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, and
+`statements`. When your Vitest configuration lives outside the usual paths, set
+`tools.vitest.config`. Paths are relative to the scope.
 
 ## Python
 
 Select the `pytest` kit, and install pytest and pytest-cov in your project's `.venv`. Then run:
 
 ```bash
-gspot check --stage push --only pytest/coverage
+gspot check --only pytest/coverage
 ```
 
-`tools.pytest.coverage` sets the line coverage floor. The check runs pytest with strict markers
+`tools.pytest.coverage.lines` sets the line coverage floor. The check runs pytest with strict markers
 and strict configuration. The Ruff rules for pytest apply to your test files, and your
 application code keeps its own rules.
 

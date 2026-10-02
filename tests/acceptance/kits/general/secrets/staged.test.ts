@@ -24,7 +24,7 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
         {
             check: 'secrets/gitleaks-staged',
-            status: 'fail',
+            status: 'failed',
             findings: [containing({ file: 'settings.py', rule: 'aws-access-token', line: 1 })],
         },
     ]);
@@ -39,7 +39,7 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     );
     expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
     expect((JSON.parse(correctedSecret.stdout) as RunReport).checks).toMatchObject([
-        { check: 'secrets/gitleaks-staged', status: 'ok', findings: [] },
+        { check: 'secrets/gitleaks-staged', status: 'passed', findings: [] },
     ]);
 }
 
@@ -48,7 +48,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const baseline = await runPlanted(
         root,
         {
-            check: 'integrity/gitleaks-baseline',
+            check: 'secrets/gitleaks-baseline',
             files: { '.gspot/gitleaks-baseline.json': BASELINE },
         },
         environment,
@@ -57,12 +57,12 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const baselineReport = JSON.parse(baseline.stdout) as RunReport;
     expect(baselineReport.checks).toMatchObject([
         {
-            check: 'integrity/gitleaks-baseline',
-            status: 'fail',
+            check: 'secrets/gitleaks-baseline',
+            status: 'failed',
             findings: [
                 {
                     file: '.gspot/gitleaks-baseline.json',
-                    rule: 'no-reason',
+                    rule: 'missing-reason',
                     line: 1,
                     message: textContaining('old.py:aws-access-token:1'),
                 },
@@ -74,7 +74,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
                 },
                 {
                     file: '.gspot/gitleaks-baseline.json',
-                    rule: 'no-reason',
+                    rule: 'missing-reason',
                     line: 1,
                     message: textContaining('abc123:gone.md:generic-api-key:4'),
                 },
@@ -84,7 +84,7 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     const explained = await runPlanted(
         root,
         {
-            check: 'integrity/gitleaks-baseline',
+            check: 'secrets/gitleaks-baseline',
             files: {
                 '.gspot/gitleaks-baseline.json': BASELINE,
                 'old.py': '# A reviewed historical fixture.\n',
@@ -95,8 +95,8 @@ async function expectExplainedBaseline(root: string, environment: Record<string,
     );
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const accepted = JSON.parse(explained.stdout) as RunReport;
-    expect(accepted.checks).toMatchObject([{ check: 'integrity/gitleaks-baseline', status: 'ok', findings: [] }]);
-    const checked = await spawnGspot(root, ['check', '--stage', 'commit', '--json'], environment);
+    expect(accepted.checks).toMatchObject([{ check: 'secrets/gitleaks-baseline', status: 'passed', findings: [] }]);
+    const checked = await spawnGspot(root, ['check', '--hook', 'commit', '--json'], environment);
     const network = JSON.parse(checked.stdout) as RunReport;
     expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
 }
@@ -106,7 +106,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareStagedSecrets(sandbox.path);
-        const clean = await spawnGspot(sandbox.path, ['check', '--stage', 'commit'], environment);
+        const clean = await spawnGspot(sandbox.path, ['check', '--hook', 'commit'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await expectStagedSecret(sandbox.path, environment);
         await expectExplainedBaseline(sandbox.path, environment);

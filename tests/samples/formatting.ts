@@ -1,8 +1,8 @@
 // The formatter overrides of a planted repository and what each file resolves to.
 /** A policy with formatter overrides at the root, for a path, and in nested scopes. */
 export const FORMAT_OVERRIDES_POLICY = `level = "all"
-kits = ["formatting"]
-[guides]
+kits = ["format"]
+[rules]
 install = false
 [format]
 indent_width = 2

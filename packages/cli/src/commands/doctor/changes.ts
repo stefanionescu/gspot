@@ -4,21 +4,21 @@ import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import { readPrefix } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
-import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
+import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
+import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { Changes, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { Tooling, ToolFile } from '#cli/types/repository/repository.ts';
 
-function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
-    const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
+function recommendedKits(session: Session, selected: Set<string>): Changes['recommended'] {
+    const rows = new Map<string, Changes['recommended'][number]>();
     for (const manifest of everyManifest(session.scopes))
         for (const id of manifest.kit.recommends)
             if (!selected.has(id) && !rows.has(id))
@@ -30,8 +30,8 @@ function recommendedNotSelected(session: Session, selected: Set<string>): Change
     return rows.values().toArray();
 }
 
-function configurationRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
-    if (isOwned(config.tool, selected))
+function buildFileRow(session: Session, config: ToolFile, selected: Set<string>): ChangeRow {
+    if (isReplaced(config.tool, selected))
         return {
             path: config.path,
             note: `beside the generated ${config.tool} configuration`,
@@ -47,9 +47,9 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     };
 }
 
-function configurationNotOwned(
+function unownedConfigs(
     session: Session,
-    tooling: ExistingTooling,
+    tooling: Tooling,
     selected: Set<string>,
     files: GeneratedFile[],
 ): ChangeRow[] {
@@ -57,12 +57,12 @@ function configurationNotOwned(
     const rendered = new Set(files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
-        .filter((config) => !hasHeader(readPrefix(session.root, config.path, CHANGE_HEAD_BYTES).toString('utf8')))
-        .map((config) => configurationRow(session, config, selected));
+        .filter((config) => !hasHeader(readPrefix(session.root, config.path, HEADER_BYTES).toString('utf8')))
+        .map((config) => buildFileRow(session, config, selected));
 }
 
-function unownedGeneratedFiles(session: Session): ChangeRow[] {
-    const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
+function getUnownedOutputs(session: Session): ChangeRow[] {
+    const recorded = new Set(getOwnership(session.root).files.map((entry) => entry.path));
     return session.repository.files
         .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
         .map((file) => ({
@@ -77,31 +77,31 @@ function unownedGeneratedFiles(session: Session): ChangeRow[] {
  * @param session the session
  * @returns what changed after init, by kind
  */
-export function changeReport(session: Session): ChangeReport {
+export function getChanges(session: Session): Changes {
     const fields = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
-    const tooling = existingTooling(session.root, session.repository.files, fields);
+    const tooling = getTooling(session.root, session.repository.files, fields);
     const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
     });
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detectedNotSelected: detectKits(session.repository.files, session.manifests, fields)
+        detected: detectKits(session.repository.files, session.manifests, fields)
             .filter((plan) => !selected.has(plan.kit))
             .filter((plan) => {
                 const manifest = session.manifests.get(plan.kit);
-                return manifest?.kit.default !== true && manifest?.kit.kind !== 'general';
+                return manifest?.kit.auto !== true && manifest?.kit.kind !== 'general';
             })
             .map((plan) => ({
                 kit: plan.kit,
                 evidence: plan.evidence,
                 command: `gspot add ${plan.kit}`,
             })),
-        recommendedNotSelected: recommendedNotSelected(session, selected),
-        configurationNotOwned: [
-            ...configurationNotOwned(session, tooling, selected, rendered.files),
-            ...unownedGeneratedFiles(session),
+        recommended: recommendedKits(session, selected),
+        unowned: [
+            ...unownedConfigs(session, tooling, selected, rendered.files),
+            ...getUnownedOutputs(session),
             ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) === undefined
                 ? []
                 : [
@@ -112,8 +112,8 @@ export function changeReport(session: Session): ChangeReport {
                       },
                   ]),
         ],
-        changedOutsideGspot: [
-            ...ciLintJobs(
+        authored: [
+            ...getLintJobs(
                 session.root,
                 tooling.ci.filter((path) => !generated.has(path)),
             ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' })),

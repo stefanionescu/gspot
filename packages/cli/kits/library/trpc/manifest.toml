@@ -1,6 +1,4 @@
 [kit]
-name = "trpc"
-kind = "library"
 title = "tRPC"
 requires = ["javascript"]
 description = "tRPC routers: every procedure validates its input, and client code imports the router as a type only."
@@ -8,33 +6,30 @@ description = "tRPC routers: every procedure validates its input, and client cod
 [detect]
 dependencies = ["@trpc/server"]
 
-[[configs]]
+[[config]]
 target = ".gspot/config/eslint.config.mjs"
 fragment = true
 
-[[configs.selectors]]
+[[config.selectors]]
 level = "all"
 selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
 message = "Give the procedure an input schema before its resolver, even when the input is nothing."
 files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]
 
-[[checks]]
-name = "trpc/router-boundaries"
-title = "Router boundaries"
+[[check]]
+name = "boundaries"
+title = "Import server code as types only"
 example = "A client module importing a server router as a runtime value reports a boundary finding. Import only the router type with `import type`, and make requests through the tRPC client."
 level = "recommended"
 stage = "commit"
-owners = {extensions = [".ts", ".tsx"]}
+files = {extensions = [".ts", ".tsx"]}
 summary = "Checks that code outside the server paths imports from them as a type only."
 why = "A value import of the router pulls the server, its secrets, and its database client into the client bundle."
 help = "Import the router type with import type, and call the server through the client."
 
-[[settings]]
+[[setting]]
 name = "tools.trpc.server_files"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["**/server/**"]
 summary = "Server file globs used when architecture.elements has no server element. An explicit server element owns the boundary."
-
-[guides]
-library = [{path = "library/trpc/TRPC.md"}]

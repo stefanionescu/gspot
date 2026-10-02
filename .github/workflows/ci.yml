@@ -53,7 +53,7 @@ jobs:
             - run: mise run --skip-tools repo:tools && git diff --exit-code .mise/conf.d/test-tools.toml
             - run: mise run --skip-tools gspot -- check
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              run: mise run --skip-tools gspot -- check --stage manual
+              run: mise run --skip-tools gspot -- check --only docs/lychee-external security/codeql security/semgrep-registry
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools gspot -- doctor
     docs:

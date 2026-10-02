@@ -11,7 +11,7 @@ import { similar, contentDigest } from '#cli/platform/text.ts';
 import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/config/policy/profiles.ts';
 
-function githubUrl(reference: string): string {
+function buildGithubUrl(reference: string): string {
     const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@');
     const [owner = '', repository = '', ...rest] = location.split('/');
     const file = rest.length === 0 ? PROFILE_FILE : rest.join('/');
@@ -84,9 +84,9 @@ export function parseProfile(text: string, source: string): Profile {
  * @param cwd the directory a relative path starts from
  * @returns the validated profile
  */
-export async function readProfile(source: string, cwd: string): Promise<Profile> {
+export async function getProfile(source: string, cwd: string): Promise<Profile> {
     if (source.startsWith('http://')) throw new GspotError('profile', ['A profile is fetched over https, not http.']);
-    const url = source.startsWith(GITHUB_PREFIX) ? githubUrl(source) : source;
+    const url = source.startsWith(GITHUB_PREFIX) ? buildGithubUrl(source) : source;
     const text = url.startsWith('https://') ? await fetched(url) : localProfile(source, cwd);
     return parseProfile(text, source);
 }

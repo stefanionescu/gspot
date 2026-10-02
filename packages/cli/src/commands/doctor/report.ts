@@ -6,11 +6,12 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { changeReport } from '#cli/commands/doctor/changes.ts';
+import { getChanges } from '#cli/commands/doctor/changes.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
+import { EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
-import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
+import type { Changes, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
@@ -57,7 +58,7 @@ function toolLines(tools: ToolInspection[], colors: Colors): string[] {
     });
 }
 
-function changeLines(changes: ChangeReport): string[] {
+function changeLines(changes: Changes): string[] {
     const sections = CHANGE_SECTIONS.map(({ key, title }) => {
         const rows = changes[key].map((entry) => {
             const name = ('kit' in entry ? entry.kit : entry.path).padEnd(COLUMN_WIDTHS.name);
@@ -86,7 +87,7 @@ function versionLine(report: DoctorReport): string {
  * @param pinned the version `.gspot/version` pins, if any
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
-export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
+export function buildReport(session: Session, pinned: string | undefined): DoctorReport {
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
     // A tool with no build for this host is left out: the checks that need it skip here.
     const tools = collectPins(everyManifest(session.scopes))
@@ -104,12 +105,12 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
     return {
         submodules: submodulePaths(session.root),
         tools,
-        changes: changeReport(session),
+        changes: getChanges(session),
         hooks: hooks.text,
         ci,
         rules: {
-            files: policy.guides.install
-                ? selectRuleFiles(session.policyFiles.policy.guides, everyManifest(session.scopes), session.repository)
+            files: policy.rules.install
+                ? selectRuleFiles(session.policyFiles.policy.rules, everyManifest(session.scopes), session.repository)
                       .length
                 : 0,
         },
@@ -117,7 +118,7 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
             running: session.version,
             ...(pinned === undefined ? {} : { pinned }),
         },
-        exitCode: isBroken ? 1 : 0,
+        exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }
 
@@ -126,7 +127,7 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
  * @param report the report
  * @returns the text for stdout
  */
-export function doctorText(report: DoctorReport): string {
+export function formatReport(report: DoctorReport): string {
     const lines = [
         'tools',
         ...toolLines(report.tools, colors),

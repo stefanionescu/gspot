@@ -36,7 +36,7 @@ that match it.
 To run a few checks, list them after one `--only` flag:
 
 ```bash
-gspot check --only typescript/eslint typescript/tsc
+gspot check --only javascript/eslint typescript/tsc
 ```
 
 To check some files or folders, name them before the flags, or after `--`:

@@ -2,13 +2,13 @@
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
-import { INSTALLATION_FOLDERS } from '#cli/config/lifecycle/ownership.ts';
+import { INSTALLATION_DIRECTORIES } from '#cli/config/lifecycle/ownership.ts';
 import type { InstalledOutput, InstallationKind } from '#cli/types/tools/tools.ts';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing a tree and recovering an interrupted install name the side folders of a kind the same way.
 function sideFolders(kind: InstallationKind): { folder: string; staging: string; previous: string } {
-    const folder = INSTALLATION_FOLDERS[kind];
+    const folder = INSTALLATION_DIRECTORIES[kind];
     return { folder, staging: `${folder}.next`, previous: `${folder}.previous` };
 }
 
@@ -77,8 +77,8 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
  * @param log the open log
  * @param kind the installation
  */
-export function removeInstallation(log: Log, kind: InstallationKind): void {
+export function deleteInstallation(log: Log, kind: InstallationKind): void {
     if (log.state.installs?.includes(kind) !== true) return;
-    log.files.removeTree(INSTALLATION_FOLDERS[kind]);
+    log.files.removeTree(INSTALLATION_DIRECTORIES[kind]);
     setInstalled(log, kind, false);
 }

@@ -9,7 +9,7 @@ import { readRepository } from '#cli/repository/tree.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { packageTool } from '#cli/tools/packages/identity.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -42,7 +42,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         policyFiles.policy.exclude,
     );
     const scopes = scopeSelections(policyFiles.policy, repo.scopes, manifests);
-    const runner = policyFiles.policy.runner?.tool;
+    const runner = policyFiles.policy.runner;
     const needsPackages =
         Object.keys(
             npmPins(
@@ -65,7 +65,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         repository: repo,
         scopes,
         inspections: new Map(),
-        installations: (path) => readOwnership(path).installations,
+        installations: (path) => getOwnership(path).installations,
         reads: { root, sources: new Map() },
     };
 }

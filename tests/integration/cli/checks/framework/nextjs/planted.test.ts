@@ -4,7 +4,7 @@ import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
 
 /** The i18n settings naming the message directory and base locale. */
-const NEXT_TRANSLATIONS = '[tools.i18n]\ntranslations = {directory = "messages", base = "en"}\n';
+const NEXT_TRANSLATIONS = '[tools.i18n]\nlocales = {directory = "messages", base = "en"}\n';
 
 const ROUTE =
     '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n';
@@ -38,21 +38,21 @@ plantedCases(
     },
     [
         {
-            check: 'integrity/route-segments',
+            check: 'nextjs/route-segments',
             files: { 'app/route.ts': ROUTE },
             expected: { file: 'app/route.ts', rule: 'route-segment', line: 1 },
             corrected: { files: { 'app/api/route.ts': ROUTE } },
         },
         {
-            check: 'integrity/next-config',
+            check: 'nextjs/config',
             files: {
                 'next.config.mjs':
                     '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
             },
-            expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
+            expected: { file: 'next.config.mjs', rule: 'checks-off', line: 2 },
         },
         {
-            check: 'integrity/dependency-alignment',
+            check: 'nextjs/version-pairs',
             files: { 'package.json': MANIFEST.replace('"react-dom": "19.1.1"', '"react-dom": "18.3.1"') },
             expected: { file: 'package.json', rule: 'version-pair', line: 1 },
         },

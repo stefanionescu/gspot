@@ -45,7 +45,7 @@ function directoryPointers(context: EmitInputs, configuration: ConfigurationTarg
     if (pointer?.directories === undefined) return [];
     const scope = selection.scope.path;
     const matches = pathMatcher(pointer.directories);
-    const owned = ownedBy(manifest.owners, selection.selected, files, scope).filter(
+    const owned = ownedBy(manifest.files, selection.selected, files, scope).filter(
         (file) => !isInChildScope(context, file),
     );
     const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
@@ -86,7 +86,7 @@ function pointerFor(
         plan.files.push(...directoryPointers(context, configuration, file.path));
         return;
     }
-    const scope = configuration.per_scope ? context.selection.scope.path : '';
+    const scope = configuration.scoped ? context.selection.scope.path : '';
     const pointerPath = scope === '' ? pointer.path : `${scope}/${pointer.path}`;
     const replaced = context.selection.selected.some((owner) =>
         owner.configs.some(
@@ -105,9 +105,9 @@ function pointerFor(
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], selection: ScopeSelection): boolean {
-    if (configuration.needs === undefined) return true;
-    const wanted = configuration.needs;
-    const selectedScopes = configuration.per_scope ? [selection] : scopes;
+    const wanted = configuration.when?.kit;
+    if (wanted === undefined) return true;
+    const selectedScopes = configuration.scoped ? [selection] : scopes;
     return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.kit.name === wanted));
 }
 

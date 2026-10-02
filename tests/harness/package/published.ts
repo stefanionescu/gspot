@@ -72,7 +72,7 @@ export async function initializeConsumer(
             'prose',
             'python',
             'swift',
-            'formatting',
+            'format',
             '--no-runner',
             '--no-ci',
             '--no-hooks',

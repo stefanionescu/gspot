@@ -42,7 +42,7 @@ function indexedExecutables(root: string): ReadonlySet<string> {
     return new Set(executables.map((entry) => entry.slice(entry.indexOf('\t') + 1)));
 }
 
-function entryFor(root: string, path: string, executables: ReadonlySet<string> | undefined): RawEntry | undefined {
+function getEntry(root: string, path: string, executables: ReadonlySet<string> | undefined): RawEntry | undefined {
     const full = join(root, path);
     const stat = lstatSync(full, { throwIfNoEntry: false });
     if (stat === undefined) {
@@ -234,6 +234,6 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
                 !isExcluded(path),
         )
         .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => entryFor(root, path, executables))
+        .map((path) => getEntry(root, path, executables))
         .filter((entry) => entry !== undefined);
 }

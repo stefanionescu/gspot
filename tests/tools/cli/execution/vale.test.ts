@@ -27,11 +27,11 @@ for (const extension of ['md', 'sh']) {
         const session = await openSession(directory.path);
         const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
         const defect = await runEngineCheck(session, valeFindings, planned!);
-        expect(defect.status, defect.note).toBe('fail');
+        expect(defect.status, defect.note).toBe('failed');
         expect(defect.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
         const corrected = await runEngineCheck(session, valeFindings, planned!);
-        expect(corrected.status, corrected.note).toBe('ok');
+        expect(corrected.status, corrected.note).toBe('passed');
     });
 }
 
@@ -53,14 +53,14 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const defect = await runEngineCheck(session, valeFindings, planned!);
-    expect(defect.status, defect.note).toBe('fail');
+    expect(defect.status, defect.note).toBe('failed');
     expect(defect.findings).toStrictEqual([
         containing({ file: 'source.ts', line: 4, column: 56, rule: 'Example.Dashes' }),
         containing({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
     ]);
     await Bun.write(join(directory.path, 'source.ts'), '// Punctuation stays checked.\n');
     const corrected = await runEngineCheck(session, valeFindings, planned!);
-    expect(corrected.status, corrected.note).toBe('ok');
+    expect(corrected.status, corrected.note).toBe('passed');
 });
 
 test.each([
@@ -99,7 +99,7 @@ test.each([
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const result = await runEngineCheck(session, valeFindings, planned!);
-    expect(result.status, result.note).toBe('fail');
+    expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: path, line: 2, rule: 'Example.Concrete' }),
         containing({ file: path, line: 5, rule: 'Example.Concrete' }),
@@ -129,7 +129,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const result = await runEngineCheck(session, valeFindings, planned!);
-    expect(result.status, result.note).toBe('fail');
+    expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: 'versions.md', line: 4, rule: 'Example.Versions' }),
         containing({ file: 'versions.md', line: 5, rule: 'Example.Versions' }),
@@ -140,11 +140,11 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
     const rule = readFileSync(
-        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/headings.yml', import.meta.url),
+        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/heading-case.yml', import.meta.url),
         'utf8',
     );
     await createFileTree(directory.path, {
-        'styles/gspot/headings.yml': rule,
+        'styles/gspot/heading-case.yml': rule,
         'styles/config/vocabularies/project/accept.txt': 'Bun\n',
         '.vale.ini': 'StylesPath = styles\nVocab = project\n\n[*.md]\nBasedOnStyles = gspot\n',
         'guide.md': '# Guide\n\n## HTTP edge rules\n\n## Microsoft Edge settings\n\n## HTTP Edge Rules\n',
@@ -154,6 +154,6 @@ test('heading capitalization distinguishes ordinary edge from the browser name a
     });
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(parseAlerts(result.stdout).map((alert) => ({ line: alert.line, check: alert.check }))).toStrictEqual([
-        { line: 7, check: 'gspot.headings' },
+        { line: 7, check: 'gspot.heading-case' },
     ]);
 });

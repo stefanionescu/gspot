@@ -10,7 +10,7 @@ import type {
     PolicyLayer,
     SettingState,
     WrittenValue,
-    ExposedSettings,
+    SettingSurface,
     ResolvedSetting,
     NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
@@ -49,7 +49,7 @@ function walk(start: unknown, parts: string[]): unknown {
 }
 
 function languageSpec(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     key: string,
     table: string,
     language: string,
@@ -63,7 +63,7 @@ function languageSpec(
 }
 
 function groupedSpec(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     key: string,
     table: string,
     language: string,
@@ -77,7 +77,7 @@ function groupedSpec(
 }
 
 function categorySpec(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     language: string,
     category: string,
     name: string,
@@ -155,7 +155,7 @@ const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown>
     generated: (policy) => declarationsOf(policy, 'generated'),
     vendored: (policy) => declarationsOf(policy, 'vendored'),
     require_reasons: (policy) => policy.requireReasons,
-    extra_checks: (policy) => policy.extraChecks,
+    enable: (policy) => policy.extraChecks,
 };
 
 /**
@@ -166,9 +166,9 @@ const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown>
  * @returns the merged value
  */
 export function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
-    if (spec.kind === 'list' && Array.isArray(current) && Array.isArray(found))
+    if (spec.type === 'list' && Array.isArray(current) && Array.isArray(found))
         return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
-    if (spec.kind === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
+    if (spec.type === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
     return found;
 }
 
@@ -205,7 +205,7 @@ export function asRecord(value: unknown): Record<string, unknown> | undefined {
  * @param key the dotted key as written
  * @returns the spec with the language and category the key names, or undefined when nothing exposes it
  */
-export function specFor(surface: ExposedSettings, key: string): SpecMatch | undefined {
+export function specFor(surface: SettingSurface, key: string): SpecMatch | undefined {
     const direct = surface.specs.get(key);
     if (direct) return { spec: direct };
     const [table, language, ...rest] = key.split('.');
@@ -239,7 +239,7 @@ export function policyValue(policy: Partial<Policy>, key: string): WrittenValue 
  * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
 export function settingValue(
-    surface: ExposedSettings,
+    surface: SettingSurface,
     policy: Policy,
     key: string,
     scope?: string,
@@ -250,8 +250,7 @@ export function settingValue(
     const shipped = surface.defaults.get(spec.name) ?? surface.defaults.get(key);
     const layers = policyTables(policy, scope);
     const declaredLicenses =
-        key === 'tools.licenses.licenses_allowed' &&
-        layers.some((layer) => policyValue(layer.table, key) !== undefined);
+        key === 'tools.licenses.allowed' && layers.some((layer) => policyValue(layer.table, key) !== undefined);
     const start: SettingState = {
         value: declaredLicenses ? [] : shipped?.value,
         source: shipped ? `kit ${shipped.kit}` : 'unset',
@@ -276,7 +275,7 @@ export function settingValue(
  * @param scope the scope path whose table applies last, if any
  * @returns the resolved settings in key order
  */
-export function listSettings(surface: ExposedSettings, policy: Policy, scope?: string): ResolvedSetting[] {
+export function listSettings(surface: SettingSurface, policy: Policy, scope?: string): ResolvedSetting[] {
     const keys = surface.specs
         .keys()
         .toArray()

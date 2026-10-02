@@ -31,7 +31,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 
 /** The analyses by the name a manifest gives them. */
 const SWIFT_STRUCTURE: Record<string, Engine> = {
-    'swift/trivial-function': analysis(({ functions, sources }, input) => {
+    'swift/trivial-functions': analysis(({ functions, sources }, input) => {
         const threshold = input.view.limit('trivial_statements', 'swift') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
@@ -48,10 +48,10 @@ const SWIFT_STRUCTURE: Record<string, Engine> = {
         ];
     }),
     'swift/duplicate-functions': analysis(({ functions }, input) =>
-        duplicateFunctions(functions, input.view.limit('duplicate_min_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
+        duplicateFunctions(functions, input.view.limit('duplicate_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
     ),
     'swift/private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
-    'swift/env-access-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),
+    'swift/env-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),
     'swift/import-comments': analysis(({ sources }) => importComments(sources)),
 };
 

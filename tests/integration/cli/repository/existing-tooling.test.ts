@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { getTooling } from '#cli/kits/takeover.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { ciLintJobs } from '#cli/repository/survey.ts';
-import { existingTooling } from '#cli/kits/takeover.ts';
+import { getLintJobs } from '#cli/repository/survey.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -15,14 +15,14 @@ test('hook discovery preserves path whitespace and refuses malformed Git configu
     expect(initialized.code, initialized.stderr).toBe(0);
     const configured = runBlocking(['git', 'config', 'core.hooksPath', hooksPath], { cwd: sandbox.path });
     expect(configured.code, configured.stderr).toBe(0);
-    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
     const original = readFileSync(join(sandbox.path, '.git/config'));
     writeFileSync(join(sandbox.path, '.git/config'), '[core\n');
-    expect(() => existingTooling(sandbox.path, [], [])).toThrow('Git configuration core.hooksPath failed');
+    expect(() => getTooling(sandbox.path, [], [])).toThrow('Git configuration core.hooksPath failed');
     writeFileSync(join(sandbox.path, '.git/config'), original);
-    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
 });
@@ -35,13 +35,11 @@ test('tool discovery rejects linked hook directories and accepts the corrected d
     });
     const root = join(sandbox.path, 'project');
     symlinkSync('../outside', join(root, '.husky'));
-    expect(() => existingTooling(root, [], [])).toThrow('Unsafe lifecycle destination');
+    expect(() => getTooling(root, [], [])).toThrow('Unsafe lifecycle destination');
     expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
     unlinkSync(join(root, '.husky'));
     await createFileTree(root, { '.husky/pre-commit': '#!/bin/sh\nexit 0\n' });
-    expect(existingTooling(root, [], []).hooks).toStrictEqual([
-        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
-    ]);
+    expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
 });
 
 test('tool discovery reads an external hook directory only through the Git-resolved boundary', async () => {
@@ -53,7 +51,7 @@ test('tool discovery reads an external hook directory only through the Git-resol
     const root = join(sandbox.path, 'project');
     expect(runBlocking(['git', 'init', '-q'], { cwd: root }).code).toBe(0);
     expect(runBlocking(['git', 'config', 'core.hooksPath', '../hooks'], { cwd: root }).code).toBe(0);
-    expect(existingTooling(root, [], []).hooks).toStrictEqual([
+    expect(getTooling(root, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] },
     ]);
 });
@@ -61,7 +59,7 @@ test('tool discovery reads an external hook directory only through the Git-resol
 test('simple-git-hooks is detected from its package configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{"simple-git-hooks":{"pre-commit":"echo authored"}}\n' });
-    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'simple-git-hooks', path: 'package.json', files: [] },
     ]);
 });
@@ -80,7 +78,7 @@ test('pre-commit is detected from its native configuration', async () => {
             size: 10,
         },
     ];
-    expect(existingTooling(sandbox.path, files, []).hooks).toStrictEqual([
+    expect(getTooling(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },
     ]);
 });
@@ -95,7 +93,7 @@ test('adoption discovers nested authored configuration without adopting managed 
         'nested/.gspot/package.json': 'unowned nested output',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const discovered = existingTooling(sandbox.path, repository.files, []);
+    const discovered = getTooling(sandbox.path, repository.files, []);
     expect(discovered.configs.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
     expect(readFileSync(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe('unowned malformed output');
     expect(readFileSync(join(sandbox.path, 'vendor/.prettierrc.json'), 'utf8')).toBe('{"semi":true}');
@@ -151,30 +149,30 @@ test.each([
 ])('CI discovery recognizes $name', async ({ path, document, expected }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: JSON.stringify(document) });
-    expect(ciLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
+    expect(getLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
 });
 
 test('CI discovery reports malformed YAML and accepts its correction', async () => {
     await using sandbox = await testdir();
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
-    expect(() => ciLintJobs(sandbox.path, [path])).toThrow();
+    expect(() => getLintJobs(sandbox.path, [path])).toThrow();
     writeFileSync(join(sandbox.path, path), 'quality:\n  script: eslint src\n');
-    expect(ciLintJobs(sandbox.path, [path])).toStrictEqual([`${path}: quality`]);
+    expect(getLintJobs(sandbox.path, [path])).toStrictEqual([`${path}: quality`]);
 });
 
 test('hook discovery ignores package content without a hook declaration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{}' });
-    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
 });
 
 test('hook discovery rejects malformed package JSON and accepts its correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{' });
-    expect(() => existingTooling(sandbox.path, [], [])).toThrow(SyntaxError);
+    expect(() => getTooling(sandbox.path, [], [])).toThrow(SyntaxError);
     writeFileSync(join(sandbox.path, 'package.json'), '{"simple-git-hooks":{}}');
-    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'simple-git-hooks', path: 'package.json', files: [] },
     ]);
 });

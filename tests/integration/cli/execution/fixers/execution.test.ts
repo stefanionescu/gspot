@@ -40,7 +40,7 @@ test('a failed version inspection blocks a check and its correction without chan
         installers: {},
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };
-    planned.spec.fix_command![0] = 'version-teller';
+    planned.spec.fix![0] = 'version-teller';
     const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const checked = await runToolCheck(session, planned);
@@ -109,14 +109,14 @@ name = "project/inventory"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = process.argv.includes("added.txt") ? 0 : 1', '{files}'])}
-fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "created")'])}
+fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "created")'])}
 `,
     });
     const session = await openSession(sandbox.path);
     const options = runOptions({ stage: 'commit', fix: true });
     const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]!.files).toBe(2);
+    expect(outcome.report.checks[0]!.fileCount).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
 });
 
@@ -136,13 +136,13 @@ name = "project/format"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, '  ', '{files}'])}
-fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
+fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
 [[check]]
 name = "project/codemod"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'])}
-fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
+fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
     });
     const options = runOptions({ stage: 'commit', fix: true });

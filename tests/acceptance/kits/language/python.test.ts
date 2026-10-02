@@ -21,11 +21,11 @@ const TOOLS_PROJECT =
 // What each check accepts beside the clean module.
 const CORRECTIONS: Record<string, Record<string, string>> = {
     'python/vulture': { 'planted/unused.py': '"""No unused imports."""\n' },
-    'integrity/dependency-ownership': {
+    'python/pip-installs': {
         'uv.lock': 'version = 1\n',
         'scripts/setup.sh': '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n',
     },
-    'integrity/typecheck-membership': { 'planted/gone.py': '"""A file with a separate dependency set."""\n' },
+    'python/stale-exclusions': { 'planted/gone.py': '"""A file with a separate dependency set."""\n' },
 };
 const CASES: FindingCase[] = [
     {
@@ -94,7 +94,7 @@ test(
         const corrected = await spawnGspot(sandbox.path, args);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
-            status: 'ok',
+            status: 'passed',
             findings: [],
         });
         const initialized = await runCommand(['git', 'init', '-q'], { cwd: sandbox.path });
@@ -157,7 +157,7 @@ test(
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);
         const report = JSON.parse(refused.stdout) as RunReport;
         expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-            ['python/basedpyright', 'fail'],
+            ['python/basedpyright', 'failed'],
         ]);
         expect(report.checks[0]?.findings).toContainEqual(
             containing({
@@ -170,7 +170,7 @@ test(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const accepted = JSON.parse(corrected.stdout) as RunReport;
         expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
-            ['python/basedpyright', 'ok'],
+            ['python/basedpyright', 'passed'],
         ]);
     },
     PLANTED_TIMEOUT_MS * 4,

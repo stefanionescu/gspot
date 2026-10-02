@@ -1,71 +1,68 @@
 [kit]
-name = "commits"
-kind = "general"
 title = "Commits"
-default = true
-needs_git = true
+auto = true
+when = {git = true}
 description = "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
 
-[owners]
+[files]
 paths = ["**"]
 kinds = ["source"]
 
-[[tools]]
+[[tool]]
 name = "commitlint"
 version = "21.2.2"
 npm = "@commitlint/cli"
 mise = "npm:@commitlint/cli"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.json"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.yml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.yaml"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = ".commitlintrc.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.js"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.cjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.mjs"
 
-[[tools.replace]]
+[[tool.replace]]
 file = "commitlint.config.ts"
 
-[[configs]]
-template = "commitlint.config.cjs.tmpl"
+[[config]]
 target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
 
-[[checks]]
-name = "commits/commitlint"
-title = "Commitlint"
+[[check]]
+name = "commitlint"
+title = "Lint the commit message"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
 level = "all"
 stage = "message"
-runs = "per-file-list"
+runs = "files"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
 help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
 
-[[checks]]
-name = "commits/range"
+[[check]]
+name = "commitlint-range"
 title = "Check pushed commit messages"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
 level = "all"
@@ -77,25 +74,22 @@ summary = "Checks messages in the supplied pushed commit sets, or the local rang
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.types"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = ["feat", "fix", "refactor", "perf", "docs", "test", "build", "ci", "chore"]
 summary = "The commit types the type-enum rule allows."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.scopes"
-kind = "list"
+type = "list"
 direction = "neutral"
 default = []
 summary = "The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum."
 
-[[settings]]
+[[setting]]
 name = "tools.commitlint.rules"
-kind = "table"
+type = "table"
 direction = "per-rule"
 summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
-
-[guides]
-tool = [{path = "tool/commitlint/COMMITLINT.md"}]

@@ -1,4 +1,4 @@
-<% const scriptLanguages = settings['tools.eslint.script_languages']; const typed = scriptLanguages.includes('ts'); -%>
+<% const scriptLanguages = settings['tools.eslint.component_languages']; const typed = scriptLanguages.includes('ts'); -%>
     // The plugin ships its recommended set as blocks, and every rule in them is an error here.
     ...sveltePlugin.configs.recommended.map((block) => ({
         ...block,

@@ -15,7 +15,7 @@ import { statSync, chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync
 
 const PROJECTS_POLICY = `level = "all"
 kits = ["typescript"]
-[guides]
+[rules]
 install = false
 `;
 
@@ -107,7 +107,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const scope = 'apps/web';
-        const scopeTable = `[guides]\ninstall = false\n[[scope]]\npath = "${scope}"\nkits = ["typescript"]\n`;
+        const scopeTable = `[rules]\ninstall = false\n[[scope]]\npath = "${scope}"\nkits = ["typescript"]\n`;
         const authored = AUTHORED_TSCONFIG.replace(
             '%BUILD_INFO%',
             JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo')),

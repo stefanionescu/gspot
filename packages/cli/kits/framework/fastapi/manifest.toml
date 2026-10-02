@@ -1,6 +1,4 @@
 [kit]
-name = "fastapi"
-kind = "framework"
 title = "FastAPI"
 requires = ["python", "openapi"]
 recommends = ["security", "pytest"]
@@ -9,12 +7,9 @@ description = "A FastAPI service: the FastAPI and async rules of Ruff, which rep
 [detect]
 dependencies = ["fastapi"]
 
-[[configs]]
-template = "semgrep-fastapi.yml.tmpl"
+[[config]]
+template = "semgrep/fastapi.yml.tmpl"
 target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]
-per_scope = true
-needs = "security"
-
-[guides]
-framework = [{path = "framework/fastapi/FASTAPI.md"}, {path = "framework/fastapi/RUNTIME.md"}]
+scoped = true
+when = {kit = "security"}

@@ -15,7 +15,7 @@ function addSetting(root: SchemaNode, segments: string[], leaf: SchemaNode): voi
 
 // Manifest settings own the exposed tool keys. Keep the richer schemas for rule tables, and close
 // the surrounding tables so removed settings cannot remain valid.
-function toolSettings(schema: SchemaNode): void {
+function closeToolTables(schema: SchemaNode): void {
     const tools = schema.properties?.['tools'];
     if (tools === undefined) return;
     const toolSchema = tools.additionalProperties;
@@ -25,7 +25,7 @@ function toolSettings(schema: SchemaNode): void {
     const declared = settings.flatMap((spec) => {
         const [root, tool, ...segments] = spec.name.split('.');
         if (root !== 'tools' || tool === undefined) return [];
-        const value = settingValueSchemas[spec.kind];
+        const value = settingValueSchemas[spec.type];
         const leaf = z.toJSONSchema(z.union([value, z.strictObject({ value, reason: z.string().optional() })]));
         return [{ tool, segments, leaf }];
     });
@@ -41,11 +41,11 @@ function toolSettings(schema: SchemaNode): void {
  * The JSON schema of gspot.toml as an object.
  * @returns the schema
  */
-export function policyJsonSchema(): Record<string, unknown> {
+export function buildJsonSchema(): Record<string, unknown> {
     const schema = z.toJSONSchema(policySchema, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>;
-    toolSettings(schema);
+    closeToolTables(schema);
     const scope = (schema as SchemaNode).properties?.['scope']?.items;
-    if (scope !== undefined) toolSettings(scope);
+    if (scope !== undefined) closeToolTables(scope);
     return {
         $schema: 'https://json-schema.org/draft/2020-12/schema',
         $id: 'https://gspot.dev/schema/gspot.schema.json',

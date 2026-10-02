@@ -14,9 +14,9 @@ import type { configurationRequest } from '#cli/lifecycle/preview/eslint/protoco
  * @param cancelSignal cancellation for the process
  * @returns the structured result the process reported
  */
-export async function runConfiguration(
+export async function evaluate(
     request: z.infer<typeof configurationRequest>,
-    view?: Pick<MergedView, 'limit'>,
+    view?: Pick<MergedView, 'settings'>,
     cancelSignal?: AbortSignal,
 ): Promise<unknown> {
     // The program is the TypeScript module in the source tree, or its build beside the bundle.

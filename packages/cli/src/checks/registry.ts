@@ -2,9 +2,11 @@
 import { generatedDrift } from '#cli/checks/drift.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
+import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { localeFiles } from '#cli/checks/library/i18n.ts';
 import { SQL_ANALYSES } from '#cli/checks/language/sql.ts';
+import { checkActions } from '#cli/checks/tool/actions.ts';
 import { nginxTest } from '#cli/checks/tool/nginx/test.ts';
 import { HTML_ANALYSES } from '#cli/checks/language/html.ts';
 import { banned } from '#cli/checks/general/prose/hidden.ts';
@@ -23,7 +25,6 @@ import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { scriptInline } from '#cli/checks/language/bash/embeds.ts';
 import { scriptSafety } from '#cli/checks/language/bash/safety.ts';
 import { testCoverage } from '#cli/checks/tool/xctest/coverage.ts';
-import { checkActions } from '#cli/checks/general/files/actions.ts';
 import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
@@ -32,7 +33,6 @@ import { scriptPolicy } from '#cli/checks/language/bash/wrappers.ts';
 import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
 import { tsconfigOptions } from '#cli/checks/language/typescript.ts';
 import { adminKey } from '#cli/checks/platform/supabase/admin-key.ts';
-import { envExample } from '#cli/checks/general/files/env-example.ts';
 import { docComment } from '#cli/checks/language/bash/doc-comments.ts';
 import { dockerignore } from '#cli/checks/tool/docker/dockerignore.ts';
 import { envAccessOwner } from '#cli/checks/language/bash/env-owner.ts';
@@ -51,12 +51,12 @@ import { checkDocstrings } from '#cli/checks/language/python/pydoclint.ts';
 import { scriptBoundaries } from '#cli/checks/language/bash/boundaries.ts';
 import { structureEngine } from '#cli/checks/general/structure/context.ts';
 import { denoLint, denoCheck } from '#cli/checks/platform/supabase/deno.ts';
-import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
 import { installPolicy } from '#cli/checks/general/dependencies/install.ts';
 import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';
 import { deadParameters } from '#cli/checks/language/bash/unread-arguments.ts';
+import { getDirectories } from '#cli/checks/general/structure/folder-names.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
 import { singleFileFolder } from '#cli/checks/general/structure/lone-files.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
@@ -67,6 +67,7 @@ import { checkVerifiedSecrets } from '#cli/checks/general/secrets/trufflehog.ts'
 import { nextjsBuild, nextjsTypes } from '#cli/checks/framework/nextjs/build.ts';
 import { trivialFunction } from '#cli/checks/language/bash/trivial-functions.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
+import { siteBuilds, buildReproducible } from '#cli/checks/general/site/build.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
@@ -75,7 +76,6 @@ import { checkSecretHistory } from '#cli/checks/general/secrets/gitleaks/history
 import { duplicateFunctions } from '#cli/checks/language/bash/duplicate-functions.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { scriptGuards, scriptConfigDefaults } from '#cli/checks/language/bash/guards.ts';
-import { siteBuilds, buildReproducible } from '#cli/checks/general/static-site/build.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/language/javascript/tsc.ts';
 import { fileDirectoryCollision } from '#cli/checks/general/structure/stem-collisions.ts';
 import type { Engine, Executable, CheckRegistry } from '#cli/types/execution/execution.ts';
@@ -88,8 +88,8 @@ import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/language/ba
 import { rlsPresent, explicitGrants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/platform/supabase/project.ts';
 import { xcconfigLines, transportSecurity, entitlementsPolicy } from '#cli/checks/tool/xcode/settings.ts';
+import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { routeSegments, dependencyAlignment, nextjsConfiguration } from '#cli/checks/framework/nextjs/source.ts';
-import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/checks/general/static-site/source.ts';
 
 import {
     sizeLimits,
@@ -97,136 +97,136 @@ import {
     builtMarkup,
     deadSelectors,
     sitemapMatches,
-} from '#cli/checks/general/static-site/output.ts';
+} from '#cli/checks/general/site/output.ts';
 
 /** The engine of each check gspot analyses itself, by check ID. */
 export const ENGINES: Record<string, Engine> = {
-    'trpc/router-boundaries': trpcBoundaries,
+    'trpc/boundaries': trpcBoundaries,
     'react-native/expo-doctor': expoDoctor,
     'svelte/check': svelteCheck,
     'i18n/locales': localeFiles,
-    'integrity/css-usage': cssModuleUsage,
+    'css/module-classes': cssModuleUsage,
     'ansible/lint': ansibleLint,
-    'nginx/config-test': nginxTest,
+    'nginx/test': nginxTest,
     'jest/coverage': jestCoverage,
-    'integrity/generated-drift': generatedDrift,
-    'integrity/files': fileIntegrity,
-    'integrity/suppressions': suppressions,
-    'integrity/allowlists-match': allowlistsMatch,
-    'integrity/large-files': largeFiles,
-    'integrity/tracked-dependencies': trackedDependencies,
-    'integrity/tsconfig-options': tsconfigOptions,
-    'integrity/required-rules': requiredRules,
-    'integrity/docs-headings': docsHeadings,
-    'integrity/stale-paths': stalePaths,
+    'gspot/drift': generatedDrift,
+    'structure/config-logic': fileIntegrity,
+    'structure/suppressions': suppressions,
+    'structure/stale-allowlists': allowlistsMatch,
+    'structure/large-files': largeFiles,
+    'structure/tracked-dependencies': trackedDependencies,
+    'typescript/tsconfig': tsconfigOptions,
+    'javascript/rules-off': requiredRules,
+    'docs/headings': docsHeadings,
+    'docs/stale-paths': stalePaths,
     'docs/readme-present': readmePresent,
     'docs/readme-shape': readmeShape,
     'markdown/fences': fences,
     'duplication/jscpd': copiedBlocks,
     'files/env-example': envExample,
-    'integrity/env-files': envFiles,
+    'secrets/env-files': envFiles,
     'security/codeql': codeql,
-    'integrity/gitleaks-baseline': gitleaksBaseline,
-    'integrity/manifest-policy': manifestPolicy,
-    'integrity/lockfile-fresh': lockfileFresh,
+    'secrets/gitleaks-baseline': gitleaksBaseline,
+    'dependencies/manifests': manifestPolicy,
+    'dependencies/lockfile-fresh': lockfileFresh,
     'licenses/packages': licensesPackages,
-    'integrity/install-policy': installPolicy,
-    'integrity/lockfile-hosts': lockfileHosts,
+    'dependencies/install': installPolicy,
+    'dependencies/lockfile-hosts': lockfileHosts,
     ...DRIZZLE_ANALYSES,
-    'integrity/route-segments': routeSegments,
-    'integrity/next-config': nextjsConfiguration,
-    'nextjs/typecheck': nextjsTypes,
+    'nextjs/route-segments': routeSegments,
+    'nextjs/config': nextjsConfiguration,
+    'nextjs/tsc': nextjsTypes,
     'nextjs/build': nextjsBuild,
-    'integrity/dependency-alignment': dependencyAlignment,
+    'nextjs/version-pairs': dependencyAlignment,
     ...CLOUDFLARE_ANALYSES,
-    'static-site/build': siteBuilds,
-    'static-site/build-reproducible': buildReproducible,
-    'static-site/html-validate-built': builtMarkup,
-    'css/dead-selectors': deadSelectors,
-    'static-site/links-internal': (input) => brokenLinks(input, false),
-    'static-site/links-external': (input) => brokenLinks(input, true),
-    'static-site/size': sizeLimits,
-    'static-site/sitemap': sitemapMatches,
-    'static-site/dead-assets': deadAssets,
-    'static-site/svg-optimized': svgCompressed,
-    'static-site/webmanifest': webManifest,
-    'integrity/security-headers': securityHeaders,
+    'site/build': siteBuilds,
+    'site/build-reproducible': buildReproducible,
+    'site/html-validate': builtMarkup,
+    'site/purgecss': deadSelectors,
+    'site/linkinator': (input) => brokenLinks(input, false),
+    'site/linkinator-external': (input) => brokenLinks(input, true),
+    'site/size': sizeLimits,
+    'site/sitemap': sitemapMatches,
+    'site/dead-assets': deadAssets,
+    'site/svgo': svgCompressed,
+    'site/webmanifest': webManifest,
+    'site/security-headers': securityHeaders,
     ...HTML_ANALYSES,
     ...PYTHON_ANALYSES,
     'xctest/disabled': disabledTests,
-    'xctest/no-sleep': noSleep,
+    'xctest/sleep': noSleep,
     'xctest/recording': recordingMode,
-    'xctest/reference-images': referenceOwners,
+    'xctest/references': referenceOwners,
     'xctest/coverage': testCoverage,
     'xcode/xcconfig': xcconfigLines,
-    'xcode/entitlements-policy': entitlementsPolicy,
+    'xcode/entitlements': entitlementsPolicy,
     'xcode/ats': transportSecurity,
     'xcode/xcstrings': stringFiles,
-    'xcode/asset-catalogs': assetFolders,
-    'xcode/test-plan': testPlans,
+    'xcode/assets': assetFolders,
+    'xcode/test-plans': testPlans,
     'xcode/orphan-sources': orphanSources,
     'xcode/symlinks': projectSymlinks,
     ...SWIFT_ANALYSES,
-    'express/routes-tested': routesTested,
-    'openapi/lint': openapiLint,
+    'express/untested-routes': routesTested,
+    'openapi/spectral': openapiLint,
     'openapi/fresh': openapiFresh,
     'supabase/config': projectValid,
     'supabase/storage-policies': storagePolicies,
     'supabase/migration-names': migrationNames,
     'supabase/deno-lint': denoLint,
     'supabase/deno-check': denoCheck,
-    'supabase/admin-key-containment': adminKey,
+    'supabase/admin-key': adminKey,
     'supabase/types-fresh': typesFresh,
-    'postgres/rls-present': rlsPresent,
-    'postgres/explicit-grants': explicitGrants,
-    'postgres/security-definer-search-path': definerSearchPath,
-    'postgres/index-covers-foreign-key': foreignKeyIndexes,
+    'postgres/rls': rlsPresent,
+    'postgres/grants': explicitGrants,
+    'postgres/definer-search-path': definerSearchPath,
+    'postgres/foreign-key-indexes': foreignKeyIndexes,
     'postgres/migration-order': migrationOrder,
     'postgres/migrations-frozen': migrationsFrozen,
     'postgres/migration-docs': migrationDocs,
     ...SQL_ANALYSES,
     'docker/dockerignore': dockerignore,
     'docker/trivy-image': trivyImage,
-    'structure/single-file-folder': structureEngine(singleFileFolder),
+    'structure/lone-files': structureEngine(singleFileFolder),
     'structure/prefix-collisions': structureEngine(prefixCollisions),
-    'structure/file-directory-collision': structureEngine(fileDirectoryCollision),
-    'structure/folder-names': structureEngine(folderNames),
-    'structure/bash-limits': structureEngine(bashLimits),
-    'structure/doc-comment': structureEngine(docComment),
-    'structure/duplicate-functions': structureEngine(duplicateFunctions),
-    'structure/unused-functions': structureEngine(unusedFunctions),
-    'structure/dead-parameters': structureEngine(deadParameters),
-    'structure/private-prefix': structureEngine(privatePrefix),
-    'structure/private-before-public': structureEngine(privateBeforePublic),
-    'structure/trivial-function': structureEngine(trivialFunction),
-    'structure/env-access-owner': structureEngine(envAccessOwner),
-    'structure/bash-interpreter': structureEngine(scriptInterpreter),
-    'structure/bash-script-policy': structureEngine(scriptPolicy),
-    'structure/inline': structureEngine(scriptInline),
-    'structure/remote': structureEngine(scriptRemote),
-    'structure/bash-config-defaults': structureEngine(scriptConfigDefaults),
-    'structure/guards': structureEngine(scriptGuards),
-    'structure/bash-boundaries': structureEngine(scriptBoundaries),
-    'structure/bash-safety': structureEngine(scriptSafety),
-    'structure/source-comments': structureEngine(scriptSourceComments),
-    'structure/source-order': structureEngine(scriptSourceOrder),
+    'structure/stem-collisions': structureEngine(fileDirectoryCollision),
+    'structure/folder-names': structureEngine(getDirectories),
+    'bash/limits': structureEngine(bashLimits),
+    'bash/doc-comments': structureEngine(docComment),
+    'bash/duplicate-functions': structureEngine(duplicateFunctions),
+    'bash/unused-functions': structureEngine(unusedFunctions),
+    'bash/unread-arguments': structureEngine(deadParameters),
+    'bash/private-prefix': structureEngine(privatePrefix),
+    'bash/private-before-public': structureEngine(privateBeforePublic),
+    'bash/trivial-functions': structureEngine(trivialFunction),
+    'bash/env-owner': structureEngine(envAccessOwner),
+    'bash/contract': structureEngine(scriptInterpreter),
+    'bash/wrappers': structureEngine(scriptPolicy),
+    'bash/embeds': structureEngine(scriptInline),
+    'bash/ssh-blocks': structureEngine(scriptRemote),
+    'bash/defaults': structureEngine(scriptConfigDefaults),
+    'bash/guards': structureEngine(scriptGuards),
+    'bash/boundaries': structureEngine(scriptBoundaries),
+    'bash/safety': structureEngine(scriptSafety),
+    'bash/source-comments': structureEngine(scriptSourceComments),
+    'bash/source-order': structureEngine(scriptSourceOrder),
     'prose/vale': valeFindings,
-    'prose/banned': banned,
+    'prose/hidden': banned,
     ...NAMING_ENGINES,
 };
 
 /** The checks that run their own tool and read its output, by check ID. */
 export const RUNNERS: Record<string, Executable['run']> = {
     'secrets/trufflehog': checkVerifiedSecrets,
-    'secrets/gitleaks': checkSecretHistory,
-    'commits/range': checkCommitMessages,
-    'vue/typecheck': checkTypescript,
+    'secrets/gitleaks-history': checkSecretHistory,
+    'commits/commitlint-range': checkCommitMessages,
+    'vue/tsc': checkTypescript,
     'typescript/tsc': checkTypescript,
-    'javascript/checkjs': checkJavascript,
+    'javascript/tsc': checkJavascript,
     'swift/swiftlint': checkSwiftlint,
     'python/pydoclint': checkDocstrings,
     'python/deptry': checkDependencies,
-    'files/actions': checkActions,
+    'actions/actionlint': checkActions,
 };
 
 /** The registry the check command hands to the run. */

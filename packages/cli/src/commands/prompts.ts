@@ -71,7 +71,7 @@ export async function askChoice<T extends string>(
  * @param useDefaults whether --yes was given
  * @returns the values the person kept
  */
-export async function askMany<T extends string>(
+export async function askChoices<T extends string>(
     question: string,
     flag: string,
     choices: Choice<T>[],

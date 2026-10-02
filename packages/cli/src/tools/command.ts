@@ -12,7 +12,7 @@ import type { SpawnResult, SpawnOptions } from '#cli/types/platform/platform.ts'
  * @returns the completed process result
  */
 export async function runToolCommand(
-    view: Pick<MergedView, 'limit'> | undefined,
+    view: Pick<MergedView, 'settings'> | undefined,
     command: string[],
     prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'>,
     cancelSignal?: AbortSignal,
@@ -26,7 +26,7 @@ export async function runToolCommand(
             duration: 0,
             isCanceled: true,
         };
-    const seconds = view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
+    const seconds = Number(view?.settings['timeout'] ?? TOOL_DEADLINE.default);
     return run(command, {
         ...prepared,
         env: { ...TOOL_ENV, ...prepared.env },

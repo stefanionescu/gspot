@@ -17,8 +17,8 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         session,
         `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`,
     );
-    planned.spec.findings_exit_codes = [3];
-    planned.spec.tool_errors = '^Fatal:';
+    planned.spec.exit_codes = [3];
+    planned.spec.crash_pattern = '^Fatal:';
     const failed = await runFixer(session, planned, sandbox.path);
     expect(failed).toMatchObject({
         status: 'failed',
@@ -26,7 +26,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         note: textContaining('Fatal: cannot write'),
     });
     const corrected = plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
-    corrected.spec.tool_errors = planned.spec.tool_errors;
+    corrected.spec.crash_pattern = planned.spec.crash_pattern;
     expect(await runFixer(session, corrected, sandbox.path)).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -45,7 +45,7 @@ test.each([
         session,
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
-    planned.spec.findings_exit_codes = [3];
+    planned.spec.exit_codes = [3];
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
@@ -101,12 +101,12 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     const planned = plannedCorrection(session, "await Bun.write('source.txt', 'wrong')");
     const skipped = await runFixer(
         session,
-        { ...planned, skip: { source: 'flag', note: 'Not selected.' } },
+        { ...planned, skip: { cause: 'flag', note: 'Not selected.' } },
         sandbox.path,
     );
     const failed = await runFixer(
         session,
-        { ...planned, spec: { ...planned.spec, fix_command: [join(sandbox.path, 'absent-tool')] } },
+        { ...planned, spec: { ...planned.spec, fix: [join(sandbox.path, 'absent-tool')] } },
         sandbox.path,
     );
     expect(skipped.status).toBe('skipped');
@@ -133,7 +133,7 @@ test('fails the run when a correction exits nonzero even though its check passes
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, runOptions({ fix: true }));
-    expect(outcome.report.checks[0]?.status).toBe('ok');
+    expect(outcome.report.checks[0]?.status).toBe('passed');
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/correction');
     expect(outcome.fixes?.results[0]?.status).toBe('failed');

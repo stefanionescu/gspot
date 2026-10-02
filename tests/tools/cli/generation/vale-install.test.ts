@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openOwner, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { hasPackages, removePackages, installPackages } from '#cli/tools/vale.ts';
 
 // A Zip archive containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
@@ -70,7 +70,7 @@ test.each([
             }
             expect(await installPackages(directory.path, undefined)).toBeUndefined();
             expect(hasPackages(directory.path)).toBe(true);
-            expect(readOwnership(directory.path).files.map((file) => file.path)).toStrictEqual([
+            expect(getOwnership(directory.path).files.map((file) => file.path)).toStrictEqual([
                 '.gspot/config/vale.ini',
             ]);
             await verify(directory.path);

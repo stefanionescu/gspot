@@ -52,8 +52,8 @@ async function expectInstalledSql(installation: InstalledConsumer): Promise<void
     expect(sqlReport.checks).toHaveLength(1);
     expect(sqlReport.checks[0]).toMatchObject({
         check: 'sql/syntax',
-        status: 'ok',
-        files: 1,
+        status: 'passed',
+        fileCount: 1,
         findings: [],
     });
 }
@@ -69,7 +69,7 @@ async function expectCorrection(
     const failed = await run(args, options);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
-        { check: check.only, status: 'fail', findings: [{ file: check.path, ...check.finding }] },
+        { check: check.only, status: 'failed', findings: [{ file: check.path, ...check.finding }] },
     ]);
     writeFileSync(join(consumer, check.path), check.corrected);
     const passed = await run(args, options);

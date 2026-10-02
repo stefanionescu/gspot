@@ -50,7 +50,7 @@ export function readNextjsCommands(check: string): {
     [Symbol.dispose]: () => void;
 } {
     const failureOutput = {
-        stdout: check === 'nextjs/typecheck' ? 'src/page.ts(1,1): error TS2322: Type mismatch\n' : '',
+        stdout: check === 'nextjs/tsc' ? 'src/page.ts(1,1): error TS2322: Type mismatch\n' : '',
         stderr: check === 'nextjs/build' ? 'Error: Page is invalid\n' : '',
     };
     const directories: string[] = [];
