@@ -1,4 +1,4 @@
-// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines, and finding counts.
+// Host Bash and Zsh and the pinned Bats parse planted scripts after apply writes the configuration.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
