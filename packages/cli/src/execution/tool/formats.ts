@@ -181,8 +181,9 @@ function relativeTo(root: string, file: string): string {
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
     try {
-        const canonicalRoot = `${toPosix(realpathSync(root))}/`;
-        const canonicalFile = toPosix(realpathSync(file));
+        // The native call gives Windows paths one drive letter case and their long folder names.
+        const canonicalRoot = `${toPosix(realpathSync.native(root))}/`;
+        const canonicalFile = toPosix(realpathSync.native(file));
         return canonicalFile.startsWith(canonicalRoot) ? canonicalFile.slice(canonicalRoot.length) : file;
     } catch (error) {
         if (['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) return file;

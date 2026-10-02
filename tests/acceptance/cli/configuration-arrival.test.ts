@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/samples/typescript.ts';
+import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 const CONFIGURATION_ARRIVAL_INIT = [
     'init',
@@ -54,7 +54,7 @@ describe('gspot add', () => {
                 environment,
             );
             expect(before.code, before.stdout + before.stderr).toBe(0);
-            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
+            const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment, INSTALL_TIMEOUT_MS);
             expect(added.code, added.stdout + added.stderr).toBe(0);
             const after = await spawnGspot(
                 sandbox.path,
@@ -83,6 +83,7 @@ describe('gspot add', () => {
                 { check: 'typescript/eslint', status: 'ok', findings: [] },
             ]);
         },
-        PLANTED_TIMEOUT_MS * 4,
+        // Init and add each install the private tools.
+        INSTALL_TIMEOUT_MS * 2 + PLANTED_TIMEOUT_MS,
     );
 });

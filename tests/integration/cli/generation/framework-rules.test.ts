@@ -32,6 +32,15 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
     return results;
 }
 
+// The Testing Library rules a lint reports, with their lines.
+function testingLibraryMessages(results: ESLint.LintResult[]): { ruleId: string | null; line: number }[] {
+    return results.flatMap(({ messages }) =>
+        messages
+            .filter(({ ruleId }) => ruleId?.startsWith('testing-library/') === true)
+            .map(({ ruleId, line }) => ({ ruleId, line })),
+    );
+}
+
 test('native DOM exclusions remain files to their scope', async () => {
     const rules = await configuredRules(
         'kits = ["react", "typescript"]\n[[scope]]\npath = "native"\nkits = ["react-native"]',
@@ -89,3 +98,35 @@ install = false
         ),
     ).toStrictEqual([]);
 });
+
+test.each([
+    ['vue', '@testing-library/vue', '3.5.22'],
+    ['svelte', '@testing-library/svelte', '5.57.0'],
+])(
+    'the Testing Library rules of %s report a debugging call in a test file and nowhere else',
+    async (framework, library, version) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "all"\nkits = ["javascript", "${framework}"]\n[guides]\ninstall = false\n`,
+            'package.json': JSON.stringify({
+                name: 'planted',
+                private: true,
+                type: 'module',
+                dependencies: { [framework]: version },
+            }),
+        });
+        const eslint = await generatedEslint(sandbox.path);
+        const opening = `// A planted test.\nimport { render, screen } from '${library}';\n\nrender({});\n`;
+        const debugged = `${opening}screen.debug();\n`;
+        expect(
+            testingLibraryMessages(await eslint.lintText(debugged, { filePath: 'src/greeting.test.js' })),
+        ).toStrictEqual([{ ruleId: 'testing-library/no-debugging-utils', line: 5 }]);
+        expect(testingLibraryMessages(await eslint.lintText(debugged, { filePath: 'src/debugging.js' }))).toStrictEqual(
+            [],
+        );
+        const corrected = `${opening}screen.getByText('hello');\n`;
+        expect(
+            testingLibraryMessages(await eslint.lintText(corrected, { filePath: 'src/greeting.test.js' })),
+        ).toStrictEqual([]);
+    },
+);

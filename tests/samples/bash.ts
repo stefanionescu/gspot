@@ -220,3 +220,6 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/unsafe.sh', rule: 'blanket-success', line: 11 },
     },
 ];
+
+/** The checks of the table that run a tool, ShellCheck, shfmt, Bash, or ast-grep, rather than gspot alone. */
+export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/syntax', 'structure/bash-limits'];

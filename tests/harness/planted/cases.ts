@@ -1,22 +1,22 @@
 // One installed repository per table, and each planted defect as an edit that is restored: the check fails with the
 // expected finding, then the corrected repository passes.
 import { testdir } from 'testdirs';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plant } from '#tests/harness/planted/preservation.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
+import { runGspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { Sandbox, Correction, FindingCase, PlantedInput, SpawnOutcome } from '#tests/types/cli.ts';
 
 // The check fails with the planted defect, and the finding is where the case says.
 async function expectDefect(
-    planted: { root: string; environment: Record<string, string> },
+    planted: { root: string; environment: Record<string, string>; isInProcess?: boolean },
     entry: FindingCase,
 ): Promise<void> {
-    const outcome = await runPlanted(planted.root, entry, planted.environment);
+    const outcome = await runPlanted(planted.root, entry, planted.environment, planted.isInProcess);
     expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
     const failed = JSON.parse(outcome.stdout) as RunReport;
     expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
@@ -47,7 +47,7 @@ function correctionOf(
 
 // The check passes once the correction is planted.
 async function expectCorrection(
-    planted: { root: string; environment: Record<string, string> },
+    planted: { root: string; environment: Record<string, string>; isInProcess?: boolean },
     entry: FindingCase,
     repository: Sandbox & {
         /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
@@ -60,7 +60,12 @@ async function expectCorrection(
         corrected?: (planted: FindingCase) => Correction;
     },
 ): Promise<void> {
-    const outcome = await runPlanted(planted.root, correctionOf(entry, repository), planted.environment);
+    const outcome = await runPlanted(
+        planted.root,
+        correctionOf(entry, repository),
+        planted.environment,
+        planted.isInProcess,
+    );
     expect(outcome.code, `${entry.check} corrected: ${outcome.stdout}${outcome.stderr}`).toBe(0);
     const accepted = JSON.parse(outcome.stdout) as RunReport;
     expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'ok', findings: [] }]);
@@ -81,11 +86,15 @@ export async function runPlanted(
     cwd: string,
     planted: PlantedInput & { expected?: unknown },
     environment: Record<string, string>,
+    isInProcess = false,
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
+    const argv = ['check', '--only', planted.check, '--json'];
     try {
         // A case may build a site twice, which takes minutes on a slow runner.
-        return await spawnGspot(cwd, ['check', '--only', planted.check, '--json'], environment, PLANTED_TIMEOUT_MS * 4);
+        return isInProcess
+            ? await runGspot(cwd, argv, environment)
+            : await spawnGspot(cwd, argv, environment, PLANTED_TIMEOUT_MS * 4);
     } finally {
         restore();
     }
@@ -117,18 +126,18 @@ export function plantedCases(
 ): void {
     describe(name, () => {
         let sandbox: Awaited<ReturnType<typeof testdir>> | undefined;
-        let planted: { root: string; environment: Record<string, string> } | undefined;
+        let planted: { root: string; environment: Record<string, string>; isInProcess: boolean } | undefined;
         const installed = (): { root: string; environment: Record<string, string> } => {
             if (planted === undefined) throw new Error(`The ${name} repository is not installed.`);
             return planted;
         };
-        // Installing the private tools of a kit takes longer than one case on a cold runner.
+        // The install runs up to its own limit, and the level selection after it is one more command.
         beforeAll(async () => {
             sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
             const environment = await installSandbox(sandbox.path, repository);
-            planted = { root: sandbox.path, environment };
+            planted = { root: sandbox.path, environment, isInProcess: repository.installs === false };
             await repository.prepare?.(sandbox.path, environment);
-        }, PLANTED_TIMEOUT_MS * 4);
+        }, INSTALL_TIMEOUT_MS + PLANTED_TIMEOUT_MS);
         afterAll(async () => {
             await sandbox?.[Symbol.asyncDispose]();
         });

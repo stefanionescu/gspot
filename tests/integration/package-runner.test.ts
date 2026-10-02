@@ -1,0 +1,45 @@
+// The package runner script removes its local registry whether the publication is refused or the run is signaled.
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { chmodSync, readdirSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import { root } from '#tests/harness/package/packages.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { waitForFile, captureChild } from '#tests/harness/cli/process.ts';
+
+// The fake npm is a shebang script and the case sends SIGTERM, which Windows has neither of.
+test.skipIf(process.platform === 'win32').each(['refusal', 'SIGTERM'] as const)(
+    'release acceptance removes its registry after publication %s',
+    async (scenario) => {
+        await using sandbox = await testdir();
+        const marker = join(sandbox.path, 'started');
+        await createFileTree(sandbox.path, {
+            temp: {},
+            'bin/npm':
+                '#!/usr/bin/env bun\nconsole.error("Publication fixture started.");\n' +
+                `await Bun.write(${JSON.stringify(marker)}, 'ready');\n` +
+                (scenario === 'refusal' ? 'process.exit(9);\n' : 'await Bun.sleep(60_000);\n'),
+        });
+        chmodSync(join(sandbox.path, 'bin/npm'), 0o755);
+        const child = Bun.spawn([process.execPath, join(root, 'scripts/package.ts')], {
+            cwd: join(root, 'tests'),
+            env: {
+                ...environmentVariables(),
+                PATH: [join(sandbox.path, 'bin'), environmentVariables()['PATH']].join(delimiter),
+                TMPDIR: join(sandbox.path, 'temp'),
+            },
+            stdout: 'pipe',
+            stderr: 'pipe',
+            timeout: 15_000,
+            killSignal: 'SIGKILL',
+        });
+        await using capture = captureChild(child);
+        expect(await waitForFile(marker)).toBe(true);
+        if (scenario !== 'refusal') child.kill(scenario);
+        const expected = { refusal: 1, SIGTERM: 143 }[scenario];
+        expect(await child.exited, await capture.errors).toBe(expected);
+        expect(await capture.errors).toContain('Publication fixture started.');
+        expect(readdirSync(join(sandbox.path, 'temp'))).toStrictEqual([]);
+    },
+    30_000,
+);

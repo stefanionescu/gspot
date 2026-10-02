@@ -1,9 +1,10 @@
 // The pre-push hook checks exactly the pushed objects and leaves the working tree alone.
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { gspot } from '#tests/harness/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 
 /** Creates reviewed and broken commits beneath conflicting working-tree bytes for push selection. */
@@ -46,4 +47,15 @@ export async function preparePushRepository(
         'unused',
     ];
     return { base, reviewed, broken, command, zero: '0'.repeat(base.length) };
+}
+
+/**
+ * Expects the push repository to keep its broken head and the working-tree bytes the push must not read or change.
+ * @param root the push repository
+ * @param head the broken commit the repository was left at
+ */
+export function expectWorkingTreeKept(root: string, head: string): void {
+    expect(gitOutput(root, ['rev-parse', 'HEAD'])).toBe(head);
+    expect(readFileSync(join(root, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
+    expect(readFileSync(join(root, 'changed.sh'), 'utf8')).toBe('echo repaired only in the working tree\n');
 }

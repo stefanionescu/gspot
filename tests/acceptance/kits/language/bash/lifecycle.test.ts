@@ -1,7 +1,7 @@
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines, and finding counts.
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { join, dirname, delimiter } from 'node:path';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { script } from '#tests/harness/planted/cases.ts';
@@ -71,9 +71,11 @@ test(
         const gitPath = Bun.which('git');
         expect(gitPath).not.toBeNull();
         symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'bun.exe' : 'bun'));
-        symlinkSync(gitPath!, join(bin, process.platform === 'win32' ? 'git.exe' : 'git'));
+        // Git for Windows finds its installation from the folder git.exe sits in, which holds no lint tool.
+        if (process.platform !== 'win32') symlinkSync(gitPath!, join(bin, 'git'));
+        const path = process.platform === 'win32' ? `${bin}${delimiter}${dirname(gitPath!)}` : bin;
         const environment = {
-            PATH: bin,
+            PATH: path,
             HOME: join(sandbox.path, 'home'),
             MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
         };
@@ -84,21 +86,13 @@ test(
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(initialized.stdout + initialized.stderr).toContain('run gspot check');
-        const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck'], {
-            PATH: bin,
-            HOME: join(sandbox.path, 'home'),
-            MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
-        });
+        const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck'], environment);
         expect(check.code).toBe(2);
         expect(check.stdout).toContain('missing');
         expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'structure/bash-limits'], {
-            PATH: bin,
-            HOME: join(sandbox.path, 'home'),
-            MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
-        });
+        const missing = await spawnGspot(sandbox.path, ['check', '--only', 'structure/bash-limits'], environment);
         expect(missing.code).toBe(2);
         expect(missing.stdout).toContain('missing');
         expect(missing.stdout).toContain('Run: gspot install');

@@ -135,6 +135,21 @@ test('grouped output strips line endings and relativizes native absolute paths',
     expect(findings[0]).toMatchObject({ file: 'settings/café.toml', line: 1, message: 'Incorrect spacing' });
 });
 
+// Windows tools can print the drive letter in another case; Linux file systems tell cases apart.
+test.skipIf(process.platform === 'linux')(
+    'an absolute path that names the root in another case is still relative to it',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'planted/math.py': 'answer = 1\n' });
+        const base = kitManifests()
+            .get('files')!
+            .checks.find((check) => check.name === 'files/toml-format')!;
+        const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
+        const output = `${join(sandbox.path.toUpperCase(), 'planted', 'math.py')}:\n  1: Incorrect spacing\n`;
+        expect(parseOutput(spec, output, '', sandbox.path)).toMatchObject([{ file: 'planted/math.py', line: 1 }]);
+    },
+);
+
 test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
     const spec = kitManifests()
         .get('files')!

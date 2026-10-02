@@ -186,3 +186,29 @@ test.each(['text', 'binary'] as const)(
         await waitForExit(pid);
     },
 );
+
+test.skipIf(process.platform === 'win32')(
+    'the reap after an ordinary exit accepts a macOS refusal to signal a group that has exited',
+    async () => {
+        await using sandbox = await testdir();
+        const signal = process.kill.bind(process);
+        // macOS refuses to signal a process group whose members have exited but are not reaped yet.
+        const refused = spyOn(process, 'kill').mockImplementation((pid, kind) => {
+            if (pid < 0) throw Object.assign(new Error('Operation not permitted'), { code: 'EPERM' });
+            return signal(pid, kind);
+        });
+        const platform = process.platform;
+        Object.defineProperty(process, 'platform', { value: 'darwin' });
+        try {
+            const result = await run([process.execPath, '-e', 'process.exit(0)'], {
+                cwd: sandbox.path,
+                timeoutMs: 3000,
+            });
+            expect(result.code, result.stderr).toBe(0);
+            expect(result.isErrored).toBe(false);
+        } finally {
+            Object.defineProperty(process, 'platform', { value: platform });
+            refused.mockRestore();
+        }
+    },
+);

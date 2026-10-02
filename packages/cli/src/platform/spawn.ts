@@ -87,6 +87,14 @@ function completed(result: SpawnCompletion, started: number, diagnostic: string)
     };
 }
 
+// The group has no process left to signal. macOS refuses the signal as not permitted, rather than reporting no such
+// process, when every member has exited but is not reaped yet.
+function isGroupGone(error: NodeJS.ErrnoException, child: ChildProcess): boolean {
+    if (error.code === 'ESRCH') return true;
+    const hasExited = child.exitCode !== null || child.signalCode !== null;
+    return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
+}
+
 function terminate(child: ChildProcess, state: ProcessTermination): void {
     if (state.stopped || child.pid === undefined) return;
     state.stopped = true;
@@ -101,7 +109,7 @@ function terminate(child: ChildProcess, state: ProcessTermination): void {
                 throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
         } else process.kill(-child.pid, 'SIGKILL');
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') state.failure = error as Error;
+        if (!isGroupGone(error as NodeJS.ErrnoException, child)) state.failure = error as Error;
     }
     child.kill('SIGKILL');
     state.drainTimer = setTimeout(() => {

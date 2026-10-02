@@ -36,6 +36,8 @@ export type Sandbox = {
     modules?: boolean;
     /** The level set after init; all unless a test says otherwise. */
     level?: 'recommended' | 'all';
+    /** Whether init installs the private tools; a table of checks gspot runs itself needs none and runs in-process. */
+    installs?: boolean;
 };
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {
@@ -47,3 +49,6 @@ export type PlantedInput = {
 };
 /** What a spawned command left behind, for tests. */
 export type SpawnOutcome = { code: number; stdout: string; stderr: string };
+
+/** A planted repository after its install: the root and the environment every command of the test runs with. */
+export type InstalledRepository = { root: string; environment: Record<string, string> };

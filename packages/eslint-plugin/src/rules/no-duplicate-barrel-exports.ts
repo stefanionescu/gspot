@@ -24,7 +24,11 @@ function moduleFile(importer: string, source: string): string | undefined {
 function exportsOf(path: string, visited: Set<string>): Set<string> {
     if (visited.has(path)) return new Set();
     const ancestors = new Set([...visited, path]);
-    const program = parse(readFileSync(path, 'utf8'), { jsx: /\.[jt]sx$/u.test(path) });
+    // Without a root, the parser guesses one from every configuration the process loaded, and fails on two.
+    const program = parse(readFileSync(path, 'utf8'), {
+        jsx: /\.[jt]sx$/u.test(path),
+        tsconfigRootDir: dirname(path),
+    });
     return new Set(
         program.body.flatMap((statement) => namesOf(path, statement, ancestors)).filter((name) => name !== 'default'),
     );

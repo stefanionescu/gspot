@@ -136,9 +136,7 @@ request, start the `ci` workflow by hand. The jobs:
 
 A failed job names its task. Run that task locally with the same arguments to reproduce the
 failure. A failed shard of the suite runs the same files again with
-`mise run test:acceptance -- --shard=<k>/<n>`, with the shard numbers of the job. On Windows, a
-full acceptance run leaves out the files that still fail there; the list and the reason for
-each sit in `scripts/acceptance.ts`.
+`mise run test:acceptance -- --shard=<k>/<n>`, with the shard numbers of the job.
 
 ## Release
 

@@ -36,7 +36,15 @@ function assertParents(root: string, path: string): void {
     });
 }
 
-function entryFor(root: string, path: string): RawEntry | undefined {
+// The paths the Git index records as executable. A Windows file system keeps no executable bit, so the index stands in.
+function indexedExecutables(root: string): ReadonlySet<string> {
+    const listed = runBlocking(['git', 'ls-files', '--stage', '-z'], { cwd: root });
+    if (listed.code !== 0) return new Set();
+    const executables = listed.stdout.split('\0').filter((entry) => entry.startsWith('100755 '));
+    return new Set(executables.map((entry) => entry.slice(entry.indexOf('\t') + 1)));
+}
+
+function entryFor(root: string, path: string, executables: ReadonlySet<string> | undefined): RawEntry | undefined {
     const full = join(root, path);
     const stat = lstatSync(full, { throwIfNoEntry: false });
     if (stat === undefined) {
@@ -56,7 +64,7 @@ function entryFor(root: string, path: string): RawEntry | undefined {
         return symlinkEntry(root, path);
     }
     if (stat.isDirectory()) return undefined;
-    const isExecutable = process.platform !== 'win32' && (stat.mode & EXECUTABLE_BITS) !== 0;
+    const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);
     return { path, size: stat.size, executable: isExecutable, symlink: false };
 }
 
@@ -223,6 +231,7 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
     const paths = listedPaths(root);
     const submodules = submodulePaths(root);
     const isExcluded = pathMatcher(exclude);
+    const executables = process.platform === 'win32' ? indexedExecutables(root) : undefined;
     return [...new Set(paths)]
         .filter(
             (path) =>
@@ -233,6 +242,6 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
                 !isExcluded(path),
         )
         .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => entryFor(root, path))
+        .map((path) => entryFor(root, path, executables))
         .filter((entry) => entry !== undefined);
 }

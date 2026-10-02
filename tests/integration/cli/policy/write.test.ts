@@ -4,7 +4,16 @@ import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { writePolicy, commitPolicy, preparePolicy } from '#cli/commands/edit.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { setKey, deleteKey, appendList, scopeHolder, appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
+
+import {
+    setKey,
+    deleteKey,
+    appendList,
+    scopeHolder,
+    appendIgnore,
+    proposePolicy,
+    removeEntries,
+} from '#cli/policy/mutations.ts';
 
 const text =
     '#:schema x\n\n# Comment on kits.\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';
@@ -87,6 +96,23 @@ test('writePolicy > sets a nested key, then deletes it and the empty table', asy
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain('[limits.bash]');
     writePolicy(sandbox.path, preparePolicy(sandbox.path, deleteKey('limits.bash.file_lines')));
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('file_lines');
+});
+
+test('policy edits keep a trailing array comma and write inline tables without one', () => {
+    const original = '# Authored selection.\nkits = ["security",]\n';
+    const entry = {
+        rule: 'js/file-system-race',
+        paths: ['fixture.js'],
+        reason: 'A deliberate fixture owns its temporary files.',
+    };
+    const mutate = setKey('tools.codeql.false_positives', [entry]);
+    const proposed = proposePolicy('.', original, mutate);
+    expect(proposed.text).toContain('# Authored selection.');
+    expect(proposed.text).not.toMatch(/,\s*\}/u);
+    expect(proposed.policy.tools['codeql']?.['false_positives']).toStrictEqual([entry]);
+    const repeated = proposePolicy('.', proposed.text, mutate);
+    expect(repeated.changed).toBe(false);
+    expect(repeated.text).toBe(proposed.text);
 });
 
 test('writePolicy > appends to a list without duplicates and removes matching entries', async () => {

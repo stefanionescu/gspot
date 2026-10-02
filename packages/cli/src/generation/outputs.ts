@@ -13,6 +13,7 @@ import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/generation.ts';
@@ -40,9 +41,28 @@ function rootView(scopes: ScopeSelection[]): MergedView {
     return root.view;
 }
 
+// A path as a Git attributes pattern that matches only that file: anchored, with glob characters escaped, and quoted
+// when it holds a space or a quote.
+function attributePattern(path: string): string {
+    const escaped = path.replaceAll(/[\\*?[]/gu, (character) => `\\${character}`);
+    const pattern = `/${escaped}`;
+    if (!/[\s"]/u.test(pattern)) return pattern;
+    const quoted = pattern.replaceAll('\\', '\\\\').replaceAll('"', String.raw`\"`);
+    return `"${quoted}"`;
+}
+
+// Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
+function attributesBlock(files: Generated['files']): string {
+    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const lines = outside
+        .toSorted((left, right) => left.localeCompare(right))
+        .map((path) => `${attributePattern(path)} text eol=lf`);
+    return [GIT_ATTRIBUTES_BLOCK, ...lines].join('\n');
+}
+
 function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: Generated): void {
     if (repository.hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
-    out.blocks.push({ path: '.gitattributes', block: GIT_ATTRIBUTES_BLOCK, style: 'hash' });
+    out.blocks.push({ path: '.gitattributes', block: attributesBlock(out.files), style: 'hash' });
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         out.notes.push('CLAUDE.md goes; its own text moves to the end of AGENTS.md');
     if (!policy.guides.install) return;

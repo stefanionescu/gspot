@@ -267,7 +267,7 @@ names = ["404"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.contract_properties]]
-file = "tests/integration/cli/generation/format-width.test.ts"
+file = "tests/integration/cli/generation/formatting.test.ts"
 names = ["MD007"]
 reason = "The markdownlint rule name."
 
@@ -282,7 +282,7 @@ names = ["licenses_allowed", "packages_allowed"]
 reason = "The license scanner policy keys."
 
 [[naming.contract_properties]]
-file = "tests/acceptance/cli/ci.test.ts"
+file = "tests/integration/cli/commands/ci.test.ts"
 names = ["with"]
 reason = "The GitHub Actions inputs key."
 
@@ -597,9 +597,9 @@ reason = "The site imports the fonts from docs/src/theme.css, outside the TypeSc
 [[structure.folder_name_allowed]]
 paths = [
     "tests/acceptance/kits/language/bash",
-    "tests/acceptance/kits/language/python",
     "tests/acceptance/kits/language/swift",
     "tests/acceptance/kits/language/typescript",
+    "tests/integration/cli/checks/language/python",
     "tests/integration/cli/checks/language/swift",
     "tests/unit/cli/checks/language/python",
 ]
@@ -702,9 +702,9 @@ languages = ["javascript-typescript", "actions"]
 [[tools.codeql.false_positives]]
 rule = "js/file-system-race"
 paths = [
-    "tests/acceptance/cli/agents.test.ts",
-    "tests/acceptance/cli/lifecycle/clone.test.ts",
-    "tests/integration/cli/checks/framework/nextjs-build.test.ts",
+    "tests/integration/cli/commands/agents.test.ts",
+    "tests/acceptance/cli/clone.test.ts",
+    "tests/integration/cli/checks/framework/nextjs/build.test.ts",
     "tests/integration/cli/checks/language/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/resource-reads.test.ts",
     "tests/tools/cli/packages/project.test.ts",

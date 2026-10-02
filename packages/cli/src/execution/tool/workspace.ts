@@ -127,7 +127,7 @@ export function createFileWorkspace(
     originals: Map<string, Buffer>;
     [Symbol.dispose]: () => void;
 } {
-    const directory = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-files-')));
+    const directory = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-files-')));
     const originals = new Map<string, Buffer>();
     try {
         const files = openRoot(root, 'native');
@@ -166,7 +166,8 @@ export function createFileWorkspace(
  * @returns the temporary directory, which the caller must remove
  */
 export async function scratchCopy(root: string, paths: string[], scopePaths: string[]): Promise<string> {
-    const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
+    // The native call expands the short folder names a Windows temporary path can carry, as the tools' own paths do.
+    const scratch = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
     const files = openRoot(root, 'native');
     const context: Scratch = {
         root,

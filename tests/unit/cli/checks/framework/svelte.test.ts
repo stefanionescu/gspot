@@ -33,6 +33,14 @@ describe('svelteFindings', () => {
         expect(svelteFindings('svelte/check', 'apps/web', LINES)[0]?.file).toBe('apps/web/src/Count.svelte');
     });
 
+    // svelte-check prints Windows paths with backslashes, which a finding never carries.
+    test.skipIf(process.platform !== 'win32')('a Windows file name becomes a forward-slash path', () => {
+        expect(
+            svelteFindings('svelte/check', '', LINES.replace('src/Count.svelte', String.raw`src\\Count.svelte`))[0]
+                ?.file,
+        ).toBe('src/Count.svelte');
+    });
+
     test('a failure line is an error, not a clean result', () => {
         expect(() =>
             svelteFindings('svelte/check', '', '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"'),
