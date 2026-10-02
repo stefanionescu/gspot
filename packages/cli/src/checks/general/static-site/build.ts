@@ -1,8 +1,8 @@
 import { statSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { contentDigest } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
@@ -105,18 +105,12 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireSiteBuild(input);
     const before = new Map(
-        filesUnder(first.output).map((path) => [
-            path,
-            createHash('sha256').update(readSource(first.output, path)).digest('hex'),
-        ]),
+        filesUnder(first.output).map((path) => [path, contentDigest(readSource(first.output, path))]),
     );
     const second = await built(input);
     if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
     const after = new Map(
-        filesUnder(second.output).map((path) => [
-            path,
-            createHash('sha256').update(readSource(second.output, path)).digest('hex'),
-        ]),
+        filesUnder(second.output).map((path) => [path, contentDigest(readSource(second.output, path))]),
     );
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),

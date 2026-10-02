@@ -1,4 +1,5 @@
 // Text and object helpers every layer shares.
+import { createHash } from 'node:crypto';
 import { codePoints } from '#cli/platform/code-points.ts';
 import type { Defined } from '#cli/types/platform/platform.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, NEAR_DISTANCE_LIMIT } from '#cli/config/platform/platform.ts';
@@ -87,4 +88,14 @@ export function valueAt(value: unknown, keys: readonly (string | number)[]): unk
         current = (current as Record<string, unknown>)[key];
     }
     return current;
+}
+
+/**
+ * The SHA-256 digest of text or bytes, in lowercase hex.
+ * @param content the text or bytes
+ * @returns the digest
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ownership records, profiles, build comparisons, and state folders name content by one digest.
+export function contentDigest(content: string | Uint8Array): string {
+    return createHash('sha256').update(content).digest('hex');
 }

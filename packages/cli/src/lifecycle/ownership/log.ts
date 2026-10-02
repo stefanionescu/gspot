@@ -1,5 +1,5 @@
 // The durable ownership log an owner works from: its records and its recovery of an interrupted mutation.
-import { createHash } from 'node:crypto';
+import { contentDigest } from '#cli/platform/text.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import type { Read, Root } from '#cli/types/platform/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
@@ -51,7 +51,7 @@ function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): Owne
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
 export function identity(file: Read): Identity {
     return {
-        hash: createHash('sha256').update(file.bytes).digest('hex'),
+        hash: contentDigest(file.bytes),
         mode: fileMode(file),
         ...(file.isLink ? { isLink: true as const } : {}),
     };

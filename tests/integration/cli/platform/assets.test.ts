@@ -3,19 +3,11 @@ import { fileURLToPath } from 'node:url';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GRAMMAR_FILES } from '#cli/config/platform/platform.ts';
-import { symlinkSync, copyFileSync, readFileSync } from 'node:fs';
+import { cpSync, symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
 const ASSETS_CONFIGURATION = '[kit]\nname = "bash"\n';
 
 const CHECKOUT = 'workspace % café';
-
-const SOURCES = [
-    'packages/cli/package.json',
-    'packages/cli/src/platform/assets.ts',
-    'packages/cli/src/platform/paths.ts',
-    'packages/cli/src/platform/environment.ts',
-    'packages/cli/src/config/platform/platform.ts',
-];
 
 const ASSET_READER_SCRIPT = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
 for (const name of GRAMMAR_NAMES) {
@@ -29,17 +21,16 @@ console.log(JSON.stringify({ text: readAsset('kits/language/bash/manifest.toml')
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('development assets', () => {
     test('resolve a checkout containing spaces, percent signs, and Unicode', async () => {
-        const sources = Object.fromEntries(
-            SOURCES.map((path) => [`${CHECKOUT}/${path}`, readFileSync(join(ROOT, path), 'utf8')]),
-        );
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            ...sources,
+            [`${CHECKOUT}/packages/cli/package.json`]: readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
             [`${CHECKOUT}/packages/cli/kits/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
             [`${CHECKOUT}/assets-reader.ts`]: ASSET_READER_SCRIPT,
             [`${CHECKOUT}/packages/cli/grammars/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
+        // The whole source tree, so the copy follows every import the asset reader makes.
+        cpSync(join(ROOT, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
         symlinkSync(join(ROOT, 'node_modules'), join(cwd, 'node_modules'), 'junction');
         const missing = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {

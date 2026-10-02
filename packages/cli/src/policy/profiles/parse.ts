@@ -1,14 +1,13 @@
 // Read a profile from a path, an https URL or github:owner/repo, validate it, and name every problem in one pass.
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { parse as parseToml } from 'smol-toml';
-import { similar } from '#cli/platform/text.ts';
 import { unknownKit } from '#cli/kits/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
+import { similar, contentDigest } from '#cli/platform/text.ts';
 import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/config/policy/profiles.ts';
 
@@ -78,7 +77,7 @@ export function parseProfile(text: string, source: string): Profile {
         .map((id) => unknownKit(id, similar(id, known)));
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new GspotError('profile', problems);
-    return { source, digest: createHash('sha256').update(text).digest('hex'), tables: result.data };
+    return { source, digest: contentDigest(text), tables: result.data };
 }
 
 /**
