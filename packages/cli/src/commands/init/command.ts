@@ -1,10 +1,9 @@
 // The init command: its flags, the profile's answers, and the run from detection to the written setup.
-import { Option } from 'commander';
-import type { Command } from 'commander';
 import { compact } from '#cli/platform/text.ts';
 import { hasPolicy } from '#cli/policy/read.ts';
 import { ciSchema } from '#cli/policy/schema.ts';
 import { write } from '#cli/commands/init/write.ts';
+import { Option } from '@commander-js/extra-typings';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
@@ -13,9 +12,9 @@ import { readProfile } from '#cli/policy/profiles/parse.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import type { Program } from '#cli/types/commands/commands.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
 import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
@@ -36,31 +35,6 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,
         rules: ruleAnswer(install),
     });
-}
-
-function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
-    const lists = {
-        kits: listFlag(flags, 'kits'),
-        scopes: listFlag(flags, 'scope'),
-    };
-    const choices = {
-        hooks: flags['hooks'] === false ? ('none' as const) : undefined,
-        ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
-        runner: flags['runner'] === false ? ('none' as const) : undefined,
-        rules: flags['guides'] === false ? ('no' as const) : undefined,
-    };
-    const given: Partial<InitOptions> = Object.fromEntries(
-        [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
-    ) as Partial<InitOptions>;
-    return {
-        cwd: directoryOf(global),
-        yes: flags['yes'] === true,
-        isDryRun: flags['dryRun'] === true,
-        json: global['json'] === true,
-        install: flags['install'] !== false,
-        ...textEntry(flags, 'from', 'from'),
-        ...given,
-    };
 }
 
 // The result of an init that writes nothing: a preview, or an unreadable configuration file.
@@ -113,7 +87,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
  * Registers init.
  * @param program the commander program
  */
-export function registerInit(program: Command): void {
+export function registerInit(program: Program): void {
     program
         .command('init')
         .summary('Set up gspot in a repository')
@@ -137,8 +111,27 @@ export function registerInit(program: Command): void {
         .option('--no-guides', 'Install no guides for coding agents')
         .option('--no-runner', 'Add gspot to no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
-        .action(async (flags: Record<string, unknown>, command: Command) => {
+        .action(async (flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => initCommand(optionsFrom(flags, global)), global);
+            await printCommand(
+                (cwd) =>
+                    initCommand({
+                        cwd,
+                        yes: flags.yes === true,
+                        isDryRun: flags.dryRun === true,
+                        json: global.json === true,
+                        install: flags.install,
+                        ...compact({
+                            from: flags.from,
+                            kits: flags.kits,
+                            scopes: flags.scope,
+                            hooks: flags.hooks ? undefined : ('none' as const),
+                            ci: flags.ci === false ? ('none' as const) : flags.ci,
+                            runner: flags.runner ? undefined : ('none' as const),
+                            rules: flags.guides ? undefined : ('no' as const),
+                        }),
+                    }),
+                global,
+            );
         });
 }

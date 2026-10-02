@@ -1,7 +1,5 @@
-import type { Command } from 'commander';
 import { compact } from '#cli/platform/text.ts';
 import { everyManifest } from '#cli/kits/select.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
@@ -10,9 +8,9 @@ import { pythonInstallSteps } from '#cli/tools/python.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
+import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
 import { HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 
@@ -72,7 +70,7 @@ async function installEverything(session: Session, failures: string[]): Promise<
  * Register immutable installation for a clone.
  * @param program the command-line program
  */
-export function registerInstall(program: Command): void {
+export function registerInstall(program: Program): void {
     program
         .command('install')
         .summary('Install the locked tools')
@@ -82,12 +80,9 @@ export function registerInstall(program: Command): void {
             '\nEffects:\nInstalls the tools gspot.toml selects, at the versions in the committed locks, and installs the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.\n\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
         )
         .option('--dry-run', 'Print the install commands and write nothing')
-        .action(async (flags: Record<string, unknown>, command: Command) => {
+        .action(async (flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(
-                () => installCommand({ cwd: directoryOf(global), isDryRun: flags['dryRun'] === true }),
-                global,
-            );
+            await printCommand((cwd) => installCommand({ cwd, isDryRun: flags.dryRun === true }), global);
         });
 }
 

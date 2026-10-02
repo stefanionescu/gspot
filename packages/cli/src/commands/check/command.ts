@@ -1,21 +1,20 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
 import { addAbortSignal } from 'node:stream';
+import { compact } from '#cli/platform/text.ts';
 import { progress } from '#cli/output/reporter.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { Stage } from '#cli/types/execution/planning.ts';
 import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { PUBLIC_STAGES } from '#cli/config/commands/check.ts';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { Option, Command, InvalidArgumentError } from 'commander';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import type { StageFilter } from '#cli/types/execution/execution.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
+import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
+import { Option, Command, InvalidArgumentError } from '@commander-js/extra-typings';
+import type { Program, GlobalFlags, CommandResult } from '#cli/types/commands/commands.ts';
 
 // Git gives the pre-push hook the remote name and the remote URL.
 const PUSH_ARGUMENTS = 2;
 
-class CheckCommand extends Command {
+class CheckCommand extends Command<[], Record<string, unknown>, GlobalFlags> {
     override parseOptions(argv: string[]): {
         operands: string[];
         unknown: string[];
@@ -34,25 +33,6 @@ function stageArgument(value: string): Stage {
     const stage = PUBLIC_STAGES.find((entry) => entry === value);
     if (stage === undefined) throw new InvalidArgumentError(`Choose ${PUBLIC_STAGES.join(', ')}.`);
     return stage;
-}
-
-function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Record<string, unknown>): CheckOptions {
-    const stage = textFlag(flags, 'stage') as StageFilter | undefined;
-    const only = listFlag(flags, 'only');
-    return {
-        cwd: directoryOf(global),
-        staged: flags['staged'] === true,
-        fix: flags['fix'] === true,
-        isDryRun: flags['dryRun'] === true,
-        skips: listFlag(flags, 'skip') ?? [],
-        quiet: global['quiet'] === true,
-        verbose: global['verbose'] === true,
-        paths,
-        ...(only === undefined ? {} : { only }),
-        ...(typeof flags['changed'] === 'string' ? { changed: flags['changed'] } : {}),
-        ...(stage === undefined ? {} : { stage }),
-        ...textEntry(flags, 'messageFile', 'messageFile'),
-    };
 }
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
@@ -99,13 +79,7 @@ async function checkedCommand(
 }
 
 // Runs check with an abort signal wired to the termination signals for the duration of the run.
-async function runCheck(
-    paths: string[],
-    flags: Record<string, unknown>,
-    global: Record<string, unknown>,
-): Promise<void> {
-    const options = optionsFrom(paths, flags, global);
-    if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
+async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags): Promise<void> {
     const controller = new AbortController();
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: The signal handlers and the finally block all call this one cancellation.
     const cancel = (): void => {
@@ -114,7 +88,26 @@ async function runCheck(
     process.on('SIGINT', cancel);
     process.on('SIGTERM', cancel);
     try {
-        await printCommand(() => checkedCommand(options, paths, flags['push'] === true, controller.signal), global);
+        await printCommand((cwd) => {
+            const options: CheckOptions = {
+                cwd,
+                staged: flags.staged === true,
+                fix: flags.fix === true,
+                isDryRun: flags.dryRun === true,
+                skips: flags.skip ?? [],
+                quiet: global.quiet === true,
+                verbose: global.verbose === true,
+                paths,
+                ...compact({
+                    only: flags.only,
+                    changed: flags.changed === true ? undefined : flags.changed,
+                    stage: flags.stage,
+                    messageFile: flags.messageFile,
+                    onResult: global.json === true ? undefined : progress(process.stdout, global.quiet === true),
+                }),
+            };
+            return checkedCommand(options, paths, flags.push === true, controller.signal);
+        }, global);
     } finally {
         process.removeListener('SIGINT', cancel);
         process.removeListener('SIGTERM', cancel);
@@ -125,7 +118,7 @@ async function runCheck(
  * Registers check.
  * @param program the commander program
  */
-export function registerCheck(program: Command): void {
+export function registerCheck(program: Program): void {
     const command = new CheckCommand('check').copyInheritedSettings(program);
     program.addCommand(command);
     command
@@ -152,7 +145,7 @@ export function registerCheck(program: Command): void {
         )
         .option('--skip <checks...>', 'Skip these checks for this run')
         .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
-        .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
+        .action(async (paths, flags, command) => {
             await runCheck(paths, flags, command.optsWithGlobals());
         });
 }

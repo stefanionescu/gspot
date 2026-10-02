@@ -1,17 +1,15 @@
 // gspot add: append kits to the root selection or to one scope, apply, and install what they need.
-import type { Command } from 'commander';
-import { similar } from '#cli/platform/text.ts';
 import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { scopeHolder } from '#cli/policy/mutations.ts';
+import { compact, similar } from '#cli/platform/text.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
-import type { AddOptions, CommandResult } from '#cli/types/commands/commands.ts';
+import type { Program, AddOptions, CommandResult } from '#cli/types/commands/commands.ts';
 
 /**
  * gspot add: appends kits to the root list or to one scope's list.
@@ -42,7 +40,7 @@ async function addCommand(o: AddOptions): Promise<CommandResult> {
  * Registers add.
  * @param program the commander program
  */
-export function registerAdd(program: Command): void {
+export function registerAdd(program: Program): void {
     program
         .command('add <kit...>')
         .summary('Add kits')
@@ -53,15 +51,15 @@ export function registerAdd(program: Command): void {
         )
         .option('--scope <path>', 'Add the kits to this scope')
         .option('--dry-run', 'Print the change and write nothing')
-        .action(async (configurations: string[], flags: Record<string, unknown>, command: Command) => {
+        .action(async (configurations, flags, command) => {
             const global = command.optsWithGlobals();
             await printCommand(
-                () =>
+                (cwd) =>
                     addCommand({
-                        cwd: directoryOf(global),
+                        cwd,
                         kits: configurations,
-                        isDryRun: flags['dryRun'] === true,
-                        ...textEntry(flags, 'scope', 'scope'),
+                        isDryRun: flags.dryRun === true,
+                        ...compact({ scope: flags.scope }),
                     }),
                 global,
             );

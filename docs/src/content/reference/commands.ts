@@ -1,7 +1,7 @@
-import type { Command } from 'commander';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
+import type { CommandUnknownOpts } from '@commander-js/extra-typings';
 
 // The help text splits into the usage and the effects.
 const HELP_PARTS = 2;
@@ -14,7 +14,7 @@ const COMMAND_OWNERS = new Map([
     ['install', 'commands/install/command.ts'],
 ]);
 
-function commandPage(command: Command, name: string): ReferencePage {
+function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
     const [rootCommand = name] = name.split(' ', 1);
     const owner = COMMAND_OWNERS.get(rootCommand) ?? `commands/${rootCommand}.ts`;
     const helpFormat = command.createHelp();
@@ -75,7 +75,7 @@ function commandPage(command: Command, name: string): ReferencePage {
  */
 export function commandPages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
-    const commands = (parent: Command, ancestors: string[]): void => {
+    const commands = (parent: CommandUnknownOpts, ancestors: string[]): void => {
         for (const command of parent.createHelp().visibleCommands(parent)) {
             if (!parent.commands.includes(command)) continue;
             const path = [...ancestors, command.name()];

@@ -1,18 +1,16 @@
-import type { Command } from 'commander';
-import { similar } from '#cli/platform/text.ts';
 import { allChecks } from '#cli/kits/listing.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { compact, similar } from '#cli/platform/text.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
-import { listFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
-import type { CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
+import type { Program, CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
@@ -94,7 +92,7 @@ async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
  * Registers ignore.
  * @param program the commander program
  */
-export function registerIgnore(program: Command): void {
+export function registerIgnore(program: Program): void {
     program
         .command('ignore <check>')
         .summary('Ignore a check or a rule')
@@ -107,18 +105,15 @@ export function registerIgnore(program: Command): void {
         .option('--rule <rule>', 'Turn off one rule of the check')
         .option('--reason <text>', 'Say why; required when require_reasons is true')
         .option('--remove', 'Delete the matching ignore')
-        .action(async (check: string, flags: Record<string, unknown>, command: Command) => {
+        .action(async (check, flags, command) => {
             const global = command.optsWithGlobals();
-            const paths = listFlag(flags, 'paths');
             await printCommand(
-                () =>
+                (cwd) =>
                     ignoreCommand({
-                        cwd: directoryOf(global),
+                        cwd,
                         check,
-                        remove: flags['remove'] === true,
-                        ...(paths === undefined ? {} : { paths }),
-                        ...textEntry(flags, 'rule', 'rule'),
-                        ...textEntry(flags, 'reason', 'reason'),
+                        remove: flags.remove === true,
+                        ...compact({ paths: flags.paths, rule: flags.rule, reason: flags.reason }),
                     }),
                 global,
             );

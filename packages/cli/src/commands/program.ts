@@ -1,6 +1,5 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
-import { Command, CommanderError } from 'commander';
 import { GspotError } from '#cli/platform/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { registerApply } from '#cli/commands/apply.ts';
@@ -16,12 +15,14 @@ import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerInstall } from '#cli/commands/install/command.ts';
+import { Command, CommanderError } from '@commander-js/extra-typings';
+import type { Program, GlobalFlags } from '#cli/types/commands/commands.ts';
 import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
 // Registration order is shared by help and command lookup.
-const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
+const COMMAND_REGISTRATIONS: ((program: Program) => void)[] = [
     registerInit,
     registerInstall,
     registerCheck,
@@ -36,9 +37,9 @@ const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
     registerExport,
 ];
 
-function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity'] {
-    if (options['quiet'] === true) return 'quiet';
-    return options['verbose'] === true ? 'verbose' : 'normal';
+function verbosityOf(options: GlobalFlags): OutputOptions['verbosity'] {
+    if (options.quiet === true) return 'quiet';
+    return options.verbose === true ? 'verbose' : 'normal';
 }
 
 function exitCodeFor(error: unknown): number {
@@ -52,9 +53,8 @@ function exitCodeFor(error: unknown): number {
  * Builds the program. Exported so tests can walk it.
  * @returns the commander program with every command registered
  */
-export function buildProgram(): Command {
-    const program = new Command('gspot');
-    program
+export function buildProgram(): Program {
+    const program: Program = new Command('gspot')
         .description('Lint AI-generated code and install rules for coding agents')
         .version(GSPOT_VERSION, '--version', 'Print the version')
         .option('--json', 'Print the result as JSON')
@@ -66,15 +66,15 @@ export function buildProgram(): Command {
         .helpCommand('help [command]', 'Print help for a command')
         .showSuggestionAfterError(true)
         .showHelpAfterError('(run gspot --help to see every command)')
-        .exitOverride()
-        .hook('preAction', (thisCommand) => {
-            const options = thisCommand.optsWithGlobals();
-            configureOutput({
-                verbosity: verbosityOf(options),
-                json: options['json'] === true,
-                color: isColorAllowed(options['color'] === false),
-            });
+        .exitOverride();
+    program.hook('preAction', () => {
+        const options = program.opts();
+        configureOutput({
+            verbosity: verbosityOf(options),
+            json: options.json === true,
+            color: isColorAllowed(!options.color),
         });
+    });
     for (const register of COMMAND_REGISTRATIONS) register(program);
     return program;
 }

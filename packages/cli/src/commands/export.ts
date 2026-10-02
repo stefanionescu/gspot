@@ -1,16 +1,14 @@
 // Saves a reusable policy profile.
-import type { Command } from 'commander';
 import { resolve, relative } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**
@@ -49,7 +47,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
  * Registers export.
  * @param program the commander program
  */
-export function registerExport(program: Command): void {
+export function registerExport(program: Program): void {
     program
         .command('export <file>')
         .summary('Export a profile')
@@ -58,8 +56,8 @@ export function registerExport(program: Command): void {
             'after',
             '\nEffects:\nWrites the policy to the file as a profile. Settings that name a path stay out, and export lists them. gspot.toml does not change.\n\nExit codes:\n- 0: the profile was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.toml',
         )
-        .action(async (file: string, _flags: Record<string, unknown>, command: Command) => {
+        .action(async (file, _flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => Promise.resolve(exportCommand(directoryOf(global), file)), global);
+            await printCommand((cwd) => Promise.resolve(exportCommand(cwd, file)), global);
         });
 }

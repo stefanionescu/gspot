@@ -215,6 +215,11 @@ names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
+file = "packages/cli/src/types/commands/commands.ts"
+names = ["C"]
+reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
+
+[[naming.contract_properties]]
 file = "packages/cli/src/types/checks/general/secrets.ts"
 names = ["Commit", "File", "Fingerprint", "RuleID"]
 reason = "gitleaks reports spell these keys."
