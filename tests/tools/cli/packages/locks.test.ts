@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { LOCKS } from '#cli/config/tools/packages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { gspot as CLI } from '#tests/harness/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
@@ -48,16 +48,7 @@ test.each(PACKAGE_PROJECTS)(
         expect(readFileSync(lockPath, 'utf8')).toBe(stale);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         const read = await openSession(root);
-        expect(
-            computeDrift(
-                read.root,
-                read.policyFiles.policy,
-                emitAll(read.policyFiles.policy, read.repository, read.scopes, {
-                    version: read.version,
-                    packageClient: read.packageClient,
-                }),
-            ),
-        ).toContainEqual({
+        expect(computeDrift(read.root, read.policyFiles.policy, emitted(read))).toContainEqual({
             path: `.gspot/${LOCKS[client]}`,
             kind: 'changed',
         });

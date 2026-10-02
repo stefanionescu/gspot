@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -55,16 +55,7 @@ test.each(PACKAGE_PROJECTS)(
         const prettier = tools.find((tool) => tool.name === 'prettier')!;
         expect(inspectTool({ root, inspections: new Map() }, prettier).state).toBe('ok');
         const session = await openSession(root);
-        expect(
-            computeDrift(
-                root,
-                session.policyFiles.policy,
-                emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-                    version: session.version,
-                    packageClient: session.packageClient,
-                }),
-            ),
-        ).toStrictEqual([]);
+        expect(computeDrift(root, session.policyFiles.policy, emitted(session))).toStrictEqual([]);
         const second = await writeOutputs(await openSession(root));
         expect(second.written).toStrictEqual([]);
         expect(readFileSync(lockPath)).toStrictEqual(lock);

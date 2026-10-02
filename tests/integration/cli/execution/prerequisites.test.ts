@@ -21,7 +21,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
     });
     const options = runOptions({ only: ['xcode/entitlements-policy'] });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, { ...options, checks: CHECKS });
+    const outcome = await executeRun(session, options);
     expect(outcome.report.checks).toMatchObject([
         {
             check: 'xcode/entitlements-policy',
@@ -33,7 +33,7 @@ test('a disabled setting skips its check and enabling the setting runs it', asyn
         join(sandbox.path, 'gspot.toml'),
         policy + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
-    const enabled = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const enabled = await executeRun(await openSession(sandbox.path), options);
     expect(enabled.report.exitCode).toBe(1);
     expect(enabled.report.checks[0]?.status).toBe('fail');
     expect(enabled.report.checks[0]?.findings[0]?.message).toContain('aps-environment is not an allowed entitlement');

@@ -1,5 +1,4 @@
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -77,12 +76,12 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
         'functions.sql': source,
     });
     const options = runOptions({ only: ['sql/functions'] });
-    const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.checks[0]?.status).toBe('error');
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);
     const corrected = source.replace('SELECT :value', 'SELECT 1');
     await Bun.write(`${sandbox.path}/functions.sql`, corrected);
-    const checked = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const checked = await executeRun(await openSession(sandbox.path), options);
     expect(
         checked.report.checks
             .flatMap(({ findings }) => findings)

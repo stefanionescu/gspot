@@ -33,11 +33,11 @@ test('repository checks retain nested inputs and report their defects once at th
         'web/source.sh': 'echo sibling\n',
     });
     const options = runOptions({ stage: 'push', only: ['project/syntax'], changed: ['api/source.sh'], isDryRun: true });
-    const failed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'fail' }]);
     await Bun.write(join(sandbox.path, 'api/source.sh'), 'echo corrected\n');
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
 });

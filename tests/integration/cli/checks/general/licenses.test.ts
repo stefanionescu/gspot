@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import * as tools from '#cli/execution/tool/runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
@@ -20,10 +20,7 @@ const SCANNER =
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
-    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('/licenses.json')))
+    for (const file of emitted(session).files.filter(({ path }) => path.endsWith('/licenses.json')))
         await Bun.write(join(root, file.path), file.content);
     const selected = session.scopes[0]!;
     const spec = selected.selected

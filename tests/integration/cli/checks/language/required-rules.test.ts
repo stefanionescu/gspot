@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
@@ -30,10 +30,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
         spec: spec,
         files: session.repository.files,
     });
-    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    const generated = emitted(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);
     const base = join(sandbox.path, '.gspot/config/base.mjs');

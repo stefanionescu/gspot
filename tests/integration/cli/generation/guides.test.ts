@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { parseManifest } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 
 async function generatedGuides(level: string, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
@@ -17,10 +17,7 @@ async function generatedGuides(level: string, files: Record<string, string>): Pr
         ...files,
     });
     const session = await openSession(sandbox.path);
-    const plan = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    });
+    const plan = emitted(session);
     return new Map(plan.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
 }
 

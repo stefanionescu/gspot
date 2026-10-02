@@ -3,9 +3,9 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 
 test('native spelling file-type allowances preserve unrelated findings and neighboring files at all', async () => {
@@ -20,10 +20,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
         'neighbor.txt': `${TYPO.color} ${TYPO.the}\n`,
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('typos.toml'));
+    const configs = emitted(session).files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
     for (const config of configs) {
         await Bun.write(join(sandbox.path, config.path), config.content);
@@ -69,10 +66,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
         'upstream.txt': `${TYPO.receive}\n`,
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    });
+    const output = emitted(session);
     const configs = output.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/british/child/typos.toml',
@@ -126,10 +120,7 @@ test.each([
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
     });
     const session = await openSession(sandbox.path);
-    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('typos.toml'));
+    const outputs = emitted(session).files.filter(({ path }) => path.endsWith('typos.toml'));
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
     const [root, scope] = ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'].map((config) => {
         const result = Bun.spawnSync(

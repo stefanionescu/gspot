@@ -5,9 +5,9 @@ import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
@@ -61,10 +61,7 @@ test.each(['recommended', 'all'])(
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
-        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        });
+        const output = emitted(session);
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
         const written = new Set(
             session.scopes

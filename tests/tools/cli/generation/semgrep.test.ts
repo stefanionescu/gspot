@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { toolShipsHere } from '#tests/harness/cli/platforms.ts';
 import { installSemgrep } from '#tests/harness/tools/install.ts';
@@ -101,10 +101,7 @@ if (toolShipsHere('semgrep'))
             policyOf(['bash', 'swift', 'security'], '[guides]\ninstall = false\n', 'all'),
         );
         const session = await openSession(root);
-        for (const output of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.filter(({ path }) => path.includes('/semgrep/')))
+        for (const output of emitted(session).files.filter(({ path }) => path.includes('/semgrep/')))
             await Bun.write(join(root, output.path), output.content);
         const all = await spawnGspot(root, command);
         expect(all.code, all.stdout + all.stderr).toBe(1);

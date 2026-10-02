@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
@@ -19,10 +19,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         'app/tests/test_example.py': defect,
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('/ruff.toml'));
+    const configs = emitted(session).files.filter(({ path }) => path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',

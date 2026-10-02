@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rmSync, existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -52,14 +51,14 @@ test.each([
         });
         const session = await openSession(sandbox.path);
         const options = runOptions({ only: ['naming/identifiers', structural], isDryRun: true });
-        const failed = await executeRun(session, { ...options, checks: CHECKS });
+        const failed = await executeRun(session, options);
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
         for (const check of failed.report.checks)
             expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
         await Bun.write(join(sandbox.path, path), corrected);
-        const accepted = await executeRun(session, { ...options, checks: CHECKS });
+        const accepted = await executeRun(session, options);
         expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
         expect(accepted.report.checks).toMatchObject([
             { status: 'ok', findings: [] },
@@ -175,7 +174,7 @@ if (onPosix)
         const options = runOptions({ only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'], isDryRun: true });
         const read = spyOn(fs, 'readFileSync');
         try {
-            const clean = await executeRun(session, { ...options, checks: CHECKS });
+            const clean = await executeRun(session, options);
             expect(clean.report.exitCode).toBe(0);
             expect(
                 clean.report.checks
@@ -186,7 +185,7 @@ if (onPosix)
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
             read.mockClear();
             await Bun.write(join(sandbox.path, path), 'select from;\n');
-            const defect = await executeRun(session, { ...options, checks: CHECKS });
+            const defect = await executeRun(session, options);
             expect(defect.report.exitCode).toBe(1);
             expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
                 containing({ file: path, line: 1 }),
@@ -194,7 +193,7 @@ if (onPosix)
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
             read.mockClear();
             await Bun.write(join(sandbox.path, path), 'select 2;\n');
-            const corrected = await executeRun(session, { ...options, checks: CHECKS });
+            const corrected = await executeRun(session, options);
             expect(corrected.report.exitCode).toBe(0);
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         } finally {
@@ -239,7 +238,7 @@ format = "none"
     });
     const session = await openSession(sandbox.path);
     const options = runOptions({ only: ['sql/syntax', 'project/correct-sql'] });
-    const defect = await executeRun(session, { ...options, checks: CHECKS });
+    const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
         containing({ file: 'query.sql', line: 1 }),

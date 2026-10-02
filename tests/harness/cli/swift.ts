@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 
 const folders = new Set<string>();
@@ -43,9 +43,6 @@ export function removeBuildFolders(root?: string): void {
  */
 export async function writeSwiftlint(root: string): Promise<void> {
     const session = await openSession(root);
-    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
+    for (const file of emitted(session).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
         await Bun.write(join(root, file.path), file.content);
 }

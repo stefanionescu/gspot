@@ -6,6 +6,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { Generated } from '#cli/types/generation/generation.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 
 /**
@@ -44,4 +46,27 @@ export async function generatedFile(policy: string, path: string, files: Record<
     const file = output.files.find((entry) => entry.path === path);
     if (file === undefined) throw new Error(`The planted repository generates no ${path}.`);
     return file.content;
+}
+
+/**
+ * Everything the policy of a session generates, rendered the way apply renders it.
+ * @param session the open session
+ * @returns the generated files
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generation tests render a session the one way apply does.
+export function emitted(session: Session): Generated {
+    return emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    });
+}
+
+/**
+ * Writes the generated configuration files of a session into its repository, the way apply writes them.
+ * @param session the open session
+ * @param root the repository root
+ */
+export async function writeConfigs(session: Session, root: string): Promise<void> {
+    for (const file of emitted(session).files.filter((entry) => entry.kind === 'config'))
+        await Bun.write(join(root, file.path), file.content);
 }

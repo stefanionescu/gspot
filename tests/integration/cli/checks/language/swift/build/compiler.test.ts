@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/harness/cli/platforms.ts';
@@ -61,7 +60,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
         duration: 1,
     });
     try {
-        const failed = await executeRun(initial, { ...options, checks: CHECKS });
+        const failed = await executeRun(initial, options);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks).toContainEqual(
             containing({
@@ -72,7 +71,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
             }),
         );
         run.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
-        const executed = await executeRun(corrected, { ...options, checks: CHECKS });
+        const executed = await executeRun(corrected, options);
         expect(executed.report.exitCode).toBe(0);
         expect(readFileSync(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let value = 1\n');
     } finally {

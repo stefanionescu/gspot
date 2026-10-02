@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
@@ -26,10 +26,7 @@ if (onPosix)
         await runOwnedLifecycle(prepared.root, (owner) => installPythonProject(prepared.root, owner));
         // The fixture installs Ruff alone, so only its generated configuration is written and committed.
         const session = await openSession(repository.path);
-        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.filter((file) => file.path.startsWith('.gspot/config/ruff'));
+        const generated = emitted(session).files.filter((file) => file.path.startsWith('.gspot/config/ruff'));
         mkdirSync(join(repository.path, '.gspot/config'), { recursive: true });
         for (const file of generated) writeFileSync(join(repository.path, file.path), file.content);
         for (const args of [

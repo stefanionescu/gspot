@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -60,19 +59,19 @@ test.each([
         const target = join(sandbox.path, path);
         fs.rmSync(target);
         fs.mkdirSync(target);
-        const unreadable = await executeRun(session, { ...options, checks: CHECKS });
+        const unreadable = await executeRun(session, options);
         expect(unreadable.report.exitCode).toBe(2);
         expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
         expect(unreadable.report.checks[0]?.note).toContain('EISDIR');
         expect(fs.statSync(target).isDirectory()).toBe(true);
         fs.rmSync(target, { recursive: true });
         fs.writeFileSync(target, '{');
-        const malformed = await executeRun(session, { ...options, checks: CHECKS });
+        const malformed = await executeRun(session, options);
         expect(malformed.report.exitCode).toBe(1);
         expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'parse' }]);
         expect(fs.readFileSync(target, 'utf8')).toBe('{');
         fs.writeFileSync(target, content);
-        const corrected = await executeRun(session, { ...options, checks: CHECKS });
+        const corrected = await executeRun(session, options);
         expect(corrected.report.exitCode).toBe(0);
         expect(fs.readFileSync(target, 'utf8')).toBe(content);
     },
@@ -98,7 +97,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
         return original(...args);
     }) as typeof fs.statSync);
     try {
-        const failed = await executeRun(session, { ...options, checks: CHECKS });
+        const failed = await executeRun(session, options);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks[0]?.status).toBe('error');
         expect(failed.report.checks[0]?.note).toContain(`EACCES: cannot inspect ${image}`);
@@ -107,11 +106,11 @@ test('a denied asset existence read is an execution error and a genuinely missin
         read.mockRestore();
     }
     fs.rmSync(target);
-    const missing = await executeRun(session, { ...options, checks: CHECKS });
+    const missing = await executeRun(session, options);
     expect(missing.report.exitCode).toBe(1);
     expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
     fs.writeFileSync(target, new Uint8Array([0, 1, 2]));
-    const corrected = await executeRun(session, { ...options, checks: CHECKS });
+    const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
     expect(fs.readFileSync(join(sandbox.path, assetManifest), 'utf8')).toBe(content);
     expect(fs.readFileSync(target)).toStrictEqual(Buffer.from([0, 1, 2]));

@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import * as processes from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -120,10 +120,7 @@ export async function installAtLevel(
  */
 export async function installSemgrep(root: string): Promise<void> {
     const session = await openSession(root);
-    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(
+    const outputs = emitted(session).files.filter(
         ({ path }) => path.includes('/semgrep/') || path.endsWith('.semgrepignore') || path === '.gspot/pyproject.toml',
     );
     await runOwnedLifecycle(root, async (owner) => {

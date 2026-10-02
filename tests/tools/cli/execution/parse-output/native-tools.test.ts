@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/tool/formats.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
@@ -25,10 +25,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
     });
     const session = await openSession(sandbox.path);
-    const configuration = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
+    const configuration = emitted(session).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     await Bun.write(join(sandbox.path, configuration.path), configuration.content);
     const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
     const planned = plans[0]!;

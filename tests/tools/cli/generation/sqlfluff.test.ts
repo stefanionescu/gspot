@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 
 test('SQLFluff honors root and nested dialect settings over the database default', async () => {
     await using sandbox = await testdir();
@@ -16,10 +16,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
         'warehouse/child/query.sql': 'SELECT 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
+    const configs = emitted(session).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, /^dialect = (.+)$/mu.exec(content)?.[1]])),
     ).toStrictEqual({

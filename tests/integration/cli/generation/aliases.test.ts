@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { rmSync, mkdirSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -17,12 +17,7 @@ test.each(['package.json', 'tsconfig.json'])(
         });
         const session = await openSession(sandbox.path);
         writeFileSync(join(sandbox.path, path), '{ "compilerOptions": { "paths": {} },');
-        expect(() =>
-            emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-                version: session.version,
-                packageClient: session.packageClient,
-            }),
-        ).toThrow(
+        expect(() => emitted(session)).toThrow(
             path === 'tsconfig.json'
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
                 : 'Cannot read package manifest package.json',
@@ -185,12 +180,7 @@ test('generation preserves authored aliases and reports missing authored bases',
         session.version,
     );
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
-    expect(
-        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.some((file) => file.path === '.gspot/config/tsconfig.check.json'),
-    ).toBe(true);
+    expect(emitted(session).files.some((file) => file.path === '.gspot/config/tsconfig.check.json')).toBe(true);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);
     writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
     expect(() => inputs.importAliases('')).toThrow('missing-base.json');

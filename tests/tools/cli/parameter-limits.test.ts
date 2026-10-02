@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { LINT_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 const cases = [
@@ -62,10 +62,7 @@ for (const scenario of cases.filter((entry) => entry.language !== 'swift' || pro
             [scenario.file]: scenario.source,
         });
         const session = await openSession(directory.path);
-        const files = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files;
+        const files = emitted(session).files;
         const config = files.find(({ path }) => path === configName)!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, configName), config.content);

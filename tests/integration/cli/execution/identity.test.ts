@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -42,7 +41,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     });
     const session = await openSession(sandbox.path);
     const options = runOptions();
-    const failed = await executeRun(session, { ...options, checks: CHECKS });
+    const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'fail', findings: [] });
     await Bun.write(join(sandbox.path, '.gspot/version'), GSPOT_VERSION + '\n');
@@ -60,7 +59,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     expect(cli.exitCode, cli.stderr.toString()).toBe(1);
 
     session.policyFiles.policy.checks[0]!.count_regex = 'No matching output';
-    const corrected = await executeRun(session, { ...options, checks: CHECKS });
+    const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
 });
 

@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { TYPO } from '#tests/harness/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
+import { writeConfigs } from '#tests/harness/cli/generated.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -238,11 +238,7 @@ test.each([
             copyFileSync(ruff, join(bin, process.platform === 'win32' ? 'ruff.exe' : 'ruff'));
         }
         const session = await openSession(sandbox.path);
-        for (const output of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.filter((file) => file.kind === 'config'))
-            await Bun.write(join(sandbox.path, output.path), output.content);
+        await writeConfigs(session, sandbox.path);
         const options = runOptions({ only: [check], fix: true });
         const failed = await executeRun(session, { ...options, skips: [], only: [check] });
         expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
@@ -273,11 +269,7 @@ test('shfmt reports and fixes ordinary shell formatting', async () => {
         'example.sh': source,
     });
     const session = await openSession(sandbox.path);
-    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter((file) => file.kind === 'config'))
-        await Bun.write(join(sandbox.path, file.path), file.content);
+    await writeConfigs(session, sandbox.path);
     const options = runOptions({ only: ['bash/shfmt'] });
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);

@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
@@ -53,10 +53,7 @@ if (toolShipsHere('swiftlint'))
             [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
         });
         const session = await openSession(root);
-        const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+        const outputs = emitted(session).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         for (const output of outputs) await Bun.write(join(root, output.path), output.content);
         const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
@@ -90,10 +87,7 @@ if (toolShipsHere('swiftlint'))
                 [`${scope}/Value.swift`]: DEFECT,
             });
             const session = await openSession(sandbox.path);
-            const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-                version: session.version,
-                packageClient: session.packageClient,
-            }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+            const outputs = emitted(session).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
             expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
             for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
             const native = await runProcess(

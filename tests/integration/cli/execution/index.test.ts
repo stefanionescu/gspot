@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -41,12 +40,12 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
         git(sandbox.path, 'add', '.');
         const session = await openSession(sandbox.path);
         const options = runOptions({ only: [check], isDryRun: true });
-        const found = await executeRun(session, { ...options, checks: CHECKS });
+        const found = await executeRun(session, options);
         expect(found.report.exitCode).toBe(1);
         expect(found.report.checks[0]!.status).toBe('fail');
         expect(found.report.checks[0]!.findings).toHaveLength(1);
         writeFileSync(join(sandbox.path, '.git/index'), 'corrupt index');
-        const failed = await executeRun(session, { ...options, checks: CHECKS });
+        const failed = await executeRun(session, options);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks[0]!.status).toBe('error');
         expect(failed.report.checks[0]!.note).toContain('Git index listing failed');

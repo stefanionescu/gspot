@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
+import { writeConfigs } from '#tests/harness/cli/generated.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
@@ -26,13 +25,9 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'untracked/Dockerfile'), source);
     const session = await openSession(sandbox.path);
-    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter((file) => file.kind === 'config'))
-        await Bun.write(join(sandbox.path, file.path), file.content);
+    await writeConfigs(session, sandbox.path);
     const options = runOptions({ stage: 'push', only: ['docker/trivy-config'] });
-    const failed = await executeRun(session, { ...options, checks: CHECKS });
+    const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
     expect(
         failed.report.checks.map((check) => ({
@@ -48,7 +43,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     ]);
     for (const path of ['Dockerfile', 'sibling/Dockerfile'])
         await Bun.write(join(sandbox.path, path), source.replace('USER root', 'USER node'));
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'app/Dockerfile')).text()).toBe(source);
     expect(await Bun.file(join(sandbox.path, 'untracked/Dockerfile')).text()).toBe(source);

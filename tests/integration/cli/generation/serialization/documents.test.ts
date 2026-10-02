@@ -6,8 +6,8 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { symlinkSync, readFileSync } from 'node:fs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';
 import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
 
@@ -34,10 +34,7 @@ test('JSON option keys and YAML values keep their literal structure', async () =
         }),
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    });
+    const output = emitted(session);
     for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json', '.gspot/config/markdownlint.jsonc']) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();

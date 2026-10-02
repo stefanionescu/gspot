@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
@@ -45,10 +45,7 @@ test('JavaScript checking includes authored build directories at all', async () 
     });
     const environment = { PATH: toolsPath(['tsc']) };
     const session = await openSession(sandbox.path);
-    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
+    const generated = emitted(session).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
     await Bun.write(join(sandbox.path, generated.path), generated.content);
     const command = ['check', '--only', 'javascript/checkjs', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
@@ -79,10 +76,7 @@ test.each([false, true])(
             ...authoredFiles,
         });
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-            version: session.version,
-            packageClient: session.packageClient,
-        }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
+        const generated = emitted(session).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         await Bun.write(join(sandbox.path, generated.path), generated.content);
         chmodSync(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/checkjs', '--json'];
@@ -131,10 +125,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         'sibling/source.js': corrected,
     });
     const session = await openSession(sandbox.path);
-    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('/jsconfig.json'));
+    const outputs = emitted(session).files.filter(({ path }) => path.endsWith('/jsconfig.json'));
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/child/jsconfig.json',
         '.gspot/config/app/jsconfig.json',
@@ -179,10 +170,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
         'site/README.md': '# No script here\n',
     });
     const session = await openSession(sandbox.path);
-    const projects = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.filter(({ path }) => path.endsWith('jsconfig.json'));
+    const projects = emitted(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
     for (const project of projects) await Bun.write(join(sandbox.path, project.path), project.content);
     const reopened = await openSession(sandbox.path);
     const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/checkjs'] });

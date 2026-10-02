@@ -1,7 +1,6 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
@@ -115,7 +114,7 @@ fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.
     });
     const session = await openSession(sandbox.path);
     const options = runOptions({ stage: 'commit', fix: true });
-    const outcome = await executeRun(session, { ...options, checks: CHECKS });
+    const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.files).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
@@ -147,7 +146,7 @@ fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ',
 `,
     });
     const options = runOptions({ stage: 'commit', fix: true });
-    const outcome = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
+    const outcome = await executeRun(await openSession(sandbox.path), options);
     expect(outcome.report.exitCode, JSON.stringify(outcome.report.checks)).toBe(0);
     expect(outcome.fixes?.results).toMatchObject([
         { check: 'project/format', status: 'changed', changed: ['source.txt'] },
