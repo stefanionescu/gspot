@@ -7,7 +7,7 @@ import {
     SHEBANG_TAGS,
     FILENAME_TAGS,
     EXTENSION_TAGS,
-    LOCKFILE_NAMES,
+    LOCKFILE_CLIENTS,
     BINARY_EXTENSIONS,
     SHEBANG_INTERPRETERS,
 } from '#cli/config/repository/repository.ts';
@@ -70,7 +70,7 @@ export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const base = baseName(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],
-        [LOCKFILE_NAMES.includes(base), 'lockfile'],
+        [Object.hasOwn(LOCKFILE_CLIENTS, base), 'lockfile'],
         [base.startsWith('Dockerfile') || extension === '.dockerfile', 'dockerfile'],
         [base.startsWith('.env'), 'dotenv'],
         [entry.executable, 'executable'],

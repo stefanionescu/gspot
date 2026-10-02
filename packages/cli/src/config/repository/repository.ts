@@ -38,20 +38,23 @@ export const GENERATED_BANNERS: RegExp[] = [
     /^\/\/\/ <reference types="@cloudflare\/workers-types/,
     /^\/\/\/ <reference types="next"/,
 ];
-export const LOCKFILE_NAMES = [
-    'bun.lock',
-    'bun.lockb',
-    'package-lock.json',
-    'pnpm-lock.yaml',
-    'yarn.lock',
-    'uv.lock',
-    'poetry.lock',
-    'Cargo.lock',
-    'go.sum',
-    'Gemfile.lock',
-    'Package.resolved',
-    'Podfile.lock',
-];
+/** Every lockfile gspot knows, with the package client that writes it. */
+export const LOCKFILE_CLIENTS: Record<string, string> = {
+    'bun.lock': 'bun',
+    'bun.lockb': 'bun',
+    'package-lock.json': 'npm',
+    'npm-shrinkwrap.json': 'npm',
+    'pnpm-lock.yaml': 'pnpm',
+    'yarn.lock': 'yarn',
+    'uv.lock': 'uv',
+    'poetry.lock': 'poetry',
+    'pdm.lock': 'pdm',
+    'Cargo.lock': 'cargo',
+    'go.sum': 'go',
+    'Gemfile.lock': 'bundler',
+    'Package.resolved': 'swift',
+    'Podfile.lock': 'cocoapods',
+};
 export const BINARY_EXTENSIONS = [
     '.png',
     '.jpg',

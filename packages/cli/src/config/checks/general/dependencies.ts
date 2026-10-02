@@ -1,4 +1,8 @@
 // The literal values checks/general/dependencies reads: names, patterns, limits, and tables.
+import { LOCKFILE_CLIENTS } from '#cli/config/repository/repository.ts';
+
+// The JavaScript package clients, whose lockfiles a repository keeps one of.
+const JAVASCRIPT_CLIENTS = new Set(['bun', 'npm', 'pnpm', 'yarn']);
 
 export const BUNFIG = 'bunfig.toml';
 export const DEFAULT_AGE_DAYS = 7;
@@ -8,8 +12,13 @@ export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
 export const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
 export const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;
 
+/** The lockfiles of the JavaScript package managers, with the client of each. */
+export const LOCKFILES: Record<string, string> = Object.fromEntries(
+    Object.entries(LOCKFILE_CLIENTS).filter(([, client]) => JAVASCRIPT_CLIENTS.has(client)),
+);
+
 /** The npm lockfiles, and the one field of theirs that names where a package downloads from. */
-export const NPM_LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json']);
+export const NPM_LOCKFILES = new Set(Object.keys(LOCKFILES).filter((name) => LOCKFILES[name] === 'npm'));
 export const NPM_DOWNLOAD = /"resolved"\s*:\s*"([^"]+)"/gu;
 export const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
     bun: /lockfile had changes, but lockfile is frozen/u,
@@ -24,12 +33,4 @@ export const FROZEN_INSTALLS: Record<string, string[]> = {
     'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
     'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
     'uv.lock': ['uv', 'lock', '--check'],
-};
-
-export const LOCKFILES: Record<string, string> = {
-    'bun.lock': 'bun',
-    'bun.lockb': 'bun',
-    'package-lock.json': 'npm',
-    'pnpm-lock.yaml': 'pnpm',
-    'yarn.lock': 'yarn',
 };
