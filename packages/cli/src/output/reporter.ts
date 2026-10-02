@@ -1,13 +1,13 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { HOOK_FILES } from '#cli/config/generation/generation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
 import type { Finding, RunReport, CheckResult } from '#cli/types/execution/execution.ts';
 
 import {
-    ERROR_EXIT,
     FILES_WIDTH,
     QUIET_HIDES,
     ID_WIDTH_MIN,

@@ -1,4 +1,3 @@
-import { ERROR_EXIT } from '#cli/config/output.ts';
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
@@ -11,6 +10,7 @@ import { registerRemove } from '#cli/commands/remove.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { registerInit } from '#cli/commands/init/command.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { HELP_CODES } from '#cli/config/commands/commands.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';

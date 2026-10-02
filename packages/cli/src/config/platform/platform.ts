@@ -60,3 +60,6 @@ export const TYPO_FRACTION = 3;
 
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
+
+/** The exit of a command that did not finish: an error, a refusal, an unreadable input, or a cancellation. */
+export const ERROR_EXIT = 2;

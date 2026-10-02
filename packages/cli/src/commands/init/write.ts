@@ -10,10 +10,10 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { INCOMPLETE_INSTALL_EXIT } from '#cli/config/commands/init.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import type { Written, Installed, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
@@ -79,7 +79,7 @@ async function installed(session: Session, install: boolean): Promise<Installed>
     } catch (error) {
         if (!isRepairable(error)) throw error;
         const installNote = `${error.message}\nSetup was written; tool installation is incomplete. Run: gspot install`;
-        return { installNote, exitCode: INCOMPLETE_INSTALL_EXIT };
+        return { installNote, exitCode: ERROR_EXIT };
     }
 }
 

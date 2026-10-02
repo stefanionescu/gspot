@@ -4,11 +4,12 @@ import { progress } from '#cli/output/reporter.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { Stage } from '#cli/types/execution/planning.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
+import { PUBLIC_STAGES } from '#cli/config/commands/check.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, Command, InvalidArgumentError } from 'commander';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
-import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/config/commands/check.ts';
 import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 
 // Git gives the pre-push hook the remote name and the remote URL.
@@ -91,8 +92,8 @@ async function checkedCommand(
         if (!signal.aborted) throw error;
         return {
             text: 'Check canceled before all selected content was checked.\n',
-            json: { error: 'canceled', exitCode: CANCELED_EXIT },
-            exitCode: CANCELED_EXIT,
+            json: { error: 'canceled', exitCode: ERROR_EXIT },
+            exitCode: ERROR_EXIT,
         };
     }
 }

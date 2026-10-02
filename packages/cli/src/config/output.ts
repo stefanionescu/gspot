@@ -1,8 +1,5 @@
 // The literal values output reads: names, patterns, limits, and tables.
 
-/** The exit of a command that did not finish: an error, a refusal, or a cancellation. */
-export const ERROR_EXIT = 2;
-
 export const MS_PER_SECOND = 1000;
 export const SCOPE_WIDTH_MIN = 4;
 export const ID_WIDTH_MIN = 8;

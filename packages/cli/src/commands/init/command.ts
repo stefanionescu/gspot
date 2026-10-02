@@ -12,8 +12,9 @@ import { askConfirmation } from '#cli/commands/prompts.ts';
 import { readProfile } from '#cli/policy/profiles/parse.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
-import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
+import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
@@ -73,7 +74,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     return {
         text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
         json: { root, plan, error: 'unread-configuration', written: false },
-        exitCode: UNREADABLE_EXIT,
+        exitCode: ERROR_EXIT,
     };
 }
 
@@ -84,8 +85,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
  */
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
-    if (hasPolicy(root))
-        return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: UNREADABLE_EXIT };
+    if (hasPolicy(root)) return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: ERROR_EXIT };
     const profile = options.from === undefined ? undefined : await readProfile(options.from, options.cwd);
     const effective = profile === undefined ? options : { ...profileAnswers(profile), ...options, profile };
     const prepared = await prepare(root, effective);

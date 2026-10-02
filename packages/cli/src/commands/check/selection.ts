@@ -6,8 +6,8 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { INVALID_INPUT_EXIT } from '#cli/config/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/changes.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
@@ -54,7 +54,7 @@ export function refusalFor(
         return {
             text: `The commit message file ${options.messageFile} cannot be read.\n`,
             json: { error: 'message-file' },
-            exitCode: INVALID_INPUT_EXIT,
+            exitCode: ERROR_EXIT,
         };
     return undefined;
 }
@@ -91,7 +91,7 @@ export function unknownSelection(session: Session, only: string[] | undefined): 
     return {
         text: `No selected kit runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
         json: { error: 'unknown-check' },
-        exitCode: INVALID_INPUT_EXIT,
+        exitCode: ERROR_EXIT,
     };
 }
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { LAST_EXIT_CODE } from '#cli/config/kits.ts';
+import { MAX_EXIT_CODE } from '#cli/config/kits.ts';
 
-export const findingExitCodesSchema = z.array(z.number().int().min(1).max(LAST_EXIT_CODE));
+export const findingExitCodesSchema = z.array(z.number().int().min(1).max(MAX_EXIT_CODE));
 
 /** Argument vectors require an executable and preserve empty arguments after it. */
 export const commandSchema = z

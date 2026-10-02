@@ -1,6 +1,6 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
 import { GspotError } from '#cli/platform/errors.ts';
-import { CANCELED_EXIT } from '#cli/config/commands/check.ts';
+import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { useRevision } from '#cli/execution/checkout/revision.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push.ts';
@@ -61,7 +61,7 @@ async function checkRevision(
 function pushReport(selected: PushSelection, revisions: Checked[], signal: AbortSignal): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
     const exitCode = Math.max(
-        signal.aborted ? CANCELED_EXIT : 0,
+        signal.aborted ? ERROR_EXIT : 0,
         ...revisions.map((revision) => revision.report.exitCode),
     );
     return {
