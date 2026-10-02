@@ -7,6 +7,7 @@ import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { gspot, spawnGspot } from '#tests/harness/cli/command.ts';
@@ -106,7 +107,10 @@ process.exit(child.exitCode);
         const bad = git(sandbox.path, ['commit', '-qm', 'Added notes.'], environment);
         expect(bad.code).not.toBe(0);
         expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
-        expect(bad.stdout + bad.stderr).toContain(`--message-file ${join(sandbox.path, '.git/COMMIT_EDITMSG')}`);
+        // The reproduction quotes the path, which holds backslashes on Windows.
+        expect(bad.stdout + bad.stderr).toContain(
+            `--message-file ${quoteArgument(join(sandbox.path, '.git/COMMIT_EDITMSG'))}`,
+        );
         expect(bad.stdout + bad.stderr).toContain('Bypass this hook once: git commit --no-verify');
         const good = git(sandbox.path, ['commit', '-qm', 'docs: add the notes page'], environment);
         expect(good.code, good.stdout + good.stderr).toBe(0);
