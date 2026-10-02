@@ -24,10 +24,8 @@ async function fetched(url: string): Promise<string> {
     return response.text();
 }
 
-async function profileText(source: string, cwd: string): Promise<string> {
-    if (source.startsWith(GITHUB_PREFIX)) return fetched(githubUrl(source));
-    if (source.startsWith('https://')) return fetched(source);
-    if (source.startsWith('http://')) throw new GspotError('profile', ['A profile is fetched over https, not http.']);
+// A profile in a local file, named relative to the directory gspot started in.
+function localProfile(source: string, cwd: string): string {
     const path = resolve(cwd, source);
     try {
         return readFileSync(path, 'utf8');
@@ -86,7 +84,9 @@ export function parseProfile(text: string, source: string): Profile {
  * @param cwd the directory a relative path starts from
  * @returns the validated profile
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and the profile tests read a profile from a path or a URL through this one entry.
 export async function readProfile(source: string, cwd: string): Promise<Profile> {
-    return parseProfile(await profileText(source, cwd), source);
+    if (source.startsWith('http://')) throw new GspotError('profile', ['A profile is fetched over https, not http.']);
+    const url = source.startsWith(GITHUB_PREFIX) ? githubUrl(source) : source;
+    const text = url.startsWith('https://') ? await fetched(url) : localProfile(source, cwd);
+    return parseProfile(text, source);
 }

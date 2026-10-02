@@ -67,18 +67,12 @@ function blockDrift(root: string, rendered: Generated): DriftEntry[] {
     return entries;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two generated files can be missing or changed; the caller sits at the complexity limit.
-function presenceDrift(root: string, path: string): DriftEntry {
-    return { path, kind: openRoot(root).read(path) === undefined ? 'missing' : 'changed' };
-}
-
+// The merged and configuration outputs whose fields are gone: missing when the file is gone, changed otherwise.
 function otherDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
-    for (const merge of rendered.merges)
-        if (!hasConfiguration(root, merge)) entries.push(presenceDrift(root, merge.path));
-    for (const output of rendered.configurations)
-        if (!hasConfiguration(root, output)) entries.push(presenceDrift(root, output.path));
-    return entries;
+    using files = openRoot(root);
+    return [...rendered.merges, ...rendered.configurations]
+        .filter((output) => !hasConfiguration(root, output))
+        .map((output) => ({ path: output.path, kind: files.read(output.path) === undefined ? 'missing' : 'changed' }));
 }
 
 /**

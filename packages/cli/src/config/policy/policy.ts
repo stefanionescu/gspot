@@ -1,5 +1,6 @@
 // The literal values policy reads: names, patterns, limits, and tables.
 import type { SettingSpec } from '#cli/types/kits.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 
 export const POLICY_ASSET = 'kits/general/naming/policy.json';
 
@@ -197,6 +198,15 @@ export const REFUSED_REASONS = [
     '.',
 ];
 export const MINIMUM_REASON_WORDS = 2;
+
+/** The structure table with nothing written: no re-exports and no allowances. */
+export const STRUCTURE_DEFAULTS: Policy['structure'] = {
+    reexports: 'none',
+    single_file_folder_allowed: [],
+    prefix_collision_allowed: [],
+    folder_name_allowed: [],
+    python: {},
+};
 export const LIMITS_PREFIX = 'limits.';
 export const TOOL_PREFIX = 'tools.';
 export const RESERVED_SLOTS = new Set(['extra']);
