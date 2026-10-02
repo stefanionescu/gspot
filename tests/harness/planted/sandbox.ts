@@ -4,6 +4,7 @@ import { join, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/config/cli.ts';
 import type { Sandbox } from '#tests/types/cli.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
+import { policyOf } from '#tests/harness/cli/policy.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 import { install, toolsPath } from '#tests/harness/tools/install.ts';
@@ -21,6 +22,19 @@ function manifestOf(dependencies: Record<string, string> | undefined): Record<st
         dependencies,
     };
     return { 'package.json': `${JSON.stringify(manifest, null, 4)}\n` };
+}
+
+// Initializes the kits with their private tools installed, selects the level, and returns the command environment.
+async function installTools(root: string, sandbox: Sandbox): Promise<Record<string, string>> {
+    const tools = toolsPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]);
+    const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${tools}` };
+    const argv = ['init', '--yes', '--kits', ...sandbox.kits, ...(sandbox.init ?? QUIET_INIT)];
+    await install(root, argv, environment, sandbox.without ?? ['naming', 'spelling']);
+    const level = sandbox.level ?? 'all';
+    const selected = await spawnGspot(root, ['set', 'level', level], environment);
+    if (selected.code !== 0)
+        throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
+    return environment;
 }
 
 /**
@@ -41,13 +55,8 @@ export async function installSandbox(
     if (sandbox.modules !== false) linkInstalledModules(join(root, 'node_modules'));
     sandbox.before?.(root);
     commitAll(root);
-    const tools = toolsPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]);
-    const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${tools}` };
-    const argv = ['init', '--yes', '--kits', ...sandbox.kits, ...(sandbox.init ?? QUIET_INIT)];
-    await install(root, argv, environment, sandbox.without ?? ['naming', 'spelling']);
-    const level = sandbox.level ?? 'all';
-    const selected = await spawnGspot(root, ['set', 'level', level], environment);
-    if (selected.code !== 0)
-        throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
-    return environment;
+    if (sandbox.installs !== false) return installTools(root, sandbox);
+    // Checks gspot runs itself need only the policy: no generated file, private tool, or lockfile.
+    await Bun.write(join(root, 'gspot.toml'), policyOf(sandbox.kits, '', sandbox.level ?? 'all'));
+    return {};
 }

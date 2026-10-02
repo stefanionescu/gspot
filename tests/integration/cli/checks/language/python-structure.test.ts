@@ -13,8 +13,8 @@ plantedCases(
     {
         kits: ['python'],
         modules: false,
+        installs: false,
         without: ['naming', 'spelling', 'dependencies'],
-        tools: ['ruff'],
         files: {
             'pyproject.toml': STRUCTURE_PROJECT,
             'planted/__init__.py': '"""The planted package."""\n',

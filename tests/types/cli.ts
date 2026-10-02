@@ -36,6 +36,8 @@ export type Sandbox = {
     modules?: boolean;
     /** The level set after init; all unless a test says otherwise. */
     level?: 'recommended' | 'all';
+    /** Whether init installs the private tools; a table of checks gspot runs itself needs none and runs in-process. */
+    installs?: boolean;
 };
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {
