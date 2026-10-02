@@ -64,7 +64,7 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
             'image',
             '--quiet',
             '--config',
-            join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'trivy.yaml'),
+            join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'trivy.yml'),
             '--exit-code',
             String(FINDINGS_EXIT),
             '--format',

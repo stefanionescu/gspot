@@ -35,7 +35,7 @@ describe.if(Bun.which('docker') !== null && process.platform !== 'win32')('with 
             'gspot.toml': policyOf(['docker']),
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
-            '.gspot/config/trivy.yaml': 'severity: [HIGH, CRITICAL]\n',
+            '.gspot/config/trivy.yml': 'severity: [HIGH, CRITICAL]\n',
         });
         const session = await openSession(sandbox.path);
         const spec = session.manifests.get('docker')!.checks.find((entry) => entry.name === 'docker/trivy-image')!;
@@ -47,12 +47,12 @@ describe.if(Bun.which('docker') !== null && process.platform !== 'win32')('with 
             expect(findings).toMatchObject([
                 { file: 'compose.yaml', line: 1, rule: 'vulnerability', message: textContaining('private-key') },
             ]);
-            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [');
+            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [');
             await rejects(trivyImage(input), /Trivy could not scan/u);
             expect(await Bun.file(join(sandbox.path, 'compose.yaml')).text()).toBe(
                 `services: {app: {image: "${tags[0]}"}}\n`,
             );
-            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [HIGH, CRITICAL]\n');
+            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [HIGH, CRITICAL]\n');
             await Bun.write(join(sandbox.path, 'compose.yaml'), `services: {app: {image: "${tags[1]}"}}\n`);
             const corrected = await openSession(sandbox.path);
             const files = corrected.repository.files;

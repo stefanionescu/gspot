@@ -43,12 +43,12 @@ name = "docker"
 host = true
 
 [[config]]
-target = ".gspot/config/hadolint.yaml"
+target = ".gspot/config/hadolint.yml"
 scoped = true
 rules_path = ["ignored"]
 
 [[config]]
-target = ".gspot/config/trivy.yaml"
+target = ".gspot/config/trivy.yml"
 scoped = true
 
 [[config]]

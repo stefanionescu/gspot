@@ -92,7 +92,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     );
     const scratch = scratchFolder.path;
     if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-    else appendBuildMetadata(command, config, scratch, 'tsconfig.check.tsbuildinfo');
+    else appendBuildMetadata(command, config, scratch, 'tsconfig.tsbuildinfo');
     const result = await runToolCheck(session, planned, command, scratch);
     if (result.command !== undefined)
         result.command = result.command.map((part) => part.replace(scratch, () => session.root));
