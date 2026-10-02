@@ -170,8 +170,6 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
         "error",
         {
             "scopes": [
-                "packages/cli",
-                "packages/eslint-plugin",
                 "docs"
             ]
         }
@@ -598,6 +596,13 @@ const boundaryConfigs = [
                         "packages/cli/src/types/platform/**"
                     ],
                     "mode": "full"
+                },
+                {
+                    "type": "plugin",
+                    "pattern": [
+                        "packages/eslint-plugin/src/**"
+                    ],
+                    "mode": "full"
                 }
             ],
             "boundaries/ignore": [
@@ -758,6 +763,12 @@ const boundaryConfigs = [
                             "allow": [
                                 "platform"
                             ]
+                        },
+                        {
+                            "from": "plugin",
+                            "allow": [
+                                "plugin"
+                            ]
                         }
                     ]
                 }
@@ -767,114 +778,6 @@ const boundaryConfigs = [
 ];
 
 const scopeRules = [
-    {
-        "files": [
-            "packages/cli/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "rules": {
-            "gspot/no-cross-folder-imports": [
-                "error",
-                {
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#package": "packages/cli/package.json",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    }
-                }
-            ],
-            "gspot/import-direction": [
-                "error",
-                {
-                    "roles": {
-                        "types": [
-                            "types/**",
-                            "**/types/**"
-                        ],
-                        "harness": [
-                            "tests/harness/**"
-                        ],
-                        "tests": [
-                            "tests/**",
-                            "**/*.test.*"
-                        ],
-                        "config": [],
-                        "env": [
-                            "packages/cli/src/platform/environment.ts",
-                            "tests/harness/environment.ts"
-                        ],
-                        "runtime": [
-                            "src/**"
-                        ]
-                    },
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#package": "packages/cli/package.json",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    },
-                    "scope": "packages/cli"
-                }
-            ]
-        }
-    },
-    {
-        "files": [
-            "packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "rules": {
-            "gspot/no-cross-folder-imports": [
-                "error",
-                {
-                    "aliases": {
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    }
-                }
-            ],
-            "gspot/import-direction": [
-                "error",
-                {
-                    "roles": {
-                        "types": [
-                            "types/**",
-                            "**/types/**"
-                        ],
-                        "harness": [
-                            "tests/harness/**"
-                        ],
-                        "tests": [
-                            "tests/**",
-                            "**/*.test.*"
-                        ],
-                        "config": [],
-                        "env": [
-                            "packages/cli/src/platform/environment.ts",
-                            "tests/harness/environment.ts"
-                        ],
-                        "runtime": [
-                            "src/**"
-                        ]
-                    },
-                    "aliases": {
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    },
-                    "scope": "packages/eslint-plugin"
-                }
-            ]
-        }
-    },
     {
         "files": [
             "docs/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
@@ -1022,90 +925,6 @@ const policyRules = [
         }
     },
     {
-        "scope": "packages/cli",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/cli",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/eslint-plugin",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/eslint-plugin",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
         "scope": "docs",
         "includes": [
             "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$",
@@ -1187,15 +1006,11 @@ const defaults = [
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
             'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
             // The boundaries rule resolves imports through the classic resolver setting.
             'import/resolver': { typescript: { project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] } },
         },
@@ -1230,7 +1045,7 @@ const defaults = [
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
     { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["packages/cli/**","packages/eslint-plugin/**","docs/**"]] })),
+].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["docs/**"]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
         files: TYPESCRIPT,
@@ -1240,121 +1055,11 @@ const defaults = [
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
             'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
             // The boundaries rule resolves imports through the classic resolver setting.
             'import/resolver': { typescript: { project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/cli/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/eslint-plugin/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] } },
         },

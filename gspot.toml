@@ -52,14 +52,6 @@ naming.banned_terms = [
 ]
 
 [[scope]]
-path = "packages/cli"
-kits = []
-
-[[scope]]
-path = "packages/eslint-plugin"
-kits = []
-
-[[scope]]
 path = "docs"
 kits = ["typescript", "css", "astro"]
 
@@ -404,6 +396,11 @@ paths = [
     "packages/cli/src/types/platform/**",
 ]
 
+# The ESLint plugin is one more element, which neither imports the CLI nor is imported by it.
+[[architecture.elements]]
+name = "plugin"
+paths = ["packages/eslint-plugin/src/**"]
+
 [[architecture.edges_allowed]]
 from = "main"
 to = ["main", "commands", "platform"]
@@ -485,6 +482,10 @@ to = ["parsers", "platform"]
 [[architecture.edges_allowed]]
 from = "platform"
 to = ["platform"]
+
+[[architecture.edges_allowed]]
+from = "plugin"
+to = ["plugin"]
 
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
@@ -568,6 +569,9 @@ review_by = "2026-10-13"
 id = "GHSA-gvp8-978c-rx2q"
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reuses decode options across JSON Web Tokens."
 review_by = "2026-10-15"
+
+[tools.commitlint]
+scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 
 [tools.knip]
 entry = [

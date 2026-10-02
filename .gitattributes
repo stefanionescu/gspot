@@ -13,6 +13,4 @@
 /docs/.semgrepignore text eol=lf
 /docs/.stylelintrc.json text eol=lf
 /eslint.config.mjs text eol=lf
-/packages/cli/.semgrepignore text eol=lf
-/packages/eslint-plugin/.semgrepignore text eol=lf
 # <<< gspot managed <<<
