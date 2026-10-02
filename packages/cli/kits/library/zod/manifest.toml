@@ -1,6 +1,4 @@
 [kit]
-name = "zod"
-kind = "library"
 title = "Zod"
 requires = ["javascript"]
 description = "Zod schemas: the schema rules of ESLint, so a schema says what it accepts and rejects the rest."

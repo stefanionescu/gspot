@@ -1,6 +1,4 @@
 [kit]
-name = "python"
-kind = "language"
 title = "Python"
 requires = ["formatting", "structure"]
 recommends = ["naming", "spelling", "dependencies"]

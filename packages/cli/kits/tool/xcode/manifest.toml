@@ -1,6 +1,4 @@
 [kit]
-name = "xcode"
-kind = "tool"
 title = "Xcode"
 requires = ["files"]
 recommends = ["swift"]

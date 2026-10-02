@@ -1,6 +1,4 @@
 [kit]
-name = "xctest"
-kind = "tool"
 title = "Swift Tests"
 requires = ["swift"]
 description = "Swift test files under XCTest, Swift Testing, and snapshot testing. A disabled test says why, no test sleeps, and no snapshot test records. Every reference has its test, and coverage holds a floor."

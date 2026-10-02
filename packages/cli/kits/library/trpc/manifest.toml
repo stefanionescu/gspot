@@ -1,6 +1,4 @@
 [kit]
-name = "trpc"
-kind = "library"
 title = "tRPC"
 requires = ["javascript"]
 description = "tRPC routers: every procedure validates its input, and client code imports the router as a type only."

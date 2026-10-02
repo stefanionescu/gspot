@@ -1,6 +1,4 @@
 [kit]
-name = "nestjs"
-kind = "framework"
 title = "NestJS"
 requires = ["typescript"]
 recommends = ["vitest", "security", "dependencies"]

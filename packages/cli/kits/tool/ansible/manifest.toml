@@ -1,6 +1,4 @@
 [kit]
-name = "ansible"
-kind = "tool"
 title = "Ansible"
 requires = ["files"]
 description = "Ansible playbooks: ansible-lint in every folder that holds an ansible.cfg."

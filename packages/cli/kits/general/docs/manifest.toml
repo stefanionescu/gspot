@@ -1,6 +1,4 @@
 [kit]
-name = "docs"
-kind = "general"
 title = "Docs"
 auto = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."

@@ -1,6 +1,4 @@
 [kit]
-name = "dependencies"
-kind = "general"
 title = "Dependencies"
 auto = true
 description = "Dependency health: known advisories, one version for each dependency, exact pins, one package manager, and a lockfile that matches its manifest."

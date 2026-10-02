@@ -1,6 +1,4 @@
 [kit]
-name = "postgres"
-kind = "database"
 title = "Postgres"
 requires = ["sql"]
 description = "Postgres migrations: squawk for the changes that lock or break, ordered versions, and migrations that never change after they run. The schema checks ask for row security, explicit grants, and an index under every foreign key."

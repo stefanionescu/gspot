@@ -1,6 +1,4 @@
 [kit]
-name = "nextjs"
-kind = "framework"
 title = "Next.js"
 requires = ["typescript", "react"]
 recommends = ["css", "files", "i18n"]

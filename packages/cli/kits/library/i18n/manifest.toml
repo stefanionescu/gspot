@@ -1,6 +1,4 @@
 [kit]
-name = "i18n"
-kind = "library"
 title = "Translations"
 requires = ["javascript"]
 description = "Translated interfaces: no literal text in components, and message files that parse and stay complete in every locale."

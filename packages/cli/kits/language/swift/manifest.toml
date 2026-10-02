@@ -1,6 +1,4 @@
 [kit]
-name = "swift"
-kind = "language"
 title = "Swift"
 requires = ["formatting", "structure"]
 recommends = ["naming", "spelling"]

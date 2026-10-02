@@ -1,6 +1,4 @@
 [kit]
-name = "pytest"
-kind = "tool"
 title = "pytest"
 requires = ["python"]
 description = "pytest suites: the pytest style rules of Ruff over the tests, a test prefix the naming check knows, and a coverage floor at push."

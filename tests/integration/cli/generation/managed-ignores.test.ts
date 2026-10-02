@@ -10,7 +10,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 
 const MANAGED_IGNORES_CONFIGURATION =
-    '\n[kit]\nname = "local"\nkind = "general"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
+    '\n[kit]\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -40,7 +40,7 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     await using repository = await testdir();
     const manifest = parseManifest(
         'ignored = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
-        'configurations/local',
+        'kits/general/local',
     );
     const block = gitignoreBlock([...kitManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
@@ -78,11 +78,11 @@ test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downlo
         expect(() =>
             parseManifest(
                 `ignored = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
-                'configurations/local',
+                'kits/general/local',
             ),
         ).toThrow();
         expect(() =>
-            parseManifest('ignored = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'configurations/local'),
+            parseManifest('ignored = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'kits/general/local'),
         ).not.toThrow();
     },
 );

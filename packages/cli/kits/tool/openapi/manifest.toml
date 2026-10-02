@@ -1,6 +1,4 @@
 [kit]
-name = "openapi"
-kind = "tool"
 title = "OpenAPI"
 requires = ["files"]
 description = "A committed OpenAPI document: Spectral lints it, and the command that writes it must not change it."

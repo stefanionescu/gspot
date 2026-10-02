@@ -1,6 +1,4 @@
 [kit]
-name = "css"
-kind = "language"
 title = "CSS"
 requires = ["formatting"]
 recommends = ["spelling"]

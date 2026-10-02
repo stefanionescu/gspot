@@ -1,6 +1,4 @@
 [kit]
-name = "formatting"
-kind = "general"
 title = "Formatting"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 

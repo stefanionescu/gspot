@@ -1,6 +1,4 @@
 [kit]
-name = "zustand"
-kind = "library"
 title = "Zustand"
 requires = ["javascript"]
 description = "Zustand stores: a store is created in a store file, and a component reads it through a selector."

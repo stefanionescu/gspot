@@ -1,6 +1,4 @@
 [kit]
-name = "svelte"
-kind = "framework"
 title = "Svelte"
 requires = ["javascript"]
 recommends = ["typescript", "css", "vitest"]

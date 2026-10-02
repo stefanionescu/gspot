@@ -1,6 +1,4 @@
 [kit]
-name = "vitest"
-kind = "tool"
 title = "Vitest"
 requires = ["javascript"]
 description = "Vitest test files: the test rules of ESLint over them, and coverage thresholds at push."

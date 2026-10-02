@@ -1,6 +1,4 @@
 [kit]
-name = "files"
-kind = "general"
 title = "Configuration Files"
 auto = true
 requires = ["formatting"]

@@ -1,6 +1,4 @@
 [kit]
-name = "docker"
-kind = "tool"
 title = "Docker"
 requires = ["files"]
 recommends = ["spelling"]

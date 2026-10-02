@@ -1,6 +1,4 @@
 [kit]
-name = "cloudflare"
-kind = "platform"
 title = "Cloudflare"
 requires = ["javascript"]
 recommends = ["security", "files"]

@@ -1,6 +1,4 @@
 [kit]
-name = "vue"
-kind = "framework"
 title = "Vue"
 requires = ["javascript"]
 recommends = ["typescript", "css", "vitest"]

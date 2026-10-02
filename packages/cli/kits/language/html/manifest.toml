@@ -1,6 +1,4 @@
 [kit]
-name = "html"
-kind = "language"
 title = "HTML"
 requires = ["formatting"]
 recommends = ["spelling"]

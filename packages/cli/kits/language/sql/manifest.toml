@@ -1,6 +1,4 @@
 [kit]
-name = "sql"
-kind = "language"
 title = "SQL"
 requires = ["formatting", "structure"]
 recommends = ["naming", "spelling"]

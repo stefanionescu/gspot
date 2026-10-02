@@ -1,6 +1,4 @@
 [kit]
-name = "astro"
-kind = "framework"
 title = "Astro"
 requires = ["javascript"]
 recommends = ["typescript", "css"]

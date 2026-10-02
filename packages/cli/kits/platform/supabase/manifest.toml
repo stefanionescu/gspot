@@ -1,6 +1,4 @@
 [kit]
-name = "supabase"
-kind = "platform"
 title = "Supabase"
 requires = ["postgres"]
 recommends = ["typescript", "files", "security"]

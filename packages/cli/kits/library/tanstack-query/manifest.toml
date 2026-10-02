@@ -1,6 +1,4 @@
 [kit]
-name = "tanstack-query"
-kind = "library"
 title = "TanStack Query"
 requires = ["javascript"]
 description = "TanStack Query: the query rules of ESLint for dependency lists, stable clients, and query options in order."

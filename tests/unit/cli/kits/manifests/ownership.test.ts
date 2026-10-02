@@ -2,8 +2,7 @@ import { test, expect } from 'bun:test';
 import { validateManifests } from '#cli/kits/problems.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
-const PINNED_HEADER =
-    '[kit]\nname = "pinned"\nkind = "tool"\ntitle = "Pinned"\ndescription = "Pins one tool for the tests."\n';
+const PINNED_HEADER = '[kit]\ntitle = "Pinned"\ndescription = "Pins one tool for the tests."\n';
 
 test('every shipped manifest passes the checks across manifests', () => {
     expect(() => {
@@ -33,8 +32,8 @@ test('loading two configurations refuses duplicate executable check ownership', 
         ['first', 'second'].map((name) => [
             name,
             parseManifest(
-                `[kit]\nname = "${name}"\nkind = "tool"\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
-                `kits/${name}`,
+                `[kit]\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
+                `kits/tool/${name}`,
             ),
         ]),
     );
@@ -45,8 +44,8 @@ test('loading two configurations refuses duplicate executable check ownership', 
 
 test('manifest collection rejects an invalid replacement and accepts a different check', () => {
     const project = parseManifest(
-        `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `kits/project`,
+        `[kit]\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `kits/language/project`,
     );
     const checks = `
 [[check]]
@@ -60,9 +59,8 @@ why = "Invalid input cannot run."
 help = "Correct the reported input."
 `;
     const owner = parseManifest(
-        '[kit]\nname = "owner"\nkind = "tool"\ntitle = "Owner"\ndescription = "Executes project validation."\n' +
-            checks,
-        'configurations/owner',
+        '[kit]\ntitle = "Owner"\ndescription = "Executes project validation."\n' + checks,
+        'kits/tool/owner',
     );
     const executable = owner.checks[0]!;
     project.checks = [{ ...executable, name: 'project/description', replaces: 'project/missing' }];
@@ -85,8 +83,8 @@ help = "Correct the reported input."
 
 test('manifest collection refuses circular replacement before either check can suppress execution', () => {
     const project = parseManifest(
-        `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `kits/project`,
+        `[kit]\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `kits/language/project`,
     );
     const original = kitManifests()
         .get('bash')!
@@ -102,12 +100,12 @@ test('manifest collection refuses circular replacement before either check can s
 
 test('check references require one standalone built-in owner and preserve its definition', () => {
     const owner = parseManifest(
-        `[kit]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `kits/owner`,
+        `[kit]\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `kits/language/owner`,
     );
     const consumer = parseManifest(
-        `[kit]\nname = "consumer"\nkind = "language"\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `kits/consumer`,
+        `[kit]\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `kits/language/consumer`,
     );
     const spec = kitManifests()
         .get('structure')!
@@ -141,20 +139,19 @@ test.each([
     ['[[tool]]\nname = "unpinned"\nnpm = "unpinned"\n', 'has no version and no floor'],
     ['[[tool]]\nname = "low"\nversion = "1.0.0"\nfloor = "2.0.0"\nnpm = "low"\n', 'below its floor 2.0.0'],
 ])('a manifest whose tool is not pinned is refused: %s', (tools, text) => {
-    const manifest = parseManifest(`${PINNED_HEADER}${tools}`, 'configurations/pinned');
+    const manifest = parseManifest(`${PINNED_HEADER}${tools}`, 'kits/tool/pinned');
     expect(() => {
         validateManifests(new Map([['pinned', manifest]]));
     }).toThrow(text);
 });
 
 // A manifest whose one check reads a setting with an empty default, waiting for whatever the test says.
-const header =
-    '[kit]\nname = "waiting"\nkind = "tool"\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
+const header = '[kit]\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
 const setting =
     '[[setting]]\nname = "tools.waiting.target"\ntype = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
 function waitingManifest(waits: string): void {
     const check = `[[check]]\nexample = "A wrong target is corrected before the tool runs again."\nname = "waiting/run"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${waits}summary = "Runs the tool."\nwhy = "The target matters."\nhelp = "Set the target."\n`;
-    const manifest = parseManifest(`${header}${setting}${check}`, 'configurations/waiting');
+    const manifest = parseManifest(`${header}${setting}${check}`, 'kits/tool/waiting');
     validateManifests(new Map([['waiting', manifest]]));
 }
 

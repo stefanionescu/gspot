@@ -1,6 +1,4 @@
 [kit]
-name = "bash"
-kind = "language"
 title = "Bash"
 requires = ["structure"]
 recommends = ["naming", "formatting", "spelling"]

@@ -1,6 +1,4 @@
 [kit]
-name = "drizzle"
-kind = "library"
 title = "Drizzle"
 requires = ["javascript"]
 description = "Drizzle: no update or delete without a where, raw SQL only where the policy allows it, relations for every reference, and migrations that match the schema."

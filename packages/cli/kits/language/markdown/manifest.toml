@@ -1,6 +1,4 @@
 [kit]
-name = "markdown"
-kind = "language"
 title = "Markdown"
 requires = ["formatting"]
 recommends = ["docs", "spelling"]

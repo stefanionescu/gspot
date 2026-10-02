@@ -1,6 +1,4 @@
 [kit]
-name = "static-site"
-kind = "general"
 title = "Static Site"
 requires = ["html", "css", "javascript"]
 description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap, and its headers."

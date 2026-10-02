@@ -1,6 +1,4 @@
 [kit]
-name = "jest"
-kind = "tool"
 title = "Jest"
 requires = ["javascript"]
 description = "Jest test rules and coverage floors for repository-owned test suites."

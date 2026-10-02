@@ -1,6 +1,4 @@
 [kit]
-name = "express"
-kind = "framework"
 title = "Express"
 requires = ["javascript", "openapi"]
 recommends = ["security", "vitest"]

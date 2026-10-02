@@ -1,6 +1,4 @@
 [kit]
-name = "react"
-kind = "framework"
 title = "React"
 requires = ["javascript"]
 recommends = ["typescript", "css", "vitest"]

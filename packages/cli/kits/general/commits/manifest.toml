@@ -1,6 +1,4 @@
 [kit]
-name = "commits"
-kind = "general"
 title = "Commits"
 auto = true
 when = {git = true}

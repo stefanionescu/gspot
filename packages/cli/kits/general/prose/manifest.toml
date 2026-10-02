@@ -12,8 +12,6 @@ ignored = [
 ]
 
 [kit]
-name = "prose"
-kind = "general"
 title = "Prose"
 requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."

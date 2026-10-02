@@ -1,6 +1,4 @@
 [kit]
-name = "typescript"
-kind = "language"
 title = "TypeScript"
 requires = ["javascript", "structure"]
 recommends = ["naming", "formatting", "spelling"]

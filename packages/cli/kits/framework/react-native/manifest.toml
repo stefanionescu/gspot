@@ -1,6 +1,4 @@
 [kit]
-name = "react-native"
-kind = "framework"
 title = "React Native"
 requires = ["react"]
 recommends = ["typescript", "jest"]
