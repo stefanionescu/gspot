@@ -18,8 +18,8 @@ function isEnvironmentRead(
     );
 }
 
-export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
-    name: 'env-access-owner',
+export const envOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
+    name: 'env-owner',
     meta: {
         type: 'problem',
         docs: {

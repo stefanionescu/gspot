@@ -23,8 +23,8 @@ export default [gspot.configs.recommended];
 
 `recommended` turns on two rules as errors:
 
-- `gspot/no-client-environment`
-- `gspot/no-duplicate-barrel-exports`
+- `gspot/no-client-env`
+- `gspot/no-duplicate-exports`
 
 `gspot.configs.all` adds the rules for imports, layout, declaration order, trivial files, and
 trivial functions. Neither configuration turns on `require-server-only` or
@@ -39,7 +39,7 @@ This client module reads a private environment variable:
 export const endpoint = process.env.PRIVATE_API_URL;
 ```
 
-`gspot/no-client-environment` reports the read at line 2, column 25. Keep the private work on
+`gspot/no-client-env` reports the read at line 2, column 25. Keep the private work on
 the server, and let the client call a public route:
 
 ```javascript
@@ -82,7 +82,7 @@ export default [{
 }];
 ```
 
-The [rule reference](https://gspot.dev/reference/plugin/no-client-environment/) lists every
+The [rule reference](https://gspot.dev/reference/plugin/no-client-env/) lists every
 rule with its options and examples. The package ships ECMAScript and CommonJS modules with
 TypeScript declarations, and `gspot.rules` holds each rule.
 

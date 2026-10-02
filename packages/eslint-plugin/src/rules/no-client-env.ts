@@ -12,8 +12,8 @@ function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allow
     return allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
 }
 
-export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'private'>({
-    name: 'no-client-environment',
+export const noClientEnv = createRule<NoClientEnvironmentOptions, 'private'>({
+    name: 'no-client-env',
     meta: {
         type: 'problem',
         docs: {

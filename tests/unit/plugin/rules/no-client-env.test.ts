@@ -1,8 +1,8 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
 import example from '#tests/samples/client-environment.json';
-import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
+import { noClientEnv } from '#plugin/rules/no-client-env.ts';
 
-tester().run('no-client-environment', noClientEnvironment, {
+tester().run('no-client-env', noClientEnv, {
     valid: [
         example.corrected,
         "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",

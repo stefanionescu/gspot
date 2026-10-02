@@ -1,7 +1,7 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { registryInstanceOnly } from '#plugin/rules/registry-instance-only.ts';
+import { registryInstances } from '#plugin/rules/registry-instances.ts';
 
-tester().run('registry-instance-only', registryInstanceOnly, {
+tester().run('registry-instances', registryInstances, {
     valid: [
         { code: 'export const client = new Client();', filename: '/repo/src/turn/registry.ts' },
         { code: 'export const client = make();', filename: '/repo/src/turn/client.ts' },

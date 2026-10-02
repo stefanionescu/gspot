@@ -95,7 +95,7 @@ test.each(['recommended', 'all'])(
                 filePath,
             });
             expect(
-                metadata.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-path-style'),
+                metadata.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-style'),
             ).toStrictEqual([]);
         }
     },

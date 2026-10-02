@@ -89,8 +89,8 @@ function isLeading(
     return BLANK.test(text.slice(lineStart, comment.range[0]));
 }
 
-export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'headerFirst'>({
-    name: 'header-comments-before-imports',
+export const headerFirst = createRule<HeaderCommentsOptions, 'headerFirst'>({
+    name: 'header-first',
     meta: {
         type: 'layout',
         fixable: 'code',

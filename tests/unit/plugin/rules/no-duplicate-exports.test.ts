@@ -1,6 +1,6 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
 import { plantedRoot } from '#tests/harness/plugin/planted.ts';
-import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
+import { noDuplicateExports } from '#plugin/rules/no-duplicate-exports.ts';
 
 const root = await plantedRoot({
     'defaults.ts': 'const value = 1; export {value as default};',
@@ -13,7 +13,7 @@ const root = await plantedRoot({
     'c.ts': "export * from './a';\n",
 });
 
-tester().run('no-duplicate-barrel-exports', noDuplicateBarrelExports, {
+tester().run('no-duplicate-exports', noDuplicateExports, {
     valid: [
         { code: "export * from './defaults'; export { default } from './defaults';", filename: `${root}/index.ts` },
         { code: "export * from './comments'; export * from './a';", filename: `${root}/index.ts` },

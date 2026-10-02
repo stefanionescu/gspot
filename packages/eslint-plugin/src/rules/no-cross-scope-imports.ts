@@ -4,8 +4,8 @@ import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { CrossProjectImportsOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, staticString, normalizePath, relativeToRoot } from '#plugin/files.ts';
 
-export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'escape'>({
-    name: 'no-cross-project-imports',
+export const noCrossScopeImports = createRule<CrossProjectImportsOptions, 'escape'>({
+    name: 'no-cross-scope-imports',
     meta: {
         type: 'problem',
         docs: {

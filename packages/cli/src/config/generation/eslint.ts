@@ -33,5 +33,5 @@ export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
 // The roles import-direction reads from architecture.roles; the types and harness roles also have their own settings.
 export const DIRECTION_ROLES = ['tests', 'config', 'env', 'runtime'];
 
-// The files registry-instance-only accepts a registry in, before the configuration folder joins them.
+// The files registry-instances accepts a registry in, before the configuration folder joins them.
 export const REGISTRY_FILES = ['**/registry.ts', '**/registry.tsx', '**/registry.js'];

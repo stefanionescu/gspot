@@ -12,8 +12,8 @@ function isAlias(node: TSESTree.Expression | null): boolean {
     return current.type === AST_NODE_TYPES.MemberExpression && isAlias(current.object);
 }
 
-export const noExportedAliasConstants = createRule<[], 'alias'>({
-    name: 'no-exported-alias-constants',
+export const noAliasExports = createRule<[], 'alias'>({
+    name: 'no-alias-exports',
     meta: {
         type: 'suggestion',
         docs: {

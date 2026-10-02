@@ -4,8 +4,8 @@ import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/config/rules.ts';
 import type { TestsDirectoryContentsOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
-export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 'misplaced'>({
-    name: 'tests-directory-contents',
+export const testFolders = createRule<TestsDirectoryContentsOptions, 'misplaced'>({
+    name: 'test-folders',
     meta: {
         type: 'problem',
         docs: {

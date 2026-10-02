@@ -12,8 +12,8 @@ function isCompliant(source: string, style: ImportPathStyleName): boolean {
     return !/\.[cm]?[jt]sx?$/u.test(source);
 }
 
-export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 'extensionless'>({
-    name: 'import-path-style',
+export const importStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 'extensionless'>({
+    name: 'import-style',
     meta: {
         type: 'problem',
         docs: {

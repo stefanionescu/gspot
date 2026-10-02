@@ -1,50 +1,50 @@
+import { envOwner } from '#plugin/rules/env-owner.ts';
 import { EXPLICIT_RULES } from '#plugin/config/plugin.ts';
+import { headerFirst } from '#plugin/rules/header-first.ts';
+import { importStyle } from '#plugin/rules/import-style.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
+import { testFolders } from '#plugin/rules/test-folders.ts';
+import { noClientEnv } from '#plugin/rules/no-client-env.ts';
 import { exportLayout } from '#plugin/rules/export-layout.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
-import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
+import { noAliasExports } from '#plugin/rules/no-alias-exports.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { importDirection } from '#plugin/rules/import-direction.ts';
-import { importPathStyle } from '#plugin/rules/import-path-style.ts';
 import { noImportComments } from '#plugin/rules/no-import-comments.ts';
+import { registryInstances } from '#plugin/rules/registry-instances.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
+import { noDuplicateExports } from '#plugin/rules/no-duplicate-exports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
-import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
 import { privateBeforePublic } from '#plugin/rules/private-before-public.ts';
-import { registryInstanceOnly } from '#plugin/rules/registry-instance-only.ts';
+import { noCrossScopeImports } from '#plugin/rules/no-cross-scope-imports.ts';
 import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
-import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
-import { testsDirectoryContents } from '#plugin/rules/tests-directory-contents.ts';
-import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
-import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
-import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-before-imports.ts';
 
 const rules = {
-    'env-access-owner': envAccessOwner,
+    'env-owner': envOwner,
     'export-layout': exportLayout,
-    'header-comments-before-imports': headerCommentsBeforeImports,
+    'header-first': headerFirst,
     'import-direction': importDirection,
     'import-layout': importLayout,
-    'import-path-style': importPathStyle,
+    'import-style': importStyle,
     'max-barrel-reexports': maxBarrelReexports,
-    'no-client-environment': noClientEnvironment,
+    'no-client-env': noClientEnv,
     'no-cross-folder-imports': noCrossFolderImports,
-    'no-cross-project-imports': noCrossProjectImports,
-    'no-duplicate-barrel-exports': noDuplicateBarrelExports,
-    'no-exported-alias-constants': noExportedAliasConstants,
+    'no-cross-scope-imports': noCrossScopeImports,
+    'no-duplicate-exports': noDuplicateExports,
+    'no-alias-exports': noAliasExports,
     'no-import-comments': noImportComments,
     'no-index-imports': noIndexImports,
     'no-reexports': noReexports,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'private-before-public': privateBeforePublic,
-    'registry-instance-only': registryInstanceOnly,
+    'registry-instances': registryInstances,
     'require-server-only': requireServerOnly,
-    'tests-directory-contents': testsDirectoryContents,
+    'test-folders': testFolders,
     'types-placement': typesPlacement,
 };
 

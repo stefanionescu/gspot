@@ -151,9 +151,9 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             "maxStatements": 2
         }
     ],
-    "gspot/no-exported-alias-constants": "error",
+    "gspot/no-alias-exports": "error",
     "gspot/no-index-imports": "error",
-    "gspot/header-comments-before-imports": "error",
+    "gspot/header-first": "error",
     "gspot/no-import-comments": "error",
     "gspot/import-layout": "error",
     "gspot/export-layout": "error",
@@ -172,7 +172,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             }
         }
     ],
-    "gspot/no-cross-project-imports": [
+    "gspot/no-cross-scope-imports": [
         "error",
         {
             "scopes": [
@@ -180,7 +180,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             ]
         }
     ],
-    "gspot/registry-instance-only": [
+    "gspot/registry-instances": [
         "error",
         {
             "registryFiles": [
@@ -229,7 +229,7 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             }
         }
     ],
-    "gspot/env-access-owner": [
+    "gspot/env-owner": [
         "error",
         {
             "owners": [
@@ -295,7 +295,7 @@ const unicornRules = {
     // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
     // removes both.
     'unicorn/no-useless-undefined': 'off',
-    // gspot/import-path-style owns the import shape.
+    // gspot/import-style owns the import shape.
     'unicorn/import-style': 'off',
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
@@ -439,7 +439,7 @@ const importStyleOverrides = [
             ]
         ],
         "rules": {
-            "gspot/import-path-style": [
+            "gspot/import-style": [
                 "error",
                 {
                     "style": "ts",
@@ -1330,27 +1330,27 @@ const defaults = [
     },
 ];
 const ruleLevels = {
-    "gspot/env-access-owner": "all",
+    "gspot/env-owner": "all",
     "gspot/export-layout": "all",
-    "gspot/header-comments-before-imports": "all",
+    "gspot/header-first": "all",
     "gspot/import-direction": "all",
     "gspot/import-layout": "all",
-    "gspot/import-path-style": "all",
+    "gspot/import-style": "all",
     "gspot/max-barrel-reexports": "all",
-    "gspot/no-client-environment": "recommended",
+    "gspot/no-client-env": "recommended",
     "gspot/no-cross-folder-imports": "all",
-    "gspot/no-cross-project-imports": "all",
-    "gspot/no-duplicate-barrel-exports": "recommended",
-    "gspot/no-exported-alias-constants": "all",
+    "gspot/no-cross-scope-imports": "all",
+    "gspot/no-duplicate-exports": "recommended",
+    "gspot/no-alias-exports": "all",
     "gspot/no-import-comments": "all",
     "gspot/no-index-imports": "all",
     "gspot/no-reexports": "all",
     "gspot/no-trivial-files": "all",
     "gspot/no-trivial-functions": "all",
     "gspot/private-before-public": "all",
-    "gspot/registry-instance-only": "all",
+    "gspot/registry-instances": "all",
     "gspot/require-server-only": "recommended",
-    "gspot/tests-directory-contents": "all",
+    "gspot/test-folders": "all",
     "gspot/types-placement": "all",
     "@babel/object-curly-spacing": "recommended",
     "@babel/semi": "recommended",

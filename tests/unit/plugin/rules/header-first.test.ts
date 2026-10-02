@@ -1,7 +1,7 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-before-imports.ts';
+import { headerFirst } from '#plugin/rules/header-first.ts';
 
-tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
+tester().run('header-first', headerFirst, {
     valid: [
         "import { a } from './a';\n\n// Explains the complete\n// declaration below.\nexport const b = a;",
         "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",

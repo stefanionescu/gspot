@@ -11,8 +11,8 @@ function isConstructed(node: TSESTree.Node | null): boolean {
     return current?.type === AST_NODE_TYPES.NewExpression;
 }
 
-export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'registry'>({
-    name: 'registry-instance-only',
+export const registryInstances = createRule<RegistryInstanceOnlyOptions, 'registry'>({
+    name: 'registry-instances',
     meta: {
         type: 'problem',
         docs: {
