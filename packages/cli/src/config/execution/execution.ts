@@ -7,7 +7,7 @@ export const FIX_DIFF_CONTEXT = 3;
 export const RAN_STATUSES = new Set(['ok', 'fail']);
 
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
-export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
+export const DOCKER = { name: 'docker', host: true, installers: {} };
 
 export const POLICY_CHECK = 'integrity/policy';
 

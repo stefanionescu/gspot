@@ -15,7 +15,7 @@ kinds = ["source"]
 
 [[tools]]
 name = "next"
-provider = "host"
+host = true
 
 [[tools]]
 name = "@next/eslint-plugin-next"

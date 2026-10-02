@@ -58,7 +58,7 @@ export type ToolPin = {
     kind?: 'binary' | 'library';
     version?: string;
     floor?: string;
-    provider?: 'host';
+    host?: boolean;
     /** The platforms the tool has a build for; unset means every platform. */
     platforms?: readonly ToolPlatform[];
     version_command?: string[];

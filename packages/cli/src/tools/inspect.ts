@@ -108,14 +108,14 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
 
 function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
     const { root } = context;
-    const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
+    const isExternal = tool.host === true || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const roots = isExternal ? [cwd, root] : [join(root, GSPOT_FOLDER), cwd, root];
     const kind = privateToolInstallation(tool, runner)?.kind;
     const [path] = locateCandidates(root, roots, tool.name, kind, context.installedRoot);
     const hint = installHint(tool);
     if (path === undefined) return missingInspection(tool, hint);
     const inspected: Inspected = { root, cwd, tool, path, hint };
-    if (tool.provider === 'host' || tool.version === undefined) return hostInspection(inspected);
+    if (tool.host === true || tool.version === undefined) return hostInspection(inspected);
     return pinnedInspection(inspected, tool.version);
 }
 
@@ -185,7 +185,7 @@ export function locateTool(root: string, name: string, pending?: string[]): stri
     const tool = toolPin(kitManifests().values(), name);
     if (isInstallationPending({ root, installations: () => pending }, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
-    const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
+    const isExternal = tool.host === true || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const roots = isExternal ? [root] : [join(root, GSPOT_FOLDER), root];
     return locateCandidates(root, roots, name, privateToolInstallation(tool, runner)?.kind)[0];
 }
@@ -227,7 +227,7 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
         const pin = manifest.tools.find((tool) => tool.name === name);
         if (pin !== undefined) return pin;
     }
-    return { name, provider: 'host', installers: {} };
+    return { name, host: true, installers: {} };
 }
 
 /**
@@ -236,7 +236,7 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
  * @returns the hint
  */
 export function installHint(tool: ToolPin): string {
-    if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
+    if (tool.host === true) return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
     if (MISE_BACKENDS.some(({ installer }) => tool.installers[installer] !== undefined)) return 'Run: gspot install';
     const match = PLATFORM_INSTALLERS.find(
         ({ platform, installer }) => platform === process.platform && tool.installers[installer] !== undefined,

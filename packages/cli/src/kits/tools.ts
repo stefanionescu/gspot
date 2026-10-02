@@ -50,7 +50,7 @@ export const toolSchema = z.strictObject({
     kind: z.enum(['binary', 'library']).default('binary'),
     version: z.string().optional(),
     floor: z.string().optional(),
-    provider: z.literal('host').optional(),
+    host: z.boolean().optional(),
     // The platforms the tool has a build for; unset means every platform.
     platforms: z.array(z.enum(TOOL_PLATFORMS)).min(1).optional(),
     version_command: commandSchema.optional(),

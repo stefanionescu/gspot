@@ -16,7 +16,7 @@ kinds = ["source"]
 
 [[tools]]
 name = "plutil"
-provider = "host"
+host = true
 crash_pattern = "couldn['’]t be opened"
 
 [[checks]]

@@ -63,7 +63,7 @@ file = ".periphery.yaml"
 
 [[tools]]
 name = "xcodebuild"
-provider = "host"
+host = true
 
 [[configs]]
 template = "semgrep/ios.yml.tmpl"

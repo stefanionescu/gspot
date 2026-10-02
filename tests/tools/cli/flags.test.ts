@@ -68,7 +68,7 @@ function ownerOf(
     tool: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }['tool'],
 ): typeof context {
     if (privateToolInstallation(tool, 'mise') !== undefined) return privateContext;
-    return tool.provider === 'host' || tool.version === undefined ? hostContext : context;
+    return tool.host === true || tool.version === undefined ? hostContext : context;
 }
 
 const commands: { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] }[] = [];
@@ -77,7 +77,7 @@ for (const { manifest, check } of checks)
     for (const argv of [check.command, check.fix]) {
         if (argv === undefined) continue;
         const tool = manifest.tools.find((entry) => entry.name === (check.tool ?? argv[0]));
-        if (tool === undefined || tool.provider === 'host') continue;
+        if (tool === undefined || tool.host === true) continue;
         const flags = flagsOf(argv);
         if (flags.length > 0) commands.push({ tool, argv, subcommands: subcommandsOf(argv), flags });
     }

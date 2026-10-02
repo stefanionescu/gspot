@@ -18,7 +18,7 @@ filenames = ["tsconfig.json", "tsconfig.*.json"]
 [[tools]]
 name = "tsc"
 suppression = {marker = "@ts-(?:ignore|expect-error)\\b", reason = "@ts-(?:ignore|expect-error):?\\s+(?<reason>\\S.*)"}
-provider = "host"
+host = true
 version_command = ["--version"]
 
 [[tools]]

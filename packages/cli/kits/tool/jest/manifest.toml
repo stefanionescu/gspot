@@ -15,7 +15,7 @@ kinds = ["source"]
 
 [[tools]]
 name = "jest"
-provider = "host"
+host = true
 
 [[tools]]
 name = "eslint-plugin-jest"

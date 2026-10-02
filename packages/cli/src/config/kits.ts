@@ -20,7 +20,7 @@ export const OPTIONAL_TOOL_KEYS = [
     'platforms',
     'version',
     'floor',
-    'provider',
+    'host',
     'version_command',
     'version_exit_code',
     'version_pattern',

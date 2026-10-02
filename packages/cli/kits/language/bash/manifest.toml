@@ -40,7 +40,7 @@ github = {name = "mvdan/sh", version = "v3.12.0"}
 
 [[tools]]
 name = "bash"
-provider = "host"
+host = true
 # The bash kit writes scripts for Bash 4.4 or newer, and Bats under Bash 3.2 passes files that do not parse.
 floor = "4.4"
 version_command = ["--version"]
@@ -48,11 +48,11 @@ version_pattern = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
 
 [[tools]]
 name = "zsh"
-provider = "host"
+host = true
 
 [[tools]]
 name = "bats"
-provider = "host"
+host = true
 
 [[configs]]
 template = "semgrep/hooks.yml"

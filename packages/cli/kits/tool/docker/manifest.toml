@@ -42,7 +42,7 @@ file = ".trivyignore"
 
 [[tools]]
 name = "docker"
-provider = "host"
+host = true
 
 [[configs]]
 template = "hadolint.yaml.tmpl"

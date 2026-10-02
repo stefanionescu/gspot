@@ -21,11 +21,11 @@ version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tools]]
 name = "docker"
-provider = "host"
+host = true
 
 [[tools]]
 name = "openssl"
-provider = "host"
+host = true
 
 [[configs]]
 template = "gixy.cfg.tmpl"

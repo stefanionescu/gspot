@@ -116,7 +116,7 @@ test.each([
         const tool: ToolPin = {
             name: 'bash',
             kind: 'binary',
-            provider: 'host',
+            host: true,
             floor: '4.4',
             installers: {},
             version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],

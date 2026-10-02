@@ -238,7 +238,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     assertSettingsAgree(manifests);
     for (const manifest of manifests.values()) {
         assertRequirementsExist(manifest, manifests);
-        for (const tool of manifest.tools.filter((entry) => entry.provider !== 'host')) assertToolPin(manifest, tool);
+        for (const tool of manifest.tools.filter((entry) => entry.host !== true)) assertToolPin(manifest, tool);
         for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
         assertDefaultsDeclared(manifest, settings);
     }
