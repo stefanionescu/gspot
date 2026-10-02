@@ -48,7 +48,7 @@ export function assetPath(path: string): string {
  * @param path the asset path
  * @returns the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 20 callers name assets by their path in the package; this owner finds the package root once for all of them.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Nine callers in six modules read a package asset by its path; this finds the package root for each.
 export function readAsset(path: string): string {
     return readFileSync(assetPath(path), 'utf8');
 }
@@ -65,7 +65,7 @@ export function grammarPath(name: string): string {
     if (source !== undefined) return createRequire(join(root, 'package.json')).resolve(source);
     const path = join(root, 'grammars', name);
     if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new Error(`The grammar ${name} is missing. Run: mise run prepare:grammar`);
+        throw new Error(`The grammar ${name} is missing from the installed package. Reinstall @gspothq/cli.`);
     return path;
 }
 

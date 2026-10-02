@@ -2,13 +2,14 @@
 import { join } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { TOOL_DEADLINE } from '#cli/config/policy/policy.ts';
 import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/execution/tool.ts';
 import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
-import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/platform.ts';
 import type { ToolRun, ToolRunState, Substitutions, ToolInvocation } from '#cli/types/execution/tool.ts';
 import { collect, missingNote, checkedFindings, executionFailure } from '#cli/execution/tool/findings.ts';
@@ -95,7 +96,7 @@ async function runCommands(
     const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const invocation of prepared.commands) {
-        const seconds = toolDeadlineSeconds(planned.scope.view);
+        const seconds = planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default;
         const result = await runToolCommand(planned.scope.view, invocation.argv, prepared, session.cancelSignal);
         const failure = executionFailure(result, tool.name, seconds);
         if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
@@ -139,18 +140,14 @@ function missingConfiguration(
     base: CheckResult,
 ): CheckResult | undefined {
     if (planned.spec.nested_config === undefined) return undefined;
-    const files = openRoot(session.root);
-    try {
-        const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
-        if (missing === undefined) return undefined;
-        return {
-            ...base,
-            status: 'error',
-            note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
-        };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(session.root);
+    const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
+    if (missing === undefined) return undefined;
+    return {
+        ...base,
+        status: 'error',
+        note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
+    };
 }
 
 // Runs in the supplied workspace or an isolated source copy when the check requires one.
@@ -298,7 +295,7 @@ export async function runCheckCommand(
         { ...options, env },
         input.cancelSignal,
     );
-    const failure = executionFailure(result, name, toolDeadlineSeconds(input.view));
+    const failure = executionFailure(result, name, input.view.limit('tool_seconds') ?? TOOL_DEADLINE.default);
     if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     // Tools on Windows end their lines with CRLF; every reader of check output splits on LF.

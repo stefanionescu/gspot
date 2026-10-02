@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { rm } from 'node:fs/promises';
 import { parse as parseToml } from 'smol-toml';
+import { isRecord } from '#cli/platform/text.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { jsoncValue } from '#cli/repository/jsonc.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 import {
@@ -49,13 +49,10 @@ function wranglerTable(
     const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
-        const errors: ParseError[] = [];
-        const parsed = parseJsonc(text, errors) as Record<string, unknown> | undefined;
-        const isBroken = parsed === undefined || errors.length > 0;
-        return {
-            table: parsed ?? {},
-            problem: isBroken ? 'The file does not parse as JSON with comments.' : undefined,
-        };
+        const parsed = jsoncValue(text);
+        return isRecord(parsed)
+            ? { table: parsed, problem: undefined }
+            : { table: {}, problem: 'The file does not parse as JSON with comments.' };
     } catch (error) {
         return { table: {}, problem: error instanceof Error ? error.message : 'The file does not parse.' };
     }
@@ -177,28 +174,25 @@ export function headersSyntax(input: EngineInput): Finding[] {
 export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
     const paths = named(input, TYPES_FILE);
     if (paths.length === 0) return [];
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
+    const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    try {
-        const findings: Finding[] = [];
-        for (const path of paths)
-            if (await isTypesFileStale(isolated, path))
-                findings.push(
-                    findingAt(
-                        input,
-                        { file: path, line: 1 },
-                        'stale-types',
-                        'wrangler types writes this file differently. Run it and commit the result.',
-                    ),
-                );
-        return findings;
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const findings: Finding[] = [];
+    for (const path of paths)
+        if (await isTypesFileStale(isolated, path))
+            findings.push(
+                findingAt(
+                    input,
+                    { file: path, line: 1 },
+                    'stale-types',
+                    'wrangler types writes this file differently. Run it and commit the result.',
+                ),
+            );
+    return findings;
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */

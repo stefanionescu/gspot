@@ -1,30 +1,19 @@
 import { z } from 'zod';
-import { tmpdir } from 'node:os';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { join, resolve, isAbsolute } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
-
-import {
-    rmSync,
-    chmodSync,
-    lstatSync,
-    unlinkSync,
-    mkdtempSync,
-    copyFileSync,
-    readFileSync,
-    realpathSync,
-    writeFileSync,
-} from 'node:fs';
+import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 const projectSchema = z.strictObject({
     project: z.strictObject({
@@ -33,11 +22,16 @@ const projectSchema = z.strictObject({
         'requires-python': z.literal('>=3.11'),
         dependencies: z.array(z.string().regex(/^[a-z0-9._-]+==[a-z0-9.+!_-]+$/iu)),
     }),
-    tool: z.strictObject({ uv: z.strictObject({ package: z.literal(false) }) }),
+    tool: z.strictObject({
+        uv: z.strictObject({ package: z.literal(false), 'constraint-dependencies': z.array(z.string()).optional() }),
+    }),
 });
 const lockSchema = z.object({
     version: z.literal(1),
     'requires-python': z.string(),
+    manifest: z
+        .object({ constraints: z.array(z.object({ name: z.string(), specifier: z.string() })).optional() })
+        .optional(),
     package: z.array(
         z.object({
             name: z.string(),
@@ -50,10 +44,28 @@ const lockSchema = z.object({
     ),
 });
 
+// Requirements as one text each, with the package name normalized, in order, so a project and its lock compare.
+function requirementTexts(requirements: { name: string; specifier: string }[]): string[] {
+    return requirements
+        .map(({ name, specifier }) => `${normalizedPythonPackage(name)}${specifier}`)
+        .toSorted((left, right) => left.localeCompare(right));
+}
+
+// Whether the lock was resolved under the constraints the project sets on transitive packages.
+function constraintsMatch(constraints: string[], recorded: z.infer<typeof lockSchema>): boolean {
+    const declared = constraints.map((constraint) => {
+        const operator = constraint.search(/[<>!~=]/u);
+        return { name: constraint.slice(0, operator), specifier: constraint.slice(operator) };
+    });
+    return isDeepStrictEqual(requirementTexts(declared), requirementTexts(recorded.manifest?.constraints ?? []));
+}
+
 function matches(project: string, lock: string): boolean {
     try {
-        const manifest = projectSchema.parse(parse(project)).project;
+        const parsed = projectSchema.parse(parse(project));
+        const manifest = parsed.project;
         const recorded = lockSchema.parse(parse(lock));
+        if (!constraintsMatch(parsed.tool.uv['constraint-dependencies'] ?? [], recorded)) return false;
         const root = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
         if (root === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
         const expected = manifest.dependencies
@@ -63,10 +75,7 @@ function matches(project: string, lock: string): boolean {
                 return `${normalizedPythonPackage(name)}==${version}`;
             })
             .toSorted((left, right) => left.localeCompare(right));
-        const declared = (root.metadata?.['requires-dist'] ?? [])
-            .map((entry) => `${normalizedPythonPackage(entry.name)}${entry.specifier}`)
-            .toSorted((left, right) => left.localeCompare(right));
-        return isDeepStrictEqual(declared, expected);
+        return isDeepStrictEqual(requirementTexts(root.metadata?.['requires-dist'] ?? []), expected);
     } catch {
         return false;
     }
@@ -202,16 +211,13 @@ export async function preparePythonProject(root: string, files: GeneratedFile[],
     const original = owner.read(LOCK);
     let content = original?.bytes.toString('utf8');
     if (content === undefined || !matches(project.content, content)) {
-        const work = mkdtempSync(join(tmpdir(), 'gspot-python-lock-'));
-        try {
-            writeFileSync(join(work, 'pyproject.toml'), project.content);
-            await uv(root, owner, work, ['lock']);
-            content = readFileSync(join(work, 'uv.lock'), 'utf8');
-            if (!matches(project.content, content))
-                throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
-        } finally {
-            rmSync(work, { recursive: true, force: true });
-        }
+        using workFolder = scratchFolder('gspot-python-lock-');
+        const work = workFolder.path;
+        writeFileSync(join(work, 'pyproject.toml'), project.content);
+        await uv(root, owner, work, ['lock']);
+        content = readFileSync(join(work, 'uv.lock'), 'utf8');
+        if (!matches(project.content, content))
+            throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
     }
     files.push({
         path: LOCK,
@@ -234,14 +240,10 @@ export function pythonLockDrift(
 ): { path: string; kind?: 'missing' | 'changed' } | undefined {
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
-    const files = openRoot(root);
-    try {
-        const lock = files.read(LOCK);
-        if (lock === undefined) return { path: LOCK, kind: 'missing' };
-        return matches(project.content, lock.bytes.toString('utf8')) ? { path: LOCK } : { path: LOCK, kind: 'changed' };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const lock = files.read(LOCK);
+    if (lock === undefined) return { path: LOCK, kind: 'missing' };
+    return matches(project.content, lock.bytes.toString('utf8')) ? { path: LOCK } : { path: LOCK, kind: 'changed' };
 }
 
 /**
@@ -250,18 +252,14 @@ export function pythonLockDrift(
  * @returns the commands an install runs, or none without a Python project
  */
 export function pythonInstallSteps(root: string): string[][] {
-    const files = openRoot(root);
-    try {
-        const project = files.read(TOOL_PYTHON_PROJECT);
-        if (project === undefined) return [];
-        projectSchema.parse(parse(project.bytes.toString('utf8')));
-        const lock = files.read(LOCK);
-        if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
-            throw new Error(SETUP);
-        return [['uv', 'sync', '--locked', '--project', '.gspot']];
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const project = files.read(TOOL_PYTHON_PROJECT);
+    if (project === undefined) return [];
+    projectSchema.parse(parse(project.bytes.toString('utf8')));
+    const lock = files.read(LOCK);
+    if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
+        throw new Error(SETUP);
+    return [['uv', 'sync', '--locked', '--project', GSPOT_FOLDER]];
 }
 
 /**
@@ -278,11 +276,8 @@ export async function installPythonProject(root: string, owner: ToolOwner, execu
     const lock = owner.read(LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
-    const work = mkdtempSync(join(tmpdir(), 'gspot-python-install-'));
-    try {
-        await installInWork(root, owner, work, { project, lock }, executable);
-        return 'installed locked Python tools under .gspot/.venv';
-    } finally {
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-python-install-');
+    const work = workFolder.path;
+    await installInWork(root, owner, work, { project, lock }, executable);
+    return 'installed locked Python tools under .gspot/.venv';
 }

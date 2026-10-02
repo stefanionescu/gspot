@@ -1,7 +1,8 @@
 import pLimit from 'p-limit';
-import { run } from '#cli/platform/spawn.ts';
+import { runGit } from '#cli/platform/git.ts';
 import { statSync, constants } from 'node:fs';
 import { styleFiles } from '#cli/tools/vale.ts';
+import { isInside } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
@@ -10,7 +11,7 @@ import { isValePackageFile } from '#cli/repository/kind.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
-import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
+import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY, VALE_CONFIGURATION } from '#cli/config/execution/checkout.ts';
 
@@ -28,7 +29,7 @@ async function checkCopiedLink(roots: { revision: string; working: string }, pat
             `Installed dependency link ${relative(roots.revision, path)} cannot be resolved. Repair the dependency installation before checking this revision.`,
         ]);
     const inside = relative(resolved === undefined ? roots.working : roots.revision, target);
-    if (isAbsolute(inside) || inside === '..' || inside.startsWith(`..${sep}`))
+    if (!isInside(inside))
         throw new GspotError('selection', [
             'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
         ]);
@@ -49,7 +50,7 @@ async function validateCopiedLinks(
 }
 
 function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
-    if (basename(folder) === '.gspot' && pending.includes('npm'))
+    if (basename(folder) === GSPOT_FOLDER && pending.includes('npm'))
         throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
@@ -106,10 +107,8 @@ async function assertManifestsUnchanged(
         throw mismatch;
     // The confined read refuses a manifest link that leaves the repository before Git follows it.
     for (const entry of inputs) installed.source(entry.path);
-    const hashed = await run(['git', 'hash-object', '--stdin-paths'], {
-        cwd: root,
+    const hashed = await runGit(root, ['hash-object', '--stdin-paths'], {
         stdin: inputs.map((entry) => `${entry.path}\n`).join(''),
-        timeoutMs: 30_000,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (hashed.code !== 0)
@@ -218,24 +217,18 @@ export async function copyDependencies(
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const installed = openRoot(root, 'native');
-    try {
-        const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
-        const projects = inputs
-            .map((entry) => entry.path)
-            .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
-        const directories = dependencyDirectories(installed, projects);
-        if (directories.length === 0) return;
-        await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
-        const packages = directories.filter((directory) => directory.dependency === 'node_modules');
-        for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
-        // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
-        const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
-        for (const { folder, dependency } of packages.filter(
-            (directory) => basename(directory.folder) !== GSPOT_FOLDER,
-        ))
-            await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
-    } finally {
-        installed.close();
-    }
+    using installed = openRoot(root, 'native');
+    const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
+    const projects = inputs
+        .map((entry) => entry.path)
+        .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
+    const directories = dependencyDirectories(installed, projects);
+    if (directories.length === 0) return;
+    await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
+    const packages = directories.filter((directory) => directory.dependency === 'node_modules');
+    for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
+    // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
+    const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
+    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== GSPOT_FOLDER))
+        await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
 }

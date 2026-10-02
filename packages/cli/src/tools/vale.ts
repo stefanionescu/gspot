@@ -1,14 +1,13 @@
-import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { READ_ONLY_FILE } from '#cli/config/platform/platform.ts';
-import { rmSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/tools/tools.ts';
 
 // Harper also installs dictionaries beside its styles.
@@ -60,21 +59,17 @@ function stageInputs(files: Root, work: string): void {
 
 // Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
 function replacePackages(files: Root, work: string): void {
-    const synced = openRoot(work);
-    try {
-        const outputs = styleFiles(synced).filter((path) => isValePackageFile(path));
-        const folders = new Set(outputs.flatMap((path) => packageFolder(path)));
-        for (const folder of packageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
-        for (const folder of folders)
-            swapPackage(
-                files,
-                synced,
-                folder,
-                outputs.filter((path) => path.startsWith(`${folder}/`)),
-            );
-    } finally {
-        synced.close();
-    }
+    using synced = openRoot(work);
+    const outputs = styleFiles(synced).filter((path) => isValePackageFile(path));
+    const folders = new Set(outputs.flatMap((path) => packageFolder(path)));
+    for (const folder of packageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
+    for (const folder of folders)
+        swapPackage(
+            files,
+            synced,
+            folder,
+            outputs.filter((path) => path.startsWith(`${folder}/`)),
+        );
 }
 
 /**
@@ -93,14 +88,10 @@ function packageFolders(files: Root): string[] {
  * @returns whether every required directory exists
  */
 export function hasPackages(root: string): boolean {
-    const files = openRoot(root);
-    try {
-        const needed = packageDirectories(files);
-        if (needed === undefined) return false;
-        return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const needed = packageDirectories(files);
+    if (needed === undefined) return false;
+    return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
 }
 
 /**
@@ -126,12 +117,8 @@ export function styleFiles(files: Root): string[] {
  * @param root the repository root
  */
 export function removePackages(root: string): void {
-    const files = openRoot(root);
-    try {
-        for (const folder of packageFolders(files)) files.removeTree(folder);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    for (const folder of packageFolders(files)) files.removeTree(folder);
 }
 
 /**
@@ -143,18 +130,14 @@ export function removePackages(root: string): void {
 export async function installPackages(root: string, pending: string[] | undefined): Promise<string | undefined> {
     const binary = locateTool(root, 'vale', pending);
     if (binary === undefined) return 'vale is not installed';
-    const work = mkdtempSync(join(tmpdir(), 'gspot-vale-'));
-    const files = openRoot(root);
-    try {
-        stageInputs(files, work);
-        const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
-        if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
-        replacePackages(files, work);
-        return undefined;
-    } finally {
-        files.close();
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-vale-');
+    const work = workFolder.path;
+    using files = openRoot(root);
+    stageInputs(files, work);
+    const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
+    if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
+    replacePackages(files, work);
+    return undefined;
 }
 
 /**

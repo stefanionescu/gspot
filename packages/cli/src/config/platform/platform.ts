@@ -60,3 +60,24 @@ export const TYPO_FRACTION = 3;
 
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
+
+/** The exit of a command that did not finish: an error, a refusal, an unreadable input, or a cancellation. */
+export const ERROR_EXIT = 2;
+
+/** Milliseconds in a second, for durations shown in seconds. */
+export const MS_PER_SECOND = 1000;
+
+/** Bytes in a kilobyte, for sizes shown in kilobytes. */
+export const BYTES_PER_KB = 1024;
+
+/** A whole share, for ratios shown as percentages. */
+export const FULL_PERCENTAGE = 100;
+
+/** Read by everyone and written by the owner: the mode of an ordinary file. */
+export const OWNER_WRITABLE_FILE = 0o644;
+
+/** Read and run by everyone, written by the owner: the mode of a program. */
+export const EXECUTABLE_FILE = 0o755;
+
+/** The permission bits of a mode, without the file type: also the mode Git records for a link. */
+export const PERMISSION_BITS = 0o777;

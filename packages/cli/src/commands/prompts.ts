@@ -1,7 +1,7 @@
 // The clack questions, asked only in a terminal and never under --yes.
 import { note } from '#cli/output/messages.ts';
-import { isCi } from '#cli/platform/environment.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { isInteractive } from '#cli/platform/environment.ts';
 import type { Choice } from '#cli/types/commands/commands.ts';
 import { select, confirm, multiselect } from '@clack/prompts';
 
@@ -20,7 +20,7 @@ export async function askConfirmation(
     useDefaults: boolean,
 ): Promise<boolean> {
     if (useDefaults) return defaultAnswer;
-    if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
+    if (!isInteractive())
         throw new GspotError(
             'prompt',
             `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`,
@@ -47,7 +47,7 @@ export async function askChoice<T extends string>(
     useDefaults: boolean,
 ): Promise<T> {
     if (useDefaults) return initial;
-    if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
+    if (!isInteractive())
         throw new GspotError(
             'prompt',
             `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`,
@@ -78,7 +78,7 @@ export async function askMany<T extends string>(
     initial: T[],
     useDefaults: boolean,
 ): Promise<T[]> {
-    if (useDefaults || !(process.stdin.isTTY && process.stdout.isTTY && !isCi())) {
+    if (useDefaults || !isInteractive()) {
         note(`Selected: ${initial.length === 0 ? 'none' : initial.join(', ')}. Change with ${flag}.`);
         return initial;
     }

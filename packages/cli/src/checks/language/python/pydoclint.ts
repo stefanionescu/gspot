@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { readText } from '#cli/platform/filesystem.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { DOCSTRING_COMMAND } from '#cli/config/checks/language/python.ts';
@@ -43,17 +43,14 @@ export function docstringStyle(text: string, convention?: unknown): 'google' | '
  * @param planned the scoped docstring check.
  * @returns the native check result with shared batching and error handling.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry runs pydoclint through this function, which adds the style the project names.
 export async function checkDocstrings(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openRoot(session.root);
-    let style: 'google' | 'numpy' | undefined;
-    try {
-        const project = files.read(posix.join(planned.scope.scope.path, 'pyproject.toml'));
-        style = docstringStyle(
-            project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes),
-            planned.scope.view.settings['tools.ruff.docstring_convention'],
-        );
-    } finally {
-        files.close();
-    }
-    return runToolCheck(session, planned, [...DOCSTRING_COMMAND, ...(style === undefined ? [] : ['--style', style])]);
+    const style = docstringStyle(
+        readText(session.root, posix.join(planned.scope.scope.path, 'pyproject.toml')) ?? '',
+        planned.scope.view.settings['tools.ruff.docstring_convention'],
+    );
+    return await runToolCheck(session, planned, [
+        ...DOCSTRING_COMMAND,
+        ...(style === undefined ? [] : ['--style', style]),
+    ]);
 }

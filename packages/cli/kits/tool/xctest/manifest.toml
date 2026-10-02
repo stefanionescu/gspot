@@ -107,4 +107,3 @@ summary = "Snapshot paths relative to the test file directory, with {file} as it
 
 [guides]
 tool = [{path = "tool/xctest/XCTEST.md"}]
-general = [{path = "general/code/TESTING.md"}]

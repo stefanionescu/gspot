@@ -1,8 +1,7 @@
 import { detectKits } from '#cli/kits/detect.ts';
-import { Argument, type Command } from 'commander';
 import { everyManifest } from '#cli/kits/select.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { Argument } from '@commander-js/extra-typings';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -11,7 +10,7 @@ import { readManifests } from '#cli/repository/packages.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { ExtraRow, ToolTables, CommandResult, SettingsListing } from '#cli/types/commands/commands.ts';
+import type { Program, ExtraRow, ToolTables, CommandResult, SettingsListing } from '#cli/types/commands/commands.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.
 function scopeTag(scope: string | undefined): string {
@@ -121,7 +120,7 @@ function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing 
  * List configurations and effective settings without executing checks or mutating the project.
  * @param program the command-line program
  */
-export function registerList(program: Command): void {
+export function registerList(program: Program): void {
     program
         .command('list')
         .summary('List kits, checks, and settings')
@@ -131,10 +130,10 @@ export function registerList(program: Command): void {
             '\nEffects:\nLists the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.\n\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
         )
         .addArgument(new Argument('[kind]', 'Pass settings to list the settings').choices(['settings']))
-        .action(async (kind: string | undefined, _flags: Record<string, unknown>, command: Command) => {
+        .action(async (kind, _flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(async () => {
-                const session = await openSession(findRoot(directoryOf(global)));
+            await printCommand(async (cwd) => {
+                const session = await openSession(findRoot(cwd));
                 return kind === 'settings' ? settingsText(session) : kitsResult(session);
             }, global);
         });

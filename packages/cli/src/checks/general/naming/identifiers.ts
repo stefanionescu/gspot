@@ -1,17 +1,18 @@
 import { isOwned } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { selectForScope } from '#cli/kits/select.ts';
 import { shippedPolicy } from '#cli/policy/audit.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { CASE_NAMES } from '#cli/checks/general/naming/cases.ts';
-import { languageKits, selectForScope } from '#cli/kits/select.ts';
+import { REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { TEST_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
-import { TEST_FILE, REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/checks/general/naming/extractors/bash.ts';
 import { swiftIdentifiers } from '#cli/checks/general/naming/extractors/swift.ts';
@@ -21,8 +22,10 @@ import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming
 import { typescriptIdentifiers } from '#cli/checks/general/naming/extractors/typescript.ts';
 import type { Identifier, NamingInputs, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
+const isTestPath = pathMatcher(TEST_FILE_GLOBS);
+
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
-    const languages = languageKits(input.selection.selected);
+    const languages = input.selection.selected.filter((manifest) => manifest.kit.kind === 'language');
     return input.files
         .filter((file) => file.kind === 'source')
         .map((file) => ({
@@ -33,7 +36,7 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
 }
 
 function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[], path: string): Finding[] {
-    const context: NamingInputs = { policy, isReactFile: REACT_FILE.test(path), isTestFile: TEST_FILE.test(path) };
+    const context: NamingInputs = { policy, isReactFile: REACT_FILE.test(path), isTestFile: isTestPath(path) };
     return identifiers.flatMap((identifier) =>
         nameProblems(identifier, context).map((problem) => {
             const source = problem.source === undefined ? '' : ` (${problem.source})`;
@@ -81,7 +84,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
     const selections = new Map(
         input.scopeEntries.map((scope) => [
             scope.path,
-            languageKits(selectForScope(policy, scope.path, input.manifests)),
+            selectForScope(policy, scope.path, input.manifests).filter((manifest) => manifest.kit.kind === 'language'),
         ]),
     );
     const read: { path: string; names: string[] }[] = [];

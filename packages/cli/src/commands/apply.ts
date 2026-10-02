@@ -1,5 +1,3 @@
-import type { Command } from 'commander';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
@@ -11,7 +9,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import { eslintRuleDiff } from '#cli/lifecycle/preview/eslint/diff.ts';
 import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
-import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
+import type { Program, ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -73,7 +71,7 @@ function reportText(report: ApplyReport): string {
  * Registers apply.
  * @param program the commander program
  */
-export function registerApply(program: Command): void {
+export function registerApply(program: Program): void {
     program
         .command('apply')
         .summary('Write the configuration from gspot.toml')
@@ -83,13 +81,13 @@ export function registerApply(program: Command): void {
             '\nEffects:\nReads gspot.toml and writes the tool configuration, the guides for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
         )
         .option('--dry-run', 'Show the changes without writing project files')
-        .action(async (flags: Record<string, unknown>, command: Command) => {
+        .action(async (flags, command) => {
             const global = command.optsWithGlobals();
             await printCommand(
-                () =>
+                (cwd) =>
                     applyCommand({
-                        cwd: directoryOf(global),
-                        isDryRun: flags['dryRun'] === true,
+                        cwd,
+                        isDryRun: flags.dryRun === true,
                     }),
                 global,
             );

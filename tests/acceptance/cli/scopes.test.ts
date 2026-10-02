@@ -11,6 +11,7 @@ import { INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { toolsPath, installAtLevel } from '#tests/harness/tools/install.ts';
 
+const ROOT_KITS = ['dependencies', 'docs', 'files', 'secrets', 'spelling'];
 const SCOPES_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
 
@@ -45,7 +46,8 @@ test(
             '--no-guides',
             '--no-install',
         ];
-        await installAtLevel(sandbox.path, argv, environment);
+        // The root kits init selects in every repository install tools the ESLint check never runs.
+        await installAtLevel(sandbox.path, argv, environment, 'all', ROOT_KITS);
         const command = ['check', '--only', 'typescript/eslint', '--json'];
         const lint = await spawnGspot(sandbox.path, command, environment);
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);

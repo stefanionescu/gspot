@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { toolSchema } from '#cli/kits/tools.ts';
 import { SENTENCE_MIN } from '#cli/config/kits.ts';
 import { outputSchema } from '#cli/kits/output.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 
 const stringList = z.array(z.string()).default([]);
@@ -148,7 +149,7 @@ const settingSchema = z.strictObject({
 function isUntrackedPath(path: string): boolean {
     const [root, ...names] = (path.endsWith('/') ? path.slice(0, -1) : path).split('/');
     return (
-        root === '.gspot' &&
+        root === GSPOT_FOLDER &&
         names.length > 0 &&
         names.every((name) => /^[A-Za-z0-9._-]+$/u.test(name) && name !== '.' && name !== '..')
     );

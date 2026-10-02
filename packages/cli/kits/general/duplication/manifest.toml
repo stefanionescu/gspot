@@ -62,6 +62,3 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "Paths the duplication check skips, each with a reason."
-
-[guides]
-agent = [{path = "general/agent/WORKING.md"}]

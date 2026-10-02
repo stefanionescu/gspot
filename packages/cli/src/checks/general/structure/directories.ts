@@ -1,3 +1,5 @@
+import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general/structure.ts';
 
@@ -13,15 +15,14 @@ export function directoryOf(path: string): string {
 }
 
 /**
- * The base name without its extension; `.d.ts` counts as one extension.
+ * The base name without its extension; a declaration extension such as `.d.mts` counts as one.
  * @param path a path
  * @returns the stem
  */
 export function stemOf(path: string): string {
-    const base = path.slice(path.lastIndexOf('/') + 1);
-    if (base.endsWith('.d.ts')) return base.slice(0, -'.d.ts'.length);
-    const dot = base.lastIndexOf('.');
-    return dot <= 0 ? base : base.slice(0, dot);
+    const base = posix.basename(path);
+    const extension = extensionOf(base);
+    return base.slice(0, base.length - extension.length);
 }
 
 /**

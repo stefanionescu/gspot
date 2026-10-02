@@ -69,13 +69,8 @@ export function misePins(manifests: Manifest[], isPackagePinned: boolean): MiseP
  * @returns each tool pinned twice, with the file that pins it
  */
 export function pinnedTwice(root: string, manifests: Manifest[]): { tool: string; version: string; place: string }[] {
-    const files = openRoot(root);
-    let current;
-    try {
-        current = files.read('mise.toml');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const current = files.read('mise.toml');
     if (current === undefined) return [];
     const config = z
         .object({ tools: z.record(z.string(), z.unknown()).optional() })

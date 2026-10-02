@@ -1,15 +1,17 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
+import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Layout, Manifest, KitEvidence } from '#cli/types/kits.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function dependencyMap(fields: Fields[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
     for (const fact of fields) {
-        if (scope !== '' && !fact.path.startsWith(`${scope}/`)) continue;
+        if (!isInScope(fact.path, scope)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
@@ -19,8 +21,8 @@ function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
     const candidates = files.filter(
         (file) =>
             file.kind === 'source' &&
-            !file.path.split('/').some((part) => part.toLowerCase() === '.gspot') &&
-            (scope === '' || file.path.startsWith(`${scope}/`)),
+            !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER) &&
+            isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const names = new Set<string>();
@@ -28,7 +30,7 @@ function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
     for (const file of candidates) {
         const extension = extensionOf(file.path);
         if (extension !== '') extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
-        names.add(baseName(file.path));
+        names.add(posix.basename(file.path));
         for (const tag of file.tags) if (tag.startsWith(SHEBANG_TAG)) shebangs.add(tag.slice(SHEBANG_TAG.length));
     }
     return { candidates, extensionCounts, names, shebangs, dependencies: dependencyMap(fields, scope), scope };
@@ -37,7 +39,7 @@ function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
 function isFileNamed(tree: Layout, name: string): boolean {
     if (!GLOB_CHARS.test(name)) return tree.names.has(name);
     const matcher = pathMatcher([name]);
-    return tree.candidates.some((file) => matcher(baseName(file.path)) || matcher(file.path));
+    return tree.candidates.some((file) => matcher(posix.basename(file.path)) || matcher(file.path));
 }
 
 function extensionEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
@@ -52,7 +54,7 @@ function filenameEvidence(detect: Manifest['detect'], tree: Layout): string | un
     if (filename === undefined) return undefined;
     const matcher = pathMatcher([filename]);
     const found = tree.candidates.find(
-        (file) => baseName(file.path) === filename || matcher(file.path) || matcher(baseName(file.path)),
+        (file) => posix.basename(file.path) === filename || matcher(file.path) || matcher(posix.basename(file.path)),
     );
     return found?.path ?? filename;
 }

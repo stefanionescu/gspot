@@ -39,13 +39,9 @@ function runsLint(command: string): boolean {
 // The files in a folder under a root, without dot files; none when the folder does not exist.
 function listDir(root: string, rel: string): string[] {
     if (!existsSync(join(root, rel))) return [];
-    const files = openRoot(root);
-    try {
-        if (files.stat(rel)?.isDirectory() !== true) return [];
-        return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    if (files.stat(rel)?.isDirectory() !== true) return [];
+    return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
@@ -64,15 +60,11 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
 }
 
 function hasPackageHooks(root: string): boolean {
-    const files = openRoot(root);
-    try {
-        const source = files.read('package.json');
-        if (source === undefined) return false;
-        const manifest: unknown = JSON.parse(source.bytes.toString('utf8'));
-        return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const source = files.read('package.json');
+    if (source === undefined) return false;
+    const manifest: unknown = JSON.parse(source.bytes.toString('utf8'));
+    return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
 }
 
 function jobCommands(job: object): string[] {
@@ -108,15 +100,10 @@ function isLintJob(name: string, job: unknown): boolean {
 export function existingHooks(root: string): ExistingTooling['hooks'] {
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
-    const files = openRoot(root);
-    let present: string[];
-    try {
-        present = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
-            (name) => files.stat(name) !== undefined,
-        );
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const present: string[] = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
+        (name) => files.stat(name) !== undefined,
+    );
     const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
     return [
         ...(location === undefined
@@ -176,23 +163,19 @@ export function surveyRepository(
  * @returns the names of the jobs that already run a linter
  */
 export function ciLintJobs(root: string, paths: string[]): string[] {
-    const files = openRoot(root);
-    try {
-        return paths
-            .filter((path) => !OTHER_CI_FILES.has(path))
-            .flatMap((path) => {
-                const source = files.read(path);
-                if (source === undefined) return [];
-                const document: unknown = parseYaml(source.bytes.toString('utf8'));
-                if (typeof document !== 'object' || document === null) return [];
-                const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
-                if (typeof jobs !== 'object' || jobs === null) return [];
-                return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
-                    if (name.startsWith('.')) return [];
-                    return isLintJob(name, job) ? [`${path}: ${name}`] : [];
-                });
+    using files = openRoot(root);
+    return paths
+        .filter((path) => !OTHER_CI_FILES.has(path))
+        .flatMap((path) => {
+            const source = files.read(path);
+            if (source === undefined) return [];
+            const document: unknown = parseYaml(source.bytes.toString('utf8'));
+            if (typeof document !== 'object' || document === null) return [];
+            const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
+            if (typeof jobs !== 'object' || jobs === null) return [];
+            return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
+                if (name.startsWith('.')) return [];
+                return isLintJob(name, job) ? [`${path}: ${name}`] : [];
             });
-    } finally {
-        files.close();
-    }
+        });
 }

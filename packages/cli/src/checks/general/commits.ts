@@ -1,20 +1,19 @@
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { runToolCommand } from '#cli/tools/command.ts';
+import { writeFileSync } from 'node:fs';
+import { runGit } from '#cli/platform/git.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
-import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { pushBase } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
     if (planned.commits !== undefined) return planned.commits;
-    const listed = await runToolCommand(
-        planned.scope.view,
-        ['git', 'rev-list', `${await pushBase(session.root, session.cancelSignal)}..HEAD`, '--'],
-        { cwd: session.root },
-        session.cancelSignal,
-    );
+    const base = await pushBase(session.root, session.cancelSignal);
+    const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
+        cancelSignal: session.cancelSignal,
+    });
     if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
     return listed.stdout.split('\n').filter(Boolean);
 }
@@ -39,48 +38,44 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
         return { ...result, status: 'skipped', note: 'Commit messages require a Git repository.' };
     const commits = await selectedCommits(session, planned);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
-    const scratch = mkdtempSync(join(tmpdir(), 'gspot-messages-'));
+    using folder = scratchFolder('gspot-messages-');
+    const scratch = folder.path;
     let checked = 0;
     const statuses = new Set<CheckResult['status']>();
-    try {
-        const commitFile = join(scratch, 'message.txt');
-        for (const object of commits) {
-            const read = await runToolCommand(
-                planned.scope.view,
-                ['git', 'show', '--no-patch', '--no-show-signature', '--format=%B', object, '--'],
-                { cwd: session.root },
-                session.cancelSignal,
-            );
-            if (read.code !== 0)
-                return {
-                    ...result,
-                    status: 'error',
-                    duration: performance.now() - started,
-                    note: `Cannot read commit ${object}: ${read.stderr.trim()}`,
-                };
-            writeFileSync(commitFile, read.stdout, { mode: 0o600 });
-            const current = await runToolCheck(session, { ...planned, messageFile: commitFile }, [
-                'commitlint',
-                '--config',
-                '{config:commitlint}',
-                '--edit',
-                '{message_file}',
-            ]);
-            result.findings.push(
-                ...current.findings.map((finding) => ({ ...finding, message: `${object}: ${finding.message}` })),
-            );
-            checked++;
-            if (['missing', 'error'].includes(current.status))
-                return { ...current, findings: result.findings, duration: performance.now() - started };
-            statuses.add(current.status);
-        }
-        return {
-            ...result,
-            status: statuses.has('fail') ? 'fail' : 'ok',
-            duration: performance.now() - started,
-            note: `Checked ${String(checked)} commit messages.`,
-        };
-    } finally {
-        rmSync(scratch, { recursive: true, force: true });
+    const commitFile = join(scratch, 'message.txt');
+    for (const object of commits) {
+        const read = await runGit(
+            session.root,
+            ['show', '--no-patch', '--no-show-signature', '--format=%B', object, '--'],
+            { cancelSignal: session.cancelSignal },
+        );
+        if (read.code !== 0)
+            return {
+                ...result,
+                status: 'error',
+                duration: performance.now() - started,
+                note: `Cannot read commit ${object}: ${read.stderr.trim()}`,
+            };
+        writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
+        const current = await runToolCheck(session, { ...planned, messageFile: commitFile }, [
+            'commitlint',
+            '--config',
+            '{config:commitlint}',
+            '--edit',
+            '{message_file}',
+        ]);
+        result.findings.push(
+            ...current.findings.map((finding) => ({ ...finding, message: `${object}: ${finding.message}` })),
+        );
+        checked++;
+        if (['missing', 'error'].includes(current.status))
+            return { ...current, findings: result.findings, duration: performance.now() - started };
+        statuses.add(current.status);
     }
+    return {
+        ...result,
+        status: statuses.has('fail') ? 'fail' : 'ok',
+        duration: performance.now() - started,
+        note: `Checked ${String(checked)} commit messages.`,
+    };
 }

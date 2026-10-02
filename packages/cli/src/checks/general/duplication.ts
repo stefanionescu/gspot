@@ -1,11 +1,10 @@
 import { z } from 'zod';
-import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { statSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/repository/sources.ts';
-import { FULL_PERCENTAGE } from '#cli/config/policy/policy.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { rmSync, statSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { CloneReport } from '#cli/types/checks/general/general.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -71,40 +70,28 @@ export function cloneFindings(
  * @returns the findings
  */
 export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
-    const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
-    try {
-        const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
-        const files = openRoot(input.root);
-        let content: Buffer;
-        try {
-            const config = files.read('.gspot/config/jscpd.json');
-            if (config === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
-            content = config.bytes;
-        } finally {
-            files.close();
-        }
-        const shipped = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
-        // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
-        const config = join(work, 'jscpd.json');
-        writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
-        const argv = [JSCPD_TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
-        const result = await runCheckCommand(input, argv, { cwd: input.root });
-        if (result.code !== 0)
-            throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-        const path = join(work, 'jscpd-report.json');
-        if (statSync(path, { throwIfNoEntry: false }) === undefined)
-            throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-        const named = input.view.settings['limits.duplication.threshold_percent'];
-        return cloneFindings(
-            cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))),
-            {
-                check: input.spec.name,
-                root: input.root,
-                ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
-                owned: new Set(owned),
-            },
-        );
-    } finally {
-        rmSync(work, { recursive: true, force: true });
-    }
+    using workFolder = scratchFolder('gspot-jscpd-');
+    const work = workFolder.path;
+    const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    using files = openRoot(input.root);
+    const generated = files.read('.gspot/config/jscpd.json');
+    if (generated === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
+    const shipped = JSON.parse(generated.bytes.toString('utf8')) as Record<string, unknown>;
+    // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
+    const config = join(work, 'jscpd.json');
+    writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
+    const argv = [JSCPD_TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
+    const result = await runCheckCommand(input, argv, { cwd: input.root });
+    if (result.code !== 0)
+        throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+    const path = join(work, 'jscpd-report.json');
+    if (statSync(path, { throwIfNoEntry: false }) === undefined)
+        throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+    const named = input.view.settings['limits.duplication.threshold_percent'];
+    return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
+        check: input.spec.name,
+        root: input.root,
+        ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
+        owned: new Set(owned),
+    });
 }

@@ -1,13 +1,6 @@
 import { test, expect, describe } from 'bun:test';
-import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/types/checks/database.ts';
+import { migration } from '#tests/harness/cli/migrations.ts';
 import { schema } from '#cli/checks/database/postgres/schema.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven cases parse a migration fixture; one owner keeps its shape.
-async function migration(name: string, text: string): Promise<Migration> {
-    const parsed = await sqlFile(text);
-    return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };
-}
 
 describe('schema', () => {
     test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {

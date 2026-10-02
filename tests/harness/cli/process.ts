@@ -24,7 +24,7 @@ export async function waitForExit(pid: number): Promise<void> {
  * @param path the module path below packages/cli/src
  * @returns the absolute path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five test files locate a CLI source file through it; one owner keeps the path.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four test files locate a CLI source file through it, seven times.
 export function cliSource(path: string): string {
     return fileURLToPath(new URL(`../../../packages/cli/src/${path}`, import.meta.url));
 }

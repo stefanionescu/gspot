@@ -26,33 +26,29 @@ function visit(walk: SelectionWalk, kitName: string): void {
     walk.order.push(manifest);
 }
 
-function chainFrom(
+/**
+ * The chain of requires from one kit to another, or undefined when the first does not need the second.
+ * @param target the configuration that is required
+ * @param from the configuration the chain starts at
+ * @param manifests every kit manifest
+ * @param seen the kits the search has visited, which it fills
+ * @returns the configuration names from `from` to `target`
+ */
+export function requireChain(
     target: string,
     from: string,
     manifests: Map<string, Manifest>,
-    seen: Set<string>,
+    seen = new Set<string>(),
 ): string[] | undefined {
     if (from === target) return [from];
     if (seen.has(from)) return undefined;
     seen.add(from);
     const requires = manifests.get(from)?.kit.requires ?? [];
     for (const required of requires) {
-        const rest = chainFrom(target, required, manifests, seen);
+        const rest = requireChain(target, required, manifests, seen);
         if (rest) return [from, ...rest];
     }
     return undefined;
-}
-
-/**
- * The chain of requires from one kit to another, or undefined when the first does not need the second.
- * @param target the configuration that is required
- * @param from the configuration the chain starts at
- * @param manifests every kit manifest
- * @returns the configuration names from `from` to `target`
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and the kits command explain a required kit by the same chain search.
-export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
-    return chainFrom(target, from, manifests, new Set());
 }
 
 /**
@@ -88,16 +84,6 @@ export function selectForScope(
         [...policy.kits, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.kits)],
         manifests,
     );
-}
-
-/**
- * The language kits in a selection.
- * @param selected the selected manifests
- * @returns the manifests whose kind is language
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The naming engine picks the language kits of a selection in two places the same way.
-export function languageKits(selected: Manifest[]): Manifest[] {
-    return selected.filter((manifest) => manifest.kit.kind === 'language');
 }
 
 /**

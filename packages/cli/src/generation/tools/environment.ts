@@ -1,6 +1,6 @@
 import { stringify } from 'smol-toml';
-import { pythonPins } from '#cli/tools/pins.ts';
 import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
+import { pythonPins, pythonConstraints } from '#cli/tools/pins.ts';
 
 /**
  * Keep Python lint dependencies in a private project owned by gspot.
@@ -10,12 +10,18 @@ import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
 export function toolEnvironment(manifests: Manifest[]): GeneratedFile[] {
     const dependencies = pythonPins(manifests);
     if (dependencies.length === 0) return [];
+    const constraints = pythonConstraints(manifests);
     return [
         {
             path: '.gspot/pyproject.toml',
             content: stringify({
                 project: { name: 'gspot-tools', version: '0.0.0', 'requires-python': '>=3.11', dependencies },
-                tool: { uv: { package: false } },
+                tool: {
+                    uv: {
+                        package: false,
+                        ...(constraints.length === 0 ? {} : { 'constraint-dependencies': constraints }),
+                    },
+                },
             }),
             readOnly: true,
             kind: 'config',

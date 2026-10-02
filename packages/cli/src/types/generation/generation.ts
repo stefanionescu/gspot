@@ -62,6 +62,8 @@ export type TemplateInputs = {
     tomlDate: new (value: string) => Date;
     files: (extension: string) => string[];
     importAliases: (scope: string) => Record<string, string>;
+    /** The folders of the npm package workspaces, read when a template asks. */
+    packageWorkspaces: () => string[];
     tools: string[];
     /** The npm package of every selected tool that has one. */
     toolPackages: string[];

@@ -1,10 +1,11 @@
 // The durable ownership log an owner works from: its records and its recovery of an interrupted mutation.
-import { createHash } from 'node:crypto';
+import { contentDigest } from '#cli/platform/text.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import type { Read, Root } from '#cli/types/platform/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
+import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
 import type {
     Log,
@@ -51,7 +52,7 @@ function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): Owne
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
 export function identity(file: Read): Identity {
     return {
-        hash: createHash('sha256').update(file.bytes).digest('hex'),
+        hash: contentDigest(file.bytes),
         mode: fileMode(file),
         ...(file.isLink ? { isLink: true as const } : {}),
     };
@@ -68,6 +69,24 @@ export function matches(file: Read | undefined, expected: Identity | undefined):
     if (expected === undefined) return false;
     const found = identity(file);
     return found.hash === expected.hash && found.mode === expected.mode && found.isLink === expected.isLink;
+}
+
+/**
+ * Whether a file is the one gspot recorded. A Git checkout of a read-only file counts: it holds the same bytes
+ * with mode 0644 where gspot wrote 0444.
+ * @param file the file as it is now, or undefined when it does not exist
+ * @param recorded the recorded identity, or undefined when none was recorded
+ * @returns whether the file is unedited
+ */
+export function isRecorded(file: Read | undefined, recorded: Identity | undefined): boolean {
+    if (matches(file, recorded)) return true;
+    if (file === undefined || recorded === undefined || file.isLink === true || recorded.isLink === true) return false;
+    const found = identity(file);
+    return (
+        found.hash === recorded.hash &&
+        recorded.mode === READ_ONLY_FILE &&
+        found.mode === fileMode({ mode: OWNER_WRITABLE_FILE })
+    );
 }
 
 /**

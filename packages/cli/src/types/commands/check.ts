@@ -1,4 +1,5 @@
 // The types of commands/check in this package.
+import type { Stage } from '#cli/types/execution/planning.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/execution.ts';
 import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
@@ -22,6 +23,18 @@ export type Revision = {
     reportRoot?: string;
     staged?: StagedSet;
     changed?: string[];
+};
+/** The flags of check, as commander parses them. */
+export type CheckFlags = {
+    only?: string[];
+    push?: true;
+    staged?: true;
+    changed?: string | true;
+    fix?: true;
+    dryRun?: true;
+    stage?: Stage;
+    skip?: string[];
+    messageFile?: string;
 };
 export type CheckOptions = {
     onResult?: (result: CheckResult) => void;

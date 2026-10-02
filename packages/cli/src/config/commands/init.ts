@@ -14,11 +14,9 @@ export const CI_CHOICES: { value: InitAnswers['ci']; label: string }[] = [
     { value: 'gitlab', label: '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)' },
     { value: 'none', label: 'no workflow' },
 ];
-export const INCOMPLETE_INSTALL_EXIT = 2;
 export const COLUMN_GAP = 2;
 export const KIT_WIDTH = 16;
 export const REASON_WIDTH = 12;
-export const UNREADABLE_EXIT = 2;
 export const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
 

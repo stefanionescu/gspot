@@ -7,7 +7,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -32,6 +32,25 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
     );
     expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe('authored edit');
+});
+
+test('a writable checkout of a read-only output is no edit: apply keeps it, and a prune removes it', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[guides]\ninstall = true\n') });
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    const written = (applied.json as { written: string[] }).written;
+
+    const output = written.find((path) => (statSync(join(sandbox.path, path)).mode & 0o777) === 0o444)!;
+    expect(output).toBeDefined();
+    const bytes = readFileSync(join(sandbox.path, output), 'utf8');
+    chmodSync(join(sandbox.path, output), 0o644);
+    const reapplied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(reapplied.exitCode).toBe(0);
+    expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe(bytes);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([], '[guides]\ninstall = false\n'));
+    const pruned = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(pruned.exitCode).toBe(0);
+    expect(existsSync(join(sandbox.path, output))).toBe(false);
 });
 
 test('a failed pin publication leaves the old version and succeeds after the write failure is repaired', async () => {

@@ -1,4 +1,3 @@
-import { rm } from 'node:fs/promises';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
 import { TABLE } from '#cli/config/checks/library.ts';
@@ -62,38 +61,33 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
         )
     )
         return [];
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
+    const scratch = scratchFolder.path;
     const isolated = join(scratch, input.scope);
-    try {
-        const before = generatedContents(isolated);
-        const result = await runCheckCommand(input, ['drizzle-kit', 'generate'], { cwd: isolated });
-        if (result.code !== 0)
-            throw new Error(
-                `The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
-            );
-        const after = generatedContents(isolated);
-        const changed = [...new Set([...before.keys(), ...after.keys()])]
-            .filter((path) => {
-                const was = before.get(path);
-                const now = after.get(path);
-                return was === undefined || now === undefined || !was.equals(now);
-            })
-            .toSorted((left, right) => left.localeCompare(right));
-        return changed.map((path) =>
-            findingAt(
-                input,
-                { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
-                'missing-migration',
-                'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
-            ),
-        );
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const before = generatedContents(isolated);
+    const result = await runCheckCommand(input, ['drizzle-kit', 'generate'], { cwd: isolated });
+    if (result.code !== 0)
+        throw new Error(`The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+    const after = generatedContents(isolated);
+    const changed = [...new Set([...before.keys(), ...after.keys()])]
+        .filter((path) => {
+            const was = before.get(path);
+            const now = after.get(path);
+            return was === undefined || now === undefined || !was.equals(now);
+        })
+        .toSorted((left, right) => left.localeCompare(right));
+    return changed.map((path) =>
+        findingAt(
+            input,
+            { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
+            'missing-migration',
+            'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
+        ),
+    );
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */

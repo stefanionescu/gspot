@@ -8,11 +8,15 @@ import { runOptions } from '#tests/harness/cli/command.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { onPosix, toolShipsHere } from '#tests/harness/cli/platforms.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same version script at a different speed.
-const versionScript = (slow: boolean): string => `#!${process.execPath}
-if (process.argv.includes('--version')) { console.log('26.8.0'); }
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five cases plant this tool script with another version or speed.
+const versionScript = (version: string, slow = false): string => `#!${process.execPath}
+if (process.argv.includes('--version')) { console.log(${JSON.stringify(version)}); }
 else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_000);' : ''} }
 `;
+
+// A checker that passes, and one that fails.
+const PASSING_SCRIPT = `#!${process.execPath}\nprocess.exitCode = 0;\n`;
+const FAILING_SCRIPT = `#!${process.execPath}\nprocess.exitCode = 1;\n`;
 
 if (toolShipsHere('ansible-lint'))
     test.each(['timeout', 'canceled'] as const)(
@@ -24,7 +28,7 @@ if (toolShipsHere('ansible-lint'))
                 'gspot.toml': policyOf(['ansible', 'structure'], '[limits]\ntool_seconds = 1\n', 'all'),
                 'deploy/ansible.cfg': '[defaults]\n',
                 'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
-                '.gspot/.venv/bin/ansible-lint': versionScript(true),
+                '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0', true),
             });
             chmodSync(executable, 0o755);
             const controller = new AbortController();
@@ -49,7 +53,7 @@ if (toolShipsHere('ansible-lint'))
                 );
                 expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
                 expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(true);
-                writeFileSync(executable, versionScript(false));
+                writeFileSync(executable, versionScript('26.8.0'));
                 const corrected = await executeRun(await openSession(sandbox.path), options);
                 expect(corrected.report.exitCode).toBe(0);
                 expect(corrected.report.checks[0]!.status).toBe('ok');
@@ -60,10 +64,6 @@ if (toolShipsHere('ansible-lint'))
         },
     );
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases plant the same version command with a different version.
-const versionCommand = (version: string): string =>
-    `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
-
 if (toolShipsHere('ansible-lint'))
     test('an adapter reads a changed executable version on the next command instead of reusing its old success', async () => {
         await using sandbox = await testdir();
@@ -72,25 +72,22 @@ if (toolShipsHere('ansible-lint'))
             '.gitignore': '.gspot/\n.venv/\n',
             'ansible.cfg': '[defaults]\n',
             'site.yml': '---\n- hosts: all\n  tasks: []\n',
-            '.gspot/.venv/bin/ansible-lint': versionCommand('26.8.0'),
+            '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0'),
         });
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
         chmodSync(executable, 0o755);
         const options = runOptions({ stage: 'commit', only: ['ansible/lint'] });
         const initial = await executeRun(await openSession(sandbox.path), options);
         expect(initial.report.checks[0]!.status).toBe('ok');
-        writeFileSync(executable, versionCommand('23.0.0'));
+        writeFileSync(executable, versionScript('23.0.0'));
         const changed = await executeRun(await openSession(sandbox.path), options);
         expect(changed.report.exitCode).toBe(2);
         expect(changed.report.checks[0]!.status).toBe('missing');
         expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
-        writeFileSync(executable, versionCommand('26.8.0'));
+        writeFileSync(executable, versionScript('26.8.0'));
         const executed = await executeRun(await openSession(sandbox.path), options);
         expect(executed.report.exitCode).toBe(0);
     });
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases plant the same checker with a different exit code.
-const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
 // Windows keeps no permission bits to read back.
 if (onPosix)
@@ -103,7 +100,7 @@ if (onPosix)
                 `[[check]]\nname = "project/checker"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
             ),
             'source.txt': 'input\n',
-            checker: exitScript(false),
+            checker: PASSING_SCRIPT,
         });
         chmodSync(executable, 0o755);
         const session = await openSession(sandbox.path);
@@ -112,7 +109,7 @@ if (onPosix)
         expect(executed.report.exitCode).toBe(0);
         const repeated = await executeRun(session, options);
         expect(repeated.report.checks[0]!.status).toBe('ok');
-        writeFileSync(executable, exitScript(true));
+        writeFileSync(executable, FAILING_SCRIPT);
         const changed = await executeRun(session, options);
         expect(changed.report.exitCode).toBe(1);
         expect(changed.report.checks[0]!.status).toBe('fail');
@@ -120,7 +117,7 @@ if (onPosix)
         const unexecutable = await executeRun(session, options);
         expect(unexecutable.report.exitCode).toBe(2);
         chmodSync(executable, 0o755);
-        writeFileSync(executable, exitScript(false));
+        writeFileSync(executable, PASSING_SCRIPT);
         const restored = await executeRun(session, options);
         expect(restored.report.exitCode).toBe(0);
     });

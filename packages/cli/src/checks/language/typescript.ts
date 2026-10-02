@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/config/generation/generation.ts';
@@ -17,7 +17,7 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
         ...input.files
             .map((file) => file.path)
             .filter((path) => {
-                const name = path.slice(path.lastIndexOf('/') + 1);
+                const name = posix.basename(path);
                 return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
             }),
     ]);

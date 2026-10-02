@@ -1,4 +1,4 @@
-import { stringify } from 'yaml';
+import { Scalar, Document, stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { WorkflowShape } from '#cli/types/generation/generation.ts';
@@ -14,22 +14,24 @@ import {
     MISE_MIN_VERSION,
 } from '#cli/config/generation/generation.ts';
 
-function setupSteps(shape: WorkflowShape): string[] {
+// An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
+function pinned(action: string, version: string): Scalar {
+    const node = new Scalar(action);
+    node.comment = ` ${version}`;
+    return node;
+}
+
+function setupSteps(shape: WorkflowShape): Record<string, unknown>[] {
     if (shape.isMise)
         return [
-            `      - uses: ${MISE} # v3.2.0`,
-            '        with:',
-            `          version: "${MISE_MIN_VERSION}"`,
-            '          cache: false',
-            '      - run: mise exec -- gspot install',
+            { uses: pinned(MISE, 'v3.2.0'), with: { version: MISE_MIN_VERSION, cache: false } },
+            { run: 'mise exec -- gspot install' },
         ];
     return [
-        `      - uses: ${NODE} # v7.0.0`,
-        '        with:',
-        `          node-version: "${NODE_VERSION}"`,
-        `      - run: npm install --global @gspothq/cli@${shape.version}`,
-        '      - run: gspot install',
-        '      - run: gspot doctor',
+        { uses: pinned(NODE, 'v7.0.0'), with: { 'node-version': NODE_VERSION } },
+        { run: `npm install --global @gspothq/cli@${shape.version}` },
+        { run: 'gspot install' },
+        { run: 'gspot doctor' },
     ];
 }
 
@@ -51,50 +53,56 @@ function comparisonCheck(command: string, isFull: boolean): string {
     ].join('\n');
 }
 
-function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manual'): string[] {
+// The paths the job caches between runs: the package caches and the installed tools.
+const CACHED_PATHS = [
+    '~/.npm/_cacache',
+    '~/.bun/install/cache',
+    '~/.cache/uv',
+    '~/.cache/mise',
+    '~/.local/share/mise/installs',
+    '~/.local/share/pnpm/store',
+    '~/.yarn/berry/cache',
+];
+
+function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
     const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
     const selected = stage === 'manual' ? `${command} --stage manual` : comparisonCheck(command, shape.run === 'all');
-    return [
-        `  ${stage}-${platform}:`,
-        `    runs-on: ${runner}`,
-        '    timeout-minutes: 30',
+    const check = {
+        name: 'Check',
         ...(stage === 'manual'
-            ? [
-                  "    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
-              ]
-            : []),
-        '    defaults:',
-        '      run:',
-        '        shell: bash',
-        '    steps:',
-        `      - uses: ${CHECKOUT} # v4.3.1`,
-        '        with:',
-        '          fetch-depth: 0',
-        '          persist-credentials: false',
-        `      - uses: ${CACHE} # v4.2.3`,
-        '        with:',
-        "          key: gspot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.mise/conf.d/gspot-tools.toml', '.gspot/version') }}",
-        '          path: |',
-        '            ~/.npm/_cacache',
-        '            ~/.bun/install/cache',
-        '            ~/.cache/uv',
-        '            ~/.cache/mise',
-        '            ~/.local/share/mise/installs',
-        '            ~/.local/share/pnpm/store',
-        '            ~/.yarn/berry/cache',
-        ...setupSteps(shape),
-        '      - name: Check',
+            ? {}
+            : {
+                  env: {
+                      GSPOT_CI_BASE:
+                          "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}",
+                  },
+              }),
+        run: `${selected}\n`,
+    };
+    return {
+        'runs-on': runner,
+        'timeout-minutes': 30,
         ...(stage === 'manual'
-            ? []
-            : [
-                  '        env:',
-                  "          GSPOT_CI_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}",
-              ]),
-        '        run: |',
-        ...selected.split('\n').map((line) => `          ${line}`),
-    ];
+            ? {
+                  if: "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
+              }
+            : {}),
+        defaults: { run: { shell: 'bash' } },
+        steps: [
+            { uses: pinned(CHECKOUT, 'v4.3.1'), with: { 'fetch-depth': 0, 'persist-credentials': false } },
+            {
+                uses: pinned(CACHE, 'v4.2.3'),
+                with: {
+                    key: "gspot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.mise/conf.d/gspot-tools.toml', '.gspot/version') }}",
+                    path: `${CACHED_PATHS.join('\n')}\n`,
+                },
+            },
+            ...setupSteps(shape),
+            check,
+        ],
+    };
 }
 
 /**
@@ -104,22 +112,22 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
  */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
-    const content = [
-        headerFor('gspot.yml', shape.version).trimEnd(),
-        'name: gspot',
-        'on: [push, pull_request, merge_group]',
-        'permissions:',
-        '  contents: read',
-        'concurrency:',
-        "  group: gspot-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
-        "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
-        'jobs:',
-        ...platforms.flatMap((platform) => [
-            ...checkJob(shape, platform, 'check'),
-            ...checkJob(shape, platform, 'manual'),
-        ]),
-        '',
-    ].join('\n');
+    const workflow = new Document({
+        name: 'gspot',
+        on: ['push', 'pull_request', 'merge_group'],
+        permissions: { contents: 'read' },
+        concurrency: {
+            group: "gspot-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
+            'cancel-in-progress': "${{ github.event_name == 'pull_request' }}",
+        },
+        jobs: Object.fromEntries(
+            platforms.flatMap((platform) => [
+                [`check-${platform}`, checkJob(shape, platform, 'check')],
+                [`manual-${platform}`, checkJob(shape, platform, 'manual')],
+            ]),
+        ),
+    });
+    const content = `${headerFor('gspot.yml', shape.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;
     return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };
 }
 

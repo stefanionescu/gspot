@@ -10,6 +10,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {
@@ -104,25 +105,18 @@ function replaceTools(
  * Discover configuration sections declared by the tools that own them.
  * @param root the repository root
  * @param paths the tracked file paths
- * @param selected the selected kits, when only their tools count
  * @returns tool configurations with their containing files and sections
  */
-function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
+function declaredKits(root: string, paths: Iterable<string>): ExistingTool[] {
     const inventory = new Set(
-        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
+        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER)),
     );
-    const files = openRoot(root);
-    try {
-        return [...kitManifests().values()].flatMap((manifest) =>
-            manifest.tools
-                .filter((tool) => selected === undefined || selected.includes(tool.name))
-                .flatMap((tool) =>
-                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
-                ),
-        );
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    return [...kitManifests().values()].flatMap((manifest) =>
+        manifest.tools.flatMap((tool) =>
+            (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
+        ),
+    );
 }
 
 /**

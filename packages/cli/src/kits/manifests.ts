@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/platform/text.ts';
 import { INSTALLER_KEYS } from '#cli/kits/tools.ts';
@@ -53,7 +54,7 @@ function appendReferences(manifests: Map<string, Manifest>): void {
 function registerManifest(manifests: Map<string, Manifest>, path: string): void {
     const dir = path.slice(0, -'/manifest.toml'.length);
     const manifest = parseManifest(readAsset(path), dir);
-    const folder = dir.slice(dir.lastIndexOf('/') + 1);
+    const folder = posix.basename(dir);
     if (folder !== manifest.kit.name)
         throw manifestError(manifest.kit.name, [
             `the folder is \`${folder}\` and the name is \`${manifest.kit.name}\`; they must match.`,

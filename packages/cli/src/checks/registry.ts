@@ -93,10 +93,9 @@ import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/ch
 
 import {
     sizeLimits,
+    brokenLinks,
     builtMarkup,
     deadSelectors,
-    externalLinks,
-    internalLinks,
     sitemapMatches,
 } from '#cli/checks/general/static-site/output.ts';
 
@@ -144,8 +143,8 @@ export const ENGINES: Record<string, Engine> = {
     'static-site/build-reproducible': buildReproducible,
     'static-site/html-validate-built': builtMarkup,
     'css/dead-selectors': deadSelectors,
-    'static-site/links-internal': internalLinks,
-    'static-site/links-external': externalLinks,
+    'static-site/links-internal': (input) => brokenLinks(input, false),
+    'static-site/links-external': (input) => brokenLinks(input, true),
     'static-site/size': sizeLimits,
     'static-site/sitemap': sitemapMatches,
     'static-site/dead-assets': deadAssets,

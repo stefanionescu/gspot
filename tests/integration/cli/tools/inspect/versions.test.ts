@@ -7,8 +7,8 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
+import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
-import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
@@ -105,29 +105,6 @@ test('a command shares version reads and the next session inspections again', as
         which.mockRestore();
     }
 });
-
-test.each([
-    ['wrapper', 'ok', '0.9.0'],
-    ['other-package', 'error', 'version inspection exited 1'],
-] as const)(
-    'the declared npm version exit applies only to the matching package: %s',
-    async (packageName, state, text) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            '.gspot/node_modules/wrapper/package.json': JSON.stringify({ name: packageName, version: '0.7.0' }),
-            '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho 0.9.0\nexit 1\n',
-        });
-        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), EXECUTABLE_FILE);
-        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-        symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
-        const tool = commandPin('wrapped', '0.10.0');
-        tool.floor = '0.9.0';
-        tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
-        const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(read.state).toBe(state);
-        expect(state === 'ok' ? read.found : read.note).toContain(text);
-    },
-);
 
 test.each([
     ['3.2.57', 'outdated'],

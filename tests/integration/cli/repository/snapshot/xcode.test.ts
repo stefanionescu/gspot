@@ -8,8 +8,8 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { projectSymlinks } from '#cli/checks/tool/xcode/project.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { orphanSources, projectSymlinks } from '#cli/checks/tool/xcode/project.ts';
 
 // Windows file names cannot hold a newline or a quote.
 if (onPosix)
@@ -62,56 +62,3 @@ if (onPosix)
         expect(await projectSymlinks(input)).toStrictEqual([]);
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
     });
-
-test('Xcode source membership does not mix independent nested projects', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['xcode'], '[[scope]]\npath = "nested"\nkits = ["xcode"]\n'),
-        'Root.xcodeproj/project.pbxproj': `{
-    rootObject = P;
-    objects = {
-        P = {isa = PBXProject; mainGroup = G; targets = (T,); };
-        G = {isa = PBXGroup; children = (F,); sourceTree = "<group>"; };
-        F = {isa = PBXFileReference; path = "Root.swift"; sourceTree = "<group>"; };
-        B = {isa = PBXBuildFile; fileRef = F; };
-        S = {isa = PBXSourcesBuildPhase; files = (B,); };
-        T = {isa = PBXNativeTarget; buildPhases = (S,); };
-    };
-}`,
-        'Root.swift': 'let root = 1\n',
-        'nested/Nested.xcodeproj/project.pbxproj': `{
-    rootObject = P;
-    objects = {
-        P = {isa = PBXProject; mainGroup = G; targets = (T,); };
-        G = {isa = PBXGroup; children = (F,); sourceTree = "<group>"; };
-        F = {isa = PBXFileReference; path = "Nested.swift"; sourceTree = "<group>"; };
-        B = {isa = PBXBuildFile; fileRef = F; };
-        S = {isa = PBXSourcesBuildPhase; files = (B,); };
-        T = {isa = PBXNativeTarget; buildPhases = (S,); };
-    };
-}`,
-        'nested/Nested.swift': 'let nested = 1\n',
-        'nested/Extra.swift': 'let extra = 1\n',
-    });
-    const session = await openSession(sandbox.path);
-    for (const selected of session.scopes) {
-        const spec = selected.selected
-            .flatMap((manifest) => manifest.checks)
-            .find((check) => check.name === 'xcode/orphan-sources')!;
-        const findings = orphanSources(scopeInput(session, spec, selected.scope.path));
-        expect(findings).toStrictEqual(
-            selected.scope.path === ''
-                ? []
-                : [
-                      {
-                          check: 'xcode/orphan-sources',
-                          file: 'nested/Extra.swift',
-                          line: 1,
-                          rule: 'no-target',
-                          fixable: false,
-                          message: 'This Swift file is in no target of the project.',
-                      },
-                  ],
-        );
-    }
-});

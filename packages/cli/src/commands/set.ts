@@ -1,7 +1,7 @@
 // A bracketed list or table uses JSON or TOML syntax.
 
-import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
+import { compact } from '#cli/platform/text.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
@@ -12,12 +12,11 @@ import { quoteArgument } from '#cli/platform/quoting.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
-import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { Program, SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/mutations.ts';
 import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/config/commands/commands.ts';
 
@@ -109,17 +108,25 @@ function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     };
 }
 
+// What set did: the new value, or the items it added to or removed from a list.
+function changeText(o: SetOptions, isList: boolean, shown: string, value: unknown): string {
+    const items = JSON.stringify(value);
+    if (!isList || o.replace) return `${shown} = ${items}`;
+    return `${o.remove ? 'removed from' : 'added to'} ${shown}: ${items}`;
+}
+
 function describeSet(
     session: Session,
     selection: ScopeSelection,
     o: SetOptions,
     shown: string,
     value: unknown,
+    isList: boolean,
 ): string {
     const current = settingValue(selection.surface, session.policyFiles.policy, o.key, o.scope);
     const reason = o.reason === undefined ? '' : `  # ${o.reason}`;
     const was = current === undefined ? '' : `  (was ${JSON.stringify(current.value)} from ${current.source})`;
-    return `${shown} = ${JSON.stringify(value)}${reason}${was}`;
+    return `${changeText(o, isList, shown, value)}${reason}${was}`;
 }
 
 function refuseRuleOff(spec: SettingSpec, o: SetOptions): void {
@@ -180,7 +187,12 @@ function writeValue(
     );
     validateSetReason(session, selection, o, spec, value);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));
+    return commitPolicy(
+        root,
+        setMutation(o, isList, value),
+        false,
+        describeSet(session, selection, o, shown, value, isList),
+    );
 }
 
 /**
@@ -212,7 +224,7 @@ async function setCommand(o: SetOptions): Promise<CommandResult> {
  * Registers set.
  * @param program the commander program
  */
-export function registerSet(program: Command): void {
+export function registerSet(program: Program): void {
     program
         .command('set <key> [value...]')
         .summary('Change a setting')
@@ -226,19 +238,18 @@ export function registerSet(program: Command): void {
         .option('--replace', 'Replace the whole list instead of adding to it')
         .option('--remove', 'Remove these items from the list')
         .option('--default', 'Delete the setting so the inherited or default value applies')
-        .action(async (key: string, items: string[], flags: Record<string, unknown>, command: Command) => {
+        .action(async (key, items, flags, command) => {
             const global = command.optsWithGlobals();
             await printCommand(
-                () =>
+                (cwd) =>
                     setCommand({
-                        cwd: directoryOf(global),
+                        cwd,
                         key,
                         items,
-                        replace: flags['replace'] === true,
-                        remove: flags['remove'] === true,
-                        toDefault: flags['default'] === true,
-                        ...textEntry(flags, 'reason', 'reason'),
-                        ...textEntry(flags, 'scope', 'scope'),
+                        replace: flags.replace === true,
+                        remove: flags.remove === true,
+                        toDefault: flags.default === true,
+                        ...compact({ reason: flags.reason, scope: flags.scope }),
                     }),
                 global,
             );

@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'import-meta-resolve';
 import { join, resolve as resolvePath } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 function moduleSource(path: string, text: string): string {
@@ -85,7 +86,7 @@ export async function runEslintPreview(
     // Every module is on disk before the first import: the runtime reads the directory once and keeps that listing.
     const modules = request.sources.map((source, index) => {
         const module = join(work, `eslint-preview-${String(index)}.mjs`);
-        writeFileSync(module, moduleSource(path, source), { mode: 0o600 });
+        writeFileSync(module, moduleSource(path, source), { mode: PRIVATE_FILE });
         return module;
     });
     const results: z.infer<typeof eslintPreviewResponse> = [];

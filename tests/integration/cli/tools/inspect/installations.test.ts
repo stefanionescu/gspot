@@ -9,8 +9,8 @@ import { failure } from '#tests/harness/expectations.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import * as environment from '#cli/platform/environment.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
-import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 

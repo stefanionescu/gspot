@@ -78,21 +78,16 @@ async function preparePlugin(command: string[], cwd: string, timeoutMs: number, 
 export async function runSourceCommand(command: string[], cwd: string, timeoutMs: number): Promise<void> {
     const controller = new AbortController();
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: process.removeListener needs the same function object that process.on received.
-    const interrupted = (): void => {
-        process.exitCode = 130;
+    const stopped = (signal: NodeJS.Signals): void => {
+        process.exitCode = signal === 'SIGINT' ? 130 : 143;
         controller.abort();
     };
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: process.removeListener needs the same function object that process.on received.
-    const terminated = (): void => {
-        process.exitCode = 143;
-        controller.abort();
-    };
-    process.on('SIGINT', interrupted);
-    process.on('SIGTERM', terminated);
+    process.on('SIGINT', stopped);
+    process.on('SIGTERM', stopped);
     try {
         await preparePlugin(command, cwd, timeoutMs, controller.signal);
     } finally {
-        process.removeListener('SIGINT', interrupted);
-        process.removeListener('SIGTERM', terminated);
+        process.removeListener('SIGINT', stopped);
+        process.removeListener('SIGTERM', stopped);
     }
 }

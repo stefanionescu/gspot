@@ -380,7 +380,6 @@ direction = "tightening"
 default = "none"
 summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
 
-
 [[settings]]
 name = "structure.single_file_folder_allowed"
 kind = "list"
@@ -433,6 +432,3 @@ kind = "list"
 direction = "tightening"
 default = []
 summary = "Which element may import which; an element imports only itself unless a row says otherwise."
-
-[guides]
-general = [{path = "general/agent/WORKING.md"}]

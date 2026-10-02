@@ -78,31 +78,27 @@ function nestedConfigurations(session: Session, planned: PlannedCheck): string[]
     const nested = planned.spec.nested_config;
     if (nested === undefined) return [];
     const scope = planned.scope.scope.path;
-    const files = openRoot(session.root);
-    try {
-        const paths = [
-            scope === '' ? nested : `${scope}/${nested}`,
-            ...allConfigs(session, planned)
-                .filter((config) => !config.fragment && config.pointer?.path === nested)
-                .map((config) => targetInScope(scope, config)),
-        ];
-        const ancestors = planned.files.flatMap((file) => {
-            const found: string[] = [];
-            for (
-                let directory = posix.dirname(file.path);
-                directory !== '.' && directory !== scope;
-                directory = posix.dirname(directory)
-            )
-                found.push(`${directory}/${nested}`);
-            return found;
-        });
-        for (const path of ancestors) {
-            if (!paths.includes(path) && files.read(path) !== undefined) paths.push(path);
-        }
-        return paths;
-    } finally {
-        files.close();
+    using files = openRoot(session.root);
+    const paths = [
+        scope === '' ? nested : `${scope}/${nested}`,
+        ...allConfigs(session, planned)
+            .filter((config) => !config.fragment && config.pointer?.path === nested)
+            .map((config) => targetInScope(scope, config)),
+    ];
+    const ancestors = planned.files.flatMap((file) => {
+        const found: string[] = [];
+        for (
+            let directory = posix.dirname(file.path);
+            directory !== '.' && directory !== scope;
+            directory = posix.dirname(directory)
+        )
+            found.push(`${directory}/${nested}`);
+        return found;
+    });
+    for (const path of ancestors) {
+        if (!paths.includes(path) && files.read(path) !== undefined) paths.push(path);
     }
+    return paths;
 }
 
 /**

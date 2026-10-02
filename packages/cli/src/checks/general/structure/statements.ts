@@ -145,7 +145,7 @@ export function trivialFile(root: Node, language: Language, threshold: number): 
  * @param threshold the statement limit
  * @returns the message
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five engines report trivial functions; one owner keeps their wording the same.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The Bash, Python, SQL, and Swift engines report a trivial function in this one wording.
 export function trivialFunctionText(name: string, count: number, threshold: number): string {
     const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
     return `${name} has ${statements}. Functions with ${String(threshold)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;

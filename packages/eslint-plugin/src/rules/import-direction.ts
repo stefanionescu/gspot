@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { importFile, isRequireCall } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
@@ -22,11 +22,6 @@ import type {
     ImportDirectionOptions,
     ImportDirectionMessages,
 } from '#plugin/types/rules.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the imported file get their role by the same glob lookup.
-function roleOf(path: string, roles: Required<ImportDirectionRoles>): ImportDirectionRole {
-    return ROLE_ORDER.find((role) => role !== 'other' && isAnyGlobMatch(path, roles[role])) ?? 'other';
-}
 
 function isTypeOnly(node: ImportNode): boolean {
     if ('importKind' in node && node.importKind === 'type') return true;
@@ -107,13 +102,15 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const root = lintedRoot(context);
         const scope = (options.scope ?? '').replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the import target are made relative to the scope the same way.
-        const relativeOf = (absolute: string): string => {
-            const rel = relativeToRoot(root, absolute);
-            return prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
-        };
         const roles: Required<ImportDirectionRoles> = { ...NO_ROLES, ...options.roles };
-        const role = roleOf(relativeOf(file), roles);
+        // A file's path relative to the scope, and the role the first matching glob gives it.
+        const placed = (absolute: string): { path: string; role: ImportDirectionRole } => {
+            const rel = relativeToRoot(root, absolute);
+            const path = prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
+            const role = ROLE_ORDER.find((entry) => entry !== 'other' && isAnyGlobMatch(path, roles[entry])) ?? 'other';
+            return { path, role };
+        };
+        const { role } = placed(file);
         if (role === 'other') return {};
         const contracts = options.contracts ?? DEFAULT_CONTRACTS;
         const rootOfScope = scope === '' ? root : `${root}/${scope}`;
@@ -122,9 +119,9 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             const resolved =
                 source === undefined ? undefined : importFile(file, source, rootOfScope, options.aliases ?? {});
             if (source === undefined || resolved === undefined) return;
-            const target = relativeOf(resolved);
+            const target = placed(resolved);
             const found = verdict(
-                { role, targetRole: roleOf(target, roles), source, target, isTypeOnly: typeOnly },
+                { role, targetRole: target.role, source, target: target.path, isTypeOnly: typeOnly },
                 contracts,
             );
             if (found) context.report({ node, messageId: found.messageId, data: found.data });
@@ -140,12 +137,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                 check(node, node.source);
             },
             CallExpression(node) {
-                if (
-                    node.callee.type !== AST_NODE_TYPES.Identifier ||
-                    node.callee.name !== 'require' ||
-                    node.arguments.length !== 1
-                )
-                    return;
+                if (!isRequireCall(node)) return;
                 const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), 'require');
                 if (variable !== null && variable.defs.length > 0) return;
                 check(node, node.arguments[0]);

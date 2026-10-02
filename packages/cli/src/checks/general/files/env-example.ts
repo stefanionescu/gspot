@@ -1,5 +1,7 @@
+import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { ENV_TEMPLATE_NAMES } from '#cli/config/repository/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { KEY_GROUP, ENV_KEY_LINE, ENV_READ_PATTERNS, ENV_READ_EXTENSIONS } from '#cli/config/checks/general/files.ts';
@@ -20,8 +22,8 @@ export function envExample(input: EngineInput): Finding[] {
     const listed = input.view.tool('dotenv')['templates'];
     const names = Array.isArray(listed) ? listed.map(String) : ENV_TEMPLATE_NAMES;
     // The owned files are configuration; the reads are in code, so the whole scope is searched.
-    const inScope = input.files.filter((file) => input.scope === '' || file.path.startsWith(`${input.scope}/`));
-    const templates = inScope.filter((file) => names.includes(file.path.slice(file.path.lastIndexOf('/') + 1)));
+    const inScope = input.files.filter((file) => isInScope(file.path, input.scope));
+    const templates = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (templates.length === 0) return [];
     const known = new Set(
         templates.flatMap((file) => {

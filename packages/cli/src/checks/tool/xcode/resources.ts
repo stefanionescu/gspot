@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
@@ -17,24 +17,9 @@ function parsed(input: EngineInput, path: string): { value: unknown; error: stri
     }
 }
 
-function stringFindings(input: EngineInput, path: string): Finding[] {
-    const read = parsed(input, path);
-    const at = { file: path, line: 1 };
-    if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
-    const strings = read.value as StringsFile;
-    const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
-    const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));
-    locales.delete(strings.sourceLanguage ?? 'en');
-    return entries.flatMap(([key, entry]) => {
-        const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
-        if (missing.length === 0) return [];
-        return [findingAt(input, at, 'missing-translation', `"${key}" has no translation for ${missing.join(', ')}.`)];
-    });
-}
-
 function setName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
-    const name = folder.slice(folder.lastIndexOf('/') + 1);
+    const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
 }
 
@@ -80,9 +65,23 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the xcode-xcstrings check, which the analysis table names.
 export function stringFiles(input: EngineInput): Finding[] {
-    return trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path));
+    return trackedEnding(input, ['.xcstrings']).flatMap((path) => {
+        const read = parsed(input, path);
+        const at = { file: path, line: 1 };
+        if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
+        const strings = read.value as StringsFile;
+        const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
+        const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));
+        locales.delete(strings.sourceLanguage ?? 'en');
+        return entries.flatMap(([key, entry]) => {
+            const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
+            if (missing.length === 0) return [];
+            return [
+                findingAt(input, at, 'missing-translation', `"${key}" has no translation for ${missing.join(', ')}.`),
+            ];
+        });
+    });
 }
 
 /**

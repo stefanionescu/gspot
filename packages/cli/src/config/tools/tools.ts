@@ -43,7 +43,6 @@ export const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string
 ];
 export const MANAGED_PREFIX = '.gspot/';
 export const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
-export const MILLISECONDS = 1000;
 export const TOOL_PYTHON_PROJECT = '.gspot/pyproject.toml';
 export const LOCK = '.gspot/uv.lock';
 export const SETUP = 'Run: gspot apply, then gspot install';

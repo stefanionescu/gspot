@@ -6,6 +6,7 @@ import { unknownKit } from '#cli/kits/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { KitReason, InitInputs, InitDetection, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -28,17 +29,13 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         { name: 'root', path: '', kits: [], source: 'root' },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
-    const files = openRoot(root);
-    try {
-        for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
-            if (path === '') continue;
-            if (files.stat(path)?.isDirectory() !== true)
-                throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
-            if (scopes.every((scope) => scope.path !== path))
-                scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
+        if (path === '') continue;
+        if (files.stat(path)?.isDirectory() !== true)
+            throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
+        if (scopes.every((scope) => scope.path !== path))
+            scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
     }
     return scopes;
 }
@@ -88,7 +85,7 @@ function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scop
     return context.files.some(
         (file) =>
             file.kind === 'source' &&
-            scopes.every((scope) => scope.path === '' || !file.path.startsWith(`${scope.path}/`)) &&
+            scopes.every((scope) => scope.path === '' || !isInScope(file.path, scope.path)) &&
             manifest.owners.extensions.some((extension) => file.path.endsWith(extension)),
     );
 }

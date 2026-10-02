@@ -1,14 +1,11 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
+import { isRecord } from '#cli/platform/text.ts';
 import type { JsonFormat } from '#cli/types/generation/generation.ts';
 
 function primitive(value: unknown): string | undefined {
     if (value === null || typeof value === 'number' || typeof value === 'boolean') return String(value);
     if (typeof value === 'string') return JSON.stringify(value);
     return undefined;
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function oneLine(value: unknown): string | undefined {
@@ -18,7 +15,7 @@ function oneLine(value: unknown): string | undefined {
         const parts = value.map((entry) => oneLine(entry));
         return parts.includes(undefined) ? undefined : `[${parts.join(', ')}]`;
     }
-    return isPlainRecord(value) && Object.keys(value).length === 0 ? '{}' : undefined;
+    return isRecord(value) && Object.keys(value).length === 0 ? '{}' : undefined;
 }
 
 function wrapped(open: string, lines: string[], close: string, depth: number, format: JsonFormat): string {
@@ -54,7 +51,7 @@ function recordBlock(value: Record<string, unknown>, depth: number, format: Json
 
 function block(value: unknown, depth: number, format: JsonFormat, taken: number): string {
     if (Array.isArray(value)) return arrayBlock(value, depth, format, format.width - format.indent * depth - taken);
-    if (isPlainRecord(value)) return recordBlock(value, depth, format);
+    if (isRecord(value)) return recordBlock(value, depth, format);
     return primitive(value) ?? 'null';
 }
 

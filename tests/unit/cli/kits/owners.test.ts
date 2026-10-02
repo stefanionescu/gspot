@@ -4,26 +4,17 @@ import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { isOwned, ownedBy } from '#cli/kits/owners.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { trackedFile } from '#tests/harness/cli/tracked.ts';
 import { shebangInterpreter } from '#cli/repository/tags.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a tracked file with the same fields.
-const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
-    path,
-    prefix: Buffer.alloc(0),
-    kind: 'source',
-    tags,
-    executable: false,
-    size: 1,
-});
 const manifests = kitManifests();
 
 describe('owners', () => {
     test('match by extension, filename at any depth, tag and glob', () => {
         const bash = manifests.get('bash')!;
-        expect(isOwned(bash.owners, file('scripts/build.sh'))).toBe(true);
-        expect(isOwned(bash.owners, file('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
-        expect(isOwned(bash.owners, file('README.md'))).toBe(false);
+        expect(isOwned(bash.owners, trackedFile('scripts/build.sh'))).toBe(true);
+        expect(isOwned(bash.owners, trackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
+        expect(isOwned(bash.owners, trackedFile('README.md'))).toBe(false);
         expect(
             isOwned(
                 {
@@ -35,7 +26,7 @@ describe('owners', () => {
                     from_prettier_plugins: false,
                     kinds: ['source'],
                 },
-                file('public/_headers'),
+                trackedFile('public/_headers'),
             ),
         ).toBe(true);
     });
@@ -43,14 +34,14 @@ describe('owners', () => {
     test('a repository configuration with from_languages owners what the language kits claim', () => {
         const selected = selectKits(['bash'], manifests);
         const structure = manifests.get('structure')!;
-        const owned = ownedBy(structure.owners, selected, [file('a.sh'), file('README.md')], '');
+        const owned = ownedBy(structure.owners, selected, [trackedFile('a.sh'), trackedFile('README.md')], '');
         expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
     });
 
     test('a scope narrows the file set', () => {
         const selected = selectKits(['bash'], manifests);
         expect(
-            ownedBy(manifests.get('bash')!.owners, selected, [file('api/a.sh'), file('b.sh')], 'api').map(
+            ownedBy(manifests.get('bash')!.owners, selected, [trackedFile('api/a.sh'), trackedFile('b.sh')], 'api').map(
                 (entry) => entry.path,
             ),
         ).toStrictEqual(['api/a.sh']);
@@ -67,7 +58,7 @@ describe('owners', () => {
 
 describe('detection', () => {
     test('proposes a language from an extension and the defaults for every repository', () => {
-        const plans = detectKits([file('a.sh')], manifests, []);
+        const plans = detectKits([trackedFile('a.sh')], manifests, []);
         expect(plans.find((plan) => plan.kit === 'bash')?.evidence).toBe('1 .sh file');
         expect(plans.some((plan) => plan.kit === 'spelling')).toBe(true);
     });
@@ -83,7 +74,7 @@ describe('detection', () => {
 
 test('owners > Prettier formats a plugin file type only while the kit with that plugin is selected', () => {
     const formatting = manifests.get('formatting')!.owners;
-    const files = [file('src/Page.astro'), file('src/App.svelte'), file('src/index.ts')];
+    const files = [trackedFile('src/Page.astro'), trackedFile('src/App.svelte'), trackedFile('src/index.ts')];
     for (const [kits, expected] of [
         [['formatting', 'typescript'], ['src/index.ts']],
         [

@@ -1,15 +1,13 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { z } from 'zod';
-import { tmpdir } from 'node:os';
-import { mkdtempSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
-import { sep, join, relative, isAbsolute } from 'node:path';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { jestPercentage, jestCoverageSettings } from '#cli/policy/tools.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { Suite, JestRun, TestReport } from '#cli/types/checks/tool/jest.ts';
@@ -38,9 +36,8 @@ function readTestReport(reports: Root, stderr: string): TestReport {
 // The source-relative path of a test suite, which must lie inside the copied sources.
 function suitePath(source: string, suite: Suite): string {
     const file = relative(source, suite.name);
-    if (isAbsolute(file) || file === '..' || file.startsWith(`..${sep}`))
-        throw new Error('Jest reported a test outside the selected source copy.');
-    return file.split(sep).join('/');
+    if (!isInside(file)) throw new Error('Jest reported a test outside the selected source copy.');
+    return toPosix(file);
 }
 
 // One finding per coverage dimension under its floor.
@@ -149,19 +146,12 @@ export const reportSchema = z.object({
  */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));
-    const work = mkdtempSync(join(tmpdir(), 'gspot-jest-'));
-    let source: string | undefined;
-    const reports = openRoot(work);
-    try {
-        source = await scratchCopy(
-            input.root,
-            input.files.map((file) => file.path),
-            input.scopeEntries.map((scope) => scope.path),
-        );
-        return await runJest({ input, source, work }, reports, settings);
-    } finally {
-        reports.close();
-        if (source !== undefined) await rm(source, { recursive: true, force: true });
-        await rm(work, { recursive: true, force: true });
-    }
+    using work = scratchFolder('gspot-jest-');
+    using reports = openRoot(work.path);
+    using source = await scratchCopy(
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
+    );
+    return await runJest({ input, source: source.path, work: work.path }, reports, settings);
 }

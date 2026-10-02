@@ -170,8 +170,6 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
         "error",
         {
             "scopes": [
-                "packages/cli",
-                "packages/eslint-plugin",
                 "docs"
             ]
         }
@@ -474,130 +472,122 @@ const boundaryConfigs = [
             "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
         ],
         "settings": {
-            "boundaries/elements": [
+            "boundaries/files": [
                 {
-                    "type": "main",
+                    "category": "main",
                     "pattern": [
                         "packages/cli/src/main.ts"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "commands",
+                    "category": "commands",
                     "pattern": [
                         "packages/cli/src/commands/**",
                         "packages/cli/src/config/commands/**",
                         "packages/cli/src/types/commands/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "checks",
+                    "category": "checks",
                     "pattern": [
                         "packages/cli/src/checks/**",
                         "packages/cli/src/config/checks/**",
                         "packages/cli/src/types/checks/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "output",
+                    "category": "output",
                     "pattern": [
                         "packages/cli/src/output/**",
                         "packages/cli/src/config/output.ts",
                         "packages/cli/src/types/output.ts"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "execution",
+                    "category": "execution",
                     "pattern": [
                         "packages/cli/src/execution/**",
                         "packages/cli/src/config/execution/**",
                         "packages/cli/src/types/execution/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "lifecycle",
+                    "category": "lifecycle",
                     "pattern": [
                         "packages/cli/src/lifecycle/**",
                         "packages/cli/src/config/lifecycle/**",
                         "packages/cli/src/types/lifecycle/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "generation",
+                    "category": "generation",
                     "pattern": [
                         "packages/cli/src/generation/**",
                         "packages/cli/src/config/generation/**",
                         "packages/cli/src/types/generation/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "tools",
+                    "category": "tools",
                     "pattern": [
                         "packages/cli/src/tools/**",
                         "packages/cli/src/config/tools/**",
                         "packages/cli/src/types/tools/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "policy",
+                    "category": "policy",
                     "pattern": [
                         "packages/cli/src/policy/**",
                         "packages/cli/src/config/policy/**",
                         "packages/cli/src/types/policy/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "rules",
+                    "category": "rules",
                     "pattern": [
                         "packages/cli/src/rules/**",
                         "packages/cli/src/config/rules.ts",
                         "packages/cli/src/types/rules.ts"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "kits",
+                    "category": "kits",
                     "pattern": [
                         "packages/cli/src/kits/**",
                         "packages/cli/src/config/kits.ts",
                         "packages/cli/src/types/kits.ts"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "repository",
+                    "category": "repository",
                     "pattern": [
                         "packages/cli/src/repository/**",
                         "packages/cli/src/config/repository/**",
                         "packages/cli/src/types/repository/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "parsers",
+                    "category": "parsers",
                     "pattern": [
                         "packages/cli/src/parsers/**",
                         "packages/cli/src/config/parsers/**",
                         "packages/cli/src/types/parsers/**"
-                    ],
-                    "mode": "full"
+                    ]
                 },
                 {
-                    "type": "platform",
+                    "category": "platform",
                     "pattern": [
                         "packages/cli/src/platform/**",
                         "packages/cli/src/config/platform/**",
                         "packages/cli/src/types/platform/**"
-                    ],
-                    "mode": "full"
+                    ]
+                },
+                {
+                    "category": "plugin",
+                    "pattern": [
+                        "packages/eslint-plugin/src/**"
+                    ]
                 }
             ],
             "boundaries/ignore": [
@@ -606,158 +596,344 @@ const boundaryConfigs = [
             ]
         },
         "rules": {
-            "boundaries/element-types": [
+            "boundaries/dependencies": [
                 "error",
                 {
                     "default": "disallow",
-                    "rules": [
+                    "policies": [
                         {
-                            "from": "main",
-                            "allow": [
-                                "main",
-                                "commands",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "main"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "main",
+                                                "commands",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "commands",
-                            "allow": [
-                                "commands",
-                                "checks",
-                                "output",
-                                "execution",
-                                "lifecycle",
-                                "generation",
-                                "tools",
-                                "policy",
-                                "rules",
-                                "kits",
-                                "repository",
-                                "parsers",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "commands"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "commands",
+                                                "checks",
+                                                "output",
+                                                "execution",
+                                                "lifecycle",
+                                                "generation",
+                                                "tools",
+                                                "policy",
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "parsers",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "checks",
-                            "allow": [
-                                "checks",
-                                "execution",
-                                "lifecycle",
-                                "generation",
-                                "tools",
-                                "policy",
-                                "rules",
-                                "kits",
-                                "repository",
-                                "parsers",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "checks"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "checks",
+                                                "execution",
+                                                "lifecycle",
+                                                "generation",
+                                                "tools",
+                                                "policy",
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "parsers",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "output",
-                            "allow": [
-                                "output",
-                                "execution",
-                                "generation",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "output"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "output",
+                                                "execution",
+                                                "generation",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "execution",
-                            "allow": [
-                                "execution",
-                                "lifecycle",
-                                "generation",
-                                "tools",
-                                "policy",
-                                "rules",
-                                "kits",
-                                "repository",
-                                "parsers",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "execution"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "execution",
+                                                "lifecycle",
+                                                "generation",
+                                                "tools",
+                                                "policy",
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "parsers",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "lifecycle",
-                            "allow": [
-                                "lifecycle",
-                                "generation",
-                                "tools",
-                                "policy",
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "lifecycle"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "lifecycle",
+                                                "generation",
+                                                "tools",
+                                                "policy",
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "generation",
-                            "allow": [
-                                "generation",
-                                "tools",
-                                "policy",
-                                "rules",
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "generation"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "generation",
+                                                "tools",
+                                                "policy",
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "tools",
-                            "allow": [
-                                "tools",
-                                "policy",
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "tools"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "tools",
+                                                "policy",
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "policy",
-                            "allow": [
-                                "policy",
-                                "rules",
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "policy"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "policy",
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "rules",
-                            "allow": [
-                                "rules",
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "rules"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "rules",
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "kits",
-                            "allow": [
-                                "kits",
-                                "repository",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "kits"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "kits",
+                                                "repository",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "repository",
-                            "allow": [
-                                "repository",
-                                "parsers",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "repository"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "repository",
+                                                "parsers",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "parsers",
-                            "allow": [
-                                "parsers",
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "parsers"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "parsers",
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         },
                         {
-                            "from": "platform",
-                            "allow": [
-                                "platform"
-                            ]
+                            "from": {
+                                "file": {
+                                    "categories": "platform"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "platform"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "plugin"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "plugin"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         }
                     ]
                 }
@@ -767,114 +943,6 @@ const boundaryConfigs = [
 ];
 
 const scopeRules = [
-    {
-        "files": [
-            "packages/cli/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "rules": {
-            "gspot/no-cross-folder-imports": [
-                "error",
-                {
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#package": "packages/cli/package.json",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    }
-                }
-            ],
-            "gspot/import-direction": [
-                "error",
-                {
-                    "roles": {
-                        "types": [
-                            "types/**",
-                            "**/types/**"
-                        ],
-                        "harness": [
-                            "tests/harness/**"
-                        ],
-                        "tests": [
-                            "tests/**",
-                            "**/*.test.*"
-                        ],
-                        "config": [],
-                        "env": [
-                            "packages/cli/src/platform/environment.ts",
-                            "tests/harness/environment.ts"
-                        ],
-                        "runtime": [
-                            "src/**"
-                        ]
-                    },
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#package": "packages/cli/package.json",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    },
-                    "scope": "packages/cli"
-                }
-            ]
-        }
-    },
-    {
-        "files": [
-            "packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "rules": {
-            "gspot/no-cross-folder-imports": [
-                "error",
-                {
-                    "aliases": {
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    }
-                }
-            ],
-            "gspot/import-direction": [
-                "error",
-                {
-                    "roles": {
-                        "types": [
-                            "types/**",
-                            "**/types/**"
-                        ],
-                        "harness": [
-                            "tests/harness/**"
-                        ],
-                        "tests": [
-                            "tests/**",
-                            "**/*.test.*"
-                        ],
-                        "config": [],
-                        "env": [
-                            "packages/cli/src/platform/environment.ts",
-                            "tests/harness/environment.ts"
-                        ],
-                        "runtime": [
-                            "src/**"
-                        ]
-                    },
-                    "aliases": {
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    },
-                    "scope": "packages/eslint-plugin"
-                }
-            ]
-        }
-    },
     {
         "files": [
             "docs/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
@@ -1022,90 +1090,6 @@ const policyRules = [
         }
     },
     {
-        "scope": "packages/cli",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/cli",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/eslint-plugin",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "packages/eslint-plugin",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
         "scope": "docs",
         "includes": [
             "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$",
@@ -1187,15 +1171,11 @@ const defaults = [
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
             'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
             // The boundaries rule resolves imports through the classic resolver setting.
             'import/resolver': { typescript: { project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] } },
         },
@@ -1230,7 +1210,7 @@ const defaults = [
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
     { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["packages/cli/**","packages/eslint-plugin/**","docs/**"]] })),
+].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["docs/**"]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
         files: TYPESCRIPT,
@@ -1240,121 +1220,11 @@ const defaults = [
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
             'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
             // The boundaries rule resolves imports through the classic resolver setting.
             'import/resolver': { typescript: { project: [
     "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/cli/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/eslint-plugin/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "packages/cli/tsconfig.json",
-    "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] } },
         },

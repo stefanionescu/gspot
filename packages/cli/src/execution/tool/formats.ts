@@ -168,14 +168,6 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
     grouped: ({ spec, text }, output) => parseGrouped(spec.name, output, text, spec.help),
 };
 
-// Findings from a tool's output, per the check's output format.
-function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {
-    const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
-    // A tool that colors its output although nothing reads colors still yields clean paths and messages.
-    const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
-    return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output);
-}
-
 function relativeTo(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
@@ -200,9 +192,11 @@ function relativeTo(root: string, file: string): string {
  * @param cwd the tool working directory, for native relative source paths.
  * @returns the findings.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every tool check turns output into findings here, so the fixable flag and the path rules apply once.
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd = root): Finding[] {
-    return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({
+    const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
+    // A tool that colors its output although nothing reads colors still yields clean paths and messages.
+    const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
+    return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
         fixable: spec.fix_command !== undefined && finding.fixable,
         file: relativeTo(toolPath(root), toPosix(finding.file)),

@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -11,7 +12,7 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = NPM_LOCKFILES.has(path.slice(path.lastIndexOf('/') + 1));
+    const isNpm = NPM_LOCKFILES.has(posix.basename(path));
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
@@ -36,7 +37,7 @@ export function lockfileHosts(input: EngineInput): Finding[] {
     const paths = input.files
         .map((file) => file.path)
         .filter((path) => {
-            const name = path.slice(path.lastIndexOf('/') + 1);
+            const name = posix.basename(path);
             return LOCKFILES[name] !== undefined && name !== 'bun.lockb';
         });
     return paths.flatMap((path) => fileFindings(input, path, hosts));

@@ -1,11 +1,9 @@
-import type { Command } from 'commander';
 import { hasPolicy } from '#cli/policy/read.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
+import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 
 async function explainResult(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);
@@ -19,7 +17,7 @@ async function explainResult(directory: string, subject: string): Promise<Comman
  * Registers explain.
  * @param program the commander program
  */
-export function registerExplain(program: Command): void {
+export function registerExplain(program: Program): void {
     program
         .command('explain <subject>')
         .summary('Explain a check, rule, kit, setting, or file')
@@ -28,8 +26,8 @@ export function registerExplain(program: Command): void {
             'after',
             '\nEffects:\nPrints what the subject is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.\n\nExit codes:\n- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.\n\nExample:\ngspot explain bash/syntax',
         )
-        .action(async (subject: string, _flags: Record<string, unknown>, command: Command) => {
+        .action(async (subject, _flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => explainResult(directoryOf(global), subject), global);
+            await printCommand((cwd) => explainResult(cwd, subject), global);
         });
 }

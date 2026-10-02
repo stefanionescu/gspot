@@ -125,6 +125,13 @@ test('writePolicy > appends to a list without duplicates and removes matching en
     writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher'])));
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(written.match(/dispatcher/g)).toHaveLength(1);
+    // A table entry is the same entry whatever order its keys come in.
+    for (const entry of [
+        { name: 'Ledger', reason: 'A domain term.' },
+        { reason: 'A domain term.', name: 'Ledger' },
+    ])
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.allowed', [entry])));
+    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8').match(/Ledger/g)).toHaveLength(1);
     const counter = { removed: 0 };
     writePolicy(
         sandbox.path,

@@ -71,6 +71,3 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "Names Vale accepts as written: products, tools, people."
-
-[guides]
-general = [{path = "general/prose/WRITING.md"}, {path = "general/code/COMMENTS.md"}]

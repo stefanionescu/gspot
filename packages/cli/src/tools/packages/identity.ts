@@ -43,33 +43,29 @@ export function parsePackageTool(value: string): z.infer<typeof packageToolSchem
  * @returns the package manager name and exact version
  */
 export async function packageTool(root: string, projectPaths: string[]): Promise<z.infer<typeof packageToolSchema>> {
-    const files = openRoot(root);
-    try {
-        const candidates = [
-            'package.json',
-            ...projectPaths
-                .filter((path) => path.endsWith('/package.json') && !path.startsWith('.gspot/'))
-                .toSorted((left, right) => left.localeCompare(right))
-                .slice(0, 1),
-        ];
-        const detected = await detectedTool(root, files, candidates);
-        const { name, version } = detected ?? {
-            name: which.sync('bun', { nothrow: true }) === null ? 'npm' : 'bun',
-            version: undefined,
-        };
-        if (version !== undefined) return packageToolSchema.parse({ name, version });
-        const current = files.read('.gspot/package.json');
-        if (current !== undefined) {
-            const held = z.object({ packageManager: z.string() }).parse(JSON.parse(current.bytes.toString('utf8')));
-            const recorded = parsePackageTool(held.packageManager);
-            if (recorded.name === name) return recorded;
-        }
-        const result = await runToolCommand(undefined, [name, '--version'], { cwd: root });
-        if (result.code !== 0) throw new Error(`Cannot determine the ${name} version for the tool project.`);
-        return packageToolSchema.parse({ name, version: result.stdout.trim() });
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    const candidates = [
+        'package.json',
+        ...projectPaths
+            .filter((path) => path.endsWith('/package.json') && !path.startsWith('.gspot/'))
+            .toSorted((left, right) => left.localeCompare(right))
+            .slice(0, 1),
+    ];
+    const detected = await detectedTool(root, files, candidates);
+    const { name, version } = detected ?? {
+        name: which.sync('bun', { nothrow: true }) === null ? 'npm' : 'bun',
+        version: undefined,
+    };
+    if (version !== undefined) return packageToolSchema.parse({ name, version });
+    const current = files.read('.gspot/package.json');
+    if (current !== undefined) {
+        const held = z.object({ packageManager: z.string() }).parse(JSON.parse(current.bytes.toString('utf8')));
+        const recorded = parsePackageTool(held.packageManager);
+        if (recorded.name === name) return recorded;
     }
+    const result = await runToolCommand(undefined, [name, '--version'], { cwd: root });
+    if (result.code !== 0) throw new Error(`Cannot determine the ${name} version for the tool project.`);
+    return packageToolSchema.parse({ name, version: result.stdout.trim() });
 }
 
 export const packageToolSchema = z.strictObject({

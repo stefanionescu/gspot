@@ -89,7 +89,7 @@ function bindingReads(checker: ts.TypeChecker, symbol: ts.Symbol, source: ts.Nod
 }
 
 function sheetFindings(input: EngineInput, sheet: string, defined: string[], importers: Importer[]): Finding[] {
-    const name = sheet.slice(sheet.lastIndexOf('/') + 1);
+    const name = posix.basename(sheet);
     if (importers.length === 0) return [];
     const known = new Set(
         defined.flatMap((entry) => [

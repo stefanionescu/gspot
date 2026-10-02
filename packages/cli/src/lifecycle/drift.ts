@@ -1,5 +1,6 @@
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -20,7 +21,7 @@ function isStrayCandidate(path: string, policy: Policy): boolean {
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two drift entries carry a patch; the caller sits at the complexity limit.
 function patch(path: string, before: string, after: string, beforeName: string): string {
-    return createTwoFilesPatch(`a/${path}`, `b/${path}`, before, after, beforeName, 'rendered', {
+    return createTwoFilesPatch(`a/${toPosix(path)}`, `b/${toPosix(path)}`, before, after, beforeName, 'rendered', {
         context: DRIFT_DIFF_CONTEXT,
     });
 }
@@ -66,18 +67,12 @@ function blockDrift(root: string, rendered: Generated): DriftEntry[] {
     return entries;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two generated files can be missing or changed; the caller sits at the complexity limit.
-function presenceDrift(root: string, path: string): DriftEntry {
-    return { path, kind: openRoot(root).read(path) === undefined ? 'missing' : 'changed' };
-}
-
+// The merged and configuration outputs whose fields are gone: missing when the file is gone, changed otherwise.
 function otherDrift(root: string, rendered: Generated): DriftEntry[] {
-    const entries: DriftEntry[] = [];
-    for (const merge of rendered.merges)
-        if (!hasConfiguration(root, merge)) entries.push(presenceDrift(root, merge.path));
-    for (const output of rendered.configurations)
-        if (!hasConfiguration(root, output)) entries.push(presenceDrift(root, output.path));
-    return entries;
+    using files = openRoot(root);
+    return [...rendered.merges, ...rendered.configurations]
+        .filter((output) => !hasConfiguration(root, output))
+        .map((output) => ({ path: output.path, kind: files.read(output.path) === undefined ? 'missing' : 'changed' }));
 }
 
 /**

@@ -21,7 +21,7 @@ export const PRETTIER_TOOLING: ExistingTooling = {
  * @param requires the configurations it requires
  * @returns the parsed manifest
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two test files build manifests through it ten times; one owner keeps the fixture shape.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The selection tests build six manifests through it.
 export function testManifest(name: string, requires: string[] = []): Manifest {
     return parseManifest(
         `[kit]\nname = "${name}"\nkind = "language"\ntitle = "${name}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A configuration for the tests, long enough."\n`,

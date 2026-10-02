@@ -1,6 +1,6 @@
 ---
 layer: tool
-kit: cloudflare
+kit: files
 title: GitHub Actions
 ---
 

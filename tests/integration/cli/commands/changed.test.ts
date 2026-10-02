@@ -2,21 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
+import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-
-function git(root: string, ...argv: string[]): string {
-    const result = runBlocking(['git', ...argv], { cwd: root });
-    expect(result.code, result.stderr).toBe(0);
-    return result.stdout.trim();
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five commits in these journeys stage and commit the same way.
-function commit(root: string): void {
-    git(root, 'add', '.');
-    git(root, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Update');
-}
 
 const policy = `kits = []
 [[check]]
@@ -36,12 +24,12 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
         'api/source.txt': 'before',
         'web/source.txt': 'before',
     });
-    git(sandbox.path, 'init', '-b', 'main');
-    commit(sandbox.path);
-    git(sandbox.path, 'branch', 'base');
-    git(sandbox.path, 'branch', '--set-upstream-to=base');
+    gitOutput(sandbox.path, ['init', '-b', 'main']);
+    commitAll(sandbox.path);
+    gitOutput(sandbox.path, ['branch', 'base']);
+    gitOutput(sandbox.path, ['branch', '--set-upstream-to=base']);
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'committed change');
-    commit(sandbox.path);
+    commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
     const selected = await runGspot(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
@@ -70,20 +58,20 @@ test('changed selection resolves the remote default and refuses absent upstream 
         '.gitignore': '.gspot/\n',
         'api/source.txt': 'before',
     });
-    git(sandbox.path, 'init', '-b', 'topic');
-    commit(sandbox.path);
+    gitOutput(sandbox.path, ['init', '-b', 'topic']);
+    commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(absent.code).toBe(2);
     expect((JSON.parse(absent.stdout) as { message: string }).message).toContain('use --changed=<ref>');
-    git(sandbox.path, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
-    git(sandbox.path, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
+    gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    gitOutput(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'changed');
     const defaultRange = await runGspot(sandbox.path, ['check', '--changed']);
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
     expect(defaultRange.stdout).toContain('refs/remotes/origin/main');
-    git(sandbox.path, 'branch', 'upstream');
-    git(sandbox.path, 'branch', '--set-upstream-to=upstream');
-    git(sandbox.path, 'update-ref', '-d', 'refs/heads/upstream');
+    gitOutput(sandbox.path, ['branch', 'upstream']);
+    gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
+    gitOutput(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
     const missing = await runGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(missing.code).toBe(2);
     expect((JSON.parse(missing.stdout) as { message: string }).message).toContain('refs/heads/upstream');
@@ -101,12 +89,12 @@ test('a shallow comparison failure explains how to fetch the missing history', a
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source/gspot.toml': policy, 'source/api/source.txt': 'before' });
     const source = join(sandbox.path, 'source');
-    git(source, 'init', '-b', 'main');
-    commit(source);
-    const base = git(source, 'rev-parse', 'HEAD');
+    gitOutput(source, ['init', '-b', 'main']);
+    commitAll(source);
+    const base = gitOutput(source, ['rev-parse', 'HEAD']);
     await Bun.write(join(source, 'api/source.txt'), 'after');
-    commit(source);
-    git(sandbox.path, 'clone', '--depth=1', pathToFileURL(source).href, 'checkout');
+    commitAll(source);
+    gitOutput(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']);
     const result = await runGspot(join(sandbox.path, 'checkout'), ['check', `--changed=${base}`, '--json']);
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as { message: string }).message).toContain('git fetch --unshallow');

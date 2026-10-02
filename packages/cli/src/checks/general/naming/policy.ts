@@ -61,12 +61,6 @@ function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<stri
     return reserved;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ceiling reads a scoped and then a general number setting the same way.
-function numberSetting(surface: ExposedSettings, policy: Policy, scope: string, key: string): number | undefined {
-    const found = settingValue(surface, policy, key, scope);
-    return typeof found?.value === 'number' ? found.value : undefined;
-}
-
 function limitsReader(
     shipped: ShippedPolicy,
     surface: ExposedSettings,
@@ -77,12 +71,13 @@ function limitsReader(
         const table: ShippedLanguage | undefined = shipped.languages[language];
         const parent = CATEGORY_PARENTS[category] ?? category;
         const prefix = `naming.${language}`;
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Character and word ceilings fall back through the same three steps.
-        const ceiling = (slot: string, defaultLimit: number | undefined): number =>
-            numberSetting(surface, policy, scope, `${prefix}.${parent}.${slot}`) ??
-            numberSetting(surface, policy, scope, `${prefix}.${slot}`) ??
-            defaultLimit ??
-            0;
+
+        const ceiling = (slot: string, defaultLimit: number | undefined): number => {
+            const found = [`${prefix}.${parent}.${slot}`, `${prefix}.${slot}`]
+                .map((key) => settingValue(surface, policy, key, scope)?.value)
+                .find((value): value is number => typeof value === 'number');
+            return found ?? defaultLimit ?? 0;
+        };
         const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
         return {
             caseNames: Array.isArray(cases) ? (cases as string[]) : shippedCase(table, category, parent),

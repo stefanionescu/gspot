@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rm } from 'node:fs/promises';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
@@ -19,14 +18,10 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const named = input.view.tool('openapi')['document'];
     const document = typeof named === 'string' ? named : '';
     if (document === '') return [];
-    const files = openRoot(input.root, 'native');
-    try {
-        files.source(document);
-        if (files.read('.gspot/config/spectral.yaml') === undefined)
-            throw new Error('The Spectral configuration is missing. Run: gspot apply');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(input.root, 'native');
+    files.source(document);
+    if (files.read('.gspot/config/spectral.yaml') === undefined)
+        throw new Error('The Spectral configuration is missing. Run: gspot apply');
     const ruleset = join(input.root, '.gspot/config/spectral.yaml');
     const result = await runCheckCommand(
         input,
@@ -59,28 +54,25 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const command = typeof producer === 'string' ? producer : '';
     if (document === '' || command === '') return [];
     const before = readSource(input.root, document, input.reads);
-    const scratch = await scratchCopy(
+    using scratchFolder = await scratchCopy(
         input.root,
         [...input.files.map((file) => file.path), document],
         input.scopeEntries.map((scope) => scope.path),
     );
-    try {
-        const result = await runCheckCommand(input, commandArguments(command), { cwd: scratch });
-        if (result.code !== 0)
-            throw new Error(
-                `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
-            );
-        const after = readSource(scratch, document);
-        if (before.equals(after)) return [];
-        return [
-            findingAt(
-                input,
-                { file: document, line: 1 },
-                'stale',
-                `Running ${command} changes this document; commit what it writes.`,
-            ),
-        ];
-    } finally {
-        await rm(scratch, { recursive: true, force: true });
-    }
+    const scratch = scratchFolder.path;
+    const result = await runCheckCommand(input, commandArguments(command), { cwd: scratch });
+    if (result.code !== 0)
+        throw new Error(
+            `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+        );
+    const after = readSource(scratch, document);
+    if (before.equals(after)) return [];
+    return [
+        findingAt(
+            input,
+            { file: document, line: 1 },
+            'stale',
+            `Running ${command} changes this document; commit what it writes.`,
+        ),
+    ];
 }

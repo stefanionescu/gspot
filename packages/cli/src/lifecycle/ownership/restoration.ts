@@ -2,8 +2,8 @@
 // gspot adopted it.
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/generation/markers.ts';
-import { matches } from '#cli/lifecycle/ownership/log.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/merge/plan.ts';
@@ -17,7 +17,7 @@ function fieldRestoration(
 ): { current: Read; configuration: ConfigurationOwnership } | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
-    const applies = configuration.edited || !configuration.created || !matches(current, existing.installed);
+    const applies = configuration.edited || !configuration.created || !isRecorded(current, existing.installed);
     return applies ? { current, configuration } : undefined;
 }
 
@@ -49,7 +49,7 @@ function restoreBlock(current: Read, block: NonNullable<OwnershipEntry['block']>
 
 // What giving back a whole file writes: an adopted file stays as it is, any other is deleted.
 function fileRestoration(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
-    if (current !== undefined && !matches(current, existing.installed)) return undefined;
+    if (current !== undefined && !isRecorded(current, existing.installed)) return undefined;
     return existing.adopted === true && current !== undefined ? { next: current } : {};
 }
 

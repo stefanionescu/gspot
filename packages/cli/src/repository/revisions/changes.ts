@@ -1,10 +1,8 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
-import { run } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
 import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
-import { gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
+import { runGit, gitLines, gitPaths, gitValue, isShallow } from '#cli/platform/git.ts';
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
 async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
@@ -33,9 +31,7 @@ async function defaultReference(root: string, cancelSignal?: AbortSignal): Promi
 
 // The merge base of a ref and HEAD, with a note about cut history when the repository is shallow.
 async function mergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
-    const base = await run(['git', 'merge-base', '--', compared, 'HEAD'], {
-        cwd: root,
-        timeoutMs: GIT_TIMEOUT_MS,
+    const base = await runGit(root, ['merge-base', '--', compared, 'HEAD'], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (base.code === 0) return base.stdout.trim();

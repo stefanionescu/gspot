@@ -1,5 +1,5 @@
 // gspot remove: drop a kit from the root selection or from one scope, apply, and install what the rest need.
-import type { Command } from 'commander';
+import { compact } from '#cli/platform/text.ts';
 import { requireChain } from '#cli/kits/select.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -8,10 +8,9 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { scopeHolder } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { textEntry, directoryOf } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
-import type { CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
+import type { Program, CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
 
 /**
  * gspot remove: drops one configuration from the root list or from one scope's list.
@@ -41,7 +40,7 @@ async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
  * Registers remove.
  * @param program the commander program
  */
-export function registerRemove(program: Command): void {
+export function registerRemove(program: Program): void {
     program
         .command('remove <kit>')
         .summary('Remove a kit')
@@ -52,15 +51,15 @@ export function registerRemove(program: Command): void {
         )
         .option('--scope <path>', 'Remove the kit from this scope')
         .option('--dry-run', 'Print the change and write nothing')
-        .action(async (configuration: string, flags: Record<string, unknown>, command: Command) => {
+        .action(async (configuration, flags, command) => {
             const global = command.optsWithGlobals();
             await printCommand(
-                () =>
+                (cwd) =>
                     removeCommand({
-                        cwd: directoryOf(global),
+                        cwd,
                         kit: configuration,
-                        isDryRun: flags['dryRun'] === true,
-                        ...textEntry(flags, 'scope', 'scope'),
+                        isDryRun: flags.dryRun === true,
+                        ...compact({ scope: flags.scope }),
                     }),
                 global,
             );

@@ -126,9 +126,15 @@ function settingExplanation(session: Session | undefined, key: string): Explanat
     };
 }
 
-function explainSlashed(session: Session | undefined, subject: string): Explanation | { error: string } {
+// A check name first, then a tracked file whose first folder shares a name with a check, and only then a tool rule.
+function explainSlashed(
+    session: Session | undefined,
+    subject: string,
+    file: Explanation | { error: string } | undefined,
+): Explanation | { error: string } {
     const check = checkExplanation(session, subject);
     if (check) return check;
+    if (file !== undefined) return file;
     const slash = subject.indexOf('/');
     const toolRule = toolRuleExplanation(session, subject.slice(0, slash), subject.slice(slash + 1));
     if (toolRule) return toolRule;
@@ -153,7 +159,7 @@ export function explain(session: Session | undefined, subject: string): Explanat
     const file = explainPath(session, subject);
     if (file !== undefined && subject.startsWith('./')) return file;
     let named: Explanation | { error: string };
-    if (subject.includes('/')) named = explainSlashed(session, subject);
+    if (subject.includes('/')) named = explainSlashed(session, subject, file);
     else if (subject.includes('.')) named = explainDotted(session, subject);
     else named = kitExplanation(subject);
     if (!('error' in named)) return named;

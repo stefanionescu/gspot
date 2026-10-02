@@ -2,8 +2,8 @@
 import { print } from '#cli/output/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { runGitBlocking } from '#cli/platform/git.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
@@ -21,7 +21,7 @@ import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } f
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.isDryRun) return;
-    const status = runBlocking(['git', 'status', '--porcelain'], { cwd: root });
+    const status = runGitBlocking(root, ['status', '--porcelain']);
     if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
     const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
     if (changed.length > 0) throw new GspotError('policy', [messages.dirtyTree(changed.length)]);

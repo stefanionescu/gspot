@@ -142,6 +142,3 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "Paths Semgrep never scans, each with a reason; they are written into .semgrepignore."
-
-[guides]
-code = [{path = "general/code/SECURITY.md"}, {path = "general/code/SECRETS.md"}]

@@ -11,13 +11,8 @@ import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/general/
  * @returns the findings
  */
 export function gitleaksBaseline(input: EngineInput): Finding[] {
-    const files = openRoot(input.root);
-    let bytes: Buffer | undefined;
-    try {
-        bytes = files.read(BASELINE)?.bytes;
-    } finally {
-        files.close();
-    }
+    using files = openRoot(input.root);
+    const bytes: Buffer | undefined = files.read(BASELINE)?.bytes;
     if (bytes === undefined) return [];
     const entries = JSON.parse(bytes.toString('utf8')) as GitleaksFinding[];
     const reasons = (input.view.tool('gitleaks')['baseline_reasons'] as BaselineReason[] | undefined) ?? [];

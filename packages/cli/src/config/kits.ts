@@ -13,9 +13,6 @@ export const GLOB_CHARS = /[*?{]/u;
 /** The fields two kits may set differently when both declare one setting. */
 export const SETTING_DEFAULT_FIELDS = new Set(['default', 'default_all', 'detect']);
 
-/** Nonzero statuses documented by a checker or correction tool as source findings. */
-export const LAST_EXIT_CODE = 255;
-
 export const FORMAT_PREFIX = 'format.';
 
 // The pin fields a manifest may leave out, copied when declared.

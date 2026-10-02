@@ -1,9 +1,9 @@
 // Path handling: forward slashes in selectors, the platform form for tools.
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
-import { sep, join } from 'node:path';
-import { createHash } from 'node:crypto';
-import { cacheHome } from '#cli/platform/environment.ts';
+import { contentDigest } from '#cli/platform/text.ts';
+import { sep, join, posix, isAbsolute } from 'node:path';
+import { cacheDirectory } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
 import type { GlobWalk, GlobOptions } from '#cli/types/platform/platform.ts';
@@ -118,14 +118,13 @@ export function toPlatform(path: string): string {
 }
 
 /**
- * The last segment of a posix path.
- * @param path a posix path
- * @returns the base name
+ * Whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
+ * @param local the path relative to the folder, with either separator
+ * @returns whether the path stays inside the folder
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Detection and the checks take the last segment of a repository path, which has forward slashes on every platform.
-export function baseName(path: string): string {
-    const index = path.lastIndexOf('/');
-    return index === -1 ? path : path.slice(index + 1);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every boundary check, from links to tool reports, refuses a path that leaves its folder by this one test.
+export function isInside(local: string): boolean {
+    return !(isAbsolute(local) || local === '..' || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
 
 /**
@@ -134,7 +133,7 @@ export function baseName(path: string): string {
  * @returns the extension, '' when there is none
  */
 export function extensionOf(path: string): string {
-    const base = baseName(path);
+    const base = posix.basename(path);
     const declaration = DECLARATION_EXTENSIONS.find((extension) => base.endsWith(extension));
     if (declaration !== undefined) return declaration;
     const index = base.lastIndexOf('.');
@@ -146,10 +145,10 @@ export function extensionOf(path: string): string {
  * @param root the repository root
  * @returns the cache folder for this repository
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The Swift build and its tests locate the private build cache by this one hash of the real root path.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: It names the build folder of one repository, a hash of its real root path under the cache directory.
 export function buildFolder(root: string): string {
-    const identity = createHash('sha256').update(realpathSync(root)).digest('hex');
-    return join(cacheHome(), 'gspot', identity);
+    const identity = contentDigest(realpathSync(root));
+    return join(cacheDirectory(), identity);
 }
 
 /**

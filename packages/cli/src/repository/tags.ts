@@ -1,5 +1,6 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import type { Tagged, RawEntry } from '#cli/types/repository/repository.ts';
 
 import {
@@ -7,7 +8,7 @@ import {
     SHEBANG_TAGS,
     FILENAME_TAGS,
     EXTENSION_TAGS,
-    LOCKFILE_NAMES,
+    LOCKFILE_CLIENTS,
     BINARY_EXTENSIONS,
     SHEBANG_INTERPRETERS,
 } from '#cli/config/repository/repository.ts';
@@ -57,7 +58,7 @@ function shebangExecutable(firstLine: string): string | undefined {
     if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
     if (tokens[index] === '-S') index += 1;
     const word = tokens[index];
-    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+    return word === undefined || word === '' ? undefined : posix.basename(word);
 }
 /**
  * Tags for one entry. Binary files retain path tags and do not receive content tags.
@@ -67,10 +68,10 @@ function shebangExecutable(firstLine: string): string | undefined {
  */
 export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const extension = extensionOf(entry.path);
-    const base = baseName(entry.path);
+    const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],
-        [LOCKFILE_NAMES.includes(base), 'lockfile'],
+        [Object.hasOwn(LOCKFILE_CLIENTS, base), 'lockfile'],
         [base.startsWith('Dockerfile') || extension === '.dockerfile', 'dockerfile'],
         [base.startsWith('.env'), 'dotenv'],
         [entry.executable, 'executable'],

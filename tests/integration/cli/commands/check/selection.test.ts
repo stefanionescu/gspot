@@ -66,6 +66,15 @@ test('file and folder arguments intersect check lists, and --skip leaves the oth
     ]);
 });
 
+test('a program option ends a list option, so the path after it stays a file argument', async () => {
+    await using sandbox = await selectionSandbox();
+    const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/one', '--json', 'src/selected.ts']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    const report = JSON.parse(result.stdout) as RunReport;
+    expect(report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one']);
+    expect(report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
+});
+
 test('-C resolves file arguments from the folder it names', async () => {
     await using sandbox = await selectionSandbox();
     const relative = await spawnGspot(sandbox.path, [
@@ -80,6 +89,19 @@ test('-C resolves file arguments from the folder it names', async () => {
     expect(relative.code, relative.stdout + relative.stderr).toBe(1);
     const relativeReport = JSON.parse(relative.stdout) as RunReport;
     expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
+        'src/selected.ts',
+    ]);
+    const after = await spawnGspot(sandbox.path, [
+        'check',
+        '-C',
+        'src',
+        'selected.ts',
+        '--only',
+        'sandbox/one',
+        '--json',
+    ]);
+    const afterReport = JSON.parse(after.stdout) as RunReport;
+    expect(afterReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'src/selected.ts',
     ]);
 });

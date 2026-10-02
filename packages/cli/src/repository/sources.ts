@@ -2,7 +2,6 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { SourceReads } from '#cli/types/platform/platform.ts';
 import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
-import { NATURE_HEAD_BYTES } from '#cli/config/repository/repository.ts';
 
 /**
  * Reads a bounded prefix, closing the descriptor even when reading fails.
@@ -13,13 +12,8 @@ import { NATURE_HEAD_BYTES } from '#cli/config/repository/repository.ts';
  */
 export function readPrefix(root: string, path: string, bytes: number): Buffer {
     const buffer = Buffer.alloc(bytes);
-    const files = openRoot(root, 'native');
-    let source: string;
-    try {
-        source = files.source(path);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    const source: string = files.source(path);
     const descriptor = openSync(source, 'r');
     let offset = 0;
     try {
@@ -35,19 +29,6 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
 }
 
 /**
- * Required file prefixes decoded as text for shebang and banner checks.
- * @param root the repository root
- * @param path the file, relative to the root
- * @param bytes how many bytes to read
- * @returns the text
- * @throws when required content cannot be read
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the tracked-file tests read the opening bytes of a file as text through this.
-export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
-    return readPrefix(root, path, bytes).toString('utf8');
-}
-
-/**
  * Read required content, reusing source bytes only within the read repository.
  * @param root the directory being read
  * @param path the source path relative to that directory
@@ -58,12 +39,8 @@ export function readSource(root: string, path: string, reads?: SourceReads): Buf
     const read = reads?.root === root ? reads.sources : undefined;
     const held = read?.get(path);
     if (held !== undefined) return held;
-    const files = openRoot(root, 'native');
-    try {
-        const bytes = readFileSync(files.source(path));
-        read?.set(path, bytes);
-        return bytes;
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    const bytes = readFileSync(files.source(path));
+    read?.set(path, bytes);
+    return bytes;
 }

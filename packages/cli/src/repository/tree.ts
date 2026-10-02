@@ -1,4 +1,5 @@
 // Builds the Repository record: the file set with kinds and tags, and the scopes.
+import { posix } from 'node:path';
 import { tagEntry } from '#cli/repository/tags.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { kindOf, readAttributes } from '#cli/repository/kind.ts';
@@ -102,7 +103,7 @@ export async function readRepository(
             { name: 'root', path: '', kits: [], source: 'root' },
             ...scopeEntries.map(
                 (entry): ScopeEntry => ({
-                    name: entry.path.slice(entry.path.lastIndexOf('/') + 1),
+                    name: posix.basename(entry.path),
                     path: entry.path,
                     kits: entry.kits,
                     source: 'gspot.toml',

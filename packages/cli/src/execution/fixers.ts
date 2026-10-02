@@ -1,6 +1,6 @@
 // Corrections run in passes until they settle; dry runs use a scratch copy and return diffs.
-import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
@@ -26,12 +26,8 @@ function sourceBytes(files: Root, path: string): Buffer | undefined {
 }
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
-    const files = openRoot(root, 'native');
-    try {
-        return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
 }
 
 function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
@@ -107,25 +103,21 @@ async function isolatedCorrection(
     const result = await runCorrection(session, planned, prepared);
     const current = contentsOf(root, result.changed);
     const corrected = contentsOf(workspace.root, result.changed);
-    const files = openRoot(root, 'native');
-    try {
-        // Validate every changed source before publishing any correction bytes.
-        const destinations = [...workspace.originals]
-            .filter(([path]) => result.changed.includes(path))
-            .map(([path, original]) => {
-                if (current.get(path)?.equals(original) !== true)
-                    throw new Error(
-                        `${path} changed while its correction was running; the isolated correction was not applied.`,
-                    );
-                return [path, files.source(path)] as const;
-            });
-        for (const [path, destination] of destinations) {
-            const bytes = corrected.get(path);
-            if (bytes === undefined) unlinkSync(destination);
-            else writeFileSync(destination, bytes);
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root, 'native');
+    // Validate every changed source before publishing any correction bytes.
+    const destinations = [...workspace.originals]
+        .filter(([path]) => result.changed.includes(path))
+        .map(([path, original]) => {
+            if (current.get(path)?.equals(original) !== true)
+                throw new Error(
+                    `${path} changed while its correction was running; the isolated correction was not applied.`,
+                );
+            return [path, files.source(path)] as const;
+        });
+    for (const [path, destination] of destinations) {
+        const bytes = corrected.get(path);
+        if (bytes === undefined) unlinkSync(destination);
+        else writeFileSync(destination, bytes);
     }
     return result;
 }
@@ -226,34 +218,30 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
-    const scratch = isDryRun
+    using scratch = isDryRun
         ? await scratchCopy(
               session.root,
               [...paths, ...session.repository.files.map((file) => file.path)],
               session.repository.scopes.map((scope) => scope.path),
           )
         : undefined;
-    const root = scratch ?? session.root;
-    try {
-        const before = contentsOf(root, paths);
-        const results = await fixerPasses(session, checks, root, paths);
-        const after = contentsOf(root, paths);
-        const changed = changedPaths(before, after);
-        const diffs = isDryRun
-            ? changed.map((path) =>
-                  createTwoFilesPatch(
-                      `a/${path}`,
-                      `b/${path}`,
-                      before.get(path)?.toString('utf8') ?? '',
-                      after.get(path)?.toString('utf8') ?? '',
-                      '',
-                      '',
-                      { context: FIX_DIFF_CONTEXT },
-                  ),
-              )
-            : [];
-        return { results, changed, diffs };
-    } finally {
-        if (scratch !== undefined) await rm(scratch, { recursive: true, force: true });
-    }
+    const root = scratch?.path ?? session.root;
+    const before = contentsOf(root, paths);
+    const results = await fixerPasses(session, checks, root, paths);
+    const after = contentsOf(root, paths);
+    const changed = changedPaths(before, after);
+    const diffs = isDryRun
+        ? changed.map((path) =>
+              createTwoFilesPatch(
+                  `a/${toPosix(path)}`,
+                  `b/${toPosix(path)}`,
+                  before.get(path)?.toString('utf8') ?? '',
+                  after.get(path)?.toString('utf8') ?? '',
+                  '',
+                  '',
+                  { context: FIX_DIFF_CONTEXT },
+              ),
+          )
+        : [];
+    return { results, changed, diffs };
 }

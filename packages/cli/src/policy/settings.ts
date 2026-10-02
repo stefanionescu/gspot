@@ -1,5 +1,5 @@
-import { compact } from '#cli/platform/text.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
+import { compact, isRecord } from '#cli/platform/text.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/policy/policy.ts';
 
@@ -189,13 +189,13 @@ export function policyTables(policy: Policy, scope: string | undefined): PolicyL
 }
 
 /**
- * Narrows a value to a plain object.
+ * Narrows a value to a table: a plain object that is not a list or a date.
  * @param value anything
- * @returns the value as a record, or undefined for primitives and null
+ * @returns the value as a record, or undefined for anything else
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Policy readers narrow an unknown value to a plain object by this one test.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The policy readers and the init proposal narrow about twenty values to tables by this test.
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
-    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
+    return isRecord(value) ? value : undefined;
 }
 
 /**

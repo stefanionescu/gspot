@@ -10,7 +10,6 @@ export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
 
 export const POLICY_CHECK = 'integrity/policy';
-export const UNABLE_EXIT = 2;
 
 /** Native structured reporters reserve these nonzero exit codes for findings. */
 export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([

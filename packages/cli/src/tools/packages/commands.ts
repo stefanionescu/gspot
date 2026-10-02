@@ -172,17 +172,13 @@ export async function prepareNativeWrappers(
     selected: Iterable<ToolPin>,
 ): Promise<void> {
     const tools = [...new Map([...selected].map((tool) => [tool.name, tool])).values()];
-    const files = openRoot(work, 'native');
+    using files = openRoot(work, 'native');
     // A Windows shim is a command file from npm or an executable from Bun; the first that exists is the wrapper.
     const suffixes = process.platform === 'win32' ? ['.cmd', '.exe', ''] : [''];
-    try {
-        for (const tool of tools.filter((candidate) => needsVersionCheck(candidate, dependencies))) {
-            const extension =
-                suffixes.find((suffix) => existsSync(join(work, 'node_modules', '.bin', tool.name + suffix))) ?? '';
-            await assertNativeVersion(work, files.source(`node_modules/.bin/${tool.name}${extension}`), tool);
-        }
-    } finally {
-        files.close();
+    for (const tool of tools.filter((candidate) => needsVersionCheck(candidate, dependencies))) {
+        const extension =
+            suffixes.find((suffix) => existsSync(join(work, 'node_modules', '.bin', tool.name + suffix))) ?? '';
+        await assertNativeVersion(work, files.source(`node_modules/.bin/${tool.name}${extension}`), tool);
     }
 }
 

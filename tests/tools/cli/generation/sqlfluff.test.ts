@@ -26,25 +26,11 @@ test('SQLFluff honors root and nested dialect settings over the database default
     });
     const config = configs.find((file) => file.path === '.gspot/config/sqlfluff.cfg')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two native runs differ only in the dialect flag; one owner keeps the command line.
-    const run = (dialect?: string) =>
-        Bun.spawnSync(
-            [
-                'sqlfluff',
-                'lint',
-                '--config',
-                config.path,
-                '--ignore-local-config',
-                '--rules',
-                'LT01',
-                ...(dialect === undefined ? [] : ['--dialect', dialect]),
-                'query.sql',
-            ],
-            { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' },
-        );
-    const wrong = run('postgres');
+    const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
+    const options = { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' } as const;
+    const wrong = Bun.spawnSync([...lint, '--dialect', 'postgres', 'query.sql'], options);
     expect(wrong.exitCode, wrong.stderr.toString()).toBe(1);
     expect(wrong.stdout.toString()).toContain('PRS');
-    const corrected = run();
+    const corrected = Bun.spawnSync([...lint, 'query.sql'], options);
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
 });

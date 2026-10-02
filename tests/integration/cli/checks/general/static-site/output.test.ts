@@ -6,13 +6,14 @@ import * as processes from '#cli/platform/spawn.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
 import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { siteBuild } from '#cli/checks/general/static-site/build.ts';
-import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
+import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/static-site/output.ts';
 
 test.each([
     {
         name: 'links',
-        analyze: internalLinks,
+        analyze: (input: EngineInput) => brokenLinks(input, false),
         check: 'static-site/links-internal',
         body: '<a href="/missing.html">Missing</a>',
         finding: {

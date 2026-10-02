@@ -61,17 +61,20 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
         const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
         if (table === undefined || table.elements.length === 0) return [];
         const prefix = path === '' ? '' : `${path}/`;
-        const elements = table.elements.map((element) => ({
-            type: element.name,
+        // Each element is a category of files, because boundaries matches its element patterns against folders only.
+        const categories = table.elements.map((element) => ({
+            category: element.name,
             pattern: element.paths.map((pattern) => `${prefix}${pattern}`),
-            mode: 'full',
         }));
-        const edges = table.edges_allowed.map((entry) => ({ from: entry.from, allow: entry.to }));
+        const policies = table.edges_allowed.map((entry) => ({
+            from: { file: { categories: entry.from } },
+            allow: { to: { file: { categories: { anyOf: entry.to } } } },
+        }));
         return [
             {
                 files: [`${prefix}${ESLINT_CODE_FILES}`],
-                settings: { 'boundaries/elements': elements, 'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'] },
-                rules: { 'boundaries/element-types': ['error', { default: 'disallow', rules: edges }] },
+                settings: { 'boundaries/files': categories, 'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'] },
+                rules: { 'boundaries/dependencies': ['error', { default: 'disallow', policies }] },
             },
         ];
     });

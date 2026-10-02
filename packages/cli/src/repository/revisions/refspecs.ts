@@ -1,8 +1,6 @@
 // The objects a remote's fetch mappings already brought into the repository, which a push need not re-check.
-import { run } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { gitText, gitLines } from '#cli/platform/git.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/platform/platform.ts';
+import { runGit, gitText, gitLines } from '#cli/platform/git.ts';
 import type { RefRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
 
 // A refspec is a source and a destination.
@@ -89,9 +87,7 @@ async function remoteRefEntries(
     remote: string,
     cancelSignal?: AbortSignal,
 ): Promise<string[] | undefined> {
-    const configured = await run(['git', 'config', '--null', '--get-all', `remote.${remote}.fetch`], {
-        cwd: root,
-        timeoutMs: GIT_TIMEOUT_MS,
+    const configured = await runGit(root, ['config', '--null', '--get-all', `remote.${remote}.fetch`], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (configured.code === 1) return undefined;

@@ -1,11 +1,9 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdtempSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
@@ -33,32 +31,29 @@ async function scanned(
 ): Promise<Finding[]> {
     const database = join(work, language);
     const output = join(work, `${language}.sarif`);
-    const source = await scratchCopy(
+    using sourceFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
-    try {
-        await spawned(
-            input,
-            ['database', 'create', database, `--language=${language}`, '--source-root', source, '--overwrite'],
-            source,
-        );
-        const queries = `codeql/${language}-queries@${version}:codeql-suites/${language}-${suite}.qls`;
-        await spawned(
-            input,
-            ['database', 'analyze', database, queries, '--download', '--format=sarif-latest', `--output=${output}`],
-            source,
-        );
-        return sarifFindings(
-            JSON.parse(readSource(work, `${language}.sarif`).toString('utf8')),
-            input.spec.name,
-            accepted,
-            source,
-        );
-    } finally {
-        await rm(source, { recursive: true, force: true });
-    }
+    const source = sourceFolder.path;
+    await spawned(
+        input,
+        ['database', 'create', database, `--language=${language}`, '--source-root', source, '--overwrite'],
+        source,
+    );
+    const queries = `codeql/${language}-queries@${version}:codeql-suites/${language}-${suite}.qls`;
+    await spawned(
+        input,
+        ['database', 'analyze', database, queries, '--download', '--format=sarif-latest', `--output=${output}`],
+        source,
+    );
+    return sarifFindings(
+        JSON.parse(readSource(work, `${language}.sarif`).toString('utf8')),
+        input.spec.name,
+        accepted,
+        source,
+    );
 }
 
 /**
@@ -134,14 +129,11 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
             return { language, version };
         },
     );
-    const work = mkdtempSync(join(tmpdir(), 'gspot-codeql-'));
+    using workFolder = scratchFolder('gspot-codeql-');
+    const work = workFolder.path;
     const findings: Finding[] = [];
-    try {
-        for (const { language, version } of selected) {
-            findings.push(...(await scanned(input, language, suite, work, accepted, version)));
-        }
-    } finally {
-        await rm(work, { recursive: true, force: true });
+    for (const { language, version } of selected) {
+        findings.push(...(await scanned(input, language, suite, work, accepted, version)));
     }
     return findings;
 }

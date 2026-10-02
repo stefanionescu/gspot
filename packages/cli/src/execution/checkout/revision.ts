@@ -1,21 +1,15 @@
-import { tmpdir } from 'node:os';
+import { realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { decodedText } from '#cli/platform/text.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import { run, runBinary } from '#cli/platform/spawn.ts';
-import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
+import { runGit, runGitBinary } from '#cli/platform/git.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
-
-import {
-    NEWLINE,
-    FILE_MODE,
-    ENTRY_MODES,
-    EXECUTABLE_MODE,
-    MATERIALIZATION_BATCH_SIZE,
-} from '#cli/config/execution/checkout.ts';
+import { NEWLINE, ENTRY_MODES, MATERIALIZATION_BATCH_SIZE } from '#cli/config/execution/checkout.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;
@@ -23,9 +17,7 @@ const FRAME_NEWLINES = 2;
 const entryReads = new WeakMap<SourceReads, Map<string, Promise<GitEntry[]>>>();
 
 async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
-    const result = await run(['git', ...args], {
-        cwd: root,
-        timeoutMs: 30_000,
+    const result = await runGit(root, [...args], {
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
         ...(stdin === undefined ? {} : { stdin }),
     });
@@ -39,12 +31,12 @@ async function gitOutput(root: string, args: string[], cancelSignal?: AbortSigna
 // Writes one tracked entry into the snapshot: a directory for a gitlink, otherwise the blob with its mode.
 function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>): void {
     if (entry.mode === '160000') {
-        files.mkdir(entry.path, EXECUTABLE_MODE);
+        files.mkdir(entry.path, EXECUTABLE_FILE);
         return;
     }
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
-    const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
+    const mode = ENTRY_MODES[entry.mode] ?? OWNER_WRITABLE_FILE;
     const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
     files.write(entry.path, content, undefined);
 }
@@ -111,20 +103,14 @@ function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
  * @returns validated entries
  */
 async function readEntries(root: string, source: RevisionSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const command =
-        source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.hash];
-    const read = await runBinary(command, {
-        cwd: root,
-        timeoutMs: 30_000,
-        ...(cancelSignal === undefined ? {} : { cancelSignal }),
-    });
+    const argv = source.kind === 'index' ? ['ls-files', '--stage', '-z'] : ['ls-tree', '-r', '-z', source.hash];
+    const read = await runGitBinary(root, argv, { ...(cancelSignal === undefined ? {} : { cancelSignal }) });
     if (read.code !== 0)
         throw new GspotError('selection', [
             'Cannot read the Git index. Resolve Git errors before checking staged content.',
         ]);
-    const bytes = Buffer.from(read.stdout);
-    const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
+    const text = decodedText(read.stdout);
+    if (text === undefined) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
     if (text !== '' && !text.endsWith('\0')) throw new GspotError('selection', ['The Git entry stream is incomplete.']);
     return text
         .split('\0')
@@ -148,10 +134,8 @@ export async function gitBlobs(
     if (objects.length === 0) return new Map();
     if (objects.some((gitHash) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(gitHash)))
         throw new GspotError('selection', ['Git blob requests require full object IDs.']);
-    const result = await runBinary(['git', 'cat-file', '--batch'], {
-        cwd: root,
+    const result = await runGitBinary(root, ['cat-file', '--batch'], {
         stdin: objects.join('\n') + '\n',
-        timeoutMs: 30_000,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (result.code !== 0)
@@ -208,15 +192,19 @@ export function gitEntries(
  */
 export async function committedEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const options = { cwd: root, timeoutMs: 30_000, ...(cancelSignal === undefined ? {} : { cancelSignal }) };
-    const head = await run(['git', 'rev-parse', '--verify', '--quiet', 'HEAD'], options);
+    const head = await runGit(options.cwd, ['rev-parse', '--verify', '--quiet', 'HEAD'], options);
     if (head.code === 0) return gitEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
     const failure = new GspotError('selection', [
         'Cannot read committed Git history. Restore HEAD before checking migrations.',
     ]);
     if (head.code !== 1) throw failure;
-    const symbolic = await run(['git', 'symbolic-ref', '--quiet', 'HEAD'], options);
+    const symbolic = await runGit(options.cwd, ['symbolic-ref', '--quiet', 'HEAD'], options);
     if (symbolic.code !== 0) throw failure;
-    const refs = await run(['git', 'for-each-ref', '--format=%(refname)', '--', symbolic.stdout.trim()], options);
+    const refs = await runGit(
+        options.cwd,
+        ['for-each-ref', '--format=%(refname)', '--', symbolic.stdout.trim()],
+        options,
+    );
     if (refs.code === 0 && refs.stdout.trim() === '' && refs.stderr.trim() === '') return [];
     throw failure;
 }
@@ -240,35 +228,32 @@ export async function useRevision<Result>(
     const directory = relative(realpathSync(gitRoot), realpathSync(root));
     const entries = await gitEntries(gitRoot, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
-    const revisionRoot = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-revision-')));
-    try {
-        await gitOutput(
-            gitRoot,
-            ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
-            cancelSignal,
-        );
-        // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
-        if (source.kind === 'commit')
-            await gitOutput(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
-        await gitOutput(revisionRoot, ['read-tree', '--empty'], cancelSignal);
-        await gitOutput(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
-        const tree = await gitOutput(revisionRoot, ['write-tree'], cancelSignal);
-        const objects = await gitBlobs(
-            revisionRoot,
-            entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
-            cancelSignal,
-        );
-        await populateRevision(revisionRoot, entries, objects, cancelSignal);
-        copyProsePackages(
-            gitRoot,
-            revisionRoot,
-            entries.map((entry) => entry.path),
-        );
-        await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
-        await setImmediate();
-        cancelSignal?.throwIfAborted();
-        return await action(join(revisionRoot, directory), tree.trim());
-    } finally {
-        rmSync(revisionRoot, { recursive: true, force: true });
-    }
+    using revisionRootFolder = scratchFolder('gspot-revision-');
+    const revisionRoot = revisionRootFolder.path;
+    await gitOutput(
+        gitRoot,
+        ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
+        cancelSignal,
+    );
+    // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
+    if (source.kind === 'commit')
+        await gitOutput(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
+    await gitOutput(revisionRoot, ['read-tree', '--empty'], cancelSignal);
+    await gitOutput(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
+    const tree = await gitOutput(revisionRoot, ['write-tree'], cancelSignal);
+    const objects = await gitBlobs(
+        revisionRoot,
+        entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
+        cancelSignal,
+    );
+    await populateRevision(revisionRoot, entries, objects, cancelSignal);
+    copyProsePackages(
+        gitRoot,
+        revisionRoot,
+        entries.map((entry) => entry.path),
+    );
+    await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
+    await setImmediate();
+    cancelSignal?.throwIfAborted();
+    return await action(join(revisionRoot, directory), tree.trim());
 }

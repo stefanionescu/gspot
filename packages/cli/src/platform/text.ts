@@ -1,26 +1,9 @@
 // Text and object helpers every layer shares.
-import { codePoints } from '#cli/platform/code-points.ts';
+import { isUtf8 } from 'node:buffer';
+import { createHash } from 'node:crypto';
+import { distance } from 'fastest-levenshtein';
 import type { Defined } from '#cli/types/platform/platform.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, NEAR_DISTANCE_LIMIT } from '#cli/config/platform/platform.ts';
-
-function distance(a: string, b: string): number {
-    const right = codePoints(b);
-    let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
-    let result = right.length;
-    for (const [row, letter] of codePoints(a).entries()) {
-        const current: number[] = [];
-        let left = row + 1;
-        let diagonal = 0;
-        for (const [column, above] of previous.entries()) {
-            if (column > 0) left = Math.min(above + 1, left + 1, diagonal + Number(letter !== right[column - 1]));
-            current.push(left);
-            diagonal = above;
-        }
-        previous = current;
-        result = left;
-    }
-    return result;
-}
 
 /**
  * Up to three candidates within an edit distance that reads as a typo, closest first.
@@ -63,4 +46,48 @@ export function codeList(items: string[], limit = LIST_LIMIT): string {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers drop undefined entries so exact optional types hold, and this is the one way they do it.
 export function compact<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
+}
+
+/**
+ * Whether a parsed value is a plain object of named values: not null, not a list, and not a date.
+ * @param value the value
+ * @returns whether the value holds keys
+ */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
+}
+
+/**
+ * The value at a key path inside a parsed object.
+ * @param value the parsed object
+ * @param keys the keys, outermost first
+ * @returns the value, or undefined when any key along the path is absent
+ */
+export function valueAt(value: unknown, keys: readonly (string | number)[]): unknown {
+    let current = value;
+    for (const key of keys) {
+        if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) return undefined;
+        current = (current as Record<string, unknown>)[key];
+    }
+    return current;
+}
+
+/**
+ * The SHA-256 digest of text or bytes, in lowercase hex.
+ * @param content the text or bytes
+ * @returns the digest
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ownership records, profiles, build comparisons, and state folders name content by one digest.
+export function contentDigest(content: string | Uint8Array): string {
+    return createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Bytes as text, when they are UTF-8.
+ * @param bytes the bytes
+ * @returns the text, or undefined when the bytes are not UTF-8
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers of files, Git listings, and manifests refuse bytes that are not UTF-8 by this one test.
+export function decodedText(bytes: Uint8Array): string | undefined {
+    return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }

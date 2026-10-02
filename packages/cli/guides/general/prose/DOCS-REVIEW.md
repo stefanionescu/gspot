@@ -172,9 +172,5 @@ Documentation work is complete when:
 
 The final standard is practical: a reader can understand the project, decide
 whether it fits, complete the documented goal safely, and find deeper
-information without inspecting implementation source.
-
-Document templates for a README, an advanced guide, a task, a concept, a reference, a
-troubleshooting topic, an API endpoint, and release notes ship under `templates/docs/`. Start
-from the template, remove sections that do not apply, and never publish an empty heading,
+information without inspecting implementation source. Never publish an empty heading,
 placeholder prose, or a checklist as content.

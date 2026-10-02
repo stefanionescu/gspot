@@ -49,7 +49,7 @@ export function functionFolders(input: EngineInput): string[] {
         .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
         .map((path) => path.slice(0, path.lastIndexOf('/')))
         .filter((folder) => folder.split('/').length === base.split('/').length + 1)
-        .filter((folder) => !folder.slice(folder.lastIndexOf('/') + 1).startsWith(SHARED_PREFIX));
+        .filter((folder) => !posix.basename(folder).startsWith(SHARED_PREFIX));
     return [...new Set(folders)];
 }
 
@@ -63,7 +63,7 @@ export function projectValid(input: EngineInput): Finding[] {
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
     if (typeof config === 'string') return [findingAt(input, at, 'parse', config)];
-    const folders = new Set(functionFolders(input).map((folder) => folder.slice(folder.lastIndexOf('/') + 1)));
+    const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return missing.map((name) =>
         findingAt(

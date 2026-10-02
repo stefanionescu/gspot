@@ -1,19 +1,20 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { sep, dirname, relative } from 'node:path';
+import { dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
+import { NO_INPUTS, EMPTY_FILES, GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {
-    const local = relative(root, path).split(sep).join('/');
-    const files = openRoot(root, 'native');
+    const local = toPosix(relative(root, path));
+    using files = openRoot(root, 'native');
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf('node_modules');
-        if (dependency !== -1 && segments[0] !== '.gspot') {
+        if (dependency !== -1 && segments[0] !== GSPOT_FOLDER) {
             mutationPath(local);
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
@@ -22,8 +23,6 @@ function configurationText(root: string, path: string): string | undefined {
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
-    } finally {
-        files.close();
     }
 }
 

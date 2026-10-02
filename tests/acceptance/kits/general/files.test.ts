@@ -27,8 +27,6 @@ plantedCases(
     [
         {
             check: 'files/toml-format',
-            // The npm build of Taplo, which Windows gets, checks no file there.
-            platforms: ['linux', 'darwin'],
             files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
             expected: {
                 file: 'settings/layout.toml',
@@ -122,18 +120,13 @@ test(
 );
 
 test.each([
-    // The npm build of Taplo, which Windows gets, checks no file there.
-    ...(process.platform === 'win32'
-        ? []
-        : [
-              {
-                  check: 'files/toml',
-                  path: 'settings.toml',
-                  broken: 'a = 1\n[x\n',
-                  corrected: 'a = 1\n',
-                  expected: { file: 'settings.toml', line: 2 },
-              },
-          ]),
+    {
+        check: 'files/toml',
+        path: 'settings.toml',
+        broken: 'a = 1\n[x\n',
+        corrected: 'a = 1\n',
+        expected: { file: 'settings.toml', line: 2 },
+    },
     {
         check: 'files/yaml',
         path: 'config.yaml',

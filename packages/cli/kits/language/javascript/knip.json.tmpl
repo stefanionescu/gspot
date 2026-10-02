@@ -8,7 +8,7 @@ const workspaceEntries = (scope) => entryFiles(scope).flatMap((pattern) => {
 const ignored = (settings['tools.knip.ignore_dependencies'] ?? []).map((entry) => (typeof entry === 'string' ? { name: entry } : entry));
 const ignoredNames = (workspace) => ignored.filter((entry) => entry.workspace === workspace).map((entry) => entry.name);
 const named = ignored.flatMap((entry) => (entry.workspace === undefined ? [] : [entry.workspace]));
-const paths = [...new Set(['', ...scopes.map((scope) => scope.path), ...named])];
+const paths = [...new Set(['', ...packageWorkspaces(), ...named])];
 const workspaces = Object.fromEntries(paths.map((path) => [path === '' ? '.' : path, {
     entry: workspaceEntries(path),
     project: ['**/*.{ts,tsx,mts,cts,js,mjs,cjs}'],

@@ -1,5 +1,5 @@
 import { stringify } from 'smol-toml';
-import { asRaw } from '#cli/policy/normalize.ts';
+import { asRecord } from '#cli/policy/settings.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { InitPlan } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/policy/policy.ts';
@@ -27,9 +27,9 @@ function headTables(plan: InitPlan): TomlTable {
 
 // Repository keys override each tool setting without dropping profile siblings.
 function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
-    const tools = { ...asRaw(base) };
-    for (const [tool, settings] of Object.entries(asRaw(overrides) ?? {}))
-        tools[tool] = { ...asRaw(tools[tool]), ...asRaw(settings) };
+    const tools = { ...asRecord(base) };
+    for (const [tool, settings] of Object.entries(asRecord(overrides) ?? {}))
+        tools[tool] = { ...asRecord(tools[tool]), ...asRecord(settings) };
     return tools;
 }
 
@@ -43,18 +43,18 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
             continue;
         }
         const isBothTables =
-            Object.keys(asRaw(existing) ?? {}).length > 0 && Object.keys(asRaw(value) ?? {}).length > 0;
-        document[key] = isBothTables ? { ...asRaw(value), ...asRaw(existing) } : value;
+            Object.keys(asRecord(existing) ?? {}).length > 0 && Object.keys(asRecord(value) ?? {}).length > 0;
+        document[key] = isBothTables ? { ...asRecord(value), ...asRecord(existing) } : value;
     }
 }
 
 // Initialization selects enabled integrations.
 function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     if (plan.hooks === 'none') delete document['hooks'];
-    else document['hooks'] = { ...asRaw(document['hooks']) };
+    else document['hooks'] = { ...asRecord(document['hooks']) };
     if (plan.ci === 'none') delete document['ci'];
-    else document['ci'] = { ...asRaw(document['ci']), provider: plan.ci };
-    document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: plan.rules };
+    else document['ci'] = { ...asRecord(document['ci']), provider: plan.ci };
+    document['guides'] = { directory: '.gspot/guides', ...asRecord(document['guides']), install: plan.rules };
     if (plan.runner === 'none') delete document['runner'];
     else document['runner'] = { tool: plan.runner };
 }

@@ -11,6 +11,7 @@ import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
 import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
@@ -28,15 +29,10 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
     return match?.[1] ?? match?.[0];
 }
 
-function versionFailure(
-    result: SpawnResult,
-    tool: ToolPin,
-    text: string,
-    expectedExit: number,
-): VersionRead | undefined {
+function versionFailure(result: SpawnResult, tool: ToolPin, text: string): VersionRead | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
-    if (result.code !== expectedExit)
+    if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
     return undefined;
 }
@@ -64,18 +60,14 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
 
 // Read library versions from the private installation used by generated configurations.
 function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
-    const files = openRoot(root);
+    using files = openRoot(root);
     const hint = installHint(tool);
     const name = tool.installers['npm']?.name ?? tool.name;
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
-    try {
-        const file = files.read(path);
-        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
-        if (parsed?.version === undefined) return missingInspection(tool, hint);
-        return libraryInspection(root, tool, path, parsed.version, hint);
-    } finally {
-        files.close();
-    }
+    const file = files.read(path);
+    const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
+    if (parsed?.version === undefined) return missingInspection(tool, hint);
+    return libraryInspection(root, tool, path, parsed.version, hint);
 }
 
 // The inspection of a tool that is not installed anywhere gspot looks.
@@ -117,7 +109,7 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
 function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
     const { root } = context;
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
-    const roots = isExternal ? [cwd, root] : [join(root, '.gspot'), cwd, root];
+    const roots = isExternal ? [cwd, root] : [join(root, GSPOT_FOLDER), cwd, root];
     const kind = privateToolInstallation(tool, runner)?.kind;
     const [path] = locateCandidates(root, roots, tool.name, kind, context.installedRoot);
     const hint = installHint(tool);
@@ -138,13 +130,6 @@ function isInstallationPending(
     return installation !== undefined && pending?.includes(installation.kind) === true;
 }
 
-// The exit code the version command is expected to end with: the package's own when the package is installed.
-function expectedExitCode(tool: ToolPin, installedPackage: string | undefined): number {
-    const npm = tool.installers['npm'];
-    const fromPackage = installedPackage === undefined ? undefined : npm?.version_exit_code;
-    return fromPackage ?? tool.version_exit_code ?? 0;
-}
-
 /**
  * Interpret an executable version response for both installation and later inspections.
  * @param tool the pin.
@@ -161,7 +146,7 @@ export function readVersion(
 ): VersionRead {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const failure = versionFailure(result, tool, text, expectedExitCode(tool, installedPackage));
+    const failure = versionFailure(result, tool, text);
     if (failure !== undefined) return failure;
     const version =
         (npm?.version === tool.version ? installedPackage : undefined) ??
@@ -201,7 +186,7 @@ export function locateTool(root: string, name: string, pending?: string[]): stri
     if (isInstallationPending({ root, installations: () => pending }, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
-    const roots = isExternal ? [root] : [join(root, '.gspot'), root];
+    const roots = isExternal ? [root] : [join(root, GSPOT_FOLDER), root];
     return locateCandidates(root, roots, name, privateToolInstallation(tool, runner)?.kind)[0];
 }
 

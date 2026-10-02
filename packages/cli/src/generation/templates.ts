@@ -3,7 +3,9 @@ import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
+import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { policyValue, harnessFolders } from '#cli/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
@@ -33,7 +35,7 @@ function prefixed(path: string, pattern: string): string {
     return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
 }
 
-// The entry files of a scope: what its policy declares, then what its selected kits know.
+// The entry files of a folder: what the policy declares for it, then what the kits of the deepest scope around it know.
 function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): string[] {
     const layers = [
         { path: '', table: policy },
@@ -45,7 +47,10 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
         const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
         return entries.map((pattern) => prefixed(path, pattern));
     });
-    const selected = scopes.find((entry) => entry.scope.path === scope)?.selected ?? [];
+    const owner = scopes
+        .filter((entry) => isInScope(scope, entry.scope.path))
+        .toSorted((left, right) => right.scope.path.length - left.scope.path.length)[0];
+    const selected = owner?.selected ?? [];
     const declared = selected.flatMap((manifest) => manifest.entry_files).map((pattern) => prefixed(scope, pattern));
     return [...new Set([...authored, ...declared])];
 }
@@ -197,6 +202,7 @@ export function templateInputs(
         yaml: stringifyYaml,
         tomlDate: TomlDate,
         importAliases: (scope) => aliasesFor(root, scope),
+        packageWorkspaces: () => packageWorkspaces(root),
         files,
         header: headerFor('x.toml', version),
         headerLines: headerLines(version),

@@ -1,14 +1,16 @@
 // Owns reads from the process environment and normalizes variables for tool execution.
 
-import { homedir } from 'node:os';
-import { join, isAbsolute } from 'node:path';
+import { isCI } from 'std-env';
+import envPaths from 'env-paths';
+import { isAbsolute } from 'node:path';
+
 /**
- * True under a CI runner, which sets CI.
- * @returns whether CI is set
+ * True when a person can answer a prompt: both standard streams are terminals and no CI runner is detected.
+ * @returns whether to prompt
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Prompts and colors decide that they run under CI by the same variable.
-export function isCi(): boolean {
-    return (process.env['CI'] ?? '') !== '';
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The three prompts ask this one question before they open.
+export function isInteractive(): boolean {
+    return process.stdin.isTTY && process.stdout.isTTY && !isCI;
 }
 
 /**
@@ -34,16 +36,12 @@ export function environmentVariables(): Record<string, string> {
 }
 
 /**
- * The platform cache directory; relative environment overrides are invalid.
+ * The gspot cache directory of the platform. A relative XDG_CACHE_HOME or LOCALAPPDATA is refused.
  * @returns the absolute cache directory
  */
-export function cacheHome(): string {
-    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
-    const name = process.platform === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';
-    const override = process.env[name];
-    if (override !== undefined && override !== '') {
-        if (!isAbsolute(override)) throw new Error(`${name} must name an absolute directory.`);
-        return override;
-    }
-    return process.platform === 'win32' ? join(homedir(), 'AppData', 'Local') : join(homedir(), '.cache');
+export function cacheDirectory(): string {
+    const { cache } = envPaths('gspot', { suffix: '' });
+    if (!isAbsolute(cache))
+        throw new Error('The cache directory must be absolute; set XDG_CACHE_HOME or LOCALAPPDATA to one.');
+    return cache;
 }

@@ -20,13 +20,9 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
 function existingCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
-    const files = openRoot(root);
-    try {
-        if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
-        if (files.stat('.github/workflows')?.isDirectory() === true) return 'github';
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
+    if (files.stat('.github/workflows')?.isDirectory() === true) return 'github';
     return undefined;
 }
 

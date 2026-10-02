@@ -1,12 +1,12 @@
 // A private tool installation as one unit: written beside its folder, swapped in by a rename, and recorded by kind
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
 import { INSTALLATION_FOLDERS } from '#cli/config/lifecycle/ownership.ts';
 import type { InstalledOutput, InstallationKind } from '#cli/types/tools/tools.ts';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Install, recovery, and removal must name the side folders of a kind the same way.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing a tree and recovering an interrupted install name the side folders of a kind the same way.
 function sideFolders(kind: InstallationKind): { folder: string; staging: string; previous: string } {
     const folder = INSTALLATION_FOLDERS[kind];
     return { folder, staging: `${folder}.next`, previous: `${folder}.previous` };

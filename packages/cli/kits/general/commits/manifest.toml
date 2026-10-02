@@ -98,5 +98,4 @@ direction = "per-rule"
 summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
 
 [guides]
-general = [{path = "general/agent/GIT.md"}]
 tool = [{path = "tool/commitlint/COMMITLINT.md"}]

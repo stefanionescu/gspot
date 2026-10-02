@@ -1,19 +1,10 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
+import { valueAt } from '#cli/platform/text.ts';
 import type { Finding } from '#cli/types/execution/execution.ts';
 import type { OutputFormat } from '#cli/types/execution/tool.ts';
 
-function at(value: unknown, path: string | undefined): unknown {
-    if (path === undefined || path === '') return value;
-    let current = value;
-    for (const key of path.split('.')) {
-        if (current === null || typeof current !== 'object') return undefined;
-        current = (current as Record<string, unknown>)[key];
-    }
-    return current;
-}
-
 function listAt(value: unknown, path: string | undefined): unknown[] {
-    const found = at(value, path);
+    const found = path === undefined || path === '' ? value : valueAt(value, path.split('.'));
     if (!Array.isArray(found)) throw new Error(`Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
     return found;
 }
@@ -45,7 +36,7 @@ function jsonFinding(shape: { check: string; help: string; output: OutputFormat 
                 (path) =>
                     sources
                         .map((source) => {
-                            const value = at(source, path);
+                            const value = valueAt(source, path.split('.'));
                             return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
                         })
                         .find((value) => value !== undefined) ?? '',

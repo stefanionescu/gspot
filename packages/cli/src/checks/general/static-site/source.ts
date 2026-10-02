@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
@@ -58,7 +58,7 @@ export function deadAssets(input: EngineInput): Finding[] {
     return files
         .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIX.test(file.path))
         .filter((file) => {
-            const name = file.path.slice(file.path.lastIndexOf('/') + 1);
+            const name = posix.basename(file.path);
             return texts.every((text) => !text.includes(name));
         })
         .map((file) =>

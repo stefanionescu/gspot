@@ -1,6 +1,5 @@
-import { compact } from '#cli/platform/text.ts';
-import type { Defined } from '#cli/types/platform/platform.ts';
-import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/config/policy/policy.ts';
+import { compact, isRecord } from '#cli/platform/text.ts';
+import { CATEGORY_KEYS, NAMING_LIST_KEYS, STRUCTURE_DEFAULTS } from '#cli/config/policy/policy.ts';
 
 import type {
     Limits,
@@ -15,12 +14,8 @@ import type {
     NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
-function isTable(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function isReasonedForm(value: unknown): value is { value: unknown; reason: string } {
-    return isTable(value) && 'value' in value && 'reason' in value;
+    return isRecord(value) && 'value' in value && 'reason' in value;
 }
 
 function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
@@ -34,7 +29,7 @@ function normalizeCategory(raw: Record<string, unknown>): NamingCategoryTable {
 function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable {
     const language: NamingLanguageTable = { ...normalizeCategory(table), categories: {} };
     for (const [inner, entry] of Object.entries(table))
-        if (!CATEGORY_KEYS.has(inner) && isTable(entry)) language.categories[inner] = normalizeCategory(entry);
+        if (!CATEGORY_KEYS.has(inner) && isRecord(entry)) language.categories[inner] = normalizeCategory(entry);
     return language;
 }
 
@@ -43,7 +38,7 @@ function normalizeScopeTables(raw: RawScope): Partial<Policy> {
     if (raw.limits) table.limits = normalizeLimits(raw.limits);
     if (raw.naming) table.naming = normalizeNaming(raw.naming);
     if (raw.architecture) table.architecture = normalizeArchitecture(raw.architecture);
-    if (raw.structure) table.structure = normalizeStructure(raw.structure);
+    if (raw.structure) table.structure = defaulted<Policy['structure']>(raw.structure, STRUCTURE_DEFAULTS);
     if (raw.tools) table.tools = raw.tools as Policy['tools'];
     if (raw.format) table.format = compact(raw.format);
     return table;
@@ -59,16 +54,6 @@ function trimTrailingSlashes(path: string): string {
     let end = path.length;
     while (end > 0 && path[end - 1] === '/') end -= 1;
     return path.slice(0, end);
-}
-
-/**
- * Compacts every object of a list; a missing list is empty.
- * @param entries the entries as written
- * @returns the compacted objects
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Rules, edges, and ignores compact each entry of a list that may be missing.
-function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
-    return (entries ?? []).map((entry) => compact(entry));
 }
 
 /**
@@ -90,7 +75,7 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
-        if (!isTable(value) || 'value' in value) {
+        if (!isRecord(value) || 'value' in value) {
             limits.root[key] = toReasoned(value as number | { value: number; reason: string });
             continue;
         }
@@ -125,11 +110,11 @@ function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
         remove_groups: lists.remove_groups,
         contract_properties: lists.contract_properties,
         languages: {},
-        rules: compactAll(raw?.rules),
+        rules: (raw?.rules ?? []).map((entry) => compact(entry)),
     };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries)
-        if (!NAMING_LIST_KEYS.has(key) && isTable(value)) naming.languages[key] = normalizeLanguage(value);
+        if (!NAMING_LIST_KEYS.has(key) && isRecord(value)) naming.languages[key] = normalizeLanguage(value);
     return naming;
 }
 
@@ -138,27 +123,12 @@ function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @param raw the table as written, if any
  * @returns the architecture configuration
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the architecture table the same way.
+
 function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
     const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [] });
-    return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
+    return compact({ ...filled, edges_allowed: filled.edges_allowed.map((entry) => compact(entry)) });
 }
 
-/**
- * Fills the structure table's defaults.
- * @param raw the table as written, if any
- * @returns the structure configuration
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the structure table the same way.
-function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
-    return defaulted<Policy['structure']>(raw, {
-        reexports: 'none',
-        single_file_folder_allowed: [],
-        prefix_collision_allowed: [],
-        folder_name_allowed: [],
-        python: {},
-    });
-}
 /**
  * The whole document in Policy shape.
  * @param raw the validated document
@@ -181,11 +151,11 @@ export function normalize(raw: RawPolicy): Policy {
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
         architecture: normalizeArchitecture(raw.architecture),
-        structure: normalizeStructure(raw.structure),
-        format: compact(raw.format ?? {}),
+        structure: defaulted<Policy['structure']>(raw.structure, STRUCTURE_DEFAULTS),
+        format: compact({ ...raw.format }),
         prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [] }),
-        tools: (raw.tools ?? {}) as Policy['tools'],
-        ignores: compactAll(raw.ignore),
+        tools: { ...raw.tools } as Policy['tools'],
+        ignores: (raw.ignore ?? []).map((entry) => compact(entry)),
         declarations: [
             ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),
             ...raw.vendored.map((entry) => ({ ...entry, kind: 'vendored' as const })),
@@ -197,14 +167,4 @@ export function normalize(raw: RawPolicy): Policy {
         ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
         scopeTables,
     };
-}
-
-/**
- * A parsed value as a table.
- * @param value the parsed value
- * @returns the table, or undefined when the value is not one
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init proposal reads twelve TOML values as tables; one owner keeps the table test in one place.
-export function asRaw(value: unknown): Record<string, unknown> | undefined {
-    return isTable(value) ? value : undefined;
 }

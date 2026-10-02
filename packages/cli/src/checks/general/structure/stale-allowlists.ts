@@ -1,10 +1,11 @@
 import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { pathTokens, proseLines } from '#cli/parsers/references.ts';
 import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import type { PathPattern } from '#cli/types/checks/general/structure.ts';
 import type { LicenseException } from '#cli/types/checks/general/general.ts';
@@ -84,7 +85,7 @@ function licenseFindings(input: EngineInput): Finding[] {
         const exceptions = (table.tools?.['licenses']?.['packages_allowed'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
-            if (path.split('/').includes('.gspot')) return false;
+            if (path.split('/').includes(GSPOT_FOLDER)) return false;
             if (
                 ![
                     'package-lock.json',
@@ -98,7 +99,7 @@ function licenseFindings(input: EngineInput): Finding[] {
             )
                 return false;
             const folder = dirname(path) === '.' ? '' : dirname(path);
-            return scope === '' || path.startsWith(`${scope}/`) || folder === '' || scope.startsWith(`${folder}/`);
+            return isInScope(path, scope) || isInScope(scope, folder);
         });
         if (paths.length === 0)
             throw new Error('License exceptions require a dependency lockfile in their project or workspace.');

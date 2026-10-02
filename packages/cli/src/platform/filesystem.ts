@@ -1,10 +1,13 @@
 // A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
-import { sep, relative, isAbsolute } from 'node:path';
+import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
+import { isInside } from '#cli/platform/paths.ts';
+import { decodedText } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
-import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform/platform.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
+import type { Read, Root, Bounds, PathFormat, ScratchFolder } from '#cli/types/platform/platform.ts';
 
 import {
     rmSync,
@@ -15,6 +18,7 @@ import {
     renameSync,
     type Stats,
     unlinkSync,
+    mkdtempSync,
     readdirSync,
     realpathSync,
 } from 'node:fs';
@@ -23,8 +27,7 @@ import {
 function sourceOf(bounds: Bounds, path: string): string {
     const target = realpathSync(parentPath(bounds, path));
     const local = relative(bounds.canonical, target);
-    if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
-        throw new Error(`Source link leaves the repository: ${path}`);
+    if (!isInside(local)) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
 
@@ -93,11 +96,17 @@ function releaseLocks(bounds: Bounds): void {
     bounds.locks.clear();
 }
 
+// The paths of the entries in one folder of a root.
+function childPaths(files: Root, directory: string): string[] {
+    if (directory === '') return files.list();
+    return files.list(directory).map((name) => `${directory}/${name}`);
+}
+
 /**
  * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
  * @param root the directory every path is files to
  * @param pathFormat whether paths use forward slashes or the platform's own spelling
- * @returns the files reader and writer, which the caller closes
+ * @returns the files reader and writer, which the caller disposes, as `using` does
  */
 export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Root {
     const bounds = boundsOf(realpathSync(root), pathFormat);
@@ -134,5 +143,52 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         close: () => {
             releaseLocks(bounds);
         },
+        [Symbol.dispose]: () => {
+            releaseLocks(bounds);
+        },
     };
+}
+
+/**
+ * Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
+ * Its path is the native real path, which on Windows expands short folder names, as the paths tools report do.
+ * @param prefix the start of the folder name
+ * @returns the folder, which the caller disposes, as `using` does
+ */
+export function scratchFolder(prefix: string): ScratchFolder {
+    const path = realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
+    return {
+        path,
+        [Symbol.dispose]: () => {
+            rmSync(path, { recursive: true, force: true });
+        },
+    };
+}
+
+/**
+ * Reads one file under a directory as UTF-8 text.
+ * @param root the directory the path is relative to
+ * @param path the file, with forward slashes
+ * @returns the text, or undefined when the file does not exist
+ * @throws when the file is not UTF-8 text
+ */
+export function readText(root: string, path: string): string | undefined {
+    using files = openRoot(root);
+    const read = files.read(path);
+    if (read === undefined) return undefined;
+    const text = decodedText(read.bytes);
+    if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
+    return text;
+}
+
+/**
+ * Visits every entry under a folder of a root, and enters each one the visitor says is a folder to walk.
+ * @param files the root
+ * @param start the folder, with forward slashes, or '' for the root itself
+ * @param visit called with the path of each entry; returns whether to walk into it
+ */
+export function walkRoot(files: Root, start: string, visit: (path: string) => boolean): void {
+    const pending = [start];
+    for (let directory = pending.pop(); directory !== undefined; directory = pending.pop())
+        pending.push(...childPaths(files, directory).filter((path) => visit(path)));
 }

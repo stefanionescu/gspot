@@ -3,7 +3,9 @@ import { join, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
@@ -51,31 +53,27 @@ function sourcesWritten(line: string, folder: string, files: Root): string {
 
 async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
-    const files = openBuildCache(plan.folder);
-    try {
-        if (plan.scratch !== undefined) {
-            files.stat(toPosix(relative(plan.folder, plan.scratch)));
-            rmSync(plan.scratch, { recursive: true, force: true });
-        }
-        const source = prepareBuildSources(
-            input.root,
-            input.files.map((file) => file.path),
-            plan.folder,
-            files,
-        );
-        const cwd = join(source, input.scope);
-        const result = await runCheckCommand(input, plan.argv, { cwd });
-        // Match SwiftLint paths and expose response-file sources in the compiler log.
-        const output = `${result.stdout}\n${result.stderr}`
-            .split('\n')
-            .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
-            .join('\n');
-        const log = toPosix(relative(plan.folder, plan.log));
-        files.write(log, { bytes: Buffer.from(output), mode: 0o600 }, files.read(log));
-        return { output, code: result.code };
-    } finally {
-        files.close();
+    using files = openBuildCache(plan.folder);
+    if (plan.scratch !== undefined) {
+        files.stat(toPosix(relative(plan.folder, plan.scratch)));
+        rmSync(plan.scratch, { recursive: true, force: true });
     }
+    const source = prepareBuildSources(
+        input.root,
+        input.files.map((file) => file.path),
+        plan.folder,
+        files,
+    );
+    const cwd = join(source, input.scope);
+    const result = await runCheckCommand(input, plan.argv, { cwd });
+    // Match SwiftLint paths and expose response-file sources in the compiler log.
+    const output = `${result.stdout}\n${result.stderr}`
+        .split('\n')
+        .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
+        .join('\n');
+    const log = toPosix(relative(plan.folder, plan.log));
+    files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
+    return { output, code: result.code };
 }
 
 // Share the compiler log within a command; a later command must read the current source.
@@ -113,7 +111,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const config = join(input.root, '.gspot', 'config', input.scope, 'swiftlint.yml');
+    const config = join(input.root, GSPOT_FOLDER, 'config', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const source = join(plan.folder, 'source');
     const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
@@ -131,7 +129,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
  */
 export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'periphery');
-    const config = join(input.root, '.gspot', 'config', input.scope, 'periphery.yml');
+    const config = join(input.root, GSPOT_FOLDER, 'config', input.scope, 'periphery.yml');
     const argv = [
         'periphery',
         'scan',
@@ -143,21 +141,17 @@ export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
         'xcode',
         '--disable-update-check',
     ];
-    const files = openBuildCache(plan.folder);
-    try {
-        const source = prepareBuildSources(
-            input.root,
-            input.files.map((file) => file.path),
-            plan.folder,
-            files,
-        );
-        const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
-        const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
-        const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
-        if (found.length === 0 && result.code !== 0)
-            throw new Error(`Periphery failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-        return found;
-    } finally {
-        files.close();
-    }
+    using files = openBuildCache(plan.folder);
+    const source = prepareBuildSources(
+        input.root,
+        input.files.map((file) => file.path),
+        plan.folder,
+        files,
+    );
+    const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
+    const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
+    const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
+    if (found.length === 0 && result.code !== 0)
+        throw new Error(`Periphery failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+    return found;
 }

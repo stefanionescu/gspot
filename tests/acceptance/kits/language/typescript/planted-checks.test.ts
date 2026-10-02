@@ -1,10 +1,16 @@
 // Source CLI journeys: every check of the typescript configuration reports its planted defect and accepts the correction.
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { appendFileSync } from 'node:fs';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/samples/typescript.ts';
 import { runPlanted, plantedCases } from '#tests/harness/planted/cases.ts';
+
+// The entry may import the orders, and the orders only each other.
+const ARCHITECTURE =
+    '[[architecture.elements]]\nname = "entry"\npaths = ["src/main.ts"]\n[[architecture.elements]]\nname = "orders"\npaths = ["src/orders/**"]\n[[architecture.edges_allowed]]\nfrom = "entry"\nto = ["entry", "orders"]\n[[architecture.edges_allowed]]\nfrom = "orders"\nto = ["orders"]\n';
 
 const PLANTED_CHECKS_MAIN = `// The receipt of one order.
 import { orderTotal } from './orders/total.js';
@@ -67,6 +73,14 @@ const CASES: FindingCase[] = [
                 '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
         },
         expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
+    },
+    {
+        check: 'typescript/eslint',
+        files: {
+            'src/orders/back.ts':
+                "// An order module that reaches back into the entry.\nimport { receipt } from '../main.js';\n\n/** The receipt again. */\nexport const again = receipt;\n",
+        },
+        expected: { file: 'src/orders/back.ts', rule: 'boundaries/dependencies', line: 2 },
     },
     {
         check: 'javascript/knip',
@@ -134,6 +148,11 @@ plantedCases(
             'src/orders/total.ts': TOTAL,
             'src/orders/receipt.ts': RECEIPT,
             'src/main.ts': PLANTED_CHECKS_MAIN,
+        },
+        prepare: async (root, environment) => {
+            appendFileSync(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
+            const applied = await spawnGspot(root, ['apply'], environment);
+            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         },
     },
     CASES,

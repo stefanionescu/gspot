@@ -9,14 +9,21 @@ const miseInstallerSchema = z.union([
     z.string(),
     installerDefinition.extend({ options: z.record(z.string(), z.union([z.string(), z.boolean()])).optional() }),
 ]);
-const npmInstallerSchema = z.union([
+// A floor a gspot maintainer raises on a package a Python tool pulls in, such as one above an advisory. Each is a
+// name, one comparison, and a version, as uv takes it.
+const pypiInstallerSchema = z.union([
     z.string(),
-    installerDefinition.extend({ version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional() }),
+    installerDefinition.extend({
+        constraints: z
+            .array(z.string().regex(/^[a-z0-9._-]+(?:[<>!~=]=|[<>])[a-z0-9.*+!_-]+$/iu))
+            .min(1)
+            .optional(),
+    }),
 ]);
 
 const installerFields = {
-    npm: npmInstallerSchema.optional(),
-    pypi: installerSchema.optional(),
+    npm: installerSchema.optional(),
+    pypi: pypiInstallerSchema.optional(),
     mise: miseInstallerSchema.optional(),
     brew: installerSchema.optional(),
     apt: installerSchema.optional(),

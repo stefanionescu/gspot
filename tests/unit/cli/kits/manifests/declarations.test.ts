@@ -9,20 +9,8 @@ test('a template pointer rejects a conflicting emission mode', () => {
     expect(() => parseManifest(source, 'configurations/example')).not.toThrow();
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same manifest with a different selector.
-const selectorDefinition = (selection: string) => `
-[kit]
-name = "example"
-kind = "language"
-title = "Example"
-description = "Configuration replacement for the example language."
-[[tools]]
-name = "example"
-version = "1.0.0"
-[[tools.replace]]
-file = "package.json"
-${selection}
-`;
+const SELECTOR_MANIFEST =
+    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "Configuration replacement for the example language."\n[[tools]]\nname = "example"\nversion = "1.0.0"\n[[tools.replace]]\nfile = "package.json"\n';
 
 test('shared replace selectors cannot authorize retiring the containing file', () => {
     for (const selection of [
@@ -30,37 +18,30 @@ test('shared replace selectors cannot authorize retiring the containing file', (
         'table = "tool.ruff"',
         'key = "eslintConfig"\ntable = "tool.ruff"\nshared = true',
     ])
-        expect(() => parseManifest(selectorDefinition(selection), 'configurations/example')).toThrow();
+        expect(() => parseManifest(SELECTOR_MANIFEST + selection, 'configurations/example')).toThrow();
     expect(() =>
-        parseManifest(selectorDefinition('key = "eslintConfig"\nshared = true'), 'configurations/example'),
+        parseManifest(`${SELECTOR_MANIFEST}key = "eslintConfig"\nshared = true\n`, 'configurations/example'),
     ).not.toThrow();
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same security manifest with a different pin.
-const pinnedSecurity = (pin: string) => `
-[kit]
-name = "security"
-kind = "general"
-title = "Security"
-description = "Pinned query packs used by security analysis."
-[[tools]]
-name = "codeql"
-version = "2.24.3"
-query_packs = {python = "${pin}"}
-`;
+const SECURITY_MANIFEST =
+    '[kit]\nname = "security"\nkind = "general"\ntitle = "Security"\ndescription = "Pinned query packs used by security analysis."\n[[tools]]\nname = "codeql"\nversion = "2.24.3"\n';
 
 test('query-pack metadata refuses a version range and accepts an exact release', () => {
-    expect(() => parseManifest(pinnedSecurity('^1.2.3'), 'kits/general/security')).toThrow();
-    expect(() => parseManifest(pinnedSecurity('1.7.8'), 'kits/general/security')).not.toThrow();
+    expect(() =>
+        parseManifest(`${SECURITY_MANIFEST}query_packs = {python = "^1.2.3"}\n`, 'kits/general/security'),
+    ).toThrow();
+    expect(() =>
+        parseManifest(`${SECURITY_MANIFEST}query_packs = {python = "1.7.8"}\n`, 'kits/general/security'),
+    ).not.toThrow();
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases parse the same manifest with a different rule page and crash pattern.
-const toolPageDefinition = (page: string, crash: string) =>
-    `[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
+const TOOL_MANIFEST =
+    '[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\n';
 
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseManifest(
-        toolPageDefinition('https://example.test/rules/{rule}', '^Fatal:'),
+        `${TOOL_MANIFEST}rule_page = "https://example.test/rules/{rule}"\ncrash_pattern = '^Fatal:'\n`,
         'configurations/example',
     );
     expect(manifest.tools[0]).toMatchObject({
@@ -68,39 +49,36 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
         crash_pattern: '^Fatal:',
     });
     expect(() =>
-        parseManifest(toolPageDefinition('https://example.test/rules', '^Fatal:'), 'configurations/example'),
+        parseManifest(
+            `${TOOL_MANIFEST}rule_page = "https://example.test/rules"\ncrash_pattern = '^Fatal:'\n`,
+            'configurations/example',
+        ),
     ).toThrow('{rule}');
     expect(() =>
-        parseManifest(toolPageDefinition('https://example.test/rules/{rule}', '(Fatal'), 'configurations/example'),
+        parseManifest(
+            `${TOOL_MANIFEST}rule_page = "https://example.test/rules/{rule}"\ncrash_pattern = '(Fatal'\n`,
+            'configurations/example',
+        ),
     ).toThrow('regular expression');
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases parse the same manifest with a different suppression marker.
-const suppressionDefinition = (inline: string) => `
-[kit]
-name = "example"
-kind = "language"
-title = "Example"
-description = "A configuration for directive placement."
-[[tools]]
-name = "example"
-[tools.suppression]
-marker = "# file-disable"
-reason = "reason: (?<reason>.+)"
-${inline}
-`;
+const SUPPRESSION_MANIFEST =
+    '[kit]\nname = "example"\nkind = "language"\ntitle = "Example"\ndescription = "A configuration for directive placement."\n[[tools]]\nname = "example"\n[tools.suppression]\nmarker = "# file-disable"\nreason = "reason: (?<reason>.+)"\n';
 
 test('tool suppression metadata validates an inline pattern without requiring it', () => {
-    expect(() => parseManifest(suppressionDefinition('inline_marker = "("'), 'configurations/example')).toThrow(
+    expect(() => parseManifest(`${SUPPRESSION_MANIFEST}inline_marker = "("\n`, 'configurations/example')).toThrow(
         'regular expression',
     );
-    const manifest = parseManifest(suppressionDefinition('inline_marker = "# line-disable"'), 'configurations/example');
+    const manifest = parseManifest(
+        `${SUPPRESSION_MANIFEST}inline_marker = "# line-disable"\n`,
+        'configurations/example',
+    );
     expect(manifest.tools[0]?.suppression).toStrictEqual({
         marker: '# file-disable',
         inline_marker: '# line-disable',
         reason: 'reason: (?<reason>.+)',
     });
-    expect(parseManifest(suppressionDefinition(''), 'configurations/example').tools[0]?.suppression).toStrictEqual({
+    expect(parseManifest(SUPPRESSION_MANIFEST, 'configurations/example').tools[0]?.suppression).toStrictEqual({
         marker: '# file-disable',
         reason: 'reason: (?<reason>.+)',
     });

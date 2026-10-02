@@ -52,14 +52,6 @@ naming.banned_terms = [
 ]
 
 [[scope]]
-path = "packages/cli"
-kits = []
-
-[[scope]]
-path = "packages/eslint-plugin"
-kits = []
-
-[[scope]]
 path = "docs"
 kits = ["typescript", "css", "astro"]
 
@@ -147,10 +139,6 @@ word = "udid"
 reason = "Apple's device identifier API name."
 
 [[tools.typos.words]]
-word = "certifi"
-reason = "The Python certificate package name."
-
-[[tools.typos.words]]
 word = "axe"
 reason = "The axe-core accessibility package name."
 
@@ -213,6 +201,11 @@ reason = "The pre-push JSON report names Git object identities with this key."
 file = "packages/cli/src/types/commands/check.ts"
 names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/commands/commands.ts"
+names = ["C"]
+reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/checks/general/secrets.ts"
@@ -399,6 +392,11 @@ paths = [
     "packages/cli/src/types/platform/**",
 ]
 
+# The ESLint plugin is one more element, which neither imports the CLI nor is imported by it.
+[[architecture.elements]]
+name = "plugin"
+paths = ["packages/eslint-plugin/src/**"]
+
 [[architecture.edges_allowed]]
 from = "main"
 to = ["main", "commands", "platform"]
@@ -481,6 +479,10 @@ to = ["parsers", "platform"]
 from = "platform"
 to = ["platform"]
 
+[[architecture.edges_allowed]]
+from = "plugin"
+to = ["plugin"]
+
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
 harness = "tests/harness"
@@ -499,70 +501,8 @@ script_files = [
 ]
 node_version = ">=24.2.0"
 
-[[tools.osv.ignore]]
-id = "GHSA-w6j9-cwv2-h6wq"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never parses a JSON Web Key Set."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-2gx3-rcp4-g85q"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-8wjv-2p76-3863"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-9j54-fg26-wv3r"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-9v7f-9g4p-ffgj"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-ffc3-869f-jxw9"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-42vr-xj54-vc7v"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.15.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-jwrc-g2q2-pq5p"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reads a PEM key."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-hxm8-2xgr-2p9m"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-p4g4-x82p-q773"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-r6x4-923q-g947"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-w2cx-738m-mc7w"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
-review_by = "2026-10-13"
-
-[[tools.osv.ignore]]
-id = "GHSA-gvp8-978c-rx2q"
-reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reuses decode options across JSON Web Tokens."
-review_by = "2026-10-15"
+[tools.commitlint]
+scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 
 [tools.knip]
 entry = [
@@ -665,7 +605,6 @@ reason = "A build dependency of the manual site; the license binds changes to it
 package = "truncate-utf8-bytes@1.0.2"
 license = "WTFPL"
 reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."
-[tools.osv]
 
 [[ignore]]
 check = "security/semgrep"

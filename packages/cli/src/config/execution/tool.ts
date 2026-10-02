@@ -37,6 +37,3 @@ export const LEADING_DOT_SLASH = /^\.\//u;
 export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 export const DEFAULT_OUTPUT_FORMAT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
 export const LINE_FEED = 10;
-
-/** The permission bits of a mode, without the file type. */
-export const PERMISSION_BITS = 0o777;

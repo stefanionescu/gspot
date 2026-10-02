@@ -1,9 +1,10 @@
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { InstalledOutput } from '#cli/types/tools/tools.ts';
-import { sep, join, posix, dirname, basename, relative } from 'node:path';
+import { join, posix, dirname, basename, relative } from 'node:path';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
 
 import {
@@ -54,13 +55,9 @@ function installedFile(directory: string, local: string, target: string, source:
 export function installedOutputs(directory: string, kind: 'npm' | 'python'): InstalledOutput[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
     const outputs: InstalledOutput[] = [];
-    const parent = openRoot(dirname(directory), 'native');
-    try {
-        if (parent.stat(basename(directory))?.isDirectory() !== true)
-            throw new Error(`Installed output is not a directory: ${directory}`);
-    } finally {
-        parent.close();
-    }
+    using parent = openRoot(dirname(directory), 'native');
+    if (parent.stat(basename(directory))?.isDirectory() !== true)
+        throw new Error(`Installed output is not a directory: ${directory}`);
     const root = realpathSync(directory);
     const files = openRoot(root, 'native');
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
@@ -75,7 +72,7 @@ export function installedOutputs(directory: string, kind: 'npm' | 'python'): Ins
             const source = files.source(local);
             if (lstatSync(source).isDirectory()) {
                 if (name === cacheDirectory) continue;
-                collect(relative(root, source).split(sep).join('/'), target, [...ancestors, canonical]);
+                collect(toPosix(relative(root, source)), target, [...ancestors, canonical]);
             } else outputs.push({ path, file: installedFile(directory, local, target, source) });
         }
     };

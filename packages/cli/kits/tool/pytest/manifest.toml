@@ -40,9 +40,6 @@ default = 0
 default_all = 80
 summary = "The smallest share of lines the tests cover, out of 100."
 
-[guides]
-general = [{path = "general/code/TESTING.md"}]
-
 [defaults]
 "tools.ruff.select" = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
 "tools.ruff.test_files" = ["**/tests/**", "**/test_*.py", "**/*_test.py", "**/conftest.py"]

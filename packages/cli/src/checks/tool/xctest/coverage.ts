@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
-import { PERCENT } from '#cli/config/checks/tool/xctest.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
@@ -66,7 +66,7 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
             (entry) => entry.name === floor.target || entry.name === `${floor.target}.app`,
         );
         if (target === undefined) return [`The coverage report holds no target named ${floor.target}.`];
-        const covered = Math.floor(target.lineCoverage * PERCENT);
+        const covered = Math.floor(target.lineCoverage * FULL_PERCENTAGE);
         return covered >= floor.percent
             ? []
             : [`${floor.target} covers ${String(covered)} of 100 lines, under the floor of ${String(floor.percent)}.`];
@@ -85,20 +85,16 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
     const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
     const plan = swiftBuildPlan(input, 'coverage');
     const bundle = join(plan.folder, 'coverage.xcresult');
-    const files = openBuildCache(plan.folder);
-    try {
-        const source = prepareBuildSources(
-            input.root,
-            input.files.map((file) => file.path),
-            plan.folder,
-            files,
-        );
-        const cwd = join(source, input.scope);
-        removePreviousBundle(files);
-        const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
-        const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
-        return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
-    } finally {
-        files.close();
-    }
+    using files = openBuildCache(plan.folder);
+    const source = prepareBuildSources(
+        input.root,
+        input.files.map((file) => file.path),
+        plan.folder,
+        files,
+    );
+    const cwd = join(source, input.scope);
+    removePreviousBundle(files);
+    const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
+    const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
+    return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
 }

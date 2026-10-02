@@ -1,4 +1,4 @@
-import { join, dirname } from 'node:path';
+import { join, posix, dirname } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { SHOWN_LINES } from '#cli/config/checks/checks.ts';
@@ -10,7 +10,7 @@ import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/gene
 
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
 function frozenCommand(input: EngineInput, path: string): string[] | undefined {
-    const filename = path.slice(path.lastIndexOf('/') + 1);
+    const filename = posix.basename(path);
     if (filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, path, input.reads).toString('utf8')))
         return ['yarn', 'install', '--immutable'];
     return FROZEN_INSTALLS[filename];

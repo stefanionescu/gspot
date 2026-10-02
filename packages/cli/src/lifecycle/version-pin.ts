@@ -4,6 +4,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -28,7 +29,7 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
     runOwnedLifecycle(root, (owner) => {
         const status = owner.replace(
             '.gspot/version',
-            { bytes: Buffer.from(`${version}\n`), mode: 0o644 },
+            { bytes: Buffer.from(`${version}\n`), mode: OWNER_WRITABLE_FILE },
             'pin',
             true,
         );

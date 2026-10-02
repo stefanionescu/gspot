@@ -30,12 +30,8 @@ try {
         .parse(process.argv.slice(ARGUMENT_START));
     const request = configurationRequest.parse(JSON.parse(readFileSync(requestPath, 'utf8')));
     const result = await evaluate(request, output);
-    const files = openRoot(dirname(output));
-    try {
-        files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: PRIVATE_FILE }, undefined);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(dirname(output));
+    files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: PRIVATE_FILE }, undefined);
 } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;

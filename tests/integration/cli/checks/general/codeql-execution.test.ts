@@ -24,10 +24,6 @@ const JAVASCRIPT_LANGUAGES = JSON.stringify({
     extractors: { javascript: [{}] },
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases write the same policy with a different CodeQL language.
-const policy = (value: string) =>
-    policyOf(['security'], `[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`, 'all');
-
 // Aliases resolve to one native language and its exact query-pack version.
 function expectNativeCodeqlOptions(commands: string[][], packVersion: string): void {
     const option = (command: string, prefix: string) =>
@@ -41,7 +37,10 @@ function expectNativeCodeqlOptions(commands: string[][], packVersion: string): v
 // A language that names a path is refused before any process runs; a real language runs in a copy.
 async function refusesOutsideLanguage(language: string): Promise<string[]> {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['security'], `[tools.codeql]\nlanguages = [${JSON.stringify(language)}]\n`, 'all'),
+        'source.py': 'value = 1\n',
+    });
     const session = await openSession(directory.path);
     const spec = session.manifests.get('security')!.checks.find((entry) => entry.name === 'security/codeql')!;
     const input = scopeInput(session, spec);
@@ -71,7 +70,10 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
     try {
         await rejection(codeql(input));
         expect(run).not.toHaveBeenCalled();
-        await Bun.write(join(directory.path, 'gspot.toml'), policy('python'));
+        await Bun.write(
+            join(directory.path, 'gspot.toml'),
+            policyOf(['security'], '[tools.codeql]\nlanguages = ["python"]\n', 'all'),
+        );
         const corrected = await openSession(directory.path);
         expect(
             await codeql(

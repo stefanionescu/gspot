@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
@@ -49,7 +49,7 @@ function scannerFindings(input: EngineInput, install: Record<string, unknown>, s
  * @returns the findings
  */
 export function installPolicy(input: EngineInput): Finding[] {
-    const isBun = input.files.some((file) => LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)] === 'bun');
+    const isBun = input.files.some((file) => LOCKFILES[posix.basename(file.path)] === 'bun');
     if (!isBun) return [];
     const tool = input.view.tool('install');
     const days = (tool['min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;

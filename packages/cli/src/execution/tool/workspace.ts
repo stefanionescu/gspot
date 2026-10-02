@@ -1,19 +1,19 @@
 // Temporary copies of selected files for commands that must not read the working tree.
-import { tmpdir } from 'node:os';
-import { cp, rm, readdir } from 'node:fs/promises';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { cp, readdir } from 'node:fs/promises';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
+import { PERMISSION_BITS } from '#cli/config/platform/platform.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
+import type { ScratchFolder } from '#cli/types/platform/platform.ts';
+import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
-import { SCRATCH_EXTRAS, PERMISSION_BITS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/tool.ts';
+import { SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/tool.ts';
 
 import {
-    rmSync,
     statSync,
     constants,
     mkdirSync,
     unlinkSync,
-    mkdtempSync,
     symlinkSync,
     type Dirent,
     readFileSync,
@@ -25,9 +25,7 @@ const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true, mode: constants
 // Copies each selected file that exists, resolving it through the files root.
 async function copySelected(context: Scratch, paths: string[], dependencies: string[]): Promise<void> {
     const copied = new Set(
-        [...paths, ...SCRATCH_EXTRAS].filter(
-            (path) => !dependencies.some((dir) => path === dir || path.startsWith(`${dir}/`)),
-        ),
+        [...paths, ...SCRATCH_EXTRAS].filter((path) => !dependencies.some((dir) => isInScope(path, dir))),
     );
     for (const path of copied) {
         if (statSync(join(context.root, path), { throwIfNoEntry: false }) === undefined) continue;
@@ -127,31 +125,21 @@ export function createFileWorkspace(
     originals: Map<string, Buffer>;
     [Symbol.dispose]: () => void;
 } {
-    const directory = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-files-')));
+    const folder = scratchFolder('gspot-files-');
     const originals = new Map<string, Buffer>();
     try {
-        const files = openRoot(root, 'native');
-        try {
-            for (const path of new Set(paths)) {
-                const source = files.source(path);
-                const bytes = readFileSync(source);
-                originals.set(path, bytes);
-                const target = join(directory, path);
-                mkdirSync(dirname(target), { recursive: true });
-                writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
-            }
-        } finally {
-            files.close();
+        using files = openRoot(root, 'native');
+        for (const path of new Set(paths)) {
+            const source = files.source(path);
+            const bytes = readFileSync(source);
+            originals.set(path, bytes);
+            const target = join(folder.path, path);
+            mkdirSync(dirname(target), { recursive: true });
+            writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
         }
-        return {
-            root: directory,
-            originals,
-            [Symbol.dispose]: () => {
-                rmSync(directory, { recursive: true, force: true });
-            },
-        };
+        return { root: folder.path, originals, [Symbol.dispose]: folder[Symbol.dispose] };
     } catch (error) {
-        rmSync(directory, { recursive: true, force: true });
+        folder[Symbol.dispose]();
         throw error;
     }
 }
@@ -163,12 +151,12 @@ export function createFileWorkspace(
  * @param root the repository root
  * @param paths the source paths relative to the repository root
  * @param scopePaths the scopes whose installed dependencies the command needs
- * @returns the temporary directory, which the caller must remove
+ * @returns the temporary folder, which the caller disposes
  */
-export async function scratchCopy(root: string, paths: string[], scopePaths: string[]): Promise<string> {
-    // The native call expands the short folder names a Windows temporary path can carry, as the tools' own paths do.
-    const scratch = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
-    const files = openRoot(root, 'native');
+export async function scratchCopy(root: string, paths: string[], scopePaths: string[]): Promise<ScratchFolder> {
+    const folder = scratchFolder('gspot-fix-');
+    const scratch = folder.path;
+    using files = openRoot(root, 'native');
     const context: Scratch = {
         root,
         scratch,
@@ -196,11 +184,9 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
         for (let directory = context.pending.pop(); directory !== undefined; directory = context.pending.pop())
             for (const entry of await outerTargetsFirst(directory.source)) await visitEntry(context, directory, entry);
         await relinkFiles(context);
-        return scratch;
+        return folder;
     } catch (error) {
-        await rm(scratch, { recursive: true, force: true });
+        folder[Symbol.dispose]();
         throw error;
-    } finally {
-        files.close();
     }
 }

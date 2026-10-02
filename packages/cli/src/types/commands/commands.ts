@@ -1,4 +1,5 @@
 // The types of commands in this package.
+import type { Command } from '@commander-js/extra-typings';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
@@ -23,6 +24,12 @@ export type SetOptions = {
 };
 
 export type CommandResult = { text: string; json: unknown; exitCode: number };
+
+/** The flags every command takes, as commander parses them. */
+export type GlobalFlags = { json?: true; quiet?: true; verbose?: true; color: boolean; C?: string };
+
+/** The program the commands register on, typed by its global flags. */
+export type Program = Command<[], GlobalFlags>;
 
 /** The JSON a failed command prints: the error's name and message. */
 export type CommandFailureJson = { error: string; message: string };

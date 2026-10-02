@@ -172,18 +172,14 @@ function isActive(check: PlannedCheck): boolean {
  * @returns the check with the ignored files left out
  */
 function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
-    const tree = openRoot(session.root);
-    try {
-        const read = tree.read('.prettierignore');
-        if (read === undefined) return check;
-        const matcher = ignore().add(read.bytes.toString('utf8'));
-        const files = check.files.filter((file) => !matcher.ignores(file.path));
-        return files.length === 0
-            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
-            : { ...check, files };
-    } finally {
-        tree.close();
-    }
+    using tree = openRoot(session.root);
+    const read = tree.read('.prettierignore');
+    if (read === undefined) return check;
+    const matcher = ignore().add(read.bytes.toString('utf8'));
+    const files = check.files.filter((file) => !matcher.ignores(file.path));
+    return files.length === 0
+        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+        : { ...check, files };
 }
 /**
  * Checks enabled by persistent policy, before evaluating executable tool configurations.

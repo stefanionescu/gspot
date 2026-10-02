@@ -14,16 +14,6 @@ function aliasTarget(source: string, prefix: string, target: string): string | u
     return posix.join(base, rest);
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two shapes of require statement share this test of the call.
-function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
-    return (
-        node?.type === AST_NODE_TYPES.CallExpression &&
-        node.callee.type === AST_NODE_TYPES.Identifier &&
-        node.callee.name === 'require' &&
-        node.arguments.length === 1
-    );
-}
-
 /**
  * The file an import source names, relative imports against the importer and aliases against the root; undefined for packages.
  * @param importer the importing file
@@ -80,4 +70,19 @@ export function isDirective(value: string): boolean {
     const text = value.replace(LEADING_STAR, '').trim();
     if (TS_DIRECTIVE.test(text)) return true;
     return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
+}
+
+/**
+ * Whether a node calls require with one argument.
+ * @param node the node, which may be absent
+ * @returns whether it is a require call
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The import rules, the declaration order rule, and the require statement test share this test of the call.
+export function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
+    return (
+        node?.type === AST_NODE_TYPES.CallExpression &&
+        node.callee.type === AST_NODE_TYPES.Identifier &&
+        node.callee.name === 'require' &&
+        node.arguments.length === 1
+    );
 }

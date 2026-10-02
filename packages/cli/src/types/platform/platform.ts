@@ -57,6 +57,8 @@ export type AsyncSpawnOptions = SpawnOptions & {
     onStdout?: (chunk: string) => void;
     onStderr?: (chunk: string) => void;
 };
+/** The spawn options of a Git command; the cancellation may be absent, as a session's is. */
+export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'cancelSignal'> & { cancelSignal?: AbortSignal | undefined };
 export type ProcessTermination = {
     stopped: boolean;
     failure: Error | undefined;
@@ -92,7 +94,11 @@ export type Root = {
     removeTree(path: string): void;
     lock(path: string): void;
     close(): void;
+    [Symbol.dispose](): void;
 };
+
+/** A temporary folder that removes itself when disposed. */
+export type ScratchFolder = Disposable & { path: string };
 
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 

@@ -6,7 +6,7 @@ import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { readText } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
@@ -35,16 +35,9 @@ const dependencyConfiguration = z.object({
  * @returns the native dependency findings, including undeclared application imports.
  */
 export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openRoot(session.root);
-    let exclusions: string[];
-    try {
-        const project = files.read(posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
-        const text = project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes);
-        exclusions = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
-    } finally {
-        files.close();
-    }
-    return runToolCheck(session, planned, [
+    const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '';
+    const exclusions: string[] = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
+    return await runToolCheck(session, planned, [
         'deptry',
         '.',
         '--no-ansi',

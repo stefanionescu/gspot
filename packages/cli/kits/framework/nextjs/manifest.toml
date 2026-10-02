@@ -116,7 +116,7 @@ structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
 [guides]
-framework = [{path = "framework/nextjs/NEXTJS.md"}]
+framework = [{path = "framework/nextjs/NEXTJS.md"}, {path = "framework/nextjs/SECURITY.md"}]
 
 [required_rules]
 tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]

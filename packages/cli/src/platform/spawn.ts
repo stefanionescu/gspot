@@ -173,19 +173,19 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     };
 }
 
-/**
- * Runs a command without a shell and preserves its streams and failure classification.
- * @param command executable and literal arguments
- * @param options working directory, environment, and process controls
- * @returns captured output and termination status
- */
-export async function run(command: string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+// Runs a command without a shell under supervision. Standard output stays in the encoding the caller reads, and the
+// diagnostics are decoded to text.
+async function supervisedRun(
+    command: string[],
+    options: AsyncSpawnOptions,
+    encoding: 'utf8' | 'base64',
+): Promise<SpawnResult> {
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const base = commandOptions(options, executable);
-    const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32' });
+    const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32', encoding });
     const supervision = supervise(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
@@ -193,13 +193,25 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     try {
         const result = await child;
         if (result.failed) executionFailure = new Error(result.shortMessage);
-        return { ...completed(result, started, result.stderr), ...supervision.state };
+        const diagnostic = Buffer.from(result.stderr, encoding).toString('utf8');
+        return { ...completed(result, started, diagnostic), ...supervision.state };
     } catch (error) {
         executionFailure = error instanceof Error ? error : new Error(String(error));
         throw error;
     } finally {
         await supervision.dispose(executionFailure);
     }
+}
+
+/**
+ * Runs a command without a shell and preserves its streams and failure classification.
+ * @param command executable and literal arguments
+ * @param options working directory, environment, and process controls
+ * @returns captured output and termination status
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Text capture is the run every tool and Git read uses; binary capture is the other encoding of the same run.
+export async function run(command: string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+    return await supervisedRun(command, options, 'utf8');
 }
 
 /**
@@ -224,33 +236,9 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
  * @param options working directory, environment, and process controls
  * @returns captured output and termination status
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Git reads repository objects and paths as bytes through this; text capture is the other encoding of the same run.
 export async function runBinary(command: string[], options: AsyncSpawnOptions): Promise<BinarySpawnResult> {
-    const started = performance.now();
-    const [executable, ...argv] = command;
-    if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (missingExecutable(executable, options.cwd))
-        return { ...completed(notFound(executable), started, ''), stdout: Buffer.alloc(0) };
-    const base = commandOptions(options, executable);
-    const child = execa(executable, argv, {
-        ...base,
-        detached: process.platform !== 'win32',
-        // Bun requires a Node encoding name when it constructs child-process streams.
-        encoding: 'base64',
-    });
-    const supervision = supervise(child, options);
-    let executionFailure: Error | undefined;
-    try {
-        const result = await child;
-        if (result.failed) executionFailure = new Error(result.shortMessage);
-        return {
-            ...completed(result, started, Buffer.from(result.stderr, 'base64').toString('utf8')),
-            ...supervision.state,
-            stdout: Buffer.from(result.stdout, 'base64'),
-        };
-    } catch (error) {
-        executionFailure = error instanceof Error ? error : new Error(String(error));
-        throw error;
-    } finally {
-        await supervision.dispose(executionFailure);
-    }
+    // Bun requires a Node encoding name when it constructs child-process streams, so the bytes arrive as base64.
+    const result = await supervisedRun(command, options, 'base64');
+    return { ...result, stdout: Buffer.from(result.stdout, 'base64') };
 }

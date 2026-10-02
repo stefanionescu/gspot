@@ -135,6 +135,3 @@ kind = "number"
 direction = "ceiling"
 default = 7
 summary = "The most words one SQL identifier may have."
-
-[guides]
-general = [{path = "general/code/NAMING.md"}, {path = "general/code/NAMING-FILES.md"}]

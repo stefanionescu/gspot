@@ -1,12 +1,13 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
+import { decodedText } from '#cli/platform/text.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
 import { planConfiguration } from '#cli/lifecycle/merge/plan.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import { matches, identity, isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import type { BlockSpan, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
 
 import type {
@@ -29,7 +30,7 @@ function isPreservedReplacement(
 ): boolean {
     if (current === undefined) return false;
     if (existing === undefined) return !matches(current, installed) && !replace;
-    return !matches(current, existing.installed) && kind !== 'policy' && !(replace && expected !== undefined);
+    return !isRecorded(current, existing.installed) && kind !== 'policy' && !(replace && expected !== undefined);
 }
 
 // The plan that installs the next bytes. A file gspot first records while it already holds them is adopted.
@@ -49,9 +50,9 @@ function changedReplacement(
 
 // The text of a managed block's file, refused when the file is not UTF-8 text.
 function blockText(path: string, current: Read | undefined): string {
-    const text = current?.bytes.toString('utf8') ?? '';
-    if (current !== undefined && !Buffer.from(text).equals(current.bytes))
-        throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
+    if (current === undefined) return '';
+    const text = decodedText(current.bytes);
+    if (text === undefined) throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
     return text;
 }
 
@@ -160,7 +161,7 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
         if (planned === undefined) return { path, current, previous: existing, status: 'preserved' };
         return blockPlan(path, current, existing, planned);
     }
-    if (existing !== undefined && current !== undefined && !matches(current, existing.installed))
+    if (existing !== undefined && current !== undefined && !isRecorded(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
     return blockPlan(path, current, existing, insertedBlock(current, span, style, body));
 }
@@ -183,7 +184,7 @@ export function proposeConfiguration(
 ): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
-    const isInstalled = matches(current, existing?.installed);
+    const isInstalled = isRecorded(current, existing?.installed);
     const plan = planConfiguration({
         path,
         format,
@@ -218,7 +219,7 @@ export function proposeRetirement(log: Log, path: string, expected: Read): Plann
     if (!isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
     if (current === undefined) return { path, current, previous: existing, status: 'unchanged' };
-    if (existing !== undefined && !matches(current, existing.installed))
+    if (existing !== undefined && !isRecorded(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
     return { path, current, previous: existing, status: 'changed' };
 }
