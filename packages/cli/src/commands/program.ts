@@ -15,8 +15,8 @@ import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerInstall } from '#cli/commands/install/command.ts';
-import { Command, CommanderError } from '@commander-js/extra-typings';
 import type { Program, GlobalFlags } from '#cli/types/commands/commands.ts';
+import { Option, Command, CommanderError } from '@commander-js/extra-typings';
 import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -37,6 +37,25 @@ const COMMAND_REGISTRATIONS: ((program: Program) => void)[] = [
     registerExport,
 ];
 
+// The program reads its options anywhere on the line. It hands the command every argument after the command name,
+// its own options included. An option such as --json then also ends a list option of the command where it stands.
+class GspotProgram extends Command {
+    override parseOptions(argv: string[]): { operands: string[]; unknown: string[] } {
+        const parsed = super.parseOptions(argv);
+        const [name] = parsed.operands;
+        if (name === undefined || !this.commands.some((command) => command.name() === name)) return parsed;
+        // The command name is the first argument equal to it that is not the value of an option such as -C.
+        const valued = new Set(
+            this.options
+                .filter((option) => option.required)
+                .flatMap((option) => [option.short, option.long])
+                .filter((flag) => flag !== undefined),
+        );
+        const position = argv.findIndex((argument, index) => argument === name && !valued.has(argv[index - 1] ?? ''));
+        return { operands: [name], unknown: argv.slice(position + 1) };
+    }
+}
+
 function verbosityOf(options: GlobalFlags): OutputOptions['verbosity'] {
     if (options.quiet === true) return 'quiet';
     return options.verbose === true ? 'verbose' : 'normal';
@@ -54,7 +73,7 @@ function exitCodeFor(error: unknown): number {
  * @returns the commander program with every command registered
  */
 export function buildProgram(): Program {
-    const program: Program = new Command('gspot')
+    const program: Program = new GspotProgram('gspot')
         .description('Lint AI-generated code and install rules for coding agents')
         .version(GSPOT_VERSION, '--version', 'Print the version')
         .option('--json', 'Print the result as JSON')
@@ -76,6 +95,10 @@ export function buildProgram(): Program {
         });
     });
     for (const register of COMMAND_REGISTRATIONS) register(program);
+    // Each command takes hidden copies of the program options, which the program has already read.
+    for (const command of program.commands)
+        for (const option of program.options.filter((entry) => entry.long !== '--version'))
+            command.addOption(new Option(option.flags, option.description).hideHelp());
     return program;
 }
 
