@@ -177,7 +177,9 @@ file = "packages/cli/src/types/policy/policy.ts"
 names = [
     "allow_digits",
     "allow_duplicate_words",
-    "allowed_for",
+    "ban_digits",
+    "ban_repeats",
+    "case_insensitive",
     "config_directory",
     "dropped_groups",
     "edges_allowed",
@@ -189,8 +191,9 @@ names = [
     "protocol_keys",
     "structural_prefix",
     "types_directory",
+    "whole_parts",
 ]
-reason = "Public gspot.toml keys."
+reason = "Public gspot.toml keys, and the keys of the naming policy gspot ships."
 
 [[naming.protocol_keys]]
 file = "packages/cli/src/types/repository/revisions.ts"

@@ -1,11 +1,11 @@
 {
     "version": 1,
     "matching": {
-        "wholeParts": true,
-        "caseInsensitive": true
+        "whole_parts": true,
+        "case_insensitive": true
     },
-    "banDigits": true,
-    "banDuplicateWords": true,
+    "ban_digits": true,
+    "ban_repeats": true,
     "groups": {
         "containers": {
             "removable": true,
@@ -97,7 +97,7 @@
             "removable": true,
             "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
         },
-        "test": {
+        "tests": {
             "removable": true,
             "terms": [
                 "test case",
@@ -115,19 +115,19 @@
     "reserved": [
         {
             "term": "data",
-            "allowedFor": ["API success envelope field"]
+            "uses": ["API success envelope field"]
         },
         {
             "term": "message",
-            "allowedFor": ["API client message field"]
+            "uses": ["API client message field"]
         },
         {
             "term": "id",
-            "allowedFor": ["identifier word"]
+            "uses": ["identifier word"]
         },
         {
             "term": "config",
-            "allowedFor": [
+            "uses": [
                 "configuration directory",
                 "configuration file stem",
                 "configuration variable",
@@ -136,7 +136,7 @@
         },
         {
             "term": "values",
-            "allowedFor": ["SQL VALUES clause"]
+            "uses": ["SQL VALUES clause"]
         }
     ],
     "external": [
@@ -262,8 +262,8 @@
     ],
     "languages": {
         "typescript": {
-            "maxChars": 35,
-            "maxWords": 4,
+            "max_chars": 35,
+            "max_words": 4,
             "acronyms": "word",
             "categories": {
                 "files": {
@@ -311,8 +311,8 @@
             }
         },
         "javascript": {
-            "maxChars": 35,
-            "maxWords": 4,
+            "max_chars": 35,
+            "max_words": 4,
             "acronyms": "word",
             "categories": {
                 "files": {
@@ -351,8 +351,8 @@
             }
         },
         "python": {
-            "maxChars": 35,
-            "maxWords": 4,
+            "max_chars": 35,
+            "max_words": 4,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -388,8 +388,8 @@
             }
         },
         "swift": {
-            "maxChars": 40,
-            "maxWords": 5,
+            "max_chars": 40,
+            "max_words": 5,
             "acronyms": "initialism",
             "categories": {
                 "files": {
@@ -407,8 +407,8 @@
             }
         },
         "bash": {
-            "maxChars": 35,
-            "maxWords": 4,
+            "max_chars": 35,
+            "max_words": 4,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -429,8 +429,8 @@
             }
         },
         "sql": {
-            "maxChars": 55,
-            "maxWords": 7,
+            "max_chars": 55,
+            "max_words": 7,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -503,13 +503,13 @@
             "paths": ["**"],
             "languages": ["python", "bash"],
             "categories": ["functions", "variables", "constants", "methods", "attributes"],
-            "structuralPrefix": "^_+"
+            "structural_prefix": "^_+"
         },
         {
             "paths": ["**"],
             "languages": ["typescript", "javascript"],
             "categories": ["parameters", "variables"],
-            "structuralPrefix": "^_+"
+            "structural_prefix": "^_+"
         },
         {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
@@ -529,17 +529,17 @@
         {
             "paths": ["**/e2e/**"],
             "categories": ["directories", "files"],
-            "allowDigits": true
+            "allow_digits": true
         },
         {
             "paths": ["**/migrations/**"],
             "categories": ["files"],
-            "allowDigits": true
+            "allow_digits": true
         },
         {
             "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
             "categories": ["files"],
-            "structuralPrefix": "^\\d{2}-"
+            "structural_prefix": "^\\d{2}-"
         },
         {
             "paths": ["**"],
@@ -559,7 +559,7 @@
             "paths": ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"],
             "languages": ["python"],
             "categories": ["functions", "methods"],
-            "structuralPrefix": "^test_",
+            "structural_prefix": "^test_",
             "reason": "The test runner finds a test by this prefix."
         }
     ]

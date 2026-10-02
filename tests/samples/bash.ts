@@ -210,7 +210,7 @@ export const BASH_CASES: FindingCase[] = [
         files: {
             'scripts/mutable.sh': `${HEAD}# main: runs the script.\nmain() {\n    local total="$1"\n${ASSIGNMENTS}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
         },
-        expected: { file: 'scripts/mutable.sh', rule: 'mutable-assignments', line: 9 },
+        expected: { file: 'scripts/mutable.sh', rule: 'assignments', line: 9 },
     },
     {
         check: 'bash/safety',

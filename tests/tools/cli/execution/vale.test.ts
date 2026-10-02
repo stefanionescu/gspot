@@ -140,11 +140,11 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
     const rule = readFileSync(
-        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/headings.yml', import.meta.url),
+        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/heading-case.yml', import.meta.url),
         'utf8',
     );
     await createFileTree(directory.path, {
-        'styles/gspot/headings.yml': rule,
+        'styles/gspot/heading-case.yml': rule,
         'styles/config/vocabularies/project/accept.txt': 'Bun\n',
         '.vale.ini': 'StylesPath = styles\nVocab = project\n\n[*.md]\nBasedOnStyles = gspot\n',
         'guide.md': '# Guide\n\n## HTTP edge rules\n\n## Microsoft Edge settings\n\n## HTTP Edge Rules\n',
@@ -154,6 +154,6 @@ test('heading capitalization distinguishes ordinary edge from the browser name a
     });
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(parseAlerts(result.stdout).map((alert) => ({ line: alert.line, check: alert.check }))).toStrictEqual([
-        { line: 7, check: 'gspot.headings' },
+        { line: 7, check: 'gspot.heading-case' },
     ]);
 });

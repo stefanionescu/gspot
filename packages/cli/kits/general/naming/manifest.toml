@@ -71,7 +71,7 @@ name = "naming.dropped_groups"
 type = "list"
 direction = "loosening"
 default = []
-summary = "Removable term groups this repository drops, each with a reason. The marketing, defensive, and terminology groups never drop."
+summary = "Removable term groups this repository drops, each with a reason. The marketing and defensive groups never drop."
 
 [[setting]]
 name = "naming.protocol_keys"

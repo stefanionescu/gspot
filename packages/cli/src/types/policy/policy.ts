@@ -21,11 +21,11 @@ type LimitTable = Record<string, Reasoned<number>>;
 /** The shipped policy file, kits/general/naming/policy.json. */
 export type ShippedPolicy = {
     version: number;
-    matching: { wholeParts: boolean; caseInsensitive: boolean };
-    banDigits: boolean;
-    banDuplicateWords: boolean;
+    matching: { whole_parts: boolean; case_insensitive: boolean };
+    ban_digits: boolean;
+    ban_repeats: boolean;
     groups: Record<string, { removable: boolean; terms: string[] }>;
-    reserved: { term: string; allowedFor: string[] }[];
+    reserved: { term: string; uses: string[] }[];
     external: string[];
     languages: Record<string, ShippedLanguage>;
     rules: ShippedRule[];
@@ -33,8 +33,8 @@ export type ShippedPolicy = {
 
 /** One language's table in the shipped policy. */
 export type ShippedLanguage = {
-    maxChars: number;
-    maxWords: number;
+    max_chars: number;
+    max_words: number;
     acronyms: 'word' | 'initialism' | 'lower';
     categories: Record<string, { case: string[] }>;
 };
@@ -47,9 +47,9 @@ export type ShippedRule = {
     names?: string[] | undefined;
     exclude?: boolean | undefined;
     reason?: string | undefined;
-    allowDigits?: boolean | undefined;
-    allowDuplicateWords?: boolean | undefined;
-    structuralPrefix?: string | undefined;
+    allow_digits?: boolean | undefined;
+    allow_duplicate_words?: boolean | undefined;
+    structural_prefix?: string | undefined;
     case?: string[] | undefined;
 };
 
@@ -180,7 +180,7 @@ export type NamingSettings = {
     banned: string[];
     allowed: { name: string; reason?: string }[];
     external: string[];
-    reserved: { term: string; allowed_for: string[] }[];
+    reserved: { term: string; uses: string[] }[];
     dropped_groups: { group: string; reason?: string }[];
     protocol_keys: { file: string; names: string[] }[];
     languages: Record<string, NamingLanguageTable>;

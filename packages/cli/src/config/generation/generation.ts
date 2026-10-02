@@ -119,7 +119,7 @@ export const GSPOT_STYLE = 'gspot';
 /** Maps the three documentation length rules to their limit keys. */
 export const LENGTH_RULES: Record<string, string> = {
     'sentence-length': 'docs.sentence_words',
-    'step-length': 'docs.list_item_words',
+    'item-length': 'docs.list_item_words',
     'paragraph-length': 'docs.paragraph_sentences',
 };
 

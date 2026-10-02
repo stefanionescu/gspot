@@ -252,7 +252,7 @@ help = "Inline unnecessary functions. For one an external API requires, run `gsp
 [[check]]
 name = "limits"
 title = "Keep shell scripts within the size limits"
-example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
+example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `assignments`. Split the script or the function by the job, then rerun."
 level = "all"
 stage = "commit"
 searched = ["shellcheck", "shfmt"]

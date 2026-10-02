@@ -59,7 +59,7 @@ const namingRule = z.strictObject({
 
 const namedReason = z.strictObject({ name: text, reason: text.optional() });
 
-const reservedTerm = z.strictObject({ term: text, allowed_for: textList });
+const reservedTerm = z.strictObject({ term: text, uses: textList });
 
 const groupReason = z.strictObject({ group: text, reason: text.optional() });
 
