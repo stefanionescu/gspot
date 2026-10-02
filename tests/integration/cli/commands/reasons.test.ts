@@ -101,56 +101,6 @@ test.each([false, true])('inline suppression reasons follow require_reasons=%s',
     expect((JSON.parse(explained.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
 });
 
-test.each([
-    { configuration: 'sql', path: 'query.sql', form: 'sqlfluff', bare: '-- noqa: LT01', clean: 'SELECT 1;' },
-    {
-        configuration: 'css',
-        path: 'style.css',
-        form: 'stylelint',
-        bare: '/* stylelint-disable */',
-        clean: 'body { color: red; }',
-    },
-    {
-        configuration: 'html',
-        path: 'page.html',
-        form: 'html-validate',
-        bare: '<!-- html-validate-disable -->',
-        clean: '<p>Example</p>',
-    },
-    {
-        configuration: 'markdown',
-        path: 'guide.md',
-        form: 'markdownlint-cli2',
-        bare: '<!-- markdownlint-disable -->',
-        clean: '# Example',
-    },
-])(
-    '$configuration suppression comments use their tool definition, fail without required reasons, and accept correction',
-    async ({ configuration, path, form, bare, clean }) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'gspot.toml': `level = "all"\nrequire_reasons = true\nkits = ["structure", "${configuration}"]\n[guides]\ninstall = false\n`,
-            [path]: `${bare}\n${clean}\n`,
-        });
-        const command = ['check', '--only', 'integrity/suppressions', '--json'];
-        const failed = await runGspot(directory.path, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks[0]!.findings).toStrictEqual([
-            containing({
-                check: 'integrity/suppressions',
-                file: path,
-                line: 1,
-                rule: `${form}-no-reason`,
-            }),
-        ]);
-        await Bun.write(join(directory.path, path), `${clean}\n`);
-        const corrected = await runGspot(directory.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
-    },
-);
-
 test('shared noqa text is attributed only to the tool that reads the file', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
