@@ -104,3 +104,14 @@ test.each([
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(treeContents(sandbox.path)).toStrictEqual(before);
 });
+
+test('init in a repository that already has gspot.toml exits 2 and changes nothing', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'kits = ["bash"]\n', 'scripts/a.sh': script });
+    commitAll(sandbox.path);
+    const before = treeContents(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET]);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'already-initialized' });
+    expect(treeContents(sandbox.path)).toStrictEqual(before);
+});
