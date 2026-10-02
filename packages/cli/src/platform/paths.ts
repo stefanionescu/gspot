@@ -145,7 +145,7 @@ export function extensionOf(path: string): string {
  * @param root the repository root
  * @returns the cache folder for this repository
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The Swift build and its tests locate the private build cache by this one hash of the real root path.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: It names the build folder of one repository, a hash of its real root path under the cache directory.
 export function buildFolder(root: string): string {
     const identity = contentDigest(realpathSync(root));
     return join(cacheDirectory(), identity);

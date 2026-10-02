@@ -6,7 +6,7 @@ import { INSTALLATION_FOLDERS } from '#cli/config/lifecycle/ownership.ts';
 import type { InstalledOutput, InstallationKind } from '#cli/types/tools/tools.ts';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Install, recovery, and removal must name the side folders of a kind the same way.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing a tree and recovering an interrupted install name the side folders of a kind the same way.
 function sideFolders(kind: InstallationKind): { folder: string; staging: string; previous: string } {
     const folder = INSTALLATION_FOLDERS[kind];
     return { folder, staging: `${folder}.next`, previous: `${folder}.previous` };

@@ -11,7 +11,7 @@ import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/generation/generation.t
 import { hooksDirectory, readGitSetting, runGitBlocking } from '#cli/platform/git.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Install and doctor must compare core.hooksPath with the same spelling of the hooks folder.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing the hooks, reading their status, and finding foreign hooks compare core.hooksPath with this spelling.
 function ownHooksPath(root: string): string {
     return `${hookPrefix(root)}${HOOKS_DIRECTORY}`;
 }
