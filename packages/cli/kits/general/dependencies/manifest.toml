@@ -53,11 +53,9 @@ file = "syncpack.config.cjs"
 file = "syncpack.config.mjs"
 
 [[config]]
-template = "osv-scanner.toml.tmpl"
 target = ".gspot/config/osv-scanner.toml"
 
 [[config]]
-template = "syncpack.json.tmpl"
 target = ".gspot/config/syncpack.json"
 header = false
 

@@ -45,7 +45,6 @@ name = "docker"
 host = true
 
 [[config]]
-template = "hadolint.yaml.tmpl"
 target = ".gspot/config/hadolint.yaml"
 scoped = true
 rules_path = ["ignored"]
@@ -56,7 +55,6 @@ target = ".gspot/config/trivy.yaml"
 scoped = true
 
 [[config]]
-template = "trivyignore.tmpl"
 target = ".gspot/config/trivyignore"
 scoped = true
 

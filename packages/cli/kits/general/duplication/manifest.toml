@@ -18,7 +18,6 @@ mise = "npm:jscpd"
 file = ".jscpd.json"
 
 [[config]]
-template = "jscpd.json.tmpl"
 target = ".gspot/config/jscpd.json"
 header = false
 

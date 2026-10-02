@@ -85,13 +85,11 @@ pypi = "validate-pyproject"
 version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
 [[config]]
-template = "ruff.toml.tmpl"
 target = ".gspot/config/ruff.toml"
 scoped = true
 rules_path = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
 [[config]]
-template = "basedpyrightconfig.json.tmpl"
 target = ".gspot/config/basedpyrightconfig.json"
 pointer = {path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}"}
 scoped = true

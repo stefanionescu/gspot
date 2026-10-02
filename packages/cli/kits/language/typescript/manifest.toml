@@ -42,7 +42,6 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[config]]
-template = "tsconfig.check.json.tmpl"
 target = ".gspot/config/tsconfig.check.json"
 scoped = true
 

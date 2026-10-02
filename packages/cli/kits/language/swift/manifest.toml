@@ -73,20 +73,17 @@ needs = "security"
 scoped = true
 
 [[config]]
-template = "swiftlint.yml.tmpl"
 target = ".gspot/config/swiftlint.yml"
 rules_path = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
 scoped = true
 pointer = {path = ".swiftlint.yml", body = "parent_config: {target_json}\n"}
 
 [[config]]
-template = "swiftformat.tmpl"
 target = ".gspot/config/swiftformat"
 rules_path = ["enable", "disable", "rules", "lint-only"]
 scoped = true
 
 [[config]]
-template = "periphery.yml.tmpl"
 target = ".gspot/config/periphery.yml"
 scoped = true
 

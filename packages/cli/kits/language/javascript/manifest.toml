@@ -195,12 +195,10 @@ rules_path = ["rules"]
 pointer = {path = "eslint.config.mjs", body = "export { default } from '{target}';"}
 
 [[config]]
-template = "jsconfig.json.tmpl"
 target = ".gspot/config/jsconfig.json"
 scoped = true
 
 [[config]]
-template = "knip.json.tmpl"
 target = ".gspot/config/knip.json"
 header = false
 

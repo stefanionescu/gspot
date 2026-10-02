@@ -62,7 +62,6 @@ needs = "security"
 scoped = true
 
 [[config]]
-template = "shellcheckrc.tmpl"
 target = ".gspot/config/shellcheckrc"
 rules_path = ["enable", "disable"]
 

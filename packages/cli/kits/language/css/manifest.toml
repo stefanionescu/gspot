@@ -60,7 +60,6 @@ version = "2.0.0"
 npm = "postcss-html"
 
 [[config]]
-template = "stylelint.json.tmpl"
 target = ".gspot/config/stylelint.json"
 rules_path = ["rules"]
 scoped = true

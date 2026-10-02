@@ -47,7 +47,6 @@ file = "commitlint.config.mjs"
 file = "commitlint.config.ts"
 
 [[config]]
-template = "commitlint.config.cjs.tmpl"
 target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
 

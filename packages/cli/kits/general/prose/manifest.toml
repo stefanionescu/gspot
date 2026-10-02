@@ -41,7 +41,6 @@ file = "_vale.ini"
 file = "vale.ini"
 
 [[config]]
-template = "vale.ini.tmpl"
 target = ".gspot/config/vale.ini"
 rules_path = ["*.rules", "*.BasedOnStyles"]
 

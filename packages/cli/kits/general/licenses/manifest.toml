@@ -29,7 +29,6 @@ pypi = "pip-licenses"
 mise = "pipx:pip-licenses"
 
 [[config]]
-template = "licenses.json.tmpl"
 target = ".gspot/config/licenses.json"
 scoped = true
 

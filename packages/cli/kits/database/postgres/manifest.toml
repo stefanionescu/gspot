@@ -27,7 +27,6 @@ file = ".squawk.toml"
 file = "squawk.toml"
 
 [[config]]
-template = "squawk.toml.tmpl"
 target = ".gspot/config/squawk.toml"
 scoped = true
 rules_path = ["excluded_rules"]

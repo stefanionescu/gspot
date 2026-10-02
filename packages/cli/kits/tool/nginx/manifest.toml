@@ -28,7 +28,6 @@ name = "openssl"
 host = true
 
 [[config]]
-template = "gixy.cfg.tmpl"
 target = ".gspot/config/gixy.cfg"
 rules_path = ["checks", "skips"]
 

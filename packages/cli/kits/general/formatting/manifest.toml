@@ -98,7 +98,6 @@ template = "editorconfig.tmpl"
 target = ".editorconfig"
 
 [[config]]
-template = "prettier.json.tmpl"
 target = ".gspot/config/prettier.json"
 header = false
 

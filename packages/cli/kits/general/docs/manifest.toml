@@ -24,7 +24,6 @@ file = "lychee.toml"
 file = ".lycheeignore"
 
 [[config]]
-template = "lychee.toml.tmpl"
 target = ".gspot/config/lychee.toml"
 
 [[check]]

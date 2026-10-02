@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { posix } from 'node:path';
 import { toolSchema } from '#cli/kits/tools.ts';
 import { SENTENCE_MIN } from '#cli/config/kits.ts';
 import { outputSchema } from '#cli/kits/output.ts';
@@ -66,10 +67,11 @@ const configSchema = z
         components: z.array(z.string().min(1)).default([]),
         selectors: z.array(selectorSchema).default([]),
     })
-    .refine(
-        (config) => config.fragment || config.template !== undefined,
-        'A config that is not a fragment names its template.',
-    );
+    // A config that is not a fragment reads the template named after its target file, unless it names another.
+    .transform((config) => ({
+        ...config,
+        template: config.template ?? (config.fragment ? undefined : `${posix.basename(config.target)}.tmpl`),
+    }));
 
 const sentence = z.string().min(SENTENCE_MIN);
 

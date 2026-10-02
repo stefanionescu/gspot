@@ -93,16 +93,13 @@ name = "xmllint"
 host = true
 
 [[config]]
-template = "taplo.toml.tmpl"
 target = ".gspot/config/taplo.toml"
 
 [[config]]
-template = "yamllint.yml.tmpl"
 target = ".gspot/config/yamllint.yml"
 rules_path = ["rules"]
 
 [[config]]
-template = "v8r.yml.tmpl"
 target = ".gspot/config/v8r.yml"
 
 [[check]]

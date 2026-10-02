@@ -29,7 +29,6 @@ file = ".typos.toml"
 file = "_typos.toml"
 
 [[config]]
-template = "typos.toml.tmpl"
 target = ".gspot/config/typos.toml"
 scoped = true
 
