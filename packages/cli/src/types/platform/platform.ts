@@ -92,6 +92,7 @@ export type Root = {
     removeTree(path: string): void;
     lock(path: string): void;
     close(): void;
+    [Symbol.dispose](): void;
 };
 
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };

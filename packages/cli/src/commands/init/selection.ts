@@ -28,17 +28,13 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         { name: 'root', path: '', kits: [], source: 'root' },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
-    const files = openRoot(root);
-    try {
-        for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
-            if (path === '') continue;
-            if (files.stat(path)?.isDirectory() !== true)
-                throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
-            if (scopes.every((scope) => scope.path !== path))
-                scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
+        if (path === '') continue;
+        if (files.stat(path)?.isDirectory() !== true)
+            throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
+        if (scopes.every((scope) => scope.path !== path))
+            scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
     }
     return scopes;
 }

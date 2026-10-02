@@ -188,18 +188,12 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
  */
 export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
     const paths = policy.scopes.map((scope) => scope.path);
-    const files = openRoot(root);
-    try {
-        const missing = paths.flatMap((path, index) => {
-            const location: PathSegment[] = ['scope', index, 'path'];
-            return guarded(location, () =>
-                files.stat(path)?.isDirectory() === true
-                    ? []
-                    : [{ path: location, message: messages.scopeMissing(path) }],
-            );
-        });
-        return [...missing, ...duplicateScopeProblems(paths)];
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const missing = paths.flatMap((path, index) => {
+        const location: PathSegment[] = ['scope', index, 'path'];
+        return guarded(location, () =>
+            files.stat(path)?.isDirectory() === true ? [] : [{ path: location, message: messages.scopeMissing(path) }],
+        );
+    });
+    return [...missing, ...duplicateScopeProblems(paths)];
 }

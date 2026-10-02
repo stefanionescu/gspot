@@ -54,13 +54,9 @@ function installedFile(directory: string, local: string, target: string, source:
 export function installedOutputs(directory: string, kind: 'npm' | 'python'): InstalledOutput[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
     const outputs: InstalledOutput[] = [];
-    const parent = openRoot(dirname(directory), 'native');
-    try {
-        if (parent.stat(basename(directory))?.isDirectory() !== true)
-            throw new Error(`Installed output is not a directory: ${directory}`);
-    } finally {
-        parent.close();
-    }
+    using parent = openRoot(dirname(directory), 'native');
+    if (parent.stat(basename(directory))?.isDirectory() !== true)
+        throw new Error(`Installed output is not a directory: ${directory}`);
     const root = realpathSync(directory);
     const files = openRoot(root, 'native');
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;

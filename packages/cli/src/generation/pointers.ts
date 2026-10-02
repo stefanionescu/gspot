@@ -65,19 +65,15 @@ export function mergePointer(
     pointerPath: string,
     targetPath: string,
 ): ConfigurationOutput {
-    const files = openRoot(root);
-    try {
-        const text = files.read(pointerPath)?.bytes.toString('utf8') ?? '{}\n';
-        parsePointer(text, pointerPath);
-        return {
-            path: pointerPath,
-            format: 'json',
-            changes: Object.entries(pointer.merge ?? {}).map(([key, value]) => ({
-                path: [key],
-                value: fillTarget(value, pointerPath, targetPath),
-            })),
-        };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const text = files.read(pointerPath)?.bytes.toString('utf8') ?? '{}\n';
+    parsePointer(text, pointerPath);
+    return {
+        path: pointerPath,
+        format: 'json',
+        changes: Object.entries(pointer.merge ?? {}).map(([key, value]) => ({
+            path: [key],
+            value: fillTarget(value, pointerPath, targetPath),
+        })),
+    };
 }

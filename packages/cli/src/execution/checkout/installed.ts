@@ -218,24 +218,18 @@ export async function copyDependencies(
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const installed = openRoot(root, 'native');
-    try {
-        const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
-        const projects = inputs
-            .map((entry) => entry.path)
-            .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
-        const directories = dependencyDirectories(installed, projects);
-        if (directories.length === 0) return;
-        await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
-        const packages = directories.filter((directory) => directory.dependency === 'node_modules');
-        for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
-        // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
-        const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
-        for (const { folder, dependency } of packages.filter(
-            (directory) => basename(directory.folder) !== GSPOT_FOLDER,
-        ))
-            await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
-    } finally {
-        installed.close();
-    }
+    using installed = openRoot(root, 'native');
+    const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
+    const projects = inputs
+        .map((entry) => entry.path)
+        .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
+    const directories = dependencyDirectories(installed, projects);
+    if (directories.length === 0) return;
+    await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
+    const packages = directories.filter((directory) => directory.dependency === 'node_modules');
+    for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
+    // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
+    const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
+    for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== GSPOT_FOLDER))
+        await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
 }

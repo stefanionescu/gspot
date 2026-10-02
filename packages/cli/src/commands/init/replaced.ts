@@ -6,16 +6,12 @@ import type { ExistingTool, ExistingTooling } from '#cli/types/repository/reposi
 
 // Captures every owned file. The write refuses a file that changed after the plan was shown.
 function readOwned(root: string, owned: ExistingTool[], replaced: Replaced): void {
-    const files = openRoot(root);
-    try {
-        for (const path of new Set(owned.map((entry) => entry.path))) {
-            const original = files.read(path);
-            if (original === undefined)
-                replaced.unread.push({ path, note: 'not read and not deleted: the file is missing' });
-            else replaced.read.set(path, original);
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    for (const path of new Set(owned.map((entry) => entry.path))) {
+        const original = files.read(path);
+        if (original === undefined)
+            replaced.unread.push({ path, note: 'not read and not deleted: the file is missing' });
+        else replaced.read.set(path, original);
     }
 }
 

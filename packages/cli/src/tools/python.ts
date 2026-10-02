@@ -234,14 +234,10 @@ export function pythonLockDrift(
 ): { path: string; kind?: 'missing' | 'changed' } | undefined {
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
-    const files = openRoot(root);
-    try {
-        const lock = files.read(LOCK);
-        if (lock === undefined) return { path: LOCK, kind: 'missing' };
-        return matches(project.content, lock.bytes.toString('utf8')) ? { path: LOCK } : { path: LOCK, kind: 'changed' };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const lock = files.read(LOCK);
+    if (lock === undefined) return { path: LOCK, kind: 'missing' };
+    return matches(project.content, lock.bytes.toString('utf8')) ? { path: LOCK } : { path: LOCK, kind: 'changed' };
 }
 
 /**
@@ -250,18 +246,14 @@ export function pythonLockDrift(
  * @returns the commands an install runs, or none without a Python project
  */
 export function pythonInstallSteps(root: string): string[][] {
-    const files = openRoot(root);
-    try {
-        const project = files.read(TOOL_PYTHON_PROJECT);
-        if (project === undefined) return [];
-        projectSchema.parse(parse(project.bytes.toString('utf8')));
-        const lock = files.read(LOCK);
-        if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
-            throw new Error(SETUP);
-        return [['uv', 'sync', '--locked', '--project', '.gspot']];
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const project = files.read(TOOL_PYTHON_PROJECT);
+    if (project === undefined) return [];
+    projectSchema.parse(parse(project.bytes.toString('utf8')));
+    const lock = files.read(LOCK);
+    if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
+        throw new Error(SETUP);
+    return [['uv', 'sync', '--locked', '--project', '.gspot']];
 }
 
 /**

@@ -26,35 +26,31 @@ export async function eslintRuleDiff(
         const entry = drift.find((candidate) => candidate.path === file.path);
         return entry === undefined ? [] : [{ file, entry, rulesPath: file.rulesPath }];
     });
-    const files = openRoot(root);
-    try {
-        for (const { file, entry, rulesPath } of selected) {
-            try {
-                const current = files.read(file.path)?.bytes.toString('utf8');
-                const sources = [current, file.content].filter((source) => source !== undefined);
-                const resolvedRules = eslintPreviewResponse.length(sources.length).parse(
-                    await runConfiguration(
-                        {
-                            tool: 'eslint',
-                            operation: 'preview-rules',
-                            root: root,
-                            path: file.path,
-                            sources,
-                        },
-                        view,
-                        signal,
-                    ),
-                );
-                entry.rules = compareRules(rulesPath, current === undefined ? {} : { rules: resolvedRules[0] }, {
-                    rules: resolvedRules.at(-1),
-                });
-                delete entry.ruleError;
-            } catch (error) {
-                entry.ruleError = `Rule comparison failed: ${error instanceof Error ? error.message.split('\n', 1).join('') : String(error)}`;
-                delete entry.rules;
-            }
+    using files = openRoot(root);
+    for (const { file, entry, rulesPath } of selected) {
+        try {
+            const current = files.read(file.path)?.bytes.toString('utf8');
+            const sources = [current, file.content].filter((source) => source !== undefined);
+            const resolvedRules = eslintPreviewResponse.length(sources.length).parse(
+                await runConfiguration(
+                    {
+                        tool: 'eslint',
+                        operation: 'preview-rules',
+                        root: root,
+                        path: file.path,
+                        sources,
+                    },
+                    view,
+                    signal,
+                ),
+            );
+            entry.rules = compareRules(rulesPath, current === undefined ? {} : { rules: resolvedRules[0] }, {
+                rules: resolvedRules.at(-1),
+            });
+            delete entry.ruleError;
+        } catch (error) {
+            entry.ruleError = `Rule comparison failed: ${error instanceof Error ? error.message.split('\n', 1).join('') : String(error)}`;
+            delete entry.rules;
         }
-    } finally {
-        files.close();
     }
 }

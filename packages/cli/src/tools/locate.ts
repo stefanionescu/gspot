@@ -52,13 +52,9 @@ function candidateExists(files: Root, root: string, path: string): boolean {
 
 // The executables of the name that exist in the repository's search folders.
 function repositoryCandidates(root: string, directories: string[], names: string[]): string[] {
-    const files = openRoot(root);
-    try {
-        const paths = directories.flatMap((directory) => names.map((file) => join(directory, file)));
-        return paths.filter((path) => candidateExists(files, root, path));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const paths = directories.flatMap((directory) => names.map((file) => join(directory, file)));
+    return paths.filter((path) => candidateExists(files, root, path));
 }
 
 // The executables of the name on PATH and among mise's shims.
@@ -129,16 +125,12 @@ export function locateCandidates(
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const files = toPosix(relative(root, path)).startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
-    try {
-        const folder = dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path))));
-        // A Windows shim in node_modules/.bin is a file of its own, not a link into its package, so the package is
-        // found by name beside that folder.
-        const start = basename(folder) === '.bin' ? join(dirname(folder), name) : folder;
-        return versionAbove(files, root, start, name);
-    } finally {
-        files?.close();
-    }
+    using files = toPosix(relative(root, path)).startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
+    const folder = dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path))));
+    // A Windows shim in node_modules/.bin is a file of its own, not a link into its package, so the package is
+    // found by name beside that folder.
+    const start = basename(folder) === '.bin' ? join(dirname(folder), name) : folder;
+    return versionAbove(files, root, start, name);
 }
 
 /**

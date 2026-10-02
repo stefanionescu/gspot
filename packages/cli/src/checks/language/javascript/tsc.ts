@@ -43,14 +43,10 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
     visited.add(path);
     const config = getTsconfig(root, path);
     if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
-    const files = openRoot(root, 'native');
-    try {
-        validateOutputs(root, config, files);
-        for (const reference of config.projectReferences ?? [])
-            validateBuild(root, ts.resolveProjectReferencePath(reference), visited);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    validateOutputs(root, config, files);
+    for (const reference of config.projectReferences ?? [])
+        validateBuild(root, ts.resolveProjectReferencePath(reference), visited);
 }
 
 // Rewrites the disposable copy of the generated JavaScript project to the scope's files, and counts them.

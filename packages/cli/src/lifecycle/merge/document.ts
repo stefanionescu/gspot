@@ -145,13 +145,9 @@ export function hasConfiguration(
         changes: { path: (string | number)[]; value: unknown }[];
     },
 ): boolean {
-    const files = openRoot(root);
-    try {
-        const current = files.read(output.path);
-        if (current === undefined) return false;
-        const document = configurationDocument(current.bytes.toString('utf8'), output.format);
-        return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), field.value));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const current = files.read(output.path);
+    if (current === undefined) return false;
+    const document = configurationDocument(current.bytes.toString('utf8'), output.format);
+    return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), field.value));
 }

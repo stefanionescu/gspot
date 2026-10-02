@@ -60,21 +60,17 @@ function stageInputs(files: Root, work: string): void {
 
 // Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
 function replacePackages(files: Root, work: string): void {
-    const synced = openRoot(work);
-    try {
-        const outputs = styleFiles(synced).filter((path) => isValePackageFile(path));
-        const folders = new Set(outputs.flatMap((path) => packageFolder(path)));
-        for (const folder of packageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
-        for (const folder of folders)
-            swapPackage(
-                files,
-                synced,
-                folder,
-                outputs.filter((path) => path.startsWith(`${folder}/`)),
-            );
-    } finally {
-        synced.close();
-    }
+    using synced = openRoot(work);
+    const outputs = styleFiles(synced).filter((path) => isValePackageFile(path));
+    const folders = new Set(outputs.flatMap((path) => packageFolder(path)));
+    for (const folder of packageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
+    for (const folder of folders)
+        swapPackage(
+            files,
+            synced,
+            folder,
+            outputs.filter((path) => path.startsWith(`${folder}/`)),
+        );
 }
 
 /**
@@ -93,14 +89,10 @@ function packageFolders(files: Root): string[] {
  * @returns whether every required directory exists
  */
 export function hasPackages(root: string): boolean {
-    const files = openRoot(root);
-    try {
-        const needed = packageDirectories(files);
-        if (needed === undefined) return false;
-        return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const needed = packageDirectories(files);
+    if (needed === undefined) return false;
+    return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
 }
 
 /**
@@ -126,12 +118,8 @@ export function styleFiles(files: Root): string[] {
  * @param root the repository root
  */
 export function removePackages(root: string): void {
-    const files = openRoot(root);
-    try {
-        for (const folder of packageFolders(files)) files.removeTree(folder);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    for (const folder of packageFolders(files)) files.removeTree(folder);
 }
 
 /**

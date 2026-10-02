@@ -109,15 +109,11 @@ export function kindOf(
  * @returns the parsed rules, or none when the optional file is absent
  */
 export function readAttributes(root: string): Attribute[] {
-    const files = openRoot(root);
-    try {
-        return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
-            .split('\n')
-            .map((line) => attributeRule(line))
-            .filter((rule) => rule !== undefined);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
+        .split('\n')
+        .map((line) => attributeRule(line))
+        .filter((rule) => rule !== undefined);
 }
 
 // What is in the tree: files, kinds, tags, scopes, and the tooling init finds.

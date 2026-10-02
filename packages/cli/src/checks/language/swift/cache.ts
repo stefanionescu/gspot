@@ -92,12 +92,8 @@ function pruneSources(folder: string, files: Root, desired: Map<string, Read>): 
 export function openBuildCache(folder: string): Root {
     const home = cacheHome();
     mkdirSync(home, { recursive: true });
-    const boundary = openRoot(home);
-    try {
-        boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
-    } finally {
-        boundary.close();
-    }
+    using boundary = openRoot(home);
+    boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
     const files = openRoot(folder, 'native');
     try {
         files.lock('build.lock');

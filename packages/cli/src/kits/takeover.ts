@@ -111,18 +111,14 @@ function declaredKits(root: string, paths: Iterable<string>, selected?: string[]
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
     );
-    const files = openRoot(root);
-    try {
-        return [...kitManifests().values()].flatMap((manifest) =>
-            manifest.tools
-                .filter((tool) => selected === undefined || selected.includes(tool.name))
-                .flatMap((tool) =>
-                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
-                ),
-        );
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    return [...kitManifests().values()].flatMap((manifest) =>
+        manifest.tools
+            .filter((tool) => selected === undefined || selected.includes(tool.name))
+            .flatMap((tool) =>
+                (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
+            ),
+    );
 }
 
 /**

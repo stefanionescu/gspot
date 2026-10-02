@@ -40,16 +40,13 @@ function verdict(name: string, license: string, exception: LicenseException | un
 function readConfiguration(input: EngineInput): z.infer<typeof configurationSchema> {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
-    const files = openRoot(input.root);
-    let configuration: z.infer<typeof configurationSchema>;
-    try {
-        const content = files.read(targetInScope(input.scope, target));
-        if (content === undefined)
-            throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
-        configuration = configurationSchema.parse(JSON.parse(content.bytes.toString('utf8')));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(input.root);
+    const content = files.read(targetInScope(input.scope, target));
+    if (content === undefined)
+        throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
+    const configuration: z.infer<typeof configurationSchema> = configurationSchema.parse(
+        JSON.parse(content.bytes.toString('utf8')),
+    );
     const tool = input.view.tool('licenses');
     if (
         !isDeepStrictEqual(configuration, {

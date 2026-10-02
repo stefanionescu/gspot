@@ -130,18 +130,14 @@ export function createFileWorkspace(
     const directory = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-files-')));
     const originals = new Map<string, Buffer>();
     try {
-        const files = openRoot(root, 'native');
-        try {
-            for (const path of new Set(paths)) {
-                const source = files.source(path);
-                const bytes = readFileSync(source);
-                originals.set(path, bytes);
-                const target = join(directory, path);
-                mkdirSync(dirname(target), { recursive: true });
-                writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
-            }
-        } finally {
-            files.close();
+        using files = openRoot(root, 'native');
+        for (const path of new Set(paths)) {
+            const source = files.source(path);
+            const bytes = readFileSync(source);
+            originals.set(path, bytes);
+            const target = join(directory, path);
+            mkdirSync(dirname(target), { recursive: true });
+            writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
         }
         return {
             root: directory,

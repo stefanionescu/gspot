@@ -74,16 +74,10 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
     try {
         const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
-        const files = openRoot(input.root);
-        let content: Buffer;
-        try {
-            const config = files.read('.gspot/config/jscpd.json');
-            if (config === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
-            content = config.bytes;
-        } finally {
-            files.close();
-        }
-        const shipped = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
+        using files = openRoot(input.root);
+        const generated = files.read('.gspot/config/jscpd.json');
+        if (generated === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
+        const shipped = JSON.parse(generated.bytes.toString('utf8')) as Record<string, unknown>;
         // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
         const config = join(work, 'jscpd.json');
         writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));

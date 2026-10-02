@@ -145,16 +145,10 @@ export function packageLockDrift(
     const manifest = generated.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (manifest === undefined) return undefined;
     const project = projectOf(manifest.content);
-    const files = openRoot(root);
-    try {
-        const recorded = files.read(project.lockPath);
-        if (recorded === undefined) return { path: project.lockPath, kind: 'missing' };
-        return isCurrentLock(project, recorded)
-            ? { path: project.lockPath }
-            : { path: project.lockPath, kind: 'changed' };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const recorded = files.read(project.lockPath);
+    if (recorded === undefined) return { path: project.lockPath, kind: 'missing' };
+    return isCurrentLock(project, recorded) ? { path: project.lockPath } : { path: project.lockPath, kind: 'changed' };
 }
 
 /**
@@ -163,16 +157,12 @@ export function packageLockDrift(
  * @returns the commands an install runs, or none without a tool project
  */
 export function packageInstallSteps(root: string): string[][] {
-    const files = openRoot(root);
-    try {
-        const manifest = files.read(TOOL_PACKAGE_PROJECT);
-        if (manifest === undefined) return [];
-        const project = projectOf(manifest.bytes.toString('utf8'));
-        if (!isCurrentLock(project, files.read(project.lockPath))) throw new Error(SETUP);
-        return [packageInstallCommand(project.client, true)];
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const manifest = files.read(TOOL_PACKAGE_PROJECT);
+    if (manifest === undefined) return [];
+    const project = projectOf(manifest.bytes.toString('utf8'));
+    if (!isCurrentLock(project, files.read(project.lockPath))) throw new Error(SETUP);
+    return [packageInstallCommand(project.client, true)];
 }
 
 /**

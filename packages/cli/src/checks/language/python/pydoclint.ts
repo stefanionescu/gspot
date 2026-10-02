@@ -44,16 +44,14 @@ export function docstringStyle(text: string, convention?: unknown): 'google' | '
  * @returns the native check result with shared batching and error handling.
  */
 export async function checkDocstrings(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openRoot(session.root);
-    let style: 'google' | 'numpy' | undefined;
-    try {
-        const project = files.read(posix.join(planned.scope.scope.path, 'pyproject.toml'));
-        style = docstringStyle(
-            project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes),
-            planned.scope.view.settings['tools.ruff.docstring_convention'],
-        );
-    } finally {
-        files.close();
-    }
-    return runToolCheck(session, planned, [...DOCSTRING_COMMAND, ...(style === undefined ? [] : ['--style', style])]);
+    using files = openRoot(session.root);
+    const project = files.read(posix.join(planned.scope.scope.path, 'pyproject.toml'));
+    const style: 'google' | 'numpy' | undefined = docstringStyle(
+        project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes),
+        planned.scope.view.settings['tools.ruff.docstring_convention'],
+    );
+    return await runToolCheck(session, planned, [
+        ...DOCSTRING_COMMAND,
+        ...(style === undefined ? [] : ['--style', style]),
+    ]);
 }

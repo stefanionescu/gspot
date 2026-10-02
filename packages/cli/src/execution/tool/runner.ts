@@ -139,18 +139,14 @@ function missingConfiguration(
     base: CheckResult,
 ): CheckResult | undefined {
     if (planned.spec.nested_config === undefined) return undefined;
-    const files = openRoot(session.root);
-    try {
-        const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
-        if (missing === undefined) return undefined;
-        return {
-            ...base,
-            status: 'error',
-            note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
-        };
-    } finally {
-        files.close();
-    }
+    using files = openRoot(session.root);
+    const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
+    if (missing === undefined) return undefined;
+    return {
+        ...base,
+        status: 'error',
+        note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
+    };
 }
 
 // Runs in the supplied workspace or an isolated source copy when the check requires one.

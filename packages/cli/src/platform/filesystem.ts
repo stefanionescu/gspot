@@ -97,7 +97,7 @@ function releaseLocks(bounds: Bounds): void {
  * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
  * @param root the directory every path is files to
  * @param pathFormat whether paths use forward slashes or the platform's own spelling
- * @returns the files reader and writer, which the caller closes
+ * @returns the files reader and writer, which the caller disposes, as `using` does
  */
 export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Root {
     const bounds = boundsOf(realpathSync(root), pathFormat);
@@ -132,6 +132,9 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
             acquireLock(bounds, path);
         },
         close: () => {
+            releaseLocks(bounds);
+        },
+        [Symbol.dispose]: () => {
             releaseLocks(bounds);
         },
     };

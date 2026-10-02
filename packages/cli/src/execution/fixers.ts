@@ -26,12 +26,8 @@ function sourceBytes(files: Root, path: string): Buffer | undefined {
 }
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
-    const files = openRoot(root, 'native');
-    try {
-        return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
 }
 
 function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
@@ -107,25 +103,21 @@ async function isolatedCorrection(
     const result = await runCorrection(session, planned, prepared);
     const current = contentsOf(root, result.changed);
     const corrected = contentsOf(workspace.root, result.changed);
-    const files = openRoot(root, 'native');
-    try {
-        // Validate every changed source before publishing any correction bytes.
-        const destinations = [...workspace.originals]
-            .filter(([path]) => result.changed.includes(path))
-            .map(([path, original]) => {
-                if (current.get(path)?.equals(original) !== true)
-                    throw new Error(
-                        `${path} changed while its correction was running; the isolated correction was not applied.`,
-                    );
-                return [path, files.source(path)] as const;
-            });
-        for (const [path, destination] of destinations) {
-            const bytes = corrected.get(path);
-            if (bytes === undefined) unlinkSync(destination);
-            else writeFileSync(destination, bytes);
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root, 'native');
+    // Validate every changed source before publishing any correction bytes.
+    const destinations = [...workspace.originals]
+        .filter(([path]) => result.changed.includes(path))
+        .map(([path, original]) => {
+            if (current.get(path)?.equals(original) !== true)
+                throw new Error(
+                    `${path} changed while its correction was running; the isolated correction was not applied.`,
+                );
+            return [path, files.source(path)] as const;
+        });
+    for (const [path, destination] of destinations) {
+        const bytes = corrected.get(path);
+        if (bytes === undefined) unlinkSync(destination);
+        else writeFileSync(destination, bytes);
     }
     return result;
 }

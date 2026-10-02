@@ -34,13 +34,9 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
-    const files = openRoot(scratch);
-    let isBuilt: boolean;
-    try {
-        isBuilt = result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
-    } finally {
-        files.close();
-    }
+    using files = openRoot(scratch);
+    const isBuilt: boolean =
+        result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
     const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_DIFFERENCES).join(' | ');
     return { cwd, command, output, isBuilt, said };
 }

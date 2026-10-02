@@ -44,79 +44,69 @@ function projectScopes(files: TrackedFile[], fields: Fields[], patterns: string[
 
 // Validate filesystem access before the workspace resolver reads package manifests.
 function inspectWorkspacePaths(root: string, patterns: string[]): void {
-    const files = openRoot(root);
-    try {
-        const normalized = patterns.map((pattern) => {
-            const negate = pattern.startsWith('!') ? '!' : '';
-            const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
-            mutationPath(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
-            return `${negate}${path}`;
-        });
-        const ancestors = normalized.flatMap((pattern) => {
-            if (pattern.startsWith('!')) return [pattern];
-            const parts = pattern.split('/');
-            return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
-        });
-        const paths = globPaths(root, [...ancestors, '!**/node_modules/**', '!**/.git/**'], {
-            dot: true,
-            onlyFiles: false,
-        });
-        // Every visited path is read through the root boundary, which refuses a link that leaves the repository.
-        for (const path of paths) {
-            if (files.stat(path)?.isDirectory() === true) files.read(`${path}/package.json`);
-        }
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    const normalized = patterns.map((pattern) => {
+        const negate = pattern.startsWith('!') ? '!' : '';
+        const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
+        mutationPath(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
+        return `${negate}${path}`;
+    });
+    const ancestors = normalized.flatMap((pattern) => {
+        if (pattern.startsWith('!')) return [pattern];
+        const parts = pattern.split('/');
+        return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
+    });
+    const paths = globPaths(root, [...ancestors, '!**/node_modules/**', '!**/.git/**'], {
+        dot: true,
+        onlyFiles: false,
+    });
+    // Every visited path is read through the root boundary, which refuses a link that leaves the repository.
+    for (const path of paths) {
+        if (files.stat(path)?.isDirectory() === true) files.read(`${path}/package.json`);
     }
 }
 
 function workspacePackages(root: string): Package[] {
-    const files = openRoot(root);
-    try {
-        const rootSource = files.read('package.json');
-        const packagePatterns = z
-            .object({ packages: z.array(z.string()).optional() })
-            .transform((value) => value.packages ?? ['packages/*']);
-        const declarations = [
-            {
-                tool: PnpmTool,
-                path: 'pnpm-workspace.yaml',
-                parse: parseYaml,
-                schema: packagePatterns,
-            },
-            {
-                tool: LernaTool,
-                path: 'lerna.json',
-                parse: JSON.parse,
-                schema: packagePatterns,
-            },
-            {
-                tool: RushTool,
-                path: 'rush.json',
-                parse: parseJsonc,
-                schema: z
-                    .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
-                    .transform((value) => value.projects.map((project) => project.projectFolder)),
-            },
-        ];
-        for (const { tool, path, parse, schema } of declarations) {
-            const source = files.read(path);
-            if (source === undefined || !tool.isMonorepoRootSync(root)) continue;
-            const patterns = schema.parse(parse(source.bytes.toString('utf8')));
-            inspectWorkspacePaths(root, patterns);
-            return tool.getPackagesSync(root).packages;
-        }
-        if (rootSource === undefined) return [];
-        const { workspaces: declaration = [] } = packageManifestSchema.parse(
-            JSON.parse(rootSource.bytes.toString('utf8')),
-        );
-        const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
-        if (workspaces.length === 0) return [];
-        inspectWorkspacePaths(root, workspaces);
-        return YarnTool.getPackagesSync(root).packages;
-    } finally {
-        files.close();
+    using files = openRoot(root);
+    const rootSource = files.read('package.json');
+    const packagePatterns = z
+        .object({ packages: z.array(z.string()).optional() })
+        .transform((value) => value.packages ?? ['packages/*']);
+    const declarations = [
+        {
+            tool: PnpmTool,
+            path: 'pnpm-workspace.yaml',
+            parse: parseYaml,
+            schema: packagePatterns,
+        },
+        {
+            tool: LernaTool,
+            path: 'lerna.json',
+            parse: JSON.parse,
+            schema: packagePatterns,
+        },
+        {
+            tool: RushTool,
+            path: 'rush.json',
+            parse: parseJsonc,
+            schema: z
+                .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
+                .transform((value) => value.projects.map((project) => project.projectFolder)),
+        },
+    ];
+    for (const { tool, path, parse, schema } of declarations) {
+        const source = files.read(path);
+        if (source === undefined || !tool.isMonorepoRootSync(root)) continue;
+        const patterns = schema.parse(parse(source.bytes.toString('utf8')));
+        inspectWorkspacePaths(root, patterns);
+        return tool.getPackagesSync(root).packages;
     }
+    if (rootSource === undefined) return [];
+    const { workspaces: declaration = [] } = packageManifestSchema.parse(JSON.parse(rootSource.bytes.toString('utf8')));
+    const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
+    if (workspaces.length === 0) return [];
+    inspectWorkspacePaths(root, workspaces);
+    return YarnTool.getPackagesSync(root).packages;
 }
 
 function npmScopes(root: string, byPath: Map<string, Fields>, lintOnly: string[]): ScopeEntry[] {
@@ -133,14 +123,10 @@ function npmScopes(root: string, byPath: Map<string, Fields>, lintOnly: string[]
 }
 
 function memberScopes(root: string, members: string[]): ScopeEntry[] {
-    const files = openRoot(root);
-    try {
-        return members
-            .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)
-            .map((member) => workspaceEntry(member));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    return members
+        .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)
+        .map((member) => workspaceEntry(member));
 }
 
 /**

@@ -19,14 +19,10 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const named = input.view.tool('openapi')['document'];
     const document = typeof named === 'string' ? named : '';
     if (document === '') return [];
-    const files = openRoot(input.root, 'native');
-    try {
-        files.source(document);
-        if (files.read('.gspot/config/spectral.yaml') === undefined)
-            throw new Error('The Spectral configuration is missing. Run: gspot apply');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(input.root, 'native');
+    files.source(document);
+    if (files.read('.gspot/config/spectral.yaml') === undefined)
+        throw new Error('The Spectral configuration is missing. Run: gspot apply');
     const ruleset = join(input.root, '.gspot/config/spectral.yaml');
     const result = await runCheckCommand(
         input,

@@ -35,16 +35,11 @@ const dependencyConfiguration = z.object({
  * @returns the native dependency findings, including undeclared application imports.
  */
 export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openRoot(session.root);
-    let exclusions: string[];
-    try {
-        const project = files.read(posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
-        const text = project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes);
-        exclusions = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
-    } finally {
-        files.close();
-    }
-    return runToolCheck(session, planned, [
+    using files = openRoot(session.root);
+    const project = files.read(posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
+    const text = project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes);
+    const exclusions: string[] = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
+    return await runToolCheck(session, planned, [
         'deptry',
         '.',
         '--no-ansi',

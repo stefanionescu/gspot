@@ -137,13 +137,9 @@ export function runOwnedLifecycle<Result>(root: string, action: (owner: Owner) =
  * @returns the recorded ownership, empty when nothing was recorded
  */
 export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): OwnershipState {
-    const files = openRoot(root);
-    try {
-        const record = files.read(`${stateDirectory}/ownership.json`);
-        return record === undefined
-            ? { version: 1, files: [] }
-            : ownershipSchema.parse(JSON.parse(record.bytes.toString('utf8')));
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    const record = files.read(`${stateDirectory}/ownership.json`);
+    return record === undefined
+        ? { version: 1, files: [] }
+        : ownershipSchema.parse(JSON.parse(record.bytes.toString('utf8')));
 }

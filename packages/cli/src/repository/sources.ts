@@ -13,13 +13,8 @@ import { NATURE_HEAD_BYTES } from '#cli/config/repository/repository.ts';
  */
 export function readPrefix(root: string, path: string, bytes: number): Buffer {
     const buffer = Buffer.alloc(bytes);
-    const files = openRoot(root, 'native');
-    let source: string;
-    try {
-        source = files.source(path);
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    const source: string = files.source(path);
     const descriptor = openSync(source, 'r');
     let offset = 0;
     try {
@@ -58,12 +53,8 @@ export function readSource(root: string, path: string, reads?: SourceReads): Buf
     const read = reads?.root === root ? reads.sources : undefined;
     const held = read?.get(path);
     if (held !== undefined) return held;
-    const files = openRoot(root, 'native');
-    try {
-        const bytes = readFileSync(files.source(path));
-        read?.set(path, bytes);
-        return bytes;
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root, 'native');
+    const bytes = readFileSync(files.source(path));
+    read?.set(path, bytes);
+    return bytes;
 }
