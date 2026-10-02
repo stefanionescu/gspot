@@ -12,7 +12,6 @@ const SHARDING = /^--shard=[1-9]\d*\/[1-9]\d*$/u;
 // Acceptance files that fail on Windows today, with the cause. A full Windows run leaves them out until the stage that
 // moves acceptance cases to faster tiers fixes them; every other system runs them.
 const WINDOWS_PENDING = new Map<string, string>([
-    ['cli/cancellation.test.ts', 'a signal exits 130 where 2 is expected'],
     ['cli/commits.test.ts', 'commitlint runs time out on the Windows runner'],
     ['cli/configuration-arrival.test.ts', 'gspot add times out on the Windows runner'],
     ['cli/example.test.ts', 'the sandbox install fails on Windows'],
