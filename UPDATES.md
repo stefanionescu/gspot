@@ -23,7 +23,7 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 36 to 41 make the next batch on `refactor/rename-checks-plugin-tasks`. Stages 36 to 39 are done.
+- Stages 36 to 41 make the next batch on `refactor/rename-checks-plugin-tasks`. Stages 36 to 40 are done.
 
 ### Stages
 
@@ -70,7 +70,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 37    | Rename plugin rules and options                        | A.12                                                                                                    | in the batch |
 | 38    | Add the missing scenario tests, part one               | D.5 rows 1 to 17, with fixes for the bugs they confirm                                                  | in the batch |
 | 39    | Add the missing scenario tests, part two               | D.5 rows 18 to 34                                                                                       | in the batch |
-| 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | not started  |
+| 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | in the batch |
 | 41    | Trim the guides, READMEs, and CONTRIBUTING             | E.1 to E.4; `--save-exact`; `GSPOT_JOBS` documented                                                     | not started  |
 | 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | not started  |
 | 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | not started  |
@@ -142,15 +142,15 @@ The owner and the work settled these while implementing:
 
 ### Working in this repository
 
-- Tools come from mise, with Bun 1.4.2. A fresh clone runs `mise trust`, `mise run repo:setup`, `mise run apply`, and
-  `mise run repo:install-checks`.
+- Tools come from mise, with Bun 1.4.2. A fresh clone runs `mise trust`, `mise run setup`, `mise run apply`, and
+  `mise run install`.
 - Run one heavy job at a time: the machine slows down under parallel suites.
 - Acceptance tests need `GITHUB_TOKEN="$(gh auth token)"` and Docker Desktop running (`open -a Docker`). Run them in
   chunks that finish within ten minutes:
   `GITHUB_TOKEN="$(gh auth token)" mise run test:acceptance -- ./acceptance/source/cli/agents.test.ts`. Paths are
   relative to `tests`.
 - Other suites: `mise run test` for the unit and integration tests, `mise run test:tools`, `mise run test:package`,
-  and `mise run docs:build`.
+  and `mise run build:docs`.
 - CI runs four shards on Linux, macOS, and Windows. A shard that fails on a network error reruns with
   `gh run rerun <run> --failed`.
 - After a stage changes the ownership schema, delete `.gspot/state` and rerun `mise run apply`. Before switching to a
@@ -172,7 +172,7 @@ The owner and the work settled these while implementing:
       the tests that ran the rule examples.
     - The `tests/unit` check is gone, because CI runs the suites directly. The jest kit is out of this repository's
       kit list, so its tests lose the Jest rules. `jest` and `eslint-plugin-jest` moved to the tests workspace.
-    - The `repo:tools` script builds the test tool pins itself, and `mise run gspot -- <command>` replaces the `check`
+    - The `pin:test-tools` script builds the test tool pins itself, and `mise run gspot -- <command>` replaces the `check`
       and `doctor` tasks.
     - `types_directory` and `config_directory` stay, as the owner decided. Five naming exceptions for names that the
       earlier stages deleted are gone; the other exceptions still serve a file.
@@ -182,7 +182,7 @@ The owner and the work settled these while implementing:
     - stage 25: the shared Swift helpers in `swift-build`.
 - Stage 10 cut the D.4 command and package rows that delete, trim, or merge within acceptance. Stages 2 to 6 had
   already deleted the cache, performance, uninstall, and report-storage files.
-- A weekly `pins` workflow runs `repo:pins` (`packages/cli/scripts/pins.ts`) in place of the pins test.
+- A weekly `pins` workflow runs `check:pins` (`packages/cli/scripts/pins.ts`) in place of the pins test.
 - `package/lifecycle` tests the package runner script and moves with it in stage 21.
 - Stage 11 cut the D.4 kit rows that delete, trim, or merge within acceptance. `svg` merged into `static-site`, and
   `swift/security` was deleted. `swift/package` and the plist case of `xcode` run on macOS only.
@@ -292,7 +292,7 @@ The owner and the work settled these while implementing:
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
-  validation. A CI step replaces the test of the tool pins: it runs `repo:tools` and `git diff --exit-code`.
+  validation. A CI step replaces the test of the tool pins: it runs `pin:test-tools` and `git diff --exit-code`.
 - Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
   and byte backups. `output/progress`, `output/reporter`, `comment-syntax`, `suppression-comments`, `hooks`, `kinds`,
   `gitlinks`, `bun`, and most ownership files needed no further cut.
@@ -434,6 +434,19 @@ The owner and the work settled these while implementing:
     - A second fixer pass reruns the fixers whose files the first pass changed.
     - A list setting in a scope adds to the lists above it.
     - A per-rule key such as `tools.markdownlint.rules.MD013` is not a key of its own; the table form refuses `off`.
+- Stage 40 renamed the packages, tasks, and CI jobs of A.9:
+    - The root package is `@gspothq/workspace` and the docs package `@gspothq/docs`. The CLI reads its manifest as
+      `#cli-package`, the one alias.
+    - The tasks are `setup`, `install`, `pin:test-tools`, `check:pins`, `check:types`, `check:release`, `build:cli`,
+      `build:plugin`, `generate:docs`, `build:docs`, and `serve:docs`. `build:docs` checks the links with
+      `docs/links.ts`, `test:unit` and `test:integration` are gone, and `setup` prepares the grammar.
+    - `grammars.ts` replaces `inputs.ts`. A source checkout reads the npm grammars from `node_modules`, `setup`
+      downloads the Swift parser, and the build copies every grammar into the package.
+    - CI has a `test` job and a `tools-and-acceptance` job by platform, and every step has a name. The release calls
+      CI as its `ci` job and runs the package tests once.
+    - `docs.yml` replaces `site.yml`. It builds the release tag and deploys it, without the deploy plumbing.
+    - Beyond the rows: `repo:pins` is `check:pins`, and `docs:dev` is `serve:docs` with its `dev` alias. The
+      `$/` reference in `release.yml` stays: it is the self-repository syntax, which the actionlint runner translates.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
@@ -450,7 +463,7 @@ The owner and the work settled these while implementing:
 - `git grep` finds no retired name or path, and no quarantine marker remains. Windows acceptance blocks merges.
 - Knip is clean, the boundaries rule reports no violations, and `mise run doctor` is clean.
 - `mise run gspot -- check`, `mise run test`, and the full tool, acceptance, and package suites pass, one at a time.
-  `mise run docs:build` passes.
+  `mise run build:docs` passes.
 - `npm pack --dry-run` for both packages shows `rules`, `kits`, `grammars` without Ruby, and `dist`.
 - A packed-package journey runs `init --yes` in a repository with `AGENTS.md` and `CLAUDE.md`, then `check`.
   `CLAUDE.md` is gone, and `AGENTS.md` holds the block and the moved text.
