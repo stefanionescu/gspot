@@ -1,5 +1,6 @@
 // Corrections run in passes until they settle; dry runs use a scratch copy and return diffs.
 import { createTwoFilesPatch } from 'diff';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
@@ -232,8 +233,8 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
     const diffs = isDryRun
         ? changed.map((path) =>
               createTwoFilesPatch(
-                  `a/${path}`,
-                  `b/${path}`,
+                  `a/${toPosix(path)}`,
+                  `b/${toPosix(path)}`,
                   before.get(path)?.toString('utf8') ?? '',
                   after.get(path)?.toString('utf8') ?? '',
                   '',

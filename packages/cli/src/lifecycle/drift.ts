@@ -1,5 +1,6 @@
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -20,7 +21,7 @@ function isStrayCandidate(path: string, policy: Policy): boolean {
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two drift entries carry a patch; the caller sits at the complexity limit.
 function patch(path: string, before: string, after: string, beforeName: string): string {
-    return createTwoFilesPatch(`a/${path}`, `b/${path}`, before, after, beforeName, 'rendered', {
+    return createTwoFilesPatch(`a/${toPosix(path)}`, `b/${toPosix(path)}`, before, after, beforeName, 'rendered', {
         context: DRIFT_DIFF_CONTEXT,
     });
 }
