@@ -1,0 +1,61 @@
+import type { SwiftFunction, StructureProblem } from '#cli/types/checks.ts';
+import { trivialFunctionText, executableStatements } from '#cli/checks/general/structure/statements.ts';
+/**
+ * Report every implemented function at or below the configured statement threshold.
+ * @param functions the functions of a file
+ * @param threshold the statement count at or under which a function is trivial
+ * @returns one problem per trivial function
+ */
+export function trivialFunctions(functions: SwiftFunction[], threshold: number): StructureProblem[] {
+    return functions.flatMap((fn) => {
+        const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'swift');
+        return count <= threshold
+            ? [
+                  {
+                      file: fn.path,
+                      line: fn.node.startPosition.row + 1,
+                      rule: 'trivial-function',
+                      text: trivialFunctionText(fn.name, count, threshold),
+                  },
+              ]
+            : [];
+    });
+}
+
+/**
+ * Groups of matching function bodies that meet the minimum line count.
+ * @param functions every function of the run
+ * @param minimum the fewest body lines a repeated body holds
+ * @returns one problem for each group
+ */
+export function duplicateFunctions(functions: SwiftFunction[], minimum: number): StructureProblem[] {
+    const groups = new Map<string, SwiftFunction[]>();
+    for (const fn of functions) {
+        const lines = fn.body.flatMap((statement) =>
+            statement.text
+                .split('\n')
+                .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
+                .filter((line) => line !== '' && !line.startsWith('//')),
+        );
+        if (lines.length < minimum) continue;
+        const key = lines.join('\n');
+        groups.set(key, [...(groups.get(key) ?? []), fn]);
+    }
+    return groups
+        .values()
+        .filter((group) => group.length > 1)
+        .flatMap((group) => {
+            const [first] = group;
+            if (first === undefined) return [];
+            const places = group.map((fn) => `${fn.path}:${String(fn.node.startPosition.row + 1)} (${fn.name})`);
+            return [
+                {
+                    file: first.path,
+                    line: first.node.startPosition.row + 1,
+                    rule: 'same-body',
+                    text: `These functions have the same body: ${places.join(', ')}.`,
+                },
+            ];
+        })
+        .toArray();
+}

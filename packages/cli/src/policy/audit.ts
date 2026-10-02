@@ -4,7 +4,7 @@ import { policyLayers } from '#cli/policy/problems.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
-import { shippedPolicy } from '#cli/checks/naming/policy.ts';
+import { shippedPolicy } from '#cli/checks/general/naming/policy.ts';
 import { isWeaker, isReasonAccepted } from '#cli/policy/loosening.ts';
 import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';

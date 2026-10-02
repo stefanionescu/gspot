@@ -53,8 +53,6 @@ level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "docker"
-engine = "integrity"
-analysis = "nginx-test"
 tool = "docker"
 owners = {filenames = ["nginx.conf"]}
 summary = "Validates each main configuration inside the nginx image and records the files nginx parsed. It mounts a throwaway certificate and resolves upstream names."

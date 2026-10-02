@@ -1,53 +1,19 @@
-// Dispatch to the built-in engines by `engine =` in the manifest.
+// Running a check: the registry names the engine or the tool runner of each built-in check; every other check runs its command.
 import { join } from 'node:path';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { banned } from '#cli/checks/prose/banned.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { checkActions } from '#cli/checks/actions.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { valeFindings } from '#cli/checks/prose/vale.ts';
-import { integrityEngine } from '#cli/checks/dispatch.ts';
-import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
-import { namingEngine } from '#cli/checks/naming/engine.ts';
+import { ENGINES, RUNNERS } from '#cli/checks/registry.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { checkDependencies } from '#cli/checks/python/project.ts';
-import { structureEngine } from '#cli/checks/structure/engine.ts';
-import { checkDocstrings } from '#cli/checks/python/docstrings.ts';
-import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
-import { checkCommitMessages } from '#cli/checks/commit-messages.ts';
-import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
+import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 import type { Session, Executable, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { SUPPRESSIONS_CHECK, GENERATED_DRIFT_CHECK } from '#cli/config/execution/execution.ts';
 import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
 
 // A tool check runs the command of its definition; staged state does not change the command.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Executable.run passes the staged set third, where runToolCheck takes a command, so the tool check drops it here.
 const toolCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
-
-const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
-    integrity: integrityEngine,
-    naming: namingEngine,
-    structure: structureEngine,
-    prose(spec) {
-        if (spec.analysis === 'vale') return valeFindings;
-        if (spec.analysis === 'banned') return banned;
-        throw new Error(`No prose analysis is called ${spec.analysis ?? ''}.`);
-    },
-};
-
-const analyses = new Map<string, Executable['run']>([
-    ['verified-secrets', checkVerifiedSecrets],
-    ['gitleaks-history', checkSecretHistory],
-    ['commit-messages', checkCommitMessages],
-    ['typescript', checkTypescript],
-    ['javascript', checkJavascript],
-    ['swiftlint', checkSwiftlint],
-    ['pydoclint', checkDocstrings],
-    ['deptry', checkDependencies],
-    ['actions', checkActions],
-]);
 
 // Prepare asynchronous repository reads before handing input to the selected engine.
 async function executionInput(
@@ -56,7 +22,7 @@ async function executionInput(
     staged: Set<string> | undefined,
 ): Promise<EngineInput> {
     const input = engineInput(session, planned);
-    if (planned.spec.runs === 'once' && planned.spec.analysis === 'suppressions')
+    if (planned.spec.runs === 'once' && planned.spec.name === SUPPRESSIONS_CHECK)
         input.suppressions = await suppressionComments(
             session.root,
             session.scopes,
@@ -88,10 +54,7 @@ function engineResult(
         checkCoverage(input, result.checkedFiles);
         result.files = result.checkedFiles.length;
     }
-    for (const finding of result.findings) {
-        if (input.spec.engine !== undefined) finding.engine = input.spec.engine;
-        finding.help ??= input.spec.help;
-    }
+    for (const finding of result.findings) finding.help ??= input.spec.help;
     return result;
 }
 
@@ -99,7 +62,7 @@ function engineResult(
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
     if (error instanceof GspotError && error.code === 'skipped') return { status: 'skipped', note: error.message };
     if (error instanceof GspotError && error.code === 'missing-tool') return { status: 'missing', note: error.message };
-    return { status: 'error', note: `the ${name} engine failed: ${(error as Error).message}` };
+    return { status: 'error', note: `the ${name} check failed: ${(error as Error).message}` };
 }
 
 /**
@@ -129,7 +92,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
     };
     if (planned.spec.runs === 'once') {
         input.repositoryFiles = session.repository.files;
-        if (planned.spec.analysis === 'generated-drift')
+        if (planned.spec.name === GENERATED_DRIFT_CHECK)
             input.generatedDrift = () =>
                 computeDrift(
                     session.root,
@@ -166,7 +129,6 @@ export async function runEngineCheck(
         duration: 0,
         findings: [],
     };
-    const name = spec.engine;
     const started = performance.now();
     try {
         const input = await executionInput(session, planned, staged);
@@ -179,7 +141,7 @@ export async function runEngineCheck(
             duration: performance.now() - started,
         };
     } catch (error) {
-        return { ...base, duration: performance.now() - started, ...failureOf(name ?? spec.name, error) };
+        return { ...base, duration: performance.now() - started, ...failureOf(spec.name, error) };
     }
 }
 
@@ -189,11 +151,12 @@ export async function runEngineCheck(
  * @returns the function that runs the check
  */
 export function checkExecution(spec: CheckSpec): Executable['run'] {
-    if (spec.engine !== undefined) {
-        const engine = engines[spec.engine](spec);
-        return (session, planned, staged) => runEngineCheck(session, engine, planned, staged);
+    const runner = RUNNERS[spec.name];
+    if (runner !== undefined) return runner;
+    const engine = ENGINES[spec.name];
+    if (engine !== undefined) return (session, planned, staged) => runEngineCheck(session, engine, planned, staged);
+    if (spec.command === undefined) {
+        throw new Error(`The check ${spec.name} names no command, and gspot has no built-in check by that name.`);
     }
-    const analysis = spec.analysis === undefined ? undefined : analyses.get(spec.analysis);
-    if (analysis !== undefined) return analysis;
     return toolCheck;
 }

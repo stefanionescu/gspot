@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 import { sep, resolve } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { sarifFindings } from '#cli/checks/security/codeql.ts';
+import { sarifFindings } from '#cli/checks/general/security/codeql.ts';
 
 const sourceRoot = resolve('selected-source');
 const sourceUri = pathToFileURL(`${sourceRoot}${sep}`).href;

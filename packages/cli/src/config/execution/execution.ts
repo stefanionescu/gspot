@@ -69,4 +69,9 @@ export const PROJECT_MANIFESTS = ['package.json', 'pyproject.toml'];
 export const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 /** The words a platform name is written with in a sentence. */
 export const PLATFORM_LABELS: Record<string, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
-export const HISTORY_ANALYSES = new Set(['commit-messages', 'gitleaks-history', 'verified-secrets']);
+/** The checks that read the history of the pushed commits. */
+export const HISTORY_CHECKS = new Set(['commits/range', 'secrets/gitleaks', 'secrets/trufflehog']);
+/** The check that reads the suppression comments of every source file. */
+export const SUPPRESSIONS_CHECK = 'integrity/suppressions';
+/** The check that compares the generated files with what the policy renders. */
+export const GENERATED_DRIFT_CHECK = 'integrity/generated-drift';

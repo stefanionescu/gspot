@@ -3,9 +3,9 @@ import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
 import type { CheckOptions } from '#cli/types/commands.ts';
-import { envFiles } from '#cli/checks/security/env/files.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import { envExample } from '#cli/checks/security/env/example.ts';
+import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
+import { envExample } from '#cli/checks/general/files/env-example.ts';
 
 test('staged refusal and tracked-file checks agree on environment files and templates in nested folders', async () => {
     await using directory = await testdir();

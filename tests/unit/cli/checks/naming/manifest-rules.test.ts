@@ -4,7 +4,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { rulesFor, effectivePolicy } from '#cli/checks/naming/policy.ts';
+import { rulesFor, effectivePolicy } from '#cli/checks/general/naming/policy.ts';
 
 const manifests = kitManifests();
 const express = manifests.get('express')!;

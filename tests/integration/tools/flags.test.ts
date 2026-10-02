@@ -120,8 +120,7 @@ test('every pinned tool a manifest command names is defined in that manifest', (
     const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const undefinedTools = manifests.flatMap((manifest) =>
         manifest.checks
-            .filter((check) => check.command !== undefined)
-            .map((check) => check.tool ?? check.command[0]!)
+            .flatMap((check) => (check.command === undefined ? [] : [check.tool ?? check.command[0]!]))
             .filter((name) => !declared.has(name)),
     );
     expect([...new Set(undefinedTools)]).toStrictEqual([]);

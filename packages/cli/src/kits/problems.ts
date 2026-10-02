@@ -82,10 +82,10 @@ function checkOwners(manifests: Map<string, Manifest>): Map<string, string> {
     return owners;
 }
 
-// Whether a check is a built-in engine check that runs once without a tool.
+// Whether a check is built in, runs once per repository, and names no command or tool.
 function isStandalone(check: Manifest['checks'][number] | undefined): boolean {
     if (check === undefined) return false;
-    return check.engine !== undefined && check.runs === 'once' && check.tool === undefined;
+    return check.command === undefined && check.tool === undefined && check.runs === 'once';
 }
 
 // Refuses a check reference that does not name another kit's standalone built-in check.
@@ -214,8 +214,8 @@ export function manifestProblems(raw: RawManifest): string[] {
         CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.problem(check)),
     );
     const readers = configurationReaders(raw.checks);
-    const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
-    if (hasEngineCheck) return checks;
+    const hasBuiltInCheck = raw.checks.some((check) => check.command === undefined);
+    if (hasBuiltInCheck) return checks;
     // A config that needs another kit is read by that kit's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
         .filter((config) => !config.fragment && config.pointer === undefined && config.needs === undefined)

@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
+import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 test.each([
     ['// Example eslint-disable-next-line no-console', false],

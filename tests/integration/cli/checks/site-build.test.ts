@@ -12,8 +12,8 @@ import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import type { SiteReportCase } from '#tests/types/integration/cli/checks.ts';
-import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/static-site/build.ts';
-import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/static-site/output-checks.ts';
+import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
+import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
 
 import {
     statSync,

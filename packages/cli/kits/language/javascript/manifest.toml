@@ -228,7 +228,6 @@ level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
-analysis = "javascript"
 tool = "tsc"
 owners = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
@@ -341,8 +340,6 @@ example = "An authored ESLint override disabling a rule required by policy repor
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "required-rules"
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the configurations require."
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."

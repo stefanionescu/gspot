@@ -10,7 +10,6 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
     if (problems.length === 0) return undefined;
     const findings = problems.map((problem) => ({
         check: POLICY_CHECK,
-        engine: 'integrity',
         file: 'gspot.toml',
         message: problemText(problem),
         fixable: false,

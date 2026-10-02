@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { underFloor } from '#cli/checks/xctest/coverage.ts';
+import { underFloor } from '#cli/checks/tool/xctest/coverage.ts';
 
 test('the coverage check compares each named target with its floor', () => {
     const report = { targets: [{ name: 'App.app', lineCoverage: 0.617 }] };

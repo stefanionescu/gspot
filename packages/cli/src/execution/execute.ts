@@ -12,7 +12,7 @@ import { assembleReport } from '#cli/execution/run-report.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import type { Finding, CheckResult } from '#cli/types/checks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
+import { DOCKER, RAN_STATUSES, HISTORY_CHECKS, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 
 import type {
     Pass,
@@ -188,7 +188,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
             check.files.length > 0 ||
             check.triggerPaths.length > 0 ||
             check.spec.stage === 'message' ||
-            (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0),
+            (HISTORY_CHECKS.has(check.spec.name) && (check.commits?.length ?? 0) > 0),
     );
     const ran = await runChecks(pass, active);
     const report = assembleReport({

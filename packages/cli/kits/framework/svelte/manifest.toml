@@ -76,8 +76,6 @@ example = "A component containing `<img src={source} />` reports `a11y_missing_a
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "svelte-check"
 replaces = "typescript/tsc"
 owners = {extensions = [".svelte"]}
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."

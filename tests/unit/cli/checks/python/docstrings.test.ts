@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { docstringStyle } from '#cli/checks/python/docstrings.ts';
+import { docstringStyle } from '#cli/checks/language/python/pydoclint.ts';
 
 test.each(['google', 'numpy'] as const)('Ruff %s docstrings keep into an unconfigured pydoclint style', (style) => {
     const project = `[tool.ruff.lint.pydocstyle]\nconvention = "${style}"\n`;

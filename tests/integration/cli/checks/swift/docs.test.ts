@@ -7,8 +7,8 @@ import * as inspections from '#cli/tools/inspect.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { checkSwiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 
 test('Swift documentation adapter rejects malformed native output and removes its selected workspace', async () => {
     await using sandbox = await testdir();

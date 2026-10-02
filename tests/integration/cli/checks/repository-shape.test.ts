@@ -4,10 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
-import { fileIntegrity } from '#cli/checks/repository/files.ts';
-import { largeFiles } from '#cli/checks/repository/large-files.ts';
-import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
-import { suppressions, suppressionComments } from '#cli/checks/repository/suppressions.ts';
+import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
+import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';
+import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
+import { suppressions, suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 const policy = {
     kits: ['typescript', 'docs'],

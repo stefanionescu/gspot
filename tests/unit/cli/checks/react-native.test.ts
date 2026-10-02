@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { doctorFindings } from '#cli/checks/react-native.ts';
+import { doctorFindings } from '#cli/checks/framework/react-native.ts';
 
 const REPORT = [
     'Running 15 checks on your project...',

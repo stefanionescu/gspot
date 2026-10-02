@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
-import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
+import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();

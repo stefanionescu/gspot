@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { functionsOf as swiftFunctions } from '#cli/checks/swift/sources.ts';
-import { functionsOf as pythonFunctions } from '#cli/checks/python/modules.ts';
-import { trivialFunctions as swiftTrivial } from '#cli/checks/swift/bodies.ts';
-import { trivialFunctions as pythonTrivial } from '#cli/checks/python/functions.ts';
-import { trivialFile, executableStatements } from '#cli/checks/structure/statements.ts';
+import { functionsOf as swiftFunctions } from '#cli/checks/language/swift/sources.ts';
+import { functionsOf as pythonFunctions } from '#cli/checks/language/python/modules.ts';
+import { trivialFunctions as swiftTrivial } from '#cli/checks/language/swift/bodies.ts';
+import { trivialFunctions as pythonTrivial } from '#cli/checks/language/python/functions.ts';
+import { trivialFile, executableStatements } from '#cli/checks/general/structure/statements.ts';
 
 test.each([
     ['python', 'def example():\n    """Contract."""\n    work()\n    work()\n'],

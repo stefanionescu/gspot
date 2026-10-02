@@ -37,8 +37,6 @@ level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
-engine = "integrity"
-analysis = "jest-coverage"
 owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
 tool = "jest"
 summary = "Runs Jest in a disposable source copy and checks all four coverage floors."

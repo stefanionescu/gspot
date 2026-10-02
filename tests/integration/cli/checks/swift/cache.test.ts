@@ -4,7 +4,7 @@ import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
-import { openBuildCache } from '#cli/checks/swift/cache.ts';
+import { openBuildCache } from '#cli/checks/language/swift/cache.ts';
 import { rmSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('build state is platform-local, stable for one repository, and distinct between repositories', async () => {

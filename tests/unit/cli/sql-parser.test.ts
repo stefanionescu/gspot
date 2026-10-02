@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/support/spelling.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
-import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import type { SourceReads } from '#cli/types/repository/repository.ts';
+import { sqlIdentifiers } from '#cli/checks/general/naming/extractors/sql.ts';
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
     const reads: SourceReads = { root: '/repository', sources: new Map() };
@@ -55,7 +55,7 @@ test('SQL statement positions skip nested comments and count Unicode prefixes co
 
 test('concurrent SQL parsing returns independent results in a fresh process', () => {
     const script = `
-        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/parser.ts', import.meta.dir))};
+        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/pg.ts', import.meta.dir))};
         const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parseSql(sql)));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;

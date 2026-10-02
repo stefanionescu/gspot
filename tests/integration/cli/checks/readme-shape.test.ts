@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
-import { docsHeadings } from '#cli/checks/docs/headings.ts';
-import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
+import { readmeShape } from '#cli/checks/general/docs/readme.ts';
+import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 
 describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {

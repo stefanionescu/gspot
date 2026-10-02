@@ -9,8 +9,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
+import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
+import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
 import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {

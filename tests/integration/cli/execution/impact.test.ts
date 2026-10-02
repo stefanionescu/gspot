@@ -146,8 +146,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
 });
 
-test('an unknown analysis refuses the complete plan before any command runs', async () => {
-    const engine = 'integrity';
+test('a check with no command and no built-in check refuses the complete plan before any command runs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(['typescript']),
@@ -171,12 +170,10 @@ test('an unknown analysis refuses the complete plan before any command runs', as
     const invalid: CheckSpec = {
         ...definition,
         name: 'sandbox/unknown',
-        engine,
-        analysis: 'unknown-analysis',
     };
     session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
     expect(await rejection(executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false }))).toContain(
-        `No ${engine} analysis is called unknown-analysis.`,
+        'The check sandbox/unknown names no command, and gspot has no built-in check by that name.',
     );
     expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
 });

@@ -237,7 +237,7 @@ names = [
 reason = "Emscripten and libpg-query export these members."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/checks/sql.ts"
+file = "packages/cli/src/checks/language/sql.ts"
 names = ["FunctionParameter"]
 reason = "The libpg-query AST tag for a function parameter."
 
@@ -402,12 +402,12 @@ reason = "Each directory owns tests of that named language kit, parser, or tool 
 
 [[structure.folder_name_allowed]]
 paths = [
-    "packages/cli/src/checks/bash",
-    "packages/cli/src/checks/python",
-    "packages/cli/src/checks/swift",
-    "packages/cli/src/checks/typescript",
+    "packages/cli/src/checks/language/bash",
+    "packages/cli/src/checks/language/javascript",
+    "packages/cli/src/checks/language/python",
+    "packages/cli/src/checks/language/swift",
 ]
-reason = "Each folder holds the checks and parsers of one language, named after it."
+reason = "Each folder holds the checks of one language kit and is named after the kit, as the kits folder is."
 
 [[structure.single_file_folder_allowed]]
 paths = ["docs/src/pages/schema"]
@@ -510,7 +510,7 @@ reason = "JSON.stringify emits whole literals into a standalone ESLint module, n
 
 [[tools.codeql.false_positives]]
 rule = "js/incomplete-sanitization"
-paths = ["packages/cli/src/checks/actions.ts"]
+paths = ["packages/cli/src/checks/general/files/actions.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 
 [[tools.codeql.false_positives]]

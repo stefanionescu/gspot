@@ -10,8 +10,8 @@ import { statSync, chmodSync, existsSync } from 'node:fs';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { checkJavascript } from '#cli/checks/typescript/tsc.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { checkJavascript } from '#cli/checks/language/javascript/tsc.ts';
 import { JAVASCRIPT_AUTHORED_FILES } from '#tests/inputs/integration/tools/generation.ts';
 
 test('JavaScript checking includes authored build directories at all', async () => {

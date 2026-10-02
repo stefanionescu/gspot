@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
 import type { CloneReport } from '#cli/types/checks.ts';
-import { cloneFindings } from '#cli/checks/docs/copied-blocks.ts';
+import { cloneFindings } from '#cli/checks/general/duplication.ts';
 
 describe('clone findings', () => {
     test('native absolute and relative paths retain owned copies and exclude other files', () => {

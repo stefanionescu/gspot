@@ -172,7 +172,6 @@ example = "A workflow using an unknown expression context such as `${{ unknown.v
 level = "recommended"
 stage = "commit"
 runs = "per-file-list"
-analysis = "actions"
 tool = "actionlint"
 findings_exit_codes = [1]
 owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
@@ -233,8 +232,6 @@ example = "Source code reading `API_URL` while the environment template omits th
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "env-example"
 summary = "Checks that every environment variable the code reads appears in the environment template."
 why = "A variable missing from the template is the one a new machine lacks on its first run."
 help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."

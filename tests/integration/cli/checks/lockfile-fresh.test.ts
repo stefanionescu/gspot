@@ -6,8 +6,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 
 test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
     'frozen installation reports %s as inability, preserves the repository, and retries successfully',

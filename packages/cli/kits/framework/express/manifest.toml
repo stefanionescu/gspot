@@ -23,8 +23,6 @@ example = "With `tools.express.route_files = [\"routes/*.ts\"]`, `routes/users.t
 level = "all"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "routes-tested"
 summary = "Checks that a test in the same scope imports each route file."
 why = "A route with no test is the one that changes behavior without anyone noticing."
 help = "Add a test that imports and exercises the route."

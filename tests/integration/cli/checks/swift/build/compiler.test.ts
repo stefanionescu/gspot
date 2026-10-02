@@ -4,12 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/support/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
-import { swiftBuild, swiftAnalyze } from '#cli/checks/swift/build.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { swiftBuild, swiftAnalyze } from '#cli/checks/language/swift/build.ts';
 import { rejection, containing, textContaining } from '#tests/support/expectations.ts';
 
 // The build checks inspect the Swift toolchain before their mocked runs.

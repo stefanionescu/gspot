@@ -29,8 +29,6 @@ level = "recommended"
 stage = "commit"
 runs = "once"
 platform = ["macos", "linux"]
-engine = "integrity"
-analysis = "ansible-lint"
 tool = "ansible-lint"
 owners = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
 summary = "Runs ansible-lint in every folder that holds an ansible.cfg."

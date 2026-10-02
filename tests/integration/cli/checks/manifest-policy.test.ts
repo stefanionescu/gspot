@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
+import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
 import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 async function input(root: string): Promise<EngineInput> {

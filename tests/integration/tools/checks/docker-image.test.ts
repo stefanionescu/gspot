@@ -7,8 +7,8 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
-import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { textContaining } from '#tests/support/expectations.ts';
+import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
 
 // Imports the payload of the sandbox as each tag in turn; the second import gets a payload without credentials.
 function importImages(sandbox: string, tags: readonly string[]): void {

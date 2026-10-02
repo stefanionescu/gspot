@@ -40,8 +40,6 @@ example = "A locked package whose declared license is outside the allowed licens
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "licenses-packages"
 waits_for = "tools.licenses.licenses_allowed"
 owners = {filenames = ["package.json", "pyproject.toml"]}
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."

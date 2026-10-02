@@ -6,7 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
-import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
+import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { prepareSupabaseCheck } from '#tests/support/cli/supabase/check.ts';
 

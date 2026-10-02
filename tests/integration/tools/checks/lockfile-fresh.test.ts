@@ -8,7 +8,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { rmSync, existsSync, readFileSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
+import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 
 test.each([
     [process.execPath, 'bun.lock'],

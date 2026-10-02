@@ -11,7 +11,7 @@ import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
-import { parseAlerts, valeFindings } from '#cli/checks/prose/vale.ts';
+import { parseAlerts, valeFindings } from '#cli/checks/general/prose/vale.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {

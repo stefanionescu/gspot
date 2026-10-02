@@ -24,8 +24,6 @@ title = "Router boundaries"
 example = "A client module importing a server router as a runtime value reports a boundary finding. Import only the router type with `import type`, and make requests through the tRPC client."
 level = "recommended"
 stage = "commit"
-engine = "integrity"
-analysis = "trpc-boundaries"
 owners = {extensions = [".ts", ".tsx"]}
 summary = "Checks that code outside the server paths imports from them as a type only."
 why = "A value import of the router pulls the server, its secrets, and its database client into the client bundle."

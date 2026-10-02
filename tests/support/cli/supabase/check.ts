@@ -6,8 +6,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import type { PrepareSupabaseCheckResult } from '#tests/types/results.ts';
+import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
 
 /** Isolates the external Supabase executable while preserving real freshness planning and execution. */
 export async function prepareSupabaseCheck(

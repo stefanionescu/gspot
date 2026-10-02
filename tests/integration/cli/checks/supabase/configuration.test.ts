@@ -8,8 +8,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { functionFolders } from '#cli/checks/supabase/project.ts';
-import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
+import { projectValid, functionFolders, storagePolicies } from '#cli/checks/platform/supabase/project.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;

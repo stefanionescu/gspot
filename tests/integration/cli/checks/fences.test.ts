@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { fences } from '#cli/checks/docs/fences.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
+import { fences } from '#cli/checks/language/markdown.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('a fenced block that does not parse in its language is a finding', async () => {

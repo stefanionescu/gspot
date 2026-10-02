@@ -2,10 +2,12 @@ import { z } from 'zod';
 import { reasoned } from '#cli/policy/fields.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
-import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
+import { FULL_PERCENTAGE } from '#cli/config/checks/typescript.ts';
 
 const text = z.string();
+
 const flag = z.boolean();
+
 const textListNonEmpty = z.array(text.min(1)).min(1);
 
 const extraTable = z.object({ reason: text.optional() }).catchall(z.unknown());
@@ -18,20 +20,36 @@ const enabledSeverity = z.union([
     z.literal(ESLINT_WARN),
     z.literal(ESLINT_ERROR),
 ]);
+
 const enabledRule = z.union([enabledSeverity, z.tuple([enabledSeverity]).rest(z.unknown())], {
     error: (issue) =>
         `Use an enabled severity (error, warn, 2, or 1), optionally followed by rule options. To disable this rule, use gspot ignore <check> --rule ${quoteArgument(String(issue.path?.at(-1) ?? '<rule>'))}.`,
 });
+
 const eslintRules = z.record(text, enabledRule);
+
 const stylelintValue = z.union([z.literal(true), text.min(1), z.number(), z.record(text, z.json())]);
+
 const stylelintRules = z.record(
     text.min(1),
     z.union([stylelintValue, z.tuple([z.union([stylelintValue, z.array(z.json())])]).rest(z.json())]),
 );
+
 const eslintTable = toolTable.extend({
     rules: eslintRules.optional(),
     overrides: z.array(z.strictObject({ paths: textListNonEmpty, rules: eslintRules })).optional(),
 });
+
+export const jestPercentage = z.number().min(0).max(FULL_PERCENTAGE);
+
+/** Coverage floors shared by policy validation and native Jest execution. */
+export const jestCoverageSettings = z.object({
+    coverage_lines: jestPercentage,
+    coverage_branches: jestPercentage,
+    coverage_functions: jestPercentage,
+    coverage_statements: jestPercentage,
+});
+
 export const toolsSchema = z
     .object({
         ruff: toolTable.extend({ docstring_convention: z.enum(['google', 'numpy', 'pep257']).optional() }).optional(),

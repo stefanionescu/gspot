@@ -7,9 +7,9 @@ import * as tools from '#cli/execution/tool/runner.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { licensesPackages } from '#cli/checks/licenses.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 // The pinned scanner as the private environment holds it: a shell script on POSIX, a command file on Windows.

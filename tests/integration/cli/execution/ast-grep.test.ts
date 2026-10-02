@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { astGrepMatches } from '#cli/checks/bash/ast-grep.ts';
+import { astGrepMatches } from '#cli/checks/language/bash/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();

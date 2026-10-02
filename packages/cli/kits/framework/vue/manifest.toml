@@ -76,7 +76,6 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 tool = "vue-tsc"
-analysis = "typescript"
 replaces = "typescript/tsc"
 needs = "typescript"
 owners = {extensions = [".vue"]}

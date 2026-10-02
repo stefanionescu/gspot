@@ -5,8 +5,8 @@ import { onMac } from '#tests/support/cli/platforms.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
-import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { swiftBuild, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
 import { statSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 // The build checks inspect the Swift toolchain before their mocked runs.
