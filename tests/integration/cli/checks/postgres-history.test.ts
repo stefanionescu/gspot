@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
@@ -18,22 +18,24 @@ const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
 
 const PATH = 'migrations/20240201_teams.sql';
 
-function git(root: string, args: string[]): string {
-    const result = runBlocking(['git', ...args], { cwd: root });
-    expect(result.code).toBe(0);
-    return result.stdout.trim();
-}
-
 test('migration history reports changed committed SQL and an earlier new version, then accepts corrections', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: ORIGINAL });
-    git(sandbox.path, ['init']);
-    git(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([]);
-    git(sandbox.path, ['-c', 'user.name=Example', '-c', 'user.email=example@example.com', 'commit', '-m', 'Fixture']);
+    gitOutput(sandbox.path, [
+        '-c',
+        'user.name=Example',
+        '-c',
+        'user.email=example@example.com',
+        'commit',
+        '-m',
+        'Fixture',
+    ]);
     writeFileSync(join(sandbox.path, PATH), ORIGINAL + 'ALTER TABLE teams ADD COLUMN name text;\n');
     await createFileTree(sandbox.path, { 'migrations/20240101_early.sql': 'SELECT 1;\n' });
-    git(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['add', '.']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([
         {
             check: 'postgres/migrations-frozen',
@@ -55,11 +57,11 @@ test('migration history reports changed committed SQL and an earlier new version
         },
     ]);
     writeFileSync(join(sandbox.path, PATH), ORIGINAL);
-    git(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
+    gitOutput(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([]);
     expect(await migrationOrder(await sessionInput(sandbox.path, 'postgres/migration-order'))).toStrictEqual([]);
     const read = await sessionInput(sandbox.path, 'postgres/migrations-frozen');
-    const branch = git(sandbox.path, ['symbolic-ref', 'HEAD']);
+    const branch = gitOutput(sandbox.path, ['symbolic-ref', 'HEAD']);
     writeFileSync(join(sandbox.path, '.git', branch), 'broken');
     await rejects(migrationsFrozen(read), { message: /Cannot read committed Git history/u });
 });

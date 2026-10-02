@@ -2,26 +2,20 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
-function git(root: string, ...args: string[]): void {
-    const result = runBlocking(['git', ...args], { cwd: root });
-    expect(result.code, result.stderr).toBe(0);
-}
-
 test('the index keeps deleted tracked paths, encoded names, and excludes untracked files', async () => {
     const path = 'folder % café/file.env';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
     expect(indexedPaths(sandbox.path)).toStrictEqual([]);
-    git(sandbox.path, 'init', '-q');
-    git(sandbox.path, 'add', '--', path);
+    gitOutput(sandbox.path, ['init', '-q']);
+    gitOutput(sandbox.path, ['add', '--', path]);
     rmSync(join(sandbox.path, path));
     expect(indexedPaths(sandbox.path)).toStrictEqual([path]);
 });
@@ -36,8 +30,8 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
             'node_modules/example/source.js': 'export {};\n',
             'source.ts': 'export {};\n',
         });
-        git(sandbox.path, 'init', '-q');
-        git(sandbox.path, 'add', '.');
+        gitOutput(sandbox.path, ['init', '-q']);
+        gitOutput(sandbox.path, ['add', '.']);
         const session = await openSession(sandbox.path);
         const options = runOptions({ only: [check], isDryRun: true });
         const found = await executeRun(session, options);

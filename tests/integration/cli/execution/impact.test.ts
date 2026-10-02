@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { gitOutput } from '#tests/harness/cli/git.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -42,12 +42,6 @@ test('repository checks retain nested inputs and report their defects once at th
     expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
-function git(root: string, ...argv: string[]): void {
-    const result = runBlocking(['git', ...argv], { cwd: root });
-    expect(result.code, result.stderr).toBe(0);
-}
-
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const spec: CheckSpec = {
@@ -80,11 +74,19 @@ test.each([
         'api/source.ts': 'export {};\n',
         'web/kept.ts': 'export {};\n',
     });
-    git(sandbox.path, 'init');
-    git(sandbox.path, 'add', '.');
-    git(sandbox.path, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Sandbox');
-    if (operation === 'delete') git(sandbox.path, 'rm', 'api/source.ts');
-    else git(sandbox.path, 'mv', 'api/source.ts', 'web/source.ts');
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, [
+        '-c',
+        'user.name=Sandbox',
+        '-c',
+        'user.email=sandbox@example.com',
+        'commit',
+        '-qm',
+        'Sandbox',
+    ]);
+    if (operation === 'delete') gitOutput(sandbox.path, ['rm', 'api/source.ts']);
+    else gitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
     mkdirSync(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
