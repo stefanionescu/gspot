@@ -597,9 +597,9 @@ reason = "The site imports the fonts from docs/src/theme.css, outside the TypeSc
 [[structure.folder_name_allowed]]
 paths = [
     "tests/acceptance/kits/language/bash",
-    "tests/acceptance/kits/language/python",
     "tests/acceptance/kits/language/swift",
     "tests/acceptance/kits/language/typescript",
+    "tests/integration/cli/checks/language/python",
     "tests/integration/cli/checks/language/swift",
     "tests/unit/cli/checks/language/python",
 ]
