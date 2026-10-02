@@ -25,7 +25,7 @@ approved it on October 1, 2026.
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
 - Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
   flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
-- Stages 29 to 32 are done on that branch. The next stage to start is stage 33.
+- Stages 29 to 33 are done on that branch. The next stage to start is stage 34.
 
 ### Stages
 
@@ -65,7 +65,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 30    | Rename the kit manifest fields                         | A.4                                                                                                     | in the batch     |
 | 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | in the batch     |
 | 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | in the batch     |
-| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | not started      |
+| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | in the batch     |
 | 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | not started      |
 | 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | not started      |
 | 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | not started      |
@@ -374,6 +374,27 @@ The owner and the work settled these while implementing:
     - The shipped rule against subagents is gone, as decided. This repository's own `AGENTS.md` keeps its line.
     - The `.gspot/guides` copies that a clone had adopted stayed behind after the move, because apply hands back an
       adopted file instead of deleting it. They were deleted by hand.
+- Stage 33 renamed the flags, output words, and JSON fields of A.2, A.7, and A.8:
+    - `check --hook commit|push` replaces `--stage`. A message file alone selects the message checks, so `--hook`
+      takes no `message`. A manual check runs when `--only` names it, and the generated CI job lists the selected
+      manual checks by name. This repository's CI lists its three.
+    - Each command's description holds what the `Effects:` heading repeated. `-C` says directory.
+    - `tsconfig.check.json`, `hadolint.yaml`, and `trivy.yaml` are `tsconfig.json`, `hadolint.yml`, and `trivy.yml`.
+      `gspot-tools` is one constant, `GSPOT_JOBS` is documented, and the site workflow reads `PAGES_ENABLED`, which
+      the repository does not set yet.
+    - Five Vale styles, the bash ast-grep rule, and the keys of the shipped naming policy have plain names.
+    - Results say passed, failed, skipped, missing, or error everywhere. `fileCount` and `files`, `partial`,
+      `unstagedChanges`, and a skip `cause` of replaced, setting, condition, flag, platform, or ignore replace the
+      old fields. The exit codes are `EXIT_FINDINGS`, `EXIT_ERROR`, and `TRIVY_EXIT`.
+    - Error codes are nouns: tool, output, skip, and pin join policy and the rest. A failed install prints `error` and
+      `message`. doctor says detected, recommended, unowned, and authored; a push report says skipped; list says
+      `selectedKits`; apply says updated.
+    - Kept apart from A.8: the report's `failed` list stays, because it also names a check whose fixer failed while
+      the check passed. explain names the file's kind `fileKind`, because the explanation's own `kind` is path.
+    - Nineteen more generated files that a clone had adopted were deleted by hand, and five old Vale styles.
+- Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
+  from the ownership log. Every layout change leaves such files in an existing clone.
+- The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
