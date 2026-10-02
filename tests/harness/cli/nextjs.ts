@@ -1,64 +1,15 @@
-// Next.js projects for installed consumers and disposable build verification.
+// Next.js projects for disposable build verification.
 import executables from 'which';
+import { join } from 'node:path';
 import { spyOn } from 'bun:test';
-import { randomUUID } from 'node:crypto';
-import { join, delimiter } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
-import { initArgs } from '#tests/harness/planted/init.ts';
-import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { install, toolsPath } from '#tests/harness/tools/install.ts';
-import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
-import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/harness/cli/modules.ts';
-
-/** init selecting nextjs without the recommendations the tests leave out. */
-const NEXT_INIT = initArgs(['nextjs']); /**
- * Plants the project beside this repository's node_modules, initializes it, and sets the all level.
- * @returns the sandbox and the environment its commands run with
- */
-export async function installedNextProject(): Promise<{
-    sandbox: Awaited<ReturnType<typeof testdir>>;
-    environment: Record<string, string>;
-}> {
-    // Webpack requires the linked dependencies and the sandbox to share a drive.
-    const sandbox = await testdir(
-        {},
-        { dirname: join(join(INSTALLED_MODULES, '../..'), 'gspot-test-' + randomUUID()) },
-    );
-    try {
-        await createFileTree(sandbox.path, {
-            '.gitignore': 'node_modules\n.next\n',
-            'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,
-            'tsconfig.json':
-                '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "DOM.Iterable", "ES2022"],\n        "noEmit": true,\n        "plugins": [{ "name": "next" }]\n    },\n    "include": ["app"]\n}\n',
-            'next.config.mjs': NEXT_CONFIG,
-            'app/page.tsx': NEXT_PAGE,
-            'app/layout.tsx': NEXT_LAYOUT,
-            'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
-            'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
-        });
-        linkInstalledModules(join(sandbox.path, 'node_modules'));
-        commitAll(sandbox.path);
-        const environment = {
-            PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
-        };
-        await install(sandbox.path, NEXT_INIT, environment, ['naming', 'spelling', 'css', 'files']);
-        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
-        if (selected.code !== 0)
-            throw new Error(`Next.js setup failed (${String(selected.code)}): ${selected.stdout}${selected.stderr}`);
-        return { sandbox, environment };
-    } catch (error) {
-        await sandbox[Symbol.asyncDispose]();
-        throw error;
-    }
-}
 
 /**
  * Prepare tracked and untracked output for disposable Next.js build checks.

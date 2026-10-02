@@ -704,7 +704,7 @@ rule = "js/file-system-race"
 paths = [
     "tests/integration/cli/commands/agents.test.ts",
     "tests/acceptance/cli/clone.test.ts",
-    "tests/integration/cli/checks/framework/nextjs-build.test.ts",
+    "tests/integration/cli/checks/framework/nextjs/build.test.ts",
     "tests/integration/cli/checks/language/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/resource-reads.test.ts",
     "tests/tools/cli/packages/project.test.ts",

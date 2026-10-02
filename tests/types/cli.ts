@@ -49,3 +49,6 @@ export type PlantedInput = {
 };
 /** What a spawned command left behind, for tests. */
 export type SpawnOutcome = { code: number; stdout: string; stderr: string };
+
+/** A planted repository after its install: the root and the environment every command of the test runs with. */
+export type InstalledRepository = { root: string; environment: Record<string, string> };

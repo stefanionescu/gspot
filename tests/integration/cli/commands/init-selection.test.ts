@@ -72,3 +72,27 @@ test(
     },
     PLANTED_TIMEOUT_MS,
 );
+
+test.each([
+    { dependency: false, named: false, isSelected: false },
+    { dependency: true, named: false, isSelected: true },
+    { dependency: false, named: true, isSelected: true },
+])(
+    'Next.js selects locale checking according to dependencies and explicit choices: %j',
+    async ({ dependency, named, isSelected }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'package.json': JSON.stringify({
+                name: 'translated-app',
+                private: true,
+                dependencies: { next: '16.3.5', ...(dependency ? { 'next-intl': '4.3.9' } : {}) },
+            }),
+            'app/page.tsx': 'export default function Page() { return "home"; }\n',
+        });
+        const kits = ['--kits', 'nextjs', ...(named ? ['i18n'] : [])];
+        const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...kits, ...QUIET_INIT]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const { plan } = JSON.parse(result.stdout) as { plan: { kits: { kit: string }[] } };
+        expect(plan.kits.some(({ kit }) => kit === 'i18n')).toBe(isSelected);
+    },
+);
