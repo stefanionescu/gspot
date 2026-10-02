@@ -18,14 +18,15 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 2, 2026
 
-- `main` is at `28ac40ad`. Stages 1 to 24 are merged as pull requests #2 to #8 and #10 to #19. Stage 7 also deleted
+- `main` is at `bd9362fa`. Stages 1 to 28 are merged as pull requests #2 to #8 and #10 to #20. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
-  flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
-- Stages 29 to 35 are done on that branch. The batch suites run next, then the pull request.
+- Stages 29 to 35 rename keys, fields, checks, flags, and identifiers in pull request #21, branch
+  `refactor/rename-policy-keys`.
+- Stages 36 to 41 make the next batch on `refactor/rename-checks-plugin-tasks`, stacked on it. Stages 36 and 37 are
+  done.
 
 ### Stages
 
@@ -56,20 +57,20 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | merged, #17      |
 | 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | merged, #18      |
 | 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | merged, #18      |
-| 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | pull request #19 |
-| 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | pull request #20 |
-| 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | pull request #20 |
-| 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | pull request #20 |
-| 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | pull request #20 |
-| 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | in the batch     |
-| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | in the batch     |
-| 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | in the batch     |
-| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | in the batch     |
-| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | in the batch     |
-| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | in the batch     |
-| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | in the batch     |
-| 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | not started      |
-| 37    | Rename plugin rules and options                        | A.12                                                                                                    | not started      |
+| 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | merged, #19      |
+| 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | merged, #20      |
+| 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | merged, #20      |
+| 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | merged, #20      |
+| 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | merged, #20      |
+| 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | pull request #21 |
+| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | pull request #21 |
+| 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | pull request #21 |
+| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | pull request #21 |
+| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | pull request #21 |
+| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | pull request #21 |
+| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | pull request #21 |
+| 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | in the batch     |
+| 37    | Rename plugin rules and options                        | A.12                                                                                                    | in the batch     |
 | 38    | Add the missing scenario tests, part one               | D.5 rows 1 to 17, with fixes for the bugs they confirm                                                  | not started      |
 | 39    | Add the missing scenario tests, part two               | D.5 rows 18 to 34                                                                                       | not started      |
 | 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | not started      |
@@ -402,6 +403,19 @@ The owner and the work settled these while implementing:
     - Also left: about 30 pairs whose new name already exists in the file, and the pattern rows, such as
       `cancelSignal` to `signal` and folder to directory.
     - This repository allows `snapshot` in its tests, the name of the revision copies gspot checks.
+- Stage 36 renamed the A.11 identifiers the same way:
+    - About 170 check functions and constants take the name of their check, such as `syntax`, `guards`, and `build`,
+      and the constants drop `DEFAULT_` and `CONFIGURATION`.
+    - Left for later: about 30 generic local names, and about 30 pairs whose new name already names something in the
+      file, such as `svelteCheck` to `check` and `parseSql` to `parse`. Each needs a person to rename the name it
+      collides with first.
+- Stage 37 renamed the plugin rules of A.12:
+    - The nine rules take the IDs of A.12, and their files follow. The options drop the words their rule already
+      says: `isClient`, `allowed`, `pattern`, `directories`, `harness`, `directory`, `files`, and `roots`.
+    - The messages are `typesToRuntime`, `alias`, `escape`, and `valueImport`. The layout rules share one
+      `LayoutOptions`, and no option type keeps the "No" of its rule.
+    - The plugin keeps its own `TRIVIAL_STATEMENTS`, with the name the CLI uses, because the plugin ships alone and
+      cannot read the CLI's value.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
