@@ -173,3 +173,26 @@ test('tracked discovery reports a directory replaced by a file and accepts its c
     await createFileTree(sandbox.path, { 'src/source.ts': 'restored' });
     expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['src/source.ts']);
 });
+
+test('on Windows, tracked discovery takes the executable bit from the Git index', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'indexed.sh': '#!/bin/sh\n', 'local.sh': '#!/bin/sh\n' });
+    for (const argv of [
+        ['init', '-q'],
+        ['add', '-A'],
+        ['update-index', '--chmod=+x', 'indexed.sh'],
+    ])
+        expect(processes.runBlocking(['git', ...argv], { cwd: sandbox.path }).code).toBe(0);
+    // Only the file system knows this bit, and Windows file systems keep none.
+    fs.chmodSync(join(sandbox.path, 'local.sh'), 0o700);
+    const platform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    try {
+        expect(trackedEntries(sandbox.path).map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
+            { path: 'indexed.sh', executable: true },
+            { path: 'local.sh', executable: false },
+        ]);
+    } finally {
+        Object.defineProperty(process, 'platform', { value: platform });
+    }
+});
