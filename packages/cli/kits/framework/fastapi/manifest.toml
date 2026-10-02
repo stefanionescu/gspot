@@ -15,3 +15,6 @@ target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]
 per_scope = true
 needs = "security"
+
+[guides]
+framework = [{path = "framework/fastapi/FASTAPI.md"}, {path = "framework/fastapi/RUNTIME.md"}]
