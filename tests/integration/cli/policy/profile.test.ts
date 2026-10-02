@@ -29,7 +29,7 @@ describe('profile file paths', () => {
 
 test('profiles retain runner coverage settings and omit the architecture roles, which name repository paths', async () => {
     await using directory = await testdir();
-    const tools = { jest: { coverage_lines: 90, test_module: 'bun:test' } };
+    const tools = { jest: { coverage: { lines: 90 }, test_module: 'bun:test' } };
     const roles = { harness: 'tests/fixtures' };
     const exported = exportedProfile(
         stringify({ kits: ['jest'], tools, architecture: { roles } }),

@@ -24,7 +24,7 @@ report, exits with `2`.
 To require full function coverage:
 
 ```bash
-gspot set tools.jest.coverage_functions 100
+gspot set tools.jest.coverage.functions 100
 ```
 
 Add `--scope app` to set it for the scope `app` only. The
@@ -44,8 +44,8 @@ run:
 gspot check --stage push --only vitest/coverage
 ```
 
-Set the floors with `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`,
-and `coverage_statements`. When your Vitest configuration lives outside the usual paths, set
+Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, and
+`statements`. When your Vitest configuration lives outside the usual paths, set
 `tools.vitest.config`. Paths are relative to the scope.
 
 ## Python
@@ -56,7 +56,7 @@ Select the `pytest` kit, and install pytest and pytest-cov in your project's `.v
 gspot check --stage push --only pytest/coverage
 ```
 
-`tools.pytest.coverage` sets the line coverage floor. The check runs pytest with strict markers
+`tools.pytest.coverage.lines` sets the line coverage floor. The check runs pytest with strict markers
 and strict configuration. The Ruff rules for pytest apply to your test files, and your
 application code keeps its own rules.
 

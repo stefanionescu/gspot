@@ -23,7 +23,7 @@ test(
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 ['javascript'],
-                '[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ncoverage_functions = 100\n',
+                '[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest.coverage]\nfunctions = 100\n',
                 'all',
             ),
             'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
@@ -61,7 +61,7 @@ test(
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 ['jest'],
-                '[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n',
+                '[tools.jest.coverage]\nlines = 80\nbranches = 80\nfunctions = 80\nstatements = 80\n',
                 'all',
             ),
             'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',

@@ -14,14 +14,14 @@ test('a scope resolves its own tool settings over the root defaults', async () =
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
             ['python', 'pytest'],
-            '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
+            '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest.coverage]\nlines = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
             'all',
         ),
         'app/main.py': 'value = 1\n',
     });
     const session = await openSession(sandbox.path);
     const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
-    expect(nested.view.settings['tools.pytest.coverage']).toBe(91);
+    expect(nested.view.settings['tools.pytest.coverage.lines']).toBe(91);
     expect(nested.view.settings['tools.vulture.min_confidence']).toBe(95);
 });
 

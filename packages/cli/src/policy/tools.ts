@@ -44,10 +44,12 @@ export const jestPercentage = z.number().min(0).max(FULL_PERCENTAGE);
 
 /** Coverage floors shared by policy validation and native Jest execution. */
 export const jestCoverageSettings = z.object({
-    coverage_lines: jestPercentage,
-    coverage_branches: jestPercentage,
-    coverage_functions: jestPercentage,
-    coverage_statements: jestPercentage,
+    coverage: z.object({
+        lines: jestPercentage,
+        branches: jestPercentage,
+        functions: jestPercentage,
+        statements: jestPercentage,
+    }),
 });
 
 export const toolsSchema = z
@@ -102,10 +104,14 @@ export const toolsSchema = z
             .optional(),
         jest: toolTable
             .extend({
-                coverage_lines: reasoned(jestCoverageSettings.shape.coverage_lines).optional(),
-                coverage_branches: reasoned(jestCoverageSettings.shape.coverage_branches).optional(),
-                coverage_functions: reasoned(jestCoverageSettings.shape.coverage_functions).optional(),
-                coverage_statements: reasoned(jestCoverageSettings.shape.coverage_statements).optional(),
+                coverage: z
+                    .strictObject({
+                        lines: reasoned(jestPercentage).optional(),
+                        branches: reasoned(jestPercentage).optional(),
+                        functions: reasoned(jestPercentage).optional(),
+                        statements: reasoned(jestPercentage).optional(),
+                    })
+                    .optional(),
                 test_module: text.min(1).optional(),
             })
             .optional(),

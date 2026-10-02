@@ -47,7 +47,7 @@ function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof 
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
     const covered = coverageSchema.parse(JSON.parse(coverageFile.bytes.toString('utf8'))).total;
     return dimensions.flatMap((name) => {
-        const floor = settings[`coverage_${name}`];
+        const floor = settings.coverage[name];
         if (covered[name].pct >= floor) return [];
         return [
             findingAt(
@@ -67,7 +67,7 @@ async function runJest(
     settings: z.infer<typeof jestCoverageSettings>,
 ): Promise<Finding[]> {
     const { input, source, work } = run;
-    const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings[`coverage_${name}`]]));
+    const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings.coverage[name]]));
     const command = [
         'jest',
         '--coverage',

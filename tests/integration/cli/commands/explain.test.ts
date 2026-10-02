@@ -27,18 +27,18 @@ test('explain > setting explanations include nested-only settings and each inher
 [[scope]]
 path = "api"
 kits = ["jest"]
-[scope.tools.jest]
-coverage_lines = 90
+[scope.tools.jest.coverage]
+lines = 90
 [[scope]]
 path = "api/worker"
 kits = []
-[scope.tools.jest]
-coverage_lines = 95
+[scope.tools.jest.coverage]
+lines = 95
 `,
         'api/example.test.js': 'test("example", () => {});\n',
         'api/worker/example.test.js': 'test("worker", () => {});\n',
     });
-    const result = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage.lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         scopes: [
@@ -48,8 +48,8 @@ coverage_lines = 95
     });
     const policy = join(sandbox.path, 'gspot.toml');
     const original = await Bun.file(policy).text();
-    await Bun.write(policy, original.replace('coverage_lines = 95', 'coverage_lines = 96'));
-    const updated = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage_lines', '--json']);
+    await Bun.write(policy, original.replace('lines = 95', 'lines = 96'));
+    const updated = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage.lines', '--json']);
     expect(JSON.parse(updated.stdout)).toMatchObject({
         scopes: [
             { scope: 'api', current: 90 },

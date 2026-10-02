@@ -50,7 +50,7 @@ test(
                     () => '',
                 ),
             },
-            policy: '[tools.pytest]\ncoverage = 95\n',
+            policy: '[tools.pytest.coverage]\nlines = 95\n',
             expected: { message: textContaining('Required test coverage of 95%') },
         };
         const outcome = await runPlanted(sandbox.path, untested, environment);

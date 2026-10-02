@@ -52,14 +52,14 @@ test.each([
     },
     {
         name: 'an inline table value',
-        text: 'tools = { jest = { coverage_lines = "wrong" } }\n',
-        where: 'tools.jest.coverage_lines',
+        text: 'tools = { jest = { coverage = { lines = "wrong" } } }\n',
+        where: 'tools.jest.coverage.lines',
         correction: ['"wrong"', '90'],
     },
     {
         name: 'a repeated scope table',
-        text: '[[scope]]\npath = "api"\n[[scope]]\npath = "web"\n[scope.tools.jest]\ncoverage_lines = "wrong"\n',
-        where: 'scope.1.tools.jest.coverage_lines',
+        text: '[[scope]]\npath = "api"\n[[scope]]\npath = "web"\n[scope.tools.jest.coverage]\nlines = "wrong"\n',
+        where: 'scope.1.tools.jest.coverage.lines',
         correction: ['"wrong"', '90'],
     },
     {

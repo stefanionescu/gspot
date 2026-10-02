@@ -37,7 +37,7 @@ level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
-command = ["vitest", "run", "{each:--config:tools.vitest.config}", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:tools.vitest.coverage_lines}", "--coverage.thresholds.branches={setting:tools.vitest.coverage_branches}", "--coverage.thresholds.functions={setting:tools.vitest.coverage_functions}", "--coverage.thresholds.statements={setting:tools.vitest.coverage_statements}"]
+command = ["vitest", "run", "{each:--config:tools.vitest.config}", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:tools.vitest.coverage.lines}", "--coverage.thresholds.branches={setting:tools.vitest.coverage.branches}", "--coverage.thresholds.functions={setting:tools.vitest.coverage.functions}", "--coverage.thresholds.statements={setting:tools.vitest.coverage.statements}"]
 owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs"]}
 output = {format = "regex", pattern = "^ERROR: (?<message>Coverage for .*)$"}
 summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their floors."
@@ -52,7 +52,7 @@ default = ""
 summary = "The Vitest configuration the coverage run reads, relative to the scope, for a repository that keeps it somewhere Vitest does not look."
 
 [[settings]]
-name = "tools.vitest.coverage_lines"
+name = "tools.vitest.coverage.lines"
 kind = "number"
 direction = "floor"
 default = 0
@@ -60,7 +60,7 @@ default_all = 80
 summary = "The smallest share of lines the tests cover, out of 100."
 
 [[settings]]
-name = "tools.vitest.coverage_branches"
+name = "tools.vitest.coverage.branches"
 kind = "number"
 direction = "floor"
 default = 0
@@ -68,7 +68,7 @@ default_all = 80
 summary = "The smallest share of branches the tests cover, out of 100."
 
 [[settings]]
-name = "tools.vitest.coverage_functions"
+name = "tools.vitest.coverage.functions"
 kind = "number"
 direction = "floor"
 default = 0
@@ -76,7 +76,7 @@ default_all = 80
 summary = "The smallest share of functions the tests cover, out of 100."
 
 [[settings]]
-name = "tools.vitest.coverage_statements"
+name = "tools.vitest.coverage.statements"
 kind = "number"
 direction = "floor"
 default = 0

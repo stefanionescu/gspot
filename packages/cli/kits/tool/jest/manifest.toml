@@ -44,7 +44,7 @@ why = "Coverage floors expose untested source without changing working-tree buil
 help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
 
 [[settings]]
-name = "tools.jest.coverage_lines"
+name = "tools.jest.coverage.lines"
 kind = "number"
 direction = "floor"
 default = 0
@@ -52,7 +52,7 @@ default_all = 80
 summary = "The minimum percentage of source lines covered by tests."
 
 [[settings]]
-name = "tools.jest.coverage_branches"
+name = "tools.jest.coverage.branches"
 kind = "number"
 direction = "floor"
 default = 0
@@ -60,7 +60,7 @@ default_all = 80
 summary = "The minimum percentage of source branches covered by tests."
 
 [[settings]]
-name = "tools.jest.coverage_functions"
+name = "tools.jest.coverage.functions"
 kind = "number"
 direction = "floor"
 default = 0
@@ -68,7 +68,7 @@ default_all = 80
 summary = "The minimum percentage of source functions covered by tests."
 
 [[settings]]
-name = "tools.jest.coverage_statements"
+name = "tools.jest.coverage.statements"
 kind = "number"
 direction = "floor"
 default = 0
