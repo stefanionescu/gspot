@@ -85,7 +85,7 @@ async function prepareFormatterConsumer(
     return { toolConsumer, toolOptions, authoredPackage };
 }
 
-/** Initializes and installs native check wrappers through the published CLI. */
+/** Initializes and installs the native checks through the published CLI. */
 async function prepareNativeConsumer(installation: InstalledConsumer): Promise<{
     nativeConsumer: string;
     nativeOptions: { cwd: string; env: Record<string, string | undefined>; timeoutMs: number };
@@ -127,12 +127,20 @@ async function prepareNativeConsumer(installation: InstalledConsumer): Promise<{
 
 const release = getPublishedRelease();
 
-// A wrapped check reports its finding through the private tool folder, then passes on the corrected or fixed file.
-async function expectWrappedCheck(
+// A check reports its finding through the tool gspot installed, an npm wrapper in the private tool folder or a native
+// release, then passes on the corrected or fixed file.
+async function expectInstalledCheck(
     command: string[],
     consumer: string,
     options: Parameters<typeof run>[1],
-    check: { only: string; path: string; defect?: string; corrected?: string; finding: Record<string, unknown> },
+    check: {
+        only: string;
+        path: string;
+        isNpm: boolean;
+        defect?: string;
+        corrected?: string;
+        finding: Record<string, unknown>;
+    },
 ): Promise<void> {
     const args = [...command, 'check', check.path, '--only', check.only, '--json'];
     if (check.defect !== undefined) writeFileSync(join(consumer, check.path), check.defect);
@@ -144,7 +152,8 @@ async function expectWrappedCheck(
         status: 'fail',
         findings: [{ file: check.path, ...check.finding }],
     });
-    expect(toPosix(relative(realpathSync(consumer), checked!.command![0]!))).toStartWith('.gspot/node_modules/');
+    const executable = toPosix(relative(realpathSync(consumer), checked!.command![0]!));
+    expect(executable.startsWith('.gspot/node_modules/')).toBe(check.isNpm);
     if (check.corrected === undefined) {
         const fixed = await run([...args, '--fix'], options);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -188,28 +197,31 @@ test(
 );
 
 test(
-    'installed native wrappers report TOML and whitespace defects and accept corrections',
+    'installed native tools report TOML and whitespace defects and accept corrections',
     async () => {
         await using fixture = await createConsumer(release.registry, release.version);
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
-        await expectWrappedCheck(command, nativeConsumer, nativeOptions, {
+        await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
             only: 'files/toml-format',
             path: 'settings.toml',
+            isNpm: false,
             finding: { fixable: true },
         });
         expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
-        await expectWrappedCheck(command, nativeConsumer, nativeOptions, {
+        await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
             only: 'files/toml',
             path: 'settings.toml',
+            isNpm: false,
             defect: 'a = [\n',
             corrected: 'a = 1\n',
             finding: { line: 2, column: 1, fixable: false },
         });
-        await expectWrappedCheck(command, nativeConsumer, nativeOptions, {
+        await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
             only: 'formatting/editorconfig-checker',
             path: 'notes.json',
+            isNpm: true,
             corrected: '"text"\n',
             finding: { line: 1, fixable: false },
         });

@@ -20,8 +20,7 @@ floor = "0.9.0"
 mise = "taplo"
 brew = "taplo"
 cargo = "taplo-cli"
-# The npm WASM entry exits 1 after successfully printing its native version.
-npm = {name = "@taplo/cli", version = "0.7.0", version_exit_code = 1}
+# No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 github = {name = "tamasfe/taplo", version = "0.10.0"}
 
 [[tools.replace]]

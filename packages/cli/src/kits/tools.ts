@@ -9,13 +9,8 @@ const miseInstallerSchema = z.union([
     z.string(),
     installerDefinition.extend({ options: z.record(z.string(), z.union([z.string(), z.boolean()])).optional() }),
 ]);
-const npmInstallerSchema = z.union([
-    z.string(),
-    installerDefinition.extend({ version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional() }),
-]);
-
 const installerFields = {
-    npm: npmInstallerSchema.optional(),
+    npm: installerSchema.optional(),
     pypi: installerSchema.optional(),
     mise: miseInstallerSchema.optional(),
     brew: installerSchema.optional(),

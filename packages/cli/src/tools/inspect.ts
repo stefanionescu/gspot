@@ -29,15 +29,10 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
     return match?.[1] ?? match?.[0];
 }
 
-function versionFailure(
-    result: SpawnResult,
-    tool: ToolPin,
-    text: string,
-    expectedExit: number,
-): VersionRead | undefined {
+function versionFailure(result: SpawnResult, tool: ToolPin, text: string): VersionRead | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
-    if (result.code !== expectedExit)
+    if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
     return undefined;
 }
@@ -135,13 +130,6 @@ function isInstallationPending(
     return installation !== undefined && pending?.includes(installation.kind) === true;
 }
 
-// The exit code the version command is expected to end with: the package's own when the package is installed.
-function expectedExitCode(tool: ToolPin, installedPackage: string | undefined): number {
-    const npm = tool.installers['npm'];
-    const fromPackage = installedPackage === undefined ? undefined : npm?.version_exit_code;
-    return fromPackage ?? tool.version_exit_code ?? 0;
-}
-
 /**
  * Interpret an executable version response for both installation and later inspections.
  * @param tool the pin.
@@ -158,7 +146,7 @@ export function readVersion(
 ): VersionRead {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const failure = versionFailure(result, tool, text, expectedExitCode(tool, installedPackage));
+    const failure = versionFailure(result, tool, text);
     if (failure !== undefined) return failure;
     const version =
         (npm?.version === tool.version ? installedPackage : undefined) ??

@@ -31,7 +31,6 @@
         "@eslint-community/eslint-plugin-eslint-comments",
         "@eslint/js",
         "@gspothq/eslint-plugin",
-        "@taplo/cli",
         "editorconfig-checker",
         "eslint",
         "eslint-config-prettier",
