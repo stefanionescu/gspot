@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { join } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { kitName, targetInScope } from '#cli/kits/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -34,7 +35,7 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
         return [
             {
                 check,
-                file: scope === '' ? diagnostic.filename : `${scope}/${diagnostic.filename}`,
+                file: scope === '' ? toPosix(diagnostic.filename) : `${scope}/${toPosix(diagnostic.filename)}`,
                 line: diagnostic.start.line + 1,
                 column: diagnostic.start.character + 1,
                 ...(rule === undefined ? {} : { rule }),
