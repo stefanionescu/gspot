@@ -1,24 +1,14 @@
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { generatedFile } from '#tests/harness/cli/generated.ts';
 
 const SHARED_SETTINGS_PACKAGE = '{"private":true,"type":"module"}\n';
 
-const TAILWIND_AT_RULES = [
-    'tailwind',
-    'apply',
-    'layer',
-    'theme',
-    'utility',
-    'variant',
-    'custom-variant',
-    'source',
-    'plugin',
-    'config',
-    'reference',
-];
+// The at-rules the Next.js kit adds for Tailwind, read from its manifest so the test pins no copy.
+const TAILWIND_AT_RULES = kitManifests().get('nextjs')!.defaults['tools.stylelint.ignore_at_rules'];
 
 const PYTHON = policyOf(['python']);
 

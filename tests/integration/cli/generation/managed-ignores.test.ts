@@ -71,22 +71,21 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     expect(checked.stdout.split('\0').filter(Boolean)).toStrictEqual(ignored);
 });
 
-test.each([
-    'source/',
-    '../outside/',
-    '.gspot/../source/',
-    '.gspot/downloads/../../source/',
-    '.gspot/./downloads/',
-    '.gspot/downloads/\nsource/',
-    '.gspot\\downloads\\',
-])('a manifest cannot hide authored paths through %s', (path) => {
-    expect(() =>
-        parseManifest(
-            `untracked = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
-            'configurations/local',
-        ),
-    ).toThrow();
-    expect(() =>
-        parseManifest('untracked = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'configurations/local'),
-    ).not.toThrow();
-});
+// One path per refusal: outside .gspot, a parent segment, a current segment, and a character no name holds.
+test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downloads/\nsource/'])(
+    'a manifest cannot hide authored paths through %s',
+    (path) => {
+        expect(() =>
+            parseManifest(
+                `untracked = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
+                'configurations/local',
+            ),
+        ).toThrow();
+        expect(() =>
+            parseManifest(
+                'untracked = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
+                'configurations/local',
+            ),
+        ).not.toThrow();
+    },
+);

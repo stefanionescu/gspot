@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { kitManifests } from '#cli/kits/manifests.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { venvExecutable } from '#tests/harness/cli/platforms.ts';
@@ -43,25 +43,35 @@ test('managed library discovery refuses a linked package directory', async () =>
     );
 });
 
+// Synthetic pins for each installer combination: npm only, npm with mise, PyPI with mise, and none.
+const NPM: ToolPin = {
+    ...commandPin('linter', '1.0.0', 'linter'),
+    installers: { npm: { name: 'linter', version: '1.0.0' } },
+};
+const MISE_FIRST: ToolPin = {
+    ...commandPin('searcher', '2.0.0'),
+    installers: { npm: { name: '@scope/searcher', version: '2.0.0' }, mise: { name: 'searcher', version: '2.0.0' } },
+};
+const PYPI: ToolPin = {
+    ...commandPin('formatter', '3.0.0'),
+    installers: { pypi: { name: 'formatter', version: '3.0.0' }, mise: { name: 'formatter', version: '3.0.0' } },
+};
+const NONE: ToolPin = commandPin('compiler', '4.0.0');
+
 test.each([
-    ['javascript', 'eslint', undefined, 'npm'],
-    ['javascript', 'eslint', 'mise', 'npm'],
-    ['structure', 'ast-grep', 'mise', undefined],
-    ['structure', 'ast-grep', 'npm', 'npm'],
-    ['python', 'ruff', undefined, 'python'],
-    ['python', 'ruff', 'mise', 'python'],
-    ['typescript', 'tsc', undefined, undefined],
-] as const)('installation placement for %s/%s under %s is %s', (configuration, name, runner, kind) => {
-    const tool = kitManifests()
-        .get(configuration)!
-        .tools.find((entry) => entry.name === name)!;
-    expect(tool).toBeDefined();
+    ['an npm pin', NPM, undefined, 'npm'],
+    ['an npm pin', NPM, 'mise', 'npm'],
+    ['an npm or mise pin', MISE_FIRST, 'mise', undefined],
+    ['an npm or mise pin', MISE_FIRST, 'npm', 'npm'],
+    ['a PyPI pin', PYPI, undefined, 'python'],
+    ['a PyPI pin', PYPI, 'mise', 'python'],
+    ['a pin with no installer', NONE, undefined, undefined],
+] as const)('the private installation of %s under %s is %s', (_label, tool, runner, kind) => {
     const placement = privateToolInstallation(tool, runner);
     expect(placement?.kind).toBe(kind);
     // A private installation pins the version its installer names.
     const installer = placement?.kind === 'python' ? 'pypi' : 'npm';
-    const pinned = placement === undefined ? undefined : tool.installers[installer]?.version;
-    expect(pinned).toBe(placement?.version);
+    expect(placement === undefined ? undefined : tool.installers[installer]?.version).toBe(placement?.version);
 });
 
 test('a missing private npm binary cannot fall back to the developer executable', async () => {

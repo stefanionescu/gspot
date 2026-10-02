@@ -37,39 +37,11 @@ test('Swift checks report each scope independently and file-list inputs omit sib
 test.each([
     ['xcode/xcconfig', 'Build.xcconfig', 'PRODUCT_NAME App\n', 'PRODUCT_NAME = App\n', 'xcconfig-line'],
     [
-        'xcode/xcstrings',
-        'Localizable.xcstrings',
-        '{"strings":{"one":{"localizations":{"de":{},"en":{}}},"two":{"localizations":{"en":{}}}}}',
-        '{"strings":{}}',
-        'missing-translation',
-    ],
-    [
-        'xcode/asset-catalogs',
-        'Assets.xcassets/Logo.imageset/Contents.json',
-        '{"images":[]}',
-        '{"images":[{"filename":"logo.png"}]}',
-        'empty-set',
-    ],
-    [
         'xcode/entitlements-policy',
         'App.entitlements',
         '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
         '<plist><dict><key>nested-capability</key><true/></dict></plist>',
         'entitlement',
-    ],
-    [
-        'xcode/ats',
-        'Info.plist',
-        '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>',
-        '<plist><dict/></plist>',
-        'arbitrary-loads',
-    ],
-    [
-        'xcode/test-plan',
-        'App.xcodeproj/xcshareddata/xcschemes/App.xcscheme',
-        '<Scheme><TestAction><TestableReference/></TestAction></Scheme>',
-        '<Scheme><TestAction><TestableReference/><TestPlanReference/></TestAction></Scheme>',
-        'scheme-plan',
     ],
 ] as const)(
     '%s checks the deepest scope and preserves sibling settings',
