@@ -19,6 +19,18 @@ export function privateToolInstallation(
 }
 
 /**
+ * The constraints the Python tools set on the packages they pull in, each once, in order.
+ * @param manifests the selected manifests
+ * @returns the constraints, such as `pyjwt>=2.14.0`
+ */
+export function pythonConstraints(manifests: Manifest[]): string[] {
+    const constraints = collectPins(manifests).flatMap((tool) =>
+        privateToolInstallation(tool)?.kind === 'python' ? (tool.installers['pypi']?.constraints ?? []) : [],
+    );
+    return [...new Set(constraints)].toSorted((left, right) => left.localeCompare(right));
+}
+
+/**
  * Every distinct tool pin across the selection, sorted by name.
  * @param manifests the selected manifests
  * @returns the pins

@@ -22,11 +22,16 @@ const projectSchema = z.strictObject({
         'requires-python': z.literal('>=3.11'),
         dependencies: z.array(z.string().regex(/^[a-z0-9._-]+==[a-z0-9.+!_-]+$/iu)),
     }),
-    tool: z.strictObject({ uv: z.strictObject({ package: z.literal(false) }) }),
+    tool: z.strictObject({
+        uv: z.strictObject({ package: z.literal(false), 'constraint-dependencies': z.array(z.string()).optional() }),
+    }),
 });
 const lockSchema = z.object({
     version: z.literal(1),
     'requires-python': z.string(),
+    manifest: z
+        .object({ constraints: z.array(z.object({ name: z.string(), specifier: z.string() })).optional() })
+        .optional(),
     package: z.array(
         z.object({
             name: z.string(),
@@ -39,10 +44,28 @@ const lockSchema = z.object({
     ),
 });
 
+// Requirements as one text each, with the package name normalized, in order, so a project and its lock compare.
+function requirementTexts(requirements: { name: string; specifier: string }[]): string[] {
+    return requirements
+        .map(({ name, specifier }) => `${normalizedPythonPackage(name)}${specifier}`)
+        .toSorted((left, right) => left.localeCompare(right));
+}
+
+// Whether the lock was resolved under the constraints the project sets on transitive packages.
+function constraintsMatch(constraints: string[], recorded: z.infer<typeof lockSchema>): boolean {
+    const declared = constraints.map((constraint) => {
+        const operator = constraint.search(/[<>!~=]/u);
+        return { name: constraint.slice(0, operator), specifier: constraint.slice(operator) };
+    });
+    return isDeepStrictEqual(requirementTexts(declared), requirementTexts(recorded.manifest?.constraints ?? []));
+}
+
 function matches(project: string, lock: string): boolean {
     try {
-        const manifest = projectSchema.parse(parse(project)).project;
+        const parsed = projectSchema.parse(parse(project));
+        const manifest = parsed.project;
         const recorded = lockSchema.parse(parse(lock));
+        if (!constraintsMatch(parsed.tool.uv['constraint-dependencies'] ?? [], recorded)) return false;
         const root = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
         if (root === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
         const expected = manifest.dependencies
@@ -52,10 +75,7 @@ function matches(project: string, lock: string): boolean {
                 return `${normalizedPythonPackage(name)}==${version}`;
             })
             .toSorted((left, right) => left.localeCompare(right));
-        const declared = (root.metadata?.['requires-dist'] ?? [])
-            .map((entry) => `${normalizedPythonPackage(entry.name)}${entry.specifier}`)
-            .toSorted((left, right) => left.localeCompare(right));
-        return isDeepStrictEqual(declared, expected);
+        return isDeepStrictEqual(requirementTexts(root.metadata?.['requires-dist'] ?? []), expected);
     } catch {
         return false;
     }

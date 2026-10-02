@@ -99,4 +99,7 @@ export type Manifest = Omit<RawManifest, 'kit' | 'tools' | 'checks' | 'settings'
 };
 
 export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> &
-    Partial<Omit<NpmInstallerDefinition, 'name'>> & { options?: Record<string, string | boolean> };
+    Partial<Omit<NpmInstallerDefinition, 'name'>> & {
+        options?: Record<string, string | boolean>;
+        constraints?: string[];
+    };
