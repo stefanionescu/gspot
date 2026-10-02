@@ -282,7 +282,7 @@ names = ["licenses_allowed", "packages_allowed"]
 reason = "The license scanner policy keys."
 
 [[naming.contract_properties]]
-file = "tests/acceptance/cli/ci.test.ts"
+file = "tests/integration/cli/commands/ci.test.ts"
 names = ["with"]
 reason = "The GitHub Actions inputs key."
 
