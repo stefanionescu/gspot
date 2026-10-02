@@ -44,10 +44,12 @@ export function registerAdd(program: Program): void {
     program
         .command('add <kit...>')
         .summary('Add kits')
-        .description('Add kits to the root selection or to one scope')
+        .description(
+            'Add kits to the root selection or to one scope, apply the configuration, and install the tools the change needs. Kits that a selected kit requires stay selected. --dry-run prints the change and writes nothing.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nAdds the kits to the root or --scope selection, applies the configuration, and installs the tools the change needs. Kits that a selected kit requires stay selected. --dry-run prints the change and writes nothing.\n\nExit codes:\n- 0: the kits were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
+            '\nExit codes:\n- 0: the kits were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
         )
         .option('--scope <path>', 'Add the kits to this scope')
         .option('--dry-run', 'Print the change and write nothing')

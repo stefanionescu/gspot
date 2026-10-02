@@ -91,10 +91,12 @@ export function registerInit(program: Program): void {
     program
         .command('init')
         .summary('Set up gspot in a repository')
-        .description('Read the repository, show a plan, and write it when you accept')
+        .description(
+            'Read the repository, show a plan, and write it when you accept. The plan covers the policy file, the tool configuration, the rules for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools; Git keeps the replaced files. init runs no check. --dry-run writes nothing.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and shows a plan: the policy file, the tool configuration, the rules for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools; Git keeps the replaced files. init runs no check. --dry-run writes nothing.\n\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
+            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
         )
         .option('--yes', 'Accept the plan without asking')
         .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')

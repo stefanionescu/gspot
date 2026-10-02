@@ -96,10 +96,12 @@ export function registerIgnore(program: Program): void {
     program
         .command('ignore <check>')
         .summary('Ignore a check or a rule')
-        .description('Turn off a check, or one of its rules, for some paths or everywhere')
+        .description(
+            'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and the configuration is applied. Every report lists the ignores, and --verbose prints each reason.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nWrites the ignore to gspot.toml and applies the configuration. Every report lists the ignores, and --verbose prints each reason.\n\nExit codes:\n- 0: the ignore was written and applied.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
+            '\nExit codes:\n- 0: the ignore was written and applied.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
         )
         .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, to the whole scope')
         .option('--rule <rule>', 'Turn off one rule of the check')

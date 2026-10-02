@@ -26,10 +26,12 @@ export function registerDoctor(program: Program): void {
     program
         .command('doctor')
         .summary('Check the gspot setup')
-        .description('Report missing tools, unchecked files, and changes since init')
+        .description(
+            'Report missing tools, unchecked files, and changes since init: the selected tools, the Git hooks, the files no check reads, and the generated files that changed. doctor repairs nothing. Each problem comes with the command that fixes it.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nChecks the selected tools, the Git hooks, the files no check reads, and the generated files that changed. doctor repairs nothing. Each problem comes with the command that fixes it.\n\nExit codes:\n- 0: the selected tools and hooks are ready.\n- 1: a selected tool or hook is missing, invalid, or outdated.\n- 2: doctor could not finish.\n\nExample:\ngspot doctor',
+            '\nExit codes:\n- 0: the selected tools and hooks are ready.\n- 1: a selected tool or hook is missing, invalid, or outdated.\n- 2: doctor could not finish.\n\nExample:\ngspot doctor',
         )
         .action(async (_flags, command) => {
             const global = command.optsWithGlobals();

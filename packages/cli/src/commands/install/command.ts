@@ -74,10 +74,12 @@ export function registerInstall(program: Program): void {
     program
         .command('install')
         .summary('Install the locked tools')
-        .description('Install the locked tools and the Git hooks for this clone')
+        .description(
+            'Install the tools gspot.toml selects, at the versions in the committed locks, and the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nInstalls the tools gspot.toml selects, at the versions in the committed locks, and installs the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.\n\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
+            '\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
         )
         .option('--dry-run', 'Print the install commands and write nothing')
         .action(async (flags, command) => {

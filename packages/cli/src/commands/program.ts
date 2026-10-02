@@ -80,7 +80,7 @@ export function buildProgram(): Program {
         .option('--quiet', 'Print only failures')
         .option('--verbose', 'Print each command gspot runs, and each ignore with its reason')
         .option('--no-color', 'Print without color')
-        .option('-C <dir>', 'Run as if gspot started in this folder')
+        .option('-C <dir>', 'Run as if gspot started in this directory')
         .helpOption('-h, --help', 'Print help for the command')
         .helpCommand('help [command]', 'Print help for a command')
         .showSuggestionAfterError(true)

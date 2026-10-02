@@ -228,10 +228,12 @@ export function registerSet(program: Program): void {
     program
         .command('set <key> [value...]')
         .summary('Change a setting')
-        .description('Write one setting to gspot.toml and apply it')
+        .description(
+            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nChecks the value, writes it to gspot.toml, and applies the configuration. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.\n\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
+            '\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
         )
         .option('--reason <text>', 'Say why; required to loosen a setting when require_reasons is true')
         .option('--scope <path>', 'Write the setting in this scope instead of the root')

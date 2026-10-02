@@ -51,10 +51,12 @@ export function registerExport(program: Program): void {
     program
         .command('export <file>')
         .summary('Export a profile')
-        .description('Write the policy to a profile other repositories can start from')
+        .description(
+            'Write the policy to a profile other repositories can start from. Settings that name a path stay out, and export lists them. gspot.toml does not change.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nWrites the policy to the file as a profile. Settings that name a path stay out, and export lists them. gspot.toml does not change.\n\nExit codes:\n- 0: the profile was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.toml',
+            '\nExit codes:\n- 0: the profile was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.toml',
         )
         .action(async (file, _flags, command) => {
             const global = command.optsWithGlobals();

@@ -117,10 +117,12 @@ export function registerCheck(program: Program): void {
     command
         .argument('[paths...]')
         .summary('Run the checks')
-        .description('Run checks over the selected files and folders and print findings')
+        .description(
+            'Run the selected checks and print each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nRuns the selected checks and prints each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.\n\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
+            '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
         .option('--only <checks...>', 'Run only these checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())

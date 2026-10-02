@@ -124,10 +124,12 @@ export function registerList(program: Program): void {
     program
         .command('list')
         .summary('List kits, checks, and settings')
-        .description('List the kits and their checks, or the settings and their sources')
+        .description(
+            'List the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.',
+        )
         .addHelpText(
             'after',
-            '\nEffects:\nLists the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.\n\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
+            '\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
         )
         .addArgument(new Argument('[kind]', 'Pass settings to list the settings').choices(['settings']))
         .action(async (kind, _flags, command) => {
