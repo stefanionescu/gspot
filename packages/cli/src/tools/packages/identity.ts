@@ -35,6 +35,17 @@ function exactTool(name: string, version: string): z.infer<typeof packageToolSch
     return packageToolSchema.parse({ name, version });
 }
 
+// The client the tool project recorded, or undefined when the file does not parse, as when a merge left its markers.
+function recordedTool(bytes: Buffer): z.infer<typeof packageToolSchema> | undefined {
+    let held: unknown;
+    try {
+        held = JSON.parse(bytes.toString('utf8'));
+    } catch {
+        return undefined;
+    }
+    return parsePackageTool(z.object({ packageManager: z.string() }).parse(held).packageManager);
+}
+
 /**
  * Validate an exact package-manager identity at the manifest boundary.
  * @param value the packageManager declaration
@@ -68,11 +79,8 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
     };
     if (version !== undefined) return exactTool(name, version);
     const current = files.read('.gspot/package.json');
-    if (current !== undefined) {
-        const held = z.object({ packageManager: z.string() }).parse(JSON.parse(current.bytes.toString('utf8')));
-        const recorded = parsePackageTool(held.packageManager);
-        if (recorded.name === name) return recorded;
-    }
+    const recorded = current === undefined ? undefined : recordedTool(current.bytes);
+    if (recorded?.name === name) return recorded;
     const result = await runToolCommand(undefined, [name, '--version'], { cwd: root });
     if (result.code !== 0) throw new Error(`Cannot determine the ${name} version for the tool project.`);
     return packageToolSchema.parse({ name, version: result.stdout.trim() });

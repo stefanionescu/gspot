@@ -7,6 +7,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -130,4 +131,43 @@ test('apply refuses to move a generated file to a spelling that differs only by 
     expect(renamed.stderr).toContain('differs only by letter case');
     expect(readdirSync(join(sandbox.path, 'docs'))).toStrictEqual(['rules']);
     expect(readFileSync(guide, 'utf8')).toBe(written);
+});
+
+test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['bash', 'markdown']),
+        'entry.sh': 'echo example\n',
+        'README.md': '# Example\n',
+    });
+    const applied = await runGspot(directory.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const edit = (path: string, text: (current: string) => string): void => {
+        const full = join(directory.path, path);
+        chmodSync(full, 0o644);
+        writeFileSync(full, text(readFileSync(full, 'utf8')));
+    };
+    edit('.gspot/config/shellcheckrc', (current) => `${current}# Edited.\n`);
+    edit('.gspot/package.json', (current) => `<<<<<<< ours\n${current}=======\n>>>>>>> theirs\n`);
+    edit('AGENTS.md', (current) =>
+        current.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
+    );
+    writeFileSync(join(directory.path, 'gspot.toml'), policyOf(['bash']));
+    const before = treeContents(directory.path);
+    const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const { drift } = JSON.parse(preview.stdout) as { drift: { path: string; kind: string; diff?: string }[] };
+    expect(drift).toContainEqual(
+        containing({
+            path: '.gspot/config/shellcheckrc',
+            kind: 'changed',
+            diff: expect.stringContaining('-# Edited.') as string,
+        }),
+    );
+    expect(drift).toContainEqual(containing({ path: '.gspot/package.json', kind: 'conflict' }));
+    expect(drift).toContainEqual(
+        containing({ path: 'AGENTS.md', kind: 'changed', diff: expect.stringContaining('-Edited inside.') as string }),
+    );
+    expect(drift).toContainEqual(containing({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
+    expect(treeContents(directory.path)).toStrictEqual(before);
 });
