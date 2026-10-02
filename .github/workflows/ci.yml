@@ -1,6 +1,6 @@
 name: ci
 # Every pull request, merge group, and push to main runs the whole suite on Linux, macOS, and Windows. The tool and
-# acceptance tests are split into four shards per system by file count.
+# acceptance tests are split into four shards per platform by file count.
 on:
     push:
         branches: [main]
@@ -25,36 +25,47 @@ jobs:
             run:
                 shell: bash
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Install mise and the pinned tools
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   cache: true
-            - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+            - name: Restore the package caches
+              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
               with:
                   path: |
                       ~/.bun/install/cache
                       ~/.cache/uv
                   key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
             # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
-            - run: git remote set-head origin "${DEFAULT_BRANCH}"
+            - name: Point origin/HEAD at the default branch
+              run: git remote set-head origin "${DEFAULT_BRANCH}"
               env:
                   DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
             - name: Install the XML tools and zsh that doctor expects
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - run: mise run --skip-tools setup
-            - id: install
+            - name: Set up the repository
+              run: mise run --skip-tools setup
+            - name: Install the repository checks
+              id: install
               run: mise run --skip-tools install
-            - run: mise run --skip-tools check:types
+            - name: Check the types
+              run: mise run --skip-tools check:types
             # The tracked pins of the kit tools must be what the manifests write.
-            - run: mise run --skip-tools pin:test-tools && git diff --exit-code .mise/conf.d/test-tools.toml
-            - run: mise run --skip-tools gspot -- check
-            - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            - name: Check the test tool pins
+              run: mise run --skip-tools pin:test-tools && git diff --exit-code .mise/conf.d/test-tools.toml
+            - name: Run the repository checks
+              run: mise run --skip-tools gspot -- check
+            - name: Run the manual checks
+              if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools gspot -- check --only docs/lychee-external security/codeql security/semgrep-registry
-            - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            - name: Run doctor
+              if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools gspot -- doctor
     docs:
         runs-on: ubuntu-24.04
@@ -62,16 +73,21 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ github.token }}
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Install mise and the pinned tools
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   install: false
-            - run: mise install bun node
-            - run: mise run --skip-tools setup
-            - run: mise run --skip-tools build:docs
+            - name: Install Bun and Node
+              run: mise install bun node
+            - name: Set up the repository
+              run: mise run --skip-tools setup
+            - name: Build the site
+              run: mise run --skip-tools build:docs
     package:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
@@ -81,23 +97,29 @@ jobs:
             run:
                 shell: bash
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Install mise and the pinned tools
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   cache: true
-            - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+            - name: Restore the package caches
+              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
               with:
                   path: |
                       ~/.bun/install/cache
                       ~/.cache/uv
                   key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-            - run: mise run --skip-tools setup
-            - run: mise run --skip-tools install
-            - run: mise run --skip-tools test:package
-    unit:
+            - name: Set up the repository
+              run: mise run --skip-tools setup
+            - name: Install the repository checks
+              run: mise run --skip-tools install
+            - name: Test the packages
+              run: mise run --skip-tools test:package
+    test:
         strategy:
             fail-fast: false
             matrix:
@@ -110,15 +132,18 @@ jobs:
             run:
                 shell: bash
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Install mise and the pinned tools
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   cache: true
-            - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+            - name: Restore the package caches
+              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
               with:
                   path: |
                       ~/.bun/install/cache
@@ -131,30 +156,33 @@ jobs:
             - name: Install Bash 5 on macOS, which ships Bash 3.2
               if: runner.os == 'macOS'
               run: brew install bash
-            - run: mise run --skip-tools setup
+            - name: Set up the repository
+              run: mise run --skip-tools setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
               run: mise run --skip-tools ci:swiftformat
-            - run: mise run --skip-tools install
-            - run: mise run --skip-tools test
-    suite:
-        name: suite (${{ matrix.system }} ${{ matrix.shard }}/${{ matrix.shards }})
+            - name: Install the repository checks
+              run: mise run --skip-tools install
+            - name: Run the unit and integration tests
+              run: mise run --skip-tools test
+    tools-and-acceptance:
+        name: tools and acceptance (${{ matrix.platform }} ${{ matrix.shard }}/${{ matrix.shards }})
         strategy:
             fail-fast: false
             matrix:
                 include:
-                    - { os: ubuntu-24.04, system: linux, shard: 1, shards: 4 }
-                    - { os: ubuntu-24.04, system: linux, shard: 2, shards: 4 }
-                    - { os: ubuntu-24.04, system: linux, shard: 3, shards: 4 }
-                    - { os: ubuntu-24.04, system: linux, shard: 4, shards: 4 }
-                    - { os: macos-15, system: macos, shard: 1, shards: 4 }
-                    - { os: macos-15, system: macos, shard: 2, shards: 4 }
-                    - { os: macos-15, system: macos, shard: 3, shards: 4 }
-                    - { os: macos-15, system: macos, shard: 4, shards: 4 }
-                    - { os: windows-2025, system: windows, shard: 1, shards: 4 }
-                    - { os: windows-2025, system: windows, shard: 2, shards: 4 }
-                    - { os: windows-2025, system: windows, shard: 3, shards: 4 }
-                    - { os: windows-2025, system: windows, shard: 4, shards: 4 }
+                    - { os: ubuntu-24.04, platform: linux, shard: 1, shards: 4 }
+                    - { os: ubuntu-24.04, platform: linux, shard: 2, shards: 4 }
+                    - { os: ubuntu-24.04, platform: linux, shard: 3, shards: 4 }
+                    - { os: ubuntu-24.04, platform: linux, shard: 4, shards: 4 }
+                    - { os: macos-15, platform: macos, shard: 1, shards: 4 }
+                    - { os: macos-15, platform: macos, shard: 2, shards: 4 }
+                    - { os: macos-15, platform: macos, shard: 3, shards: 4 }
+                    - { os: macos-15, platform: macos, shard: 4, shards: 4 }
+                    - { os: windows-2025, platform: windows, shard: 1, shards: 4 }
+                    - { os: windows-2025, platform: windows, shard: 2, shards: 4 }
+                    - { os: windows-2025, platform: windows, shard: 3, shards: 4 }
+                    - { os: windows-2025, platform: windows, shard: 4, shards: 4 }
         runs-on: ${{ matrix.os }}
         timeout-minutes: 90
         env:
@@ -164,15 +192,18 @@ jobs:
             run:
                 shell: bash
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Install mise and the pinned tools
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   cache: true
-            - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+            - name: Restore the package caches
+              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
               with:
                   path: |
                       ~/.bun/install/cache
@@ -190,11 +221,13 @@ jobs:
               if: runner.os == 'Windows'
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
-            - run: mise run --skip-tools setup
+            - name: Set up the repository
+              run: mise run --skip-tools setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
               run: mise run --skip-tools ci:swiftformat
-            - id: install
+            - name: Install the repository checks
+              id: install
               run: mise run --skip-tools install
             - name: Run this shard of the tool tests
               run: mise run --skip-tools test:tools -- "--shard=${SHARD}"
