@@ -3,15 +3,6 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import { FUNCTIONS, TYPE_ONLY, EXECUTABLE_STATEMENTS } from '#plugin/config/plugin.ts';
 
-// Count executable statements under a node, entering the functions written inside it.
-function count(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
-    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;
-    const isExpressionBody =
-        FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
-    const own = isExpressionBody || EXECUTABLE_STATEMENTS.has(node.type) ? 1 : 0;
-    return childNodes(node, visitorKeys).reduce((total, child) => total + count(child, visitorKeys), own);
-}
-
 // Read syntax children through the parser visitor keys. Metadata and parent links are excluded.
 function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): TSESTree.Node[] {
     return (visitorKeys[node.type] ?? []).flatMap((key) => {
@@ -22,18 +13,18 @@ function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, re
 }
 
 /**
- * Count the executable statements of a function, including those of the functions written inside it.
- * An expression body counts as one statement.
- * @param node the function implementation
+ * Count the executable statements under a node, those of the functions written inside it included. An expression
+ * body counts as one statement.
+ * @param node the function implementation, or a node inside it
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns the count
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both trivial rules count statements, those of nested functions included, through this one entry.
-export function totalStatements(
-    node: ImplementedFunction,
-    visitorKeys: Readonly<Record<string, readonly string[]>>,
-): number {
-    return count(node, visitorKeys);
+export function totalStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;
+    const isExpressionBody =
+        FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
+    const own = isExpressionBody || EXECUTABLE_STATEMENTS.has(node.type) ? 1 : 0;
+    return childNodes(node, visitorKeys).reduce((total, child) => total + totalStatements(child, visitorKeys), own);
 }
 
 /**
