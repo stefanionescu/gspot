@@ -22,8 +22,8 @@ approved it on October 1, 2026.
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
-  own. Stages 15 to 21 were pull request #17. Stage 22 onward is the next batch, branch `refactor/test-tiers`.
-- The next stage to start is stage 23.
+  own. Stages 15 to 21 were pull request #17. Stages 22 and 23 are pull request #18, branch `refactor/test-tiers`.
+- The next stage to start is stage 24.
 
 ### Stages
 
@@ -53,7 +53,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | merged, #17      |
 | 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | merged, #17      |
 | 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | pull request #18 |
-| 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | not started      |
+| 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | pull request #18 |
 | 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | not started      |
 | 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | not started      |
 | 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | not started      |
@@ -257,6 +257,16 @@ The owner and the work settled these while implementing:
       environment JSON. No OpenAPI content has a second user.
     - `runGspot` waits for stage 23, which turns those spawns into in-process calls. The run environment that three
       helpers repeat, and `LIBRARIES_CLEAN`, which repeats `COMPONENT_SOURCE`, wait for stage 26.
+- Stage 23 ran the integration tier in-process and shared the builders:
+    - `runGspot` calls the CLI's `main` over `-C`, restoring the environment, the streams, and the exit code.
+      `spawnGspot` keeps the child process for the acceptance, package, and tool tiers.
+    - `runOptions`, `initOptions`, `emitted`, `writeConfigs`, and `scopeInput` replace the repeated literals and
+      blocks.
+    - The stricter flag test found that the pinact check passed `--verify`, which the help of pinact 5 does not list.
+      It passes `--verify-comment` now.
+    - Left for stage 25: the local manifest of `shared-settings`, the source copy list of `platform/assets`, the
+      repeated snapshot case of `xcode-project`, the spawn blocks of `squawk`, and the shared Swift helpers of
+      `swift-build`.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
