@@ -4,9 +4,9 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 /**
  * Locate heading sections and their level markers without treating fenced headings as structure.
  * @param text the authored Markdown guide.
- * @returns source ranges and level markers for each heading.
+ * @returns source ranges, depths, and level markers for each heading.
  */
-export function guideSections(text: string): { start: number; end: number; all: boolean }[] {
+export function guideSections(text: string): { start: number; end: number; depth: number; all: boolean }[] {
     const nodes = fromMarkdown(text).children;
     const headings = nodes.flatMap((node, index) => {
         if (node.type !== 'heading') return [];
