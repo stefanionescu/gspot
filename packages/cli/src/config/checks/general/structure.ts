@@ -99,7 +99,7 @@ export const BANNED_FOLDERS = [
 ];
 
 /** Git names its hooks, so the hook directories may hold pre-commit beside pre-push. */
-export const STRUCTURE_HOOK_DIRECTORIES = [HOOKS_DIRECTORY, '.githooks', '.husky', '.mise/tasks/hook'];
+export const HOOK_DIRECTORIES = [HOOKS_DIRECTORY, '.githooks', '.husky', '.mise/tasks/hook'];
 export const HOOK_PREFIX = 'pre';
 
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */

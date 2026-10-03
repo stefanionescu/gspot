@@ -7,11 +7,12 @@ import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import { matches, identity, isRecorded } from '#cli/lifecycle/ownership/log.ts';
+import { isMatch, identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import type { BlockSpan, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
 
 import type {
     Log,
+    Identity,
     OwnedKind,
     OwnedBlock,
     PlannedBlock,
@@ -23,13 +24,13 @@ import type {
 function isPreservedReplacement(
     existing: OwnershipEntry | undefined,
     current: Read | undefined,
-    installed: ReturnType<typeof identity>,
+    installed: ReturnType<typeof identify>,
     kind: OwnedKind,
     replace: boolean,
     expected: Read | undefined,
 ): boolean {
     if (current === undefined) return false;
-    if (existing === undefined) return !matches(current, installed) && !replace;
+    if (existing === undefined) return !isMatch(current, installed) && !replace;
     return !isRecorded(current, existing.installed) && kind !== 'policy' && !(replace && expected !== undefined);
 }
 
@@ -41,8 +42,8 @@ function planChange(
     next: Read,
     kind: OwnedKind,
 ): Planned & { entry: OwnershipEntry } {
-    const installed = identity(next);
-    const status = matches(current, installed) ? 'unchanged' : 'changed';
+    const installed = identify(next);
+    const status = isMatch(current, installed) ? 'unchanged' : 'changed';
     const isAdopted = existing === undefined && status === 'unchanged' && ADOPTED_KINDS.has(kind);
     const entry: OwnershipEntry = { path, kind, installed, ...(isAdopted ? { adopted: true } : {}) };
     return { path, current, previous: existing, next, entry, status };
@@ -95,7 +96,7 @@ function planBlock(
     planned: PlannedBlock,
 ): Planned {
     const next = { bytes: Buffer.from(planned.nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
-    if (existing?.block !== undefined && matches(current, identity(next)))
+    if (existing?.block !== undefined && isMatch(current, identify(next)))
         return { path, current, previous: existing, status: 'unchanged' };
     const plan = planChange(path, current, existing, next, 'block');
     plan.entry.block = planned.block;
@@ -103,20 +104,14 @@ function planBlock(
 }
 
 /**
- * The file as it is now, read as a link entry when the plan or the record involves a link.
+ * The file as it is on disk, read as a link entry when any side of the plan or its record is a link.
  * @param log the open log
  * @param path the file
- * @param existing the file's record
- * @param next the bytes proposed for it, when a replacement is proposed
+ * @param sides the current file, the next bytes, or the record
  * @returns the snapshot, or undefined when the file does not exist
  */
-export function currentRead(
-    log: Log,
-    path: string,
-    existing: OwnershipEntry | undefined,
-    next?: Read,
-): Read | undefined {
-    const isLink = [next, existing?.installed].some((read) => read?.isLink === true);
+export function getOnDisk(log: Log, path: string, ...sides: (Read | Identity | undefined)[]): Read | undefined {
+    const isLink = sides.some((side) => side?.isLink === true);
     return isLink ? log.files.readEntry(path) : log.files.read(path);
 }
 
@@ -130,14 +125,14 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
     const { path, next, kind, replace = false, expected, proposed } = request;
     const existing = log.entryFor(path);
     log.files.validate(path, next, proposed);
-    const current = currentRead(log, path, existing, next);
+    const current = getOnDisk(log, path, next, existing?.installed);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
-    const installed = identity(next);
+    const installed = identify(next);
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
     if (isPreservedReplacement(existing, current, installed, kind, replace, expected))
         return { path, current, previous: existing, status: 'preserved' };
-    if (existing !== undefined && matches(current, installed))
+    if (existing !== undefined && isMatch(current, installed))
         return { path, current, previous: existing, status: 'unchanged' };
     return planChange(path, current, existing, next, kind);
 }
@@ -200,7 +195,7 @@ export function proposeMerge(
     const entry: OwnershipEntry = {
         path,
         kind: 'merge',
-        installed: identity(plan.next),
+        installed: identify(plan.next),
         configuration: plan.configuration,
     };
     return { path, current, previous: existing, next: plan.next, entry, status: plan.status };

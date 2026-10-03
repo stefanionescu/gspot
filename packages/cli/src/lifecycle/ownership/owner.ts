@@ -67,15 +67,15 @@ function buildOwner(log: Log): Owner {
  * @param current the file as it is now, or undefined when it does not exist
  * @returns the snapshot to write
  */
-export function written(proposed: Read, current: Read | undefined): Read {
+export function preserveMode(proposed: Read, current: Read | undefined): Read {
     const { bytes } = proposed;
     const mode = fileMode(proposed);
-    const checkout =
+    const isCheckout =
         mode === READ_ONLY_FILE &&
         current?.mode === fileMode({ mode: OWNER_WRITABLE_FILE }) &&
         current.isLink !== true &&
         current.bytes.equals(bytes);
-    return { bytes, mode: checkout ? current.mode : mode };
+    return { bytes, mode: isCheckout ? current.mode : mode };
 }
 
 /**

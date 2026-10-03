@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import type { SwiftReader } from '#cli/types/checks/language/swift.ts';
+import { DUPLICATE_LINES } from '#cli/config/checks/language/swift.ts';
 import { trivialFile } from '#cli/checks/general/structure/statements.ts';
 import { TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
-import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/language/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/language/swift/sources.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { analyze, swiftBuild, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
@@ -48,7 +48,7 @@ const SWIFT_STRUCTURE: Record<string, Engine> = {
         ];
     }),
     'swift/duplicate-functions': analysis(({ functions }, input) =>
-        duplicateFunctions(functions, input.view.limit('duplicate_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
+        duplicateFunctions(functions, input.view.limit('duplicate_lines', 'swift') ?? DUPLICATE_LINES),
     ),
     'swift/private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
     'swift/env-owner': analysis(({ sources }, input) => envOwner(sources, ownerPaths(input))),

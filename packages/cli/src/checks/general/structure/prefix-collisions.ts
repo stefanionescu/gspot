@@ -12,8 +12,8 @@ import {
     SCRIPT_ENDING,
     TOOL_PREFIXES,
     IGNORED_FOLDERS,
+    HOOK_DIRECTORIES,
     PREFIX_COLLISIONS,
-    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/config/checks/general/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.

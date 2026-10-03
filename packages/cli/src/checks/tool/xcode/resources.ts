@@ -8,7 +8,7 @@ import type { StringsFile, AssetContents } from '#cli/types/checks/tool/xcode.ts
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.
-function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
+function readJson(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
     const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         return { value: JSON.parse(text) as unknown, error: undefined };
@@ -31,7 +31,7 @@ function symbolOf(name: string): string {
 }
 
 function imageFindings(input: EngineInput, path: string): Finding[] {
-    const read = parsed(input, path);
+    const read = readJson(input, path);
     const at = { file: path, line: 1 };
     if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
     if (!path.endsWith(IMAGE_SET)) return [];
@@ -67,7 +67,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  */
 export function xcstrings(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => {
-        const read = parsed(input, path);
+        const read = readJson(input, path);
         const at = { file: path, line: 1 };
         if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
         const strings = read.value as StringsFile;

@@ -11,7 +11,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns the findings
  */
-export function docsHeadings(input: EngineInput): Finding[] {
+export function headings(input: EngineInput): Finding[] {
     const extra = (input.view.tool('docs')['banned_headings'] as string[] | undefined) ?? [];
     const banned = new Set([...BANNED_HEADINGS, ...extra.map((heading) => heading.toLowerCase())]);
     const findings: Finding[] = [];

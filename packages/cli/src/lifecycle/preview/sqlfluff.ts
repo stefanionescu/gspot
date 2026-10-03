@@ -1,6 +1,6 @@
 import type { SqlfluffLine } from '#cli/types/lifecycle/preview.ts';
 
-function value(text: string): unknown {
+function parseScalar(text: string): unknown {
     const [mantissa = '', ...exponents] = text.toLowerCase().split('e');
     if (
         exponents.length <= 1 &&
@@ -85,7 +85,7 @@ export function parseSqlfluff(text: string): Record<string, unknown> {
     const options: Record<string, unknown> = Object.fromEntries([
         ...[...(sections.get('sqlfluff:rules') ?? [])].map(([option, setting]): [string, unknown] => [
             option,
-            value(setting.trim()),
+            parseScalar(setting.trim()),
         ]),
         ...[...sections]
             .filter(([name]) => name.startsWith('sqlfluff:rules:'))
@@ -94,7 +94,7 @@ export function parseSqlfluff(text: string): Record<string, unknown> {
                 Object.fromEntries(
                     [...new Map([...defaults, ...entries])].map(([option, setting]): [string, unknown] => [
                         option,
-                        value(setting.trim()),
+                        parseScalar(setting.trim()),
                     ]),
                 ),
             ]),

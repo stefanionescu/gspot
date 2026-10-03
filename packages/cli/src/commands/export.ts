@@ -19,22 +19,22 @@ import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
  */
 export function exportCommand(cwd: string, file: string): CommandResult {
     const root = findRoot(cwd);
-    const policy = readPolicy(root);
-    const saved = exportProfile(policy.text, file);
+    const policyFile = readPolicy(root);
+    const saved = exportProfile(policyFile.text, file);
     mutationTarget(file);
     const path = toPosix(relative(root, resolve(cwd, file)));
     mutationTarget(path);
     parseProfile(saved.text, file);
     asOwner(root, (owner) => {
-        if (owner.read('gspot.toml')?.bytes.toString('utf8') !== policy.text)
+        if (owner.read('gspot.toml')?.bytes.toString('utf8') !== policyFile.text)
             throw new Error('The policy changed while the profile was prepared. Retry the export.');
-        const existing = getOwnership(root).files.find((entry) => entry.path === path);
-        if (existing !== undefined && existing.kind !== 'export')
+        const owned = getOwnership(root).files.find((entry) => entry.path === path);
+        if (owned !== undefined && owned.kind !== 'export')
             throw new Error(`Profile export cannot replace managed ${path}. Choose another destination.`);
-        const current = owner.read(path);
+        const onDisk = owner.read(path);
         const plan = owner.proposeReplacement(
             path,
-            { bytes: Buffer.from(saved.text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
+            { bytes: Buffer.from(saved.text), mode: onDisk?.mode ?? OWNER_WRITABLE_FILE },
             'export',
         );
         owner.applyPlans([plan]);

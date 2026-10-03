@@ -2,23 +2,17 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { getOnDisk } from '#cli/lifecycle/ownership/plans.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
+import { isMatch, identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';
-
-// The file as it is now, read as a link entry when either side of the plan is a link.
-function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {
-    const isLink = current?.isLink === true || next?.isLink === true;
-    if (isLink) return log.files.readEntry(path);
-    return log.files.read(path);
-}
 
 // Refuses a plan whose file or record changed after it was made.
 function assertPlanFresh(log: Log, plan: Planned, proposed: ReadonlyMap<string, Read | undefined>): void {
     const { path, current, previous, next } = plan;
     const existing = log.entryFor(path);
     if (next !== undefined) log.files.validate(path, next, proposed);
-    const found = foundRead(log, path, current, next);
+    const found = getOnDisk(log, path, current, next);
     if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
         throw new Error(`File changed after its plan: ${path}`);
 }
@@ -46,8 +40,8 @@ function removeEmptyFolders(log: Log, path: string): void {
 function write(log: Log, prepared: Planned[]): void {
     log.state.pending = prepared.map(({ path, current, next, entry }) => ({
         path,
-        ...(current === undefined ? {} : { before: identity(current) }),
-        ...(next === undefined ? {} : { after: identity(next) }),
+        ...(current === undefined ? {} : { before: identify(current) }),
+        ...(next === undefined ? {} : { after: identify(next) }),
         ...(entry === undefined ? {} : { entry }),
     }));
     log.save();
@@ -61,7 +55,7 @@ function write(log: Log, prepared: Planned[]): void {
                 log.files.remove(path, current);
                 removeEmptyFolders(log, path);
             }
-        } else if (!matches(current, identity(next))) log.files.write(path, next, current);
+        } else if (!isMatch(current, identify(next))) log.files.write(path, next, current);
     }
     log.finish();
 }

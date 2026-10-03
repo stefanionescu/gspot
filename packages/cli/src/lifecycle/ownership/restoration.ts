@@ -6,7 +6,7 @@ import type { Read } from '#cli/types/platform/platform.ts';
 import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
+import { getOnDisk } from '#cli/lifecycle/ownership/plans.ts';
 import { openDocument } from '#cli/lifecycle/merge/document.ts';
 import type { Planned, MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
@@ -76,7 +76,7 @@ function getRestoration(existing: OwnershipEntry, current: Read | undefined): Re
  */
 export function proposeRestoration(log: Log, path: string): Planned {
     const existing = log.entryFor(path);
-    const current = currentRead(log, path, existing);
+    const current = getOnDisk(log, path, existing?.installed);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
     const restoration = getRestoration(existing, current);

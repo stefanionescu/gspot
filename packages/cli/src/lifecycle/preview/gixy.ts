@@ -1,5 +1,5 @@
 // Flags are section-independent; valued options retain the plugin section prefix.
-function option(line: string, section: string): [string, string] {
+function parseOption(line: string, section: string): [string, string] {
     const comment = line.search(/\s[;#]/u);
     const statement = comment === -1 ? line : line.slice(0, comment).trimEnd();
     const nameEnd = statement.search(/[:=;#\s]/u);
@@ -30,7 +30,7 @@ export function parseGixy(text: string): Record<string, string[]> {
             section = `${line.slice(1, -1).replaceAll('_', '-')}-`;
             continue;
         }
-        const [canonical, value] = option(line, section);
+        const [canonical, value] = parseOption(line, section);
         if (!['checks', 'tests', 'skips'].includes(canonical)) continue;
         if (value.startsWith('[')) throw new Error('Gixy check selectors must be comma-separated strings.');
         result[canonical] = value

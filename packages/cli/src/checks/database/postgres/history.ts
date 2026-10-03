@@ -4,7 +4,7 @@ import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { getBlobs, getHeadEntries } from '#cli/execution/checkout/revision.ts';
 
-const history = new WeakMap<object, Promise<Map<string, string>>>();
+const cache = new WeakMap<object, Promise<Map<string, string>>>();
 
 async function readCommittedText(input: EngineInput): Promise<Map<string, string>> {
     if (!input.hasGit) return new Map();
@@ -27,10 +27,10 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
 }
 
 function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let read = history.get(input.reads);
+    let read = cache.get(input.reads);
     if (read === undefined) {
         read = readCommittedText(input);
-        history.set(input.reads, read);
+        cache.set(input.reads, read);
     }
     return read;
 }

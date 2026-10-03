@@ -102,7 +102,7 @@ function literalProblems(root: Node): MarkupProblem[] {
     return [...texts, ...held];
 }
 
-async function findings(
+async function markupFindings(
     input: EngineInput,
     paths: string[],
     read: (root: Node) => MarkupProblem[],
@@ -139,7 +139,7 @@ async function findings(
  */
 function scripts(input: EngineInput): Promise<Finding[]> {
     const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
-    return findings(input, paths, scriptProblems);
+    return markupFindings(input, paths, scriptProblems);
 }
 
 /**
@@ -157,7 +157,7 @@ function literals(input: EngineInput): Finding[] | Promise<Finding[]> {
     const isTemplate = pathMatcher(templates);
     const isExcluded = pathMatcher(excluded);
     const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
-    return findings(input, paths, literalProblems);
+    return markupFindings(input, paths, literalProblems);
 }
 
 /**

@@ -86,7 +86,7 @@ export function getChanges(session: Session): Changes {
         version: session.version,
         packageClient: session.packageClient,
     });
-    const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
+    const workflows = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         detected: detectKits(session.repository.files, session.manifests, fields)
             .filter((plan) => !selected.has(plan.kit))
@@ -116,7 +116,7 @@ export function getChanges(session: Session): Changes {
         authored: [
             ...getLintJobs(
                 session.root,
-                tooling.ci.filter((path) => !generated.has(path)),
+                tooling.ci.filter((path) => !workflows.has(path)),
             ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' })),
         ],
         pinnedTwice: pinnedTwice(session.root, everyManifest(session.scopes)).map((pin) => ({

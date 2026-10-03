@@ -6,7 +6,7 @@ import type { ReadCache } from '#cli/types/platform/platform.ts';
 import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
 import type { ParseReads, GrammarName } from '#cli/types/parsers/parsers.ts';
 
-const reads = new WeakMap<ReadCache, Map<string, Tree>>();
+const cache = new WeakMap<ReadCache, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {
     isReady: undefined,
@@ -46,10 +46,10 @@ export function parserFor(name: GrammarName): Promise<Parser> {
 export async function parseSource(name: GrammarName, text: string, context?: ParseReads): Promise<Tree | null> {
     const parser = await parserFor(name);
     if (context?.resources === undefined) return parser.parse(text);
-    let trees = reads.get(context.reads);
+    let trees = cache.get(context.reads);
     if (trees === undefined) {
         trees = new Map();
-        reads.set(context.reads, trees);
+        cache.set(context.reads, trees);
     }
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);

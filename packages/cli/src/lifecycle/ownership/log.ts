@@ -13,11 +13,11 @@ import type { Log, Identity, Ownership, OwnershipEntry, PendingOwnership } from 
 function recoverPending(files: Root, pending: PendingOwnership, accept: (pending: PendingOwnership) => void): void {
     const isLink = [pending.before, pending.after].some((entry) => entry?.isLink === true);
     const current = isLink ? files.readEntry(pending.path) : files.read(pending.path);
-    if (matches(current, pending.after)) {
+    if (isMatch(current, pending.after)) {
         accept(pending);
         return;
     }
-    if (current !== undefined && !matches(current, pending.before))
+    if (current !== undefined && !isMatch(current, pending.before))
         throw new Error(
             `Interrupted lifecycle operation conflicts with edited ${pending.path}. Resolve that file before retrying.`,
         );
@@ -45,7 +45,7 @@ function getEntry(entries: Map<string, OwnershipEntry>, path: string): Ownership
  * @returns its hash, mode, and whether it is a link
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
-export function identity(file: Read): Identity {
+export function identify(file: Read): Identity {
     return {
         hash: contentDigest(file.bytes),
         mode: fileMode(file),
@@ -59,10 +59,10 @@ export function identity(file: Read): Identity {
  * @param expected the recorded identity, or undefined when none was recorded
  * @returns whether they agree
  */
-export function matches(file: Read | undefined, expected: Identity | undefined): boolean {
+export function isMatch(file: Read | undefined, expected: Identity | undefined): boolean {
     if (file === undefined) return expected === undefined;
     if (expected === undefined) return false;
-    const found = identity(file);
+    const found = identify(file);
     return found.hash === expected.hash && found.mode === expected.mode && found.isLink === expected.isLink;
 }
 
@@ -74,9 +74,9 @@ export function matches(file: Read | undefined, expected: Identity | undefined):
  * @returns whether the file is unedited
  */
 export function isRecorded(file: Read | undefined, recorded: Identity | undefined): boolean {
-    if (matches(file, recorded)) return true;
+    if (isMatch(file, recorded)) return true;
     if (file === undefined || recorded === undefined || file.isLink === true || recorded.isLink === true) return false;
-    const found = identity(file);
+    const found = identify(file);
     return (
         found.hash === recorded.hash &&
         recorded.mode === READ_ONLY_FILE &&
@@ -91,15 +91,15 @@ export function isRecorded(file: Read | undefined, recorded: Identity | undefine
  * @returns the log
  */
 export function openLog(files: Root, stateDirectory: string): Log {
-    const record = `${stateDirectory}/ownership.json`;
-    let recorded = files.read(record);
+    const logPath = `${stateDirectory}/ownership.json`;
+    let recorded = files.read(logPath);
     const state = parseState(recorded);
     const entries = new Map(state.files.map((entry) => [entry.path.normalize('NFC').toLowerCase(), entry]));
     const save = (): void => {
         state.files = [...entries.values()];
         ownershipSchema.parse(state);
         const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
-        files.write(record, next, recorded);
+        files.write(logPath, next, recorded);
         recorded = next;
     };
     const accept = (pending: PendingOwnership): void => {

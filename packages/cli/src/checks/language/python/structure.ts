@@ -9,13 +9,8 @@ import { functionsOf, pythonModules } from '#cli/checks/language/python/modules.
 import { singletons, importComments } from '#cli/checks/language/python/imports.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/language/python/functions.ts';
+import { FILE_LINES, DEFINITIONS, FUNCTION_LINES, PACKAGE_EXPORTS } from '#cli/config/checks/language/python.ts';
 
-import {
-    DEFINITIONS,
-    DEFAULT_FILE_LINES,
-    DEFAULT_FUNCTION_LINES,
-    DEFAULT_PACKAGE_EXPORTS,
-} from '#cli/config/checks/language/python.ts';
 import {
     exportOrder,
     packageExports,
@@ -41,7 +36,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 /** The analyses by the name a manifest gives them. */
 const PYTHON_STRUCTURE: Record<string, Engine> = {
     'python/file-lines': analysis(({ modules }, input) => {
-        const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
+        const ceiling = input.view.limit('file_lines', 'python') ?? FILE_LINES;
         return modules.flatMap((module) => {
             const count = [...module.lines].filter(
                 (line) => line.trim() !== '' && !line.trimStart().startsWith('#'),
@@ -59,7 +54,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
         });
     }),
     'python/function-lines': analysis(({ modules, functions }, input) => {
-        const ceiling = input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES;
+        const ceiling = input.view.limit('function_lines', 'python') ?? FUNCTION_LINES;
         const lines = new Map(modules.map((module) => [module.path, module.lines]));
         return functions.flatMap((fn) => {
             const count = (lines.get(fn.path) ?? [])
@@ -114,7 +109,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
     ),
     'python/package-exports': analysis(({ modules }, input) => {
         const ceiling = input.view.settings['limits.python.package_exports'];
-        return packageExports(modules, typeof ceiling === 'number' ? ceiling : DEFAULT_PACKAGE_EXPORTS);
+        return packageExports(modules, typeof ceiling === 'number' ? ceiling : PACKAGE_EXPORTS);
     }),
     'python/import-comments': analysis(({ modules }) => importComments(modules)),
     'python/export-order': analysis(({ modules }) => exportOrder(modules)),

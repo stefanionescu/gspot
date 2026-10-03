@@ -227,7 +227,7 @@ export const projectSchema = z.object({ rootObject: z.string(), objects: z.recor
  * @param directory the folder the project file lives in, relative to the repository root
  * @returns the source paths and the synchronized folders with their exclusions
  */
-export function readProject(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
+export function readPbxproj(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
     const parsed = projectSchema.parse(parse(text));
     const root = projectItem(parsed, parsed.rootObject);
     if (root.isa !== 'PBXProject' || root.mainGroup === undefined)

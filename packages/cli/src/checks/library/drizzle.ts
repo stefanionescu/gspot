@@ -24,7 +24,7 @@ function relations(input: EngineInput): Finding[] {
             path: file.path,
             text: readSource(input.root, file.path, input.reads).toString('utf8'),
         }));
-    const everything = files.map((file) => file.text).join('\n');
+    const schemaText = files.map((file) => file.text).join('\n');
     return files.flatMap((file) =>
         file.text
             .matchAll(TABLE)
@@ -34,7 +34,7 @@ function relations(input: EngineInput): Finding[] {
                 const body = next === -1 ? file.text.slice(match.index) : file.text.slice(match.index, next);
                 return (
                     body.includes('.references(') &&
-                    !new RegExp(String.raw`relations\(\s*${name}\b`, 'u').test(everything)
+                    !new RegExp(String.raw`relations\(\s*${name}\b`, 'u').test(schemaText)
                 );
             })
             .map((match) =>

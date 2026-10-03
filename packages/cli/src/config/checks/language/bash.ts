@@ -7,7 +7,7 @@ export const RULES: Record<string, { asset: string; limit: string; noun: string;
 };
 export const OUTER_LEVELS = 2;
 
-export const DEFAULT_MIN_LINES = 3;
+export const DUPLICATE_LINES = 3;
 export const IDENTIFIER = /[A-Za-z_]\w*/gu;
 export const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
 export const WORD = /[A-Za-z0-9]+/gu;

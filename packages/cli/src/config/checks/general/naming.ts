@@ -36,9 +36,9 @@ export const CATEGORY_PARENTS: Record<string, string> = {
 export const CALLBACK_VERB = 'handle';
 
 /** The digits of a migration timestamp, YYYYMMDDHHMMSS. */
-export const MIGRATION_TIMESTAMP_DIGITS = 14;
+export const MIGRATION_DIGITS = 14;
 export const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
-export const MIGRATION_DIRECTORY = /^\d{14}_/u;
+export const MIGRATION_PREFIX = /^\d{14}_/u;
 export const WRAPPERS: { open: string; close: string; category: string }[] = [
     { open: '[', close: ']', category: 'path_parameters' },
     { open: '(', close: ')', category: 'directories' },

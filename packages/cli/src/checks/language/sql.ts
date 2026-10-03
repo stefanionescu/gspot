@@ -59,7 +59,7 @@ function functionOption(statement: SqlStatementView, name: string): FunctionOpti
 }
 
 // The executable statements of an SQL function: its standard body, or the string body parsed on its own.
-async function sqlBodyStatements(statement: SqlStatementView): Promise<number> {
+async function sqlBody(statement: SqlStatementView): Promise<number> {
     const body = functionOption(statement, 'as')?.List?.items[0]?.String.sval;
     if (body === undefined) return sqlStatements(statement.fields['sql_body']);
     const parsedBody = await parseSql(body);
@@ -78,7 +78,7 @@ async function bodyStatements(
         const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
         return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
     }
-    return language === 'sql' ? sqlBodyStatements(statement) : undefined;
+    return language === 'sql' ? sqlBody(statement) : undefined;
 }
 
 // The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.

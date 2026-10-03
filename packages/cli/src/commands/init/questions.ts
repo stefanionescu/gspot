@@ -73,8 +73,9 @@ export async function askKits(
     const choices = manifests
         .values()
         .map((manifest) => {
-            const how = selection.how.get(manifest.kit.name);
-            const hint = how === 'required' ? 'required by another selected kit' : (how ?? manifest.kit.description);
+            const reason = selection.how.get(manifest.kit.name);
+            const hint =
+                reason === 'required' ? 'required by another selected kit' : (reason ?? manifest.kit.description);
             return { value: manifest.kit.name, label: manifest.kit.name, hint };
         })
         .toArray();

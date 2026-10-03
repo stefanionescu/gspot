@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import type { Identifier } from '#cli/types/checks/general/naming.ts';
-import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
+import { WRAPPERS, MIGRATION_PREFIX, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
 
 function baseStem(base: string): string {
     const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));
@@ -9,7 +9,7 @@ function baseStem(base: string): string {
     return dot <= 0 ? base : base.slice(0, dot);
 }
 
-function unwrapped(segment: string): { name: string; category: string } {
+function segmentName(segment: string): { name: string; category: string } {
     const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
     if (bracket === undefined) return { name: segment, category: 'directories' };
     const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
@@ -25,7 +25,7 @@ function unwrapped(segment: string): { name: string; category: string } {
 export function fileIdentifier(path: string, language: string): Identifier {
     const base = posix.basename(path);
     const name = language === 'sql' && base.endsWith('.sql') ? base : baseStem(base);
-    const named = name.startsWith('[') ? unwrapped(name) : { name, category: 'files' };
+    const named = name.startsWith('[') ? segmentName(name) : { name, category: 'files' };
     return {
         file: path,
         line: 1,
@@ -46,7 +46,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 export function directoryIdentifiers(path: string, language: string): Identifier[] {
     const segments = path.split('/').slice(0, -1);
     return segments.flatMap((segment, index) => {
-        const named = segment.startsWith('.') || MIGRATION_DIRECTORY.test(segment) ? undefined : unwrapped(segment);
+        const named = segment.startsWith('.') || MIGRATION_PREFIX.test(segment) ? undefined : segmentName(segment);
         if (named === undefined || named.name === '') return [];
         const directory = segments.slice(0, index + 1).join('/');
         return [

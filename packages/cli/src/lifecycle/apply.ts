@@ -1,6 +1,6 @@
 import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
-import { written, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership, preserveMode } from '#cli/lifecycle/ownership/owner.ts';
 import { VERSION_FILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
@@ -59,7 +59,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
         if (file.executable === true) mode = EXECUTABLE_FILE;
-        const replacement = written({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
+        const replacement = preserveMode({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
         return owner.proposeReplacement(file.path, replacement, kind, read !== undefined, read);
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));

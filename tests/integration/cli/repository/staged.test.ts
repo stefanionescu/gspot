@@ -5,7 +5,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/harness/cli/git.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { getStaged, getPushBase, changedFiles } from '#cli/repository/revisions/changes.ts';
+import { getStaged, getChanged, getPushBase } from '#cli/repository/revisions/changes.ts';
 
 function commit(root: string): void {
     gitOutput(root, ['init']);
@@ -30,7 +30,7 @@ test('Git change read > keeps deletion paths in staged and reference comparisons
     gitOutput(sandbox.path, ['rm', 'source.ts']);
     const removed = await getStaged(sandbox.path);
     expect(removed.staged).toStrictEqual(['source.ts']);
-    const changed = await changedFiles(sandbox.path, 'HEAD');
+    const changed = await getChanged(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['source.ts']);
 });
 
@@ -41,7 +41,7 @@ test('Git change read > keeps both paths of a rename across directories', async 
     gitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
     const moved = await getStaged(sandbox.path);
     expect(moved.staged).toStrictEqual(['api/source.ts', 'web/source.ts']);
-    const changed = await changedFiles(sandbox.path, 'HEAD');
+    const changed = await getChanged(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
 });
 
@@ -57,10 +57,10 @@ test('Git change read > rejects invalid reference reads without interpreting opt
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commit(sandbox.path);
-    const changed = await changedFiles(sandbox.path, 'HEAD');
+    const changed = await getChanged(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
-    expect(await rejection(changedFiles(sandbox.path, 'missing-reference'))).toContain('Git merge-base failed');
-    expect(await rejection(changedFiles(sandbox.path, '--output=outside.txt'))).toContain('Git merge-base failed');
+    expect(await rejection(getChanged(sandbox.path, 'missing-reference'))).toContain('Git merge-base failed');
+    expect(await rejection(getChanged(sandbox.path, '--output=outside.txt'))).toContain('Git merge-base failed');
     expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
 });
 test('Git change read > push comparison distinguishes an absent upstream from a missing upstream object', async () => {
@@ -125,7 +125,7 @@ test('Git change read > a new branch compares with the remote default without lo
         'Unpublished',
     ]);
     expect(await getPushBase(sandbox.path)).toBe(published);
-    const { reference, commits } = await changedFiles(sandbox.path, '');
+    const { reference, commits } = await getChanged(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
     // Only the unpublished commit is new after the remote default, so only its message is checked.
     expect(commits).toStrictEqual([runBlocking(['git', 'rev-parse', 'HEAD'], { cwd: sandbox.path }).stdout.trim()]);

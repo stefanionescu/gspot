@@ -48,7 +48,7 @@ function buildIgnore(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
 
 async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
     const counter = { removed: 0 };
-    const result = await commitPolicy(
+    const committed = await commitPolicy(
         root,
         removeMatching(
             'ignore',
@@ -66,7 +66,7 @@ async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
         counter.removed === 0
             ? 'no matching ignore entry'
             : `removed ${String(counter.removed)} ignore ${noun} for ${o.check}`;
-    return { ...result, text: `${text}\n` };
+    return { ...committed, text: `${text}\n` };
 }
 
 /**

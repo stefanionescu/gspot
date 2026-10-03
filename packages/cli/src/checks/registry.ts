@@ -21,6 +21,7 @@ import { fresh, spectral } from '#cli/checks/tool/openapi.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { coverage } from '#cli/checks/tool/xctest/coverage.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
+import { headings } from '#cli/checks/general/docs/headings.ts';
 import { bashLimits } from '#cli/checks/language/bash/limits.ts';
 import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
@@ -32,7 +33,6 @@ import { untestedRoutes } from '#cli/checks/framework/express.ts';
 import { expoDoctor } from '#cli/checks/framework/react-native.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { references } from '#cli/checks/tool/xctest/references.ts';
-import { docsHeadings } from '#cli/checks/general/docs/headings.ts';
 import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
@@ -110,7 +110,7 @@ export const ENGINES: Record<string, Engine> = {
     'structure/tracked-dependencies': trackedDependencies,
     'typescript/tsconfig': tsconfigOptions,
     'javascript/rules-off': requiredRules,
-    'docs/headings': docsHeadings,
+    'docs/headings': headings,
     'docs/stale-paths': stalePaths,
     'docs/readme-present': readmePresent,
     'docs/readme-shape': readmeShape,

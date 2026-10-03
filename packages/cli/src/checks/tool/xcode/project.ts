@@ -6,7 +6,7 @@ import type { TestPlan } from '#cli/types/checks/tool/xcode.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { getBlobs, getCachedEntries } from '#cli/execution/checkout/revision.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
-import { readProject, projectTestTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
+import { readPbxproj, projectTestTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two checks find the folder of a project bundle; the bundle boundary is computed in one place.
@@ -23,7 +23,7 @@ function folderOf(projectFile: string): string {
 export function orphanSources(input: EngineInput): Finding[] {
     const projects = trackedEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
-        ...readProject(
+        ...readPbxproj(
             readSource(input.root, path, input.reads).toString('utf8'),
             posix.join(input.root, folderOf(path)),
         ),
