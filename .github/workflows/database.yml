@@ -1,9 +1,7 @@
 name: database
-# The Supabase database journey starts a local Postgres container. The pull request jobs leave it out, because
-# pulling the image on every run hits the registry rate limit, so it runs here once a week and on demand.
+# The Supabase database test starts a local Postgres container. The pull request jobs leave it out, because pulling
+# the image on every run hits the registry rate limit, so it runs only when started by hand.
 on:
-    schedule:
-        - cron: '23 5 * * 1'
     workflow_dispatch:
 permissions:
     contents: read

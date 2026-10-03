@@ -1,9 +1,7 @@
 name: pins
 # Every tool pin of the kit manifests must exist in its registry. The check calls a registry once per pin, so it runs
-# once a week and on demand instead of in every pull request.
+# only when started by hand.
 on:
-    schedule:
-        - cron: '41 5 * * 1'
     workflow_dispatch:
 permissions:
     contents: read
