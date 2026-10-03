@@ -23,8 +23,8 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stages 41 to 44 start the next
-  batch on `docs/trim-guides-readmes`, stacked on it.
+- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stages 41 to 44 and the first
+  part of 45 make the next batch on `docs/trim-guides-readmes`, stacked on it.
 
 ### Stages
 
@@ -76,7 +76,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | in the batch     |
 | 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | in the batch     |
 | 44    | Shorten the base rules                                 | the general rows of F.1                                                                                 | in the batch     |
-| 45    | Shorten the kit rules                                  | the other rows of F.1, and F.2                                                                          | not started      |
+| 45    | Shorten the kit rules                                  | the other rows of F.1, and F.2                                                                          | in progress      |
 | 46    | Finish the audit and check release readiness           | delete this file and the three images, with their ignore; the final verification below                  | not started      |
 
 ### Decisions
@@ -487,6 +487,18 @@ The owner and the work settled these while implementing:
       what Vale enforces, and the naming rule leaves the choice of retrieval verb to the project.
     - Left near their size: errors, accessibility, and the content, media, and surfaces parts of the documentation
       rules, each within about 30 lines of the audit's target.
+- Stage 45 is in progress. Done so far:
+    - The Next.js security file is gone; its boundary rules moved into the Next.js file. The commitlint rule is gone,
+      the browser rules joined the site rules, and the Vitest rule keeps what is specific to Vitest.
+    - Twenty rule files lost their lists of what each linter reports; one sentence in the working rule replaces them.
+- Left for stage 45, the F.1 kit rows and the rest of F.2:
+    - Merge the FastAPI runtime file into the FastAPI file, about 490 lines to 110.
+    - Shorten drizzle, react-hook-form, tanstack-query, trpc, zod, and zustand by 20% to 30%, and supabase, postgres,
+      docker, i18n, Express, SwiftUI, and HTTP to the audit's targets.
+    - Rewrite the Bash operations file and the examples taken from other projects, such as `run_ssh`,
+      `nvidia-smi`, `HF_TOKEN`, Tiptap, and a chat proxy.
+    - Keep each rule that several files repeat in one file: reading the environment, error disclosure, history in
+      comments, generated output, exact pins, and speculative handling.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
