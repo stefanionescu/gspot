@@ -2,14 +2,14 @@ import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands.ts';
 import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { kitReference, settingsPage } from './policy.ts';
+import { settingsPage, policyReference } from './policy.ts';
 import { allChecks } from '@gspothq/cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { kitManifests } from '@gspothq/cli/src/kits/manifests.ts';
-import { kitPage, rulePage, pluginReferencePages } from './definitions.ts';
+import { kitPage, checkPage, pluginReferencePages } from './definitions.ts';
 
 /**
- * Every generated reference page, keyed by its Markdown path: commands, kits, rules, plugin rules, settings, and the policy file.
+ * Every generated reference page, keyed by its Markdown path: commands, kits, checks, plugin rules, settings, and the policy file.
  * @returns the pages by identity
  */
 export function referencePages(): Map<string, ReferencePage> {
@@ -28,7 +28,7 @@ export function referencePages(): Map<string, ReferencePage> {
         ['framework', 'Frameworks'],
         ['tool', 'Tools'],
         ['library', 'Libraries'],
-        ['platforms', 'Platforms'],
+        ['platform', 'Platforms'],
         ['database', 'Databases'],
         ['general', 'Repository checks'],
     ];
@@ -57,12 +57,15 @@ export function referencePages(): Map<string, ReferencePage> {
     );
     for (const manifest of manifests) add(`kits/${manifest.kit.name}.md`, kitPage(manifest));
     const checks = allChecks();
-    for (const { check, kit: configuration } of checks.values())
-        add(`rules/${check.name}.md`, rulePage(check, configuration));
+    for (const { check, kit } of checks.values()) add(`checks/${check.name}.md`, checkPage(check, kit));
     add('settings.md', settingsPage(manifests));
     add(
         'configuration.md',
-        referencePage('Configuration file', 'All policy fields from the validated schema.', kitReference()),
+        referencePage(
+            'Policy file',
+            'Every field of gspot.toml, from the schema the reader validates.',
+            policyReference(),
+        ),
     );
     for (const [path, page] of pluginReferencePages()) add(path, page);
     return pages;

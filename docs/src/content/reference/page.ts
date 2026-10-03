@@ -1,9 +1,8 @@
 import { sourceRevision } from '../revision.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import packageManifest from '@gspothq/cli/package.json' with { type: 'json' };
 
 /**
- * Preserve definition attribution and build provenance without serializing metadata into Markdown.
+ * A generated page whose edit link names the source file that defines it, at the build revision.
  * @param title the page title
  * @param description the one-line description
  * @param body the Markdown body
@@ -20,7 +19,7 @@ export function referencePage(
     const source = `https://github.com/stefanionescu/gspot/blob/${sourceRevision}/${owner}`;
     return {
         data: { title, description, editUrl: source },
-        body: `\ngspot ${packageManifest.version} · [Source definition](${source})\n\n${body}`,
+        body: `\n${body}`,
     };
 }
 /**

@@ -103,7 +103,7 @@ export default defineConfig({
                         {
                             label: 'Checks',
                             collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/rules' } }],
+                            items: [{ autogenerate: { directory: 'reference/checks' } }],
                         },
                         {
                             label: 'ESLint plugin',
