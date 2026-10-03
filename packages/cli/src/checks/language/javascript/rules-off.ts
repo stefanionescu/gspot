@@ -1,8 +1,8 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
+import { ESLINT_FILE } from '#cli/config/platform/locations.ts';
 import { evaluate } from '#cli/lifecycle/preview/eslint/client.ts';
-import { ESLINT_FILE } from '#cli/config/checks/language/javascript.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/config/generation/generation.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { eslintCoverageResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';

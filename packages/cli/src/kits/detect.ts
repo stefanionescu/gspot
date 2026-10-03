@@ -2,8 +2,8 @@
 import { posix } from 'node:path';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Layout, Manifest, KitEvidence } from '#cli/types/kits.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';

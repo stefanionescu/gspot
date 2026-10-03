@@ -1,6 +1,7 @@
 import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { written, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { VERSION_FILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
@@ -66,7 +67,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
     const expected = new Set([
         'gspot.toml',
-        '.gspot/version',
+        VERSION_FILE,
         '.gitignore',
         'CLAUDE.md',
         ...generated.map(({ path }) => path),
@@ -89,7 +90,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
         );
     owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
     moveClaudeFile(owner, report);
-    pruneInstallations(owner, root, retained, expected.has('.gspot/pyproject.toml'));
+    pruneInstallations(owner, root, retained, expected.has(TOOL_PYTHON_PROJECT));
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));

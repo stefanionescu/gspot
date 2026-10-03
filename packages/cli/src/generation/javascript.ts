@@ -3,6 +3,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { readPackageManifest } from '#cli/repository/packages.ts';
 import { TRAILING_STAR } from '#cli/config/generation/generation.ts';
 
@@ -83,7 +84,7 @@ export function javascriptConfiguration(
         });
         configuration['exclude'] = [
             '**/node_modules/**',
-            '.gspot/**',
+            `${DOT_GSPOT}/**`,
             '**/eslint.config.mjs',
             '**/eslint.config.js',
             '**/eslint.config.cjs',

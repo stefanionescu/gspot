@@ -1,5 +1,6 @@
 // The literal values generation reads: names, patterns, limits, and tables.
 import { z } from 'zod';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { HookName } from '#cli/types/generation/generation.ts';
 import ruleLevels from '#cli/config/generation/eslint-levels.json' with { type: 'json' };
 
@@ -61,8 +62,8 @@ export const HOOK_UNAVAILABLE = 'The command that runs gspot is not installed. I
 
 // Every file gspot writes keeps LF, so a CRLF checkout does not mark the generated files and hooks as changed.
 export const GIT_ATTRIBUTES_BLOCK = [
-    '.gspot/** linguist-generated',
-    '.gspot/** text eol=lf',
+    `${DOT_GSPOT}/** linguist-generated`,
+    `${DOT_GSPOT}/** text eol=lf`,
     '.gitignore text eol=lf',
     '.gitattributes text eol=lf',
 ].join('\n');
@@ -129,9 +130,6 @@ export const HASH_BLOCK_START = '# >>> gspot managed >>>';
 export const HASH_BLOCK_END = '# <<< gspot managed <<<';
 
 export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'] as const;
-
-/** The folder of the hook scripts gspot writes, which core.hooksPath names. */
-export const HOOKS_DIRECTORY = '.gspot/hooks';
 
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';
 export const MISE_MIN_VERSION = '2026.8.8';

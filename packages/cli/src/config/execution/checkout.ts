@@ -12,7 +12,6 @@ export const ENTRY_MODES: Record<string, number> = {
 };
 export const COPY_CONCURRENCY = 8;
 export const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
-export const VALE_INI = '.gspot/config/vale.ini';
 
 /** Entered, read, and written by the owner alone: the mode of a private directory. */
 export const PRIVATE_DIRECTORY = 0o700;

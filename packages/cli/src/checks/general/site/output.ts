@@ -9,6 +9,7 @@ import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { filesUnder, requireBuild } from '#cli/checks/general/site/build.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { SiteBuild, SizeLimit } from '#cli/types/checks/general/site.ts';
@@ -90,7 +91,7 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
         .filter((path) => path.endsWith('.html'))
         .map((path) => join(build.output, path));
     if (pages.length === 0) return [];
-    const config = join(input.root, '.gspot/config/html-validate-built.json');
+    const config = join(input.root, CONFIGURATION_DIRECTORY, 'html-validate-built.json');
     const result = await runCheckCommand(
         input,
         ['html-validate', '--config', config, '--formatter', 'json', ...pages],

@@ -10,6 +10,7 @@ import { getLintJobs } from '#cli/repository/survey.ts';
 import { readPrefix } from '#cli/repository/sources.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { readManifests } from '#cli/repository/packages.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
@@ -64,7 +65,7 @@ function unownedConfigs(
 function getUnownedOutputs(session: Session): ChangeRow[] {
     const recorded = new Set(getOwnership(session.root).files.map((entry) => entry.path));
     return session.repository.files
-        .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
+        .filter((file) => file.path.startsWith(`${DOT_GSPOT}/`) && !recorded.has(file.path))
         .map((file) => ({
             path: file.path,
             note: 'not recorded as owned; lifecycle commands preserve this file',

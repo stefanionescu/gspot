@@ -7,6 +7,7 @@ import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { CloneReport } from '#cli/types/checks/general/general.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { JSCPD_TOOL, DUPLICATION_PERCENT } from '#cli/config/checks/general/duplication.ts';
 
@@ -74,7 +75,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const work = workFolder.path;
     const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     using files = openRoot(input.root);
-    const generated = files.read('.gspot/config/jscpd.json');
+    const generated = files.read(`${CONFIGURATION_DIRECTORY}/jscpd.json`);
     if (generated === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
     const shipped = JSON.parse(generated.bytes.toString('utf8')) as Record<string, unknown>;
     // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.

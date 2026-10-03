@@ -11,6 +11,7 @@ import type { Generated } from '#cli/types/generation/generation.ts';
 import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import { TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 async function noteProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const installed = await installProsePackages(session);
@@ -77,8 +78,7 @@ export async function writeOutputs(session: Session, replace?: ReadonlyMap<strin
         const toolInputs = new Set(
             rendered.files
                 .filter(
-                    (file) =>
-                        file.kind === 'lock' || ['.gspot/package.json', '.gspot/pyproject.toml'].includes(file.path),
+                    (file) => file.kind === 'lock' || [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT].includes(file.path),
                 )
                 .map((file) => file.path),
         );

@@ -5,9 +5,9 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { TRIVY_EXIT, COMPOSE_FILES, SHOWN_FINDINGS } from '#cli/config/checks/tool/docker.ts';
 

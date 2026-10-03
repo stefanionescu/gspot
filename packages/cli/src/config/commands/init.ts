@@ -1,5 +1,6 @@
 // The literal values commands/init reads: names, patterns, limits, and tables.
 import type { InitAnswers } from '#cli/types/commands/init.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 export const DETECTION_LABEL_WIDTH = 13;
 export const NO_KITS = 'none';
@@ -22,7 +23,7 @@ export const ALREADY_INSTALLED =
 
 /** The plan row of the hooks folder. */
 export const HOOKS_ROW = {
-    path: '.gspot/hooks',
+    path: HOOKS_DIRECTORY,
     note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
 };
 export const GAP_WIDTH = 3;

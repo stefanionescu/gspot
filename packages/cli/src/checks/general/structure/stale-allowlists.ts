@@ -1,7 +1,7 @@
 import { dirname, basename } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { pathTokens, proseLines } from '#cli/parsers/references.ts';
 import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';

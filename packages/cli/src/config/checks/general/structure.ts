@@ -1,6 +1,7 @@
 // The literal values checks/general/structure reads: names, patterns, limits, and tables.
 import { TOML_STRINGS } from '#cli/config/checks/checks.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { EXTENSION_TAGS } from '#cli/config/repository/repository.ts';
 
 export const POLICY_FILE = 'gspot.toml';
@@ -74,8 +75,6 @@ export const CONTAINER_NOISE = new Set([
 export const NAMES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 export const TYPE_REFERENCES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
 
-export const GSPOT_DIRECTORY = '.gspot/';
-
 /** Folder names that say nothing about what the folder holds. */
 export const BANNED_FOLDERS = [
     'common',
@@ -100,7 +99,7 @@ export const BANNED_FOLDERS = [
 ];
 
 /** Git names its hooks, so the hook directories may hold pre-commit beside pre-push. */
-export const STRUCTURE_HOOK_DIRECTORIES = ['.gspot/hooks', '.githooks', '.husky', '.mise/tasks/hook'];
+export const STRUCTURE_HOOK_DIRECTORIES = [HOOKS_DIRECTORY, '.githooks', '.husky', '.mise/tasks/hook'];
 export const HOOK_PREFIX = 'pre';
 
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */

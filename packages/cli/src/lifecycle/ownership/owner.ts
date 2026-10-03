@@ -1,10 +1,10 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { STATE_DIRECTORY } from '#cli/config/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { openLog } from '#cli/lifecycle/ownership/log.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';

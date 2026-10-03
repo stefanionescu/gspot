@@ -1,6 +1,9 @@
 // The literal values kits reads: names, patterns, limits, and tables.
-
-export const STATE_DIRECTORY = '.gspot/state';
+import {
+    STATE_DIRECTORY,
+    NODE_MODULES_DIRECTORY,
+    PYTHON_ENVIRONMENT_DIRECTORY,
+} from '#cli/config/platform/locations.ts';
 
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
@@ -46,10 +49,5 @@ export const TOOL_PLATFORMS = [
     'windows-x64',
     'windows-arm64',
 ] as const;
-
-export const CONFIGURATION_DIRECTORY = '.gspot/config';
-
-export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
-export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
 
 export const PRIVATE_PATHS = [`${NODE_MODULES_DIRECTORY}/`, `${PYTHON_ENVIRONMENT_DIRECTORY}/`, `${STATE_DIRECTORY}/`];

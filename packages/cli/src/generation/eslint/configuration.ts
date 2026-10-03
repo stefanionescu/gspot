@@ -1,6 +1,7 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
 import { harnessFolders } from '#cli/policy/settings.ts';
 import { aliasesFor } from '#cli/generation/javascript.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/policy.ts';
 
@@ -194,7 +195,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
         })),
         boundaryBlocks: boundaryBlocks(policy, scopes),
         scopeBlocks: scopeBlocks(context),
-        ignoredPaths: ['**/node_modules/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)],
+        ignoredPaths: ['**/node_modules/**', `${DOT_GSPOT}/**`, ...policy.declarations.flatMap((entry) => entry.paths)],
         extra: extraBlock(view),
     };
 }

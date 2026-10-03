@@ -5,7 +5,8 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { DOT_GSPOT, NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {

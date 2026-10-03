@@ -1,6 +1,6 @@
 import type { GeneratedFile } from '#cli/types/kits.ts';
-import { STYLES_DIRECTORY } from '#cli/config/tools/tools.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Policy, MergedView } from '#cli/types/policy/policy.ts';
 
 import {

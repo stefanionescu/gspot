@@ -7,6 +7,7 @@ import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
 import { toolOutputDetail } from '#cli/execution/tool/findings.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
@@ -20,9 +21,9 @@ export async function spectral(input: EngineInput): Promise<Finding[]> {
     if (document === '') return [];
     using files = openRoot(input.root, 'native');
     files.source(document);
-    if (files.read('.gspot/config/spectral.yaml') === undefined)
+    if (files.read(`${CONFIGURATION_DIRECTORY}/spectral.yaml`) === undefined)
         throw new Error('The Spectral configuration is missing. Run: gspot apply');
-    const ruleset = join(input.root, '.gspot/config/spectral.yaml');
+    const ruleset = join(input.root, CONFIGURATION_DIRECTORY, 'spectral.yaml');
     const result = await runCheckCommand(
         input,
         ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', document],

@@ -8,11 +8,11 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
-import { LOCKS, VALE_INI, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
+import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 
 const INPUTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
@@ -65,8 +65,8 @@ function assertDependencyReady(revisionRoot: string, folder: string, pending: st
 
 // Refuses a snapshot whose Vale configuration differs from the one the packages were installed for.
 function assertValeMatches(installed: Root, destination: Root): void {
-    const current = installed.read(VALE_INI);
-    const selected = destination.read(VALE_INI);
+    const current = installed.read(VALE_CONFIG);
+    const selected = destination.read(VALE_CONFIG);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
@@ -187,7 +187,7 @@ async function copyDependency(
  * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
 export function copyValePackages(root: string, revisionRoot: string, paths: string[]): void {
-    const configs = paths.filter((path) => path === VALE_INI || path.endsWith(`/${VALE_INI}`));
+    const configs = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
         const installed = openRoot(join(root, folder));

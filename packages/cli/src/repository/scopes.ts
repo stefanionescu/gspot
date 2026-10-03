@@ -9,10 +9,11 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { packageManifestSchema } from '#cli/repository/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
 import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
-import { DOT_GSPOT, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {

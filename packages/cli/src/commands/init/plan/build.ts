@@ -7,6 +7,7 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import { CI_SETUP, HOOKS_ROW } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { Tooling, ScopeEntry } from '#cli/types/repository/repository.ts';
+import { DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands/init.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePlan['change'] {
@@ -14,11 +15,11 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePla
     const rows: ReplacePlan['change'] =
         count === 0
             ? []
-            : [{ path: '.gspot/package.json', note: `${String(count)} pinned npm tools; matching lockfile` }];
+            : [{ path: TOOL_PACKAGE_PROJECT, note: `${String(count)} pinned npm tools; matching lockfile` }];
     const python = pythonPins(everySelected).length;
     if (python > 0)
         rows.push({
-            path: '.gspot/pyproject.toml',
+            path: TOOL_PYTHON_PROJECT,
             note: `${String(python)} pinned Python tools; matching uv.lock and private environment`,
         });
     if (answers.runner === 'mise')
@@ -138,7 +139,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
         })),
         write: [
             { path: 'gspot.toml', note: `your policy, ${String(policyLines)} lines` },
-            { path: '.gspot/', note: 'generated configuration and version pin' },
+            { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
             ...everySelected
                 .flatMap((manifest) => manifest.configs)
                 .map((config) => config.pointer?.path)

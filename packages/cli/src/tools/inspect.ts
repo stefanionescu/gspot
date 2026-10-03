@@ -8,11 +8,10 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
+import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
 import {

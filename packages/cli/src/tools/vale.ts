@@ -8,7 +8,7 @@ import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { READ_ONLY_FILE } from '#cli/config/platform/platform.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
-import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/tools/tools.ts';
+import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Harper also installs dictionaries beside its styles.
 function packageDirectories(files: Root): string[] | undefined {

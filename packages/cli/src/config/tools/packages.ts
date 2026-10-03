@@ -1,7 +1,5 @@
 // The literal values tools/packages reads: names, patterns, limits, and tables.
 
-export const TOOL_PACKAGE_PROJECT = '.gspot/package.json';
-export const YARN_SETTINGS = '.gspot/.yarnrc.yml';
 export const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;
 export const NPM_SETTING_PREFIX = 'npm_config_';
 

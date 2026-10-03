@@ -6,12 +6,10 @@ import type { ToolPin } from '#cli/types/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
-import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
+import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -40,7 +38,7 @@ function searchDirectories(
 // Whether a candidate exists: a managed path must resolve through the files root, any other is read from disk.
 function candidateExists(files: Root, root: string, path: string): boolean {
     const local = toPosix(relative(root, path));
-    if (!local.startsWith(MANAGED_PREFIX)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.source(local);
         return true;
@@ -85,7 +83,7 @@ function packageFacts(files: Root | undefined, root: string, manifest: string): 
 function versionAbove(files: Root | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
-        if (files !== undefined && !toPosix(relative(root, manifest)).startsWith(MANAGED_PREFIX)) return undefined;
+        if (files !== undefined && !toPosix(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`)) return undefined;
         const parsed = packageFacts(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
@@ -125,7 +123,7 @@ export function locateCandidates(
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = toPosix(relative(root, path)).startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
+    using files = toPosix(relative(root, path)).startsWith(`${DOT_GSPOT}/`) ? openRoot(root) : undefined;
     const folder = dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path))));
     // A Windows shim in node_modules/.bin is a file of its own, not a link into its package, so the package is
     // found by name beside that folder.

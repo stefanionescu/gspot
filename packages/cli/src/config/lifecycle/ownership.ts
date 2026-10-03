@@ -1,5 +1,5 @@
 // The literal values lifecycle/ownership reads: names, patterns, limits, and tables.
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 export const OUTPUT_JSON_INDENT = 2;
 
