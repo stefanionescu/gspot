@@ -77,16 +77,23 @@ test.each(['SIGTERM'] as const)(
 );
 
 test(
-    'init replaces the formatter files',
+    'init replaces the formatter files and moves CLAUDE.md into AGENTS.md, and check runs',
     async () => {
         await using fixture = await createConsumer(release.registry, release.version);
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
         const { consumer } = fixture;
+        writeFileSync(join(consumer, 'AGENTS.md'), '# Team notes\n');
+        writeFileSync(join(consumer, 'CLAUDE.md'), '# Claude notes\n\nRun the tests.\n');
         const { initialized, installedTools } = await initializeConsumer(release, fixture);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(installedTools.code, installedTools.stdout + installedTools.stderr).toBe(0);
         expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
         expect(existsSync(join(consumer, 'prettier.config.mjs'))).toBe(false);
+        expect(existsSync(join(consumer, 'CLAUDE.md'))).toBe(false);
+        const agents = readFileSync(join(consumer, 'AGENTS.md'), 'utf8');
+        expect(agents).toStartWith('# Team notes\n');
+        expect(agents).toContain('WORKING.md');
+        expect(agents).toEndWith('## Other instructions\n\n# Claude notes\n\nRun the tests.\n');
         expect(() => {
             JSON.parse(initialized.stdout);
         }).not.toThrow();
@@ -106,6 +113,15 @@ test(
             useCache: false,
         });
         expect(futureJson?.tabWidth).toBe(4);
+        const checked = Bun.spawnSync([...fixture.command, 'check', '--json'], {
+            cwd: consumer,
+            env: fixture.options.env,
+            timeout: RELEASE_TIMEOUT_MS,
+        });
+        // The fixture holds a broken script and selects kits whose tools find nothing to run on, so the run reports
+        // findings and errored checks. A crash prints an error object with no checks.
+        expect([0, 1, 2], checked.stderr.toString()).toContain(checked.exitCode);
+        expect((JSON.parse(checked.stdout.toString()) as RunReport).checks.length).toBeGreaterThan(0);
     },
     RELEASE_TIMEOUT_MS,
 );
