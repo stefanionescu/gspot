@@ -4,113 +4,46 @@ title: Express
 
 # Express
 
-## HTTP handler rules
+Routes, middleware, errors, and body parsing in an Express service, on top of the HTTP rules.
+
+## Routes and middleware
 
 <!-- level: all -->
 
-Routes adapt HTTP to domain calls. They do not own validation policy, database
-access, provider mechanics, prompts, caching, or business decisions.
+Express requires no layout, schema library, or response envelope. Use the contracts the project
+already has instead of adding competing ones. A route is an HTTP adapter: middleware validates and
+authenticates, and the route makes one domain call and sends its result.
 
 ```ts
-// Bad: route owns validation, database access, provider behavior, and response policy.
+// Bad: the route validates by hand, queries the database, and relays a provider response.
 router.post('/orders', async (req, res) => {
     const { accountId, itemIds } = req.body;
-
-    if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    if (!Array.isArray(itemIds)) {
         res.status(400).json({ error: 'Bad items' });
         return;
     }
-
-    const account = await database.from('accounts').select('*').eq('id', accountId);
-    const providerResponse = await fetch(env.PAYMENT_PROVIDER_URL, {
-        method: 'POST',
-        body: JSON.stringify({ account, itemIds }),
-    });
-
-    res.json(await providerResponse.json());
+    const account = await db.accounts.find(accountId);
+    const response = await fetch(paymentUrl, { method: 'POST', body: JSON.stringify({ account, itemIds }) });
+    res.json(await response.json());
 });
 ```
 
 ```ts
-// Good: route is an HTTP adapter.
-router.post(
-    '/',
-    validateRequest(submitOrderContract.request),
-    asyncRoute(async (req, res) => {
-        res.setHeader('Cache-Control', NO_STORE_CACHE_HEADER);
-
-        const authenticated = requireAuthenticatedRequest(req, res);
-        if (!authenticated) return;
-
-        const validated = getValidatedRequest(authenticated.request);
-        const trace = extractRequestTrace(authenticated.request, 'orders.submit');
-
-        const result = await submitOrder(authenticated.userId, validated.body, trace);
-
-        if (!result.success) {
-            sendError(res, result.error.status, result.error.code, result.error.message, result.error.details);
-            return;
-        }
-
-        sendOk(res, result.response);
-    }),
-);
+// Good: middleware validates and authenticates; the route makes one domain call.
+router.post('/orders', authenticate, validateBody(submitOrderSchema), async (req, res) => {
+    const order = await submitOrder(res.locals.accountId, res.locals.body);
+    res.status(201).json(order);
+});
 ```
 
-Middleware rules:
-
-- Middleware can validate, authenticate, rate-limit, attach context, and enforce ownership.
-- Middleware cannot make feature decisions.
-- Middleware cannot call the database for product behavior except through auth or ownership helpers designed for that boundary.
-- Business permission checks belong in a module or ownership middleware, depending on whether the rule is transport-level or domain-level.
-
-## Asynchronous errors
-
-- In Express 4, forward rejected promises through the project's async handler or
-  explicitly catch and pass errors to `next(error)`.
-- In Express 5, return the route or middleware promise so Express forwards rejections.
-  Do not add a wrapper that only duplicates this behavior. Callback-based asynchronous
-  work still passes errors to `next(error)`.
-
-The example above uses an Express 4 async handler. See
-[Express error handling](https://expressjs.com/en/guide/error-handling/)
-for version-specific behavior.
-
-## HTTP edge rules
-
-- Reject unsupported content types for body-bearing endpoints that only accept JSON.
-- Keep JSON body limits route-specific when payload sizes differ by feature.
-- Match large payload limits with reverse-proxy and provider limits.
-- Remember that body parsing itself is work. Do not parse large JSON bodies on routes that do not need them.
-- Put broad rate limits at nginx or the load balancer when available.
-- Put app-specific rate limits in Express middleware.
-- Put route-specific limits next to route assembly in the app factory or the endpoint owner.
-- Enable `trust proxy` only when the deployment topology is known and load-balancer forwarding headers are trusted.
-- Choose one compression owner. Prefer reverse-proxy compression for high-traffic production; avoid accidental double compression.
-- Do not hide authorization backdoors behind headers, query params, or test-only middleware.
-
-```ts
-// Bad: every endpoint silently inherits an oversized JSON parser.
-app.use(express.json({ limit: '50mb' }));
-
-// Good: small default, with larger limits only where the endpoint owner needs them.
-app.use(API_ROUTE_IMPORT_FILE, express.json({ limit: FILE_IMPORT_JSON_BODY_LIMIT }), importFileRouter);
-app.use(express.json({ limit: DEFAULT_JSON_BODY_LIMIT }));
-```
-
-## Function shape and parameters
-
-<!-- level: all -->
-
-API functions expose domain inputs and API/module result contracts, not
-transport or provider mechanics.
-
-Rules:
-
-- Use domain types for IDs where available.
-- Do not pass raw request/response, provider, or database objects across
-  layers.
-- Return types must reflect the module or API result contract.
+- Read request data only through the validated value. A cast such as `req.body as Order`
+  validates nothing.
+- Middleware can enforce ownership. It reaches the database for product behavior only through auth
+  or ownership helpers built for that boundary.
+- A permission check that depends on domain state belongs in a module; a transport-level one
+  belongs in ownership middleware.
+- A domain function takes domain inputs and returns the module's result contract. It never takes
+  the raw request, response, provider, or database object.
 
 ```ts
 // Bad.
@@ -119,3 +52,40 @@ export async function submitOrder(req: AuthenticatedRequest) {}
 // Good.
 export async function submitOrder(request: SubmitOrderRequest, trace: RequestTrace): Promise<SubmitOrderResult> {}
 ```
+
+## Errors
+
+- Express 5 forwards the rejection of a promise that a route or middleware returns, so return the
+  promise and add no wrapper that repeats this. Express 4 needs the project's async handler or an
+  explicit `next(error)`.
+- Callback-based asynchronous work passes its errors to `next(error)` in both versions.
+- Error middleware keeps its four-argument signature, even when an argument is unused.
+- When the headers are already sent, error middleware calls `next(error)` instead of writing a
+  second response.
+- The not-found handler comes after every route.
+
+## Body parsing and proxies
+
+Parsing a body is work, so mount a JSON parser with a small default limit, and a larger one only on
+the route that needs it. A large limit matches the reverse proxy's and the provider's limits.
+
+```ts
+// Bad: every endpoint inherits an oversized JSON parser.
+app.use(express.json({ limit: '50mb' }));
+
+// Good: a larger limit only where the endpoint needs it.
+app.use('/imports', express.json({ limit: '5mb' }), importsRouter);
+app.use(express.json({ limit: '100kb' }));
+```
+
+Enable `trust proxy` only when the deployment topology is known, set to the proxies whose
+forwarding headers are trusted. Route-specific rate limits sit next to route assembly in the
+application factory or the endpoint owner.
+
+## References
+
+| Topic          | Primary source                                                                   |
+| -------------- | -------------------------------------------------------------------------------- |
+| Error handling | [Express error handling](https://expressjs.com/en/guide/error-handling/)         |
+| Security       | [Production security](https://expressjs.com/en/advanced/best-practice-security/) |
+| Proxies        | [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html)     |
