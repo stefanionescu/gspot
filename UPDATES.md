@@ -23,8 +23,8 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stages 41 and 42 start the
-  next batch on `docs/trim-guides-readmes`, stacked on it.
+- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stages 41 to 43 start the next
+  batch on `docs/trim-guides-readmes`, stacked on it.
 
 ### Stages
 
@@ -74,7 +74,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | pull request #22 |
 | 41    | Trim the guides, READMEs, and CONTRIBUTING             | E.1 to E.4; `--save-exact`; `GSPOT_JOBS` documented                                                     | in the batch     |
 | 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | in the batch     |
-| 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | not started      |
+| 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | in the batch     |
 | 44    | Shorten the base rules                                 | the general rows of F.1                                                                                 | not started      |
 | 45    | Shorten the kit rules                                  | the other rows of F.1, and F.2                                                                          | not started      |
 | 46    | Finish the audit and check release readiness           | delete this file and the three images, with their ignore; the final verification below                  | not started      |
@@ -469,6 +469,17 @@ The owner and the work settled these while implementing:
       setup grid, and the calls to action went. The assets and notices only they used went too.
     - The README and quickstart transcripts already match `example.json`, which the acceptance suite replays, so no
       new recording was needed.
+- Stage 43 made the agent rules agree with the shipped checks (F.3, F.4):
+    - The level paragraph left 57 files; the managed block states the levels once.
+    - A rule file whose every section is for level all installs only at all, and the index lists it only then.
+      Twelve files are such: the naming rules, the commitlint rule, and the YAML rule.
+    - Each F.3 contradiction is resolved in the rule that caused it. Among them: unfinished work goes to the issue
+      tracker, examples avoid `reduce` and `tmp`, Astro props use a type, and Supabase shares code in
+      `functions/_shared`.
+    - The rule files say "this file" for themselves. Seven lines damaged by an old rename read claims and
+      configuration again.
+    - Already done in stage 32: the front matter, the manifest entries for general rules, the no-subagents rule, and
+      the inline ignore examples.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
