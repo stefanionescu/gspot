@@ -10,7 +10,7 @@ import { DECORATOR_OPTIONS } from '#cli/config/checks/language/typescript.ts';
  * @param input the engine input for the scope
  * @returns the findings
  */
-export function tsconfigOptions(input: EngineInput): Finding[] {
+export function tsconfig(input: EngineInput): Finding[] {
     const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
     const candidates = new Set([
         scopeTsconfig,

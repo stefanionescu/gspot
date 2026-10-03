@@ -34,7 +34,7 @@ const deptrySchema = z.object({
  * @param planned the dependency check and its scope.
  * @returns the native dependency findings, including undeclared application imports.
  */
-export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function deptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '';
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runToolCheck(session, planned, [

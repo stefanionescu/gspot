@@ -9,7 +9,7 @@ import type { CloneReport } from '#cli/types/checks/general/general.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { JSCPD_TOOL, DUPLICATION_PERCENT } from '#cli/config/checks/general/duplication.ts';
+import { JSCPD, DUPLICATION_PERCENT } from '#cli/config/checks/general/duplication.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),
@@ -70,7 +70,7 @@ export function cloneFindings(
  * @param input the engine input
  * @returns the findings
  */
-export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
+export async function jscpd(input: EngineInput): Promise<Finding[]> {
     using workFolder = scratchFolder('gspot-jscpd-');
     const work = workFolder.path;
     const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
@@ -81,7 +81,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
     const config = join(work, 'jscpd.json');
     writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
-    const argv = [JSCPD_TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
+    const argv = [JSCPD, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
     const result = await runCheckCommand(input, argv, { cwd: input.root });
     if (result.code !== 0)
         throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);

@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { decodedText } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { PAIR } from '#cli/config/platform/platform.ts';
 import { writeFileSync, appendFileSync } from 'node:fs';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
@@ -14,11 +15,8 @@ import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA } from '#cli/config/checks/general/secrets.ts';
 
-// The fields come as key and value pairs.
-const PAIR = 2;
-
 // The commits under review: the ones the run supplies, or every commit after the push base.
-async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
+async function scannedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
@@ -117,7 +115,7 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
     };
     if (!session.repository.hasGit)
         return { ...base, status: 'skipped', note: 'Verified secret history requires a Git repository.' };
-    const commits = await selectedCommits(session, planned);
+    const commits = await scannedCommits(session, planned);
     if (commits === undefined)
         return { ...base, status: 'error', note: 'Cannot select commits for verified secret scanning.' };
     if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };

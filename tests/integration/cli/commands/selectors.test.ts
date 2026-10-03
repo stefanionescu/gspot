@@ -10,7 +10,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 // Both report formats identify index content and preserve literal source paths.
 async function expectIndexReport(root: string, args: string[], report: RunReport): Promise<void> {
@@ -115,7 +115,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
-    writeFileSync(join(directory.path, '.gspot/version'), `${GSPOT_VERSION}\n`);
+    writeFileSync(join(directory.path, '.gspot/version'), `${RUNNING_VERSION}\n`);
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

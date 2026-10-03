@@ -1,8 +1,6 @@
+import { PAIR } from '#cli/config/platform/platform.ts';
 import type { DirectiveScan } from '#cli/types/checks/tool/nginx.ts';
 import { WORD_STOPS, NGINX_ESCAPES, WORD_START_STOPS, NGINX_PUNCTUATION } from '#cli/config/checks/tool/nginx.ts';
-
-// A backslash and the character it protects.
-const ESCAPE_PAIR = 2;
 
 // The closing quote of an argument that opens at start, or `-1` when the quote never closes.
 function quotedEnd(text: string, start: number, quote: string): number {
@@ -16,7 +14,7 @@ function quotedEnd(text: string, start: number, quote: string): number {
 // The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
 function protectedUnitEnd(text: string, at: number): number {
     const char = text[at];
-    if (char === '\\') return at + 1 < text.length ? at + ESCAPE_PAIR : -1;
+    if (char === '\\') return at + 1 < text.length ? at + PAIR : -1;
     if (char !== '$' || text[at + 1] !== '{') return -1;
     const close = text.indexOf('}', at + '${'.length);
     return close === -1 ? -1 : close + 1;
@@ -60,15 +58,15 @@ function scanAt(text: string, at: number): DirectiveScan {
 }
 
 // The tokens of an nginx configuration: comments, punctuation, quoted arguments, and bare words.
-function nginxTokens(text: string): string[] {
-    const tokens: string[] = [];
+function tokens(text: string): string[] {
+    const found: string[] = [];
     let at = 0;
     while (at < text.length) {
         const scan = scanAt(text, at);
-        if (scan.token !== undefined) tokens.push(scan.token);
+        if (scan.token !== undefined) found.push(scan.token);
         at = scan.end;
     }
-    return tokens;
+    return found;
 }
 
 /**
@@ -76,10 +74,10 @@ function nginxTokens(text: string): string[] {
  * @param text the nginx configuration text
  * @returns each directive as its name followed by its arguments
  */
-export function nginxDirectives(text: string): [string, ...string[]][] {
-    const directives: [string, ...string[]][] = [];
+export function directives(text: string): [string, ...string[]][] {
+    const found: [string, ...string[]][] = [];
     let directive: string[] = [];
-    for (const token of nginxTokens(text)) {
+    for (const token of tokens(text)) {
         if (token.startsWith('#')) continue;
         switch (token) {
             case '}': {
@@ -89,7 +87,7 @@ export function nginxDirectives(text: string): [string, ...string[]][] {
             case ';':
             case '{': {
                 const [name, ...args] = directive;
-                if (name !== undefined) directives.push([name, ...args]);
+                if (name !== undefined) found.push([name, ...args]);
                 directive = [];
                 break;
             }
@@ -102,5 +100,5 @@ export function nginxDirectives(text: string): [string, ...string[]][] {
             }
         }
     }
-    return directives;
+    return found;
 }

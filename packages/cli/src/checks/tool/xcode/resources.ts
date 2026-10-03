@@ -2,7 +2,7 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
+import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { StringsFile, AssetContents } from '#cli/types/checks/tool/xcode.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
@@ -46,7 +46,7 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
 
 function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
     if (input.policyFiles.policy.level !== 'all') return [];
-    const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
+    const swift = trackedByExtension(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
         readSource(input.root, path, input.reads).toString('utf8'),
     );
     return sets
@@ -66,7 +66,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @returns the findings
  */
 export function xcstrings(input: EngineInput): Finding[] {
-    return trackedEnding(input, ['.xcstrings']).flatMap((path) => {
+    return trackedByExtension(input, ['.xcstrings']).flatMap((path) => {
         const read = readJson(input, path);
         const at = { file: path, line: 1 };
         if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
@@ -90,6 +90,6 @@ export function xcstrings(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function assets(input: EngineInput): Finding[] {
-    const contents = trackedEnding(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
+    const contents = trackedByExtension(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
     return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

@@ -4,8 +4,8 @@ import { TYPO } from '#tests/harness/spelling.ts';
 
 test('concurrent SQL parsing returns independent results in a fresh process', () => {
     const script = `
-        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/pg.ts', import.meta.dir))};
-        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parseSql(sql)));
+        import { parse } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/pg.ts', import.meta.dir))};
+        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parse(sql)));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
     const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });

@@ -11,7 +11,7 @@ import { diffEslintRules } from '#cli/lifecycle/preview/eslint/diff.ts';
 import type { Drift, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Program, ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands/commands.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 function driftText(drift: Drift[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
@@ -50,7 +50,7 @@ async function previewApply(session: Session): Promise<CommandResult> {
     );
     const summary = drift.length === 0 ? 'every generated file matches its plan\n' : driftText(drift);
     const text = summary + plan.notes.map((note) => `note     ${note}\n`).join('');
-    const pin = { from: getPin(session.root), to: GSPOT_VERSION };
+    const pin = { from: getPin(session.root), to: RUNNING_VERSION };
     const json: ApplyPreviewJson = { dryRun: true, pin, drift, notes: plan.notes };
     return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }

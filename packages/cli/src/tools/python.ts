@@ -15,7 +15,7 @@ import { SETUP, TOOLS_PROJECT, INDEX_SETTINGS } from '#cli/config/tools/tools.ts
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
-const projectSchema = z.strictObject({
+const pyprojectSchema = z.strictObject({
     project: z.strictObject({
         name: z.literal(TOOLS_PROJECT),
         version: z.literal('0.0.0'),
@@ -62,7 +62,7 @@ function constraintsMatch(constraints: string[], recorded: z.infer<typeof lockSc
 
 function matches(project: string, lock: string): boolean {
     try {
-        const parsed = projectSchema.parse(parse(project));
+        const parsed = pyprojectSchema.parse(parse(project));
         const manifest = parsed.project;
         const recorded = lockSchema.parse(parse(lock));
         if (!constraintsMatch(parsed.tool.uv['constraint-dependencies'] ?? [], recorded)) return false;
@@ -207,7 +207,7 @@ async function installInWork(
 export async function preparePythonProject(root: string, files: GeneratedFile[], owner: ToolOwner): Promise<void> {
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
-    projectSchema.parse(parse(project.content));
+    pyprojectSchema.parse(parse(project.content));
     const original = owner.read(UV_LOCK);
     let content = original?.bytes.toString('utf8');
     if (content === undefined || !matches(project.content, content)) {
@@ -257,7 +257,7 @@ export function pythonInstallSteps(root: string): string[][] {
     using files = openRoot(root);
     const project = files.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return [];
-    projectSchema.parse(parse(project.bytes.toString('utf8')));
+    pyprojectSchema.parse(parse(project.bytes.toString('utf8')));
     const lock = files.read(UV_LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
@@ -274,7 +274,7 @@ export function pythonInstallSteps(root: string): string[][] {
 export async function installPythonProject(root: string, owner: ToolOwner, executable = 'uv'): Promise<string> {
     const project = owner.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return '';
-    projectSchema.parse(parse(project.bytes.toString('utf8')));
+    pyprojectSchema.parse(parse(project.bytes.toString('utf8')));
     const lock = owner.read(UV_LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);

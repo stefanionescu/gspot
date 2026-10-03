@@ -10,6 +10,7 @@ import { vale } from '#cli/checks/general/prose/vale.ts';
 import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { SQL_ANALYSES } from '#cli/checks/language/sql.ts';
+import { jscpd } from '#cli/checks/general/duplication.ts';
 import { moduleClasses } from '#cli/checks/language/css.ts';
 import { HTML_ANALYSES } from '#cli/checks/language/html.ts';
 import { banned } from '#cli/checks/general/prose/hidden.ts';
@@ -19,7 +20,9 @@ import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
 import { ANALYSES } from '#cli/checks/platform/cloudflare.ts';
 import { fresh, spectral } from '#cli/checks/tool/openapi.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
+import { tsconfig } from '#cli/checks/language/typescript.ts';
 import { coverage } from '#cli/checks/tool/xctest/coverage.ts';
+import { deptry } from '#cli/checks/language/python/deptry.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
 import { headings } from '#cli/checks/general/docs/headings.ts';
 import { bashLimits } from '#cli/checks/language/bash/limits.ts';
@@ -27,7 +30,6 @@ import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { DRIZZLE_ANALYSES } from '#cli/checks/library/drizzle.ts';
-import { copiedBlocks } from '#cli/checks/general/duplication.ts';
 import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
 import { untestedRoutes } from '#cli/checks/framework/express.ts';
 import { expoDoctor } from '#cli/checks/framework/react-native.ts';
@@ -37,9 +39,10 @@ import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
 import { build, types } from '#cli/checks/framework/nextjs/build.ts';
+import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
-import { tsconfigOptions } from '#cli/checks/language/typescript.ts';
 import { adminKey } from '#cli/checks/platform/supabase/admin-key.ts';
+import { install } from '#cli/checks/general/dependencies/install.ts';
 import { tsc, checkjs } from '#cli/checks/language/javascript/tsc.ts';
 import { docComment } from '#cli/checks/language/bash/doc-comments.ts';
 import { dockerignore } from '#cli/checks/tool/docker/dockerignore.ts';
@@ -48,18 +51,15 @@ import { trufflehog } from '#cli/checks/general/secrets/trufflehog.ts';
 import { assets, xcstrings } from '#cli/checks/tool/xcode/resources.ts';
 import { check, denoLint } from '#cli/checks/platform/supabase/deno.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
+import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
 import { SWIFT_ANALYSES } from '#cli/checks/language/swift/structure.ts';
-import { checkDependencies } from '#cli/checks/language/python/deptry.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
 import { NAMING_ENGINES } from '#cli/checks/general/naming/identifiers.ts';
 import { PYTHON_ANALYSES } from '#cli/checks/language/python/structure.ts';
-import { checkDocstrings } from '#cli/checks/language/python/pydoclint.ts';
 import { scriptBoundaries } from '#cli/checks/language/bash/boundaries.ts';
 import { structureEngine } from '#cli/checks/general/structure/context.ts';
-import { installPolicy } from '#cli/checks/general/dependencies/install.ts';
 import { moduleLogic } from '#cli/checks/general/structure/config-logic.ts';
-import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { getDirectories } from '#cli/checks/general/structure/folder-names.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
@@ -108,14 +108,14 @@ export const ENGINES: Record<string, Engine> = {
     'structure/stale-allowlists': staleAllowlists,
     'structure/large-files': largeFiles,
     'structure/tracked-dependencies': trackedDependencies,
-    'typescript/tsconfig': tsconfigOptions,
-    'javascript/rules-off': requiredRules,
+    'typescript/tsconfig': tsconfig,
+    'javascript/rules-off': rulesOff,
     'docs/headings': headings,
     'docs/stale-paths': stalePaths,
     'docs/readme-present': readmePresent,
     'docs/readme-shape': readmeShape,
     'markdown/fences': fences,
-    'duplication/jscpd': copiedBlocks,
+    'duplication/jscpd': jscpd,
     'files/env-example': envExample,
     'secrets/env-files': envFiles,
     'security/codeql': codeql,
@@ -123,7 +123,7 @@ export const ENGINES: Record<string, Engine> = {
     'dependencies/manifests': manifestPolicy,
     'dependencies/lockfile-fresh': lockfileFresh,
     'licenses/packages': licensesPackages,
-    'dependencies/install': installPolicy,
+    'dependencies/install': install,
     'dependencies/lockfile-hosts': lockfileHosts,
     ...DRIZZLE_ANALYSES,
     'nextjs/route-segments': routeSegments,
@@ -217,8 +217,8 @@ export const RUNNERS: Record<string, Executable['run']> = {
     'typescript/tsc': tsc,
     'javascript/tsc': checkjs,
     'swift/swiftlint': swiftlint,
-    'python/pydoclint': checkDocstrings,
-    'python/deptry': checkDependencies,
+    'python/pydoclint': pydoclint,
+    'python/deptry': deptry,
     'actions/actionlint': actionlint,
 };
 

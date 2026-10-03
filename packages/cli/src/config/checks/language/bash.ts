@@ -9,9 +9,7 @@ export const OUTER_LEVELS = 2;
 
 export const DUPLICATE_LINES = 3;
 export const IDENTIFIER = /[A-Za-z_]\w*/gu;
-export const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
 export const WORD = /[A-Za-z0-9]+/gu;
-export const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-assignments']);
 
 export const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 export const OPERATORS = [' && ', ' || ', ' | ', ';'];
@@ -103,10 +101,10 @@ export const FORWARDED_SCRIPT = /\.(?:sh|js)(?:\s|$)/u;
 export const FORWARDER_STEM = /(?:^|[._-])(?:compat|wrapper|forward)(?:[._-]|$)/iu;
 
 /** A line that only forwards to another script: an interpreter first, a script name after. */
-export const FORWARDING_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
+export const FORWARDER_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
 
 /** The most non-comment lines a script may have and still count as a forwarding wrapper. */
-export const FORWARDING_MAX_LINES = 4;
+export const FORWARDER_MAX_LINES = 4;
 
 /** Lines 2 and 3 of the header, joined: a bare # line, then a comment that says what the script does. */
 export const HEADER_COMMENT = /^#\n# .*\S/u;

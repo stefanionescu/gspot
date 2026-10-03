@@ -1,7 +1,7 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
 import { findingAt } from '#cli/execution/finding.ts';
-import { HEADER_LINES } from '#cli/config/checks/checks.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
+import { LINE_ABOVE, HEADER_LINES } from '#cli/config/checks/checks.ts';
 import type { Migration, DocProblem } from '#cli/types/checks/database.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -15,9 +15,6 @@ import {
     DOC_SEPARATOR,
     STATEMENT_WORDS,
 } from '#cli/config/checks/database.ts';
-
-// From a one-based line to the zero-based index of the line above it.
-const LINE_ABOVE = 2;
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
     const problems: DocProblem[] = [];

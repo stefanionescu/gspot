@@ -1,4 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import { LINE_ABOVE } from '#cli/config/checks/checks.ts';
 import type { ScriptFunction } from '#cli/types/checks/language/bash.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
@@ -6,12 +7,9 @@ import {
     WORD,
     VAGUE_WORDS,
     ENTRY_FUNCTIONS,
-    SHELLCHECK_COMMENT,
+    SHELLCHECK_DIRECTIVE,
     BASH_DOC_SECTIONS as DOC_SECTIONS,
 } from '#cli/config/checks/language/bash.ts';
-
-// From a one-based line to the zero-based index of the line above it.
-const LINE_ABOVE = 2;
 
 function blockAbove(lines: string[], start: number): string[] {
     const block: string[] = [];
@@ -19,7 +17,7 @@ function blockAbove(lines: string[], start: number): string[] {
     while (index >= 0) {
         const trimmed = (lines[index] ?? '').trim();
         if (!trimmed.startsWith('#')) break;
-        if (!SHELLCHECK_COMMENT.test(trimmed)) block.unshift(trimmed);
+        if (!SHELLCHECK_DIRECTIVE.test(trimmed)) block.unshift(trimmed);
         index -= 1;
     }
     return block;

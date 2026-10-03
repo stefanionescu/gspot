@@ -19,7 +19,7 @@ import type { Program, GlobalFlags } from '#cli/types/commands/commands.ts';
 import { Option, Command, CommanderError } from '@commander-js/extra-typings';
 import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 // Registration order is shared by help and command lookup.
 const COMMAND_REGISTRATIONS: ((program: Program) => void)[] = [
@@ -75,7 +75,7 @@ function exitCodeFor(error: unknown): number {
 export function buildProgram(): Program {
     const program: Program = new GspotProgram('gspot')
         .description('Lint AI-generated code and install rules for coding agents')
-        .version(GSPOT_VERSION, '--version', 'Print the version')
+        .version(RUNNING_VERSION, '--version', 'Print the version')
         .option('--json', 'Print the result as JSON')
         .option('--quiet', 'Print only failures')
         .option('--verbose', 'Print each command gspot runs, and each ignore with its reason')

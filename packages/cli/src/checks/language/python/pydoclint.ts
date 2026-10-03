@@ -7,7 +7,7 @@ import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
-const projectSchema = z.object({
+const pyprojectSchema = z.object({
     tool: z
         .object({
             pydoclint: z.object({ style: z.unknown().optional() }).default({}),
@@ -31,7 +31,7 @@ const projectSchema = z.object({
  * @returns a supported style, or undefined to preserve native configuration and defaults.
  */
 export function docstringStyle(text: string, convention?: unknown): 'google' | 'numpy' | undefined {
-    const { tool } = projectSchema.parse(parse(text));
+    const { tool } = pyprojectSchema.parse(parse(text));
     if ('style' in tool.pydoclint) return undefined;
     const style = tool.ruff.lint.pydocstyle.convention ?? convention;
     return style === 'google' || style === 'numpy' ? style : undefined;
@@ -44,7 +44,7 @@ export function docstringStyle(text: string, convention?: unknown): 'google' | '
  * @returns the native check result with shared batching and error handling.
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry runs pydoclint through this function, which adds the style the project names.
-export async function checkDocstrings(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function pydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const style = docstringStyle(
         readText(session.root, posix.join(planned.scope.scope.path, 'pyproject.toml')) ?? '',
         planned.scope.view.settings['tools.ruff.docstring_convention'],

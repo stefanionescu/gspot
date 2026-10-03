@@ -1,5 +1,5 @@
 import type { Rules, Directive } from '#cli/types/lifecycle/preview.ts';
-import { DIRECTIVE, RULE_CODE, RULE_NAME } from '#cli/config/lifecycle/preview.ts';
+import { SHELLCHECK_DIRECTIVE, SHELLCHECK_RULE_CODE, SHELLCHECK_RULE_NAME } from '#cli/config/lifecycle/preview.ts';
 
 // A rule entry is one code, or a range of two.
 const RANGE_PARTS = 2;
@@ -31,7 +31,7 @@ function parseValue(afterKey: string, key: string, lineNumber: number): Pick<Dir
 
 // The next directive on a line: its key, its plain or quoted value, and what follows it.
 function parseDirective(text: string, lineNumber: number): Directive {
-    const directive = DIRECTIVE.exec(text);
+    const directive = SHELLCHECK_DIRECTIVE.exec(text);
     const key = directive?.[1];
     if (directive === null || key === undefined)
         throw new Error(`Invalid ShellCheck directive on line ${String(lineNumber)}.`);
@@ -42,13 +42,13 @@ function parseDirective(text: string, lineNumber: number): Directive {
 function isDisableEntry(entry: string): boolean {
     if (entry === 'all') return true;
     const codes = entry.split('-');
-    return codes.length <= RANGE_PARTS && codes.every((code) => RULE_CODE.test(code));
+    return codes.length <= RANGE_PARTS && codes.every((code) => SHELLCHECK_RULE_CODE.test(code));
 }
 
 // The entries of a rule list, checked against the form the key accepts.
 function parseRuleList(key: keyof Rules, value: string, lineNumber: number): string[] {
     const entries = value === '' ? [] : value.split(',');
-    if (!entries.every((entry) => (key === 'enable' ? RULE_NAME.test(entry) : isDisableEntry(entry))))
+    if (!entries.every((entry) => (key === 'enable' ? SHELLCHECK_RULE_NAME.test(entry) : isDisableEntry(entry))))
         throw new Error(`Invalid ShellCheck ${key} list on line ${String(lineNumber)}.`);
     return key === 'disable'
         ? entries.map((entry) => entry.replaceAll(/(?:SC)?(\d+)/gu, (_, code: string) => `SC${String(Number(code))}`))

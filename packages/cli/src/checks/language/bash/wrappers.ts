@@ -8,8 +8,8 @@ import {
     FORWARDER_STEM,
     DEPRECATED_ALIAS,
     FORWARDED_SCRIPT,
-    FORWARDING_MAX_LINES,
-    FORWARDING_INTERPRETER,
+    FORWARDER_MAX_LINES,
+    FORWARDER_INTERPRETER,
 } from '#cli/config/checks/language/bash.ts';
 
 /**
@@ -53,9 +53,9 @@ export const wrappers: Analysis = async (context, scripts) => {
                 ),
             );
         const forwarding = code.filter(
-            (line) => FORWARDING_INTERPRETER.test(line.code) && FORWARDED_SCRIPT.test(line.code),
+            (line) => FORWARDER_INTERPRETER.test(line.code) && FORWARDED_SCRIPT.test(line.code),
         );
-        if (forwarding.length === 1 && code.length <= FORWARDING_MAX_LINES)
+        if (forwarding.length === 1 && code.length <= FORWARDER_MAX_LINES)
             findings.push(
                 findingAt(
                     context.input,

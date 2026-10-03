@@ -24,8 +24,8 @@ async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, o.scope);
         const list = (holder['kits'] as string[] | undefined) ?? [];
-        const rootList = (raw['kits'] as string[] | undefined) ?? [];
-        const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.kit);
+        const rootKits = (raw['kits'] as string[] | undefined) ?? [];
+        const kept = [...new Set([...rootKits, ...list])].filter((id) => id !== o.kit);
         const chain = kept.map((id) => requireChain(o.kit, id, manifests)).find((found) => found !== undefined);
         if (chain) throw new GspotError('policy', [messages.withoutRequired(o.kit, chain)]);
         if (!list.includes(o.kit)) throw new GspotError('policy', [messages.kitNotListed(o.kit, o.scope)]);

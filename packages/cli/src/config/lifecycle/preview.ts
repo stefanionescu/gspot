@@ -8,6 +8,6 @@ export const BYTE_ORDER_MARK = '\uFEFF';
 export const KEY_QUOTES = ['"', '`'];
 export const VALUE_QUOTES = ['"""', '`'];
 
-export const DIRECTIVE = /^([a-zA-Z-]+)=/u;
-export const RULE_NAME = /^[a-zA-Z-]+$/u;
-export const RULE_CODE = /^(?:SC)?\d+$/u;
+export const SHELLCHECK_DIRECTIVE = /^([a-zA-Z-]+)=/u;
+export const SHELLCHECK_RULE_NAME = /^[a-zA-Z-]+$/u;
+export const SHELLCHECK_RULE_CODE = /^(?:SC)?\d+$/u;

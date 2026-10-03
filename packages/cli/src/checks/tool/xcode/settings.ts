@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
+import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
@@ -10,7 +10,7 @@ import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/con
  * @returns the findings
  */
 export function xcconfig(input: EngineInput): Finding[] {
-    return trackedEnding(input, ['.xcconfig']).flatMap((path) =>
+    return trackedByExtension(input, ['.xcconfig']).flatMap((path) =>
         readSource(input.root, path, input.reads)
             .toString('utf8')
             .split('\n')
@@ -19,8 +19,8 @@ export function xcconfig(input: EngineInput): Finding[] {
                 // Conditions in brackets can contain equals signs before the assignment itself.
                 const sign = line.indexOf('=', line.lastIndexOf(']') + 1);
                 const isSetting = sign > 0 && SETTING_NAME.test(line.slice(0, sign).trim());
-                const isFine = line === '' || line.startsWith('//') || isSetting || INCLUDE_LINE.test(line);
-                return isFine
+                const isValid = line === '' || line.startsWith('//') || isSetting || INCLUDE_LINE.test(line);
+                return isValid
                     ? []
                     : [
                           findingAt(
@@ -41,7 +41,7 @@ export function xcconfig(input: EngineInput): Finding[] {
  */
 export function entitlements(input: EngineInput): Finding[] {
     const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
-    return trackedEnding(input, ['.entitlements']).flatMap((path) => {
+    return trackedByExtension(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
@@ -65,7 +65,7 @@ export function entitlements(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function ats(input: EngineInput): Finding[] {
-    return trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
+    return trackedByExtension(input, ['.plist']).flatMap((path): Finding[] => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];

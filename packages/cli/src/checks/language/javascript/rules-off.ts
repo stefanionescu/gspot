@@ -3,12 +3,12 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
 import { ESLINT_FILE } from '#cli/config/platform/locations.ts';
 import { evaluate } from '#cli/lifecycle/preview/eslint/client.ts';
-import { ESLINT_RULE_LEVELS } from '#cli/config/generation/generation.ts';
+import { ESLINT_LEVELS } from '#cli/config/generation/generation.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { eslintCoverageResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 // The rules the selected kits require, for each file ending they name.
-function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
+function requiredByExtension(input: EngineInput): Map<string, Set<string>> {
     const selected = input.selection.selected;
     const required = new Map<string, Set<string>>();
     for (const manifest of selected)
@@ -18,7 +18,7 @@ function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
                 new Set([
                     ...(required.get(ending) ?? []),
                     ...rules.filter(
-                        (rule) => input.policyFiles.policy.level === 'all' || ESLINT_RULE_LEVELS[rule] !== 'all',
+                        (rule) => input.policyFiles.policy.level === 'all' || ESLINT_LEVELS[rule] !== 'all',
                     ),
                 ]),
             );
@@ -30,10 +30,10 @@ function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
  * @param input the engine input
  * @returns the findings
  */
-export async function requiredRules(input: EngineInput): Promise<Finding[]> {
+export async function rulesOff(input: EngineInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const findings: Finding[] = [];
-    const required = requiredByEnding(input);
+    const required = requiredByExtension(input);
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&

@@ -8,7 +8,7 @@ import { runOptions } from '#tests/harness/cli/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 const policy = `kits = []
 [[check]]
@@ -44,7 +44,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'failed', findings: [] });
-    await Bun.write(join(sandbox.path, '.gspot/version'), GSPOT_VERSION + '\n');
+    await Bun.write(join(sandbox.path, '.gspot/version'), RUNNING_VERSION + '\n');
     const cli = Bun.spawnSync(
         [
             process.execPath,
@@ -73,7 +73,7 @@ test('malformed custom JSON output produces inability instead of a discarded fin
             `[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
         ),
         'source.txt': 'original',
-        '.gspot/version': GSPOT_VERSION + '\n',
+        '.gspot/version': RUNNING_VERSION + '\n',
     });
     const cli = Bun.spawnSync(
         [

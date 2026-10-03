@@ -9,10 +9,10 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
+import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import type { LicenseException } from '#cli/types/checks/general/general.ts';
 import type { LicensedPackage } from '#cli/types/checks/general/licenses.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/general/licenses.ts';
 
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);
@@ -77,7 +77,7 @@ async function javascriptLicenses(input: EngineInput, start: string): Promise<Li
     installedDirectory(start, 'node_modules');
     const report = await licenseReport(
         input,
-        [LICENSE_CHECKER_TOOL, '--json', '--excludePrivatePackages', '--start', start],
+        [LICENSE_CHECKER, '--json', '--excludePrivatePackages', '--start', start],
         start,
     );
     return Object.entries(reportSchema.parse(report)).map(([name, entry]) => ({

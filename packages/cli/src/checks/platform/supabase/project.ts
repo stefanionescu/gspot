@@ -14,7 +14,7 @@ import {
     FUNCTIONS_DIRECTORY,
 } from '#cli/config/checks/platform/supabase.ts';
 
-const projectSchema = z.object({
+const supabaseSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),
     storage: z.object({ buckets: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
@@ -24,13 +24,13 @@ const projectSchema = z.object({
  * @param input the scoped repository read
  * @returns the config or the error
  */
-export function readConfiguration(input: EngineInput): z.infer<typeof projectSchema> | string | undefined {
+export function readConfiguration(input: EngineInput): z.infer<typeof supabaseSchema> | string | undefined {
     const local = posix.join(input.scope, SUPABASE_CONFIG);
     const path = join(input.root, local);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
     const text = readSource(input.root, local, input.reads).toString('utf8');
     try {
-        return projectSchema.parse(parse(text));
+        return supabaseSchema.parse(parse(text));
     } catch (error) {
         return error instanceof Error ? error.message : 'The file does not parse.';
     }

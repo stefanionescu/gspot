@@ -12,6 +12,9 @@ export const TOML_STRINGS = /"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'
 
 export const SHOWN_LINES = 3;
 
+/** From a one-based line to the zero-based index of the line above it. */
+export const LINE_ABOVE = 2;
+
 export const DRIFT_MESSAGES: Record<Drift['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
     missing: 'This generated file is missing.',

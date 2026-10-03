@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { HookName } from '#cli/types/generation/generation.ts';
-import ruleLevels from '#cli/config/generation/eslint-levels.json' with { type: 'json' };
+import eslintLevels from '#cli/config/generation/eslint-levels.json' with { type: 'json' };
 
 /** Compiler flags that add diagnostics without changing module resolution or emitted JavaScript. */
 export const RECOMMENDED_OPTIONS = {
@@ -23,7 +23,7 @@ export const COMPILER_OPTIONS = {
 };
 
 /** Stable rule membership for generated defaults and required-rule validation. */
-export const ESLINT_RULE_LEVELS = z.record(z.string(), z.enum(['recommended', 'all'])).parse(ruleLevels);
+export const ESLINT_LEVELS = z.record(z.string(), z.enum(['recommended', 'all'])).parse(eslintLevels);
 
 export const TRAILING_STAR = /\*$/u;
 export const JSON_EXTENSIONS = new Set(['.json', '.webmanifest']);

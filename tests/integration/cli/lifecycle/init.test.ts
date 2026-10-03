@@ -14,7 +14,7 @@ import { PRETTIER_TOOLING } from '#tests/harness/cli/tooling.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 test.each([
     [
@@ -137,7 +137,7 @@ test('failed initialization retains the previous pin until generated publication
     }
     const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
+    expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
 });
 
 test('init refuses a failed Git status before writing and succeeds after the failure is corrected', async () => {

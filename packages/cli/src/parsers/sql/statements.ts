@@ -1,5 +1,5 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
-import { parseSql } from '#cli/parsers/sql/pg.ts';
+import { parse } from '#cli/parsers/sql/pg.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import { withoutVariables } from '#cli/parsers/sql/source.ts';
 import type { ReadCache } from '#cli/types/platform/platform.ts';
@@ -23,7 +23,7 @@ async function parseFile(text: string): Promise<SqlFile> {
     const source = prepared.text;
     const variables = prepared.variables;
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
-    const parsed = await parseSql(source);
+    const parsed = await parse(source);
     const bytes = Buffer.from(source, 'utf8');
     if (parsed.error !== undefined) {
         const offset = codePoints(source).slice(0, parsed.error.offset).join('').length;
