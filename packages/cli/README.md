@@ -1,8 +1,7 @@
 # gspot
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding
-agents. Git hooks run the checks on every commit and push, and a finding stops the commit. Your
-choices live in one policy file, `gspot.toml`.
+agents.
 
 ## Install
 
