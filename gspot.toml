@@ -635,6 +635,11 @@ paths = ["packages/cli/src/kits/messages.ts", "packages/cli/src/policy/messages.
 reason = "Every message has one builder in its catalog, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalogs move out of functions."
 
 [[ignore]]
+check = "docs/stale-paths"
+paths = ["FINDINGS.md"]
+reason = "FINDINGS.md records an audit, and it names files and folders the cleanup deletes and moves."
+
+[[ignore]]
 check = "javascript/eslint"
 rule = "package-json/require-exports"
 paths = ["packages/cli/package.json"]
