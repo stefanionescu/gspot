@@ -636,8 +636,8 @@ reason = "Every message has one builder in its catalog, so callers share one wor
 
 [[ignore]]
 check = "docs/stale-paths"
-paths = ["FINDINGS.md"]
-reason = "FINDINGS.md records an audit, and it names files and folders the cleanup deletes and moves."
+paths = ["FINDINGS.md", "findings/**"]
+reason = "FINDINGS.md and findings/ record an audit, and they name files and folders the cleanup deletes and moves."
 
 [[ignore]]
 check = "javascript/eslint"
