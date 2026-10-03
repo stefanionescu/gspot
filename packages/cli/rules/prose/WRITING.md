@@ -22,8 +22,7 @@ vocabulary. This file says why, and covers what no checker sees.
 
 ## Voice and tone
 
-The voice is concise, direct, precise, calm, friendly, confident without unsupported
-statements, and conversational without becoming chatty.
+The voice is concise, direct, precise, calm, and friendly.
 
 ### Voice conventions
 
@@ -40,14 +39,9 @@ statements, and conversational without becoming chatty.
 - Start with the subject, not the page: "Deployment uses immutable container images," not
   "This page explains how deployment works." A scope sentence appears only where a reader
   needs it to tell this page from a nearby topic.
-- Documentation is not sales copy. Words such as `easy`, `simple`, `obviously`, `trivial`,
-  `powerful`, and `seamless` explain no work and can make a struggling reader feel at fault.
-  State the measurable effect: "Caching can reduce repeated database reads."
-- Write the full form of every contraction, in documents, comments, error messages, and
-  commit messages, so a negative is unmistakable.
+- Documentation is not sales copy: state the measurable effect, never `easy` or `seamless`.
 - Use a direct imperative for a required action and "can" for a capability or a clearly
-  optional choice. Label recommendations and optional steps. The weak modals (`may`, `might`,
-  and the three the checker names) leave the reader unsure whether an action is required.
+  optional choice, and label recommendations and optional steps.
 - Use American English spelling, grammar, and punctuation unless the project documents
   another standard, and never mix dialects in one set.
 
@@ -83,15 +77,8 @@ operational meaning. Prefer a literal alternative to a violent metaphor: "stop t
 time, and "while" only for simultaneous actions. The checker names the ambiguous conjunction
 that can mean either.
 
-Spell out an acronym or uncommon abbreviation on first use on each page, then put it in
-parentheses: "Content delivery network (CDN)." Universally familiar names such as API, URL,
-HTTP, JSON, and HTML stay short. Keep acronyms out of titles unless the audience uses the
-acronym as the primary name. Form plurals without an apostrophe: APIs. Spell out zero through
-nine in prose. Use numerals from 10, and for measurements, versions, dates, times,
-percentages, code, exact limits, steps, and table values.
-
-Do not begin a sentence with a numeral. Dates and times for people read "January 3, 2026 at
-10:30 AM UTC," with the time zone whenever readers in different regions can act on the time.
+Keep acronyms out of titles unless the audience uses the acronym as the primary name. Dates
+and times for people read "January 3, 2026 at 10:30 AM UTC," with the time zone whenever readers in different regions can act on the time.
 Machine-readable values, logs, APIs, and release stamps use ISO 8601: `2026-01-03T10:30:00Z`.
 Numeric dates such as `03/04/2026` are ambiguous. Name the currency when an amount can be
 read in more than one, as `10 USD` or `$0.25 USD`. A bare `$10` is ambiguous across
@@ -104,15 +91,9 @@ official name on first use and the same term for the same concept across the set
 introduce a synonym to avoid repetition. Do not shorten a product name unless the short form
 is established. Treat product names as singular and keep feature names lowercase.
 
-Keep a project word list where capitalization or preferred terms are not obvious. Prefer a
-noun phrase to a possessive on a product name: "the Docker command-line interface." A
-sentence may end with a preposition when the alternative sounds unnatural. Punctuation stays
-restrained. A period ends a complete sentence, the serial comma joins three or more items,
-one space follows a sentence, and quotation marks are straight. A colon introduces a list or
-example.
-
-A sentence is split rather than joined by a semicolon. Commas, parentheses, colons, or
-separate sentences replace em and en dashes. Headings carry no decorative punctuation.
+Keep a project word list where capitalization or preferred terms are not obvious. Punctuation
+stays restrained. Split a sentence rather than join it with a semicolon. Replace em dashes and en
+dashes with commas, colons, or separate sentences. Keep decorative punctuation out of headings.
 
 ## Inclusive and respectful language
 
@@ -157,12 +138,9 @@ guarantees. When evidence is incomplete, narrow the statement or state the known
 - State the applicable version, platform, plan, role, or deployment mode when behavior is
   not universal, as "version 3.2 or later." Mark the scope of version details inside a
   timeless explanation.
-- Treat AI-generated documentation as an untrusted draft. Review it for repetition,
-  fabricated commands or fields, vague statements, incorrect scope, stale names, and
-  unnecessary new pages.
-- Review it also for missing permissions, hidden safety consequences, examples that look valid
-  but cannot run, and confident statements the codebase does not support. A retained
-  statement needs the same evidence as human-written content.
+- Treat AI-generated documentation as an untrusted draft: look for fabricated commands or
+  fields, wrong scope, stale names, missing permissions, and examples that cannot run. A
+  retained statement needs the same evidence as human-written content.
 
 ### Future behavior
 

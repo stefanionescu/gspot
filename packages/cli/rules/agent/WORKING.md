@@ -49,12 +49,10 @@ testing rules and to the assertion, focus, and coverage checks of the repository
 
 ## No defensive logic
 
-Do not invent defensive logic for scenarios that are not part of the real contract.
-
-- Do not add guards, fallbacks, retries, optional handling, defaults, or wrappers for states that cannot occur under the real contract.
-- Handle known failure modes at real boundaries: user input, network calls, persistence, permissions, and external services.
-- Trust internal invariants after they are established. If an invariant is unclear, trace the code and clarify the contract instead of adding speculative protection.
-- Do not pad the codebase with logic meant to protect against hypothetical future failures.
+Do not add guards, fallbacks, retries, defaults, or wrappers for states the real contract rules
+out. Handle known failure modes at real boundaries: user input, network calls, persistence,
+permissions, and external services. Trust an internal invariant once it is established; when one
+is unclear, trace the code and clarify the contract instead of adding speculative protection.
 
 ## Abstractions
 
@@ -65,44 +63,18 @@ when real callers prove the same contract and the extraction removes complexity.
 forwarding wrappers, one-caller helpers, or abstractions for hypothetical reuse. Prefer local
 duplication when callers have different responsibilities. Remove abstractions whose cost exceeds their benefit.
 
-### Watch for boxing
-
-- If a shared abstraction starts gaining flags, modes, optional branches, or
-  caller-specific conditionals, treat that as evidence the abstraction is wrong.
-- "Boxing" is forbidden: do not stuff loosely related behavior into one
-  function/class/module with parameters deciding which behavior runs.
-
-### Inline the wrong abstraction
-
-- When an abstraction is wrong, inline it back into each caller, delete the
-  branches each caller does not need, then extract only the common behavior that
-  remains.
-
-### Make the change easy
-
-- Preparatory refactoring is allowed when it makes the requested change easier:
-  first preserve behavior, then make the behavior change.
-- Keep refactoring and behavior changes in separate commits.
-
-### Keep granularity continuous
-
-- Higher-level helpers must be replaceable by a small number of lower-level
-  operations. Do not create API granularity gaps.
-
-### Use inversion of control deliberately
-
-- Use inversion of control when it prevents option explosion across multiple
-  real use cases.
-- Do not add inversion of control for a single use case if it makes the call
-  site harder without reducing complexity.
-
-### Prefer data flow and data structures
-
-- Prefer plain functions and explicit data flow before classes, interfaces,
-  factories, strategies, inheritance, or framework patterns.
-- Prefer data structures and their relationships over code-pattern taxonomies.
-- Push state and I/O outward; keep core logic pure or close to
-  pure when that reduces the number of parts.
+- An abstraction that gains flags, modes, optional branches, or caller-specific conditions is
+  the wrong one. Do not box loosely related behavior into one function with a parameter that
+  picks the behavior.
+- Inline a wrong abstraction into each caller, delete the branches each caller does not need,
+  and extract only the common behavior that remains.
+- A preparatory refactor that makes the requested change easy is allowed: first keep the
+  behavior, then change it, in separate commits.
+- A higher-level helper stays replaceable by a few lower-level operations, with no gap in
+  granularity between them. Use inversion of control when it prevents an explosion of options
+  across real use cases, not for a single one.
+- Prefer plain functions, data structures, and explicit data flow to classes, factories,
+  strategies, and inheritance. Push state and I/O outward, and keep the core close to pure.
 
 ## Language discipline
 

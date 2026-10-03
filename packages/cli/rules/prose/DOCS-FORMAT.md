@@ -29,19 +29,10 @@ constraint, a maintenance requirement. They never hide obsolete documentation, d
 history, reviewer conversations, or commented-out broken links. Delete obsolete content; Git
 keeps the history.
 
-Shortcodes, custom alerts, tab components, cards, and generated macros are acceptable only
-when the documentation platform owns and tests them. They render in every supported surface,
-a secondary renderer gets a useful fallback, essential meaning stays in text, and the
-component does more than decorate. Use tabs only for parallel alternatives such as operating
-systems or package managers. Tabs carry short parallel titles, the same order across pages,
-and a complete procedure in each tab.
-
-### Panels, cards, and tooltips
-
-Use collapsible panels only for optional secondary detail. Prerequisites, safety warnings,
-procedure steps, error recovery, and accessibility information never collapse. Use cards only
-on landing pages, with descriptive link text, and with a fallback list. Use a glossary
-tooltip only for the first important occurrence of a term, in one short sentence.
+Shortcodes, tabs, cards, and other components are acceptable only when the documentation
+platform owns and tests them, essential meaning stays in text, and a secondary renderer gets a
+useful fallback. Tabs hold parallel alternatives, such as operating systems, each with a complete
+procedure. Prerequisites, safety warnings, and steps never sit in a collapsed panel.
 
 ## Structure pages predictably
 
@@ -151,14 +142,8 @@ supports it.
 
 ### Table size and footnotes
 
-Keep tables narrow. Before adding a column, ask whether the attribute is required for the
-comparison and whether the value can move to a linked reference. Ask whether several small
-tables or a list reads better. Cells hold no paragraphs, large code blocks, or nested lists.
-
-A footnote is used only when one qualification applies to several cells, when inline content
-makes the table unreadable, or when the note is secondary but necessary. A footnote never
-carries safety information or required steps. Prefer Markdown-native footnotes where the
-renderer supports them.
+Keep tables narrow: a cell holds no paragraph, large code block, or nested list. A footnote
+qualifies several cells at once and never carries safety information or a required step.
 
 ## Use alerts sparingly
 
@@ -173,8 +158,6 @@ security or data-loss risk:
 > Rotating the key invalidates every existing session.
 ```
 
-Use only the types the project renderer supports. Keep an alert concise and put it before the
-action it qualifies. No alerts back to back, and at most one per section. No long procedure
-or large list inside one, no alert for information that belongs in the paragraph, and no alert
-as decoration. No meaning is carried by the color or icon alone. Content that needs more than
-a short paragraph gets a heading and a normal section.
+Use only the types the project renderer supports, and put a short alert before the action it
+qualifies, at most one per section. Content that needs more than a short paragraph gets a
+heading and a normal section instead.

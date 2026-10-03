@@ -4,81 +4,49 @@ title: Comments
 
 # Comments
 
-## Present state only
+## What a comment says
 
 <!-- level: all -->
 
-Comments and documentation describe what the code does right now. Never write `was removed`, `deleted`, `renamed`, `refactored`, or how the code `used to` work. No changelogs in comments.
+A comment explains why, not what, and describes the code as it is now.
+
+- No history: not `was removed`, `renamed from`, `replaced old Z`, or the old behavior.
+  Git keeps history.
+- No file paths or variable locations, which go stale. Name the concept instead. A well-known
+  file such as `package.json` may be named when it helps.
+- No default values, which drift when the code changes.
+- No em dashes or double hyphens as dashes; use a space, comma, or colon. The `--` before the
+  reason of a suppression comment is syntax, not a dash.
 
 Bad: `# Removed the old checkpoint loader.`
 Good: `# Loads model checkpoints from the configured artifact directory.`
 
-## Avoid referencing specific file paths
+A doc comment says what a function does, what its parameters mean, and what it returns.
+
+## When to comment
 
 <!-- level: all -->
 
-Comments and documentation must not reference specific file names or paths. File names change; hardcoding them creates stale references.
+Comment a function that:
 
-Exceptions: well-known configuration files such as `package.json` or
-`pyproject.toml` may be mentioned by name when genuinely useful.
+- handles a non-obvious failure
+- has concurrency, cancellation, or isolation requirements
+- makes a security or privacy decision
+- encodes a domain invariant such as `idempotent` or `retry-safe`
+- sits on a hot path
+- takes more than ten seconds to understand from its signature and body
 
-## Punctuation
+Do not comment code that is already obvious.
 
-<!-- level: all -->
+## Keep comments true
 
-Do not use em dashes or double hyphens as dashes. Use a space, comma, or colon instead. The `--`
-before the reason of a suppression comment is syntax, not a dash.
-
-Bad: `The server handles requests - including retries - before responding.`
-Good: `The server handles requests, including retries, before responding.`
-
-## Comments
-
-<!-- level: all -->
-
-Keep comments concise and focused on intent ("why"), not narration ("what"). Do not embed default values in comments; they drift when code changes. Reference concept names, not file paths.
-
-Comments and doc comments must never contain:
-
-- **Code change history.** No `changed X to Y`, `replaced old Z`, `updated to use W`, `refactored from`. Git tracks history.
-- **What was done to variables or code.** No `added this field`, `moved this constant`, `renamed from oldName`. Describe the present purpose.
-- **File or variable locations.** Do not say `defined in X.ts` or `see the value in config.Y` unless the reference is essential for understanding. Code is searchable; stale path references are not.
-
-Good doc comments describe what a function does, what its parameters mean, and what it returns. They do not narrate how the function came to exist or what it replaced.
-
-## Always comment
-
-<!-- level: all -->
-
-Regardless of language or visibility, add a comment when a function:
-
-- Handles edge cases or non-obvious failure modes.
-- Has concurrency, cancellation, or isolation requirements.
-- Makes security or privacy decisions.
-- Encodes domain invariants (`must be monotonic`, `idempotent`, `retry-safe`).
-- Sits on a performance-sensitive hot path.
-- Takes a reader more than ten seconds to understand from the signature and body alone.
-
-The comment explains why, not what. Do not add comments only to satisfy a generic style preference
-when the code is already obvious.
-
-## Comment maintenance
-
-When editing any file, check that comments and doc comments are still accurate. Stale comments are worse than no comments because they actively mislead.
-
-- If you change a function's behavior, update its doc comment to match.
-- If you change a function's parameters, update `@param` tags.
-- If you change what a function returns, update `@returns`.
-- If a comment references behavior the code lacks, rewrite or remove it.
-- If a comment describes the "why" of a decision you are undoing, remove it.
+When you change a function, update its doc comment, its `@param` tags, and its `@returns`.
+Rewrite or delete a comment that describes behavior the code lacks, or the reason for a decision
+you are undoing.
 
 ## Deferred work
 
 <!-- level: all -->
 
-Track unfinished work in the issue tracker. Do not leave `TODO`, `FIXME`, `XXX`, or `HACK`
-placeholders in source comments. An issue link can explain an existing constraint, but it
-must not replace an explanation of current behavior or promise a later implementation.
-
-Review the linked constraint when changing the affected code. Remove obsolete comments
-with the code they describe.
+Track unfinished work in the issue tracker. Do not leave `TODO`, `FIXME`, `XXX`, or `HACK` in
+comments. An issue link may explain an existing constraint, never promise a later implementation.

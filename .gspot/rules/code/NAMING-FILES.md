@@ -29,35 +29,21 @@ the same concept reads the same way at every boundary.
 
 <!-- level: all -->
 
-Files and directories define ownership. Name them for the behavior or entity
-they own, not for reuse intent.
+Files and directories define ownership: name them for the behavior or entity they own, not for
+reuse.
 
-Rules:
-
-- File names follow the language-specific case rules below.
-- A source file with one primary top-level type is named after that type when
-  the language uses primary-type filenames.
-- A module file is named after the cohesive capability it owns.
-- Do not create catch-all files or directories for unrelated code.
-- Do not move code into shared locations for a caller that does not exist yet.
-- Promote shared code only when there is a repeated concept and a stable owner.
-- A directory named by a broad layer is acceptable only when the project
-  architecture explicitly owns that layer.
-- Prefer feature ownership over top-level type buckets.
-- No directory is named `common`, `core`, `helper`, `helpers`, `util`, `utils`, `support`,
-  `misc`, `shared`, or after a language or runtime (`bash`, `javascript`, `python`, `node`,
-  `js`). Name it for what it owns.
-- The harness folder that `architecture.roles.harness` names is the declared exception for test
-  setup and lifecycle support. Group its
-  contents by responsibility instead of collecting unrelated helpers in one module.
-- A leaf directory holds more than one code file. One file in a folder is a file, not a folder.
-- Sibling files do not share a leading name part: `asset-card.ts`, `asset-list.ts`, and
-  `asset-row.ts` in one folder are an `asset/` directory with `card.ts`, `list.ts`, `row.ts`.
-- Alternate formats of one basename count as one owner when grouping prefixes.
-- A file stem never equals a sibling directory name: `orders.ts` beside `orders/` is a collision.
-- A file name is a whole-part match against the same banned term list as identifiers.
-- A generated artifact (a test result, a report, a build output) may carry a timestamp in its name;
-  hand-written source never does.
+- A file with one primary type is named after it where the language does so; a module is named
+  after the capability it owns. Prefer feature folders to top-level type buckets.
+- No catch-all file or directory: no `common`, `core`, `helper`, `helpers`, `util`, `utils`,
+  `support`, `misc`, or `shared`, and no folder named after a language or runtime. The harness
+  folder that `architecture.roles.harness` names is the exception for test setup.
+- Move code to a shared place only for a repeated concept with a stable owner, never for a caller
+  that does not exist yet.
+- A leaf directory holds more than one code file. Sibling files do not share a leading name part:
+  `asset-card.ts` and `asset-list.ts` are `asset/card.ts` and `asset/list.ts`. A file stem never
+  equals a sibling directory name.
+- A file name avoids the banned terms identifiers avoid. Only a generated artifact may carry a
+  timestamp in its name.
 
 | Avoid              | Prefer                        | Meaning                |
 | ------------------ | ----------------------------- | ---------------------- |
@@ -70,126 +56,39 @@ Rules:
 
 <!-- level: all -->
 
-External systems often use names that do not match the domain language. Keep
-those names at the boundary and translate them intentionally.
+External systems use names that do not match the domain language. Keep them at the boundary:
+DTOs, SQL rows, generated types, wire payloads, and validation schemas keep the external field
+names, and renaming one is a contract change. Translate them into domain names, through explicitly
+named mappings, before the values reach domain or presentation code; provider, database, and HTTP
+mechanics stay out of domain names.
 
-Rules:
-
-- Preserve external field names in DTOs, SQL rows, generated types, wire
-  payloads, and validation schemas when changing them misrepresents the contract.
-- Translate provider names into domain names before passing values into domain
-  or presentation layers.
-- Do not leak provider, database, storage, or HTTP mechanics into ViewModels,
-  domain entities, use cases, or API-facing response names.
-- If a name is part of an external contract, treat renaming it as a contract
-  change.
-- Use explicit mapping names when crossing layers.
-
-Name an external order-submission payload `ProviderSubmitOrderResponse` and
-preserve its wire fields, such as `providerOperationId` and `providerStatus`.
-Convert it into `SubmittedOrder` only after validating and mapping the provider
-status into the domain's order status.
-
-Keep `storage_object_path` on a wire shape such as `MessageAttachmentDTO`.
-Use `attachmentPath` on the validated `MessageAttachment` domain shape. The
-conversion belongs to the boundary that understands the storage protocol.
+A wire shape such as `MessageAttachmentDTO` keeps `storage_object_path`. The validated
+`MessageAttachment` uses `attachmentPath`, and the boundary that knows the storage protocol
+converts one into the other.
 
 ## Tests
 
 <!-- level: all -->
 
-Test names and test data names describe observable behavior, not private
-implementation details.
-
-Rules:
-
-- Name tests for the behavior and expected outcome.
-- Use descriptive unique values for names, emails, IDs, queue names, event IDs,
-  resource IDs, and external references.
-- Avoid names tied to private helper names.
-- Avoid test data names that hide the scenario.
-- Test helpers are named for the behavior they create.
-- Test data never become global mystery data.
-- A test name is a sentence stating the scenario and the expected outcome. `edge cases`,
-  `happy path`, `works`, `test1`, and `underTest` are banned.
-- Support code lives in the harness folder; `mocks/`, `helpers/`, and `utils/` are banned
-  directory names in test trees.
-- Test file names follow the language table in "Casing Across Languages."
-
-| Avoid       | Prefer                               |
-| ----------- | ------------------------------------ |
-| `2/29/2020` | `accepts February 29 in a leap year` |
-| `throws`    | `rejects an invalid date format`     |
-
-| Avoid          | Prefer                                                         | Meaning                            |
-| -------------- | -------------------------------------------------------------- | ---------------------------------- |
-| `test1`        | `testMessagesShowUnreadMessagesFirst`                          | Unread messages sort first.        |
-| `testMessages` | `testSubmitButtonTappedShowsValidationErrorWhenEmailIsInvalid` | Invalid email prevents submission. |
-
-## Review checklist
-
-<!-- level: all -->
-
-Before you run the checks of the repository, read the change against these questions:
-
-- Does each name describe a role or domain concept that the caller recognizes?
-- Does the owning module already supply any words repeated in the name?
-- Do identifiers, files, and directories follow the selected language conventions?
-- Do predicates read as assertions, and do singular and plural names match their values?
-- Are provider fields, framework names, and other external contracts preserved?
-- Does each file belong with the feature or tooling responsibility it serves?
-- Do the naming checks pass without exceptions that cover unrelated names?
+A test name is a sentence that states the scenario and the expected outcome, such as `accepts
+February 29 in a leap year`, never `edge cases`, `happy path`, `works`, or `test1`. Test data uses
+descriptive unique values that show the scenario. The testing rules cover where tests and their
+helpers live.
 
 ## Structural ownership
 
 <!-- level: all -->
 
 Keep constants, types, and schemas with their behavioral owner. Do not require top-level config
-or types buckets, forwarding modules, one declaration per file, or mirrored source/test directories.
+or types buckets, forwarding modules, one declaration per file, or mirrored source and test
+folders.
 
-Report unnecessary function indirection with at most `limits.trivial_statements` executable statements.
-The default is 2; the setting accepts positive integers and increasing it tightens enforcement.
-Count nested statements, excluding comments, blank lines, type-only declarations, and nested
-function bodies. Inspect nested functions independently. An expression body counts as one statement.
+A function that only forwards to another, with `limits.trivial_statements` statements or fewer,
+is inlined into its callers. Keep the function values a contract needs: callbacks passed or
+returned, accessors, overrides, and methods an interface requires. For an external requirement the
+check cannot see, use a narrow suppression with a reason; never add filler statements. A
+calculation with two or more callers keeps one owner, and a file of only forwarding, aliases,
+re-exports, or trivial functions merges into its owner.
 
-Preserve required function values and language signatures. In JavaScript and TypeScript, preserve
-callbacks passed inline, stored in arrays, returned, or read through a name. Object callbacks also
-retain their signatures when their containing object reaches a consumer through lexical aliases
-or object spreads. Unused object methods and methods used only through direct local calls remain
-subject to the threshold.
-
-In JavaScript and TypeScript, preserve accessors, decorated methods,
-overrides, and methods required by interfaces or base classes. Type predicates, assertion signatures,
-and constructors that initialize instance state through parameter properties or assignments also carry contracts.
-Empty constructors and constructors that only forward to `super` remain subject to the threshold.
-
-Type assertions preserve whether a function is passed as a value or immediately called.
-Directly called local wrappers and immediately
-invoked functions remain subject to the threshold. Export visibility, class decorators, and filenames
-alone grant no exemption.
-
-A substantive required callback belongs to its enclosing
-implementation, even when that implementation uses one return statement. Unused nested
-declarations do not make a wrapper substantive. A self-call requires its function binding, including the local name of a named function expression.
-Preserve identity, arity, `this`, and
-evaluation order when inlining.
-Use a narrow, reasoned suppression for external requirements the analyzer cannot establish.
-Do not add filler statements.
-
-Keep a calculation with two or more direct call sites in one owner. Resolve call sites through
-lexical bindings and imported aliases. Shared calculations include operators, constructed values,
-and composed calls. Fixed call arguments include literals and captured lexical bindings,
-but not the function's own parameters. Repeated calls alone do not justify constant getters, identity functions,
-property forwarding, or single-call wrappers.
-
-A file containing only forwarding, aliases, re-exports, or trivial functions needs consolidation.
-One substantial implementation or meaningful owned schema is sufficient. Factories own the
-objects, arrays, and interpolated templates they construct, including structures passed to
-schema builders. Returning an existing value or forwarding arguments does not establish ownership.
-A shared calculation also satisfies the file ownership check.
-
-The shared maximum is
-7 declared parameters, with explicit language overrides. Bash has no formal parameter count.
-
-Folder names such as `build`, `dist`, and `coverage` do not establish generated ownership.
-Structural checks include authored files in those folders. Declare generated output explicitly.
+Folder names such as `build`, `dist`, and `coverage` do not make a file generated; declare
+generated output explicitly.
