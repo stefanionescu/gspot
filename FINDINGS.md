@@ -15,6 +15,7 @@ a second-pass correction and a first-pass row disagree, the correction wins.
 - [Answers to your questions](#answers-to-your-questions)
 - [Decisions for you](#decisions-for-you)
 - [The plan](#the-plan)
+- [Open items](#open-items)
 - [Diagrams](#diagrams)
 - [Findings by area](#findings-by-area)
 - [File-by-file review](#file-by-file-review)
@@ -472,6 +473,49 @@ anywhere. Fix `docs.yml` and `release.yml`, delete the 31 `--skip-tools` flags, 
 Rewrite the README install section by project type, and state the real requirements. Build the new docs tree with Python
 and Swift quickstarts. Title command pages by command, add check and plugin indexes, and replace the raw schema page.
 Write every page in plain language (ISO 24495). Source: the [docs section](findings/areas/docs.md).
+
+## Open items
+
+These six items were still open when the 46 stages merged. Each one has a fix, and the area files hold the rows.
+
+**1. `stash@{0}`.** A change parked on September 19 adds `"shared"` and a `path` key to the `hooks.tool` setting.
+Today `hooks` holds only `push`, and every file the stash touches has moved or been deleted, so it does not apply.
+
+Fix: drop it with `git stash drop stash@{0}`. If you still want a shared hooks folder, it becomes a new decision.
+
+**2. `PAGES_ENABLED`.** The deploy job of `docs.yml` waits for this variable, which is not set. The repository has no
+Pages site and no environments.
+
+Fix: pick the host first (decision 15). For GitHub Pages, enable Pages with GitHub Actions as the source and add a
+reviewer to the `github-pages` environment. Then delete the `if:` gate and the variable from `CONTRIBUTING.md`. For
+another host, delete the deploy job.
+
+**3. `GSPOT_CI_ENABLED`.** The variable is set to `true`, and nothing reads it.
+
+Fix: delete it with `gh variable delete GSPOT_CI_ENABLED` (decision 19).
+
+**4. Windows acceptance timeouts.** One test in `tests/acceptance/cli/scopes.test.ts` timed out on Windows in two runs
+on main, and reruns passed. The test may take 480 s, but its steps may take more: 240 s for each command and 600 s for
+the tool install. A slow step lets Bun stop the test first, and the log does not say which step stalled. Sandbox
+installs also passed their 600 s limit once.
+
+Fix: give each step a limit that fits inside its test, and make a step that runs out print its command and output.
+Then fix the step the next failure names. If it is the install, install the tools once per shard and link them into
+each sandbox. This belongs to phase 7.
+
+**5. The weak `launcher.test.ts` check.** The test accepts exit 0, 1, or 2, so it passes when every check errors.
+
+Fix: skip `dependencies/osv`, which needs the network the test blocks. Then assert exit 1, no errored check, the exact
+failed checks, the `bash/syntax` finding in `broken.sh`, and the three skips. The
+[harness slice](findings/slices/tests-harness-packages.md) has the exact assertions.
+
+**6. `database.yml` runs the whole tool suite.** mise adds the path after `./tools` instead of replacing it, so the job
+runs every tool test, unsharded, to check one.
+
+Fix: run that one file with `bun test` in `tests`, or give `test:tools` a path argument that replaces `./tools`.
+
+Rows: items 1, 2, 3, and 6 in the [repository area](findings/areas/repository.md), and items 4 and 5 in the
+[tool tests area](findings/areas/tool-tests.md).
 
 ## Diagrams
 
