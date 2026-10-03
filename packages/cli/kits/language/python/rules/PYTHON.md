@@ -8,13 +8,6 @@ The Python rules span five files: this one (modules, imports, interfaces, docstr
 points), Typing, Design (functions and classes), Flow (control flow, errors, logging,
 resources), and Packaging (installs and dependencies).
 
-Ruff owns formatting and import order, reports docstring shape and naming case, and
-basedpyright checks types. The python structure checks report the order of a module, a name
-missing from `__all__` or its underscore, and `__all__` above the definitions or out of
-order. They also report a comment among the imports, a lazy `__getattr__`, a module-level
-singleton, a placeholder docstring, and a function or file over its limit. This file holds
-the decisions behind them and the rules no tool sees.
-
 ## Core Python philosophy
 
 Write readable Python before clever Python: explicit data flow, clear names, small functions,

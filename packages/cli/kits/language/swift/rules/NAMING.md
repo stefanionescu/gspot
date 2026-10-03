@@ -5,8 +5,6 @@ title: Swift Naming
 # Swift Naming
 
 Swift naming follows the Apple API Design Guidelines and optimizes for call-site clarity.
-SwiftLint reports casing, leading underscores, `k` and `g` prefixes, and all-caps constants;
-the naming policy reports the banned role words and `should`. This file holds the rest.
 
 ## Case, scope, and files
 

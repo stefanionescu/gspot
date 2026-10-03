@@ -5,10 +5,8 @@ title: Drizzle
 # Drizzle
 
 Some sections name Supabase, the Postgres platform these rules were written against, whose
-pooler, auth, and storage behavior change what is correct. On another Postgres, read them as
-the shape of the problem. The Drizzle ESLint rules report an update or delete without
-`.where()`. The relations and migrations checks report a foreign key with no relation and a
-migration folder that lags the schema. This file holds what those cannot see.
+pooler, auth, and storage behavior change what is correct. On another Postgres, read them as the
+shape of the problem.
 
 ## Connections
 

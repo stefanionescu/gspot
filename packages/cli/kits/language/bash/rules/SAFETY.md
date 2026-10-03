@@ -5,9 +5,7 @@ title: Bash Safety
 # Bash Safety
 
 Calling commands, processes and privilege, structured data, network, secrets, temporary files,
-portability, and debugging. ShellCheck reports `eval`, unquoted paths, `xargs` without `-0`,
-`find -exec sh -c` with an embedded `{}`, parsed `ls`, and `sudo` redirections; the structure
-checks of the bash kit report a discarded failure. This file holds the decisions behind them.
+portability, and debugging.
 
 ## Calling commands
 

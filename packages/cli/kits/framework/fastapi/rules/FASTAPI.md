@@ -62,7 +62,6 @@ from typing import ClassVar, Annotated
 from fastapi import Path, FastAPI, APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
-
 class Item(BaseModel):
     """Public catalog item.
 
@@ -74,10 +73,8 @@ class Item(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
     name: str
 
-
 CATALOG = (Item(name="Notebook"), Item(name="Pencil"))
 router = APIRouter(prefix="/items", tags=["items"])
-
 
 @router.get("/{item_id}")
 def get_item(item_id: Annotated[int, Path(ge=0)]) -> Item:
@@ -85,7 +82,6 @@ def get_item(item_id: Annotated[int, Path(ge=0)]) -> Item:
     if item_id >= len(CATALOG):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     return CATALOG[item_id]
-
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 app.include_router(router)
@@ -134,7 +130,6 @@ from typing import ClassVar, Annotated
 from fastapi import Query, FastAPI
 from pydantic import Field, BaseModel, ConfigDict
 
-
 class FilterParams(BaseModel):
     """Bounded pagination and tag filters.
 
@@ -150,9 +145,7 @@ class FilterParams(BaseModel):
     offset: int = Field(default=0, ge=0)
     tags: list[str] = Field(default_factory=list)
 
-
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-
 
 @app.get("/filters")
 def get_filters(filters: Annotated[FilterParams, Query()]) -> FilterParams:

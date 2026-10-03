@@ -27,7 +27,6 @@ Good:
 
 MAX_BATCH_SIZE = 1000
 
-
 def parse_batch_limit(raw: str) -> int:
     """Return a positive batch limit within the supported range."""
     try:
@@ -148,7 +147,6 @@ Good:
 import sys
 from pathlib import Path
 
-
 def main() -> int:
     """Read the first argument as a path and print its normalized records."""
     path = Path(sys.argv[1])
@@ -156,7 +154,6 @@ def main() -> int:
         records = [record for line in source if (record := line.strip())]
     _ = sys.stdout.write("\n".join(records))
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -5,10 +5,7 @@ title: React Hook Form
 # React Hook Form
 
 Form ownership, values, registration, validation, subscriptions, field arrays, submission,
-server actions, errors, composition, and paths. The React and TypeScript rules apply
-underneath. The React hooks rules report a conditional hook and a missing Effect dependency,
-and `tsc` reports a widened `FieldValues` or a cast path. This file holds the decisions no
-rule can see.
+server actions, errors, composition, and paths.
 
 Verify every API against the installed React Hook Form, React, resolver, and component
 versions. v7 and the v8 beta are separate contracts. `createFormControl` arrives in 7.55,

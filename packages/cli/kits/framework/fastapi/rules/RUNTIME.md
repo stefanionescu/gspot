@@ -45,7 +45,6 @@ from pydantic import BaseModel
 MAX_UPLOAD_BYTES = 1024 * 1024
 CHUNK_BYTES = 64 * 1024
 
-
 class UploadSummary(BaseModel):
     """Accepted upload size.
 
@@ -56,9 +55,7 @@ class UploadSummary(BaseModel):
 
     size: int
 
-
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-
 
 @app.post("/uploads")
 async def inspect_upload(upload: Annotated[UploadFile, File()]) -> UploadSummary:
@@ -160,7 +157,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict
 from fastapi.sse import ServerSentEvent, EventSourceResponse
 
-
 class Item(BaseModel):
     """One public inventory record.
 
@@ -172,10 +168,8 @@ class Item(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
     name: str
 
-
 ITEMS = (Item(name="Notebook"), Item(name="Pencil"))
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-
 
 @app.get("/items")
 def stream_items() -> Iterable[Item]:
@@ -186,7 +180,6 @@ def stream_items() -> Iterable[Item]:
 
     """
     yield from ITEMS
-
 
 @app.get("/events", response_class=EventSourceResponse)
 def stream_events() -> Iterable[ServerSentEvent]:

@@ -5,10 +5,7 @@ title: Python Design
 # Python Design
 
 Functions, methods, classes, dataclasses, inheritance, and decorators. Module and interface
-rules are in the Python file. Ruff reports mutable and dynamic defaults, inconsistent
-returns, a lambda bound to a name, and function length and complexity. It also reports
-exceptions that inherit from `BaseException`, exception names without `Error`, missing
-docstrings, and the `attrs` and dataclass field rules. This file holds the design decisions those rules cannot judge.
+rules are in the Python file.
 
 ## Functions
 
@@ -41,7 +38,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-
 def trim_history_messages(messages: Sequence[str], max_messages: int) -> list[str]:
     """Return at most the requested number of recent messages."""
     if max_messages == 0:
@@ -49,7 +45,6 @@ def trim_history_messages(messages: Sequence[str], max_messages: int) -> list[st
     if len(messages) <= max_messages:
         return list(messages)
     return list(messages[-max_messages:])
-
 
 __all__ = ["trim_history_messages"]
 ```
@@ -102,7 +97,6 @@ small dataclass or a function.
 
 from dataclasses import field, dataclass
 
-
 @dataclass
 class Batch:
     """Prompt text owned by one processing batch.
@@ -113,7 +107,6 @@ class Batch:
     """
 
     prompts: list[str] = field(default_factory=list)
-
 
 __all__ = ["Batch"]
 ```

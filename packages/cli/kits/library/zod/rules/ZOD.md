@@ -6,9 +6,7 @@ title: Zod
 
 Runtime contracts for data entering or leaving the application. Each schema lives with the
 feature that owns the contract. Browser-safe schemas are shared between forms and server
-operations, and database access, secrets, and authorization stay in server modules. `tsc`
-reports a type that drifts from its schema, and the ESLint TypeScript rules report an unsafe
-cast around a parse. This file holds the boundary decisions no rule can see.
+operations, and database access, secrets, and authorization stay in server modules.
 
 Check the installed Zod release and the integrations that consume its schemas: tRPC, form
 resolvers, and schema generators. Confirm 4.5 support before `z.compile()`, `z.validate()`,

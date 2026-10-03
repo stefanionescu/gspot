@@ -6,9 +6,6 @@ title: Bash Language
 
 Functions, variables, quoting, arrays, conditionals, arithmetic, loops, delimited data, paths,
 command substitution, and pipelines. Script structure and options are in the Bash file.
-ShellCheck reports unquoted expansions, `$*` forwarding, parsed `ls`, `for line in $(cat)`,
-`$?` gymnastics, deprecated syntax, and word-splitting bugs; this file holds the decisions
-and the forms it cannot judge.
 
 ## Functions
 

@@ -56,6 +56,11 @@ Templates and root HTML files stay declarative.
   markup path is the real contract.
 - Browser scripts check that required elements exist before binding behavior and do not
   swallow programming errors.
+- A plain script has no module system, so it uses no `import`. A module script resolves imports
+  as URLs or through an import map, and names the resource the server serves.
+- The DOM is available and Node built-ins are not, so a `node:` import is an error. Use the APIs
+  the declared browser support allows.
+- Build navigation and fetch URLs from values the application controls.
 
 ### Template organization
 

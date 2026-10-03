@@ -4,11 +4,6 @@ title: Supabase
 
 # Supabase
 
-The supabase kit's checks report a malformed config, a misnamed migration, a storage policy
-gap, and an admin key outside its allowed files. They report Deno lint and type errors, and
-generated types that drift from the schema. gitleaks reports a committed key. This file
-holds the ownership and workflow decisions those checks cannot see.
-
 ## Ground rules
 
 - Use the established Supabase layout for migrations, Edge Functions, generated

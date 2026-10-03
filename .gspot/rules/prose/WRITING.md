@@ -15,11 +15,6 @@ Describe the present state only. Keep private reasoning, acceptance status, and 
 development notes out of public content. Read the changed text for clarity and correctness.
 Do not expand a small edit into a review of unrelated pages.
 
-The prose checker reports the mechanical part of these rules. It sees sentence length,
-paragraph length, list-item length, marketing words, contractions, weak modals, possessives on
-product names, undefined acronyms, the serial comma, straight quotes, and the banned
-vocabulary. This file says why, and covers what no checker sees.
-
 ## Voice and tone
 
 The voice is concise, direct, precise, calm, and friendly.

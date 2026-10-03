@@ -4,11 +4,6 @@ title: TanStack Query
 
 # TanStack Query
 
-The TanStack Query ESLint plugin reports keys that miss a query-function dependency and rest
-destructuring of a hook result. It reports an unstable QueryClient, an unstable hook
-dependency, and the option order of an infinite query. This file holds the ownership,
-hydration, freshness, mutation, and pagination decisions no rule can see.
-
 ## Ownership and hydration
 
 Data owned entirely by Server Components is read on the server. A client query cache is

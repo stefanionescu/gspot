@@ -4,12 +4,6 @@ title: Next.js
 
 # Next.js
 
-The Next.js rules span two files: this one (application rules, data access and caching) and
-Next.js Security (runtime boundaries, configuration, authorization, rendering user content,
-service workers, telemetry, streaming). The Next.js ESLint plugin, the `server-only` and
-client-environment rules, the route-segment check, and the config check report the mechanical
-part; this file holds the decisions.
-
 ## Application rules
 
 The project's declared router is preserved; App Router guidance applies to App Router routes.
@@ -245,3 +239,16 @@ browser interaction uses the tRPC mutation or a Server Action, and an external c
 an HTTP contract. All share the domain operation. A Route Handler or Server Action extracts
 input, validates it, establishes context, calls the operation, and formats the response
 ([upgrade guide](https://nextjs.org/docs/app/guides/upgrading/version-16)).
+
+## Security boundaries
+
+Every Server Action, Route Handler, and externally callable operation is a boundary of its own.
+It authenticates the caller from a verified server session and authorizes the operation at the
+owner of the data. A protected layout, a hidden button, a proxy, or a client redirect protects
+nothing. No browser-provided role or user ID is trusted, and an admin client serves
+only the operations that need its authority, never a browser module.
+
+Validate and bound every body, query string, path parameter, cookie, upload, and provider
+response. `NEXT_PUBLIC_*` values are public and fixed at build time; secrets stay in validated
+server configuration. Responses expose safe fields and stable error codes, and logs hold no
+session tokens, credentials, or private content.

@@ -4,11 +4,7 @@ title: Documentation Content
 
 # Documentation Content
 
-Code examples, procedures, and links. The Markdown linter reports a fence without a language,
-a missing blank line around a fence, and ordered-list numbering. The link checks report a
-broken destination and a stale repository path. The prose checker reports "here" and "click
-here" as link text and the weak modal in a step. This file holds the decisions those tools
-cannot judge.
+Code examples, procedures, and links.
 
 ## Code examples
 

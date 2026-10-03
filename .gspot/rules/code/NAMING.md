@@ -4,13 +4,8 @@ title: Naming
 
 # Naming
 
-Principles, vocabulary, functions, and booleans. Naming Files covers casing across
-languages, files and directories, boundaries and external names, and tests. The naming
-policy reports the banned words: `Manager`, `Helper`, `Utils`, `Service`, `handler`,
-`process`, the weak modal, and the rest of the policy list. It reports the reserved words,
-single-letter and contracted names, and the word limit. The language tools report casing.
-This file says why, and holds the decision no policy can judge: whether a name says what
-the value means.
+Principles, vocabulary, functions, and booleans. Naming Files covers casing across languages,
+files and directories, boundaries and external names, and tests.
 
 ## Authority
 

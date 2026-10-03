@@ -39,6 +39,9 @@ owner. A new file comes with the reason the owning module grows that way.
 The checks of the repository run at commit and at push. Run them over the staged files before
 committing. Fix what they report. The instruction file of the repository names the command.
 
+The rule files hold the decisions no check makes. What a check reports reaches you as a finding,
+and `gspot explain <check>` describes the check.
+
 Do not run verification broader than the change. Run no full test suite, build, scan, or Docker
 check unless the user asks for it or the checks of the repository include it.
 

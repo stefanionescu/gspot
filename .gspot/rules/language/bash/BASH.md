@@ -9,12 +9,6 @@ comments, and formatting. Language covers functions, variables, quoting, arrays,
 arithmetic, loops, and paths. Safety covers commands, processes, network, secrets, temporary
 files, security, and portability. Operations covers ownership, deployment, publishing, and CI.
 
-ShellCheck reports quoting, deprecated syntax, and unsafe constructs, and shfmt owns layout.
-The structure checks of the bash kit report the header, the strict-mode options, the `main`
-call, and the order of functions. They also report the doc comment of each function, a
-discarded failure, and an unchecked `cd`. This file says why, and holds the rules no tool
-sees.
-
 ## Core Bash philosophy
 
 <!-- level: all -->

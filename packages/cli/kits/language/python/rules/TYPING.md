@@ -5,11 +5,7 @@ title: Python Typing
 # Python Typing
 
 Annotations, `Any`, generics, aliases, protocols, and suppressions. Module and interface rules
-are in the Python file. The type checker reports missing annotations at the configured level
-and unused ignores; Ruff reports the deprecated `typing` aliases, `Optional` and `Union`
-spellings, implicit optional, bare `# type: ignore`, annotation-only imports outside
-`TYPE_CHECKING`, and annotation spacing. This file holds the decisions those rules cannot
-judge.
+are in the Python file.
 
 ## Annotations
 
@@ -27,7 +23,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Iterable
-
 
 def group_records[Key: Hashable](records: Iterable[tuple[Key, str]]) -> dict[Key, list[str]]:
     """Group record values under their original keys."""
@@ -140,7 +135,6 @@ class Reader(Protocol):
     def read(self) -> str:
         """Return the document text."""
         ...
-
 
 def read_unique_records(reader: Reader) -> list[str]:
     """Read sorted unique records, omitting blank lines."""

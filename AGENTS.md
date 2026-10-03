@@ -60,7 +60,6 @@ Languages:
 
 Repository:
 
-- `.gspot/rules/general/commits/COMMITLINT.md`
 - `.gspot/rules/general/files/TASKS.md`
 - `.gspot/rules/general/files/YAML.md`
 
