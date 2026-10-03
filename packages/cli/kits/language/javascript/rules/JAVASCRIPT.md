@@ -53,7 +53,6 @@ Production code must not import quality tooling. Browser scripts must not import
 
 <!-- level: all -->
 
-- Read `process.env` in one configuration owner module. Nowhere else.
 - Prefer named imports and named exports for module code.
 - Avoid mutable exports such as `export let`.
 - Avoid default exports in app modules.

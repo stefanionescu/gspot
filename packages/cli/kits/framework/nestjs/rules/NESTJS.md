@@ -43,7 +43,6 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 - Keep controllers responsible for request and response handling. Put business operations in
   services and persistence in its declared owner.
 - Inject dependencies through constructors instead of constructing them inside consumers.
-- Read environment configuration through a validated configuration owner.
 - Define the versioning contract before publishing a public API.
 - Keep request DTOs distinct from persistence entities and map between them explicitly.
 

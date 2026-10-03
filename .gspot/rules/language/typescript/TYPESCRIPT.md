@@ -38,7 +38,7 @@ for a path before assuming a rule.
 
 <!-- level: all -->
 
-`process.env` is read in one configuration owner module and nowhere else. App code uses named
+App code uses named
 imports and exports; a default export exists only in an ecosystem-owned configuration file
 whose tool expects it. No container class or exported object simulates a namespace. Every
 symbol is imported from the module that declares it; a library scope may allow re-exports in
