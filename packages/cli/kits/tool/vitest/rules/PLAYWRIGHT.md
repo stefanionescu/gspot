@@ -4,11 +4,6 @@ title: Playwright
 
 # Playwright
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Tests
 
 - Give each test a coherent user journey with independent setup and observable assertions.

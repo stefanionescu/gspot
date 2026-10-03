@@ -4,11 +4,6 @@ title: Command-Line Programs
 
 # Command-Line Programs
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules for any executable a person or a script invokes, in every language.
 
 ## Streams and exit status

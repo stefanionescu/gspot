@@ -4,11 +4,6 @@ title: Tailwind CSS
 
 # Tailwind CSS
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Generated styles
 
 - Verify that source detection covers templates and content containing class names. Tailwind CSS 4

@@ -4,11 +4,6 @@ title: SQL Naming
 
 # SQL Naming
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 SQL names are durable infrastructure contracts. Rename them only
 through migrations and contract-aware code changes.
 

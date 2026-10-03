@@ -4,11 +4,6 @@ title: Secrets
 
 # Secrets
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Secrets in code and configuration
 
 - Never hardcode API keys, tokens, passwords, or secrets anywhere in the codebase.

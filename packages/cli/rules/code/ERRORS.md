@@ -4,11 +4,6 @@ title: Errors
 
 # Errors
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Error taxonomy
 
 - An expected operational error (invalid input, missing resource, permission denied, provider timeout) becomes a typed result or a typed error the caller can branch on.

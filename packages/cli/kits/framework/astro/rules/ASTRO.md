@@ -4,11 +4,6 @@ title: Astro
 
 # Astro
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 These rules cover Astro components, islands, markup, routing, and the data a page loads.
 
 ## Components

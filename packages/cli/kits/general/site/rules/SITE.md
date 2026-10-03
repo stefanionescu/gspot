@@ -4,11 +4,6 @@ title: Static Sites
 
 # Static Sites
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules for a repository whose product is generated HTML served from a CDN or an edge platform.
 
 ## Runtime isolation

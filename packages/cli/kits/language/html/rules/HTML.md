@@ -4,11 +4,6 @@ title: HTML
 
 # HTML
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Document
 
 - One `h1` per page. Heading levels increase by one; no level is skipped.

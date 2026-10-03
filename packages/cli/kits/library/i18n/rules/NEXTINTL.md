@@ -4,11 +4,6 @@ title: next-intl
 
 # next-intl
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules for `next-intl` in a Next.js App Router application. The locale, catalog, and RTL rules that
 hold for any framework are in the shared i18n rules; these add what the library dictates.
 
