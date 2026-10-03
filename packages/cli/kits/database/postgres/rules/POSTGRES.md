@@ -4,38 +4,27 @@ title: Postgres
 
 # Postgres
 
-Supabase examples use its `anon`, `authenticated`, and `service_role` roles and
-`config.toml` API settings. In other Postgres deployments, use the roles and
-exposed schemas declared by that application.
+Migrations, tables, row security, functions, grants, data migrations, and tests of a Postgres
+database. Roles and exposed schemas are the ones the application declares.
 
-## Migration naming
+## Migrations
 
-Prefer the
-project migration creation command when creating a blank migration, then edit
-the generated file. Keep migration timestamps chronological.
+- Create a blank migration with the project's migration command, then edit the generated file.
+  Timestamps stay chronological.
+- A migration on the base branch or applied to any remote database is immutable: never rename,
+  reorder, squash, split, or edit it. A production correction is a new forward-only migration.
+- A migration that exists only on your local branch, unpushed and unreviewed, can change before
+  merge, together with its paired generated sources.
+- Repair migration history only when the user asks for that task.
+- Every durable change is a migration, never a web console or SQL editor on a remote database.
 
-## Migration immutability
-
-- After a migration exists on the base branch or has been applied to any remote
-  database, treat it as immutable.
-- Do not rename, reorder, squash, split, or edit applied migrations.
-- If production needs a correction, create a new forward-only migration.
-- A migration that exists only in your local branch, unpushed and unreviewed, can be edited before
-  merge. Keep its paired generated sources consistent when you do.
-- Do not repair migration history manually unless the user explicitly asks for a
-  migration-history repair task.
-- Do not use a web console or SQL editor on a remote database as a shortcut.
-  Capture every durable change as a migration.
-
-## Migration structure
+### Migration structure
 
 <!-- level: all -->
 
-Every hand-written SQL migration must include the migration header and section
-headings required by the SQL documentation tooling. Do not duplicate the
-tooling's exact accepted section-name list in these rules.
-
-Use object labels before important objects:
+Every hand-written migration carries the header and section headings that the SQL documentation
+check requires; this rule does not repeat its list. A comment block labels each important object,
+and a descriptive comment sits within five lines above each `CREATE TRIGGER`.
 
 ```sql
 -- ============================================================================
@@ -47,58 +36,29 @@ CREATE TABLE commerce.orders (
 );
 ```
 
-```sql
--- ============================================================================
--- Function: validate_call_start
--- Purpose: Validates ownership and capacity before a call starts.
--- ============================================================================
-CREATE OR REPLACE FUNCTION chat.validate_call_start()
-RETURNS TRIGGER AS $$
-BEGIN
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = '';
-```
+## Tables
 
-Trigger creation must have a descriptive comment within five lines above the
-`CREATE TRIGGER` statement.
+- UUIDv7 primary keys fit when ordered identifiers suit the application. Use the generator of the
+  deployed Postgres version or the one the application declares, and add a UUIDv7 check
+  constraint. The example table takes its identifier from the caller.
+- Timestamps are `TIMESTAMPTZ`. Mutable rows that need audit columns get `created_at` and
+  `updated_at`, which the declared timestamp trigger or write owner updates.
+- Plan for account deletion: a table can skip the foreign key to the user table so its history
+  survives. Soft delete fits where the product relies on retained history.
+- Index foreign keys, common filters, ordering columns, and frequent row security predicates.
+- Durable invariants live in the database as generated columns, uniqueness, and check
+  constraints, not only in client validation.
 
-## Tables and data modeling
+## Row-level security
 
-- Prefer UUIDv7 primary keys when ordered identifiers fit the application. Use the
-  generator supported by the deployed Postgres version or the application's declared
-  generator. The table example requires callers to supply the identifier.
-- Add UUIDv7 check constraints for UUIDv7 columns.
-- Use `TIMESTAMPTZ` for timestamps.
-- Add `created_at` and `updated_at` when rows are mutable and audit columns are
-  required.
-- Update `updated_at` through the application's declared timestamp trigger or write owner.
-- Think through account deletion. Some tables intentionally avoid foreign keys to
-  `auth.users` so historical data survives user deletion.
-- Use soft delete where the product relies on retained history.
-- Add indexes for foreign keys, common filters, ordering columns, and RLS policy
-  predicates that will run frequently.
-- Keep generated columns, uniqueness constraints, and check constraints in the DB
-  when they express durable invariants. Do not rely only on client validation.
-
-## Row level security
-
-- Enable RLS on every app table in an exposed schema.
-- Exposed schemas are declared in `config.toml` under `[api].schemas`.
-- A table with RLS and no policy is intentionally inaccessible through anon or
-  authenticated Data API calls.
-- Always pair table creation with:
-    - `ALTER TABLE <schema>.<table> ENABLE ROW LEVEL SECURITY;`.
-    - explicit `REVOKE ALL` from broad roles.
-    - explicit `GRANT` statements for only the roles and columns needed.
-    - policies for user-facing access.
-- Use `TO authenticated`, `TO anon`, and `TO service_role` deliberately. Do not
-  omit `TO` unless every role truly belongs in the policy.
-- For ownership checks, wrap the identity function in a scalar subquery so the
-  planner evaluates it once per statement rather than once per row.
-- `UPDATE` access needs both a `SELECT` policy and an `UPDATE` policy.
-- Use `USING` for row visibility and `WITH CHECK` for allowed new row state.
+- Enable row-level security (RLS) on every application table in an exposed schema. A table with
+  RLS and no policy is unreachable through the API roles.
+- A new table comes with `ENABLE ROW LEVEL SECURITY`, `REVOKE ALL` from broad roles, a `GRANT` for
+  only the roles and columns needed, and policies for user-facing access.
+- Every policy names its roles with `TO`, unless every role belongs in it.
+- Wrap the identity function of an ownership check in a scalar subquery, so the planner evaluates
+  it once per statement instead of once per row.
+- `UPDATE` needs both a `SELECT` policy and an `UPDATE` policy.
 
 | Operation   | Policy expression                                                               |
 | ----------- | ------------------------------------------------------------------------------- |
@@ -108,86 +68,59 @@ Trigger creation must have a descriptive comment within five lines above the
 | Delete rows | `USING` selects rows that may be deleted                                        |
 
 - Permissive policies broaden access and restrictive policies add conditions; review how every
-  applicable policy combines for the role.
-- Validate both resource ownership and tenant membership. Prevent an update from moving a row into
-  another user's or tenant's scope by checking its proposed values.
-- Handle unauthenticated identity explicitly. Keep `anon` access limited to the rows and
-  operations intended to be public.
-- Base authorization on trusted claims and current membership data. Keep user-editable profile
-  metadata out of privilege decisions. Account for stale token claims after membership changes.
-- Grants and RLS are separate controls. Restrict table and schema privileges, then use policies
-  to limit rows. RLS does not cover `TRUNCATE`.
-- Do not create broad policies like `USING (true)` unless the table is genuinely
-  public or service-only and the migration explains why.
-- Service-role writes still need explicit table grants. Do not use service role
-  as a substitute for precise grants.
-- Use `security_invoker = true` for views in exposed schemas on Postgres 15+
-  when the view needs to respect underlying table RLS. Otherwise, revoke access or
-  keep the view out of exposed schemas.
+  policy for the role combines.
+- Check resource ownership and tenant membership. Check proposed values too, so an update cannot
+  move a row into another user's or tenant's scope.
+- Handle an unauthenticated identity explicitly, and limit anonymous access to the rows and
+  operations meant to be public.
+- Authorize from trusted claims and current membership data, never from user-editable profile
+  metadata, and account for stale claims after a membership change.
+- Grants and RLS are separate controls: restrict table and schema privileges, then limit rows with
+  policies. RLS does not cover `TRUNCATE`.
+- A `USING (true)` policy fits only a table that is genuinely public or service-only, and the
+  migration says why.
+- A privileged service role still needs explicit table grants, never a bypass for precise ones.
+- A view in an exposed schema sets `security_invoker = true` on Postgres 15 and later to respect
+  the RLS of its tables. Otherwise, revoke access to it or keep it out of exposed schemas.
 
-## Database functions
+## Functions and grants
 
-- Prefer `SECURITY INVOKER`, which is the default.
-- Use `SECURITY DEFINER` only when the function must cross RLS or role
-  boundaries, and explain the reason in the function comment.
-- Every `SECURITY DEFINER` function must set `search_path = ''`.
-- Inside `SECURITY DEFINER` functions, fully qualify every schema object.
-- Revoke execute from `public`, `anon`, `authenticated`, and `service_role` by
-  default, then grant execute only to the exact required roles.
-- Avoid direct execute grants on trigger functions.
-- Avoid dynamic SQL. When dynamic SQL is required, quote identifiers and values
-  safely and keep the input domain constrained.
-- Raise exceptions with useful SQLSTATE categories when clients or tests depend
-  on error classification.
-- Do not log secrets, tokens, personal data, or raw request payloads from
-  database functions.
+- Functions are `SECURITY INVOKER`, the default. `SECURITY DEFINER` is for a function that must
+  cross RLS or role boundaries, and its comment says why.
+- A `SECURITY DEFINER` function sets `search_path = ''` and fully qualifies every object.
+- Start every object from least privilege: `REVOKE ALL ON <object> FROM PUBLIC` and from each API
+  role.
+- Grant execute with the full function signature, only to the roles that need it. A trigger
+  function gets no direct execute grant.
+- Grant schema usage only to roles that resolve objects in it, `SELECT` only for a real read path,
+  and write access by column list.
+- Roles that a platform creates for auth, cron, or storage stay scoped to the functions and
+  schemas they need.
+- Avoid dynamic SQL. When it is required, quote identifiers and values safely and constrain the
+  input domain.
+- Raise exceptions with a meaningful SQLSTATE class when clients or tests branch on it.
 
-## Grants
+## Data migrations
 
-- Start from least privilege:
-    - `REVOKE ALL ON <object> FROM public;`.
-    - `REVOKE ALL ON <object> FROM anon;`.
-    - `REVOKE ALL ON <object> FROM authenticated;`.
-    - `REVOKE ALL ON <object> FROM service_role;`.
-- Grant schema usage only to roles that need to resolve objects in that schema.
-- Grant table write access by column list.
-- Grant `SELECT` only when the role has a real read path.
-- Keep service-owned roles, such as those a platform creates for auth, cron or
-  storage, narrowly scoped to the functions, or schemas they need.
-- When granting function execute, include the full function signature.
+Durable rows live in timestamped migrations, never in a seed file that a reset reapplies. A
+generator emits a large or structured data migration from source data:
 
-## Durable data migrations
+- Each generator stays paired with its emitted migration, which states its purpose.
+- Relative imports stay inside the generator's own folder. Data from another generator is
+  duplicated or promoted only for a clear ownership reason.
+- Source constants stay separate from the code that composes SQL.
+- Generated `UPDATE` and `DELETE` statements carry explicit `WHERE` conditions.
+- Regenerate the SQL after changing its source, and check the drift during review.
+- Once the emitted migration is immutable, a source change that alters it becomes a new
+  migration.
 
-Do not use `seed.sql` for durable app data. Durable rows live in timestamped
-migrations. Large or structured data migrations are generated from source data.
-
-Rules for generated data migrations:
-
-- Keep each generator paired with its emitted migration and document the migration's purpose.
-- Local relative imports must stay inside the same generated migration owner.
-- Keep canonical source constants separate from SQL composition code.
-- Do not import data from another generated migration owner. Duplicate or promote shared
-  constants only when there is a clear durable ownership reason.
-- Generated `UPDATE` and `DELETE` statements must include explicit `WHERE` conditions.
-- Regenerate emitted SQL after changing generated migration source.
-- Check generated SQL drift during review or verification.
-- After the generated SQL migration is immutable, do not edit the paired
-  source in a way that changes it. Add a new migration instead.
-
-Generated SQL still has to satisfy the same migration naming and documentation
-rules as hand-written SQL.
+Generated SQL follows the same naming and documentation rules as hand-written SQL.
 
 ## Tests
 
-- Use pgTAP SQL tests for schema, constraints, grants, triggers, RLS, RPCs, and
-  migration-owned database behavior.
-- Use unit tests for pure TypeScript logic, Edge Function validation, parsing,
-  and response behavior.
-- Use integration tests for client flows, auth behavior, RLS behavior, storage
-  behavior, and real function invocation paths.
-- Integration tests depend on a local database and, where one exists, a local
-  function server.
-- Do not mock away RLS or grants in integration tests. The point is to verify the
-  database boundary.
-- When changing schema that another project consumes, regenerate types and
-  update the dependent tests.
+- pgTAP tests cover schema, constraints, grants, triggers, RLS, functions, and other behavior a
+  migration owns.
+- Integration tests run against a local database and exercise client flows, auth, and RLS. They
+  never mock grants or policies away, because the database boundary is what they verify.
+- A schema change that another project consumes regenerates the types and updates the dependent
+  tests.
