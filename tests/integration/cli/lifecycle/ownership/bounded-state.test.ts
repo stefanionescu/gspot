@@ -124,12 +124,15 @@ test('giving back the last file of a folder removes the folders it leaves empty'
     expect(readdirSync(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
 });
 
-test.each([true, false])(
-    'an adopted file stays when given back, until gspot writes other bytes into it (%s)',
-    async (isChanged) => {
+test.each([
+    ['tool.json', false, true],
+    ['tool.json', true, false],
+    ['.gspot/config/tool.json', false, false],
+])(
+    'an adopted file outside .gspot stays when given back, until gspot writes other bytes into it (%s, rewritten %p)',
+    async (path, isChanged, isKept) => {
         await using directory = await testdir();
-        await createFileTree(directory.path, { '.gspot/config/tool.json': '{"v":1}\n' });
-        const path = '.gspot/config/tool.json';
+        await createFileTree(directory.path, { [path]: '{"v":1}\n' });
         const owner = openOwner(directory.path);
         try {
             const mode = owner.read(path)!.mode;
@@ -140,7 +143,7 @@ test.each([true, false])(
         } finally {
             owner.close();
         }
-        expect(existsSync(join(directory.path, path))).toBe(!isChanged);
+        expect(existsSync(join(directory.path, path))).toBe(isKept);
         expect(getOwnership(directory.path).files).toStrictEqual([]);
     },
 );

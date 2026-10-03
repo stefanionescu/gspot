@@ -1,10 +1,11 @@
 // Giving back a file the owner changed: merged fields go back, a managed block leaves, or the file goes unless
-// gspot adopted it.
+// gspot adopted it outside `.gspot`.
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/generation/markers.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { openDocument } from '#cli/lifecycle/merge/document.ts';
 import type { Planned, MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
@@ -47,10 +48,12 @@ function restoreBlock(current: Read, block: NonNullable<OwnershipEntry['block']>
     return next === '' && block.created ? {} : { next: { bytes: Buffer.from(next), mode: current.mode } };
 }
 
-// What giving back a whole file writes: an adopted file stays as it is, any other is deleted.
+// What giving back a whole file writes: an adopted file stays as it is, any other is deleted. Only gspot writes under
+// `.gspot`, so a file adopted there is generated output and goes like any other.
 function fileRestoration(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
     if (current !== undefined && !isRecorded(current, existing.installed)) return undefined;
-    return existing.adopted === true && current !== undefined ? { next: current } : {};
+    const isKept = existing.adopted === true && current !== undefined && !existing.path.startsWith(`${DOT_GSPOT}/`);
+    return isKept ? { next: current } : {};
 }
 
 // What a restoration writes, {} for a removal, or undefined when the file must be preserved.
@@ -65,7 +68,8 @@ function getRestoration(existing: OwnershipEntry, current: Read | undefined): Re
 }
 
 /**
- * Proposes giving a file back: merged fields return, a managed block leaves, or the file goes unless gspot adopted it.
+ * Proposes giving a file back: merged fields return, a managed block leaves, or the file goes unless gspot adopted it
+ * outside `.gspot`.
  * @param log the open log
  * @param path the file
  * @returns the plan
