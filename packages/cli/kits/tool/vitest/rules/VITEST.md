@@ -7,7 +7,7 @@ title: Vitest
 API test shape, test data, network and provider mocking, and mocking patterns. The Vitest
 ESLint plugin reports a focused or skipped test, a test without an assertion, a conditional
 expect, an unawaited async assertion, and an identical title. The general testing rules
-apply underneath. This guide holds the decisions those rules cannot see.
+apply underneath. This file holds the decisions those rules cannot see.
 
 ## API tests
 

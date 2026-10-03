@@ -72,7 +72,8 @@ Rules:
 - Do not create files named only for generic reuse.
 - Keep generated file names only when generator-owned.
 - React component files are kebab-case too: `login-form.tsx` exports `LoginForm`. One rule for
-  every file; the export name carries the PascalCase.
+  every TypeScript file; the export name carries the PascalCase. Astro, Svelte, and Vue component
+  files follow their framework rules.
 - Next.js reserved names are exempt from the stem checks and keep their framework spelling:
   `page`, `layout`, `loading`, `error`, `global-error`, `not-found`, `route`, `template`,
   `default`, `middleware`, `instrumentation`, `[param]`, `[...slug]`, `(group)`, `_private`,

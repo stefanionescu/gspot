@@ -8,7 +8,7 @@ Annotations, `Any`, generics, aliases, protocols, and suppressions. Module and i
 are in the Python file. The type checker reports missing annotations at the configured level
 and unused ignores; Ruff reports the deprecated `typing` aliases, `Optional` and `Union`
 spellings, implicit optional, bare `# type: ignore`, annotation-only imports outside
-`TYPE_CHECKING`, and annotation spacing. This guide holds the decisions those rules cannot
+`TYPE_CHECKING`, and annotation spacing. This file holds the decisions those rules cannot
 judge.
 
 ## Annotations
@@ -115,7 +115,7 @@ class Node:
     name: str
     parent: Node | None = None
 
-    def lineage(self) -> list[str]:
+    def list_lineage(self) -> list[str]:
         """Return names from this node toward the root."""
         names: list[str] = []
         current: Node | None = self
@@ -142,7 +142,7 @@ class Reader(Protocol):
         ...
 
 
-def unique_records(reader: Reader) -> list[str]:
+def read_unique_records(reader: Reader) -> list[str]:
     """Read sorted unique records, omitting blank lines."""
     records = {line.strip() for line in reader.read().splitlines()}
     records.discard("")

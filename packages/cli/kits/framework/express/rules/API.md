@@ -49,7 +49,7 @@ title: Express API
 - Do not expose stack traces, credentials, internal paths, database details, or provider payloads
   through error responses.
 - Use the declared not-found response after routes have had a chance to handle the request.
-- Fail startup before accepting traffic when required kit is invalid.
+- Fail startup before accepting traffic when required configuration is invalid.
 - Stop accepting traffic and release owned resources during shutdown. Do not continue serving
   after a process-level failure leaves its state untrustworthy.
 

@@ -8,7 +8,7 @@ Module ownership across a script family, deployment and publishing pipelines, an
 Script structure and options are in the Bash file; commands, processes, and secrets in Bash
 Safety. The structure checks of the bash kit report a barrel, a file that shares a stem with a
 sibling directory, and a private function called across files. They also report a public
-function outside `main` in an executable, and a discarded failure. This guide says why and
+function outside `main` in an executable, and a discarded failure. This file says why and
 holds the rest.
 
 ## Module ownership and visibility

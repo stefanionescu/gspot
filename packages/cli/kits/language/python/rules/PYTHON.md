@@ -12,7 +12,7 @@ Ruff owns formatting and import order, reports docstring shape and naming case, 
 basedpyright checks types. The python structure checks report the order of a module, a name
 missing from `__all__` or its underscore, and `__all__` above the definitions or out of
 order. They also report a comment among the imports, a lazy `__getattr__`, a module-level
-singleton, a placeholder docstring, and a function or file over its limit. This guide holds
+singleton, a placeholder docstring, and a function or file over its limit. This file holds
 the decisions behind them and the rules no tool sees.
 
 ## Core Python philosophy

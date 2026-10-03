@@ -37,10 +37,9 @@ router.post(
     '/',
     validateRequest(submitOrderContract.request),
     asyncRoute(async (req, res) => {
-        const request = req as AuthenticatedRequest;
         res.setHeader('Cache-Control', NO_STORE_CACHE_HEADER);
 
-        const authenticated = requireAuthenticatedRequest(request, res);
+        const authenticated = requireAuthenticatedRequest(req, res);
         if (!authenticated) return;
 
         const validated = getValidatedRequest(authenticated.request);

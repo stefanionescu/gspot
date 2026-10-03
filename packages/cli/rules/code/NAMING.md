@@ -9,19 +9,19 @@ languages, files and directories, boundaries and external names, and tests. The 
 policy reports the banned words: `Manager`, `Helper`, `Utils`, `Service`, `handler`,
 `process`, the weak modal, and the rest of the policy list. It reports the reserved words,
 single-letter and contracted names, and the word limit. The language tools report casing.
-This guide says why, and holds the decision no policy can judge: whether a name says what
+This file says why, and holds the decision no policy can judge: whether a name says what
 the value means.
 
 ## Authority
 
 <!-- level: all -->
 
-A name satisfies both this guide and the naming policy of the scope, and a policy finding is
+A name satisfies both this file and the naming policy of the scope, and a policy finding is
 authoritative: a disagreement is fixed at its owner, never worked around locally. The policy
-owns exact limits, banned terms, and exceptions, so this guide does not repeat them. A bad
+owns exact limits, banned terms, and exceptions, so this file does not repeat them. A bad
 name is not hidden in a string key, a filename, a quoted SQL identifier, a generated wrapper,
 or an alias. Generated code keeps generator-owned names; hand-written wrappers around it
-follow this guide.
+follow this file.
 
 ## Principles
 

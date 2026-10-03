@@ -7,7 +7,7 @@ title: Documentation Surfaces
 Command-line interfaces, APIs, libraries, configuration, environment variables, architecture,
 contributor guides, troubleshooting, logs, audit events, and release notes. No tool checks
 whether a surface is documented completely. The docs structure check reports the sections a
-README must and must not have, and the prose checker reports tense. This guide lists what
+README must and must not have, and the prose checker reports tense. This file lists what
 each surface owes its reader.
 
 ## Command-line interfaces

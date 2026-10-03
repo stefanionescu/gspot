@@ -26,7 +26,8 @@ Exceptions: well-known configuration files such as `package.json` or
 
 <!-- level: all -->
 
-Do not use em dashes or double hyphens. Use a space, comma, or colon instead.
+Do not use em dashes or double hyphens as dashes. Use a space, comma, or colon instead. The `--`
+before the reason of a suppression comment is syntax, not a dash.
 
 Bad: `The server handles requests - including retries - before responding.`
 Good: `The server handles requests, including retries, before responding.`

@@ -17,7 +17,7 @@ These rules cover Astro components, islands, markup, routing, and the data a pag
 
 ## Frontmatter and props
 
-- Declare the props as `interface Props` in the frontmatter and read them from `Astro.props`.
+- Declare the props as `type Props = { … }` in the frontmatter and read them from `Astro.props`.
 - The frontmatter runs on the server. A value reaches the browser only through the markup or the props of an island.
 - A component exports no value. Only a page or an endpoint exports `getStaticPaths` or `prerender`.
 

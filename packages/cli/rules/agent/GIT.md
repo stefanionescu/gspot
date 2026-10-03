@@ -24,7 +24,7 @@ When `git status` or the worktree shows changes you did not make, do not panic. 
 - Commit only when the user asks.
 - One change per commit. A rename and a behavior change are two commits.
 - Conventional format: `<type>(<scope>): <subject>`. Types: `feat`, `fix`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `perf`. The scope is required when the repository declares scopes.
-- The subject is an imperative sentence under 72 characters, no trailing period, no ticket number.
+- The whole header, type and scope included, stays within 72 characters. The subject is an imperative sentence with no trailing period and no ticket number.
 - The body says what changed and why, wrapped at 72 columns. It does not narrate the diff.
 - Footers reference issues (`Refs: #123`, `Closes: #123`) and breaking changes (`BREAKING CHANGE: ...`).
 - Run the checks of the repository over the staged files before committing. Never bypass hooks

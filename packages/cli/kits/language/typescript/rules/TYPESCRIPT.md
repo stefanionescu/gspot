@@ -12,7 +12,7 @@ exports, mutable exports, re-exports and barrels, thrown non-errors, and floatin
 promises. It reports `return await` placement, missing JSDoc on exports, declaration order,
 and the placement of enum-replacement objects. Prettier owns formatting.
 
-This guide says why, and holds the rules those tools cannot see. Import extensions and module
+This file says why, and holds the rules those tools cannot see. Import extensions and module
 resolution belong to the runtime file.
 
 ## Philosophy
@@ -21,7 +21,7 @@ TypeScript makes contracts explicit at compile time; it is not a runtime validat
 Types describe values after they cross a trusted boundary, and Zod, custom guards, or
 database constraints prove unknown input before it is treated as typed data. Plain values,
 small functions, discriminated unions, and clear module boundaries beat type gymnastics
-harder to read than the runtime behavior. When enforcement and this guide disagree, fix the
+harder to read than the runtime behavior. When enforcement and this file disagree, fix the
 enforcement or change the rule explicitly; drift is not a reason to weaken either.
 
 ## Files and modules
@@ -143,8 +143,8 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 
 Comments document purpose, invariants, security boundaries, concurrency behavior, and runtime
 assumptions, never TypeScript syntax, restated code, or change history; type tags stay out of
-JSDoc because TypeScript owns types. A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`,
-owned by an issue link or an expiry date, never a person.
+JSDoc because TypeScript owns types. Unfinished work goes to the issue tracker, not a `TODO`
+comment.
 
 Tests verify behavior and mock external boundaries rather than internals. They use the
 runner's typed mock helpers instead of `any` and keep shared test types beside the support
@@ -179,10 +179,12 @@ type Order = {
     items: OrderItem[];
 };
 
-function orderTotal(items: OrderItem[]): number {
-    const active = items.filter((item) => item.active);
-    const amounts = active.map((item) => item.quantity * item.price);
-    return amounts.reduce((sum, amount) => sum + amount, 0);
+function sumActiveItems(items: OrderItem[]): number {
+    let total = 0;
+    for (const item of items) {
+        if (item.active) total += item.quantity * item.price;
+    }
+    return total;
 }
 
 /**
@@ -192,8 +194,8 @@ function orderTotal(items: OrderItem[]): number {
  * @returns the signed difference between their totals.
  */
 export function compareOrders(left: Order, right: Order): number {
-    const leftTotal = orderTotal(left.items);
-    const rightTotal = orderTotal(right.items);
+    const leftTotal = sumActiveItems(left.items);
+    const rightTotal = sumActiveItems(right.items);
     return leftTotal - rightTotal;
 }
 ```
@@ -204,6 +206,6 @@ Google's full formatting rules are not adopted, because the formatter and linter
 formatting. Interfaces over type aliases, and the Angular, Polymer, JSPB proto, and
 Google-internal conformance rules, are not adopted. A global ban on default exports where
 ecosystem configuration files need them is not adopted. Broad naming-lint changes inside
-feature or docs work, and opportunistic refactors of unrelated code to match this guide, are
+feature or docs work, and opportunistic refactors of unrelated code to match this file, are
 not adopted. These choices define the standard; when enforcement differs, fix the
 enforcement.

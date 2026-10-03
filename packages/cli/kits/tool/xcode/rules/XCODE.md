@@ -7,7 +7,7 @@ title: Xcode
 ## Project settings
 
 - Warnings are errors: `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` and
-  `GCC_TREAT_WARNINGS_AS_ERRORS = YES` in every kit.
+  `GCC_TREAT_WARNINGS_AS_ERRORS = YES` in every build configuration.
 - `SWIFT_STRICT_CONCURRENCY = complete`. Upcoming-feature flags the project adopts are set in
   the project, not per file.
 - Share schemes needed by collaborators and CI. Keep personal scheme state out of the repository.

@@ -19,7 +19,7 @@ Review from the reader's perspective, not only line by line.
 - Are permissions accurate?
 - Are limitations visible?
 - Are examples valid and safe?
-- Are future owns avoided or properly scoped?
+- Are future claims avoided or properly scoped?
 
 ### Reader-goal review
 
@@ -54,7 +54,7 @@ Review from the reader's perspective, not only line by line.
 - Is active voice used where the actor matters?
 - Are pronouns unambiguous?
 - Are idioms, noun stacks, and nominalizations removed?
-- Are sausage sentences split into structured, related owns?
+- Are sausage sentences split into structured, related claims?
 - Are terms and capitalization consistent?
 - Are acronyms expanded where needed?
 - Are dates and numbers unambiguous?

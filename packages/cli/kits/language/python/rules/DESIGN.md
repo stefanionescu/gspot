@@ -8,7 +8,7 @@ Functions, methods, classes, dataclasses, inheritance, and decorators. Module an
 rules are in the Python file. Ruff reports mutable and dynamic defaults, inconsistent
 returns, a lambda bound to a name, and function length and complexity. It also reports
 exceptions that inherit from `BaseException`, exception names without `Error`, missing
-docstrings, and the `attrs` and dataclass field rules. This guide holds the design decisions those rules cannot judge.
+docstrings, and the `attrs` and dataclass field rules. This file holds the design decisions those rules cannot judge.
 
 ## Functions
 

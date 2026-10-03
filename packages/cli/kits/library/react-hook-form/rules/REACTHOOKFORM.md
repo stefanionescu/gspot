@@ -7,7 +7,7 @@ title: React Hook Form
 Form ownership, values, registration, validation, subscriptions, field arrays, submission,
 server actions, errors, composition, and paths. The React and TypeScript rules apply
 underneath. The React hooks rules report a conditional hook and a missing Effect dependency,
-and `tsc` reports a widened `FieldValues` or a cast path. This guide holds the decisions no
+and `tsc` reports a widened `FieldValues` or a cast path. This file holds the decisions no
 rule can see.
 
 Verify every API against the installed React Hook Form, React, resolver, and component

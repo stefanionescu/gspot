@@ -42,8 +42,9 @@ committing. Fix what they report. The instruction file of the repository names t
 Do not run verification broader than the change. Run no full test suite, build, scan, or Docker
 check unless the user asks for it or the checks of the repository include it.
 
-Create or update tests only when the user asks for tests. When implementation work reveals that
-tests need updates, report that follow-up instead of editing tests unasked. Tests that exist are held to the
+Create or update tests only when the user asks for tests, or when a rule of the repository asks for
+them, as the database and end-to-end rules do. When implementation work reveals that other tests
+need updates, report that follow-up instead of editing tests unasked. Tests that exist are held to the
 testing rules and to the assertion, focus, and coverage checks of the repository.
 
 ## No defensive logic
@@ -119,7 +120,7 @@ If code uses vague language, improve it when touching that code.
 
 <!-- level: all -->
 
-Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or any other form of backward-compatible scaffolding.
+Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or any other form of backward-compatible scaffolding. A published API follows the deprecation policy its project declares instead.
 
 When something is replaced or renamed:
 

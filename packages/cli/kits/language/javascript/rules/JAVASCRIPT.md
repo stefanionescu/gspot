@@ -119,7 +119,7 @@ Rules:
 - Do not create static container classes for namespacing.
 - Prefer plain functions and objects for stateless behavior.
 - Keep constructors simple.
-- Do not use decorators.
+- Do not use decorators, except where a framework such as NestJS requires them.
 - Do not add inheritance unless it represents a real runtime relationship.
 
 If a class has no meaningful instance state, it is a module with named exports.
@@ -183,7 +183,7 @@ Rules:
 - Prefer short comments near the surprising decision.
 - Do not add history comments.
 - Do not leave commented-out code.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an expiry date, never a person.
+- Track unfinished work in the issue tracker, not in a `TODO` comment.
 - Keep every lint disable comment justified with a nearby reason on the same line or the line above.
 - JSDoc is useful for exported quality helpers, but routine private functions do not need boilerplate comments.
 

@@ -8,7 +8,7 @@ Runtime boundaries, configuration, authorization, rich content, service workers,
 and streaming endpoints. Routing, rendering, and caching rules are in the Next.js file. The
 Next.js ESLint plugin and the `gspot/no-client-env` rule report a server value read in
 a client module. Semgrep reports `dangerouslySetInnerHTML`, raw SQL, and shell strings built
-from input, and gitleaks reports a committed secret. This guide holds the decisions those
+from input, and gitleaks reports a committed secret. This file holds the decisions those
 tools cannot see.
 
 ## Boundaries

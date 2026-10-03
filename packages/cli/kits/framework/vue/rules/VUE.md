@@ -54,7 +54,7 @@ Name an event for what happened, in the past tense or as a noun: `saved`, `updat
 - Local state stays in the component. Shared state goes in a store, one store for each domain.
 - A store exposes actions that say what happened. Components do not assign to store state.
 - Fetch data in a composable or a store action, never inline in a template event.
-- A composable is named `useThing` and returns reactive values when callers need reactivity.
+- A composable is named `use` and its subject, such as `useCart`, and returns reactive values when callers need reactivity.
 
 ## Accessibility and tests
 

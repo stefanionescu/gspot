@@ -6,7 +6,7 @@ title: Supabase
 
 The supabase kit's checks report a malformed config, a misnamed migration, a storage policy
 gap, and an admin key outside its allowed files. They report Deno lint and type errors, and
-generated types that drift from the schema. gitleaks reports a committed key. This guide
+generated types that drift from the schema. gitleaks reports a committed key. This file
 holds the ownership and workflow decisions those checks cannot see.
 
 ## Ground rules
@@ -122,8 +122,7 @@ rows that are easier to maintain as source data.
 - Internal Edge Function imports must include `.ts`.
 - TypeScript code outside Edge Functions follows its runtime and TypeScript configuration.
 - Declare any import aliases in the owning Deno configuration before using them.
-- Supabase examples often use `functions/_shared`; the required shared-code
-  directory is `functions/shared/`.
+- Shared code lives in `functions/_shared/`, the folder Supabase does not deploy as a function.
 
 ## Config and environment
 
@@ -213,7 +212,7 @@ Good:
 ```text
 functions/submit-order/
 functions/refresh-provider-token/
-functions/shared/
+functions/_shared/
 functions/provider-config/
 functions/generated-types/
 ```

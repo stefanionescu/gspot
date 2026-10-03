@@ -7,7 +7,7 @@ title: tRPC
 Router composition, request context, the TanStack-native client, procedures and validators,
 server callers, transport, uploads, cancellation, subscriptions, and server actions. The
 TypeScript and TanStack Query rules apply underneath. `tsc` reports the type-only imports,
-and the ESLint plugin reports the query-key and hook rules. This guide holds the ownership
+and the ESLint plugin reports the query-key and hook rules. This file holds the ownership
 and authorization decisions no tool can see. Read the documentation for the installed
 release.
 

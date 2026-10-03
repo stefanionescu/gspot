@@ -9,7 +9,7 @@ title: CSS Naming
 <!-- level: all -->
 
 - Class names are kebab-case and name the component or state (`order-card`,
-  `order-card__title` when the project uses BEM, `is-active`, `has-error`).
+  `order-card-title`, `is-active`, `has-error`).
 - A state class starts with `is-` or `has-`. It is toggled by script and never styled alone.
 - Custom properties are kebab-case and name the role of the value, not its appearance:
   `--color-surface`, `--space-2`, `--font-size-body`, never `--blue` or `--big-margin`.

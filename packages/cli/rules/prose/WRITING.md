@@ -18,7 +18,7 @@ Do not expand a small edit into a review of unrelated pages.
 The prose checker reports the mechanical part of these rules. It sees sentence length,
 paragraph length, list-item length, marketing words, contractions, weak modals, possessives on
 product names, undefined acronyms, the serial comma, straight quotes, and the banned
-vocabulary. This guide says why, and covers what no checker sees.
+vocabulary. This file says why, and covers what no checker sees.
 
 ## Voice and tone
 

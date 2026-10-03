@@ -8,7 +8,7 @@ The Next.js rules span two files: this one (application rules, data access and c
 Next.js Security (runtime boundaries, configuration, authorization, rendering user content,
 service workers, telemetry, streaming). The Next.js ESLint plugin, the `server-only` and
 client-environment rules, the route-segment check, and the config check report the mechanical
-part; this guide holds the decisions.
+part; this file holds the decisions.
 
 ## Application rules
 

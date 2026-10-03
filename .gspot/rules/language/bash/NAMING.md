@@ -46,7 +46,8 @@ propagate deployment failures; a clearer name does not establish those contracts
 Rules:
 
 - Loop variables describe the item being iterated.
-- Use `tmp_dir` or `tmp_file` only for actual temporary filesystem paths.
+- Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and
+  `temp` say nothing.
 - Avoid vague names when a domain name is available.
 - Avoid shell-reserved and shell-special names for unrelated values.
 - Initialize variables before use.
