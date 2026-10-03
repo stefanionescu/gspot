@@ -10,10 +10,10 @@ import type { Root } from '#cli/types/platform/platform.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
 function validateOutputs(root: string, config: ts.ParsedCommandLine, files: Root): void {
@@ -107,7 +107,9 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
  */
 export async function checkjs(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
-    const jsconfig = planned.manifest?.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json');
+    const jsconfig = planned.manifest?.configs.find(
+        (entry) => entry.target === `${CONFIGURATION_DIRECTORY}/jsconfig.json`,
+    );
     if (jsconfig === undefined) throw new Error('The typescript configuration declares no jsconfig target.');
     const target = targetInScope(scope, jsconfig);
     using scratchFolder = await scratchCopy(

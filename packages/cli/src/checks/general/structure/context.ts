@@ -1,16 +1,17 @@
 // What every structure analysis reads: the source files without documents or generated output, and the Bash settings.
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/general/general.ts';
 import { scriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { Engine, EngineInput } from '#cli/types/execution/execution.ts';
+import { DOCUMENT_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 import type { StructureInput, StructureAnalysis } from '#cli/types/checks/checks.ts';
-import { GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 
 function inputFor(input: EngineInput): StructureInput {
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&
             DOCUMENT_EXTENSIONS.every((extension) => !file.path.endsWith(extension)) &&
-            !file.path.startsWith(GSPOT_DIRECTORY),
+            !file.path.startsWith(`${DOT_GSPOT}/`),
     );
     const bash = input.view.tool('bash');
     return {

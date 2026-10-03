@@ -1,12 +1,12 @@
 // The types of checks/tool/xcode in this package.
 import type { z } from 'zod';
-import type { projectSchema } from '#cli/checks/tool/xcode/pbxproj.ts';
+import type { pbxprojSchema } from '#cli/checks/tool/xcode/pbxproj.ts';
 
 type ProjectRoot = ProjectEntry & { mainGroup: string };
 
 export type Plist = string | Plist[] | { [key: string]: Plist };
 export type Token = { text: string; quoted: boolean; at: number };
-export type ProjectEntry = z.infer<typeof projectSchema>['objects'][string];
+export type ProjectEntry = z.infer<typeof pbxprojSchema>['objects'][string];
 export type XcodeProject = {
     objects: Record<string, ProjectEntry>;
     root: ProjectRoot;

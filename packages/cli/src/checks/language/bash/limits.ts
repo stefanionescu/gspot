@@ -4,8 +4,8 @@ import type { Finding } from '#cli/types/execution/execution.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
 import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
 import { astGrepMatches } from '#cli/checks/language/bash/ast-grep.ts';
+import { RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
 import type { ScriptIndex, AstGrepMatch } from '#cli/types/checks/language/bash.ts';
-import { RULES, OUTER_LEVELS, COUNT_ANALYSES } from '#cli/config/checks/language/bash.ts';
 import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
@@ -117,6 +117,6 @@ const functionLines: Analysis = async (context, scripts) => {
  */
 export const bashLimits: Analysis = async (context, scripts) => {
     const index = await scripts();
-    const counted = await Promise.all([...COUNT_ANALYSES].map((analysis) => countFindings(analysis, context, index)));
+    const counted = await Promise.all(Object.keys(RULES).map((analysis) => countFindings(analysis, context, index)));
     return [...(await fileLines(context, scripts)), ...(await functionLines(context, scripts)), ...counted.flat()];
 };

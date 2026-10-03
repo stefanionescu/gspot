@@ -640,11 +640,6 @@ rule = "package-json/require-exports"
 paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
 
-[[ignore]]
-check = "docs/stale-paths"
-paths = ["UPDATES.md"]
-reason = "UPDATES.md records an audit, and it names files and folders the work deletes and moves."
-
 [prose]
 vocabulary = ["Nx", "Turborepo", "Husky", "Lefthook", "EditorConfig Checker"]
 

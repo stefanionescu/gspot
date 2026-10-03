@@ -2,24 +2,18 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform/platform.ts';
+import { getOnDisk } from '#cli/lifecycle/ownership/plans.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
+import { isMatch, identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';
-
-// The file as it is now, read as a link entry when either side of the plan is a link.
-function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {
-    const isLink = current?.isLink === true || next?.isLink === true;
-    if (isLink) return log.files.readEntry(path);
-    return log.files.read(path);
-}
 
 // Refuses a plan whose file or record changed after it was made.
 function assertPlanFresh(log: Log, plan: Planned, proposed: ReadonlyMap<string, Read | undefined>): void {
-    const { path, current, previous, next } = plan;
+    const { path, before, previous, after } = plan;
     const existing = log.entryFor(path);
-    if (next !== undefined) log.files.validate(path, next, proposed);
-    const found = foundRead(log, path, current, next);
-    if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
+    if (after !== undefined) log.files.validate(path, after, proposed);
+    const found = getOnDisk(log, path, before, after);
+    if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, before))
         throw new Error(`File changed after its plan: ${path}`);
 }
 
@@ -44,24 +38,24 @@ function removeEmptyFolders(log: Log, path: string): void {
 
 // Writes the pending records, writes every file, and settles the log.
 function write(log: Log, prepared: Planned[]): void {
-    log.state.pending = prepared.map(({ path, current, next, entry }) => ({
+    log.state.pending = prepared.map(({ path, before, after, entry }) => ({
         path,
-        ...(current === undefined ? {} : { before: identity(current) }),
-        ...(next === undefined ? {} : { after: identity(next) }),
+        ...(before === undefined ? {} : { before: identify(before) }),
+        ...(after === undefined ? {} : { after: identify(after) }),
         ...(entry === undefined ? {} : { entry }),
     }));
     log.save();
     // Publish regular targets before links, so a link finds its target.
     const ordered = prepared.toSorted(
-        (left, right) => Number(left.next?.isLink === true) - Number(right.next?.isLink === true),
+        (left, right) => Number(left.after?.isLink === true) - Number(right.after?.isLink === true),
     );
-    for (const { path, current, next } of ordered) {
-        if (next === undefined) {
-            if (current !== undefined) {
-                log.files.remove(path, current);
+    for (const { path, before, after } of ordered) {
+        if (after === undefined) {
+            if (before !== undefined) {
+                log.files.remove(path, before);
                 removeEmptyFolders(log, path);
             }
-        } else if (!matches(current, identity(next))) log.files.write(path, next, current);
+        } else if (!isMatch(before, identify(after))) log.files.write(path, after, before);
     }
     log.finish();
 }
@@ -74,9 +68,9 @@ function write(log: Log, prepared: Planned[]): void {
  */
 export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
     const proposed = new Map(
-        plans.map(({ path, next, current, status }) => [
+        plans.map(({ path, after, before, status }) => [
             path,
-            status === 'preserved' || (status === 'unchanged' && next === undefined) ? current : next,
+            status === 'preserved' || (status === 'unchanged' && after === undefined) ? before : after,
         ]),
     );
     assertPlansCurrent(log, plans, proposed);

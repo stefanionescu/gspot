@@ -16,7 +16,8 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { Written, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
+
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.
 function retireReplaced(
     root: string,
@@ -96,7 +97,7 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
             ),
         );
         const { installNote, exitCode } = await finishInstall(session, options.install);
-        const version = colors.dim(`gspot ${GSPOT_VERSION}`);
+        const version = colors.dim(`gspot ${RUNNING_VERSION}`);
         return {
             lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, version, ''],
             installNote,

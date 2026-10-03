@@ -1,11 +1,9 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import { PAIR } from '#cli/config/platform/platform.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 import { SSH_HEREDOC, SSH_BLOCK_LINES, CLOSING_QUOTE_LINE } from '#cli/config/checks/language/bash.ts';
-
-// Quotes close in pairs.
-const PAIR = 2;
 
 function unescapedQuotes(text: string, quote: string): number {
     let count = 0;

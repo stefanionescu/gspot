@@ -31,7 +31,7 @@ export type ReplacementRequest = {
     path: string;
     next: Read;
     kind: OwnedKind;
-    replace?: boolean | undefined;
+    canReplace?: boolean | undefined;
     expected?: Read | undefined;
     proposed?: ReadonlyMap<string, Read | undefined> | undefined;
 };

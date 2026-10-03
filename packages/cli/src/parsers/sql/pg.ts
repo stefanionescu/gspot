@@ -34,7 +34,7 @@ function readParse(module: PgModule, result: number): SqlParse {
  * @param text the SQL
  * @returns the parse tree, or the error with the Unicode character offset it points at
  */
-export async function parseSql(text: string): Promise<SqlParse> {
+export async function parse(text: string): Promise<SqlParse> {
     const module = await pgModule();
     const size = module.lengthBytesUTF8(text) + 1;
     const query = module._malloc(size);

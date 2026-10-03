@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { nginxDirectives } from '#cli/checks/tool/nginx/directives.ts';
+import { directives } from '#cli/checks/tool/nginx/directives.ts';
 
 test.each([
     {
@@ -25,6 +25,6 @@ test.each([
 ] satisfies { source: string; expected: [string, ...string[]][] }[])(
     'nginx directive parsing preserves argument boundaries in $source',
     ({ source, expected }) => {
-        expect(nginxDirectives(source)).toStrictEqual(expected);
+        expect(directives(source)).toStrictEqual(expected);
     },
 );

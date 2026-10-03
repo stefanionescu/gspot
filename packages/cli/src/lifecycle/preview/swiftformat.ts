@@ -1,12 +1,12 @@
-function content(line: string): string {
-    let quoted = false;
-    let escaped = false;
+function stripComment(line: string): string {
+    let isQuoted = false;
+    let isEscaped = false;
     for (let index = 0; index < line.length; index += 1) {
         const character = line[index];
-        if (escaped) escaped = false;
-        else if (character === '\\') escaped = true;
-        else if (character === '"') quoted = !quoted;
-        else if (character === '#' && !quoted) return line.slice(0, index).trim();
+        if (isEscaped) isEscaped = false;
+        else if (character === '\\') isEscaped = true;
+        else if (character === '"') isQuoted = !isQuoted;
+        else if (character === '#' && !isQuoted) return line.slice(0, index).trim();
     }
     return line.trim();
 }
@@ -15,7 +15,7 @@ function* logicalLines(text: string): Generator<{ line: string; number: number }
     let continuation: string | undefined;
     for (const [index, original] of text.split(/\r?\n/u).entries()) {
         if (continuation !== undefined && original.trimStart().startsWith('#')) continue;
-        const line = (continuation ?? '') + content(original);
+        const line = (continuation ?? '') + stripComment(original);
         if (line.endsWith('\\')) {
             continuation = line.slice(0, -1);
             continue;
@@ -26,7 +26,7 @@ function* logicalLines(text: string): Generator<{ line: string; number: number }
     if (continuation !== undefined) throw new Error('SwiftFormat configuration ends with a line continuation.');
 }
 
-function option(line: string, number: number): { key: string; value: string } {
+function parseOption(line: string, number: number): { key: string; value: string } {
     if (line.startsWith('[') || /^--filter(?:\s|$)/iu.test(line))
         throw new Error('SwiftFormat rule comparison does not support configuration sections or filters.');
     const gap = line.search(/\s/u);
@@ -59,7 +59,7 @@ export function parseSwiftformat(text: string): Record<string, string[]> {
     const rules: Record<string, string[]> = { enable: [], disable: [], rules: [], 'lint-only': [] };
     for (const { line, number } of logicalLines(text)) {
         if (line === '') continue;
-        const { key, value } = option(line, number);
+        const { key, value } = parseOption(line, number);
         if (!Object.hasOwn(rules, key)) continue;
         rules[key]?.push(...parseRuleNames(value, key, number));
     }

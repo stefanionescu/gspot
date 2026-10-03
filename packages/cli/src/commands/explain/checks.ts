@@ -154,11 +154,11 @@ function buildCheckExplanation(
 }
 
 function getRuleSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
-    const source = RULE_SUMMARIZERS[tool];
-    if (!source) return undefined;
+    const summarize = RULE_SUMMARIZERS[tool];
+    if (!summarize) return undefined;
     const pin = getPin(tool);
     const inspection = session && pin ? inspectTool(session, pin) : undefined;
-    return source(rule, inspection?.path ?? tool);
+    return summarize(rule, inspection?.path ?? tool);
 }
 
 // The nested explanation of what a tool rule means: the tool's own words, its page, or where to look.

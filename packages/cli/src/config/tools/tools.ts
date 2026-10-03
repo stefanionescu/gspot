@@ -3,11 +3,6 @@
 /** The name of the private npm and Python projects that hold the tools: unscoped, because PyPI has no scopes. */
 export const TOOLS_PROJECT = 'gspot-tools';
 
-/** The style directory under .gspot and the style Vale reads from it. */
-export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
-
-export const VALE_CONFIG = '.gspot/config/vale.ini';
-
 export const HOST_ONLY = new Set([
     'bash',
     'git',
@@ -44,10 +39,7 @@ export const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string
     { platform: 'win32', installer: 'winget', command: 'winget install' },
     { platform: 'win32', installer: 'scoop', command: 'scoop install' },
 ];
-export const MANAGED_PREFIX = '.gspot/';
 export const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
-export const TOOL_PYTHON_PROJECT = '.gspot/pyproject.toml';
-export const LOCK = '.gspot/uv.lock';
 export const SETUP = 'Run: gspot apply, then gspot install';
 export const INDEX_SETTINGS = new Set([
     'index',

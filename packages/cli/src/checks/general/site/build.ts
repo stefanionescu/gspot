@@ -16,7 +16,7 @@ import { SITE_BUILD, SHOWN_LINES, SITE_OUTPUT } from '#cli/config/checks/general
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
-async function built(input: EngineInput): Promise<SiteBuild> {
+async function runBuild(input: EngineInput): Promise<SiteBuild> {
     const site = input.view.tool('site');
     const outputPath = typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : SITE_OUTPUT;
     mutationTarget(outputPath);
@@ -65,7 +65,7 @@ export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
     const scopeBuilds = builds.get(input.reads) ?? new Map<string, Promise<SiteBuild>>();
     builds.set(input.reads, scopeBuilds);
-    const running = scopeBuilds.get(key) ?? built(input);
+    const running = scopeBuilds.get(key) ?? runBuild(input);
     scopeBuilds.set(key, running);
     return running;
 }
@@ -102,7 +102,7 @@ export async function buildReproducible(input: EngineInput): Promise<Finding[]> 
     const before = new Map(
         filesUnder(first.output).map((path) => [path, contentDigest(readSource(first.output, path))]),
     );
-    const second = await built(input);
+    const second = await runBuild(input);
     if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
     const after = new Map(
         filesUnder(second.output).map((path) => [path, contentDigest(readSource(second.output, path))]),

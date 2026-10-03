@@ -11,7 +11,7 @@ export const SWIFTLINT_COMMAND = [
     '{files}',
 ];
 export const DOC_RULE = 'doc_comment_style';
-export const DEFAULT_DUPLICATE_LINES = 4;
+export const DUPLICATE_LINES = 4;
 export const DECLARATIONS = new Set([
     'class_declaration',
     'protocol_declaration',

@@ -3,14 +3,14 @@ import { test, expect, describe } from 'bun:test';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { getPin, setPin, assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 describe('the version pin', () => {
     test('is written, read, and refused when it differs', async () => {
         await using sandbox = await testdir();
         expect(getPin(sandbox.path)).toBeUndefined();
         setPin(sandbox.path);
-        expect(getPin(sandbox.path)).toBe(GSPOT_VERSION);
+        expect(getPin(sandbox.path)).toBe(RUNNING_VERSION);
         expect(() => {
             assertPinMatches(sandbox.path);
         }).not.toThrow();

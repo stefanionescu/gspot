@@ -3,7 +3,7 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ResolvedSetting } from '#cli/types/policy/policy.ts';
 
-export type SettingScope = { scope: string; shipped: unknown; current: ResolvedSetting | undefined };
+export type SettingScope = { scope: string; shipped: unknown; effective: ResolvedSetting | undefined };
 export type Explanation = {
     kind: 'check' | 'tool-rule' | 'kit' | 'setting' | 'path';
     subject: string;

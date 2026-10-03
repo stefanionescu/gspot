@@ -55,7 +55,7 @@ function buildSettingError(session: Session, selection: ScopeSelection, key: str
     ]);
 }
 
-function shaped(parsed: unknown[], isList: boolean): unknown {
+function unwrap(parsed: unknown[], isList: boolean): unknown {
     if (parsed.length !== 1) return parsed;
     const [only] = parsed;
     if (!isList) return only;
@@ -109,24 +109,24 @@ function buildMutation(o: SetOptions, isList: boolean, value: unknown): Mutation
 }
 
 // What set did: the new value, or the items it added to or removed from a list.
-function changeText(o: SetOptions, isList: boolean, shown: string, value: unknown): string {
+function changeText(o: SetOptions, isList: boolean, label: string, value: unknown): string {
     const items = JSON.stringify(value);
-    if (!isList || o.replace) return `${shown} = ${items}`;
-    return `${o.remove ? 'removed from' : 'added to'} ${shown}: ${items}`;
+    if (!isList || o.replace) return `${label} = ${items}`;
+    return `${o.remove ? 'removed from' : 'added to'} ${label}: ${items}`;
 }
 
 function describeSet(
     session: Session,
     selection: ScopeSelection,
     o: SetOptions,
-    shown: string,
+    label: string,
     value: unknown,
     isList: boolean,
 ): string {
-    const current = settingValue(selection.surface, session.policyFiles.policy, o.key, o.scope);
+    const previous = settingValue(selection.surface, session.policyFiles.policy, o.key, o.scope);
     const reason = o.reason === undefined ? '' : `  # ${o.reason}`;
-    const was = current === undefined ? '' : `  (was ${JSON.stringify(current.value)} from ${current.source})`;
-    return `${changeText(o, isList, shown, value)}${reason}${was}`;
+    const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
+    return `${changeText(o, isList, label, value)}${reason}${was}`;
 }
 
 function assertRuleNotOff(spec: SettingSpec, o: SetOptions): void {
@@ -177,7 +177,7 @@ function commitSetting(
     if (o.items.length === 0)
         throw new GspotError('policy', [`The setting ${o.key} needs a value; pass one, or --default to remove yours.`]);
     const isList = spec.type === 'list';
-    const parsed = shaped(
+    const parsed = unwrap(
         o.items.map((item) => parseItem(item)),
         isList,
     );

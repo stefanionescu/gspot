@@ -9,6 +9,7 @@ import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { ARGUMENT_START } from '#cli/config/platform/platform.ts';
 import { ACTIVE_SEVERITIES } from '#cli/config/lifecycle/preview.ts';
 import { previewRules } from '#cli/lifecycle/preview/eslint/declarations.ts';
+import { ESLINT_FILE, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import type { eslintCoverageRequest } from '#cli/lifecycle/preview/eslint/protocol.ts';
 
 import {
@@ -45,14 +46,14 @@ try {
 export async function getActiveRules(
     request: z.infer<typeof eslintCoverageRequest>,
 ): Promise<z.infer<typeof eslintCoverageResponse>> {
-    if (openRoot(request.root).read('.gspot/config/eslint.config.mjs') === undefined)
+    if (openRoot(request.root).read(ESLINT_FILE) === undefined)
         throw new Error('The generated ESLint configuration is missing. Run: gspot apply');
-    const require = createRequire(join(request.root, '.gspot/package.json'));
+    const require = createRequire(join(request.root, TOOL_PACKAGE_PROJECT));
     const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
-    const eslintClass = await module.loadESLint({ useFlatConfig: true });
-    const eslint = new eslintClass({
+    const ESLint = await module.loadESLint({ useFlatConfig: true });
+    const eslint = new ESLint({
         cwd: request.root,
-        overrideConfigFile: join(request.root, '.gspot/config/eslint.config.mjs'),
+        overrideConfigFile: join(request.root, ESLINT_FILE),
     });
     const result: Record<string, string[]> = {};
     for (const path of request.paths) {

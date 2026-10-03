@@ -1,5 +1,6 @@
 // The literal values repository reads: names, patterns, limits, and tables.
 import type { Tooling } from '#cli/types/repository/repository.ts';
+import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 /** The package-lock format that carries both the packages table and the old dependencies tree. */
 const HYBRID_LOCKFILE = 2;
@@ -8,7 +9,6 @@ const HYBRID_LOCKFILE = 2;
 const PACKAGES_LOCKFILE = 3;
 
 /** Repository-relative paths shared by generation, execution, and lifecycle storage. */
-export const DOT_GSPOT = '.gspot';
 
 export const SHEBANG_INTERPRETERS: Record<string, string> = {
     bash: 'shell',
@@ -168,12 +168,8 @@ export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING|NOTICE)(?:$|[.-])/iu;
 /** The tags of an extension a license text may carry; one a code language claims makes the file source. */
 export const LICENSE_TAGS = new Set(['text', 'markdown']);
 
-/** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
-export const VALE_STYLES_PREFIX = '.gspot/config/vale/styles/';
-export const VALE_OWN_PREFIXES = [
-    '.gspot/config/vale/styles/gspot/',
-    '.gspot/config/vale/styles/config/vocabularies/gspot/',
-];
+/** Everything under the style directory except the gspot style and vocabulary is a vendored Vale package. */
+export const VALE_OWN_PREFIXES = [`${STYLES_DIRECTORY}/gspot/`, `${STYLES_DIRECTORY}/config/vocabularies/gspot/`];
 
 export const FOREIGN_HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
 export const EXECUTABLE_BITS = 0o111;

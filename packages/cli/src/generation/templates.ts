@@ -21,11 +21,11 @@ import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli
 
 import {
     BLOCK_IGNORES,
+    ESLINT_LEVELS,
     TOKEN_IGNORES,
     JSON_EXTENSIONS,
     COMPILER_OPTIONS,
     LEADING_NEWLINES,
-    ESLINT_RULE_LEVELS,
     PACKAGE_JSON_INDENT,
     RECOMMENDED_OPTIONS,
 } from '#cli/config/generation/generation.ts';
@@ -180,7 +180,7 @@ export function templateInputs(
             ...eslintRuleBlocks(policy),
         ],
         eslint: () => eslintConfiguration({ root, policy, scopes, selection }),
-        eslintRuleLevels: ESLINT_RULE_LEVELS,
+        eslintRuleLevels: ESLINT_LEVELS,
         isAll: policy.level === 'all',
         typescriptOptions: policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS,
         prose: {

@@ -1,21 +1,22 @@
 import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
-import { written, getOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { getOwnership, preserveMode } from '#cli/lifecycle/ownership/owner.ts';
+import { VERSION_FILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
-function configurationPlans(owner: Owner, generated: Generated, replace: boolean) {
+function configurationPlans(owner: Owner, generated: Generated, canReplace: boolean) {
     const plans: { plan: Planned; package: boolean }[] = [];
     for (const merge of generated.merges) {
         plans.push({
             package: false,
-            plan: owner.proposeConfiguration(merge.path, merge.format, merge.changes, replace),
+            plan: owner.proposeMerge(merge.path, merge.format, merge.changes, canReplace),
         });
     }
     for (const output of generated.configurations) {
         plans.push({
             package: output.path === 'package.json',
-            plan: owner.proposeConfiguration(output.path, output.format, output.changes, true),
+            plan: owner.proposeMerge(output.path, output.format, output.changes, true),
         });
     }
     return plans;
@@ -30,8 +31,8 @@ function recordPreserved(report: ApplyReport, plans: Planned[]): void {
 
 // An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.
 function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['retained'], hasPython: boolean): void {
-    if (!retained.packages) owner.removeInstallation('npm');
-    if (!hasPython) owner.removeInstallation('python');
+    if (!retained.packages) owner.deleteInstallation('npm');
+    if (!hasPython) owner.deleteInstallation('python');
     if (!retained.prose) removePackages(root);
 }
 
@@ -58,7 +59,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
         if (file.executable === true) mode = EXECUTABLE_FILE;
-        const replacement = written({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
+        const replacement = preserveMode({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
         return owner.proposeReplacement(file.path, replacement, kind, read !== undefined, read);
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
@@ -66,7 +67,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
     const expected = new Set([
         'gspot.toml',
-        '.gspot/version',
+        VERSION_FILE,
         '.gitignore',
         'CLAUDE.md',
         ...generated.map(({ path }) => path),
@@ -89,7 +90,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
         );
     owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
     moveClaudeFile(owner, report);
-    pruneInstallations(owner, root, retained, expected.has('.gspot/pyproject.toml'));
+    pruneInstallations(owner, root, retained, expected.has(TOOL_PYTHON_PROJECT));
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));

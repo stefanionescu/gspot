@@ -1,6 +1,6 @@
 // Moving `CLAUDE.md` into `AGENTS.md`: its own text goes to the end of `AGENTS.md`, and the file goes.
 import { blockSpan } from '#cli/generation/markers.ts';
-import { identity } from '#cli/lifecycle/ownership/log.ts';
+import { identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
@@ -26,7 +26,7 @@ export function proposeClaudeMove(log: Log): Planned[] {
     if (claude === undefined) return [];
     const removal: Planned = {
         path: 'CLAUDE.md',
-        current: claude,
+        before: claude,
         previous: log.entryFor('CLAUDE.md'),
         status: 'changed',
     };
@@ -38,6 +38,6 @@ export function proposeClaudeMove(log: Log): Planned[] {
     const next = { bytes: Buffer.from(`${head}${MOVED_HEADING}\n\n${moved}\n`), mode: OWNER_WRITABLE_FILE };
     // A recorded block keeps its record, which now names the file with the moved text.
     const previous = log.entryFor('AGENTS.md');
-    const entry = previous === undefined ? {} : { entry: { ...previous, installed: identity(next) } };
-    return [{ path: 'AGENTS.md', current: agents, previous, next, ...entry, status: 'changed' }, removal];
+    const entry = previous === undefined ? {} : { entry: { ...previous, installed: identify(next) } };
+    return [{ path: 'AGENTS.md', before: agents, previous, after: next, ...entry, status: 'changed' }, removal];
 }

@@ -14,7 +14,7 @@ function getPairs(blocks: TomlBlock[]): KeyValue[] {
     });
 }
 
-function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, width: number): Edit | undefined {
+function wrapArray(text: string, pair: KeyValue, lines: string[], indent: string, width: number): Edit | undefined {
     const { value } = pair;
     if (!isInlineArray(value) || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
@@ -37,7 +37,7 @@ export function wrapLongArrays(text: string, indent = ' '.repeat(INDENT_WIDTH), 
     const expanded = expandLongTables(text, width);
     const lines = expanded.split('\n');
     const edits = getPairs(parseDocument(expanded).cst)
-        .map((pair) => wrapped(expanded, pair, lines, indent, width))
+        .map((pair) => wrapArray(expanded, pair, lines, indent, width))
         .filter((edit) => edit !== undefined)
         .toSorted((left, right) => right.start - left.start);
     let out = expanded;

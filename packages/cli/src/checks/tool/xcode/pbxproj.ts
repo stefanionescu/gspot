@@ -219,7 +219,7 @@ function targetFolders(project: XcodeProject, id: string, target: ProjectEntry):
     });
 }
 
-export const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), itemSchema) });
+export const pbxprojSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), itemSchema) });
 
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
@@ -227,8 +227,8 @@ export const projectSchema = z.object({ rootObject: z.string(), objects: z.recor
  * @param directory the folder the project file lives in, relative to the repository root
  * @returns the source paths and the synchronized folders with their exclusions
  */
-export function readProject(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
-    const parsed = projectSchema.parse(parse(text));
+export function readPbxproj(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
+    const parsed = pbxprojSchema.parse(parse(text));
     const root = projectItem(parsed, parsed.rootObject);
     if (root.isa !== 'PBXProject' || root.mainGroup === undefined)
         throw new Error('The Xcode project has no main group.');
@@ -255,8 +255,8 @@ export function readProject(text: string, directory: string): { sources: Set<str
  * @param text the project file text
  * @returns the names of the test targets
  */
-export function projectTestTargets(text: string): string[] {
-    const project = projectSchema.parse(parse(text));
+export function testTargets(text: string): string[] {
+    const project = pbxprojSchema.parse(parse(text));
     const root = project.objects[project.rootObject];
     if (root?.isa !== 'PBXProject') throw new Error('The Xcode project has no project root.');
     return (root.targets ?? []).flatMap((id) => {

@@ -1,11 +1,11 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
-import { parseSql } from '#cli/parsers/sql/pg.ts';
+import { parse } from '#cli/parsers/sql/pg.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import { withoutVariables } from '#cli/parsers/sql/source.ts';
 import type { ReadCache } from '#cli/types/platform/platform.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-const reads = new WeakMap<ReadCache, Map<string, Promise<SqlFile>>>();
+const cache = new WeakMap<ReadCache, Map<string, Promise<SqlFile>>>();
 
 function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
@@ -23,7 +23,7 @@ async function parseFile(text: string): Promise<SqlFile> {
     const source = prepared.text;
     const variables = prepared.variables;
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
-    const parsed = await parseSql(source);
+    const parsed = await parse(source);
     const bytes = Buffer.from(source, 'utf8');
     if (parsed.error !== undefined) {
         const offset = codePoints(source).slice(0, parsed.error.offset).join('').length;
@@ -58,10 +58,10 @@ export function positionAt(text: string, offset: number): { line: number; column
  */
 export function sqlFile(text: string, read?: ReadCache): Promise<SqlFile> {
     if (read === undefined) return parseFile(text);
-    let files = reads.get(read);
+    let files = cache.get(read);
     if (files === undefined) {
         files = new Map();
-        reads.set(read, files);
+        cache.set(read, files);
     }
     let parsed = files.get(text);
     if (parsed === undefined) {

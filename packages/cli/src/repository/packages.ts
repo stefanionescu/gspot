@@ -3,7 +3,8 @@ import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { decodedText } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { DOT_GSPOT, SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {

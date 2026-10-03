@@ -14,7 +14,7 @@ import { installCommand } from '#cli/commands/install/command.ts';
 import { MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 test.each([
     { availability: 'missing', exitCode: 127, failureCommand: undefined, version: MISE_MIN_VERSION },
@@ -66,7 +66,7 @@ test.each([
             const repaired = await installCommand({ cwd: sandbox.path, isDryRun: false });
             expect(repaired.exitCode, repaired.text).toBe(0);
             expect(readFileSync(join(sandbox.path, 'gspot.toml'))).toStrictEqual(policy);
-            expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
+            expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
         } finally {
             installer.mockRestore();
         }

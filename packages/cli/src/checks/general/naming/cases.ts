@@ -4,18 +4,18 @@ import {
     LOWER_WORD,
     UPPER_WORD,
     PASCAL_WORD,
-    MIGRATION_TIMESTAMP_DIGITS,
+    MIGRATION_DIGITS,
 } from '#cli/config/checks/general/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
-    const stamp = name.slice(0, MIGRATION_TIMESTAMP_DIGITS);
-    const rest = name.slice(MIGRATION_TIMESTAMP_DIGITS);
+    const stamp = name.slice(0, MIGRATION_DIGITS);
+    const rest = name.slice(MIGRATION_DIGITS);
     if (!TIMESTAMP.test(stamp) || !rest.startsWith('_') || !rest.endsWith('.sql')) return false;
     const stem = rest.slice(1, -'.sql'.length);
     return stem !== '' && stem.split('_').every((word) => LOWER_WORD.test(word));
 }
 
-const CHECKS = new Map<string, (name: string) => boolean>([
+const CASE_TESTS = new Map<string, (name: string) => boolean>([
     ['camel', (name) => CAMEL_WORD.test(name)],
     ['pascal', (name) => PASCAL_WORD.test(name)],
     ['pascal-plus', (name) => name.includes('+') && name.split('+').every((word) => PASCAL_WORD.test(word))],
@@ -26,7 +26,7 @@ const CHECKS = new Map<string, (name: string) => boolean>([
 ]);
 
 /** The names accepted by case validation, in their display order. */
-export const CASE_NAMES = [...CHECKS.keys()];
+export const CASE_NAMES = [...CASE_TESTS.keys()];
 
 /**
  * True when the name has the case.
@@ -36,5 +36,5 @@ export const CASE_NAMES = [...CHECKS.keys()];
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Name validation looks up a case checker by name in two places, and an unknown case never matches.
 export function hasCase(name: string, caseName: string): boolean {
-    return CHECKS.get(caseName)?.(name) ?? false;
+    return CASE_TESTS.get(caseName)?.(name) ?? false;
 }

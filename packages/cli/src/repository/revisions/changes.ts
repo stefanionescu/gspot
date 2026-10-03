@@ -63,7 +63,7 @@ export async function getStaged(root: string, cancelSignal?: AbortSignal): Promi
  * @param cancelSignal cancellation for the Git commands
  * @returns the selected reference, the sorted paths, and the commits after the merge base, oldest first
  */
-export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedPaths> {
+export async function getChanged(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedPaths> {
     const compared = reference === '' ? await getDefaultRef(root, cancelSignal) : reference;
     if (compared === '') {
         throw new GspotError('selection', ['No upstream or default branch is available; use --changed=<ref>.']);

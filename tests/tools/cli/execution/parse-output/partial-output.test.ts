@@ -9,9 +9,9 @@ import { spawnGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
-import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
+import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {

@@ -4,6 +4,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { VERSION_FILE } from '#cli/config/platform/locations.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
@@ -14,7 +15,7 @@ const { version: RUNNING_VERSION } = packageManifest;
  * @returns the version in .gspot/version
  */
 export function getPin(root: string): string | undefined {
-    const current = openRoot(root).read('.gspot/version');
+    const current = openRoot(root).read(VERSION_FILE);
     if (current === undefined) return undefined;
     const line = current.bytes.toString('utf8').trim();
     return line === '' ? undefined : line;
@@ -28,7 +29,7 @@ export function getPin(root: string): string | undefined {
 export function setPin(root: string, version = RUNNING_VERSION): void {
     asOwner(root, (owner) => {
         const status = owner.replace(
-            '.gspot/version',
+            VERSION_FILE,
             { bytes: Buffer.from(`${version}\n`), mode: OWNER_WRITABLE_FILE },
             'pin',
             true,

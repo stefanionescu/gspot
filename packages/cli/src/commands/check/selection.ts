@@ -7,11 +7,11 @@ import { isInScope } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
+import { getChanged } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
-import { changedFiles as getChanged } from '#cli/repository/revisions/changes.ts';
 
 function isReadable(path: string): boolean {
     try {

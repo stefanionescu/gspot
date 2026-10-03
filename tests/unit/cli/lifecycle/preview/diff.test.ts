@@ -6,7 +6,7 @@ test('Gixy previews retain final root selectors and keep plugin options outside 
     const file: GeneratedFile = {
         path: '.gspot/config/gixy.cfg',
         content: 'checks = ssrf, aliastraversal\nskips = ssrf\n',
-        rulesPath: ['checks', 'skips'],
+        rulePaths: ['checks', 'skips'],
         kind: 'config',
         readOnly: true,
     };
@@ -34,7 +34,7 @@ test('record rule lists compare by ID and diagnose ambiguous duplicate IDs', () 
     const file: GeneratedFile = {
         path: '.gspot/config/semgrep/example.yml',
         content: 'rules:\n  - id: first\n    pattern: eval(...)\n  - id: second\n    pattern: exec(...)\n',
-        rulesPath: ['rules'],
+        rulePaths: ['rules'],
         kind: 'config',
         readOnly: true,
     };
@@ -58,7 +58,7 @@ test('JavaScript comparison reads static exports and rejects executable rule val
     const file: GeneratedFile = {
         path: '.gspot/config/commitlint.config.cjs',
         content: "module.exports = {rules: {'type-case': [2, 'always', 'lower-case']}};",
-        rulesPath: ['rules'],
+        rulePaths: ['rules'],
         kind: 'config',
         readOnly: true,
     };
@@ -78,7 +78,7 @@ test('Vale comparison combines style selections and keeps rule overrides in thei
     const file: GeneratedFile = {
         path: '.gspot/config/vale.ini',
         content: '[*]\nBasedOnStyles = Vale, Example\nExample.Rule = YES\n',
-        rulesPath: ['*.rules', '*.BasedOnStyles'],
+        rulePaths: ['*.rules', '*.BasedOnStyles'],
         kind: 'config',
         readOnly: true,
     };
@@ -104,7 +104,7 @@ test('SQLFluff comparison names excluded rules and changed rule options while ig
         path: '.gspot/config/sqlfluff.cfg',
         content:
             '[sqlfluff]\nexclude_rules = CP01, LT01\n[sqlfluff:rules:capitalisation.keywords]\ncapitalisation_policy = upper\n',
-        rulesPath: ['sqlfluff.rules', 'sqlfluff.exclude_rules', 'sqlfluff:rules'],
+        rulePaths: ['sqlfluff.rules', 'sqlfluff.exclude_rules', 'sqlfluff:rules'],
         kind: 'config',
         readOnly: true,
     };
@@ -137,7 +137,7 @@ test('SQLFluff comparison preserves case-sensitive options and resolves inherite
     const file: GeneratedFile = {
         path: '.gspot/config/sqlfluff.cfg',
         content: '[sqlfluff:rules:example]\nflag = true\nlimit = 1\nName = VALUE\n',
-        rulesPath: ['sqlfluff:rules'],
+        rulePaths: ['sqlfluff:rules'],
         kind: 'config',
         readOnly: true,
     };
@@ -164,7 +164,7 @@ test.each([
     },
     { path: 'rules.toml', before: '[rules]\nfirst = true\nsecond = 2\n', after: '[rules]\nsecond = 3\nthird = true\n' },
 ])('rule comparison describes additions, removals, and option changes in $path', ({ path, before, after }) => {
-    const file: GeneratedFile = { path, content: after, rulesPath: ['rules'], kind: 'config', readOnly: true };
+    const file: GeneratedFile = { path, content: after, rulePaths: ['rules'], kind: 'config', readOnly: true };
     expect(diffRules(file, before)).toStrictEqual({
         rules: [{ path: 'rules', added: ['third'], removed: ['first'], changed: ['second'] }],
     });
@@ -175,7 +175,7 @@ test('rule comparison ignores list order and reports malformed JSON without owni
     const file: GeneratedFile = {
         path: 'rules.json',
         content: '{"rules":["first","second"]}',
-        rulesPath: ['rules'],
+        rulePaths: ['rules'],
         kind: 'config',
         readOnly: true,
     };
@@ -189,7 +189,7 @@ test('ShellCheck comparisons combine repeated directives and normalize code pref
     const file: GeneratedFile = {
         path: '.gspot/config/shellcheckrc',
         content: 'shell=bash\nenable=all\ndisable=SC2086,SC2002\n',
-        rulesPath: ['enable', 'disable'],
+        rulePaths: ['enable', 'disable'],
         kind: 'config',
         readOnly: true,
     };
@@ -217,7 +217,7 @@ test('SwiftFormat comparisons combine repeated and continued rule lists without 
     const file: GeneratedFile = {
         path: '.gspot/config/swiftformat',
         content: '--enable consecutiveSpaces, trailingSpace\n--disable redundantSelf\n--indent 4\n',
-        rulesPath: ['enable', 'disable', 'rules', 'lint-only'],
+        rulePaths: ['enable', 'disable', 'rules', 'lint-only'],
         kind: 'config',
         readOnly: true,
     };

@@ -5,8 +5,8 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { STRUCTURE_PROJECT } from '#tests/samples/python.ts';
+import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
-import { checkDocstrings } from '#cli/checks/language/python/pydoclint.ts';
 
 test.each([
     ['the Google convention of Ruff', '[tool.ruff.lint.pydocstyle]\nconvention = "google"\n', ['--style', 'google']],
@@ -38,7 +38,7 @@ test.each([
         }),
     );
     try {
-        const result = await checkDocstrings(session, planned!);
+        const result = await pydoclint(session, planned!);
         expect(result.command).toStrictEqual([...PYDOCLINT_COMMAND, ...style]);
     } finally {
         command.mockRestore();

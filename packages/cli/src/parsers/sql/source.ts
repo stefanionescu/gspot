@@ -1,8 +1,6 @@
 // The index of the first stop character at or after from, or the text length.
+import { PAIR } from '#cli/config/platform/platform.ts';
 import type { Token, SqlToken } from '#cli/types/parsers/sql.ts';
-
-// Two characters read together: a doubled quote or a two-character operator.
-const PAIR = 2;
 
 function lineEnd(text: string, from: number, stops: string): number {
     for (let at = from; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;

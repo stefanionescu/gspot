@@ -7,15 +7,15 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { LOCK, SETUP, TOOLS_PROJECT, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
+import { SETUP, TOOLS_PROJECT, INDEX_SETTINGS } from '#cli/config/tools/tools.ts';
+import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
-const projectSchema = z.strictObject({
+const pyprojectSchema = z.strictObject({
     project: z.strictObject({
         name: z.literal(TOOLS_PROJECT),
         version: z.literal('0.0.0'),
@@ -62,7 +62,7 @@ function constraintsMatch(constraints: string[], recorded: z.infer<typeof lockSc
 
 function matches(project: string, lock: string): boolean {
     try {
-        const parsed = projectSchema.parse(parse(project));
+        const parsed = pyprojectSchema.parse(parse(project));
         const manifest = parsed.project;
         const recorded = lockSchema.parse(parse(lock));
         if (!constraintsMatch(parsed.tool.uv['constraint-dependencies'] ?? [], recorded)) return false;
@@ -193,7 +193,7 @@ async function installInWork(
     )
         throw new Error(`The uv run changed locked inputs. ${SETUP}`);
     await relocateInterpreter(work);
-    if (!isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) || !isDeepStrictEqual(owner.read(LOCK), lock))
+    if (!isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) || !isDeepStrictEqual(owner.read(UV_LOCK), lock))
         throw new Error('Python tool inputs changed during installation. Retry the command.');
     owner.installTree('python', installedOutputs(join(work, '.venv'), 'python'));
 }
@@ -207,8 +207,8 @@ async function installInWork(
 export async function preparePythonProject(root: string, files: GeneratedFile[], owner: ToolOwner): Promise<void> {
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
-    projectSchema.parse(parse(project.content));
-    const original = owner.read(LOCK);
+    pyprojectSchema.parse(parse(project.content));
+    const original = owner.read(UV_LOCK);
     let content = original?.bytes.toString('utf8');
     if (content === undefined || !matches(project.content, content)) {
         using workFolder = scratchFolder('gspot-python-lock-');
@@ -220,7 +220,7 @@ export async function preparePythonProject(root: string, files: GeneratedFile[],
             throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
     }
     files.push({
-        path: LOCK,
+        path: UV_LOCK,
         content,
         readOnly: true,
         kind: 'lock',
@@ -241,9 +241,11 @@ export function pythonLockDrift(
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
     using files = openRoot(root);
-    const lock = files.read(LOCK);
-    if (lock === undefined) return { path: LOCK, kind: 'missing' };
-    return matches(project.content, lock.bytes.toString('utf8')) ? { path: LOCK } : { path: LOCK, kind: 'changed' };
+    const lock = files.read(UV_LOCK);
+    if (lock === undefined) return { path: UV_LOCK, kind: 'missing' };
+    return matches(project.content, lock.bytes.toString('utf8'))
+        ? { path: UV_LOCK }
+        : { path: UV_LOCK, kind: 'changed' };
 }
 
 /**
@@ -255,8 +257,8 @@ export function pythonInstallSteps(root: string): string[][] {
     using files = openRoot(root);
     const project = files.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return [];
-    projectSchema.parse(parse(project.bytes.toString('utf8')));
-    const lock = files.read(LOCK);
+    pyprojectSchema.parse(parse(project.bytes.toString('utf8')));
+    const lock = files.read(UV_LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
     return [['uv', 'sync', '--locked', '--project', DOT_GSPOT]];
@@ -272,8 +274,8 @@ export function pythonInstallSteps(root: string): string[][] {
 export async function installPythonProject(root: string, owner: ToolOwner, executable = 'uv'): Promise<string> {
     const project = owner.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return '';
-    projectSchema.parse(parse(project.bytes.toString('utf8')));
-    const lock = owner.read(LOCK);
+    pyprojectSchema.parse(parse(project.bytes.toString('utf8')));
+    const lock = owner.read(UV_LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
     using workFolder = scratchFolder('gspot-python-install-');

@@ -36,28 +36,28 @@ export type Drift = {
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
 export type Planned = {
     path: string;
-    current: Read | undefined;
+    before: Read | undefined;
     previous: OwnedFile | undefined;
     status: 'changed' | 'unchanged' | 'preserved';
-    next?: Read;
+    after?: Read;
     entry?: OwnedFile;
 };
 
 export type Owner = ToolOwner & {
     beginInstallation(kind: InstallationKind): void;
     finishInstallation(kind: InstallationKind): void;
-    removeInstallation(kind: InstallationKind): void;
-    proposeConfiguration(
+    deleteInstallation(kind: InstallationKind): void;
+    proposeMerge(
         path: string,
         format: Format,
         changes: { path: (string | number)[]; value: unknown }[],
-        replace?: boolean,
+        canReplace?: boolean,
     ): Planned;
     proposeReplacement(
         path: string,
         next: Read,
         kind: OwnedKind,
-        replace?: boolean,
+        canReplace?: boolean,
         expected?: Read,
         proposed?: ReadonlyMap<string, Read | undefined>,
     ): Planned;
@@ -68,7 +68,7 @@ export type Owner = ToolOwner & {
     paths(): string[];
     installedPaths(): string[];
     proposeRetirement(path: string, expected: Read): Planned;
-    replace(path: string, next: Read, kind: OwnedKind, replace?: boolean, expected?: Read): Outcome;
+    replace(path: string, next: Read, kind: OwnedKind, canReplace?: boolean, expected?: Read): Outcome;
     proposeRestoration(path: string): Planned;
     proposeClaudeMove(): Planned[];
     close(): void;

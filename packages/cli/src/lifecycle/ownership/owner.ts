@@ -1,10 +1,10 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { STATE_DIRECTORY } from '#cli/config/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { openLog } from '#cli/lifecycle/ownership/log.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
@@ -34,10 +34,10 @@ function buildOwner(log: Log): Owner {
         installTree: (kind, outputs) => {
             installTree(log, kind, outputs);
         },
-        removeInstallation: (kind) => {
+        deleteInstallation: (kind) => {
             deleteInstallation(log, kind);
         },
-        proposeConfiguration: (path, format, changes, replace) => proposeMerge(log, path, format, changes, replace),
+        proposeMerge: (path, format, changes, canReplace) => proposeMerge(log, path, format, changes, canReplace),
         applyPlan: (plan) => applyPlan(log, plan),
         applyPlans: (plans) => applyPlans(log, plans),
         proposeBlock: (path, body, style) => proposeBlock(log, path, body, style),
@@ -47,10 +47,10 @@ function buildOwner(log: Log): Owner {
             return files.read(path);
         },
         paths: () => state.files.map((entry) => entry.path),
-        proposeReplacement: (path, next, kind, replace, expected, proposed) =>
-            proposeReplacement(log, { path, next, kind, replace, expected, proposed }),
-        replace: (path, next, kind, replace, expected) =>
-            applyPlan(log, proposeReplacement(log, { path, next, kind, replace, expected })),
+        proposeReplacement: (path, next, kind, canReplace, expected, proposed) =>
+            proposeReplacement(log, { path, next, kind, canReplace, expected, proposed }),
+        replace: (path, next, kind, canReplace, expected) =>
+            applyPlan(log, proposeReplacement(log, { path, next, kind, canReplace, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(log, path, expected),
         proposeRestoration: (path) => proposeRestoration(log, path),
@@ -67,15 +67,15 @@ function buildOwner(log: Log): Owner {
  * @param current the file as it is now, or undefined when it does not exist
  * @returns the snapshot to write
  */
-export function written(proposed: Read, current: Read | undefined): Read {
+export function preserveMode(proposed: Read, current: Read | undefined): Read {
     const { bytes } = proposed;
     const mode = fileMode(proposed);
-    const checkout =
+    const isCheckout =
         mode === READ_ONLY_FILE &&
         current?.mode === fileMode({ mode: OWNER_WRITABLE_FILE }) &&
         current.isLink !== true &&
         current.bytes.equals(bytes);
-    return { bytes, mode: checkout ? current.mode : mode };
+    return { bytes, mode: isCheckout ? current.mode : mode };
 }
 
 /**

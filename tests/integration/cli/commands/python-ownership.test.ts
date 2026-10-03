@@ -7,7 +7,7 @@ import { runGspot } from '#tests/harness/cli/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 test('Python dependency ownership applies only to locked scopes and accepts removal of the duplicate list', async () => {
     await using sandbox = await testdir();
@@ -17,7 +17,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
             '[[scope]]\npath = "locked"\nkits = ["python"]\n[[scope]]\npath = "other"\nkits = ["python"]\n',
             'all',
         ),
-        '.gspot/version': `${GSPOT_VERSION}\n`,
+        '.gspot/version': `${RUNNING_VERSION}\n`,
         'requirements.txt': 'root-dependency\n',
         'locked/uv.lock': 'version = 1\n',
         'locked/requirements.txt': 'duplicated-dependency\n',
@@ -45,7 +45,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(['python']),
-        '.gspot/version': `${GSPOT_VERSION}\n`,
+        '.gspot/version': `${RUNNING_VERSION}\n`,
         'main.py': 'value = 1\n',
         'pyproject.toml': '# [tool.importlinter] is only a comment\n',
     });

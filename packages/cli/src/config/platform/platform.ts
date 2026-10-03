@@ -76,6 +76,9 @@ export const BYTES_PER_KB = 1024;
 /** A whole share, for ratios shown as percentages. */
 export const FULL_PERCENTAGE = 100;
 
+/** Two items read together: a key and its value, an opening and closing quote, or two characters. */
+export const PAIR = 2;
+
 /** Read by everyone and written by the owner: the mode of an ordinary file. */
 export const OWNER_WRITABLE_FILE = 0o644;
 

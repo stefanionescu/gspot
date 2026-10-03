@@ -5,14 +5,8 @@ import { headerLines } from '#cli/generation/headers.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import type { HookName } from '#cli/types/generation/generation.ts';
-
-import {
-    HOOK_ARGS,
-    HOOK_FILES,
-    RUNNER_EXEC,
-    HOOKS_DIRECTORY,
-    HOOK_UNAVAILABLE,
-} from '#cli/config/generation/generation.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { HOOK_ARGS, HOOK_FILES, RUNNER_EXEC, HOOK_UNAVAILABLE } from '#cli/config/generation/generation.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.

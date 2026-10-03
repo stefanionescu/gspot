@@ -9,18 +9,18 @@ import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const { version: GSPOT_VERSION } = packageManifest;
+const { version: RUNNING_VERSION } = packageManifest;
 
 test('apply previews changed pins, preserves policy, and writes the pin only after successful generation', async () => {
     await using sandbox = await testdir();
     const policy = policyOf([], '[rules]\ninstall = true\n');
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect(preview.json).toMatchObject({ dryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
+    expect(preview.json).toMatchObject({ dryRun: true, pin: { from: '0.0.1', to: RUNNING_VERSION } });
     expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
+    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     const output = (applied.json as { written: string[] }).written.find((path) => path !== '.gspot/version')!;
     expect(output).toBeDefined();
@@ -72,7 +72,7 @@ test('a failed pin publication leaves the old version and succeeds after the wri
     }
     const applied = await applyCommand({ cwd: repository.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(readFileSync(join(repository.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
+    expect(readFileSync(join(repository.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
 });
 
 test('apply preview rejects a generated destination linked outside the repository', async () => {

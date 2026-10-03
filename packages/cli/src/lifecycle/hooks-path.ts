@@ -6,8 +6,9 @@ import { existsSync, readdirSync } from 'node:fs';
 import { getHooks } from '#cli/repository/survey.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
+import { HOOK_FILES } from '#cli/config/generation/generation.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/generation/generation.ts';
 import { hooksDirectory, readGitSetting, runGitBlocking } from '#cli/platform/git.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.

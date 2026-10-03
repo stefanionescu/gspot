@@ -2,11 +2,11 @@
 // without it is out of date.
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
-import { LOCK } from '#cli/config/tools/tools.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { pythonLockDrift } from '#cli/tools/python.ts';
+import { UV_LOCK } from '#cli/config/platform/locations.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 
 const CONSTRAINT = { name: 'pyjwt', specifier: '>=2.14.0' };
@@ -48,8 +48,8 @@ test('a pypi constraint reaches the tool project, and only a lock resolved under
         tool: { uv: Record<string, unknown> };
     };
     expect(project.tool.uv['constraint-dependencies']).toStrictEqual(['pyjwt>=2.14.0']);
-    await createFileTree(sandbox.path, { [LOCK]: lockFor(project.project.dependencies, []) });
-    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: LOCK, kind: 'changed' });
-    await createFileTree(sandbox.path, { [LOCK]: lockFor(project.project.dependencies, [CONSTRAINT]) });
-    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: LOCK });
+    await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, []) });
+    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCK, kind: 'changed' });
+    await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, [CONSTRAINT]) });
+    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCK });
 });

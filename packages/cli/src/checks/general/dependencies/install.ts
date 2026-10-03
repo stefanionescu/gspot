@@ -14,8 +14,8 @@ function installTable(root: string): Record<string, unknown> | undefined {
     return parsed.install ?? {};
 }
 
-function ageFindings(input: EngineInput, install: Record<string, unknown>, days: number): Finding[] {
-    const seconds = install['minimumReleaseAge'];
+function ageFindings(input: EngineInput, table: Record<string, unknown>, days: number): Finding[] {
+    const seconds = table['minimumReleaseAge'];
     const wanted = days * SECONDS_PER_DAY;
     if (typeof seconds === 'number' && seconds >= wanted) return [];
     const found = typeof seconds === 'number' ? String(seconds) : 'nothing';
@@ -29,9 +29,9 @@ function ageFindings(input: EngineInput, install: Record<string, unknown>, days:
     ];
 }
 
-function scannerFindings(input: EngineInput, install: Record<string, unknown>, scanner: string): Finding[] {
+function scannerFindings(input: EngineInput, table: Record<string, unknown>, scanner: string): Finding[] {
     if (scanner === '') return [];
-    const security = install['security'] as { scanner?: unknown } | undefined;
+    const security = table['security'] as { scanner?: unknown } | undefined;
     if (security?.scanner === scanner) return [];
     return [
         findingAt(
@@ -48,14 +48,14 @@ function scannerFindings(input: EngineInput, install: Record<string, unknown>, s
  * @param input the engine input
  * @returns the findings
  */
-export function installPolicy(input: EngineInput): Finding[] {
+export function install(input: EngineInput): Finding[] {
     const isBun = input.files.some((file) => LOCKFILES[posix.basename(file.path)] === 'bun');
     if (!isBun) return [];
     const { settings } = input.view;
     const days = (settings['install.min_release_age_days'] as number | undefined) ?? RELEASE_AGE_DAYS;
     const scanner = (settings['install.scanner'] as string | undefined) ?? '';
-    const install = installTable(input.root);
-    if (install === undefined)
+    const table = installTable(input.root);
+    if (table === undefined)
         return [
             findingAt(
                 input,
@@ -64,5 +64,5 @@ export function installPolicy(input: EngineInput): Finding[] {
                 `No ${BUNFIG} sets [install] minimumReleaseAge.`,
             ),
         ];
-    return [...ageFindings(input, install, days), ...scannerFindings(input, install, scanner)];
+    return [...ageFindings(input, table, days), ...scannerFindings(input, table, scanner)];
 }

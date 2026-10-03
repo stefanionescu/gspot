@@ -8,11 +8,12 @@ import { pythonInstallSteps } from '#cli/tools/python.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
-import { HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 
 function preparation(session: Session): { steps: string[][]; failures: string[]; hooks: string | undefined } {
     const failures: string[] = [];

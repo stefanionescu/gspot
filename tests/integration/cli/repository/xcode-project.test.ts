@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { readProject } from '#cli/checks/tool/xcode/pbxproj.ts';
+import { readPbxproj } from '#cli/checks/tool/xcode/pbxproj.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const PBXPROJ_PROJECT = `// !$*UTF8*$!
@@ -65,7 +65,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 
 test('project directory offsets and source roots resolve separately', () => {
     const source = PBXPROJ_PROJECT.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
-    const project = readProject(source, '/repo/project');
+    const project = readPbxproj(source, '/repo/project');
     expect([...project.sources]).toStrictEqual(['/repo/Code/First Group/Shared.swift', '/repo/project/Root.swift']);
     expect(project.folders).toStrictEqual([
         { path: '/repo/Code/Synced/', excluded: new Set(['/repo/Code/Synced/Excluded.swift']) },
@@ -77,10 +77,10 @@ test('quoted project strings preserve escapes and ignore comment-like text', () 
         'path = "First Group";',
         String.raw`path = "First \U00e9 \"Group\"";`,
     ).replace('path = Shared.swift;', 'path = "//Shared.swift";');
-    expect([...readProject(source, '/repo').sources]).toStrictEqual(['/Shared.swift', '/repo/Root.swift']);
+    expect([...readPbxproj(source, '/repo').sources]).toStrictEqual(['/Shared.swift', '/repo/Root.swift']);
     expect(
         [
-            ...readProject(
+            ...readPbxproj(
                 PBXPROJ_PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 Group";`),
                 '/repo',
             ).sources,

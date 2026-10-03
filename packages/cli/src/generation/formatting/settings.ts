@@ -3,9 +3,9 @@ import { dirname, relative } from 'node:path';
 import { compact } from '#cli/platform/text.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { shippedFormat } from '#cli/kits/listing.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
 import { expandedPaths } from '#cli/repository/selectors.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
 

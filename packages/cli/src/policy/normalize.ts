@@ -1,4 +1,5 @@
 import { compact, isRecord } from '#cli/platform/text.ts';
+import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { CATEGORY_KEYS, NAMING_LIST_KEYS, STRUCTURE_DEFAULTS } from '#cli/config/policy/policy.ts';
 
 import type {
@@ -171,7 +172,7 @@ export function normalize(raw: RawPolicy): Policy {
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
         ...compact({ hooks: raw.hooks, ci: raw.ci }),
-        rules: defaulted<Policy['rules']>(raw.rules, { install: true, path: '.gspot/rules', exclude: [] }),
+        rules: defaulted<Policy['rules']>(raw.rules, { install: true, path: RULES_DIRECTORY, exclude: [] }),
         ...(raw.runner === undefined ? {} : { runner: raw.runner }),
         scopeTables,
     };

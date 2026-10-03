@@ -14,6 +14,8 @@ import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
+const { version: RUNNING_VERSION } = packageManifest;
+
 // Resolves every scope: its selected kits, settings surface, and merged view.
 function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
     return scopes.map((scope) => {
@@ -23,8 +25,6 @@ function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<st
         return { scope, selected, surface, view };
     });
 }
-
-const { version: GSPOT_VERSION } = packageManifest;
 
 /**
  * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
@@ -59,7 +59,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
     return {
         ...(packageClient === undefined ? {} : { packageClient }),
         root,
-        version: GSPOT_VERSION,
+        version: RUNNING_VERSION,
         policyFiles,
         manifests,
         repository: repo,

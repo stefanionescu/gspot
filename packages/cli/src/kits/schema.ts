@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { toolSchema } from '#cli/kits/tools.ts';
 import { SENTENCE_MIN } from '#cli/config/kits.ts';
 import { outputSchema } from '#cli/kits/output.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 
 const stringList = z.array(z.string()).default([]);

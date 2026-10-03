@@ -7,8 +7,8 @@ import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { jscpd } from '#cli/checks/general/duplication.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
-import { copiedBlocks } from '#cli/checks/general/duplication.ts';
 
 const VALID = {
     report: { statistics: { total: { percentage: 0 } }, duplicates: [] },
@@ -52,13 +52,13 @@ test.each([
         });
     });
     try {
-        const failed = await runEngineCheck(session, copiedBlocks, planned!);
+        const failed = await runEngineCheck(session, jscpd, planned!);
         expect(failed.status).toBe('error');
         expect(failed.findings).toStrictEqual([]);
         expect(directories).toHaveLength(1);
         expect(directories.every((path) => !existsSync(path))).toBe(true);
         isCorrected = true;
-        const result = await runEngineCheck(session, copiedBlocks, planned!);
+        const result = await runEngineCheck(session, jscpd, planned!);
         expect(result.status).toBe('passed');
         expect(directories.every((path) => !existsSync(path))).toBe(true);
     } finally {

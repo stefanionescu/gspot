@@ -3,10 +3,10 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { TestPlan } from '#cli/types/checks/tool/xcode.ts';
+import { readPbxproj, testTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { getBlobs, getCachedEntries } from '#cli/execution/checkout/revision.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
-import { readProject, projectTestTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two checks find the folder of a project bundle; the bundle boundary is computed in one place.
@@ -21,9 +21,9 @@ function folderOf(projectFile: string): string {
  * @returns the findings
  */
 export function orphanSources(input: EngineInput): Finding[] {
-    const projects = trackedEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
+    const projects = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
-        ...readProject(
+        ...readPbxproj(
             readSource(input.root, path, input.reads).toString('utf8'),
             posix.join(input.root, folderOf(path)),
         ),
@@ -42,7 +42,7 @@ export function orphanSources(input: EngineInput): Finding[] {
             prefix: `${posix.relative(input.root, path)}/`.replace(/^\//u, ''),
             excluded: new Set([...excluded].map((source) => posix.relative(input.root, source))),
         }));
-    const tree = trackedEnding(input, ['.swift']).filter((file) => posix.basename(file) !== 'Package.swift');
+    const tree = trackedByExtension(input, ['.swift']).filter((file) => posix.basename(file) !== 'Package.swift');
     const inTree = new Set(tree);
     const untargeted = tree
         .filter(
@@ -72,11 +72,11 @@ export function orphanSources(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function testPlans(input: EngineInput): Finding[] {
-    const plans = trackedEnding(input, ['.xctestplan']).map(
+    const plans = trackedByExtension(input, ['.xctestplan']).map(
         (path) => JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as TestPlan,
     );
     const planned = new Set(plans.flatMap((plan) => (plan.testTargets ?? []).map((entry) => entry.target?.name ?? '')));
-    const schemes = trackedEnding(input, ['.xcscheme'])
+    const schemes = trackedByExtension(input, ['.xcscheme'])
         .filter((path) => path.includes('/xcshareddata/'))
         .filter((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
@@ -85,8 +85,8 @@ export function testPlans(input: EngineInput): Finding[] {
         .map((path) =>
             findingAt(input, { file: path, line: 1 }, 'scheme-plan', 'This scheme runs tests and names no test plan.'),
         );
-    const targets = trackedEnding(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
-        projectTestTargets(readSource(input.root, path, input.reads).toString('utf8'))
+    const targets = trackedByExtension(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
+        testTargets(readSource(input.root, path, input.reads).toString('utf8'))
             .filter((name) => !planned.has(name))
             .map((name) =>
                 findingAt(input, { file: path, line: 1 }, 'target-plan', `The test target ${name} is in no test plan.`),
@@ -101,7 +101,7 @@ export function testPlans(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function symlinks(input: EngineInput): Promise<Finding[]> {
-    const folders = trackedEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
+    const folders = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = await getCachedEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);
     const links = entries.filter(
@@ -133,7 +133,7 @@ export async function symlinks(input: EngineInput): Promise<Finding[]> {
  * @param endings the path endings
  * @returns the paths
  */
-export function trackedEnding(input: EngineInput, endings: string[]): string[] {
+export function trackedByExtension(input: EngineInput, endings: string[]): string[] {
     return input.files
         .filter(
             (file) =>

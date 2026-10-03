@@ -10,12 +10,13 @@ import { diffRules } from '#cli/lifecycle/preview/compare.ts';
 import type { Drift } from '#cli/types/lifecycle/lifecycle.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Generated } from '#cli/types/generation/generation.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith(`${policy.rules.path}/`) && !policy.rules.install) return false;
-    if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
+    if (path.startsWith(`${HOOKS_DIRECTORY}/`) && policy.hooks === undefined) return false;
     return !NEVER_STRAY.has(path);
 }
 

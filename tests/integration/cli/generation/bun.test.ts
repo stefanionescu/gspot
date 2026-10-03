@@ -21,7 +21,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     const session = await openSession(repository.path);
     const generated = emitted(session).configurations.find((entry) => entry.path === 'bunfig.toml')!;
     const owner = openOwner(repository.path);
-    owner.applyPlan(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
+    owner.applyPlan(owner.proposeMerge(generated.path, generated.format, generated.changes, true));
     const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');
     expect(Bun.TOML.parse(installed)).toStrictEqual({
         install: {
@@ -31,7 +31,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
         },
     });
     expect(installed).toContain('# Authored installation choices');
-    expect(owner.applyPlan(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true))).toBe(
+    expect(owner.applyPlan(owner.proposeMerge(generated.path, generated.format, generated.changes, true))).toBe(
         'unchanged',
     );
     expect(owner.applyPlan(owner.proposeRestoration('bunfig.toml'))).toBe('changed');

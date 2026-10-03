@@ -65,11 +65,11 @@ function buildKitsResult(session: Session): CommandResult {
     }));
     const fields = readManifests(session.root, session.repository.files);
     const detected = detectKits(session.repository.files, session.manifests, fields)
-        .filter((plan) => !names.has(plan.kit))
-        .map((plan) => ({
-            name: plan.kit,
-            evidence: plan.evidence,
-            command: `gspot add ${plan.kit}`,
+        .filter((detection) => !names.has(detection.kit))
+        .map((detection) => ({
+            name: detection.kit,
+            evidence: detection.evidence,
+            command: `gspot add ${detection.kit}`,
         }));
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests

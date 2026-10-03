@@ -3,10 +3,10 @@ import { posix } from 'node:path';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { DOT_GSPOT, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
 
 import {
-    DOT_GSPOT,
     BANNER_BYTES,
     LICENSE_FILE,
     LICENSE_TAGS,
@@ -16,7 +16,6 @@ import {
     GENERATED_BANNERS,
     VALE_OWN_PREFIXES,
     ENV_TEMPLATE_NAMES,
-    VALE_STYLES_PREFIX,
     VENDORED_ATTRIBUTES,
     GENERATED_ATTRIBUTES,
     VENDORED_DIRECTORIES,
@@ -78,7 +77,7 @@ function managedKind(path: string): Verdict | undefined {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Apply, drift, file kinds, and dependencies tell Vale package files from the gspot style by this one rule.
 export function isValePackageFile(path: string): boolean {
-    return path.startsWith(VALE_STYLES_PREFIX) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
+    return path.startsWith(`${STYLES_DIRECTORY}/`) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
 }
 
 /**

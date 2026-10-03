@@ -8,7 +8,7 @@ import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
-async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
+async function pushedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
@@ -36,7 +36,7 @@ export async function commitlintRange(session: Session, planned: PlannedCheck): 
     };
     if (!session.repository.hasGit)
         return { ...result, status: 'skipped', note: 'Commit messages require a Git repository.' };
-    const commits = await selectedCommits(session, planned);
+    const commits = await pushedCommits(session, planned);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
     using folder = scratchFolder('gspot-messages-');
     const scratch = folder.path;

@@ -1,8 +1,9 @@
 import { extensionOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
+import { BLOCK_COMMENT } from '#cli/config/checks/language/sql.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/config/checks/general/prose.ts';
+import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE } from '#cli/config/checks/general/prose.ts';
 
 function lineFindings(input: EngineInput, path: string, lines: string[]): Finding[] {
     const extension = extensionOf(path);
@@ -16,7 +17,7 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
                     'A Vale directive turns a rule off in the text; change the text or record an exception with gspot ignore prose/vale --rule <rule>.',
                 ),
             ];
-        if (SQL.has(extension) && line.includes(SQL_BLOCK_COMMENT))
+        if (SQL.has(extension) && line.includes(BLOCK_COMMENT))
             return [
                 findingAt(
                     input,

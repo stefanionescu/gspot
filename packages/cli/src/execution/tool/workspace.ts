@@ -1,7 +1,7 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { cp, readdir } from 'node:fs/promises';
 import { isInScope } from '#cli/repository/selectors.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
 import { PERMISSION_BITS } from '#cli/config/platform/platform.ts';
 import type { ScratchFolder } from '#cli/types/platform/platform.ts';

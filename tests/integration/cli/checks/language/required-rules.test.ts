@@ -9,7 +9,7 @@ import { emitted } from '#tests/harness/cli/generated.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { linkInstalledModules } from '#tests/harness/cli/platforms.ts';
-import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
+import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
@@ -35,7 +35,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
         config,
         "import { appendFileSync } from 'node:fs';\nappendFileSync('loads.txt', 'loaded\\n');\nimport base from './base.mjs';\nexport default [...base, { files: ['z.js'], rules: { eqeqeq: 'off' } }];\n",
     );
-    expect(await requiredRules(input)).toStrictEqual([
+    expect(await rulesOff(input)).toStrictEqual([
         {
             check: 'javascript/rules-off',
             file: '.gspot/config/eslint.config.mjs',
@@ -47,9 +47,9 @@ test('required ESLint rules inspect later file overrides and accept their correc
     ]);
     expect(readFileSync(join(sandbox.path, 'loads.txt'), 'utf8')).toBe('loaded\n');
     writeFileSync(config, generated.content);
-    expect(await requiredRules(input)).toStrictEqual([]);
+    expect(await rulesOff(input)).toStrictEqual([]);
     writeFileSync(config, 'export default { rules: { missing: true } };\n');
-    await rejects(requiredRules(input), { message: /Tool configuration evaluation failed/u });
+    await rejects(rulesOff(input), { message: /Tool configuration evaluation failed/u });
     input.cancelSignal = AbortSignal.abort();
-    await rejects(requiredRules(input), { message: 'The command was canceled.' });
+    await rejects(rulesOff(input), { message: 'The command was canceled.' });
 });

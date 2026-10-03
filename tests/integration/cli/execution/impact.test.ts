@@ -13,7 +13,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
-import { getStaged, changedFiles } from '#cli/repository/revisions/changes.ts';
+import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `kits = []
@@ -97,7 +97,7 @@ test.each([
     const revision =
         selection === 'staged'
             ? await getStaged(sandbox.path).then(({ staged }) => ({ staged }))
-            : await changedFiles(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
+            : await getChanged(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
     const planned = planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);

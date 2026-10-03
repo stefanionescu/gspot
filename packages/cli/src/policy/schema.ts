@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { outputSchema } from '#cli/kits/output.ts';
 import { toolsSchema } from '#cli/policy/tools.ts';
+import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
 import { TEST_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
@@ -186,7 +187,7 @@ const hooksSchema = z.strictObject({
 
 const rulesSchema = z.strictObject({
     install: flag.default(true).describe('Install the rules for coding agents and the agent instructions.'),
-    path: relativeDirectory.default('.gspot/rules').describe('Repository-relative folder the rules install into.'),
+    path: relativeDirectory.default(RULES_DIRECTORY).describe('Repository-relative folder the rules install into.'),
     local: text
         .optional()
         .describe("Repository-relative folder of the repository's own rules, linked from the instructions."),

@@ -3,6 +3,7 @@ import { ownedBy } from '#cli/kits/owners.ts';
 import { kitName } from '#cli/kits/targets.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
@@ -74,7 +75,7 @@ function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): 
     const { narrow } = context;
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
-    const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
+    const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith(`${DOT_GSPOT}/`));
     if (inNarrowed.length > 0) return entry.spec.runs === 'files' ? inNarrowed : files;
     if (!isTouched) return [];
     if (entry.spec.runs !== 'files') return files;

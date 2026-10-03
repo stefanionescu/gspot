@@ -69,8 +69,8 @@ function explainKit(kitName: string): Explanation | { error: string } {
 
 // The lines about one scope: its default, its current value and source, and how to change it.
 function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string[] {
-    const { scope, shipped, current } = entry;
-    const { value, source = 'unset', reason } = current ?? {};
+    const { scope, shipped, effective } = entry;
+    const { value, source = 'unset', reason } = effective ?? {};
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
     return [
@@ -93,7 +93,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
             {
                 scope: selection.scope.path,
                 spec: match.spec,
-                current: settingValue(selection.surface, session.policyFiles.policy, key, selection.scope.path),
+                effective: settingValue(selection.surface, session.policyFiles.policy, key, selection.scope.path),
                 shipped: selection.surface.defaults.get(match.spec.name)?.value,
             },
         ];
@@ -115,12 +115,12 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         data: {
             key,
             ...first.spec,
-            scopes: scopes.map(({ scope, shipped, current }) => ({
+            scopes: scopes.map(({ scope, shipped, effective }) => ({
                 scope,
                 default: shipped,
-                current: current?.value,
-                source: current?.source,
-                reason: current?.reason,
+                current: effective?.value,
+                source: effective?.source,
+                reason: effective?.reason,
             })),
         },
     };

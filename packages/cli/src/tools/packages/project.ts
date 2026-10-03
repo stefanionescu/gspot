@@ -3,6 +3,7 @@ import { z } from 'zod';
 import semver from 'semver';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { LOCKS } from '#cli/config/tools/packages.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
@@ -13,7 +14,7 @@ import { SETUP, TOOLS_PROJECT } from '#cli/config/tools/tools.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
-import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
+import { DOT_GSPOT, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
 const packageSchema = z.strictObject({
@@ -32,7 +33,7 @@ function projectOf(manifest: string): ToolProject {
     const parsed = packageSchema.parse(JSON.parse(manifest));
     const client = parsePackageTool(parsed.packageManager);
     const lock = LOCKS[client.name];
-    return { client, dependencies: parsed.devDependencies, lock, lockPath: `.gspot/${lock}` };
+    return { client, dependencies: parsed.devDependencies, lock, lockPath: `${DOT_GSPOT}/${lock}` };
 }
 
 // Whether a recorded lock pins the project's dependencies.

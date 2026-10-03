@@ -22,9 +22,9 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
     return checkOutRevision(
         root,
         { kind: 'index' },
-        async (revisionRoot, tree) => {
+        async (checkout, tree) => {
             const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
-            return checkContent(revisionRoot, { ...options, cwd: revisionRoot, paths }, signal, {
+            return checkContent(checkout, { ...options, cwd: checkout, paths }, signal, {
                 content: 'index',
                 installedRoot: root,
                 reference: tree,

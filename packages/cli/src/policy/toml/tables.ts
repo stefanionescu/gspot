@@ -14,19 +14,19 @@ function isTooWide(value: Value, width: number): boolean {
     return getInlineTables(value).some((item) => item.loc.end.column - item.loc.start.column > width);
 }
 
-function range(node: { range?: readonly [number, number] }): readonly [number, number] {
+function getRange(node: { range?: readonly [number, number] }): readonly [number, number] {
     if (node.range === undefined) throw new Error('A parsed TOML node has no source range.');
     return node.range;
 }
 
-function fields(pair: KeyValue, prefix: string): { key: string; value: Value }[] {
+function flatten(pair: KeyValue, prefix: string): { key: string; value: Value }[] {
     const key = `${prefix}${pair.key.raw}`;
     if (isInlineTable(pair.value) && pair.value.items.length > 0)
-        return pair.value.items.flatMap(({ item }) => fields(item, `${key}.`));
+        return pair.value.items.flatMap(({ item }) => flatten(item, `${key}.`));
     return [{ key, value: pair.value }];
 }
 
-function comments(text: string): string {
+function getComments(text: string): string {
     return text
         .split('\n')
         .flatMap((line) => {
@@ -36,26 +36,26 @@ function comments(text: string): string {
         .join('\n');
 }
 
-function blocks(text: string, key: string, value: Value, pad: string): string {
+function buildBlocks(text: string, key: string, value: Value, pad: string): string {
     const tables = getInlineTables(value);
-    let previous = range(value)[0];
+    let previous = getRange(value)[0];
     const output = tables.map((table) => {
-        const start = range(table)[0];
-        const leading = comments(text.slice(previous + 1, start));
-        previous = range(table)[1];
-        const assignments = table.items.flatMap(({ item }) => fields(item, ''));
+        const start = getRange(table)[0];
+        const leading = getComments(text.slice(previous + 1, start));
+        previous = getRange(table)[1];
+        const assignments = table.items.flatMap(({ item }) => flatten(item, ''));
         const ordinary = assignments.filter((entry) => getInlineTables(entry.value).length === 0);
         const nested = assignments.filter((entry) => getInlineTables(entry.value).length > 0);
         return [
             leading,
             `${pad}[[${key}]]`,
-            ...ordinary.map((entry) => `${pad}${entry.key} = ${text.slice(...range(entry.value))}`),
-            ...nested.map((entry) => blocks(text, `${key}.${entry.key}`, entry.value, pad)),
+            ...ordinary.map((entry) => `${pad}${entry.key} = ${text.slice(...getRange(entry.value))}`),
+            ...nested.map((entry) => buildBlocks(text, `${key}.${entry.key}`, entry.value, pad)),
         ]
             .filter((line) => line !== '')
             .join('\n');
     });
-    const trailing = comments(text.slice(previous, range(value)[1]));
+    const trailing = getComments(text.slice(previous, getRange(value)[1]));
     if (trailing !== '') output.push(trailing);
     return output.join('\n\n');
 }
@@ -65,17 +65,17 @@ function sectionEdits(text: string, rows: TomlBlock[], prefix: string, end: numb
     const additions: string[] = [];
     for (const pair of rows) {
         if (!isKeyValue(pair) || !isTooWide(pair.value, width)) continue;
-        const [start, stop] = range(pair);
+        const [start, stop] = getRange(pair);
         const pad = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
-        const assignments = fields(pair, '');
+        const assignments = flatten(pair, '');
         const ordinary = assignments.filter((entry) => !isTooWide(entry.value, width));
         for (const entry of assignments.filter((entry) => isTooWide(entry.value, width)))
-            additions.push(blocks(text, `${prefix}${entry.key}`, entry.value, pad));
+            additions.push(buildBlocks(text, `${prefix}${entry.key}`, entry.value, pad));
         edits.push({
             start,
             end: stop,
             replacement: ordinary
-                .map((entry) => `${entry.key} = ${text.slice(...range(entry.value))}`)
+                .map((entry) => `${entry.key} = ${text.slice(...getRange(entry.value))}`)
                 .join(`\n${pad}`),
         });
     }
@@ -96,7 +96,7 @@ export function expandLongTables(text: string, width: number): string {
     let prefix = '';
     for (const node of nodes) {
         if ('items' in node) {
-            edits.push(...sectionEdits(text, rows, prefix, range(node)[0], width));
+            edits.push(...sectionEdits(text, rows, prefix, getRange(node)[0], width));
             rows = node.items;
             prefix = `${node.key.item.raw}.`;
         } else rows.push(node);

@@ -6,15 +6,15 @@ import { readSource } from '#cli/repository/sources.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Mount } from '#cli/types/checks/tool/nginx.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { directives } from '#cli/checks/tool/nginx/directives.ts';
 import { testArguments } from '#cli/checks/tool/nginx/arguments.ts';
-import { nginxDirectives } from '#cli/checks/tool/nginx/directives.ts';
 import type { Finding, EngineInput, EngineOutcome } from '#cli/types/execution/execution.ts';
 import { NGINX_MAIN, NGINX_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
-function includedConfigurations(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+function includes(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
-    for (const [name, value] of nginxDirectives(text)) {
+    for (const [name, value] of directives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
         const target = posix.resolve('/etc/nginx', value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
@@ -36,7 +36,7 @@ function copies(input: EngineInput, path: string, work: string): Map<string, Mou
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });
-        pending.push(...includedConfigurations(input, text, base));
+        pending.push(...includes(input, text, base));
     }
     return configurations;
 }

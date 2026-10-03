@@ -5,7 +5,7 @@ import type { Read } from '#cli/types/platform/platform.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { InstalledOutput } from '#cli/types/tools/tools.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/kits.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 import {
     openSync,

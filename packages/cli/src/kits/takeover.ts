@@ -10,7 +10,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
-import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Fields, Tooling, ToolFile, TrackedFile } from '#cli/types/repository/repository.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {

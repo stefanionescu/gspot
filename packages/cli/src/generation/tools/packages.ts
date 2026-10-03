@@ -5,6 +5,7 @@ import type { PackageTool } from '#cli/types/tools/packages.ts';
 import { YARN_BERRY_MAJOR } from '#cli/config/tools/packages.ts';
 import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
 import { PACKAGE_JSON_INDENT } from '#cli/config/generation/generation.ts';
+import { YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.
@@ -21,7 +22,7 @@ export function toolPackages(
     if (client === undefined) return [];
     const files: GeneratedFile[] = [
         {
-            path: '.gspot/package.json',
+            path: TOOL_PACKAGE_PROJECT,
             content: `${JSON.stringify(
                 {
                     name: TOOLS_PROJECT,
@@ -39,7 +40,7 @@ export function toolPackages(
     ];
     if (client.name === 'yarn' && semver.major(client.version) >= YARN_BERRY_MAJOR)
         files.push({
-            path: '.gspot/.yarnrc.yml',
+            path: YARN_SETTINGS,
             content: 'nodeLinker: node-modules\nenableGlobalCache: true\n',
             readOnly: true,
             kind: 'config',

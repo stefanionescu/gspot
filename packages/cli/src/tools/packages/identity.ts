@@ -8,6 +8,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { readPackageManifest } from '#cli/repository/packages.ts';
+import { DOT_GSPOT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 // The first package manager a candidate manifest declares, reading each manifest that exists on the way.
 async function detectedTool(
@@ -68,7 +69,7 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
     const candidates = [
         'package.json',
         ...projectPaths
-            .filter((path) => path.endsWith('/package.json') && !path.startsWith('.gspot/'))
+            .filter((path) => path.endsWith('/package.json') && !path.startsWith(`${DOT_GSPOT}/`))
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
@@ -78,7 +79,7 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
         version: undefined,
     };
     if (version !== undefined) return exactTool(name, version);
-    const current = files.read('.gspot/package.json');
+    const current = files.read(TOOL_PACKAGE_PROJECT);
     const recorded = current === undefined ? undefined : recordedTool(current.bytes);
     if (recorded?.name === name) return recorded;
     const result = await runToolCommand(undefined, [name, '--version'], { cwd: root });

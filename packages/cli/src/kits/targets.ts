@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
 
