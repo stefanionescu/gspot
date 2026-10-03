@@ -81,7 +81,7 @@ function withoutMarks(text: string, open: string, close: string): string {
     return rest;
 }
 
-function copyProblems(root: Node): MarkupProblem[] {
+function literalProblems(root: Node): MarkupProblem[] {
     const texts = root
         .descendantsOfType('text')
         .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
@@ -137,7 +137,7 @@ async function findings(
  * @param input the engine input
  * @returns the findings
  */
-function htmlScripts(input: EngineInput): Promise<Finding[]> {
+function scripts(input: EngineInput): Promise<Finding[]> {
     const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     return findings(input, paths, scriptProblems);
 }
@@ -147,7 +147,7 @@ function htmlScripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
+function literals(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['templates'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
@@ -157,7 +157,7 @@ function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const isTemplate = pathMatcher(templates);
     const isExcluded = pathMatcher(excluded);
     const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
-    return findings(input, paths, copyProblems);
+    return findings(input, paths, literalProblems);
 }
 
 /**
@@ -210,6 +210,6 @@ export function scriptProblems(root: Node): MarkupProblem[] {
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const HTML_ANALYSES: Record<string, Engine> = {
-    'html/scripts': htmlScripts,
-    'html/literals': htmlText,
+    'html/scripts': scripts,
+    'html/literals': literals,
 };

@@ -90,21 +90,21 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
             ? { 'gspot/no-reexports': 'error' }
             : { 'gspot/no-reexports': ['error', { allowIndex: true }] };
     return {
-        'gspot/no-exported-alias-constants': 'error',
+        'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
-        'gspot/header-comments-before-imports': 'error',
+        'gspot/header-first': 'error',
         'gspot/no-import-comments': 'error',
         'gspot/import-layout': 'error',
         'gspot/export-layout': 'error',
         'gspot/no-cross-folder-imports': ['error', { aliases }],
-        'gspot/no-cross-project-imports': ['error', { scopes: scopePaths }],
-        'gspot/registry-instance-only':
+        'gspot/no-cross-scope-imports': ['error', { scopes: scopePaths }],
+        'gspot/registry-instances':
             config === undefined
                 ? 'error'
-                : ['error', { registryFiles: [...REGISTRY_FILES, `${config}/**`, `**/${config}/**`] }],
+                : ['error', { files: [...REGISTRY_FILES, `${config}/**`, `**/${config}/**`] }],
         'gspot/private-before-public': 'error',
         'gspot/import-direction': ['error', { roles, aliases }],
-        'gspot/env-access-owner': ['error', { owners: roles['env'] }],
+        'gspot/env-owner': ['error', { owners: roles['env'] }],
         ...reexports,
     };
 }
@@ -119,7 +119,7 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
     return {
         ...(architecture.types_directory === undefined
             ? {}
-            : { 'gspot/types-placement': ['error', { typesDirectory: architecture.types_directory }] }),
+            : { 'gspot/types-placement': ['error', { directory: architecture.types_directory }] }),
         'gspot/no-trivial-functions': ['error', trivial],
         'gspot/no-trivial-files': ['error', trivial],
         ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),
@@ -186,7 +186,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
         commentLevel: policy.requireReasons ? 'error' : 'off',
         importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
             files: [[glob, ESLINT_CODE_FILES]],
-            rules: { 'gspot/import-path-style': ['error', { style, internalPrefixes }] },
+            rules: { 'gspot/import-style': ['error', { style, internalPrefixes }] },
         })),
         runtimes: Object.entries(globals).map(([glob, runtime]) => ({
             files: [glob],

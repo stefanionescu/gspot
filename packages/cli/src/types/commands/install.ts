@@ -20,3 +20,6 @@ export type InstallationStep = {
     failure: string;
     run: (session: Session, manifests: Manifest[]) => string | Promise<string>;
 };
+
+/** What an installation after a write said, and the exit code it leaves. */
+export type Installed = { installNote: string; exitCode: number };

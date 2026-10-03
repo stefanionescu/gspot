@@ -36,7 +36,7 @@ function commentSource(text: string, comments: Node[]): string {
     return parts.join('');
 }
 
-function restoreInlineFindings(result: CheckResult, checked: CheckResult, candidates: InlineDocumentation[]): void {
+function restoreInline(result: CheckResult, checked: CheckResult, candidates: InlineDocumentation[]): void {
     for (const { source, inline } of candidates) {
         for (const comment of inline) {
             const { row, column } = comment.startPosition;
@@ -65,7 +65,7 @@ function restoreInlineFindings(result: CheckResult, checked: CheckResult, candid
  * @param planned the native check, scope, and selected files
  * @returns native findings with inline documentation positions restored
  */
-export async function checkSwiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function swiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result = await runToolCheck(session, planned, SWIFTLINT_COMMAND);
     if (!['passed', 'failed'].includes(result.status) || planned.scope.view.rulesOff(planned.check).includes(DOC_RULE))
@@ -103,7 +103,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
                 ...compact({ note: checked.note }),
                 duration: performance.now() - started,
             };
-        restoreInlineFindings(result, checked, candidates);
+        restoreInline(result, checked, candidates);
         if (result.findings.length > 0) result.status = 'failed';
         result.duration = performance.now() - started;
         return result;

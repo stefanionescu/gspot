@@ -18,7 +18,7 @@ import {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptPolicy: Analysis = async (context, scripts) => {
+export const wrappers: Analysis = async (context, scripts) => {
     const index = await scripts();
     return index.files.flatMap((file) => {
         const findings = [];

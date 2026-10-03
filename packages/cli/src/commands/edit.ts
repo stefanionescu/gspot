@@ -10,7 +10,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { proposePolicy } from '#cli/policy/mutations.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { installTools } from '#cli/commands/install/steps.ts';
+import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
+import { finishInstall } from '#cli/commands/install/steps.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Mutation, Proposal } from '#cli/types/policy/policy.ts';
 import type { CommandResult, PreparedPolicy } from '#cli/types/commands/commands.ts';
@@ -59,7 +60,7 @@ export function writePolicy(root: string, plan: PreparedPolicy): Proposal {
  * @param mutation the change to the raw document.
  * @param isDryRun when true nothing is written and apply does not run.
  * @param describe the text that tells the user what changed.
- * @returns the command result with exit code 0, and what apply wrote.
+ * @returns the command result with what apply wrote, or exit code 2 when apply stopped after the policy was written.
  */
 export async function commitPolicy(
     root: string,
@@ -82,7 +83,18 @@ export async function commitPolicy(
             path: join(root, 'gspot.toml'),
             problems: [],
         });
-        const applied = await writeOutputs(session);
+        let applied: ApplyReport;
+        try {
+            applied = await writeOutputs(session);
+        } catch (error) {
+            // The policy is written by now, so the result says it keeps the change and how to finish.
+            const reason = error instanceof Error ? error.message : String(error);
+            return {
+                text: `${describe}\ngspot.toml keeps this change, and applying it stopped: ${reason}\nResolve that, then run gspot apply.\n`,
+                json: { changed: result.changed, applied: false, message: reason },
+                exitCode: EXIT_ERROR,
+            };
+        }
         const notes = applied.notes.map((note) => `note     ${note}\n`).join('');
         return {
             text: `${describe}\n${notes}`,
@@ -117,7 +129,8 @@ export async function installSelection(
     const { applied, ...result } = changed;
     if (applied === undefined) return result;
     const session = await openSession(root);
-    const installed = await installTools(session, true);
-    const note = installed === '' ? '' : `${installed}\n`;
-    return { ...result, text: `${result.text}${note}Run gspot check to check the selected kits.\n` };
+    const { installNote, exitCode } = await finishInstall(session, true);
+    const note = installNote === '' ? '' : `${installNote}\n`;
+    const next = exitCode === 0 ? 'Run gspot check to check the selected kits.\n' : '';
+    return { ...result, text: `${result.text}${note}${next}`, exitCode };
 }

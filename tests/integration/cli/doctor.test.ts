@@ -1,5 +1,6 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
+import * as inspect from '#cli/tools/inspect.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -8,6 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
+import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('doctor lists a tool only on the systems it has a build for', async () => {
@@ -67,4 +69,38 @@ test('doctor excludes private tool manifests from language detection and detects
         },
     });
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
+});
+
+test('doctor reports a new Python file after setup with the command that adds its kit', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
+        'entry.sh': 'echo\n',
+    });
+    await writeOutputs(await openSession(sandbox.path));
+    writeFileSync(join(sandbox.path, 'service.py'), 'print("hello")\n');
+    const result = await doctorCommand({ cwd: sandbox.path });
+    const { changes } = result.json as DoctorReport;
+    expect(changes.detected).toContainEqual(containing({ kit: 'python', command: 'gspot add python' }));
+});
+
+test.each([
+    ['4.12.0', 0],
+    ['4.0.0', 1],
+])('doctor exits by the installed library version %s: an outdated tool exits 1', async (version, code) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['zod'], '[rules]\ninstall = false\n'),
+        '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({ name: 'eslint-plugin-zod', version }),
+    });
+    const original = inspect.inspectTool;
+    // Every other tool reads as ready, so the exit code follows the one planted library alone.
+    using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
+        tool.name === 'eslint-plugin-zod' ? original(context, tool) : { name: tool.name, state: 'ok' },
+    );
+    const result = await doctorCommand({ cwd: sandbox.path });
+    expect(inspected).toHaveBeenCalled();
+    const report = result.json as DoctorReport;
+    expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(code === 0 ? 'ok' : 'outdated');
+    expect(result.exitCode).toBe(code);
 });

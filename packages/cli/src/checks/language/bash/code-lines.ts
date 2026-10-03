@@ -2,9 +2,9 @@ import type { CodeLine } from '#cli/types/checks/language/bash.ts';
 
 import {
     QUOTES,
+    DIRECTORY_START,
     DECLARATION_WORDS,
     DIRECTORY_CONSTANT_SIGNS,
-    DIRECTORY_CONSTANT_START,
 } from '#cli/config/checks/language/bash.ts';
 
 function quoteAfter(quote: string | undefined, char: string): string | undefined {
@@ -72,7 +72,6 @@ export function withoutDeclaration(code: string): string {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three interpreter checks recognize the script-folder constant by this one pattern.
 export function isDirectoryConstant(code: string): boolean {
     return (
-        DIRECTORY_CONSTANT_START.test(withoutDeclaration(code)) &&
-        DIRECTORY_CONSTANT_SIGNS.every((sign) => code.includes(sign))
+        DIRECTORY_START.test(withoutDeclaration(code)) && DIRECTORY_CONSTANT_SIGNS.every((sign) => code.includes(sign))
     );
 }

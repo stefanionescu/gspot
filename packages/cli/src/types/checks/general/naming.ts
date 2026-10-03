@@ -41,13 +41,13 @@ export type Term = { term: string; parts: string[]; source: string };
 
 /** A path-scoped rule, compiled. */
 export type PathRule = {
-    isPath: (path: string) => boolean;
+    matches: (path: string) => boolean;
     languages: Set<string> | undefined;
     categories: Set<string> | undefined;
     names: Set<string> | undefined;
-    isExcluding: boolean;
+    excludes: boolean;
     isDigitsAllowed: boolean;
-    isDuplicatesAllowed: boolean;
+    allowsRepeats: boolean;
     structuralPrefix: RegExp | undefined;
     caseNames: string[] | undefined;
     source: string;

@@ -59,7 +59,7 @@ function guardFindings(file: ScriptFile, seen: Map<string, string>, context: Str
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptConfigDefaults: Analysis = async (context, scripts) => {
+export const defaults: Analysis = async (context, scripts) => {
     const owners = new Set(context.bashSetting('config_owners') as string[] | undefined);
     const fragments = context.bashList('defaults_allowed');
     const index = await scripts();
@@ -88,7 +88,7 @@ export const scriptConfigDefaults: Analysis = async (context, scripts) => {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptGuards: Analysis = async (context, scripts) => {
+export const guards: Analysis = async (context, scripts) => {
     const owners = new Set(context.bashList('config_owners'));
     const index = await scripts();
     const seen = new Map<string, string>();

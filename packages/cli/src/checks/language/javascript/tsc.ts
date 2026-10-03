@@ -79,7 +79,7 @@ function writeScopeProject(session: Session, scratch: string, scope: string, tar
  * @param planned the compiler check for one scope
  * @returns compiler findings and the shared tool execution status
  */
-export async function checkTypescript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function tsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const config = getTsconfig(session.root, join(session.root, planned.scope.scope.path, 'tsconfig.json'));
     const references = (config?.projectReferences?.length ?? 0) > 0;
     const command = references
@@ -105,7 +105,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
  * @param planned the JavaScript compiler check
  * @returns compiler diagnostics with source paths and supervised execution status
  */
-export async function checkJavascript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkjs(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
     const jsconfig = planned.manifest?.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json');
     if (jsconfig === undefined) throw new Error('The typescript configuration declares no jsconfig target.');

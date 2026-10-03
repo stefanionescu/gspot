@@ -5,7 +5,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { checkJavascript } from '#cli/checks/language/javascript/tsc.ts';
+import { checkjs } from '#cli/checks/language/javascript/tsc.ts';
 
 test('a scope whose project lists no JavaScript file passes with nothing to compile', async () => {
     await using sandbox = await testdir();
@@ -24,7 +24,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/tsc'] });
     // A policy change plans the check in every scope, including one with no JavaScript file.
     const site = { ...root!, scope: reopened.scopes.find((entry) => entry.scope.path === 'site')!, files: [] };
-    expect(await checkJavascript(reopened, site)).toMatchObject({
+    expect(await checkjs(reopened, site)).toMatchObject({
         check: 'javascript/tsc',
         scope: 'site',
         status: 'passed',

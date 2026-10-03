@@ -3,7 +3,7 @@ import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
-import packageManifest from '#package' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;

@@ -5,8 +5,8 @@ import { statSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { readPrefix } from '#cli/repository/sources.ts';
+import { failure } from '#tests/harness/expectations.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { failure, rejection } from '#tests/harness/expectations.ts';
 import { findRoot, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 test('repository file discovery > excluded links are omitted before resolving external targets', async () => {
@@ -20,7 +20,8 @@ test('repository file discovery > excluded links are omitted before resolving ex
     expect(processes.runBlocking(['git', 'init', '-q'], { cwd: root }).code).toBe(0);
     const repository = await readRepository(root, [], [], ['excluded.ts']);
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-    expect(await rejection(readRepository(root, [], [], []))).toMatch(/Source link leaves the repository/u);
+    const unexcluded = await readRepository(root, [], [], []);
+    expect(unexcluded.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     expect(fs.readFileSync(join(sandbox.path, 'outside.ts'), 'utf8')).toBe('private external bytes');
 });
 

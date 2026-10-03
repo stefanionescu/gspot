@@ -24,7 +24,7 @@ async function selectedCommits(session: Session, planned: PlannedCheck): Promise
  * @param planned the planned check
  * @returns the check result
  */
-export async function checkCommitMessages(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function commitlintRange(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
         check: planned.check,

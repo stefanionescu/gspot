@@ -3,7 +3,7 @@ import { harnessFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { directoryOf } from '#cli/checks/general/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/general/structure.ts';
+import { BANNED_FOLDERS, IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.
@@ -31,7 +31,7 @@ export const getDirectories: Analysis = (context) => {
                 seen.has(folder) ||
                 harnesses.has(folder) ||
                 IGNORED_FOLDERS.includes(segment) ||
-                !BANNED_FOLDER_NAMES.includes(segment.toLowerCase())
+                !BANNED_FOLDERS.includes(segment.toLowerCase())
             )
                 return [];
             if (allowed(folder) || allowed(`${folder}/`)) return [];

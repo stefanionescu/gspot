@@ -130,7 +130,7 @@ function licenseFindings(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function allowlistsMatch(input: EngineInput): Finding[] {
+export function staleAllowlists(input: EngineInput): Finding[] {
     const candidates = matchCandidates(input.files.map((file) => file.path));
     const references = referencedPaths(input);
     const findings = policyPatterns(input)

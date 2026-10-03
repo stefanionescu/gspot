@@ -7,7 +7,9 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { treeContents } from '#tests/harness/planted/preservation.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
+import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
 
@@ -73,4 +75,99 @@ test('malformed authored blocks refuse apply before generated files change', asy
     const corrected = await runGspot(directory.path, ['apply']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
+});
+
+// A lock that a crash left behind, and one a live process holds: apply stops and names the lock to delete.
+test.each([
+    ['empty', () => ''],
+    ['held by a live process', (pid: number) => `${String(pid)}:held`],
+    ...(process.platform === 'win32' ? [] : [['held by process 1', () => '1:held'] as const]),
+] as const)('apply refuses a writer lock %s and names it', async (_, holder) => {
+    await using directory = await testdir();
+    // A process that outlives the run stands for the holder; disposing it kills it.
+    await using sleeper = Bun.spawn([process.execPath, '-e', 'await Bun.sleep(60_000)']);
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf([], '[rules]\ninstall = false\n'),
+        '.gspot/state/writer.lock': holder(sleeper.pid),
+    });
+    const refused = await runGspot(directory.path, ['apply']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('.gspot/state/writer.lock');
+    expect(readFileSync(join(directory.path, '.gspot/state/writer.lock'), 'utf8')).toBe(holder(sleeper.pid));
+});
+
+test('apply --json prints one error object when it refuses an edited generated file', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['bash'], '[rules]\ninstall = false\n'),
+        'entry.sh': 'echo example\n',
+    });
+    const applied = await runGspot(directory.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const generated = join(directory.path, '.gspot/config/shellcheckrc');
+    chmodSync(generated, 0o644);
+    writeFileSync(generated, `${readFileSync(generated, 'utf8')}# Edited.\n`);
+    writeFileSync(
+        join(directory.path, 'gspot.toml'),
+        policyOf(['bash'], '[rules]\ninstall = false\n[limits]\nfile_lines = 100\n'),
+    );
+    const refused = await runGspot(directory.path, ['apply', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    const failure = JSON.parse(refused.stdout) as CommandFailureJson;
+    expect(Object.keys(failure)).toStrictEqual(['error', 'message']);
+    expect(failure.message).toContain('shellcheckrc');
+});
+
+test('apply refuses to move a generated file to a spelling that differs only by letter case', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[rules]\npath = "docs/rules"\n') });
+    const first = await runGspot(sandbox.path, ['apply']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const guide = join(sandbox.path, 'docs/rules/agent/WORKING.md');
+    const written = readFileSync(guide, 'utf8');
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([], '[rules]\npath = "docs/Rules"\n'));
+    const renamed = await runGspot(sandbox.path, ['apply']);
+    expect(renamed.code, renamed.stdout + renamed.stderr).toBe(2);
+    expect(renamed.stderr).toContain('differs only by letter case');
+    expect(readdirSync(join(sandbox.path, 'docs'))).toStrictEqual(['rules']);
+    expect(readFileSync(guide, 'utf8')).toBe(written);
+});
+
+test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['bash', 'markdown']),
+        'entry.sh': 'echo example\n',
+        'README.md': '# Example\n',
+    });
+    const applied = await runGspot(directory.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const edit = (path: string, text: (current: string) => string): void => {
+        const full = join(directory.path, path);
+        chmodSync(full, 0o644);
+        writeFileSync(full, text(readFileSync(full, 'utf8')));
+    };
+    edit('.gspot/config/shellcheckrc', (current) => `${current}# Edited.\n`);
+    edit('.gspot/package.json', (current) => `<<<<<<< ours\n${current}=======\n>>>>>>> theirs\n`);
+    edit('AGENTS.md', (current) =>
+        current.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
+    );
+    writeFileSync(join(directory.path, 'gspot.toml'), policyOf(['bash']));
+    const before = treeContents(directory.path);
+    const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const { drift } = JSON.parse(preview.stdout) as { drift: { path: string; kind: string; diff?: string }[] };
+    expect(drift).toContainEqual(
+        containing({
+            path: '.gspot/config/shellcheckrc',
+            kind: 'changed',
+            diff: expect.stringContaining('-# Edited.') as string,
+        }),
+    );
+    expect(drift).toContainEqual(containing({ path: '.gspot/package.json', kind: 'conflict' }));
+    expect(drift).toContainEqual(
+        containing({ path: 'AGENTS.md', kind: 'changed', diff: expect.stringContaining('-Edited inside.') as string }),
+    );
+    expect(drift).toContainEqual(containing({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
+    expect(treeContents(directory.path)).toStrictEqual(before);
 });

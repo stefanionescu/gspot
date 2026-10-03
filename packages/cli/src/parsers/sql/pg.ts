@@ -12,7 +12,7 @@ async function pgModule(): Promise<PgModule> {
     return state.module;
 }
 
-function readResult(module: PgModule, result: number): SqlParse {
+function readParse(module: PgModule, result: number): SqlParse {
     const treeAt = module.getValue(result, 'i32');
     const errorAt = module.getValue(result + POINTER_BYTES + POINTER_BYTES, 'i32');
     if (errorAt !== 0) {
@@ -41,7 +41,7 @@ export async function parseSql(text: string): Promise<SqlParse> {
     module.stringToUTF8(text, query, size);
     const result = module._wasm_parse_query_raw(query);
     try {
-        return readResult(module, result);
+        return readParse(module, result);
     } finally {
         module._free(query);
         module._wasm_free_parse_result(result);

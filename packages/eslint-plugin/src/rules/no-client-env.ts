@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { ClientEnvOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { NoClientEnvironmentOptions } from '#plugin/types/rules.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 
 function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allowed: Set<string>): boolean {
@@ -12,8 +12,8 @@ function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allow
     return allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
 }
 
-export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'private'>({
-    name: 'no-client-environment',
+export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
+    name: 'no-client-env',
     meta: {
         type: 'problem',
         docs: {
@@ -27,7 +27,7 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
         },
         schema: [
             optionsSchema({
-                clientModule: { type: 'boolean' },
+                isClient: { type: 'boolean' },
                 publicPrefixes: { type: 'array', items: { type: 'string' } },
                 allowed: { type: 'array', items: { type: 'string' } },
             }),
@@ -37,12 +37,12 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',
         },
     },
-    defaultOptions: [{ clientModule: false, publicPrefixes: ['NEXT_PUBLIC_'], allowed: ['NODE_ENV'] }],
+    defaultOptions: [{ isClient: false, publicPrefixes: ['NEXT_PUBLIC_'], allowed: ['NODE_ENV'] }],
     create(context, [options]) {
         const prefixes = options.publicPrefixes ?? ['NEXT_PUBLIC_'];
         const allowed = new Set(options.allowed ?? ['NODE_ENV']);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
-        let isClient = options.clientModule === true;
+        let isClient = options.isClient === true;
         return {
             Program(node) {
                 isClient ||= node.body.some(

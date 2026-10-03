@@ -55,7 +55,7 @@ function pageProblems(page: PageLinks, origin: string, files: Set<string>, pages
 
 if (import.meta.main) {
     if (process.argv.length > ARGUMENT_START) throw new Error('The built-site link check accepts no arguments.');
-    await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
+    await validateSiteLinks(new URL('dist/', import.meta.url), 'https://gspot.dev');
     process.stdout.write('All built-site links and fragment targets are valid.\n');
 }
 

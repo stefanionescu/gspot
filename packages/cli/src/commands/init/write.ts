@@ -9,12 +9,12 @@ import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
-import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import { installTools } from '#cli/commands/install/steps.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
-import { EXIT_ERROR, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import type { Written, Installed, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
+import { finishInstall } from '#cli/commands/install/steps.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import type { Written, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.
@@ -63,25 +63,6 @@ function generatedPaths(session: Session): Set<string> {
     return new Set(every.map((output) => output.path));
 }
 
-// Whether every failure of an installation is one a later gspot install can repair.
-function isRepairable(error: unknown): error is AggregateError {
-    if (!(error instanceof AggregateError)) return false;
-    return error.errors.every(
-        (failure: unknown) => failure instanceof GspotError && ['tool', 'installation'].includes(failure.code),
-    );
-}
-
-// Installs the tools, or reports an incomplete installation the setup can live with.
-async function installed(session: Session, install: boolean): Promise<Installed> {
-    try {
-        return { installNote: await installTools(session, install), exitCode: 0 };
-    } catch (error) {
-        if (!isRepairable(error)) throw error;
-        const installNote = `${error.message}\nSetup was written; tool installation is incomplete. Run: gspot install`;
-        return { installNote, exitCode: EXIT_ERROR };
-    }
-}
-
 /**
  * Writes the policy and the generated files, retires the replaced configuration, and installs the tools.
  * @param root the repository root
@@ -114,7 +95,7 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
                 (path) => `retained ${path}: directory contents or subsequent edits are not authorized for deletion`,
             ),
         );
-        const { installNote, exitCode } = await installed(session, options.install);
+        const { installNote, exitCode } = await finishInstall(session, options.install);
         const version = colors.dim(`gspot ${GSPOT_VERSION}`);
         return {
             lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, version, ''],

@@ -83,8 +83,8 @@ function namesOf(file: string, statement: TSESTree.Statement, visited = new Set<
     return resolved === undefined ? [] : [...exportsOf(resolved, visited)];
 }
 
-export const noDuplicateBarrelExports = createRule<[], 'duplicate'>({
-    name: 'no-duplicate-barrel-exports',
+export const noDuplicateExports = createRule<[], 'duplicate'>({
+    name: 'no-duplicate-exports',
     meta: {
         type: 'problem',
         docs: {

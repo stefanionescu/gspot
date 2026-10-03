@@ -35,7 +35,7 @@ function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string
     return names;
 }
 
-async function readScriptFile(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
+async function readScript(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
     const text = readSource(input.root, file.path, input.reads).toString('utf8');
     const lines = text.split('\n');
     const functions = await scriptFunctions(text, input);
@@ -52,7 +52,7 @@ async function readScriptFile(input: EngineInput, file: TrackedFile): Promise<Sc
 
 async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
     const read: ScriptFile[] = [];
-    for (const file of files) read.push(await readScriptFile(input, file));
+    for (const file of files) read.push(await readScript(input, file));
     const owners = new Map<string, string>();
     for (const file of read)
         for (const entry of file.functions) if (!owners.has(entry.name)) owners.set(entry.name, file.path);

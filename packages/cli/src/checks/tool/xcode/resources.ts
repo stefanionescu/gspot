@@ -65,7 +65,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function stringFiles(input: EngineInput): Finding[] {
+export function xcstrings(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => {
         const read = parsed(input, path);
         const at = { file: path, line: 1 };
@@ -89,7 +89,7 @@ export function stringFiles(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function assetFolders(input: EngineInput): Finding[] {
+export function assets(input: EngineInput): Finding[] {
     const contents = trackedEnding(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
     return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

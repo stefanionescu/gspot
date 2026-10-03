@@ -6,10 +6,10 @@ import { readSource } from '#cli/repository/sources.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Mount } from '#cli/types/checks/tool/nginx.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { testArguments } from '#cli/checks/tool/nginx/arguments.ts';
 import { nginxDirectives } from '#cli/checks/tool/nginx/directives.ts';
-import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
 import type { Finding, EngineInput, EngineOutcome } from '#cli/types/execution/execution.ts';
-import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
+import { NGINX_MAIN, NGINX_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
 function includedConfigurations(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
@@ -24,7 +24,7 @@ function includedConfigurations(input: EngineInput, text: string, base: string):
     return included;
 }
 
-function configurationCopies(input: EngineInput, path: string, work: string): Map<string, Mount> {
+function copies(input: EngineInput, path: string, work: string): Map<string, Mount> {
     const directory = mkdtempSync(join(work, 'configuration-'));
     const configurations = new Map<string, Mount>();
     const pending = [{ path, target: '/etc/nginx/nginx.conf' }];
@@ -41,12 +41,7 @@ function configurationCopies(input: EngineInput, path: string, work: string): Ma
     return configurations;
 }
 
-function configurationFailure(
-    check: string,
-    path: string,
-    configurations: Map<string, Mount>,
-    said: string,
-): EngineOutcome {
+function failure(check: string, path: string, configurations: Map<string, Mount>, said: string): EngineOutcome {
     const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups ?? {};
     const file = configurations.get(target)?.path ?? path;
     return {
@@ -56,13 +51,13 @@ function configurationFailure(
 }
 
 async function tested(input: EngineInput, path: string, work: string, image: string): Promise<EngineOutcome> {
-    const configurations = configurationCopies(input, path, work);
+    const configurations = copies(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
         certificate: join(work, 'certificate.pem'),
         key: join(work, 'key.pem'),
     };
-    const argv = nginxTestArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
+    const argv = testArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
     const result = await runCheckCommand(input, ['docker', ...argv], { cwd: input.root });
     if (result.code === 0) {
         const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):\r?$/gmu)]
@@ -81,7 +76,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     const said = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
     if (result.code !== 1 || said === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return configurationFailure(input.spec.name, path, configurations, said);
+    return failure(input.spec.name, path, configurations, said);
 }
 
 /**
@@ -89,14 +84,14 @@ async function tested(input: EngineInput, path: string, work: string, image: str
  * @param input the engine input
  * @returns one finding for each file nginx refuses
  */
-export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
-    const image = (input.view.tool('nginx')['image'] as string | undefined) ?? DEFAULT_IMAGE;
+export async function test(input: EngineInput): Promise<EngineOutcome> {
+    const image = (input.view.tool('nginx')['image'] as string | undefined) ?? NGINX_IMAGE;
     const scopes = input.scopeEntries;
     const paths = input.files
         .map((file) => file.path)
         .filter(
             (path) =>
-                (path === MAIN_FILE || path.endsWith(`/${MAIN_FILE}`)) && scopeOf(path, scopes).path === input.scope,
+                (path === NGINX_MAIN || path.endsWith(`/${NGINX_MAIN}`)) && scopeOf(path, scopes).path === input.scope,
         );
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = scratchFolder('gspot-nginx-');

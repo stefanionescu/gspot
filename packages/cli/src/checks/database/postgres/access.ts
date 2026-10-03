@@ -2,7 +2,7 @@
 import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import { DEFAULT_SCHEMA } from '#cli/config/checks/database.ts';
+import { PUBLIC_SCHEMA } from '#cli/config/checks/database.ts';
 import { schema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
@@ -46,11 +46,9 @@ async function statementFindings(
  * @param input the engine input
  * @returns the findings
  */
-export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
+export async function rls(input: EngineInput): Promise<Finding[]> {
     const fields = schema(await migrationsOf(input));
-    const schemas = new Set(
-        (input.view.tool('postgres')['client_schemas'] as string[] | undefined) ?? [DEFAULT_SCHEMA],
-    );
+    const schemas = new Set((input.view.tool('postgres')['client_schemas'] as string[] | undefined) ?? [PUBLIC_SCHEMA]);
     return fields.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
@@ -70,7 +68,7 @@ export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the postgres-grants check, which the analysis table names.
-export function explicitGrants(input: EngineInput): Promise<Finding[]> {
+export function grants(input: EngineInput): Promise<Finding[]> {
     return statementFindings(
         input,
         'grant-all',

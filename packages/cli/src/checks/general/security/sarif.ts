@@ -5,12 +5,12 @@ import { readSource } from '#cli/repository/sources.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 
-const artifactLocation = z.object({
+const locationSchema = z.object({
     uri: z.string().optional(),
     uriBaseId: z.string().optional(),
     index: z.number().int().nonnegative().optional(),
 });
-const sarifResult = z.object({
+const resultSchema = z.object({
     ruleId: z.string().optional(),
     message: z.object({ text: z.string().optional() }).optional(),
     locations: z
@@ -18,7 +18,7 @@ const sarifResult = z.object({
             z.object({
                 physicalLocation: z
                     .object({
-                        artifactLocation: artifactLocation.optional(),
+                        artifactLocation: locationSchema.optional(),
                         region: z
                             .object({
                                 startLine: z.number().int().positive().optional(),
@@ -32,13 +32,13 @@ const sarifResult = z.object({
         )
         .optional(),
 });
-const sarifRun = z.object({
-    results: z.array(sarifResult),
-    artifacts: z.array(z.object({ location: artifactLocation.optional(), encoding: z.string().optional() })).optional(),
+const runSchema = z.object({
+    results: z.array(resultSchema),
+    artifacts: z.array(z.object({ location: locationSchema.optional(), encoding: z.string().optional() })).optional(),
     defaultEncoding: z.string().optional(),
     columnKind: z.enum(['utf16CodeUnits', 'unicodeCodePoints']).optional(),
     newlineSequences: z.array(z.string().min(1)).min(1).optional(),
-    originalUriBaseIds: z.record(z.string(), artifactLocation).optional(),
+    originalUriBaseIds: z.record(z.string(), locationSchema).optional(),
     invocations: z
         .array(
             z.object({
@@ -50,9 +50,9 @@ const sarifRun = z.object({
 });
 
 function indexedArtifact(
-    artifact: z.infer<typeof artifactLocation> | undefined,
-    run: z.infer<typeof sarifRun>,
-): z.infer<typeof artifactLocation> | undefined {
+    artifact: z.infer<typeof locationSchema> | undefined,
+    run: z.infer<typeof runSchema>,
+): z.infer<typeof locationSchema> | undefined {
     if (artifact === undefined) return undefined;
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;
     const resolved = run.artifacts?.[artifact.index]?.location;
@@ -62,8 +62,8 @@ function indexedArtifact(
 
 // Source URIs must resolve inside the selected copy before path-specific exceptions can apply.
 function sourceFile(
-    artifact: z.infer<typeof artifactLocation> | undefined,
-    run: z.infer<typeof sarifRun>,
+    artifact: z.infer<typeof locationSchema> | undefined,
+    run: z.infer<typeof runSchema>,
     source: string,
 ): string {
     if (artifact?.uri === undefined) return '';
@@ -86,7 +86,7 @@ function sourceFile(
 }
 
 function sourceText(
-    run: z.infer<typeof sarifRun>,
+    run: z.infer<typeof runSchema>,
     index: number | undefined,
     source: { root: string; file: string },
 ): string {
@@ -97,7 +97,11 @@ function sourceText(
 }
 
 // Decode offsets as code points, then report columns in the unit declared by the producer.
-function offsetPosition(text: string, offset: number, run: z.infer<typeof sarifRun>): { line: number; column: number } {
+function offsetPosition(
+    text: string,
+    offset: number,
+    run: z.infer<typeof runSchema>,
+): { line: number; column: number } {
     const characters = codePoints(text);
     if (offset > characters.length) throw new Error('CodeQL reported a character offset beyond the source file.');
     const prefix = characters.slice(0, offset).join('');
@@ -128,8 +132,8 @@ function offsetPosition(text: string, offset: number, run: z.infer<typeof sarifR
  * @returns the repository-relative location
  */
 export function placeOf(
-    location: NonNullable<z.infer<typeof sarifResult>['locations']>[number]['physicalLocation'],
-    run: z.infer<typeof sarifRun>,
+    location: NonNullable<z.infer<typeof resultSchema>['locations']>[number]['physicalLocation'],
+    run: z.infer<typeof runSchema>,
     source: string,
 ): { file: string; line: number; column?: number } {
     if (location === undefined) return { file: '', line: 1 };
@@ -147,4 +151,4 @@ export function placeOf(
     };
 }
 
-export const sarifLog = z.object({ version: z.literal('2.1.0'), runs: z.array(sarifRun).min(1) });
+export const logSchema = z.object({ version: z.literal('2.1.0'), runs: z.array(runSchema).min(1) });

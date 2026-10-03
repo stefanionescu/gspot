@@ -1,6 +1,6 @@
 // The literal values checks/general/secrets reads: names, patterns, limits, and tables.
 
-export const BASELINE = '.gspot/gitleaks-baseline.json';
+export const GITLEAKS_BASELINE = '.gspot/gitleaks-baseline.json';
 
 export const CHANGE_LINE =
     /^:[0-7]{6} (100644|100755|120000) (?:[a-f0-9]{40}|[a-f0-9]{64}) ([a-f0-9]{40}|[a-f0-9]{64}) [AMT]$/u;

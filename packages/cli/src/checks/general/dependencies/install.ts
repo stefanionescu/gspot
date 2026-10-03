@@ -5,7 +5,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation/generation.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { BUNFIG, LOCKFILES, DEFAULT_AGE_DAYS } from '#cli/config/checks/general/dependencies.ts';
+import { BUNFIG, LOCKFILES, RELEASE_AGE_DAYS } from '#cli/config/checks/general/dependencies.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
@@ -52,7 +52,7 @@ export function installPolicy(input: EngineInput): Finding[] {
     const isBun = input.files.some((file) => LOCKFILES[posix.basename(file.path)] === 'bun');
     if (!isBun) return [];
     const { settings } = input.view;
-    const days = (settings['install.min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
+    const days = (settings['install.min_release_age_days'] as number | undefined) ?? RELEASE_AGE_DAYS;
     const scanner = (settings['install.scanner'] as string | undefined) ?? '';
     const install = installTable(input.root);
     if (install === undefined)

@@ -36,7 +36,7 @@ function textProblem(text: string): string | undefined {
  * @param input the engine input
  * @returns the findings
  */
-export function localeFiles(input: EngineInput): Finding[] {
+export function locales(input: EngineInput): Finding[] {
     const named = input.view.tool('i18n')['locales'] as Translations | undefined;
     if (named?.directory === undefined) return [];
     const directory = posix.join(input.scope, named.directory);

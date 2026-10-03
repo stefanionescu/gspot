@@ -1,7 +1,7 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { importPathStyle } from '#plugin/rules/import-path-style.ts';
+import { importStyle } from '#plugin/rules/import-style.ts';
 
-tester().run('import-path-style', importPathStyle, {
+tester().run('import-style', importStyle, {
     valid: [
         { code: "import { a } from './a.js';", options: [{ style: 'js' }] },
         { code: "import { a } from '@/a.js';", options: [{ style: 'js' }] },

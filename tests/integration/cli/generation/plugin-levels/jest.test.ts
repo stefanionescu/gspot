@@ -109,15 +109,13 @@ test.each(['js', 'jsx'])(
         ).toStrictEqual([]);
         const misplaced = await eslint.lintFiles(['app/tests/unit/helpers.js']);
         expect(
-            misplaced
-                .flatMap((file) => file.messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/tests-directory-contents'),
+            misplaced.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/test-folders'),
         ).toMatchObject([{ message: textContaining('app/tests/fixtures') }]);
         const harnessResults = await eslint.lintFiles(['app/tests/fixtures/helpers.js']);
         expect(
             harnessResults
                 .flatMap((file) => file.messages)
-                .filter(({ ruleId, fatal }) => ruleId === 'gspot/tests-directory-contents' || fatal),
+                .filter(({ ruleId, fatal }) => ruleId === 'gspot/test-folders' || fatal),
         ).toStrictEqual([]);
         const runtime = await eslint.lintFiles(['app/src/runtime.js']);
         expect(

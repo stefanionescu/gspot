@@ -1,4 +1,4 @@
-import { DEFAULT_MAX } from '#plugin/config/rules.ts';
+import { MAX_REEXPORTS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { lintedFile, isIndexFile } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
@@ -23,11 +23,11 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
                 'This index has {{count}} re-exports; the limit is {{max}}. Import from the owning modules or split the index.',
         },
     },
-    defaultOptions: [{ max: DEFAULT_MAX }],
+    defaultOptions: [{ max: MAX_REEXPORTS }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined || !isIndexFile(file)) return {};
-        const max = options.max ?? DEFAULT_MAX;
+        const max = options.max ?? MAX_REEXPORTS;
         const nodes: TSESTree.Node[] = [];
         return {
             ExportAllDeclaration(node) {

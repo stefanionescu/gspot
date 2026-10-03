@@ -6,7 +6,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
-import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
+import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 // One JavaScript and one Python lockfile: the parsing of every format is a unit test.
@@ -32,7 +32,7 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'structure/stale-allowlists')!;
-        return allowlistsMatch(scopeInput(session, spec));
+        return staleAllowlists(scopeInput(session, spec));
     };
     expect(await check()).toStrictEqual([
         containing({
@@ -66,7 +66,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'structure/stale-allowlists')!;
-        return allowlistsMatch(scopeInput(session, spec));
+        return staleAllowlists(scopeInput(session, spec));
     };
     expect(await rejection(check())).toContain('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);

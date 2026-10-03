@@ -32,7 +32,7 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
  * @param input the engine input
  * @returns the findings
  */
-export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
+export async function lint(input: EngineInput): Promise<Finding[]> {
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))

@@ -5,7 +5,7 @@ export const PBXPROJ_ESCAPES: Record<string, string> = { n: '\n', r: '\r', t: '\
 export const PBXPROJ_PUNCTUATION = new Set(['{', '}', '(', ')', '=', ';', ',']);
 export const SYMLINK_MODE = '120000';
 export const WORD_CHARACTER = /[A-Za-z0-9_.$/+-]/u;
-export const BUILD_SETTING = /\$[({]/u;
+export const SETTING_REFERENCE = /\$[({]/u;
 export const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
 export const INCLUDE_LINE = /^#include\??\s+"[^"]+"$/u;
 export const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;

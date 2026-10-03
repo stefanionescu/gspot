@@ -18,9 +18,9 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
     for (const level of ['recommended', 'all']) {
         const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [published.configs[level]] });
         const client = await eslint.lintText("'use client';\nconsole.log(process.env.SECRET);\n", { filePath: 'client.js' });
-        assert.deepEqual(client[0].messages.filter(({ ruleId }) => ruleId === 'gspot/no-client-environment').map(({ line, messageId }) => ({ line, messageId })), [{ line: 2, messageId: 'private' }]);
+        assert.deepEqual(client[0].messages.filter(({ ruleId }) => ruleId === 'gspot/no-client-env').map(({ line, messageId }) => ({ line, messageId })), [{ line: 2, messageId: 'private' }]);
         const alias = await eslint.lintText('const source = 1;\nexport const alias = source;\n', { filePath: 'example.js' });
-        assert.deepEqual(alias[0].messages.map(({ ruleId, line }) => ({ ruleId, line })), level === 'recommended' ? [] : [{ ruleId: 'gspot/no-exported-alias-constants', line: 2 }]);
+        assert.deepEqual(alias[0].messages.map(({ ruleId, line }) => ({ ruleId, line })), level === 'recommended' ? [] : [{ ruleId: 'gspot/no-alias-exports', line: 2 }]);
         const corrected = await eslint.lintText('export const source = 1;\n', { filePath: 'example.js' });
         assert.deepEqual(corrected[0].messages, []);
     }

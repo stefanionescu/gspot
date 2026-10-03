@@ -11,7 +11,7 @@ import {
     SHARED_PREFIX,
     MIGRATION_NAME,
     SUPABASE_CONFIG,
-    DEFAULT_FUNCTIONS,
+    FUNCTIONS_DIRECTORY,
 } from '#cli/config/checks/platform/supabase.ts';
 
 const projectSchema = z.object({
@@ -43,7 +43,7 @@ export function readProject(input: EngineInput): z.infer<typeof projectSchema> |
  */
 export function functionFolders(input: EngineInput): string[] {
     const named = input.view.tool('supabase')['functions_directory'];
-    const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : DEFAULT_FUNCTIONS);
+    const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : FUNCTIONS_DIRECTORY);
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))

@@ -3,6 +3,7 @@ import which from 'which';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
@@ -23,6 +24,26 @@ async function detectedTool(
         if (detected !== undefined) return detected;
     }
     return undefined;
+}
+
+// The declared client at its version, refusing a range, which the tool project cannot pin.
+function exactTool(name: string, version: string): z.infer<typeof packageToolSchema> {
+    if (semver.valid(version) === null)
+        throw new GspotError('installation', [
+            `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
+        ]);
+    return packageToolSchema.parse({ name, version });
+}
+
+// The client the tool project recorded, or undefined when the file does not parse, as when a merge left its markers.
+function recordedTool(bytes: Buffer): z.infer<typeof packageToolSchema> | undefined {
+    let held: unknown;
+    try {
+        held = JSON.parse(bytes.toString('utf8'));
+    } catch {
+        return undefined;
+    }
+    return parsePackageTool(z.object({ packageManager: z.string() }).parse(held).packageManager);
 }
 
 /**
@@ -56,13 +77,10 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
         name: which.sync('bun', { nothrow: true }) === null ? 'npm' : 'bun',
         version: undefined,
     };
-    if (version !== undefined) return packageToolSchema.parse({ name, version });
+    if (version !== undefined) return exactTool(name, version);
     const current = files.read('.gspot/package.json');
-    if (current !== undefined) {
-        const held = z.object({ packageManager: z.string() }).parse(JSON.parse(current.bytes.toString('utf8')));
-        const recorded = parsePackageTool(held.packageManager);
-        if (recorded.name === name) return recorded;
-    }
+    const recorded = current === undefined ? undefined : recordedTool(current.bytes);
+    if (recorded?.name === name) return recorded;
     const result = await runToolCommand(undefined, [name, '--version'], { cwd: root });
     if (result.code !== 0) throw new Error(`Cannot determine the ${name} version for the tool project.`);
     return packageToolSchema.parse({ name, version: result.stdout.trim() });

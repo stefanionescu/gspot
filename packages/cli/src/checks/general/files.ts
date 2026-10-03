@@ -4,7 +4,13 @@ import { readSource } from '#cli/repository/sources.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { ENV_TEMPLATE_NAMES } from '#cli/config/repository/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { KEY_GROUP, ENV_KEY_LINE, ENV_READ_PATTERNS, ENV_READ_EXTENSIONS } from '#cli/config/checks/general/files.ts';
+
+import {
+    ENV_KEY_LINE,
+    ENV_KEY_GROUP,
+    ENV_READ_PATTERNS,
+    ENV_READ_EXTENSIONS,
+} from '#cli/config/checks/general/files.ts';
 
 function readPatterns(input: EngineInput): RegExp[] {
     const accessor = input.view.tool('dotenv')['accessor'];
@@ -29,7 +35,7 @@ export function envExample(input: EngineInput): Finding[] {
         templates.flatMap((file) => {
             const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
             return lines.flatMap((line) => {
-                const key = ENV_KEY_LINE.exec(line.trim())?.[KEY_GROUP];
+                const key = ENV_KEY_LINE.exec(line.trim())?.[ENV_KEY_GROUP];
                 return key === undefined ? [] : [key];
             });
         }),
@@ -45,7 +51,7 @@ export function envExample(input: EngineInput): Finding[] {
             const findings: Finding[] = [];
             for (const pattern of patterns) {
                 for (const match of line.matchAll(pattern)) {
-                    const key = match[KEY_GROUP];
+                    const key = match[ENV_KEY_GROUP];
                     if (key === undefined || known.has(key) || seen.has(key)) continue;
                     seen.add(key);
                     findings.push(

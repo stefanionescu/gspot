@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import type { TestdirResult } from 'testdirs';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
+import { fresh } from '#cli/checks/tool/openapi.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
-import { openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -79,7 +79,7 @@ function expectPreserved({
 test('OpenAPI freshness reports a failed generation and preserves dirty and untracked input', async () => {
     const planted = await plant('{"fail":true}\n');
     await using directory = planted.directory;
-    expect(await rejection(openapiFresh(planted.input))).toContain('Generation failed');
+    expect(await rejection(fresh(planted.input))).toContain('Generation failed');
     expectPreserved(planted);
     expect(directory.path).toBe(planted.directory.path);
 });
@@ -87,7 +87,7 @@ test('OpenAPI freshness reports a failed generation and preserves dirty and untr
 test('OpenAPI freshness reports a stale document, accepts the regenerated one, and preserves input', async () => {
     const planted = await plant('{"version":3}\n');
     await using directory = planted.directory;
-    expect(await openapiFresh(planted.input)).toStrictEqual([
+    expect(await fresh(planted.input)).toStrictEqual([
         {
             check: planted.spec.name,
             file: 'openapi.json',
@@ -98,6 +98,6 @@ test('OpenAPI freshness reports a stale document, accepts the regenerated one, a
         },
     ]);
     writeFileSync(join(directory.path, 'schema.json'), planted.edited);
-    expect(await openapiFresh(planted.input)).toStrictEqual([]);
+    expect(await fresh(planted.input)).toStrictEqual([]);
     expectPreserved(planted);
 });

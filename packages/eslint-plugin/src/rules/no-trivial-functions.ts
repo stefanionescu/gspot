@@ -1,9 +1,9 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImplementedFunction } from '#plugin/types/plugin.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
-import type { NoTrivialFunctionsOptions } from '#plugin/types/rules.ts';
+import type { TrivialFunctionsOptions } from '#plugin/types/rules.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import { isRecursive, isInlineValue } from '#plugin/function-references.ts';
 import { isClassLike, type TypeChecker, isMethodDeclaration, type MethodDeclaration } from 'typescript';
@@ -48,7 +48,7 @@ function isRequired(node: ImplementedFunction, source: TSESLint.SourceCode): boo
     );
 }
 
-export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial'>({
+export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
     meta: {
         type: 'problem',
@@ -70,7 +70,7 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
     },
     defaultOptions: [{ maxStatements: 2 }],
     create(context, [options]) {
-        const max = options.maxStatements ?? DEFAULT_TRIVIAL_STATEMENTS;
+        const max = options.maxStatements ?? TRIVIAL_STATEMENTS;
         return {
             ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression):exit'(
                 node: ImplementedFunction,

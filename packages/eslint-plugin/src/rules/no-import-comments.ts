@@ -1,9 +1,9 @@
 import { runsOf } from '#plugin/layout.ts';
 import { BLANK } from '#plugin/config/plugin.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import type { LayoutOptions } from '#plugin/types/rules.ts';
 import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
 
 // The comment with the whitespace that its removal leaves behind: a whole line, or the space before a trailing note.
 function removalRange(text: string, comment: TSESTree.Comment): [number, number] {
@@ -18,7 +18,7 @@ function removalRange(text: string, comment: TSESTree.Comment): [number, number]
 }
 
 // Comments separated by whitespace alone form one block, moved by one fix.
-function blocksOf(text: string, comments: TSESTree.Comment[]): [TSESTree.Comment, ...TSESTree.Comment[]][] {
+function commentBlocks(text: string, comments: TSESTree.Comment[]): [TSESTree.Comment, ...TSESTree.Comment[]][] {
     const blocks: [TSESTree.Comment, ...TSESTree.Comment[]][] = [];
     for (const comment of comments) {
         const current = blocks.at(-1);
@@ -34,7 +34,7 @@ function blocksOf(text: string, comments: TSESTree.Comment[]): [TSESTree.Comment
     return blocks;
 }
 
-export const noImportComments = createRule<HeaderCommentsOptions, 'comment'>({
+export const noImportComments = createRule<LayoutOptions, 'comment'>({
     name: 'no-import-comments',
     meta: {
         type: 'layout',
@@ -72,7 +72,7 @@ export const noImportComments = createRule<HeaderCommentsOptions, 'comment'>({
                                 comment.range[1] <= (lineEnd === -1 ? text.length : lineEnd) &&
                                 !isDirective(comment.value),
                         );
-                    for (const block of blocksOf(text, inside))
+                    for (const block of commentBlocks(text, inside))
                         context.report({
                             loc: { start: block[0].loc.start, end: block.at(-1)?.loc.end ?? block[0].loc.end },
                             messageId: 'comment',

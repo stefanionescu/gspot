@@ -1,7 +1,7 @@
 // The literal values checks/framework/nextjs reads: names, patterns, limits, and tables.
 
 export const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;
-export const CONFIG_FILE = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;
+export const NEXT_CONFIG = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;
 export const SWITCHED_OFF = /\b(?<name>ignoreDuringBuilds|ignoreBuildErrors)\s*:\s*true\b/gu;
 export const SECRET_KEY = /\b(?<name>[A-Z][A-Z\d_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY)[A-Z\d_]*)\s*:/gu;
 export const PAIRS: [string, string][] = [

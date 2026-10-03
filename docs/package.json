@@ -1,5 +1,5 @@
 {
-    "name": "gspot-docs",
+    "name": "@gspothq/docs",
     "private": true,
     "version": "0.1.0",
     "type": "module",
@@ -10,7 +10,6 @@
         "@fontsource-variable/geist-mono": "5.3.0",
         "@gspothq/cli": "workspace:*",
         "astro": "7.3.2",
-        "execa": "9.6.1",
         "htmlparser2": "10.1.0",
         "starlight-llms-txt": "0.11.0",
         "zod": "4.6.2"

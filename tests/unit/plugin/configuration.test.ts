@@ -39,13 +39,13 @@ test.each(['recommended', 'all'] as const)(
         });
         expect(
             alias
-                .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
+                .filter(({ ruleId }) => ruleId === 'gspot/no-alias-exports')
                 .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
         ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
         const defect = linter.verify("'use client';\nexport const value = process.env.SECRET;", config, {
             filename: join(sandbox.path, 'example.js'),
         });
-        expect(defect.filter(({ ruleId }) => ruleId === 'gspot/no-client-environment')).toMatchObject([
+        expect(defect.filter(({ ruleId }) => ruleId === 'gspot/no-client-env')).toMatchObject([
             { line: 2, column: 22, messageId: 'private' },
         ]);
         const corrected = linter.verify("'use client';\nexport const value = 'public';", config, {

@@ -14,30 +14,23 @@ const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 if (import.meta.main) {
     try {
-        new Command('bun packages/cli/scripts/inputs.ts')
-            .description('Copy the grammar files into grammars/, and download and verify the pinned Swift parser')
+        new Command('bun packages/cli/scripts/grammars.ts')
+            .description(
+                'Download and verify the pinned Swift parser into grammars/. A source checkout reads the other grammars from node_modules, and the build copies them.',
+            )
             .allowExcessArguments(false)
             .exitOverride()
             .parse();
-        await prepareGrammars(fileURLToPath(new URL('../grammars/', import.meta.url)));
+        await prepareSwift(fileURLToPath(new URL('../grammars/', import.meta.url)));
     } catch (error) {
         if (!(error instanceof CommanderError)) throw error;
         process.exitCode = error.exitCode === 0 ? 0 : ERROR_EXIT;
     }
 }
 
-// Every grammar the package ships, each with the license of its source.
-async function prepareGrammars(folder: string): Promise<void> {
-    const packages = createRequire(fileURLToPath(new URL('../package.json', import.meta.url)));
-    mkdirSync(join(folder, 'licenses'), { recursive: true });
-    for (const [name, source] of Object.entries(GRAMMAR_PACKAGES)) {
-        copyFileSync(packages.resolve(source), join(folder, name));
-        const owner = source.slice(0, source.indexOf('/'));
-        copyFileSync(
-            join(dirname(packages.resolve(`${owner}/package.json`)), 'LICENSE'),
-            join(folder, 'licenses', `${owner}.txt`),
-        );
-    }
+// The Swift parser, which no npm package carries, with its license.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Setup and the build both download the Swift parser and its license through this.
+async function prepareSwift(folder: string): Promise<void> {
     await prepareInput(join(folder, 'swift.wasm'), SWIFT_GRAMMAR);
     await prepareInput(join(folder, 'licenses', 'tree-sitter-swift.txt'), SWIFT_GRAMMAR.license);
 }
@@ -71,4 +64,22 @@ export async function prepareInput(path: string, input: { url: string; checksum:
         rmSync(temporary, { force: true });
     }
     return bytes;
+}
+
+/**
+ * Copies every grammar the package ships into a folder, each with the license of its source, for the build.
+ * @param folder the grammars folder of the package
+ */
+export async function copyGrammars(folder: string): Promise<void> {
+    const packages = createRequire(fileURLToPath(new URL('../package.json', import.meta.url)));
+    mkdirSync(join(folder, 'licenses'), { recursive: true });
+    for (const [name, source] of Object.entries(GRAMMAR_PACKAGES)) {
+        copyFileSync(packages.resolve(source), join(folder, name));
+        const owner = source.slice(0, source.indexOf('/'));
+        copyFileSync(
+            join(dirname(packages.resolve(`${owner}/package.json`)), 'LICENSE'),
+            join(folder, 'licenses', `${owner}.txt`),
+        );
+    }
+    await prepareSwift(folder);
 }

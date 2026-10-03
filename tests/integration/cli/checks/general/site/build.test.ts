@@ -12,8 +12,8 @@ import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/site/output.ts';
-import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/site/build.ts';
+import { brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { filesUnder, cachedBuild, buildReproducible } from '#cli/checks/general/site/build.ts';
 
 import {
     statSync,
@@ -48,7 +48,7 @@ const SITE_REPORTS: {
     },
     {
         name: 'markup',
-        analyze: builtMarkup,
+        analyze: htmlValidate,
         defect: (output: string) => [
             {
                 filePath: join(output, 'index.html'),
@@ -99,7 +99,7 @@ describe('site build reproducibility', () => {
         await createFileTree(sandbox.path, { 'build.js': SITE_BUILD, 'dist/index.html': 'edited output' });
         chmodSync(join(sandbox.path, 'dist/index.html'), 0o640);
         const request = await siteInput(sandbox.path, ['build.js'], resources);
-        const first = await siteBuild(request);
+        const first = await cachedBuild(request);
         const before = readFileSync(join(first.output, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
         expect(await buildReproducible(request)).toStrictEqual([]);
@@ -123,10 +123,10 @@ readFileSync('local-input.txt');
 ${SITE_BUILD}`,
         });
         const request = await siteInput(sandbox.path, ['build.js'], resources);
-        const first = await siteBuild(request);
+        const first = await cachedBuild(request);
         expect(first.isBuilt).toBe(false);
         expect(first.said).toContain('local-input.txt');
-        const corrected = await siteBuild(await siteInput(sandbox.path, ['build.js', 'local-input.txt'], resources));
+        const corrected = await cachedBuild(await siteInput(sandbox.path, ['build.js', 'local-input.txt'], resources));
         expect(corrected.isBuilt).toBe(true);
         expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
         expect(readFileSync(join(sandbox.path, 'local-input.txt'), 'utf8')).toBe('Only available in the working tree.');
@@ -138,7 +138,7 @@ test('a failed reproducibility build retains the first isolated output', async (
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, { 'build.js': SITE_BUILD });
     const request = await siteInput(sandbox.path, ['build.js'], resources);
-    const first = await siteBuild(request);
+    const first = await cachedBuild(request);
     expect(first.isBuilt).toBe(true);
     writeFileSync(join(sandbox.path, 'build.js'), 'throw new Error("Planted build failure");');
     expect(await rejection(buildReproducible(request))).toContain('The second site build failed');
@@ -197,7 +197,7 @@ test.each(SITE_REPORTS)(
         using resources = new DisposableStack();
         await createFileTree(sandbox.path, { 'build.js': SITE_BUILD });
         const request = await siteInput(sandbox.path, ['build.js'], resources);
-        const build = await siteBuild(request);
+        const build = await cachedBuild(request);
         writeFileSync(join(build.output, 'style.css'), 'body { color: red; }');
         let code = 2;
         let stdout = '';

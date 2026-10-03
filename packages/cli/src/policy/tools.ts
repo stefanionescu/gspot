@@ -40,15 +40,15 @@ const eslintTable = toolTable.extend({
     overrides: z.array(z.strictObject({ paths: textListNonEmpty, rules: eslintRules })).optional(),
 });
 
-export const jestPercentage = z.number().min(0).max(FULL_PERCENTAGE);
+export const percentage = z.number().min(0).max(FULL_PERCENTAGE);
 
 /** Coverage floors shared by policy validation and native Jest execution. */
-export const jestCoverageSettings = z.object({
+export const thresholdsSchema = z.object({
     coverage: z.object({
-        lines: jestPercentage,
-        branches: jestPercentage,
-        functions: jestPercentage,
-        statements: jestPercentage,
+        lines: percentage,
+        branches: percentage,
+        functions: percentage,
+        statements: percentage,
     }),
 });
 
@@ -106,10 +106,10 @@ export const toolsSchema = z
             .extend({
                 coverage: z
                     .strictObject({
-                        lines: reasoned(jestPercentage).optional(),
-                        branches: reasoned(jestPercentage).optional(),
-                        functions: reasoned(jestPercentage).optional(),
-                        statements: reasoned(jestPercentage).optional(),
+                        lines: reasoned(percentage).optional(),
+                        branches: reasoned(percentage).optional(),
+                        functions: reasoned(percentage).optional(),
+                        statements: reasoned(percentage).optional(),
                     })
                     .optional(),
                 test_module: text.min(1).optional(),

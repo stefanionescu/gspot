@@ -8,7 +8,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { checkSwiftlint } from '#cli/checks/language/swift/swiftlint.ts';
+import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 
 test('Swift documentation adapter rejects malformed native output and removes its selected workspace', async () => {
     await using sandbox = await testdir();
@@ -47,7 +47,7 @@ test('Swift documentation adapter rejects malformed native output and removes it
         return Promise.resolve({ code: 0, missing: false, stdout: '[]', stderr: '', duration: 1 });
     });
     try {
-        const failed = await checkSwiftlint(session, planned);
+        const failed = await swiftlint(session, planned);
         expect(failed.status).toBe('error');
         expect(failed.note).toContain('invalid JSON report');
         expect(workspace).not.toBe('');

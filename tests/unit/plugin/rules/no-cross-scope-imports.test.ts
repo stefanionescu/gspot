@@ -1,9 +1,9 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
+import { noCrossScopeImports } from '#plugin/rules/no-cross-scope-imports.ts';
 
 const scopes = ['api', 'supabase'];
 
-tester().run('no-cross-project-imports', noCrossProjectImports, {
+tester().run('no-cross-scope-imports', noCrossScopeImports, {
     valid: [
         { code: "import { a } from './a.js';", filename: '/repo/api/src/b.ts', options: [{ scopes }] },
         { code: "import { a } from '../types/a.js';", filename: '/repo/api/src/b.ts', options: [{ scopes }] },

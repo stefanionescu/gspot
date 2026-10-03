@@ -8,9 +8,10 @@ import { UV_INSTALLER } from '#cli/config/tools/tools.ts';
 import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { installPythonProject } from '#cli/tools/python.ts';
-import type { InstallationStep } from '#cli/types/commands/install.ts';
+import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
+import type { Installed, InstallationStep } from '#cli/types/commands/install.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const installations: InstallationStep[] = [
@@ -81,6 +82,14 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
     return notes.join('; ');
 }
 
+// Whether every failure of an installation is one a later gspot install can repair.
+function isRepairable(error: unknown): error is AggregateError {
+    if (!(error instanceof AggregateError)) return false;
+    return error.errors.every(
+        (failure: unknown) => failure instanceof GspotError && ['tool', 'installation'].includes(failure.code),
+    );
+}
+
 /**
  * Install private tool projects and clone-local hooks, with optional task-runner integration.
  * @param session the selected tools and repository
@@ -103,4 +112,20 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
     if (failures.length > 0)
         throw new AggregateError(failures, [...summaries, ...failures.map((error) => error.message)].join('\n'));
     return summaries.join('; ');
+}
+
+/**
+ * Installs the tools after a command wrote its files, or reports an installation that a later gspot install can finish.
+ * @param session the session over the written files
+ * @param isInstalling false when the command was told not to install
+ * @returns what the installation said, and exit code 2 when it did not finish
+ */
+export async function finishInstall(session: Session, isInstalling: boolean): Promise<Installed> {
+    try {
+        return { installNote: await installTools(session, isInstalling), exitCode: 0 };
+    } catch (error) {
+        if (!isRepairable(error)) throw error;
+        const installNote = `${error.message}\nThe files were written; tool installation is incomplete. Run: gspot install`;
+        return { installNote, exitCode: EXIT_ERROR };
+    }
 }

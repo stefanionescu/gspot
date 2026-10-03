@@ -8,7 +8,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns the findings
  */
-export async function routesTested(input: EngineInput): Promise<Finding[]> {
+export async function untestedRoutes(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool('express');
     const routes = tool['route_files'] as string[];
     const tests = input.view.settings['tests'] as string[];

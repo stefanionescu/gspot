@@ -4,14 +4,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { write } from '#cli/commands/init/write.ts';
+import { prepare } from '#cli/commands/init/prepare.ts';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import { script } from '#tests/harness/planted/cases.ts';
 import { git, commitAll } from '#tests/harness/cli/git.ts';
 import { keptMode } from '#tests/harness/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { initOptions } from '#tests/harness/planted/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { textContaining } from '#tests/harness/expectations.ts';
-import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
+import { rmSync, statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const PLAN_INIT = [
     'init',
@@ -149,3 +152,35 @@ test(
     },
     PLANTED_TIMEOUT_MS * 3,
 );
+
+test.each([
+    [
+        'changes',
+        (path: string) => {
+            writeFileSync(path, 'disable=SC2034\n');
+        },
+    ],
+    [
+        'vanishes',
+        (path: string) => {
+            rmSync(path);
+        },
+    ],
+])('a file init takes over that %s after the plan stops init before it writes', async (_, change) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
+    commitAll(sandbox.path);
+    const options = initOptions(sandbox.path, {
+        kits: ['bash'],
+        hooks: 'none',
+        ci: 'none',
+        runner: 'none',
+        rules: 'no',
+    });
+    const prepared = await prepare(sandbox.path, options);
+    expect(prepared.removed.map((entry) => entry.path)).toContain('.shellcheckrc');
+    change(join(sandbox.path, '.shellcheckrc'));
+    expect(await rejection(write(sandbox.path, options, prepared))).toContain('Run gspot init again');
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+});

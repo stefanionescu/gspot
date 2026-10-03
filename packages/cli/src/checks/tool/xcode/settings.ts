@@ -9,7 +9,7 @@ import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/con
  * @param input the engine input
  * @returns the findings
  */
-export function xcconfigLines(input: EngineInput): Finding[] {
+export function xcconfig(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcconfig']).flatMap((path) =>
         readSource(input.root, path, input.reads)
             .toString('utf8')
@@ -39,7 +39,7 @@ export function xcconfigLines(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function entitlementsPolicy(input: EngineInput): Finding[] {
+export function entitlements(input: EngineInput): Finding[] {
     const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
     return trackedEnding(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
@@ -64,7 +64,7 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function transportSecurity(input: EngineInput): Finding[] {
+export function ats(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);

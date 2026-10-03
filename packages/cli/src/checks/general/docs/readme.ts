@@ -7,13 +7,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/sources.ts';
 import type { ShapeProblem } from '#cli/types/checks/general/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-
-import {
-    LICENSE_NAMES,
-    CONTENTS_HEADING,
-    CONTENTS_THRESHOLD,
-    START_SECTION_WORDS,
-} from '#cli/config/checks/general/docs.ts';
+import { START_WORDS, LICENSE_NAMES, CONTENTS_HEADING, CONTENTS_HEADINGS } from '#cli/config/checks/general/docs.ts';
 
 // A README section is a second-level heading.
 const SECTION_DEPTH = 2;
@@ -47,12 +41,8 @@ function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: b
             'contents',
             `A README with more than ${String(threshold)} H2 headings carries a Contents list.`,
         ]);
-    if (isScopeRoot && sections.every((text) => START_SECTION_WORDS.every((word) => !text.includes(word))))
-        problems.push([
-            1,
-            'start-section',
-            `A README has a section whose heading says ${START_SECTION_WORDS.join(', ')}.`,
-        ]);
+    if (isScopeRoot && sections.every((text) => START_WORDS.every((word) => !text.includes(word))))
+        problems.push([1, 'start-section', `A README has a section whose heading says ${START_WORDS.join(', ')}.`]);
     return problems;
 }
 
@@ -90,7 +80,7 @@ export function readmePresent(input: EngineInput): Finding[] {
  */
 export function readmeShape(input: EngineInput): Finding[] {
     const headings = input.view.settings['limits.docs.contents_headings'];
-    const threshold = typeof headings === 'number' ? headings : CONTENTS_THRESHOLD;
+    const threshold = typeof headings === 'number' ? headings : CONTENTS_HEADINGS;
     const roots = new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
     return input.files
         .filter(

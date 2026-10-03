@@ -12,7 +12,7 @@ import { LOCAL_NAMES, HOST_PATTERNS } from '#cli/config/checks/tool/nginx.ts';
  * @param image the nginx image.
  * @returns the argv after docker.
  */
-export function nginxTestArguments(
+export function testArguments(
     text: string,
     mounts: { configs: { source: string; target: string }[]; certificate: string; key: string },
     image: string,

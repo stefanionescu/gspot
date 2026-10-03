@@ -1,11 +1,11 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { INDEX_PATTERNS } from '#plugin/config/rules.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { DEFAULT_PATTERNS } from '#plugin/config/rules.ts';
+import type { IndexImportsOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { NoIndexImportsOptions } from '#plugin/types/rules.ts';
 
-export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
+export const noIndexImports = createRule<IndexImportsOptions, 'index'>({
     name: 'no-index-imports',
     meta: {
         type: 'problem',
@@ -20,22 +20,22 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
         },
         schema: [
             optionsSchema({
-                allow: { type: 'array', items: { type: 'string' } },
+                allowed: { type: 'array', items: { type: 'string' } },
                 patterns: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: { index: 'Import the owning module instead of the index "{{source}}".' },
     },
-    defaultOptions: [{ allow: [], patterns: DEFAULT_PATTERNS }],
+    defaultOptions: [{ allowed: [], patterns: INDEX_PATTERNS }],
     create(context, [options]) {
-        const allow = new Set(options.allow);
-        const patterns = (options.patterns ?? DEFAULT_PATTERNS).map((pattern) => new RegExp(pattern, 'u'));
+        const allowed = new Set(options.allowed);
+        const patterns = (options.patterns ?? INDEX_PATTERNS).map((pattern) => new RegExp(pattern, 'u'));
         const check = (node: TSESTree.Node | null | undefined): void => {
             const source = staticString(node);
             if (
                 !node ||
                 source === undefined ||
-                allow.has(source) ||
+                allowed.has(source) ||
                 patterns.every((pattern) => !pattern.test(source))
             )
                 return;

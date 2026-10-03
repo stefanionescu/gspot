@@ -11,7 +11,7 @@ function escapePattern(text: string): string {
  * @param input the scoped files and snapshot layout
  * @returns the orphan reference findings
  */
-export function referenceOwners(input: EngineInput): Finding[] {
+export function references(input: EngineInput): Finding[] {
     const layout = input.view.tool('xctest')['reference_layout'] as string;
     const pattern = layout
         .split(/(\{file\}|\{test\}|\*|\?)/u)

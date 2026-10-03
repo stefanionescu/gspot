@@ -3,11 +3,11 @@ import type { Identifier, ExtractSink } from '#cli/types/checks/general/naming.t
 
 import {
     NAME_NODES,
-    METHOD_NODES,
     PATTERN_LISTS,
     PATTERN_FIELDS,
     TYPESCRIPT_LABELS,
     NAMED_DECLARATIONS,
+    TYPESCRIPT_METHOD_NODES,
     TYPESCRIPT_FUNCTION_NODES,
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/checks/general/naming.ts';
@@ -97,7 +97,11 @@ export function typescriptIdentifiers(root: Node, file: string, language: string
     addEnumCases(sink, root);
     const declarators = root.descendantsOfType('variable_declarator').filter((node) => !isImportBinding(node));
     for (const node of declarators) addPattern(sink, node.childForFieldName('name'), 'variables');
-    const callables = root.descendantsOfType([...TYPESCRIPT_FUNCTION_NODES, ...METHOD_NODES, 'arrow_function']);
+    const callables = root.descendantsOfType([
+        ...TYPESCRIPT_FUNCTION_NODES,
+        ...TYPESCRIPT_METHOD_NODES,
+        'arrow_function',
+    ]);
     for (const node of callables) addParameters(sink, node);
     return sink.out.toSorted((a, b) => a.line - b.line || a.column - b.column);
 }

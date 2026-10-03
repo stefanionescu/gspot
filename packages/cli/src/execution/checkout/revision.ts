@@ -1,5 +1,5 @@
-import { realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { existsSync, realpathSync } from 'node:fs';
 import { decodedText } from '#cli/platform/text.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -37,8 +37,20 @@ function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>):
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
     const mode = ENTRY_MODES[entry.mode] ?? OWNER_WRITABLE_FILE;
-    const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
-    files.write(entry.path, content, undefined);
+    // A tracked link keeps its target, wherever it points, as a Git checkout keeps it.
+    if (entry.mode === '120000') files.link(entry.path, { bytes, mode, isLink: true });
+    else files.write(entry.path, { bytes, mode }, undefined);
+}
+
+// Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
+function caseCollision(entries: GitEntry[]): [string, string] | undefined {
+    const seen = new Map<string, string>();
+    for (const { path } of entries) {
+        const earlier = seen.get(path.toLowerCase());
+        if (earlier !== undefined) return [earlier, path];
+        seen.set(path.toLowerCase(), path);
+    }
+    return undefined;
 }
 
 async function populateRevision(
@@ -47,6 +59,13 @@ async function populateRevision(
     objects: Map<string, Buffer>,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
+    const collision = caseCollision(entries);
+    // On a file system that folds letter case, the upper-case spelling of the folder names the folder itself.
+    const upper = revisionRoot.toUpperCase();
+    if (collision !== undefined && upper !== revisionRoot && existsSync(upper))
+        throw new GspotError('selection', [
+            `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
+        ]);
     const files = openRoot(revisionRoot, 'native');
     // Write links last so a tracked link can never redirect another tracked write.
     const ordered = [

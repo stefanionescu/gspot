@@ -1,7 +1,7 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
+import { noAliasExports } from '#plugin/rules/no-alias-exports.ts';
 
-tester().run('no-exported-alias-constants', noExportedAliasConstants, {
+tester().run('no-alias-exports', noAliasExports, {
     valid: [
         'export const a = 1;',
         'export const a = build(b);',

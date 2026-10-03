@@ -58,6 +58,25 @@ test.each([true, false])(
     },
 );
 
+test('an install killed after its swap and before its record is replaced by the next install', async () => {
+    await using directory = await testdir();
+    await using staged = await testdir();
+    await createFileTree(directory.path, {
+        '.gspot/state/ownership.json': `${JSON.stringify({ version: 1, files: [], installations: ['npm'] })}\n`,
+        '.gspot/node_modules/tool/index.js': 'swapped\n',
+    });
+    await createFileTree(staged.path, { 'tool/index.js': 'reinstalled\n' });
+    const owner = openOwner(directory.path);
+    try {
+        owner.installTree('npm', installedOutputs(staged.path, 'npm'));
+    } finally {
+        owner.close();
+    }
+    expect(readFileSync(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe('reinstalled\n');
+    expect(getOwnership(directory.path)).toMatchObject({ installs: ['npm'] });
+    expect(getOwnership(directory.path).installations).toBeUndefined();
+});
+
 test.each([true, false])(
     'removing a managed block deletes the file only when the block created it (%s)',
     async (isCreated) => {

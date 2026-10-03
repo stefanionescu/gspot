@@ -1,6 +1,6 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
+import { testFolders } from '#plugin/rules/test-folders.ts';
 import { plantedRoot } from '#tests/harness/plugin/planted.ts';
-import { testsDirectoryContents } from '#plugin/rules/tests-directory-contents.ts';
 
 const root = await plantedRoot({
     'tests/unit/a.test.ts': '',
@@ -15,11 +15,11 @@ const root = await plantedRoot({
     'tests/mocks/factory.ts': '',
 });
 
-const options: [{ harnessDirectory: string }] = [{ harnessDirectory: 'tests/support' }];
+const options: [{ harness: string }] = [{ harness: 'tests/support' }];
 
-tester(root).run('tests-directory-contents', testsDirectoryContents, {
+tester(root).run('test-folders', testFolders, {
     valid: [
-        { code: '', filename: `${root}/tests/custom/factory.ts`, options: [{ harnessDirectory: 'tests/custom' }] },
+        { code: '', filename: `${root}/tests/custom/factory.ts`, options: [{ harness: 'tests/custom' }] },
         { code: '', filename: `${root}/tests/unit/a.test.ts`, options },
         { code: '', filename: `${root}/tests/unit/b.d.ts`, options },
         { code: '', filename: `${root}/tests/support/factory.ts`, options },

@@ -13,7 +13,7 @@ export const findingSchema = z.strictObject({
     fixable: z.boolean(),
 });
 
-export const checkResultSchema = z.strictObject({
+export const resultSchema = z.strictObject({
     check: z.string(),
     scope: z.string(),
     status: z.enum(['passed', 'failed', 'missing', 'skipped', 'error']),

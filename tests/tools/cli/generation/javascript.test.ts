@@ -153,6 +153,8 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     await Bun.write(join(sandbox.path, 'app/jsconfig.json'), '{');
     const invalid = await spawnGspot(sandbox.path, command, env);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-    expect(invalid.stderr).toContain('app/jsconfig.json');
+    // The scope with the unreadable configuration errors alone; the other scope keeps its result.
+    const errored = (JSON.parse(invalid.stdout) as RunReport).checks.filter((check) => check.status === 'error');
+    expect(errored.map((check) => check.note?.includes('app/jsconfig.json'))).toStrictEqual([true]);
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe('{');
 }, 60_000);

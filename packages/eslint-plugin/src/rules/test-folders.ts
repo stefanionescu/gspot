@@ -1,18 +1,18 @@
 import { posix } from 'node:path';
+import type { TestFoldersOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/config/rules.ts';
-import type { TestsDirectoryContentsOptions } from '#plugin/types/rules.ts';
+import { TEST_PATTERN, CODE_EXTENSION } from '#plugin/config/rules.ts';
 import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
-export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 'misplaced'>({
-    name: 'tests-directory-contents',
+export const testFolders = createRule<TestFoldersOptions, 'misplaced'>({
+    name: 'test-folders',
     meta: {
         type: 'problem',
         docs: {
             level: 'all',
             title: 'Tests directory contents',
             example:
-                'With `harnessDirectory: "tests/support"`, when `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
+                'With `harness: "tests/support"`, when `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
             summary:
                 'Finds a file that is not a test sitting in a folder of test files. With no harness directory, it reports nothing.',
             why: 'Harness code beside tests gets imported through relative paths and drifts away from the declared harness directory.',
@@ -20,35 +20,35 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         },
         schema: [
             optionsSchema({
-                testPattern: { type: 'string' },
-                testDirectories: { type: 'array', items: { type: 'string' } },
-                harnessDirectory: { type: 'string' },
-                excluded: { type: 'array', items: { type: 'string' } },
+                pattern: { type: 'string' },
+                directories: { type: 'array', items: { type: 'string' } },
+                harness: { type: 'string' },
+                allowed: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: { misplaced: '{{name}} is not a test but sits beside tests. Move it to {{harness}}.' },
     },
     defaultOptions: [
         {
-            testPattern: DEFAULT_TEST,
-            testDirectories: ['**/tests/**', '**/__tests__/**', '**/test/**'],
-            excluded: [],
+            pattern: TEST_PATTERN,
+            directories: ['**/tests/**', '**/__tests__/**', '**/test/**'],
+            allowed: [],
         },
     ],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined) return {};
         const relative = relativeToRoot(lintedRoot(context), file);
-        const test = new RegExp(options.testPattern ?? DEFAULT_TEST, 'u');
+        const test = new RegExp(options.pattern ?? TEST_PATTERN, 'u');
         const name = posix.basename(relative);
-        const harness = options.harnessDirectory;
+        const harness = options.harness;
         if (harness === undefined) return {};
-        const directories = options.testDirectories ?? [];
-        const excluded = options.excluded ?? [];
+        const directories = options.directories ?? [];
+        const allowed = options.allowed ?? [];
         return {
             Program(node) {
                 if (relative.startsWith(`${harness}/`)) return;
-                if (!isAnyGlobMatch(relative, directories) || isAnyGlobMatch(relative, excluded)) return;
+                if (!isAnyGlobMatch(relative, directories) || isAnyGlobMatch(relative, allowed)) return;
                 if (test.test(name) || name.endsWith('.d.ts') || !CODE_EXTENSION.test(name)) return;
                 const siblings = readDirectory(posix.dirname(file));
                 if (siblings.every((entry) => !(entry.kind === 'file' && test.test(entry.name)))) return;

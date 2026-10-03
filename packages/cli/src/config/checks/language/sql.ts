@@ -1,7 +1,7 @@
 // The literal values checks/language/sql reads: names, patterns, limits, and tables.
 
 // The shipped limit on declared input parameters when the policy names none.
-export const SHIPPED_PARAMETER_LIMIT = 7;
+export const FUNCTION_PARAMETERS = 7;
 export const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
 export const BLOCK_COMMENT = '/*';
 export const LINE_COMMENT = '--';

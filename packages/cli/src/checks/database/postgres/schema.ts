@@ -1,12 +1,12 @@
 import type { SqlNode } from '#cli/types/parsers/sql.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
-import { KEY_KINDS, DEFAULT_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database.ts';
+import { KEY_KINDS, PUBLIC_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database.ts';
 import type { Reader, Schema, Location, Migration, SchemaState } from '#cli/types/checks/database.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers qualify a relation name, and the default schema is applied in one place.
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
-    return `${textOf(node['schemaname']) || DEFAULT_SCHEMA}.${textOf(node['relname'])}`;
+    return `${textOf(node['schemaname']) || PUBLIC_SCHEMA}.${textOf(node['relname'])}`;
 }
 
 function forgetTable(fields: SchemaState, table: string): void {
@@ -19,7 +19,7 @@ function forgetTable(fields: SchemaState, table: string): void {
 
 function named(parts: string[]): string {
     const name = parts.at(-1) ?? '';
-    const schema = parts.length === 1 ? DEFAULT_SCHEMA : (parts.slice(0, -1).at(-1) ?? DEFAULT_SCHEMA);
+    const schema = parts.length === 1 ? PUBLIC_SCHEMA : (parts.slice(0, -1).at(-1) ?? PUBLIC_SCHEMA);
     return `${schema}.${name}`;
 }
 

@@ -38,19 +38,6 @@ function stageFile(temporary: string, value: Read): void {
     closeSync(file);
 }
 
-// Creates the link at the staging path with, on macOS, the mode the snapshot carries.
-function stageLink(temporary: string, link: string, value: Read): void {
-    symlinkSync(link, temporary);
-    if (process.platform !== 'darwin') return;
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
-        lchmodSync(temporary, value.mode);
-    } catch (error) {
-        unlinkSync(temporary);
-        throw error;
-    }
-}
-
 // Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
 // interrupted replacement as not written.
 function mustUnlinkFirst(expected: Read | undefined): boolean {
@@ -88,7 +75,7 @@ function restoreRemoved(bounds: Bounds, path: string, expected: Read, error: unk
 // Stages the snapshot beside its destination, returning whether a file now exists at the staging path.
 function stage(staging: Staging, value: Read, link: string | undefined): void {
     if (link === undefined) stageFile(staging.temporary, value);
-    else stageLink(staging.temporary, link, value);
+    else writeLink(staging.temporary, link, value);
 }
 
 // Creates the lock file with the token, or returns false when another holder's file is already there.
@@ -110,14 +97,35 @@ function lockHolder(current: Read | undefined, path: string): number {
     return pid;
 }
 
-// Whether a process is still running.
+// Whether a process is still running. A process of another user refuses the signal, and runs too.
 function isAlive(pid: number): boolean {
     try {
         process.kill(pid, 0);
         return true;
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+        const { code } = error as NodeJS.ErrnoException;
+        if (code === 'EPERM') return true;
+        if (code !== 'ESRCH') throw error;
         return false;
+    }
+}
+
+/**
+ * Creates a link at a path where nothing exists yet, with, on macOS, the mode the snapshot carries. The target is not
+ * checked here: lifecycle writes check it first, and a revision copy keeps a tracked link wherever it points.
+ * @param temporary the path of the new link
+ * @param link the target text or bytes
+ * @param value the link snapshot
+ */
+export function writeLink(temporary: string, link: string | Buffer, value: Read): void {
+    symlinkSync(link, temporary);
+    if (process.platform !== 'darwin') return;
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
+        lchmodSync(temporary, value.mode);
+    } catch (error) {
+        unlinkSync(temporary);
+        throw error;
     }
 }
 
@@ -162,8 +170,12 @@ export function acquireLock(bounds: Bounds, path: string): void {
             return;
         }
         const current = readEntry(bounds, path, false);
-        if (isAlive(lockHolder(current, path)))
-            throw new Error('Another lifecycle writer holds this repository. Retry after it finishes.');
+        const pid = lockHolder(current, path);
+        // A crash can leave a lock whose process ID a later, unrelated process took, so the message names the lock.
+        if (isAlive(pid))
+            throw new Error(
+                `Another lifecycle writer, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
+            );
         if (isDeepStrictEqual(current, readEntry(bounds, path, false))) unlinkSync(target);
     }
 }

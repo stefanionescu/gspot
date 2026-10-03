@@ -25,9 +25,9 @@ export const COMMENTS = new Set(['comment', 'multiline_comment']);
 /** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
 export const DIRECTIVE = /^\/[/*]\s*(?:swiftlint:|swiftformat:|periphery:|sourcery:)/u;
 export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
-export const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
+export const XCODE_DESTINATION = 'generic/platform=iOS Simulator';
 export const WORKSPACE_SUFFIX = '.xcworkspace';
 export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
-export const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
+export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;

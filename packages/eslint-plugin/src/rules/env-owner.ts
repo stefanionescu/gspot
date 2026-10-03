@@ -1,11 +1,11 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { EnvOwnerOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { EnvAccessOwnerOptions } from '#plugin/types/rules.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
-function isEnvironmentRead(
+function isEnvRead(
     context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
     node: TSESTree.MemberExpression,
 ): boolean {
@@ -18,8 +18,8 @@ function isEnvironmentRead(
     );
 }
 
-export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
-    name: 'env-access-owner',
+export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
+    name: 'env-owner',
     meta: {
         type: 'problem',
         docs: {
@@ -43,7 +43,7 @@ export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
         if (owners.length === 0 || isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), owners)) return {};
         return {
             MemberExpression(node) {
-                if (!isEnvironmentRead(context, node)) return;
+                if (!isEnvRead(context, node)) return;
                 const { parent } = node;
                 if (
                     parent.type === AST_NODE_TYPES.MemberExpression &&

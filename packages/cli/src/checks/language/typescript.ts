@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { ALL_COMPILER_OPTIONS } from '#cli/config/generation/generation.ts';
+import { COMPILER_OPTIONS } from '#cli/config/generation/generation.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { DECORATOR_OPTIONS } from '#cli/config/checks/language/typescript.ts';
 
@@ -22,8 +22,8 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
             }),
     ]);
     const required = input.view.kits.includes('nestjs')
-        ? { ...ALL_COMPILER_OPTIONS, ...DECORATOR_OPTIONS }
-        : ALL_COMPILER_OPTIONS;
+        ? { ...COMPILER_OPTIONS, ...DECORATOR_OPTIONS }
+        : COMPILER_OPTIONS;
     return [...candidates].flatMap((path) => {
         const parsed = getTsconfig(input.root, join(input.root, path));
         if (parsed !== undefined)

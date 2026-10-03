@@ -1,5 +1,5 @@
 {
-    "name": "gspot",
+    "name": "@gspothq/workspace",
     "license": "Apache-2.0",
     "private": true,
     "workspaces": [

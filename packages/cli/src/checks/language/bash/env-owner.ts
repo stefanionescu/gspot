@@ -15,7 +15,7 @@ function ownerPaths(roles: Record<string, string | string[]>): string[] {
  * @param scripts the shell index
  * @returns the findings
  */
-export const envAccessOwner: Analysis = async (context, scripts) => {
+export const envOwner: Analysis = async (context, scripts) => {
     const isOwner = pathMatcher(ownerPaths(context.input.policyFiles.policy.architecture.roles));
     const index = await scripts();
     const owned = new Set(index.files.filter((file) => isOwner(file.path)).flatMap((file) => [...file.assignments]));

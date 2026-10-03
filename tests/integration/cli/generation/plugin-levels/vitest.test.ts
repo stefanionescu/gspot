@@ -33,10 +33,10 @@ test('the Vitest harness folder places test support and closes it to runtime cod
         ),
     });
     const eslint = await generatedEslint(sandbox.path);
-    expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toMatchObject([
+    expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/test-folders')).toMatchObject([
         { message: textContaining('tests/fixtures') },
     ]);
-    expect(await ruleReports(eslint, 'tests/fixtures/helpers.js', 'gspot/tests-directory-contents')).toStrictEqual([]);
+    expect(await ruleReports(eslint, 'tests/fixtures/helpers.js', 'gspot/test-folders')).toStrictEqual([]);
     expect(await ruleReports(eslint, 'src/runtime.js', 'gspot/import-direction')).toMatchObject([
         { message: textContaining('Runtime code imports test code') },
     ]);
@@ -49,5 +49,5 @@ test('without a harness role no folder is the harness, so support files are plac
         'gspot.toml': policyOf(['javascript'], '[rules]\ninstall = false\n', 'all'),
     });
     const eslint = await generatedEslint(sandbox.path);
-    expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toStrictEqual([]);
+    expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/test-folders')).toStrictEqual([]);
 });

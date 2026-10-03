@@ -12,10 +12,10 @@ Run every command from the root of the checkout.
 git clone https://github.com/stefanionescu/gspot.git
 cd gspot
 mise install
-mise run repo:setup
+mise run setup
 ```
 
-`repo:setup` installs the locked dependencies and prepares the grammar files. It also builds
+`setup` installs the locked dependencies and downloads the Swift parser. It also builds
 the ESLint plugin of the workspace and generates the content types the documentation build
 reads. After you change the plugin, run `mise run build:plugin` before the repository
 checks.
@@ -38,7 +38,7 @@ mise exec -- gspot --version
 ## Build
 
 ```sh
-mise run build
+mise run build:cli
 mise run build:plugin
 ```
 
@@ -52,9 +52,9 @@ not depend on each other. To run the build under Node:
 node packages/cli/dist/gspot.js --version
 ```
 
-`mise run prepare:grammar` copies the tree-sitter grammar files into `packages/cli/grammars/`,
-with their licenses. It also downloads the Swift 0.7.3 WebAssembly parser and checks its
-SHA-256. The setup and test tasks run it for you. Run it before you run `bun test` directly.
+From source, gspot reads the tree-sitter grammar files from `node_modules`. `setup` downloads
+the Swift 0.7.3 WebAssembly parser into `packages/cli/grammars/` and checks its SHA-256. The
+build copies the other grammar files there too, with their licenses.
 
 ## Verification
 
@@ -73,11 +73,11 @@ version against `package.json` at startup. A plain `bun test` can pick an older 
 | `mise run test:package`    | The two npm packages, built, published to a local registry, and installed. |
 | `mise run gspot -- check`  | The checks of this repository, run from source.                            |
 
-`test:unit` and `test:integration` run one half of `test`. The tool and acceptance suites need
-their pinned tools from `mise install`, and they can download packages. The acceptance runner
-builds the ESLint plugin and serves it from a local registry, which it removes when the run
-ends. The Supabase tests need Supabase CLI 2.72.7 and a running Docker daemon. The XCTest
-coverage tests need macOS with Xcode selected by `xcode-select`.
+The tool and acceptance suites need their pinned tools from `mise install`, and they can
+download packages. The acceptance runner builds the ESLint plugin and serves it from a local
+registry, which it removes when the run ends. The Supabase tests need Supabase CLI 2.72.7
+and a running Docker daemon. The XCTest coverage tests need macOS with Xcode selected by
+`xcode-select`.
 
 The full acceptance suite stops after 90 minutes. Each test also has its own time limit. To run
 some of it, pass files or folders:
@@ -95,8 +95,8 @@ registry. Then it installs them into new projects and runs real findings and fix
 
 ## Documentation
 
-The documentation site uses Astro Starlight. Preview it with `mise run docs:dev`, and build it
-with `mise run docs:build`, which also checks local links and fragments. The reference pages
+The documentation site uses Astro Starlight. Preview it with `mise run serve:docs`, and build it
+with `mise run build:docs`, which also checks local links and fragments. The reference pages
 come from the CLI help, the policy schema, the kit manifests, and the plugin rules, so change
 those owners rather than a page.
 
@@ -150,7 +150,7 @@ secret. npm links a trusted publisher only to a package that exists, so the firs
 each package is published by hand:
 
 1. Sign in with `npm login` as a member of the `gspothq` org.
-2. Run `mise run build`. Then run `npm publish --access public` in `packages/eslint-plugin`,
+2. Run `mise run build:cli`. Then run `npm publish --access public` in `packages/eslint-plugin`,
    and again in `packages/cli`.
 3. On npmjs.com, open the settings of each package and add a trusted publisher: GitHub Actions,
    the repository `stefanionescu/gspot`, the workflow `release.yml`, and the environment
@@ -166,12 +166,10 @@ npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.
 
 ## Publish the documentation
 
-The site workflow builds from a published release tag, when `PAGES_ENABLED` is `true`.
-The gspot version must match the tag. The build records the version and the source revision in
-`source.json`, and keeps the site artifact for 90 days. Only the deployment job may write to
-Pages, and a reviewer on the `github-pages` environment approves it.
+The docs workflow builds the site from a published release tag and deploys it when
+`PAGES_ENABLED` is `true`. Only the deployment job may write to Pages, and a reviewer on the
+`github-pages` environment approves it.
 
-To roll the site back, open the site workflow, select **Run workflow**, and enter the published
-tag as `release_tag`. When that build carried a documentation fix, also enter its source commit
-as `source_ref`. The workflow checks that source again, rebuilds it, and waits for the approval
-before it deploys. Check the page and its recorded revision afterwards.
+To roll the site back, open the docs workflow, select **Run workflow**, and enter an earlier
+published tag as `release_tag`. The workflow builds that tag and waits for the approval before
+it deploys.

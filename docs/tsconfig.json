@@ -12,7 +12,7 @@
         "../packages/cli/src/parsers/sql/modules.d.ts",
         "src/**/*",
         "astro.config.ts",
-        "scripts/**/*.ts"
+        "links.ts"
     ],
     "exclude": ["dist"]
 }

@@ -9,8 +9,8 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
+import { build, types } from '#cli/checks/framework/nextjs/build.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { nextjsBuild, nextjsTypes } from '#cli/checks/framework/nextjs/build.ts';
 import { prepareNextjsBuild, readNextjsCommands } from '#tests/harness/cli/nextjs.ts';
 
 for (const scope of ['', 'apps/web'])
@@ -24,7 +24,7 @@ for (const scope of ['', 'apps/web'])
             const mode = statSync(config).mode;
             using read = readNextjsCommands(check);
             const { directories, inspections, routesSeen } = read;
-            const execute = check === 'nextjs/tsc' ? nextjsTypes : nextjsBuild;
+            const execute = check === 'nextjs/tsc' ? types : build;
             const found = await execute(input);
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
@@ -82,7 +82,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
         });
     });
     try {
-        expect(await rejection(nextjsTypes(input))).toContain(diagnostic);
+        expect(await rejection(types(input))).toContain(diagnostic);
         expect(scratch).not.toBe('');
         expect(existsSync(scratch)).toBe(false);
         expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

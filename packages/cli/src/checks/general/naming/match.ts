@@ -41,7 +41,7 @@ export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
  * @param category the identifier's category
  * @returns whether the use is named
  */
-export function isReservedUseAllowed(allowedFor: string[], category: string): boolean {
+export function isUseAllowed(allowedFor: string[], category: string): boolean {
     return allowedFor.some((use) => {
         const categories = Object.entries(RESERVED_USES).find(([suffix]) => use.endsWith(suffix))?.[1] ?? [];
         return categories.includes('*') || categories.includes(category);

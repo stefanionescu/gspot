@@ -86,7 +86,7 @@ tester().run('import-direction', importDirection, {
             code: "import { a } from '@/turn/build';",
             filename: '/repo/types/b.ts',
             options,
-            errors: [{ messageId: 'typesOnlyTypes', data: { source: '@/turn/build', role: 'runtime' } }],
+            errors: [{ messageId: 'typesToRuntime', data: { source: '@/turn/build', role: 'runtime' } }],
         },
         {
             code: "import { helper } from '@tests/harness/helper';",

@@ -1,8 +1,8 @@
 import { BLANK } from '#plugin/config/plugin.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import type { LayoutOptions } from '#plugin/types/rules.ts';
 import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
 import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 import { WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/config/rules.ts';
 
@@ -89,8 +89,8 @@ function isLeading(
     return BLANK.test(text.slice(lineStart, comment.range[0]));
 }
 
-export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'headerFirst'>({
-    name: 'header-comments-before-imports',
+export const headerFirst = createRule<LayoutOptions, 'headerFirst'>({
+    name: 'header-first',
     meta: {
         type: 'layout',
         fixable: 'code',

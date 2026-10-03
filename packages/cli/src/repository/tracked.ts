@@ -1,26 +1,32 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore from 'ignore';
 import type { Dirent } from 'node:fs';
+import { isInside } from '#cli/platform/paths.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
-import { join, posix, dirname, resolve } from 'node:path';
-import { statSync, lstatSync, readdirSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { join, posix, dirname, resolve, relative } from 'node:path';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
+import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/platform.ts';
 import type { RawEntry, PathIgnore } from '#cli/types/repository/repository.ts';
 import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS, NOT_REPOSITORY_CODE } from '#cli/config/repository/repository.ts';
 
+// A link to a folder, or one that leaves the repository, is left out, so no check reads past it. A dangling link is
+// listed with no size.
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
-    using files = openRoot(root, 'native');
+    const link = { path, size: 0, executable: false, symlink: true };
+    let target: string;
     try {
-        const target = statSync(files.source(path));
-        return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
+        target = realpathSync(join(root, path));
     } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-        return { path, size: 0, executable: false, symlink: true };
+        if (error instanceof Error && 'code' in error && (error.code === 'ENOENT' || error.code === 'ELOOP'))
+            return link;
+        throw error;
     }
+    if (!isInside(relative(realpathSync(root), target))) return undefined;
+    const stat = statSync(target);
+    return stat.isDirectory() ? undefined : { ...link, size: stat.size };
 }
 
 // A listed file whose parent is now a file is reported the same way on every platform.

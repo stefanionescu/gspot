@@ -96,9 +96,9 @@ export const TYPESCRIPT_PARAMETER_NODES = ['required_parameter', 'optional_param
 export const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);
 export const IMPLICIT_PARAMETERS = new Set(['self', 'cls']);
 export const DUNDER = /^__\w+__$/u;
-export const PYTHON_UPPER_SHAPE = /^_?[A-Z][A-Z\d_]*$/u;
+export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
 export const EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
-export const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
+export const SWIFT_TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
 export const SWIFT_FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];
 export const TYPESCRIPT_FUNCTION_NODES = [
     'function_declaration',
@@ -106,10 +106,10 @@ export const TYPESCRIPT_FUNCTION_NODES = [
     'function_expression',
 ];
 export const MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
-export const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'];
+export const TYPESCRIPT_METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'];
 export const NAMED_DECLARATIONS: [string[], string][] = [
     [TYPESCRIPT_FUNCTION_NODES, 'functions'],
-    [METHOD_NODES, 'methods'],
+    [TYPESCRIPT_METHOD_NODES, 'methods'],
     [['class_declaration', 'abstract_class_declaration'], 'classes'],
     [['interface_declaration', 'type_alias_declaration', 'enum_declaration'], 'types'],
     [['public_field_definition', 'property_signature'], 'properties'],

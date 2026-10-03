@@ -7,19 +7,19 @@ import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { percentage, thresholdsSchema } from '#cli/policy/tools.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
-import { jestPercentage, jestCoverageSettings } from '#cli/policy/tools.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { Suite, JestRun, TestReport } from '#cli/types/checks/tool/jest.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
-const metric = z.object({ pct: jestPercentage });
+const metric = z.object({ pct: percentage });
 const coverageSchema = z.object({
     total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
 });
 
 // Read the Jest report and refuse a run that cannot execute its suites.
-function readTestReport(reports: Root, stderr: string): TestReport {
+function readReport(reports: Root, stderr: string): TestReport {
     const testFile = reports.read('tests.json');
     if (testFile === undefined)
         throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
@@ -41,7 +41,7 @@ function suitePath(source: string, suite: Suite): string {
 }
 
 // One finding per coverage dimension under its floor.
-function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof jestCoverageSettings>): Finding[] {
+function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof thresholdsSchema>): Finding[] {
     const coverageFile = reports.read('coverage/coverage-summary.json');
     if (coverageFile === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
@@ -61,11 +61,7 @@ function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof 
 }
 
 // Runs Jest over the copied sources and reads its reports into findings.
-async function runJest(
-    run: JestRun,
-    reports: Root,
-    settings: z.infer<typeof jestCoverageSettings>,
-): Promise<Finding[]> {
+async function runJest(run: JestRun, reports: Root, settings: z.infer<typeof thresholdsSchema>): Promise<Finding[]> {
     const { input, source, work } = run;
     const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings.coverage[name]]));
     const command = [
@@ -87,7 +83,7 @@ async function runJest(
         throw new Error(
             `Jest could not run (exit ${String(result.code)}): ${stripVTControlCharacters(result.stderr).trim()}`,
         );
-    const tested = readTestReport(reports, result.stderr);
+    const tested = readReport(reports, result.stderr);
     const findings = [
         ...tested.testResults.flatMap((suite) => {
             const file = suitePath(run.source, suite);
@@ -145,7 +141,7 @@ export const reportSchema = z.object({
  * @returns the findings
  */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
-    const settings = jestCoverageSettings.parse(input.view.tool('jest'));
+    const settings = thresholdsSchema.parse(input.view.tool('jest'));
     using work = scratchFolder('gspot-jest-');
     using reports = openRoot(work.path);
     using source = await scratchCopy(

@@ -100,3 +100,26 @@ test('a failed site build skips every output consumer and a new session rebuilds
     const rebuilt = await checkExecution(build!.spec, CHECKS)(next, build!);
     expect(rebuilt.status).toBe('passed');
 });
+
+// A runner that fails past its own handling, as a tool runner can.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The run registry takes a runner function, and this one stands for a runner that fails.
+function brokenRunner(): Promise<never> {
+    return Promise.reject(new Error('The runner broke'));
+}
+
+test('a check runner that throws errors that check alone, and the other checks keep their results', async () => {
+    const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
+    const entries = ['broken', 'kept'].map(
+        (name) =>
+            `[[check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "lines"\n`,
+    );
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], entries.join('')), 'source.txt': 'input\n' });
+    const checks = { engines: CHECKS.engines, runners: { ...CHECKS.runners, 'sandbox/broken': brokenRunner } };
+    const outcome = await executeRun(await openSession(sandbox.path), runOptions({ checks }));
+    expect(outcome.report.exitCode).toBe(2);
+    expect(outcome.report.checks).toMatchObject([
+        { check: 'sandbox/broken', status: 'error', note: textContaining('The runner broke') },
+        { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
+    ]);
+});

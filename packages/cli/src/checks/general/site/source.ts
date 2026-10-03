@@ -4,13 +4,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-
-import {
-    TEXT_SUFFIX,
-    ASSET_FOLDER,
-    REQUIRED_HEADERS,
-    REPORTED_SAVINGS_SHARE,
-} from '#cli/config/checks/general/site.ts';
+import { SVGO_SAVING, TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.reads).toString('utf8');
@@ -21,8 +15,7 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     if (result.code !== 0) throw new Error(`SVGO could not optimize ${path}: ${result.stderr.trim()}`);
     const originalBytes = Buffer.byteLength(original);
     const saved = originalBytes - Buffer.byteLength(result.stdout);
-    const exceeds =
-        input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
+    const exceeds = input.policyFiles.policy.level === 'all' ? saved > 0 : saved * SVGO_SAVING > originalBytes;
     return exceeds
         ? [
               findingAt(
@@ -40,7 +33,7 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
  * @param text the headers file
  * @returns header names in lower case with their values, from the blocks whose path covers the whole site
  */
-function siteWideHeaders(text: string): Map<string, string> {
+function sharedHeaders(text: string): Map<string, string> {
     const held = new Map<string, string>();
     let isSiteWide = false;
     for (const raw of text.split('\n')) {
@@ -83,7 +76,7 @@ export function deadAssets(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export async function svgCompressed(input: EngineInput): Promise<Finding[]> {
+export async function svgo(input: EngineInput): Promise<Finding[]> {
     const paths = input.files
         .filter((file) => file.kind === 'source' && file.path.endsWith('.svg'))
         .map((file) => file.path);
@@ -142,7 +135,7 @@ export function webManifest(input: EngineInput): Finding[] {
 export function securityHeaders(input: EngineInput): Finding[] {
     const files = input.files.filter((file) => file.path === '_headers' || file.path.endsWith('/_headers'));
     return files.flatMap((file) => {
-        const held = siteWideHeaders(readSource(input.root, file.path, input.reads).toString('utf8'));
+        const held = sharedHeaders(readSource(input.root, file.path, input.reads).toString('utf8'));
         const hasFrameRule = /frame-ancestors/iu.test(held.get('content-security-policy') ?? '');
         return Object.entries(REQUIRED_HEADERS)
             .filter(

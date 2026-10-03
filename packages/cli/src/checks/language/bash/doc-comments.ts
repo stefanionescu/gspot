@@ -4,9 +4,9 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts'
 
 import {
     WORD,
+    VAGUE_WORDS,
     ENTRY_FUNCTIONS,
     SHELLCHECK_COMMENT,
-    VAGUE_SUMMARY_WORDS,
     BASH_DOC_SECTIONS as DOC_SECTIONS,
 } from '#cli/config/checks/language/bash.ts';
 
@@ -36,7 +36,7 @@ function isMeaningful(name: string, summary: string): boolean {
     const words = summary
         .matchAll(WORD)
         .map((match) => match[0].toLowerCase())
-        .filter((word) => !VAGUE_SUMMARY_WORDS.includes(word))
+        .filter((word) => !VAGUE_WORDS.includes(word))
         .toArray();
     return words.some((word) => !nameWords.has(word));
 }

@@ -1,12 +1,12 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import { pipInstalls } from '#cli/checks/language/python/deptry.ts';
 import { trivialFile } from '#cli/checks/general/structure/statements.ts';
 import type { StructureReader } from '#cli/types/checks/language/python.ts';
-import { dependencyOwnership } from '#cli/checks/language/python/deptry.ts';
 import { importLinter } from '#cli/checks/language/python/import-linter.ts';
-import { typecheckMembership } from '#cli/checks/language/python/basedpyright.ts';
+import { TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
+import { staleExclusions } from '#cli/checks/language/python/basedpyright.ts';
 import { functionsOf, pythonModules } from '#cli/checks/language/python/modules.ts';
 import { singletons, importComments } from '#cli/checks/language/python/imports.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/language/python/functions.ts';
 
@@ -78,7 +78,7 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
         });
     }),
     'python/trivial-functions': analysis(({ functions, modules }, input) => {
-        const threshold = input.view.limit('trivial_statements', 'python') ?? DEFAULT_TRIVIAL_STATEMENTS;
+        const threshold = input.view.limit('trivial_statements', 'python') ?? TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
             ...modules
@@ -129,6 +129,6 @@ const PYTHON_STRUCTURE: Record<string, Engine> = {
 export const PYTHON_ANALYSES: Record<string, Engine> = {
     ...PYTHON_STRUCTURE,
     'python/import-linter': importLinter,
-    'python/pip-installs': dependencyOwnership,
-    'python/stale-exclusions': typecheckMembership,
+    'python/pip-installs': pipInstalls,
+    'python/stale-exclusions': staleExclusions,
 };

@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
-import { trivialFile, trivialFunctionText } from '#cli/checks/general/structure/statements.ts';
+import { trivialFile, trivialText } from '#cli/checks/general/structure/statements.ts';
 
 /**
  * Report shell functions and files at or below the executable statement threshold.
@@ -10,8 +10,8 @@ import { trivialFile, trivialFunctionText } from '#cli/checks/general/structure/
  * @param scripts reads the parsed shell scripts once
  * @returns the findings
  */
-export const trivialFunction: Analysis = async (context, scripts) => {
-    const threshold = context.limit('trivial_statements', 'bash') ?? DEFAULT_TRIVIAL_STATEMENTS;
+export const trivialFunctions: Analysis = async (context, scripts) => {
+    const threshold = context.limit('trivial_statements', 'bash') ?? TRIVIAL_STATEMENTS;
     const index = await scripts();
     const findings = index.files.flatMap((file) =>
         file.functions.flatMap((entry) =>
@@ -21,7 +21,7 @@ export const trivialFunction: Analysis = async (context, scripts) => {
                           context.input,
                           { file: file.path, line: entry.start },
                           'trivial-function',
-                          trivialFunctionText(entry.name, entry.statements, threshold),
+                          trivialText(entry.name, entry.statements, threshold),
                       ),
                   ]
                 : [],

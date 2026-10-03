@@ -5,7 +5,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { STRUCTURE_PROJECT } from '#tests/samples/python.ts';
-import { DOCSTRING_COMMAND } from '#cli/config/checks/language/python.ts';
+import { PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
 import { checkDocstrings } from '#cli/checks/language/python/pydoclint.ts';
 
 test.each([
@@ -39,7 +39,7 @@ test.each([
     );
     try {
         const result = await checkDocstrings(session, planned!);
-        expect(result.command).toStrictEqual([...DOCSTRING_COMMAND, ...style]);
+        expect(result.command).toStrictEqual([...PYDOCLINT_COMMAND, ...style]);
     } finally {
         command.mockRestore();
     }

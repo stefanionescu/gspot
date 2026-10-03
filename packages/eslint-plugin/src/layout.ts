@@ -1,7 +1,7 @@
 // Ordering shared by the import and export layout rules: statements by length, then the names inside braces.
 import { BLANK, SPACES } from '#plugin/config/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { LayoutMessages, ImportLayoutEntry } from '#plugin/types/plugin.ts';
+import type { LayoutLine, LayoutMessages } from '#plugin/types/plugin.ts';
 
 function isOwnLineComment(text: string, comment: TSESTree.Comment, before: number): boolean {
     if (!BLANK.test(text.slice(comment.range[1], before))) return false;
@@ -36,13 +36,13 @@ function compareText(left: { sortText: string; index: number }, right: { sortTex
     return left.index - right.index;
 }
 
-function compare(left: ImportLayoutEntry, right: ImportLayoutEntry): number {
+function compare(left: LayoutLine, right: LayoutLine): number {
     if (left.multiLine !== right.multiLine) return left.multiLine ? 1 : -1;
     if (left.multiLine && left.lineSpan !== right.lineSpan) return left.lineSpan - right.lineSpan;
     return compareText(left, right);
 }
 
-function entriesOf(source: TSESLint.SourceCode, run: TSESTree.Statement[]): ImportLayoutEntry[] {
+function entriesOf(source: TSESLint.SourceCode, run: TSESTree.Statement[]): LayoutLine[] {
     const text = source.getText();
     const starts = run.map((statement) => segmentStart(source, statement));
     const last = run.at(-1);
@@ -64,7 +64,7 @@ function entriesOf(source: TSESLint.SourceCode, run: TSESTree.Statement[]): Impo
     });
 }
 
-function joined(expected: ImportLayoutEntry[]): string {
+function joined(expected: LayoutLine[]): string {
     let text = '';
     let wasMultiLine = false;
     for (const [index, entry] of expected.entries()) {

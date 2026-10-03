@@ -20,6 +20,7 @@ import {
     STRICT_MODE,
     BASH_FEATURES,
     BASH_SHEBANGS,
+    OTHER_SHEBANG,
     READONLY_WORD,
     HEADER_COMMENT,
     RUNTIME_HEADER,
@@ -27,7 +28,6 @@ import {
     INHERITED_ERREXIT,
     TOP_LEVEL_ASSIGNMENT,
     DIRECTORY_CONSTANT_PIECES,
-    OTHER_INTERPRETER_SHEBANG,
 } from '#cli/config/checks/language/bash.ts';
 
 // The line that must be a bare comment marker.
@@ -127,7 +127,7 @@ function topLevelProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolea
     return ['library-flow', 'A sourced library is declarative at the top level; this line runs when it is loaded.'];
 }
 
-function libraryLineProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
+function libraryProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
     if (line.code.startsWith('set ')) return ['library-options', 'A sourced library does not change shell options.'];
     if (line.code === MAIN_CALL) return ['library-main', 'A sourced library does not call main.'];
     return topLevelProblem(line, file, isConfigOwner);
@@ -150,7 +150,7 @@ function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean
     if (file.functions.some((entry) => entry.name === 'main'))
         report(1, 'library-main', 'A sourced library defines no main.');
     for (const line of code) {
-        const problem = libraryLineProblem(line, file, isConfigOwner);
+        const problem = libraryProblem(line, file, isConfigOwner);
         if (problem !== undefined) report(line.number, problem[0], problem[1]);
     }
 }
@@ -208,12 +208,12 @@ function fileProblems(
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptInterpreter: Analysis = async (context, scripts) => {
+export const contract: Analysis = async (context, scripts) => {
     const runtime = context.bashSetting('platforms');
     const platforms = typeof runtime === 'string' ? runtime : undefined;
     const owners = new Set(context.bashList('config_owners'));
     const index = await scripts();
     return index.files
-        .filter((file) => !OTHER_INTERPRETER_SHEBANG.test(file.lines[0] ?? ''))
+        .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
         .flatMap((file) => fileProblems(context, file, platforms, owners.has(file.path)));
 };

@@ -183,3 +183,25 @@ if (onPosix)
         },
         120_000,
     );
+
+if (onPosix)
+    test('a uv run that writes index credentials into the lock is refused and installs nothing', async () => {
+        await using repository = await testdir();
+        await using artifacts = await testdir();
+        await using registry = await createPythonRegistry(artifacts.path);
+        await using prepared = await preparePythonInstallation(repository.path, 'uv.toml', 'none', registry.url);
+        const { root } = prepared;
+        const lockPath = join(root, '.gspot/uv.lock');
+        const lock = readFileSync(lockPath);
+        // The stand-in for uv copies the index password into the lock it leaves behind.
+        await createFileTree(artifacts.path, {
+            'bin/uv': "#!/bin/sh\nprintf '# synthetic-uv-password\\n' >> uv.lock\n",
+        });
+        chmodSync(join(artifacts.path, 'bin/uv'), 0o755);
+        const refused = await rejection(
+            asOwner(root, (owner) => installPythonProject(root, owner, join(artifacts.path, 'bin/uv'))),
+        );
+        expect(refused).toContain('includes repository index credentials');
+        expect(existsSync(join(root, '.gspot/.venv'))).toBe(false);
+        expect(readFileSync(lockPath)).toStrictEqual(lock);
+    });

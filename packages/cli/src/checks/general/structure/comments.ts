@@ -151,7 +151,7 @@ function tomlComments(text: string): SourceComment[] {
     return comments;
 }
 
-const COMMENT_READERS = new Map<string, (text: string) => SourceComment[]>([
+const READERS = new Map<string, (text: string) => SourceComment[]>([
     ['.toml', tomlComments],
     ['.yaml', yamlComments],
     ['.yml', yamlComments],
@@ -181,7 +181,7 @@ export async function sourceComments(path: string, text: string): Promise<Source
     const extension = extensionOf(path);
     const style = COMMENT_STYLE_BY_EXTENSION[extension];
     if (style === undefined) return [];
-    const reader = COMMENT_READERS.get(extension);
+    const reader = READERS.get(extension);
     if (reader !== undefined) return reader(text);
     if (/^\.[cm]?[jt]sx?$/u.test(extension)) return javascriptComments(path, text);
     const grammar = COMMENT_GRAMMARS.get(extension);

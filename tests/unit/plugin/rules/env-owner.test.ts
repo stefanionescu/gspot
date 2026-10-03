@@ -1,9 +1,9 @@
 import { tester } from '#tests/harness/plugin/tester.ts';
-import { envAccessOwner as environmentAccessOwner } from '#plugin/rules/env-access-owner.ts';
+import { envOwner as environmentAccessOwner } from '#plugin/rules/env-owner.ts';
 
 const OWNERS: [{ owners: string[] }] = [{ owners: ['src/env/**', 'config/**'] }];
 
-tester().run('env-access-owner', environmentAccessOwner, {
+tester().run('env-owner', environmentAccessOwner, {
     valid: [
         ...['process', 'Bun', 'Deno'].map((host) => ({
             code: `function read(${host}) { return ${host}.env.KEY; }`,

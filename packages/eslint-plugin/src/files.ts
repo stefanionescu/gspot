@@ -23,7 +23,8 @@ function isGlobMatch(path: string, glob: string): boolean {
     return isMatch(path);
 }
 /**
- * Forward slashes, no query or hash, no file:// scheme.
+ * Forward slashes, no query or hash, no file:// scheme, and a Windows drive letter in upper case, so two spellings of
+ * one path compare equal.
  * @param value a path or file URL
  * @returns the path with forward slashes
  */
@@ -32,7 +33,7 @@ export function normalizePath(value: string): string {
     const cleaned = cut === -1 ? value : value.slice(0, cut);
     const isUrl = cleaned.startsWith(FILE_SCHEME);
     const bare = isUrl ? fileURLToPath(cleaned) : cleaned;
-    return bare.replaceAll('\\', '/');
+    return bare.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
 }
 
 /**

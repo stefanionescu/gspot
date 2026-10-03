@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import type { Identifier } from '#cli/types/checks/general/naming.ts';
 import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
 
-function stemOf(base: string): string {
+function baseStem(base: string): string {
     const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));
     if (declaration !== undefined) return base.slice(0, -declaration.length);
     const dot = base.lastIndexOf('.');
@@ -24,7 +24,7 @@ function unwrapped(segment: string): { name: string; category: string } {
  */
 export function fileIdentifier(path: string, language: string): Identifier {
     const base = posix.basename(path);
-    const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
+    const name = language === 'sql' && base.endsWith('.sql') ? base : baseStem(base);
     const named = name.startsWith('[') ? unwrapped(name) : { name, category: 'files' };
     return {
         file: path,

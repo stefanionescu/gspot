@@ -6,7 +6,7 @@ tester().run('no-index-imports', noIndexImports, {
         "import { a } from './a';",
         "import { a } from '@/turn/build.js';",
         "import { a } from 'package/index.js';",
-        { code: "import { env } from '@/env/index.js';", options: [{ allow: ['@/env/index.js'] }] },
+        { code: "import { env } from '@/env/index.js';", options: [{ allowed: ['@/env/index.js'] }] },
         "import { a } from './indexes.js';",
     ],
     invalid: [
