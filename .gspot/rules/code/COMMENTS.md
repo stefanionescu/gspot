@@ -18,8 +18,8 @@ A comment explains why, not what, and describes the code as it is now.
 - No em dashes or double hyphens as dashes; use a space, comma, or colon. The `--` before the
   reason of a suppression comment is syntax, not a dash.
 
-Bad: `# Removed the old checkpoint loader.`
-Good: `# Loads model checkpoints from the configured artifact directory.`
+Bad: `# Removed the old cache loader.`
+Good: `# Loads cached responses from the configured cache directory.`
 
 A doc comment says what a function does, what its parameters mean, and what it returns.
 

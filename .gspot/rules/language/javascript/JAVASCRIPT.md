@@ -143,10 +143,10 @@ Runtime boundaries must be validated or escaped before use.
 
 Boundary examples:
 
-- Markdown content rendered into legal pages.
+- Markdown content rendered into HTML.
 - Placeholder replacement into HTML templates.
 - URLs and public paths.
-- Cloudflare request data.
+- Request headers and request metadata from the platform.
 - Environment variables.
 - Analytics configuration.
 - File paths supplied to quality tooling.

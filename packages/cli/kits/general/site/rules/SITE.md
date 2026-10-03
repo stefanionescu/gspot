@@ -75,7 +75,7 @@ Templates and root HTML files stay declarative.
 
 - Public routes use lowercase kebab-case path segments. Directory routes end with `index.html`
   in generated output.
-- Legal pages use route names that match their public path and content body.
+- A page uses a route name that matches its public path and content body.
 - Landing variants use short names that identify the audience or campaign.
 - Every page declares its title, description, canonical URL, and social metadata from
   page-owned metadata; the build fails on a page missing them.

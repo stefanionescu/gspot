@@ -21,8 +21,8 @@ Rules:
 - Environment variables use `UPPER_SNAKE_CASE`.
 - Avoid one-letter names except tiny conventional scopes such as `i` in a short
   loop.
-- Preserve provider capitalization in external names such as `HF_TOKEN` and
-  provider repository IDs.
+- Preserve provider capitalization in external names such as `AWS_REGION` and
+  provider resource IDs.
 - Packages and directories are `snake_case`. Test files are `tests/test_<module>.py`, grouped
   by the behavior they verify. Support code is in the harness folder that
   `architecture.roles.harness` names.
