@@ -11,7 +11,7 @@ test('a prepared configuration does not write and cannot overwrite a subsequent 
     await createFileTree(directory.path, { 'tsconfig.json': original });
     const owner = openOwner(directory.path);
     try {
-        const plan = owner.proposeConfiguration(
+        const plan = owner.proposeMerge(
             'tsconfig.json',
             'json',
             [{ path: ['extends'], value: './managed.json' }],
@@ -36,7 +36,7 @@ test('overlapping configuration fields are refused without changing authored byt
     const owner = openOwner(directory.path);
     try {
         expect(() =>
-            owner.proposeConfiguration(
+            owner.proposeMerge(
                 'package.json',
                 'json',
                 [

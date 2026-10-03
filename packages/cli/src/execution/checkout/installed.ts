@@ -49,14 +49,14 @@ async function assertLinks(
     }
 }
 
-function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
+function assertDependencyReady(checkout: string, folder: string, pending: string[]): void {
     if (basename(folder) === DOT_GSPOT && pending.includes('npm'))
         throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
     if (
-        !LOCKS.some((lock) => statSync(join(revisionRoot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
-        !LOCKS.some((lock) => statSync(join(revisionRoot, lock), { throwIfNoEntry: false }) !== undefined)
+        !LOCKS.some((lock) => statSync(join(checkout, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
+        !LOCKS.some((lock) => statSync(join(checkout, lock), { throwIfNoEntry: false }) !== undefined)
     )
         throw new GspotError('selection', [
             'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',
@@ -163,15 +163,15 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
 // the manifest and lock guard has matched them, and no check writes into them.
 async function copyDependency(
     root: string,
-    revisionRoot: string,
+    checkout: string,
     { folder, dependency }: Directory,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const isPrivate = basename(folder) === DOT_GSPOT;
     const pending = isPrivate ? (getOwnership(join(root, dirname(folder))).installations ?? []) : [];
-    assertDependencyReady(revisionRoot, folder, pending);
+    assertDependencyReady(checkout, folder, pending);
     const source = join(root, folder, dependency);
-    const target = join(revisionRoot, folder, dependency);
+    const target = join(checkout, folder, dependency);
     if (statSync(target, { throwIfNoEntry: false }) !== undefined)
         throw new GspotError('selection', [
             'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
@@ -183,15 +183,15 @@ async function copyDependency(
 /**
  * Copy the installed Vale packages into a snapshot whose Vale configuration matches the one they were synced for.
  * @param root the repository root
- * @param revisionRoot the snapshot directory the packages are copied into
+ * @param checkout the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
-export function copyValePackages(root: string, revisionRoot: string, paths: string[]): void {
+export function copyValePackages(root: string, checkout: string, paths: string[]): void {
     const configs = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
         const installed = openRoot(join(root, folder));
-        const destination = openRoot(join(revisionRoot, folder));
+        const destination = openRoot(join(checkout, folder));
         try {
             const packages = styleFiles(installed).filter((path) => isValePackageFile(path));
             if (packages.length === 0) continue;
@@ -207,13 +207,13 @@ export function copyValePackages(root: string, revisionRoot: string, paths: stri
 /**
  * Copy the installed package trees the snapshot's projects own, after checking that their inputs match.
  * @param root the repository root
- * @param revisionRoot the snapshot directory the dependencies are copied into
+ * @param checkout the snapshot directory the dependencies are copied into
  * @param entries the snapshot's Git entries, among them the project manifests that own dependencies
  * @param cancelSignal cancellation for the copy
  */
 export async function copyDependencies(
     root: string,
-    revisionRoot: string,
+    checkout: string,
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
@@ -226,9 +226,9 @@ export async function copyDependencies(
     if (directories.length === 0) return;
     await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
     const packages = directories.filter((directory) => directory.dependency === 'node_modules');
-    for (const directory of packages) await copyDependency(root, revisionRoot, directory, cancelSignal);
+    for (const directory of packages) await copyDependency(root, checkout, directory, cancelSignal);
     // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
-    const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
+    const roots = { revision: await realpath(checkout), working: await realpath(root) };
     for (const { folder, dependency } of packages.filter((directory) => basename(directory.folder) !== DOT_GSPOT))
         await assertLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
 }

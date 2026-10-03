@@ -22,12 +22,12 @@ export async function diffEslintRules(
     drift: Drift[],
 ): Promise<void> {
     const selected = plan.files.flatMap((file) => {
-        if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) return [];
+        if (!file.path.endsWith('/eslint.config.mjs') || file.rulePaths === undefined) return [];
         const entry = drift.find((candidate) => candidate.path === file.path);
-        return entry === undefined ? [] : [{ file, entry, rulesPath: file.rulesPath }];
+        return entry === undefined ? [] : [{ file, entry, rulePaths: file.rulePaths }];
     });
     using files = openRoot(root);
-    for (const { file, entry, rulesPath } of selected) {
+    for (const { file, entry, rulePaths } of selected) {
         try {
             const current = files.read(file.path)?.bytes.toString('utf8');
             const sources = [current, file.content].filter((source) => source !== undefined);
@@ -44,7 +44,7 @@ export async function diffEslintRules(
                     signal,
                 ),
             );
-            entry.rules = compareRules(rulesPath, current === undefined ? {} : { rules: resolvedRules[0] }, {
+            entry.rules = compareRules(rulePaths, current === undefined ? {} : { rules: resolvedRules[0] }, {
                 rules: resolvedRules.at(-1),
             });
             delete entry.ruleError;

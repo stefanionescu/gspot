@@ -17,7 +17,7 @@ type KitHeader = Omit<RawManifest['kit'], 'check_references'> & {
 type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
 
 export type GeneratedFile = {
-    rulesPath?: string[];
+    rulePaths?: string[];
     path: string;
     content: string;
     readOnly: boolean;

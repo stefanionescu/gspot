@@ -14,7 +14,7 @@ test('an installation is one record, and removing it deletes the folder', async 
     try {
         owner.installTree('npm', installedOutputs(staged.path, 'npm'));
         expect(getOwnership(directory.path)).toMatchObject({ files: [], installs: ['npm'] });
-        owner.removeInstallation('npm');
+        owner.deleteInstallation('npm');
         expect(existsSync(join(directory.path, '.gspot/node_modules'))).toBe(false);
         expect(getOwnership(directory.path).installs).toBeUndefined();
     } finally {

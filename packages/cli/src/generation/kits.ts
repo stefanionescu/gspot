@@ -126,7 +126,7 @@ function emitConfiguration(
         readOnly: true,
         kind: 'config',
         kit: manifest.kit.name,
-        ...(configuration.rules_path === undefined ? {} : { rulesPath: configuration.rules_path }),
+        ...(configuration.rules_path === undefined ? {} : { rulePaths: configuration.rules_path }),
     };
     plan.files.push(file);
     pointerFor({ ...context, inputs }, configuration, file, plan);

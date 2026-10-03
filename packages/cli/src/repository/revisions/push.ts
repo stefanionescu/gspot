@@ -27,13 +27,13 @@ function parseLine(line: string): PushLine {
 }
 
 // The commit an object peels to, or undefined for an object that is not a commit, remembered per object.
-async function peelCommit(context: PushSearch, gitHash: string): Promise<string | undefined> {
-    if (context.commits.has(gitHash)) return context.commits.get(gitHash);
+async function peelCommit(context: PushSearch, hash: string): Promise<string | undefined> {
+    if (context.commits.has(hash)) return context.commits.get(hash);
     const { root, cancelSignal } = context;
-    const peeled = await gitTrimmed(root, ['rev-parse', '--verify', `${gitHash}^{}`], cancelSignal);
+    const peeled = await gitTrimmed(root, ['rev-parse', '--verify', `${hash}^{}`], cancelSignal);
     const type = await gitTrimmed(root, ['cat-file', '-t', peeled], cancelSignal);
     const commit = type === 'commit' ? peeled : undefined;
-    context.commits.set(gitHash, commit);
+    context.commits.set(hash, commit);
     return commit;
 }
 
@@ -55,30 +55,30 @@ async function getFetchedCommits(context: PushSearch, remote: string | undefined
 }
 
 // What a pushed commit is compared against: the remote's commit, or every fetched commit for a new ref.
-async function comparison(context: PushSearch, gitHash: string, remoteHash: string): Promise<Comparison> {
+async function comparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal, fetched, shallow } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
         const previous = await peelCommit(context, remoteHash);
         if (previous === undefined) return { changed: undefined, excluded: [] };
-        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, gitHash, '--'], cancelSignal);
+        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, hash, '--'], cancelSignal);
         return { changed, excluded: [previous] };
     }
     if (fetched.length === 0 || shallow) return { changed: undefined, excluded: [] };
     const excluded = [...new Set(fetched)];
-    const changed = await gitPaths(root, [...LOG_ARGV, gitHash, '--not', ...excluded, '--'], cancelSignal);
+    const changed = await gitPaths(root, [...LOG_ARGV, hash, '--not', ...excluded, '--'], cancelSignal);
     return { changed, excluded };
 }
 
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
-async function buildRevision(context: PushSearch, line: PushLine, gitHash: string): Promise<PushRevision> {
+async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
-    const { changed, excluded } = await comparison(context, gitHash, line.remoteHash);
+    const { changed, excluded } = await comparison(context, hash, line.remoteHash);
     const exclusion = excluded.length === 0 ? [] : ['--not', ...excluded];
-    const history = await gitLines(root, ['rev-list', gitHash, ...exclusion, '--'], cancelSignal);
-    const tree = await gitTrimmed(root, ['rev-parse', '--verify', `${gitHash}^{tree}`], cancelSignal);
+    const history = await gitLines(root, ['rev-list', hash, ...exclusion, '--'], cancelSignal);
+    const tree = await gitTrimmed(root, ['rev-parse', '--verify', `${hash}^{tree}`], cancelSignal);
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
-        object: gitHash,
+        object: hash,
         tree,
         refs: [line.localRef],
         commits: history,

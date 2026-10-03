@@ -5,18 +5,18 @@ import { VERSION_FILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/location
 import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 
-function configurationPlans(owner: Owner, generated: Generated, replace: boolean) {
+function configurationPlans(owner: Owner, generated: Generated, canReplace: boolean) {
     const plans: { plan: Planned; package: boolean }[] = [];
     for (const merge of generated.merges) {
         plans.push({
             package: false,
-            plan: owner.proposeConfiguration(merge.path, merge.format, merge.changes, replace),
+            plan: owner.proposeMerge(merge.path, merge.format, merge.changes, canReplace),
         });
     }
     for (const output of generated.configurations) {
         plans.push({
             package: output.path === 'package.json',
-            plan: owner.proposeConfiguration(output.path, output.format, output.changes, true),
+            plan: owner.proposeMerge(output.path, output.format, output.changes, true),
         });
     }
     return plans;
@@ -31,8 +31,8 @@ function recordPreserved(report: ApplyReport, plans: Planned[]): void {
 
 // An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.
 function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['retained'], hasPython: boolean): void {
-    if (!retained.packages) owner.removeInstallation('npm');
-    if (!hasPython) owner.removeInstallation('python');
+    if (!retained.packages) owner.deleteInstallation('npm');
+    if (!hasPython) owner.deleteInstallation('python');
     if (!retained.prose) removePackages(root);
 }
 

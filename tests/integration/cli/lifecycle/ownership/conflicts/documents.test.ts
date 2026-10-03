@@ -11,9 +11,9 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
     const owner = openOwner(directory.path);
     try {
         const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
-        expect(() => owner.proposeConfiguration('broken.toml', 'toml', changes, true)).toThrow();
+        expect(() => owner.proposeMerge('broken.toml', 'toml', changes, true)).toThrow();
         expect(readFileSync(join(directory.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
-        owner.applyPlan(owner.proposeConfiguration('mise.toml', 'toml', changes));
+        owner.applyPlan(owner.proposeMerge('mise.toml', 'toml', changes));
         const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
         expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
         writeFileSync(join(directory.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
@@ -51,22 +51,18 @@ test('shared JSON preserves changed managed keys and rejects malformed input', a
     const owner = openOwner(directory.path);
     try {
         owner.applyPlan(
-            owner.proposeConfiguration('tsconfig.json', 'json', [{ path: ['extends'], value: './managed.json' }], true),
+            owner.proposeMerge('tsconfig.json', 'json', [{ path: ['extends'], value: './managed.json' }], true),
         );
         const authored = '{"extends":"./authored.json"}\n';
         writeFileSync(join(directory.path, 'tsconfig.json'), authored);
         expect(
-            owner.applyPlan(
-                owner.proposeConfiguration('tsconfig.json', 'json', [{ path: ['extends'], value: './next.json' }]),
-            ),
+            owner.applyPlan(owner.proposeMerge('tsconfig.json', 'json', [{ path: ['extends'], value: './next.json' }])),
         ).toBe('preserved');
         expect(owner.applyPlan(owner.proposeRestoration('tsconfig.json'))).toBe('preserved');
         expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(authored);
         writeFileSync(join(directory.path, 'invalid.json'), '{ unfinished');
         expect(() =>
-            owner.applyPlan(
-                owner.proposeConfiguration('invalid.json', 'json', [{ path: ['value'], value: true }], true),
-            ),
+            owner.applyPlan(owner.proposeMerge('invalid.json', 'json', [{ path: ['value'], value: true }], true)),
         ).toThrow('valid JSON object');
         expect(owner.read('invalid.json')!.bytes.toString('utf8')).toBe('{ unfinished');
     } finally {

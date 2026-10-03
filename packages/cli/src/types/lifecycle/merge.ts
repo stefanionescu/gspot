@@ -13,7 +13,7 @@ export type MergeRequest = {
     current: Read | undefined;
     existing: OwnershipEntry | undefined;
     matchesInstalled: boolean;
-    replace: boolean;
+    canReplace: boolean;
 };
 
 export type KeyPath = (string | number)[];

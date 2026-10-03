@@ -54,19 +54,19 @@ function caseCollision(entries: GitEntry[]): [string, string] | undefined {
 }
 
 async function populateRevision(
-    revisionRoot: string,
+    checkout: string,
     entries: GitEntry[],
     objects: Map<string, Buffer>,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const collision = caseCollision(entries);
     // On a file system that folds letter case, the upper-case spelling of the folder names the folder itself.
-    const upper = revisionRoot.toUpperCase();
-    if (collision !== undefined && upper !== revisionRoot && existsSync(upper))
+    const upper = checkout.toUpperCase();
+    if (collision !== undefined && upper !== checkout && existsSync(upper))
         throw new GspotError('selection', [
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         ]);
-    const files = openRoot(revisionRoot, 'native');
+    const files = openRoot(checkout, 'native');
     // Write links last so a tracked link can never redirect another tracked write.
     const ordered = [
         ...entries.filter((entry) => entry.mode !== '120000'),
@@ -85,14 +85,14 @@ async function populateRevision(
     }
 }
 
-function parseFrame(output: Buffer, cursor: number, gitHash: string): { end: number; size: number } {
+function parseFrame(output: Buffer, cursor: number, hash: string): { end: number; size: number } {
     const end = output.indexOf(NEWLINE, cursor);
     const header = output.subarray(cursor, end).toString('ascii');
     const match = /^([a-f0-9]{40}|[a-f0-9]{64}) blob (\d+)$/u.exec(header);
     const size = Number(match?.[2]);
     if (
         end < cursor ||
-        match?.[1] !== gitHash ||
+        match?.[1] !== hash ||
         !Number.isSafeInteger(size) ||
         end + size + 1 >= output.length ||
         output[end + size + 1] !== NEWLINE
@@ -106,12 +106,12 @@ function parseEntry(line: string, kind: Revision['kind']): GitEntry {
         kind === 'index'
             ? /^(100644|100755|120000|160000) ([a-f0-9]{40}|[a-f0-9]{64}) 0\t([\s\S]+)$/u
             : /^(100644|100755|120000|160000) (?:blob|commit) ([a-f0-9]{40}|[a-f0-9]{64})\t([\s\S]+)$/u;
-    const [, mode = '', gitHash = '', path = ''] = pattern.exec(line) ?? [];
-    if ([mode, gitHash, path].includes(''))
+    const [, mode = '', hash = '', path = ''] = pattern.exec(line) ?? [];
+    if ([mode, hash, path].includes(''))
         throw new GspotError('selection', [
             'The Git entry is unsupported or conflicted. Resolve index conflicts before checking staged content.',
         ]);
-    return { mode, hash: gitHash, path };
+    return { mode, hash: hash, path };
 }
 
 /**
@@ -151,7 +151,7 @@ export async function getBlobs(
 ): Promise<Map<string, Buffer>> {
     const objects = [...new Set(requested)];
     if (objects.length === 0) return new Map();
-    if (objects.some((gitHash) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(gitHash)))
+    if (objects.some((hash) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(hash)))
         throw new GspotError('selection', ['Git blob requests require full object IDs.']);
     const result = await runGitBinary(root, ['cat-file', '--batch'], {
         stdin: objects.join('\n') + '\n',
@@ -164,9 +164,9 @@ export async function getBlobs(
     const output = Buffer.from(result.stdout);
     const blobs = new Map<string, Buffer>();
     let cursor = 0;
-    for (const gitHash of objects) {
-        const { end, size } = parseFrame(output, cursor, gitHash);
-        blobs.set(gitHash, output.subarray(end + 1, end + size + 1));
+    for (const hash of objects) {
+        const { end, size } = parseFrame(output, cursor, hash);
+        blobs.set(hash, output.subarray(end + 1, end + size + 1));
         cursor = end + size + FRAME_NEWLINES;
     }
     if (cursor !== output.length)
@@ -239,40 +239,36 @@ export async function getHeadEntries(root: string, cancelSignal?: AbortSignal): 
 export async function checkOutRevision<Result>(
     root: string,
     source: Revision,
-    action: (revisionRoot: string, tree: string) => Promise<Result>,
+    action: (checkout: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {
-    const printedRoot = await gitText(root, ['rev-parse', '--show-toplevel'], cancelSignal);
-    const gitRoot = printedRoot.replace(/\n$/u, '');
-    const directory = relative(realpathSync(gitRoot), realpathSync(root));
-    const entries = await getCachedEntries(gitRoot, source, cancelSignal);
+    const printed = await gitText(root, ['rev-parse', '--show-toplevel'], cancelSignal);
+    const toplevel = printed.replace(/\n$/u, '');
+    const directory = relative(realpathSync(toplevel), realpathSync(root));
+    const entries = await getCachedEntries(toplevel, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
-    using revisionRootFolder = scratchFolder('gspot-revision-');
-    const revisionRoot = revisionRootFolder.path;
-    await gitText(
-        gitRoot,
-        ['clone', '--shared', '--no-checkout', '--quiet', '--', gitRoot, revisionRoot],
-        cancelSignal,
-    );
+    using checkoutFolder = scratchFolder('gspot-revision-');
+    const checkout = checkoutFolder.path;
+    await gitText(toplevel, ['clone', '--shared', '--no-checkout', '--quiet', '--', toplevel, checkout], cancelSignal);
     // The clone's object store is shared read-only; its index and working tree belong to the snapshot.
     if (source.kind === 'commit')
-        await gitText(revisionRoot, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
-    await gitText(revisionRoot, ['read-tree', '--empty'], cancelSignal);
-    await gitText(revisionRoot, ['update-index', '-z', '--index-info'], cancelSignal, index);
-    const tree = await gitText(revisionRoot, ['write-tree'], cancelSignal);
+        await gitText(checkout, ['update-ref', '--no-deref', 'HEAD', source.hash], cancelSignal);
+    await gitText(checkout, ['read-tree', '--empty'], cancelSignal);
+    await gitText(checkout, ['update-index', '-z', '--index-info'], cancelSignal, index);
+    const tree = await gitText(checkout, ['write-tree'], cancelSignal);
     const objects = await getBlobs(
-        revisionRoot,
+        checkout,
         entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.hash),
         cancelSignal,
     );
-    await populateRevision(revisionRoot, entries, objects, cancelSignal);
+    await populateRevision(checkout, entries, objects, cancelSignal);
     copyValePackages(
-        gitRoot,
-        revisionRoot,
+        toplevel,
+        checkout,
         entries.map((entry) => entry.path),
     );
-    await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
+    await copyDependencies(toplevel, checkout, entries, cancelSignal);
     await setImmediate();
     cancelSignal?.throwIfAborted();
-    return await action(join(revisionRoot, directory), tree.trim());
+    return await action(join(checkout, directory), tree.trim());
 }

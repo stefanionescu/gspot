@@ -34,10 +34,10 @@ function buildOwner(log: Log): Owner {
         installTree: (kind, outputs) => {
             installTree(log, kind, outputs);
         },
-        removeInstallation: (kind) => {
+        deleteInstallation: (kind) => {
             deleteInstallation(log, kind);
         },
-        proposeConfiguration: (path, format, changes, replace) => proposeMerge(log, path, format, changes, replace),
+        proposeMerge: (path, format, changes, canReplace) => proposeMerge(log, path, format, changes, canReplace),
         applyPlan: (plan) => applyPlan(log, plan),
         applyPlans: (plans) => applyPlans(log, plans),
         proposeBlock: (path, body, style) => proposeBlock(log, path, body, style),
@@ -47,10 +47,10 @@ function buildOwner(log: Log): Owner {
             return files.read(path);
         },
         paths: () => state.files.map((entry) => entry.path),
-        proposeReplacement: (path, next, kind, replace, expected, proposed) =>
-            proposeReplacement(log, { path, next, kind, replace, expected, proposed }),
-        replace: (path, next, kind, replace, expected) =>
-            applyPlan(log, proposeReplacement(log, { path, next, kind, replace, expected })),
+        proposeReplacement: (path, next, kind, canReplace, expected, proposed) =>
+            proposeReplacement(log, { path, next, kind, canReplace, expected, proposed }),
+        replace: (path, next, kind, canReplace, expected) =>
+            applyPlan(log, proposeReplacement(log, { path, next, kind, canReplace, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(log, path, expected),
         proposeRestoration: (path) => proposeRestoration(log, path),

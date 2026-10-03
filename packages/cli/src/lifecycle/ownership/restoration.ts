@@ -77,9 +77,9 @@ function getRestoration(existing: OwnershipEntry, current: Read | undefined): Re
 export function proposeRestoration(log: Log, path: string): Planned {
     const existing = log.entryFor(path);
     const current = getOnDisk(log, path, existing?.installed);
-    const base = { path, current, previous: existing };
+    const base = { path, before: current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
     const restoration = getRestoration(existing, current);
     if (restoration === undefined) return { ...base, status: 'preserved' };
-    return { ...base, ...(restoration.next === undefined ? {} : { next: restoration.next }), status: 'changed' };
+    return { ...base, ...(restoration.next === undefined ? {} : { after: restoration.next }), status: 'changed' };
 }

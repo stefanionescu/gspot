@@ -55,7 +55,7 @@ test('shared JSON updates preserve comments and later authored settings through 
     try {
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration(
+                owner.proposeMerge(
                     'tsconfig.json',
                     'json',
                     [{ path: ['extends'], value: './.gspot/first.json' }],
@@ -68,9 +68,7 @@ test('shared JSON updates preserve comments and later authored settings through 
         writeFileSync(join(directory.path, 'tsconfig.json'), edited);
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration('tsconfig.json', 'json', [
-                    { path: ['extends'], value: './.gspot/second.json' },
-                ]),
+                owner.proposeMerge('tsconfig.json', 'json', [{ path: ['extends'], value: './.gspot/second.json' }]),
             ),
         ).toBe('changed');
         expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(
@@ -94,7 +92,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
     const owner = openOwner(directory.path);
     try {
         owner.applyPlan(
-            owner.proposeConfiguration(
+            owner.proposeMerge(
                 'package.json',
                 'json',
                 [
@@ -109,9 +107,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
         writeFileSync(join(directory.path, 'package.json'), edited);
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration('package.json', 'json', [
-                    { path: ['scripts', 'check'], value: 'gspot check' },
-                ]),
+                owner.proposeMerge('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
             ),
         ).toBe('changed');
         expect(owner.read('package.json')!.bytes.toString('utf8')).toBe(
@@ -134,7 +130,7 @@ test('YAML ownership preserves authored entries and comments through updates and
     try {
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration(
+                owner.proposeMerge(
                     'tool.yml',
                     'yaml',
                     [{ path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged' } }],
@@ -146,7 +142,7 @@ test('YAML ownership preserves authored entries and comments through updates and
         writeFileSync(join(directory.path, 'tool.yml'), edited);
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration('tool.yml', 'yaml', [
+                owner.proposeMerge('tool.yml', 'yaml', [
                     { path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged --verbose' } },
                 ]),
             ),
@@ -169,12 +165,7 @@ test('adopting identical authored configuration restores its bytes and permissio
     const owner = openOwner(directory.path);
     try {
         owner.applyPlans([
-            owner.proposeConfiguration(
-                'package.json',
-                'json',
-                [{ path: ['scripts', 'check'], value: 'gspot check' }],
-                true,
-            ),
+            owner.proposeMerge('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }], true),
         ]);
         expect(owner.applyPlan(owner.proposeRestoration('package.json'))).toBe('changed');
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(content);
@@ -193,7 +184,7 @@ test('identical unrecorded blocks and configuration fields survive adoption, lat
     try {
         owner.applyPlans([
             owner.proposeBlock('AGENTS.md', 'existing instructions', 'markdown'),
-            owner.proposeConfiguration('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
+            owner.proposeMerge('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
         ]);
         writeFileSync(join(directory.path, 'AGENTS.md'), instructions + 'Later authored instructions.\n');
         writeFileSync(join(directory.path, 'package.json'), configuration.replace('true', 'false'));
@@ -227,22 +218,22 @@ test.each([
             { path: ['kept', 'owned'], value: true },
         ];
         try {
-            owner.applyPlan(owner.proposeConfiguration(path, format, fields, true));
+            owner.applyPlan(owner.proposeMerge(path, format, fields, true));
             const installed = owner.read(path)!.bytes.toString('utf8');
             const edited = installed.replace('4', '99');
             writeFileSync(join(directory.path, path), edited);
-            expect(owner.applyPlan(owner.proposeConfiguration(path, format, []))).toBe('preserved');
+            expect(owner.applyPlan(owner.proposeMerge(path, format, []))).toBe('preserved');
             expect(owner.read(path)!.bytes.toString('utf8')).toBe(edited);
             writeFileSync(join(directory.path, path), installed);
-            owner.applyPlan(owner.proposeConfiguration(path, format, [fields[1]!]));
+            owner.applyPlan(owner.proposeMerge(path, format, [fields[1]!]));
             expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({
                 authored: true,
                 kept: {},
                 created: { nested: { second: 2 } },
             });
-            owner.applyPlan(owner.proposeConfiguration(path, format, []));
+            owner.applyPlan(owner.proposeMerge(path, format, []));
             expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: true, kept: {} });
-            owner.applyPlan(owner.proposeConfiguration(path, format, fields, true));
+            owner.applyPlan(owner.proposeMerge(path, format, fields, true));
             writeFileSync(
                 join(directory.path, path),
                 owner.read(path)!.bytes.toString('utf8').replace('true', 'false'),

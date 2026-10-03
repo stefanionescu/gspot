@@ -117,11 +117,11 @@ export function compareRules(paths: string[], previous: unknown, proposed: unkno
  * @returns the rule differences, or the reason they cannot be read
  */
 export function diffRules(file: GeneratedFile, before: string | undefined): Pick<Drift, 'rules' | 'ruleError'> {
-    if (file.rulesPath === undefined) return {};
+    if (file.rulePaths === undefined) return {};
     try {
         const previous = before === undefined ? {} : document(file.path, before);
         const proposed = document(file.path, file.content);
-        const rules = compareRules(file.rulesPath, previous, proposed);
+        const rules = compareRules(file.rulePaths, previous, proposed);
         return { rules };
     } catch (error) {
         return {
