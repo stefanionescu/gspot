@@ -1,5 +1,4 @@
 ---
-slug: guides/custom-checks
 title: Custom checks
 description: Run your own command as a gspot check, with its findings in the same report.
 ---

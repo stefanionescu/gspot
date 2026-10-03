@@ -64,35 +64,14 @@ it, without repeats. A single-value setting takes the nearest value. If two sele
 different defaults for the same setting, gspot names both kits. To decide, set the value at the
 root or in a scope.
 
-## Settings that differ per scope
-
-- **SQL dialect.** The `postgres` kit sets `tools.sqlfluff.dialect` to `postgres`. For another
-  dialect, set its lowercase label in the root or a scope table: `sqlite`, for example.
-- **Migrations in transactions.** The `supabase` kit sets `tools.squawk.assume_in_transaction`
-  to `true`. Set it to `false` where your migration runner does not wrap each migration in a
-  transaction.
-- **Python rules.** Each scope gets its own Ruff configuration. A scope with the `pytest` kit
-  turns on the pytest style rules and allows assertions in its test files. Its sibling scopes
-  keep their own rules.
-- **Spelling.** A scope can set its own `tools.typos.locale`: `en`, `en-us`, `en-gb`, `en-ca`,
-  or `en-au`. It can also add words with `tools.typos.words` and paths with
-  `tools.typos.exclude`. Paths in `tools.typos.exclude` stay relative to the root of the policy.
-
 ## Files a scope reads
 
-Checks that read project files look inside the scope only. Supabase reads
-`supabase/config.toml` in each scope, and the settings `tools.supabase.functions_directory`,
-`tools.supabase.admin_key_files`, and `tools.i18n.locales.directory` are relative to the
-scope. Locale messages and static site files in a child scope do not count for the parent
-scope.
-
-With the `site` kit, `site/svgo` reports an SVG file when optimizing it
-saves more than 10% of its size at `recommended`, or any bytes at `all`. To optimize the
-files, run:
-
-```bash
-gspot check --only site/svgo --fix
-```
+Each kit sets the defaults its tools need, such as the SQL dialect of the `postgres` kit, and a
+scope can set its own value for any of them. Checks that read project files look inside the scope
+only: Supabase reads `supabase/config.toml` in each scope, and the settings
+`tools.supabase.functions_directory`, `tools.supabase.admin_key_files`, and the `directory` of
+`tools.i18n.locales` are relative to the scope. Locale messages and site files in a child scope do
+not count for the parent scope.
 
 ## A policy below the Git root
 

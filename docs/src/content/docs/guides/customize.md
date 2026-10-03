@@ -27,8 +27,8 @@ level = "recommended"
 require_reasons = true
 ```
 
-A kit is a bundle of checks, tool configuration, and guides for one language, framework, or
-concern. To add or remove one, run `gspot add <kit>` or `gspot remove <kit>`.
+A kit is a bundle of checks, tool configuration, and agent rules for one language, framework,
+or concern. To add or remove one, run `gspot add <kit>` or `gspot remove <kit>`.
 
 The level decides which checks run:
 
@@ -51,9 +51,9 @@ This example lets scripts print to the terminal:
 gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
-The ignore turns off one rule, `no-console`, for the paths under `scripts/`. Leave out `--rule`
-to turn off the whole check. With `require_reasons = true`, gspot refuses an ignore without a
-reason.
+The ignore turns off the lint rule `no-console` for the paths under `scripts/`. Leave out
+`--rule` to turn off the whole check. With `require_reasons = true`, gspot refuses an ignore
+without a reason.
 
 When the cause is gone, remove the ignore and run the check again:
 
@@ -101,7 +101,9 @@ gspot install
 
 ## Upgrade gspot
 
-After you upgrade gspot, preview and apply the new configuration, then install and check:
+`.gspot/version` pins the gspot version of the repository, and with mise,
+`.mise/conf.d/gspot-tools.toml` pins it too. Another version refuses `gspot check`. After you
+upgrade gspot, move the pin: preview and apply the new configuration, then install and check:
 
 ```bash
 gspot apply --dry-run

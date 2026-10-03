@@ -6,33 +6,23 @@ sidebar:
 ---
 
 gspot is an npm package. It runs on Node.js 22 or newer, or on Bun, under macOS, Linux, and
-Windows. You also need Git.
+Windows. You also need Git. The `bash` kit needs Bash 4.4 or newer; macOS ships Bash 3.2, so
+install a newer one with `brew install bash`.
 
 ## Install gspot
 
-In a JavaScript or TypeScript repository, add gspot as a development dependency:
+In a JavaScript or TypeScript repository, add gspot as an exact development dependency, so the
+version stays the one the repository pins:
 
 ```bash
-npm install --save-dev @gspothq/cli
+npm install --save-dev --save-exact @gspothq/cli
 ```
 
-With another package manager, use its add command: `pnpm add -D @gspothq/cli`, `yarn add -D @gspothq/cli`,
-or `bun add -d @gspothq/cli`.
+With another package manager: `pnpm add -D -E @gspothq/cli`, `yarn add -D -E @gspothq/cli`, or
+`bun add -d --exact @gspothq/cli`. In a repository without `package.json`, install it once for
+your user with `npm install --global @gspothq/cli`.
 
-In a repository without `package.json`, install gspot once for your user:
-
-```bash
-npm install --global @gspothq/cli
-```
-
-Check that it runs:
-
-```bash
-npx gspot --version
-```
-
-The command prints the version, such as `0.1.0`. After a global install, you can leave out
-`npx`.
+Check that it runs with `npx gspot --version`. After a global install, leave out `npx`.
 
 ## Set up a repository
 
@@ -56,30 +46,8 @@ npx gspot check
 ```
 
 `install` installs the tools at the versions in the committed locks and sets up the Git hooks.
-It changes no tracked file. If the policy and the locks disagree, `install` stops. The person
+It changes no tracked file. If the policy and the locks disagree, `install` stops: the person
 who changed the policy runs `gspot apply` and commits the result.
 
-## Match the repository version
-
-`gspot init` records the gspot version in `.gspot/version`. When mise runs the repository, it
-also pins that version in `.mise/conf.d/gspot-tools.toml`. Every person on the repository runs
-that version.
-
-A different version refuses `gspot check` and prints two ways forward: install the pinned
-version, or move the pin. To move the pin, preview the change, apply it, and install:
-
-```bash
-npx gspot apply --dry-run
-npx gspot apply
-npx gspot install
-```
-
-## Tools gspot runs
-
-Git must be on your `PATH`. gspot installs its npm and Python tools in a private project under
-`.gspot/`, so your own dependencies do not change. When mise runs the repository, mise also
-installs the native tools, such as ShellCheck. Without mise, see
-[package managers](/guides/without-mise/).
-
-The `bash` kit needs Bash 4.4 or newer. macOS ships Bash 3.2, so install a newer one with
-`brew install bash`. With Bash 3.2, the bash checks report that Bash is too old.
+`.gspot/version` pins the gspot version of the repository, and another version refuses to
+check. [Upgrade gspot](/guides/customize/#upgrade-gspot) says how to move the pin.

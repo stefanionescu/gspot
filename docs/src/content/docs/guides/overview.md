@@ -1,48 +1,22 @@
 ---
 title: Overview
-description: What gspot does, how it enforces it, and where your choices live.
+description: What gspot sets up in a repository, and where to read more.
 ---
 
 gspot lints AI-generated code and installs rules for AI coding agents. Git hooks and CI run
 the checks, and a finding stops the commit.
 
-## What gspot sets up
+`gspot init` reads your repository, shows a plan, and sets up four things:
 
-`gspot init` reads your repository and sets up four things.
+| What                                                                                                                                                | Where            | Read more                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
+| Configuration for the standard linters of your languages, such as ESLint, Ruff, and ShellCheck, with their npm and Python tools pinned in `.gspot/` | `.gspot/config/` | [Generated files](/guides/generated-files/) |
+| Checks of its own for what agents write again and again: wrappers, one-file folders, names such as `utils`, and copied code                         | `gspot.toml`     | [Fix findings](/guides/findings/)           |
+| Rules for coding agents, linked from `AGENTS.md`                                                                                                    | `.gspot/rules/`  | [Coding agents](/guides/agents/)            |
+| Git hooks, and a CI job when you ask for one                                                                                                        | `.gspot/hooks/`  | [Hooks and CI](/guides/hooks/)              |
 
-**Linters.** gspot writes the configuration for the standard tools of your languages, such as
-ESLint, Prettier, Ruff, ShellCheck, and SwiftLint. It installs them at pinned versions in a
-private folder, `.gspot/`, so your own dependencies stay as they are.
-
-**Checks for agent-written code.** Coding agents write some things again and again: functions
-that only pass their arguments on, folders that hold one file, names such as `utils`, and code
-copied between files. gspot has its own checks for these, next to the rules of the standard
-tools.
-
-**Guides for coding agents.** gspot installs Markdown guides under `.gspot/rules/` and links
-them from `AGENTS.md`. The guides tell the agent how to write code in this repository, and they
-match the checks.
-
-**Enforcement.** Git hooks run the checks before each commit and push, and a finding stops the
-commit. `gspot init --ci github` or `--ci gitlab` also writes a CI job. Each finding names the
-file, the line, the rule, and what to do. The report prints the command that reruns each
-failed check.
-
-## Two levels
-
-- `recommended`, the default, runs the checks that find defects: correctness, security,
-  accessibility, type safety, dependency health, and formatting.
-- `all` adds the house style: naming, trivial functions and files, one-file folders, copied
-  code, declaration order, and complexity.
-
-Neither level turns on experimental or preview rules. To change the level, run
-`gspot set level all`.
-
-## One policy file
-
-Your choices live in `gspot.toml`: the kits, the level, the settings, and the exceptions.
-`gspot set` and `gspot ignore` edit it and apply the change. After you edit it by hand, run
-`gspot apply`. See [the policy file](/guides/customize/).
+The default level, `recommended`, finds defects. `all` adds the house style. Your choices live
+in `gspot.toml`, described in [the policy file](/guides/customize/).
 
 ## Next steps
 

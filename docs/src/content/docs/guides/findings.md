@@ -60,7 +60,7 @@ and codemods. Then it runs the checks again. The changes stay in your working tr
 so review them before you commit. If a fixer is missing or fails, the command fails, and the
 message names the fixer.
 
-To add a fixer for your own command, see [custom checks](/guides/custom-checks/#add-a-correction-command).
+To add a fixer for your own command, see [custom checks](/guides/project-checks/#add-a-correction-command).
 
 ## When a rule does not fit
 
@@ -68,11 +68,9 @@ To add a fixer for your own command, see [custom checks](/guides/custom-checks/#
   with a reason.
 - To change a limit, such as the longest function, [change the setting](/guides/customize/#change-a-limit).
 
-Reports list every ignore, so an ignored finding stays visible.
-
 ## The report
 
 At the end of a run, gspot prints the failed, missing, errored, and skipped checks, then the
-counts and the time. A skipped check did not run, so it does not count as passed. The report
-labels an interrupted run `incomplete`. Scripts and CI can read the same report as one JSON
-object from `gspot check --json`.
+counts and the time. A skipped check did not run, so it does not count as passed. When a check
+does not run to the end, the report says `incomplete` and the run exits 2. Scripts and CI can
+read the same report as one JSON object from `gspot check --json`.

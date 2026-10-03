@@ -30,18 +30,9 @@ The path is relative to the repository root.
 
 ## How an agent resolves findings
 
-An agent works with findings this way. The managed block gives steps 1, 3, and 4:
-
-1. Run `gspot check --staged` before each commit. The commit hook runs it too.
-2. For each finding, run `gspot explain <check>` and do what the `help:` line says.
-3. When a rule does not fit, change the policy with `gspot ignore` or `gspot set` and a reason.
-   Never edit a file under `.gspot/`.
-4. After editing `gspot.toml` by hand, run `gspot apply`.
-
-## Hooks and bypasses
-
-`git commit --no-verify` and `git push --no-verify` skip the local hooks. CI and server rules
-still run. After a bypass, run `gspot check` yourself.
+The managed block tells the agent to run `gspot check --staged` before each commit and to follow
+the `help:` line of each finding. When a rule does not fit, the agent changes the policy with
+`gspot ignore` or `gspot set` and a reason, and it never edits a file under `.gspot/`.
 
 ## Remove the rules
 

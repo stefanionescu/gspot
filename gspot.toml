@@ -106,7 +106,6 @@ paths = [
     "packages/cli/dist/gspot.js",
     ".gspot/state",
     ".gspot/.venv",
-    ".gspot/config/semgrep/ios.yml",
 ]
 reason = "These exact documented outputs are ignored build products, runtime state, or configuration generated only for selected consumer integrations. Source manifests and output tests own their paths."
 
