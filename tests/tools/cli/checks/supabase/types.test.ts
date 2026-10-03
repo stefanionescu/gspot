@@ -83,8 +83,8 @@ async function prepareSupabaseDatabase(root: string): Promise<{
     };
 }
 
-// The database journey needs a Docker daemon with Linux containers. In CI it runs only in the weekly database workflow,
-// which sets DATABASE_JOURNEYS, because pulling the Postgres image on every run hits the registry rate limit.
+// The database test needs a Docker daemon with Linux containers. In CI it runs only in the database workflow, started by
+// hand, which sets DATABASE_JOURNEYS, because pulling the Postgres image on every run hits the registry rate limit.
 const runsDatabase = hasLinuxDocker && (!isCI || environmentVariables()['DATABASE_JOURNEYS'] === '1');
 
 if (runsDatabase)
