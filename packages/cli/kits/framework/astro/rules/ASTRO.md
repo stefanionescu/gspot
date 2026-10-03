@@ -4,11 +4,6 @@ title: Astro
 
 # Astro
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 These rules cover Astro components, islands, markup, routing, and the data a page loads.
 
 ## Components
@@ -22,7 +17,7 @@ These rules cover Astro components, islands, markup, routing, and the data a pag
 
 ## Frontmatter and props
 
-- Declare the props as `interface Props` in the frontmatter and read them from `Astro.props`.
+- Declare the props as `type Props = { … }` in the frontmatter and read them from `Astro.props`.
 - The frontmatter runs on the server. A value reaches the browser only through the markup or the props of an island.
 - A component exports no value. Only a page or an endpoint exports `getStaticPaths` or `prerender`.
 

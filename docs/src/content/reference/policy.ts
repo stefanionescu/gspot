@@ -6,31 +6,7 @@ import { buildJsonSchema } from '@gspothq/cli/src/policy/json-schema.ts';
 import type { Manifest, SettingSpec } from '@gspothq/cli/src/types/kits.ts';
 import { exposedSettings } from '@gspothq/cli/src/policy/setting-surface.ts';
 
-const SETTINGS_INTRO = `Every key \`gspot set\` writes and \`gspot list settings\` prints. Reasons are optional unless the repository enables \`require_reasons\`.
-
-## Scope and precedence
-
-Configuration defaults apply first. At all, a level-specific default replaces the recommended default when provided. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected kit determines which tool settings are available in each scope.
-
-Use \`gspot set <key> <value> --scope <path>\` to write an existing scope. Without \`--scope\`, the command writes the root. \`--default\` removes a written override; an inherited value can still apply. Integration settings such as hooks, CI, rules, and runner configuration belong to the repository root. See [configuration fields](/reference/configuration/) for the fields accepted inside a scope.
-
-\`gspot list settings\` shows effective values and their sources. Run it before changing an inherited setting. For list editing, \`--replace\` replaces the list written in that table; inherited entries still follow the setting merge contract.
-
-## Scoped configuration example
-
-This complete policy sets a repository limit and tightens it for the app scope:
-
-\`\`\`toml
-kits = ["javascript"]
-[limits]
-file_lines = 200
-[[scope]]
-path = "app"
-[scope.limits]
-file_lines = 100
-\`\`\`
-
-Files outside app use 200 lines. Files in app inherit the JavaScript configuration and use 100 lines.
+const SETTINGS_INTRO = `Every key \`gspot set\` writes and \`gspot list settings\` prints, with its default at each level. A scope inherits the root and the scopes around it: a value replaces the inherited one, and a list adds to it, as [monorepos](/guides/scopes/) shows.
 
 `;
 
@@ -83,13 +59,13 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
  * Render all policy fields from the schema used by the production reader.
  * @returns Markdown reference tables
  */
-export function kitReference(): string {
+export function policyReference(): string {
     const schema: JSONSchema.JSONSchema = buildJsonSchema();
     const sections = Object.entries(schema.properties ?? {}).map(
         ([name, node]) =>
             `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
     );
-    return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected kits, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for configuration-owned values.\n\n${sections.join('\n')}`;
+    return `The [machine-readable schema](/schema/gspot.schema.json) defines these fields, where \`[]\` marks an array item and \`*\` a key you choose. The policy reader also checks the selected kits, the settings they expose, and the reasons the policy asks for.\n\n${sections.join('\n')}`;
 }
 
 /**
@@ -104,7 +80,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
         ...manifests.flatMap((manifest) =>
             manifest.settings.map((setting) => ({
                 setting,
-                owner: `[the ${manifest.kit.name} configuration](/reference/kits/${manifest.kit.name}/)`,
+                owner: `[${manifest.kit.name}](/reference/kits/${manifest.kit.name}/)`,
             })),
         ),
     ];
@@ -144,6 +120,6 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
     return referencePage(
         'Settings',
         'Settings exposed by gspot set, with their types, directions, defaults, and owners.',
-        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
+        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Kit'], rows)}\n`,
     );
 }

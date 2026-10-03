@@ -4,11 +4,6 @@ title: TypeScript Naming
 
 # TypeScript Naming
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 TypeScript naming follows the project rules here. Google TypeScript guidance is
 a strong default for many language choices. The rules below deliberately override some of it, and
 say so where they do.
@@ -77,7 +72,8 @@ Rules:
 - Do not create files named only for generic reuse.
 - Keep generated file names only when generator-owned.
 - React component files are kebab-case too: `login-form.tsx` exports `LoginForm`. One rule for
-  every file; the export name carries the PascalCase.
+  every TypeScript file; the export name carries the PascalCase. Astro, Svelte, and Vue component
+  files follow their framework rules.
 - Next.js reserved names are exempt from the stem checks and keep their framework spelling:
   `page`, `layout`, `loading`, `error`, `global-error`, `not-found`, `route`, `template`,
   `default`, `middleware`, `instrumentation`, `[param]`, `[...slug]`, `(group)`, `_private`,

@@ -4,11 +4,6 @@ title: Errors
 
 # Errors
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Error taxonomy
 
 - An expected operational error (invalid input, missing resource, permission denied, provider timeout) becomes a typed result or a typed error the caller can branch on.
@@ -25,7 +20,7 @@ project contracts apply at both levels.
 - Do not catch only to rethrow unchanged.
 - Preserve the cause when wrapping: `new Error(message, { cause })`, `raise ... from error`, `Error` conformance with an underlying error.
 - Do not swallow failures. A caught error is handled, recorded, or re-raised.
-- Do not add speculative handling for states that cannot occur under the real contract.
+
 - Run required cleanup in `finally` or the language's equivalent.
 
 ## Error messages
@@ -39,6 +34,7 @@ needed to correct a finding. Keep credentials and unrelated private data out of 
 - Schema names, table names, column names, or function names.
 - Internal identifiers (row IDs, user IDs, session tokens).
 - Stack traces or file paths.
+- Raw upstream, provider, or database errors.
 - Implementation details (trigger names, policy names, internal state like "deleted" flags).
 
 **Always:**

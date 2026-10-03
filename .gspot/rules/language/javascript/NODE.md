@@ -4,11 +4,6 @@ title: Node
 
 # Node
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules that hold because the code runs on Node, whatever language it is written in.
 
 ## Module resolution
@@ -32,10 +27,3 @@ Rules that hold because the code runs on Node, whatever language it is written i
 
 - A script that is invoked directly carries a shebang and is executable.
 - Handle the signals the process is expected to receive, and release what it holds on exit.
-
-## Configuration ownership
-
-<!-- level: all -->
-
-Read configuration through one module that owns environment access. Do not read `process.env`
-from arbitrary files.

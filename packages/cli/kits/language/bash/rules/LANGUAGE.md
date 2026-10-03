@@ -6,9 +6,6 @@ title: Bash Language
 
 Functions, variables, quoting, arrays, conditionals, arithmetic, loops, delimited data, paths,
 command substitution, and pipelines. Script structure and options are in the Bash file.
-ShellCheck reports unquoted expansions, `$*` forwarding, parsed `ls`, `for line in $(cat)`,
-`$?` gymnastics, deprecated syntax, and word-splitting bugs; this guide holds the decisions
-and the forms it cannot judge.
 
 ## Functions
 
@@ -236,10 +233,10 @@ if (( statuses[0] != 0 || statuses[1] != 0 )); then
   return 1
 fi
 
-tmp_file="$(mktemp "${file}.XXXXXX")" || return 1
-sed 's/foo/bar/g' "${file}" >"${tmp_file}" || {
-  rm -f -- "${tmp_file}"
+edited_file="$(mktemp "${file}.XXXXXX")" || return 1
+sed 's/foo/bar/g' "${file}" >"${edited_file}" || {
+  rm -f -- "${edited_file}"
   return 1
 }
-mv -- "${tmp_file}" "${file}"
+mv -- "${edited_file}" "${file}"
 ```

@@ -14,9 +14,8 @@ From the root of a configured repository, run:
 gspot export team.profile.toml
 ```
 
-The destination is relative to the current folder and inside the repository. gspot refuses a
-destination that is a link, a file with other content, or an export you edited later. Run the
-same command again to refresh an export you did not edit.
+The destination is relative to the current folder and inside the repository. Run the same
+command again to refresh an export you did not edit.
 
 Read the profile before you share it. A profile leaves out everything that belongs to one
 repository: scopes, custom checks, generated and vendored declarations, and entries that name a
@@ -47,7 +46,6 @@ With `selection = "exact"`, the profile's kit list is the selection. With
 
 ## Share a profile from a URL
 
-`--from` also takes an HTTPS URL or `github:owner/repository`. Pin an exact revision when you
-need the same result every time. gspot copies the profile into the repository, so a later
-change to the source does not change repositories that already used it. Keep exceptions for one
-repository in that repository, and review profile updates like any policy change.
+`--from` also takes an HTTPS URL or `github:owner/repository[/path][@ref]`, which reads
+`gspot.profile.toml` unless a path follows. gspot copies the profile into the repository, so a
+later change to the source does not change repositories that already used it.

@@ -39,7 +39,6 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
                 <ul class="demo-corrections"><li>Delete <code>src/utils.ts</code>.</li><li>Call <code>calculateTotal</code> directly.</li></ul>
                 <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
                 <p class="demo-status">{example.passed}</p>
-                <a href="#finding">See the code change ↓</a>
             </div>
         </div>
         <a class="demo-guide" href="/guides/quick-start/">Run the complete example <span aria-hidden="true">→</span></a>

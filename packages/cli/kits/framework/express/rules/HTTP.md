@@ -4,60 +4,52 @@ title: HTTP
 
 # HTTP
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
-Rules that hold for any HTTP service, whatever framework serves it.
+Rules for any HTTP service, whatever framework serves it, on top of the security, error, and
+logging rules.
 
 ## Boundaries
 
-- Validate body, query, path parameters, headers, and content type before any business logic runs. Validation happens once, at the edge, with a schema; handlers read the validated value and never the raw request.
-- Reject unsupported content types on body-bearing endpoints.
-- Bound every input: body size per route, string lengths, collection sizes, page sizes, nesting depth.
-- Handlers adapt transport to domain calls. They do not own validation policy, database access, provider mechanics, caching, or business decisions.
-- Middleware validates, authenticates, rate-limits, and attaches context. It does not make feature decisions.
-- Authorization is checked where the data is read or changed, not only at a layout, a proxy, or a route guard.
+- Validate the body, query, path parameters, headers, and content type once, at the edge, with a
+  schema. Handlers read the validated value, never the raw request.
+- Reject unsupported content types on endpoints that take a body. Limit the body size per route,
+  and keep the proxy's body limit equal to the application parser's.
+- Handlers adapt transport to domain calls. They own no validation policy, database access,
+  provider mechanics, caching, or business decision.
+- Middleware validates, authenticates, rate-limits, and attaches context, and makes no feature
+  decision.
 
 ## Responses
 
-- One envelope for the whole service. Success and error shapes are stable and documented.
-- Status codes are precise: 201 for creation, 204 with no body, 4xx for caller errors, 5xx only for failures the caller cannot fix.
-- Client-visible error messages are generic and stable. They never carry table names, column names, stack traces, file paths, provider internals, or raw IDs.
-- Do not return stack traces, validation internals, or raw upstream errors to clients.
-- Map provider and database shapes into response shapes at the endpoint or module owner. Public field names are API names, not storage names.
+- The service documents one success shape and one error shape and keeps both stable.
+- Status codes are precise: 201 for creation, 204 with no body, 4xx for caller errors, and 5xx
+  only for failures the caller cannot fix.
+- The endpoint or module owner maps provider and database shapes into response shapes. Response
+  field names are API names, not storage names, unless the contract is explicitly provider-shaped.
+- Escape HTML for its rendering context, and never pre-escape JSON field values.
 
-## Security
+## Sessions and transport
 
-- Terminate TLS at the edge owner. Preserve security headers: HSTS, `X-Content-Type-Options`, frame policy, referrer policy, CSP where relevant.
-- Use constant-time comparison for HMAC, webhook, and token checks.
-- Use cryptographic randomness for tokens, nonces, secrets, and reset codes. Never `Math.random()` or `random.random()`.
-- Verify webhook signatures against the raw body before decoding. Handle replay with idempotency keys.
-- Redirect only to relative or allowlisted targets.
-- Never build file paths, shell commands, dynamic imports, SQL, or outbound URLs from request input. Check outbound fetch targets against allowed hosts and each redirect in a chain.
-- Cookies, when the service owns sessions: `httpOnly`, `secure`, `sameSite`, explicit `maxAge`, a non-default name. Writes never happen on GET.
-- No default credentials, example admin users, test-only auth backdoors, or maintenance endpoints without authentication.
+- Terminate TLS at the edge owner, and trust forwarding headers only from that edge.
+- A cookie session needs CSRF protection on every state-changing request.
+- When the service owns tokens, a revocation reaches every instance.
 
-## Naming on the wire
+## Wire names
 
 <!-- level: all -->
 
-- JSON bodies and query parameters: `camelCase`.
-- Preserve existing protocol header names. Do not add an `X-` prefix to a new header merely
-  to mark it as application-specific. See [RFC 6648](https://www.rfc-editor.org/rfc/rfc6648).
-- URL path segments: kebab-case plural nouns (`/order-items/{orderItemId}`).
-- Environment variables: `UPPER_SNAKE_CASE`.
-- Log event names: `lower_snake_case`.
-- The boundary translates storage casing (`user_id`) to wire casing (`userId`); domain code never sees both.
-- Response payload names are API-facing. Do not leak provider or database field names unless the contract is explicitly provider-shaped.
+- URL path segments are kebab-case plural nouns, such as `/order-items/{orderItemId}`.
+- Existing protocol header names stay as they are, and a new header carries no `X-` prefix, as
+  [RFC 6648](https://www.rfc-editor.org/rfc/rfc6648) recommends.
 
 ## Operations
 
-- Every async handler propagates errors to the central error handler. No floating promises in request paths.
-- Startup failures fail fast before the server accepts traffic.
-- Shutdown: readiness false, stop accepting, drain in-flight work for a bounded time, close resources, exit.
-- Health and readiness endpoints are cheap and do no provider calls.
-- Rate limits: broad limits at the edge, app-specific limits in middleware, route-specific limits beside the route.
-- One compression owner. Do not compress at both the proxy and the application.
-- Body limits at the proxy equal the application's parser limits.
+- Every asynchronous handler passes its errors to the central error handler, and no promise floats
+  in a request path.
+- Startup fails before the server accepts traffic. Shutdown sets readiness to false, stops
+  accepting, drains in-flight work for a bounded time, closes resources, and exits.
+- A process whose state a failure left untrustworthy exits instead of serving.
+- Health and readiness endpoints are cheap and call no provider.
+- Broad rate limits sit at the edge, application limits in middleware, and route limits beside
+  the route.
+- Either the proxy or the application compresses responses, not both. Under heavy traffic, the
+  reverse proxy owns compression.

@@ -4,11 +4,7 @@ title: Documentation Content
 
 # Documentation Content
 
-Code examples, procedures, and links. The Markdown linter reports a fence without a language,
-a missing blank line around a fence, and ordered-list numbering. The link checks report a
-broken destination and a stale repository path. The prose checker reports "here" and "click
-here" as link text and the weak modal in a step. This guide holds the decisions those tools
-cannot judge.
+Code examples, procedures, and links.
 
 ## Code examples
 
@@ -74,6 +70,12 @@ world-writable permissions, and no wildcard access unless the example is about p
 They use least-privilege roles, pin third-party automation per the project's security policy,
 and log or commit no secrets. Insecure behavior needed for an isolated local demonstration is
 labeled with its scope and why it must not reach a shared environment.
+
+Documentation is public, so every example, output block, and URL is written to be published. It
+holds no token, key, password, cookie, connection string, customer data, personal address,
+internal URL, or unredacted header. Use reserved example domains such as `example.com`, the
+documentation address ranges, and placeholders that no reader or scanner mistakes for a real
+credential.
 
 A destructive command carries its warning before the command. That covers a command that
 deletes data, rewrites history, drops a database, rotates a key, revokes access, replaces

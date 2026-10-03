@@ -4,24 +4,15 @@ title: Documentation
 
 # Documentation
 
-The documentation rules span six files. This one covers scope, standard, ownership, readers,
-the documentation set, topic types, and maintenance. Format covers Markdown, page structure,
-text formatting, lists, tables, and alerts. Content covers code examples, procedures, and
-links. Media covers interfaces, keyboard input, illustrations, and accessibility.
-
-Surfaces covers CLI, API, library, configuration, architecture, contributor, troubleshooting,
-and releases. Review holds the checklists and the definition of done.
+The documentation rules span six files. This one covers scope, ownership, readers, the
+documentation set, topic types, and maintenance.
 
 ## Scope
 
-These rules cover every document written for developers, operators, users, reviewers,
-maintainers, security teams, and contributors. That means READMEs, advanced guides, the
-documentation directory, contributor and security guides, and architecture and decision
-records. It also means reference material, tutorials, migration guides, troubleshooting,
-release notes, durable Markdown in templates, and the media those documents use. Project
-rules may add what a renderer requires, such as front matter or shortcodes, and override
-portable formatting only there. Accuracy, security, accessibility, honest limitations, and
-runnable or explicitly illustrative examples never become optional.
+These rules cover every document a project writes for its users, operators, contributors, and
+maintainers, and the media those documents use. Project rules may add what a renderer requires,
+such as front matter, and override portable formatting only there. Accuracy, security,
+accessibility, honest limitations, and runnable examples never become optional.
 
 ## Core standard
 
@@ -116,23 +107,8 @@ scans well, the advanced material is one short section, or the split gives two t
 Keep one file when readers switch pages during basic setup. Fix the structure of a long
 README before splitting it.
 
-Link the advanced guide once from the README, where normal use
-ends, with a descriptive name. Open the advanced guide by stating its audience and its
-relationship to the README.
-
-| Information                   |      README       |    Advanced guide     | Different owner                              |
-| ----------------------------- | :---------------: | :-------------------: | -------------------------------------------- |
-| One-line purpose              |        Yes        |          No           | None                                         |
-| Minimal runnable example      |        Yes        |          No           | Example file may also own runnable code      |
-| Basic prerequisites and setup |        Yes        |          No           | None                                         |
-| Routine commands              |        Yes        |   Optional summary    | CLI reference for exhaustive options         |
-| Essential limitations         |        Yes        | More detail if useful | None                                         |
-| Architecture overview         |        Yes        |    Detailed model     | Architecture guide for large systems         |
-| Rare tuning options           |  Short link only  |          Yes          | Configuration reference if exhaustive        |
-| Destructive recovery          | Warning and route |    Full procedure     | Operations runbook when access is restricted |
-| Contribution workflow         |    Short route    |          No           | Contributor guide                            |
-| Version history               |        No         |          No           | Changelog or release notes                   |
-| Security reporting            |    Short route    |          No           | Security policy                              |
+Link the advanced guide once from the README, where normal use ends, with a descriptive name,
+and open it by stating its audience and its relationship to the README.
 
 No document lists the tree. A project layout, directory structure, file map, or table that
 pairs directories with purposes is removed, not revised, whatever the size of the repository.
@@ -143,16 +119,10 @@ inline only when the reader must open, edit, or run it.
 
 <!-- level: all -->
 
-The first screen of a README says what this is, who it is for, and what problem it solves. It
-shows what normal use looks like and any limitation that disqualifies it at once. A practical
-order opens with name, purpose, essential status or caveat, minimal example, key
-capabilities, prerequisites, and setup. Normal usage, configuration, architecture overview,
-and common problems follow. Deeper documentation, contribution, and license close the page.
-An incompatible license, unsupported status, destructive default, security limitation, or
-platform restriction moves near the top.
-
-The README helps the right reader decide quickly and the wrong reader leave confidently. It
-never opens with internals, a complete option table, or project history.
+The first screen of a README says what this is, who it is for, and what problem it solves, and
+shows normal use. A limitation that disqualifies the project, such as an incompatible license,
+an unsupported status, or a destructive default, moves near the top. The README never opens
+with internals, a complete option table, or project history.
 
 ## Choose the topic type
 
@@ -185,17 +155,10 @@ clear heading: setup reads as a task, options as reference, architecture as a co
 
 <!-- level: all -->
 
-For non-trivial work, inspect the implementation, configuration, interface, and existing
-documentation that define the behavior. Identify the reader and goal. Find the owner of the
-topic and decide between updating a page and creating one. Select the topic type. List the
-claims that need evidence and the security, permission, compatibility, and data-loss caveats.
-Choose the smallest example that proves normal use.
-
-Outline in broad-to-narrow order, and identify the links, images, and examples that need
-maintenance ownership. One paragraph joins an existing page rather than opening a new one.
-Verified behavior is translated for the reader, never copied from comments, tickets, or
-implementation notes. A documentation plan follows the same rules as a code plan and includes
-the exact text diff when a plan is asked for.
+Before writing, read the implementation, configuration, and existing pages that define the
+behavior, find the page that owns the topic, and choose the topic type. List the claims that
+need evidence and the caveats on security, permissions, compatibility, and data loss. A short
+addition joins an existing page rather than opening a new one.
 
 ## Maintain continuously
 
@@ -207,14 +170,10 @@ the troubleshooting, and the diagrams in the same change. Remove obsolete docume
 instead of commenting it out or marking it old; versioned documentation or migration notes
 carry an older path.
 
-Prefer stable authoritative external sources, and replace redirect chains, archived copies,
-branch line numbers, and private destinations. Keep essential project instructions local
-rather than copying external pages. When a fact changes, search for the old value, key,
-command, error code, feature name, and synonyms, and update every intentional copy. Refresh
-screenshots and diagrams when labels, layout, highlighted controls, architecture, theme
-legibility, or example data change. Keep shared images until every versioned and localized
-page stops using them. Update the source language first and never ship unreviewed machine
-translation.
+When a fact changes, search for the old value, key, command, and name, and update every
+intentional copy. Refresh a screenshot or diagram when the labels, layout, or architecture it
+shows change. Prefer stable authoritative external sources to redirects, archived copies, and
+branch line numbers.
 
 Automation covers Markdown style, links, images, spelling, generated-reference drift, runnable
 examples, front matter, and detectable accessibility rules. Human review still judges

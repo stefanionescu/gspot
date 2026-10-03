@@ -40,10 +40,10 @@ before it writes anything. Fix the file and run `gspot init` again.
   configuration takes over. Delete the section when you are ready.
 - **Your Git hooks.** They stay in the chain and still receive their arguments and input. A
   failing hook still stops the commit. Hooks that a hook manager tracks need that manager's
-  integration; see [hooks and CI](/guides/hooks-and-ci/).
+  integration; see [hooks and CI](/guides/hooks/).
 - **Your scripts and dependencies.** The plan names lint scripts and tool dependencies that
   gspot now runs for you. Remove them when you are ready. A tool without a kit can run as a
-  [custom check](/guides/custom-checks/).
+  [custom check](/guides/project-checks/).
 
 ## Run the checks
 

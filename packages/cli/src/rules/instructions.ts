@@ -39,7 +39,7 @@ function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
  * @returns the block: a heading, the rule index when rules are installed, and the standing instructions
  */
 export function managedBlock(rules: RuleSettings, manifests: Manifest[], level: Level, repository: Repository): string {
-    const files = selectRuleFiles(rules, manifests, repository);
+    const files = selectRuleFiles(rules, manifests, repository, level);
     const index = files.length > 0 ? indexLines(rules, files) : [];
     const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;

@@ -4,11 +4,6 @@ title: Python Flow
 
 # Python Flow
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Exceptions, assertions, comparisons, control flow, iteration, strings, logging, and resources.
 
 ## Exceptions and error handling
@@ -31,7 +26,6 @@ Good:
 """Validate limits supplied by a command or environment variable."""
 
 MAX_BATCH_SIZE = 1000
-
 
 def parse_batch_limit(raw: str) -> int:
     """Return a positive batch limit within the supported range."""
@@ -153,7 +147,6 @@ Good:
 import sys
 from pathlib import Path
 
-
 def main() -> int:
     """Read the first argument as a path and print its normalized records."""
     path = Path(sys.argv[1])
@@ -161,7 +154,6 @@ def main() -> int:
         records = [record for line in source if (record := line.strip())]
     _ = sys.stdout.write("\n".join(records))
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

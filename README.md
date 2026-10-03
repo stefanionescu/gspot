@@ -1,6 +1,6 @@
 # ![gspot](docs/public/brand/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm: unreleased](docs/public/brand/badges/npm.svg)](docs/src/content/docs/guides/install.md)
+[![npm: unreleased](docs/public/brand/badges/npm.svg)](https://gspot.dev/guides/install/)
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
 [![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
 
@@ -63,47 +63,18 @@ root  naming/paths                        failed     2 files     0.0s
 23 checks passed, 2 checks failed, 1 check skipped, 6 findings, 2.4s (failed)
 ```
 
-Each finding names the file, the line, the rule, and what to do. The agent deletes
-`src/utils.ts` and calls `calculateTotal` directly:
-
-```typescript
-import { type Order, calculateTotal } from './orders.js';
-
-/**
- * The receipt lines of an order: one line per item, then the total.
- * @param order the order
- * @returns the lines
- */
-export function receiptLines(order: Order): string[] {
-    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);
-    lines.push(`Total: ${String(calculateTotal(order))}`);
-    return lines;
-}
-```
-
-The next commit passes:
-
-```text
-25 checks passed, 0 checks failed, 1 check skipped, 0 findings, 2.4s
-```
-
-The [quickstart](docs/src/content/docs/guides/quick-start.md) runs this example from an empty
-folder.
+Each finding names the file, the line, the rule, and what to do. The
+[quickstart](https://gspot.dev/guides/quick-start/) runs this example from an empty folder
+to the commit that passes.
 
 ## Documentation
 
-- [Quickstart](docs/src/content/docs/guides/quick-start.md): run the example above.
-- [Install](docs/src/content/docs/guides/install.md): npm, Bun, and global installs.
-- [The policy file](docs/src/content/docs/guides/customize.md): choose checks, change limits,
-  and record exceptions.
-- [Coding agents](docs/src/content/docs/guides/agents.md): the guides gspot installs.
-- [Hooks and CI](docs/src/content/docs/guides/check-automation.md): when the checks run.
-- [Existing repositories](docs/src/content/docs/guides/existing-repository.md): what init
-  replaces and where the originals stay.
-- [Troubleshooting](docs/src/content/docs/guides/troubleshooting.md).
-- [Kit reference](https://gspot.dev/reference/kits/): supported languages, frameworks, and tools.
-- [ESLint plugin](packages/eslint-plugin/README.md): the gspot ESLint rules on their own.
-- [Contributing](CONTRIBUTING.md), for contributors.
+- [Quickstart](https://gspot.dev/guides/quick-start/): run the example above.
+- [The policy file](https://gspot.dev/guides/customize/): choose kits, change limits, and record
+  exceptions.
+- [Coding agents](https://gspot.dev/guides/agents/): the rules gspot installs.
+- [Kits](https://gspot.dev/reference/kits/): the languages, frameworks, and tools gspot covers.
+- [Contributing](CONTRIBUTING.md): work on gspot itself.
 
 ## License
 

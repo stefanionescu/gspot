@@ -21,10 +21,7 @@ function helpSections(name: string, help: string): string {
     return `\n${contractText
         .replace('\nLevels:\n', '\n## Levels\n\n')
         .replace('\nExit codes:\n', '\n## Exit codes\n\n')
-        .replace(
-            '\n\nExample:\n',
-            '\n\n## Example\n\nRun from the repository root, or select it with `-C <dir>`.\n\n```shell\n',
-        )
+        .replace('\n\nExample:\n', '\n\n## Example\n\n```shell\n')
         .trim()}\n\`\`\`\n`;
 }
 
@@ -78,11 +75,12 @@ function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
 }
 
 /**
- * One reference page per visible command, keyed by its Markdown path under commands/.
+ * The commands index and one reference page per visible command, keyed by Markdown path under commands/.
  * @returns the pages by identity
  */
 export function commandPages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
+    const program = buildProgram();
     const commands = (parent: CommandUnknownOpts, ancestors: string[]): void => {
         for (const command of parent.createHelp().visibleCommands(parent)) {
             if (!parent.commands.includes(command)) continue;
@@ -93,6 +91,19 @@ export function commandPages(): Map<string, ReferencePage> {
             commands(command, path);
         }
     };
-    commands(buildProgram(), []);
+    commands(program, []);
+    const rows = program.commands.map((command) => [
+        `[\`gspot ${command.name()}\`](/reference/commands/${command.name()}/)`,
+        cell(command.summary()),
+    ]);
+    pages.set(
+        'commands/index.md',
+        referencePage(
+            'Commands',
+            'Every gspot command and what it does.',
+            `Run each command from the repository root, or select the root with \`-C <dir>\`.\n\n${table(['Command', 'What it does'], rows)}\n`,
+            'packages/cli/src/commands/program.ts',
+        ),
+    );
     return pages;
 }

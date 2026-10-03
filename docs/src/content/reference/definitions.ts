@@ -44,25 +44,18 @@ function ruleExclusions(manifest: Manifest): string {
 
 function checkEnvironment(check: CheckSpec): string[] {
     const tool = check.tool ?? check.command?.[0];
+    const runs = { once: 'once for the repository', scope: 'once per scope', files: 'per file' }[check.runs];
     const attributes: [string, string | undefined][] = [
+        ['Runs', runs],
         ['Tool', tool],
-        ['Platform selection', check.platforms?.join(', ')],
-        ['Prerequisite', check.needs?.join(', ')],
+        ['Platforms', check.platforms?.join(', ')],
+        ['Needs', check.needs?.join(', ')],
         [
             'Required setting',
-            check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until configured.`,
+            check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until it is set.`,
         ],
     ];
-    return [
-        `- Scope: ${
-            {
-                once: 'one execution for the repository',
-                scope: 'each selected scope, excluding files owned by child scopes',
-                files: 'selected file lists under the applicable scope policy',
-            }[check.runs]
-        }. See [scope configuration](/guides/scopes/).\n`,
-        ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
-    ];
+    return attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`]));
 }
 
 /**
@@ -93,8 +86,8 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
 }
 
 /**
- * The reference page of one configuration: its tools, targets, rule files, settings, and relations.
- * @param manifest the configuration's manifest
+ * The reference page of one kit: its tools, targets, rule files, settings, and relations.
+ * @param manifest the kit's manifest
  * @returns the page
  */
 export function kitPage(manifest: Manifest): ReferencePage {
@@ -105,7 +98,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
     const targets = manifest.configs.map((config) =>
         config.when === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.when.kit} configuration](/reference/kits/${config.when.kit}/) is selected`,
+            : `\`${config.target}\` when the [${config.when.kit} kit](/reference/kits/${config.when.kit}/) is selected`,
     );
     const rules = kitFiles(manifest).map((file) => ruleSelection(manifest, file.path));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
@@ -117,8 +110,8 @@ export function kitPage(manifest: Manifest): ReferencePage {
     ];
     const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
-        `${configuration.description}\n\nKind: ${configuration.kind}.`,
-        requires === '' ? '' : ` Requires: ${requires}.`,
+        configuration.description,
+        requires === '' ? '' : `\n\nRequires: ${requires}.`,
         configuration.auto ? ' Selected by default.' : '',
         '\n',
     ].join('');
@@ -138,7 +131,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
             table(
                 ['Check', 'Stage', 'What it finds'],
                 manifest.checks.map((check) => [
-                    `[\`${check.name}\`](/reference/rules/${check.name}/)`,
+                    `[\`${check.name}\`](/reference/checks/${check.name}/)`,
                     check.stage,
                     cell(check.summary),
                 ]),
@@ -160,27 +153,25 @@ export function kitPage(manifest: Manifest): ReferencePage {
 /**
  * The reference page of one check: why it runs, what to do, and where it runs.
  * @param check the check's manifest entry
- * @param configuration the manifest that declares the check
+ * @param manifest the manifest that declares the check
  * @returns the page
  */
-export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePage {
+export function checkPage(check: CheckSpec, manifest: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
-    const command = `gspot check --stage ${check.stage} --only ${check.name}`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/kits/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        `- Kit: [${manifest.kit.name}](/reference/kits/${manifest.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
         ...checkEnvironment(check),
         section('Defect and correction', check.example),
         check.stage === 'message'
-            ? '\n## Verify a correction\n\nThe installed commit-msg hook checks the proposed commit message. A reported defect prevents the commit. Correct the message and retry the commit. A missing tool or unreadable report does not establish a clean result.\n'
-            : `\n## Verify a correction\n\nIn a configured repository that selects this configuration, run:\n\n\`\`\`shell\n${command}\n\`\`\`\n\nA reported defect exits 1. Apply the correction described above and rerun the same command. Successful execution exits 0. Missing required tools and execution or report failures exit 2. Check the report for skips: a skipped check has not verified its inputs.\n`,
-        `\nRecord a path exception with a reason: \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
+            ? '\nThe commit-msg hook checks the message of each commit.\n'
+            : `\nRun it with \`gspot check --only ${check.name}\`, and record a path exception with \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return referencePage(
         check.title ?? check.name,
         check.summary,
         lines.join(''),
-        `packages/cli/${configuration.dir}/manifest.toml`,
+        `packages/cli/${manifest.dir}/manifest.toml`,
     );
 }

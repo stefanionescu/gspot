@@ -4,11 +4,6 @@ title: Static Sites
 
 # Static Sites
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules for a repository whose product is generated HTML served from a CDN or an edge platform.
 
 ## Runtime isolation
@@ -61,6 +56,11 @@ Templates and root HTML files stay declarative.
   markup path is the real contract.
 - Browser scripts check that required elements exist before binding behavior and do not
   swallow programming errors.
+- A plain script has no module system, so it uses no `import`. A module script resolves imports
+  as URLs or through an import map, and names the resource the server serves.
+- The DOM is available and Node built-ins are not, so a `node:` import is an error. Use the APIs
+  the declared browser support allows.
+- Build navigation and fetch URLs from values the application controls.
 
 ### Template organization
 
@@ -75,7 +75,7 @@ Templates and root HTML files stay declarative.
 
 - Public routes use lowercase kebab-case path segments. Directory routes end with `index.html`
   in generated output.
-- Legal pages use route names that match their public path and content body.
+- A page uses a route name that matches its public path and content body.
 - Landing variants use short names that identify the audience or campaign.
 - Every page declares its title, description, canonical URL, and social metadata from
   page-owned metadata; the build fails on a page missing them.
@@ -83,6 +83,6 @@ Templates and root HTML files stay declarative.
 ## Edge middleware
 
 - Middleware handles redirects, headers, and locale or device negotiation. It contains no
-  product behavior and never returns a stack trace.
+  product behavior.
 - Middleware reads configuration from the platform's bindings, never from module-level state
   shared across requests.

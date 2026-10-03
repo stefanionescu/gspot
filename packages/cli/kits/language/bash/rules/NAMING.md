@@ -4,11 +4,6 @@ title: Bash Naming
 
 # Bash Naming
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Bash naming follows Google shell guidance, with the overrides below for file stems.
 
 ## Bash case rules
@@ -51,7 +46,8 @@ propagate deployment failures; a clearer name does not establish those contracts
 Rules:
 
 - Loop variables describe the item being iterated.
-- Use `tmp_dir` or `tmp_file` only for actual temporary filesystem paths.
+- Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and
+  `temp` say nothing.
 - Avoid vague names when a domain name is available.
 - Avoid shell-reserved and shell-special names for unrelated values.
 - Initialize variables before use.

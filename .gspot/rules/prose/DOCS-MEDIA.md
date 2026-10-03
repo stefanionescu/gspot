@@ -4,10 +4,7 @@ title: Documentation Media
 
 # Documentation Media
 
-User interface instructions, keyboard input, illustrations, and accessibility. The Markdown
-linter reports an image without alt text and a table without a header row. The prose checker
-reports "click here," the interaction verbs outside the chosen set, and "Image of" in alt
-text. This guide holds the decisions those tools cannot judge.
+User interface instructions, keyboard input, illustrations, and accessibility.
 
 ## User interface instructions
 

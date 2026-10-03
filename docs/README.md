@@ -16,13 +16,3 @@ Keep these notices with every distributed copy of the assets.
   to Astro components. Its [MIT notice](public/licenses/turborepo.txt) ships with the site.
 - The site self-hosts Geist Sans and Geist Mono from the pinned Fontsource packages. The site
   build keeps each package license under `licenses/` in the output.
-- Most tool and framework logos come from [Simple Icons](https://github.com/simple-icons/simple-icons)
-  under [CC0](public/licenses/simple-icons.txt). The names identify integrations and claim no
-  sponsorship.
-- ShellCheck artwork comes from the
-  [VS Code integration](https://github.com/vscode-shellcheck/vscode-shellcheck/blob/master/shellcheck.png)
-  under its [MIT license](public/licenses/shellcheck.txt).
-- The Semgrep symbol comes from the
-  [upstream logo](https://github.com/semgrep/semgrep/blob/develop/semgrep.svg) under the GNU
-  Lesser General Public License, whose [version 2.1 text](public/licenses/semgrep.txt)
-  accompanies the asset.

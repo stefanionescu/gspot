@@ -4,30 +4,18 @@ title: SwiftUI
 
 # SwiftUI
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
-## Core iOS philosophy
+## Architecture
 
 <!-- level: all -->
 
-Architecture must make the app's domain obvious. A reader sees what the
-app does, not only framework buckets such as `Views`, `ViewModels`, `Managers`,
-or `Services`.
+The architecture makes the app's domain obvious: a reader sees what the app does, not only
+framework buckets such as `Views`, `ViewModels`, `Managers`, or `Services`. Keep the project's
+chosen UI framework, and use UIKit interoperability where a platform feature requires it, without
+rewriting existing UIKit screens.
 
-Preserve the project's chosen UI framework. Use supported UIKit interoperability where the
-platform feature requires it; selecting SwiftUI does not require rewriting existing UIKit screens.
-
-SwiftUI does not require a presentation pattern, and this file does not pick one. What it does
-require is that a view renders state and forwards intent, which the sections below spell out.
-
-Whichever pattern a project picks, a view must not reach past its own layer into a network client,
-a database, an SDK singleton or process-global framework state. That constraint is what the
-sections below enforce, and it holds under MVVM, TCA, observable state, or anything else.
-
-A project that wants a named pattern writes it down itself. The distribution does not pick one.
+This rule picks no presentation pattern, such as MVVM or TCA; a project that wants one writes it
+down. A view in any pattern renders state and forwards intent. It never reaches a network
+client, a database, an SDK singleton, or process-global framework state.
 
 ## SwiftUI views
 
@@ -81,30 +69,19 @@ across view reconstruction and identity changes.
 
 ## Accessibility
 
-Accessibility is part of the feature contract, not a final pass.
-
-Rules:
-
-- Interactive controls need clear labels, traits, states, and hints when the
-  visible label is not enough.
-- Use `.accessibilityIdentifier()` for stable UI test targets and important
-  interaction surfaces.
-- Use `.accessibilityHidden(true)` only for decorative or duplicate content.
-- Preserve Dynamic Type unless a fixed size is required by a platform control.
-- Keep tap targets large enough for reliable touch interaction.
-- Verify important flows with VoiceOver behavior in mind when changing
-  navigation, modal presentation, focus, or custom controls.
+- Interactive controls get traits, states, and hints when the visible label is not enough.
+- `.accessibilityIdentifier()` marks stable UI test targets and important interaction surfaces.
+- `.accessibilityHidden(true)` hides only decorative or duplicate content.
+- A change to navigation, modal presentation, focus, or a custom control checks the flow with
+  VoiceOver.
 
 ## Testing SwiftUI behavior
 
-- Assert state transitions and visible behavior, never private method calls.
 - Test cancellation and stale results for owners that start asynchronous work.
-- Do not mock SwiftUI or test its framework behavior.
+- Never mock SwiftUI or test its framework behavior.
 - Test reusable visual states and regressions that ordinary unit tests cannot observe.
 - Exercise critical navigation, authentication, submission, purchase, and recovery flows
   through the interface when those features exist.
-- Use accessibility identifiers for stable UI test selectors instead of localized copy.
-- Keep snapshot recording out of committed test runs and inspect reference images.
-
-Test data belongs with its tests. Do not add production defaults, protocols, or parallel
-model layers only to shorten a test.
+- UI tests select by accessibility identifier, not localized copy.
+- Snapshot recording stays out of committed test runs.
+- Never add production defaults, protocols, or parallel model layers only to shorten a test.

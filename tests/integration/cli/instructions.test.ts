@@ -36,7 +36,7 @@ describe('the managed block', () => {
         );
         expect(block).toContain('Run `gspot check --staged` before committing');
         expect(block).not.toContain('ACCESSIBILITY.md');
-        expect(block).toContain('code/NAMING.md');
+        expect(block).toContain('code/TESTING.md');
         expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
     });
 });

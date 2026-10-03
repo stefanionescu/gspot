@@ -8,6 +8,9 @@ export const RULES_FOLDER = 'rules';
 
 export const TITLE = /^# (?<title>.+)$/mu;
 
+/** The YAML front matter that opens a rule file. */
+export const FRONT_MATTER = /^---\n[\s\S]*?\n---\n/u;
+
 /** The files the managed block tells the reader to open first; they cannot be left out. */
 export const FIRST_READ = ['agent/WORKING.md', 'prose/WRITING.md'];
 

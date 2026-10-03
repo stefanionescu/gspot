@@ -9,12 +9,6 @@ comments, and formatting. Language covers functions, variables, quoting, arrays,
 arithmetic, loops, and paths. Safety covers commands, processes, network, secrets, temporary
 files, security, and portability. Operations covers ownership, deployment, publishing, and CI.
 
-ShellCheck reports quoting, deprecated syntax, and unsafe constructs, and shfmt owns layout.
-The structure checks of the bash kit report the header, the strict-mode options, the `main`
-call, and the order of functions. They also report the doc comment of each function, a
-discarded failure, and an unchecked `cd`. This guide says why, and holds the rules no tool
-sees.
-
 ## Core Bash philosophy
 
 <!-- level: all -->
@@ -98,7 +92,7 @@ Use `macOS and Linux` only when the file is supported and reviewed on both. A ne
 requirement names the minimum version and fails before any other work. Use
 `#!/usr/bin/env bash` for repository scripts; use `#!/bin/bash` only when the target runtime
 relies on system Bash at that path, such as a controlled Linux host. A `#!/bin/sh` file is
-POSIX `sh`, and this guide applies to it only in its quoting and security principles. SUID
+POSIX `sh`, and this file applies to it only in its quoting and security principles. SUID
 and SGID are forbidden on shell scripts; use `sudo` or a platform privilege boundary.
 
 Store Bash files as UTF-8 without a byte-order mark and with LF endings; a BOM before `#!`
@@ -226,9 +220,7 @@ or risky carries the full header with `Globals`, `Arguments`, `Outputs`, and `Re
 sections. Comments document behavior, not history. They explain why a shell pattern is needed
 when the code is not obvious, and they do not narrate every line.
 
-A `TODO` is
-`TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`, owned by an issue link or an expiry date, never
-a person. A suppression explains the real constraint and stays as narrow as possible.
+Track unfinished work in the issue tracker, not in a `TODO` comment. A suppression explains the real constraint and stays as narrow as possible.
 
 ## Review checklist
 

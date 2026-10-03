@@ -4,24 +4,19 @@ title: Naming
 
 # Naming
 
-Principles, vocabulary, functions, and booleans. Naming Files covers casing across
-languages, files and directories, boundaries and external names, and tests. The naming
-policy reports the banned words: `Manager`, `Helper`, `Utils`, `Service`, `handler`,
-`process`, the weak modal, and the rest of the policy list. It reports the reserved words,
-single-letter and contracted names, and the word limit. The language tools report casing.
-This guide says why, and holds the decision no policy can judge: whether a name says what
-the value means.
+Principles, vocabulary, functions, and booleans. Naming Files covers casing across languages,
+files and directories, boundaries and external names, and tests.
 
 ## Authority
 
 <!-- level: all -->
 
-A name satisfies both this guide and the naming policy of the scope, and a policy finding is
+A name satisfies both this file and the naming policy of the scope, and a policy finding is
 authoritative: a disagreement is fixed at its owner, never worked around locally. The policy
-owns exact limits, banned terms, and exceptions, so this guide does not repeat them. A bad
+owns exact limits, banned terms, and exceptions, so this file does not repeat them. A bad
 name is not hidden in a string key, a filename, a quoted SQL identifier, a generated wrapper,
 or an alias. Generated code keeps generator-owned names; hand-written wrappers around it
-follow this guide.
+follow this file.
 
 ## Principles
 
@@ -97,7 +92,7 @@ positional arguments become an options parameter with named fields, such as `isC
 in `MenuOptions`. A month increment is `monthCount`, not `month`, and a function that only
 forwards to a date library is replaced by the direct call.
 
-The verb vocabulary is fixed so a reader never guesses which synonym a boundary chose:
+A fixed verb vocabulary spares the reader a guess at which synonym a boundary chose:
 
 | Verb                 | Meaning                                                                         |
 | -------------------- | ------------------------------------------------------------------------------- |
@@ -114,38 +109,24 @@ The verb vocabulary is fixed so a reader never guesses which synonym a boundary 
 | `refresh`, `prepare` | Replace presentation state from a source; set up local state before a workflow. |
 | `reset`              | Return to an initial state.                                                     |
 
-`get` covers every application-owned retrieval: the noun and return type carry multiplicity,
-pagination, and optionality (`getSession`, `getSessions`, `getPaginatedSessions`, a lookup
-returning `T | null`), and `read`, `find`, `fetch`, `load`, `list`, and `resolve` are not
-alternate retrieval verbs. A `get` boundary may populate its owning runtime state when
-returning the raw source leaks boundary mechanics. `save`, `write`, `put`, `upsert`,
-`create`, `add`, and `remove` are not persistence synonyms. The noun stays short: no `Row`,
-`Record`, `Value`, `Existing`, or owner qualifier the type or module already supplies, and a
-qualifier only distinguishes two operations visible at one use site, `getCachedCall` against
-`getActiveCall`.
-
-A transactional domain operation keeps a precise domain verb when it is not a
-longer synonym for one CRUD operation. The non-CRUD verbs stay where the function performs
-that operation. Framework, standard-library, SDK, generated, and external contract names are
-preserved exactly.
+Each act keeps one verb across the codebase: once retrieval is `get`, no boundary reads, finds,
+fetches, or loads instead. The noun and the return type carry multiplicity and optionality
+(`getSession`, `getSessions`), and a qualifier appears only to tell apart two operations at one
+use site. A domain operation that is more than one CRUD act keeps its precise domain verb, and
+framework, SDK, generated, and external names are preserved exactly.
 
 | Avoid                    | Prefer                   | Meaning                        |
 | ------------------------ | ------------------------ | ------------------------------ |
-| `readChatConfig`         | `getChatConfig`          | Retrieve configuration.        |
-| `findSession`            | `getSession`             | Retrieve one session.          |
 | `saveCall`               | `insertCall`             | Insert a new call.             |
 | `handleData`             | `decodeAccountResponse`  | Decode account response bytes. |
 | `process`                | `validateEmailAddress`   | Validate an email address.     |
 | `update`                 | `updateDraftMessageText` | Replace draft message text.    |
 | `mapUserRowToUserDomain` | `mapUser`                | The parameter type says row.   |
 
-At a boundary the conversion is named for the operation and domain concept: `decodeUserResponse`
-rather than `data`, `parseSubmitOrderRequest` rather than `transform`. Shape suffixes such as
-`Row`, `DTO`, `Request`, and `Response` stay on the type alias, interface, or generated
-contract that declares the shape: `AccountDeletionRequestRow` for a database row. They never
-travel onto domain entities, view models, UI state, or the functions that accept the shape. A
-local variable is `row` or `dbRow` only inside database boundary code while the value is still
-the wire shape.
+At a boundary the conversion is named for the operation and the concept, `decodeUserResponse`
+rather than `transform`. Shape suffixes such as `Row`, `DTO`, `Request`, and `Response` stay on
+the type that declares the shape and never travel onto domain entities, view models, or the
+functions that accept the shape.
 
 ## Booleans and predicates
 

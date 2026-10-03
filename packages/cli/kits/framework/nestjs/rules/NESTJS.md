@@ -4,11 +4,6 @@ title: NestJS
 
 # NestJS
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 These rules cover NestJS modules, controllers, providers, validation, configuration, and tests.
 
 ## Request handling
@@ -32,12 +27,11 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 
 ## Configuration and security
 
-- Fail startup when required kit is absent or malformed.
+- Fail startup when required configuration is absent or malformed.
 - Use guards for route authorization. Enforce additional permissions at each protected operation
   when one request performs several operations or the service has non-HTTP callers.
 - Guards run before pipes. Do not assume guard inputs have passed DTO transformation or validation.
 - Set request-size limits, security headers, and rate limits for the exposed application.
-- Keep stack traces and sensitive validation details out of production responses.
 
 ## Feature organization
 
@@ -48,7 +42,6 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 - Keep controllers responsible for request and response handling. Put business operations in
   services and persistence in its declared owner.
 - Inject dependencies through constructors instead of constructing them inside consumers.
-- Read environment configuration through a validated configuration owner.
 - Define the versioning contract before publishing a public API.
 - Keep request DTOs distinct from persistence entities and map between them explicitly.
 

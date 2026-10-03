@@ -4,11 +4,6 @@ title: Accessibility
 
 # Accessibility
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Accessibility is part of the feature contract, not a final pass.
 
 ## Structure

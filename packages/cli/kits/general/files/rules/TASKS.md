@@ -4,11 +4,6 @@ title: Task Runner
 
 # Task Runner
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Rules for the repository's task surface: `mise` tasks, `package.json` scripts, `Makefile`
 targets, or whichever runner the repository declares.
 

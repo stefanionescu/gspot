@@ -11,7 +11,7 @@ implicitly unwrapped optionals, redundant `break`, `return`, `get`, `.init`, and
 `class func`, non-final classes, `fileprivate`, and `#imageLiteral`. It reports function
 length and complexity. The structure checks report declaration order.
 
-Warnings are errors in the build settings. This guide says why, and holds the rules no tool
+Warnings are errors in the build settings. This file says why, and holds the rules no tool
 sees.
 
 ## Files and style
@@ -38,7 +38,7 @@ reader meets the helpers before the contract that uses them.
 Good:
 
 ```swift
-private func positiveTotal(_ values: [Int]) -> Int {
+private func sumPositive(_ values: [Int]) -> Int {
     var total = 0
     for value in values where value > 0 {
         total += value
@@ -48,7 +48,7 @@ private func positiveTotal(_ values: [Int]) -> Int {
 
 /// Compare the sums of positive values in two collections.
 public func comparePositiveTotals(_ left: [Int], _ right: [Int]) -> Int {
-    positiveTotal(left) - positiveTotal(right)
+    sumPositive(left) - sumPositive(right)
 }
 ```
 
@@ -136,9 +136,8 @@ they add information beyond the summary and signature. Public and open declarati
 documented when the documentation policy requires it; internal and private ones only for
 non-obvious invariants, concurrency, security, lifecycle, or domain rules. No comment
 repeats the declaration, copies base documentation onto an override or conformance, or
-records change history, old names, or file paths. A `TODO` is
-`TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`, owned by an issue link or an expiry date, never
-a person. `// MARK:` lines, implementation notes, and tool directives are ordinary `//`
+records change history, old names, or file paths. Unfinished work goes to the issue tracker, not
+a `TODO` comment. `// MARK:` lines, implementation notes, and tool directives are ordinary `//`
 comments, and Apple markup backticks name parameters and types.
 
 ## Concurrency and errors
@@ -159,10 +158,8 @@ concurrency annotations gets `@preconcurrency import`, and `@unchecked Sendable`
 Clocks and scheduling boundaries are injected where time affects logic or tests.
 
 Typed errors serve callers with different recovery paths, and untyped `Error` only generic
-boundaries where cases add nothing. Technical errors become user-facing messages at the
-presentation boundary; status codes, SQL errors, file paths, tokens, internal IDs, and SDK
-messages never reach users. Failed operations throw, and UI loading and error display use
-explicit state enums. `fatalError` is reserved for an unrecoverable programmer error with a
-documented invariant, `assertionFailure` for an unexpected but recoverable state, and
-`precondition` for an invariant without which continuing is invalid. No speculative fallback
-handles a state the real contract cannot produce.
+boundaries where cases add nothing. Technical errors become user-facing messages at the presentation
+boundary. Failed operations throw, and UI loading and error display use explicit state enums.
+`fatalError` is reserved for an unrecoverable programmer error with a documented invariant,
+`assertionFailure` for an unexpected but recoverable state, and `precondition` for an invariant
+without which continuing is invalid.

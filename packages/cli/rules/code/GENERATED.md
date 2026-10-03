@@ -4,11 +4,6 @@ title: Generated Code
 
 # Generated Code
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 - A generated file is never edited by hand. Change the source or the generator and regenerate
   through the owning command.
 - Identify generated ownership explicitly. Use a generator header when the format supports comments.

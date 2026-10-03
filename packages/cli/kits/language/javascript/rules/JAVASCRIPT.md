@@ -4,11 +4,6 @@ title: JavaScript
 
 # JavaScript
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Core JavaScript philosophy
 
 JavaScript code preserves the runtime, input, and output contracts of its owner.
@@ -58,7 +53,6 @@ Production code must not import quality tooling. Browser scripts must not import
 
 <!-- level: all -->
 
-- Read `process.env` in one configuration owner module. Nowhere else.
 - Prefer named imports and named exports for module code.
 - Avoid mutable exports such as `export let`.
 - Avoid default exports in app modules.
@@ -124,7 +118,7 @@ Rules:
 - Do not create static container classes for namespacing.
 - Prefer plain functions and objects for stateless behavior.
 - Keep constructors simple.
-- Do not use decorators.
+- Do not use decorators, except where a framework such as NestJS requires them.
 - Do not add inheritance unless it represents a real runtime relationship.
 
 If a class has no meaningful instance state, it is a module with named exports.
@@ -148,10 +142,10 @@ Runtime boundaries must be validated or escaped before use.
 
 Boundary examples:
 
-- Markdown content rendered into legal pages.
+- Markdown content rendered into HTML.
 - Placeholder replacement into HTML templates.
 - URLs and public paths.
-- Cloudflare request data.
+- Request headers and request metadata from the platform.
 - Environment variables.
 - Analytics configuration.
 - File paths supplied to quality tooling.
@@ -162,7 +156,6 @@ Rules:
 - Normalize public paths before writing generated assets.
 - Validate URLs before using them in generated markup.
 - Do not log sensitive environment values.
-- Do not return stack traces from edge middleware.
 - Avoid dynamic `require` or dynamic `import` for repo-owned modules.
 - Prefer `spawn`/`execFile` with argument arrays over shell command strings.
 
@@ -176,7 +169,6 @@ Rules:
 - Handle expected failures at the owner boundary.
 - Do not catch and ignore errors unless the ignored failure is explicitly safe and documented by the local contract.
 - Preserve useful error messages in build tooling.
-- Do not expose internal stack traces in HTTP responses.
 - Clean up spawned servers or child processes in `finally` blocks.
 
 ## Comments and JSDoc
@@ -188,16 +180,11 @@ Rules:
 - Prefer short comments near the surprising decision.
 - Do not add history comments.
 - Do not leave commented-out code.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an expiry date, never a person.
+- Track unfinished work in the issue tracker, not in a `TODO` comment.
 - Keep every lint disable comment justified with a nearby reason on the same line or the line above.
 - JSDoc is useful for exported quality helpers, but routine private functions do not need boilerplate comments.
 
 ## Generated code
 
-Generated output belongs in `dist/` or documented artifact directories, not in source roots.
-
-Rules:
-
-- Do not edit generated files as the source of truth.
 - Keep generated asset names deterministic and content-hashed where the build pipeline expects hashes.
 - Encode generated data for its output context before embedding it in a document.

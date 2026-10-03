@@ -4,11 +4,6 @@ title: Security
 
 # Security
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Input
 
 - Validate every value that crosses a trust boundary before use: request bodies, query strings,
@@ -65,13 +60,10 @@ Keep executable scripts and event handlers outside HTML templates. JSON-LD remai
 
 - No secret in source, configuration files, examples, tests, logs, error messages, URLs, build
   arguments, image layers, or commit history.
-- Public service errors carry no stack trace, private path, schema name, internal ID, or raw
-  upstream error. Local developer diagnostics can identify the affected source and configuration.
-  Restricted logs retain only the safe context required by the logging policy.
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build.
 
 ## Supply chain
 
-- Pin dependencies and actions exactly; install with a frozen lockfile; respect the minimum release
-  age; scan dependencies for known advisories before every push.
+- Pin actions exactly, as the dependency rule pins packages, and scan dependencies for known
+  advisories before every push.
 - Verify checksums or signatures of downloaded binaries. Never pipe a download into an interpreter.

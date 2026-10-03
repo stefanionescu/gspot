@@ -7,7 +7,7 @@ gspot runs your test suite as a check at the push stage and fails it when covera
 the floor you set. Keep the test runner and its dependencies in your own project.
 
 The default floors are 0% at `recommended` and 80% at `all`. A floor you set applies at both
-levels. For a test runner without a kit, write a [custom check](/guides/custom-checks/).
+levels. For a test runner without a kit, write a [custom check](/guides/project-checks/).
 
 ## Jest
 
@@ -62,29 +62,11 @@ application code keeps its own rules.
 
 ## Swift tests
 
-Select the `xctest` kit. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder.
-It turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, and your
-source files keep those rules.
-
-To run SwiftLint yourself or in an editor, run `swiftlint lint` from the scope, without
-`--config`.
-[SwiftLint ignores nested configuration when you pass `--config`](https://github.com/realm/SwiftLint/blob/0.63.2/README.md#nested-configurations).
-If a nested `.swiftlint.yml` goes missing, `gspot apply` writes it again.
-
-The Swift test checks:
-
-- recognize a test file by an import of `XCTest` or `Testing`, or by the `@Test` or `@Suite`
-  attributes, even outside test folders
-- require a reason in each `XCTSkip` or `.disabled` argument
-- require `///` documentation comments instead of block documentation comments
+Select the `xctest` kit. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
+that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
+source files keep those rules. Run `swiftlint lint` from the scope without `--config`, because
+SwiftLint ignores nested configuration when you pass one.
 
 Snapshot references follow `tools.xctest.reference_layout`, by default
-`__Snapshots__/{file}/{test}.*`, relative to the test file. `{file}` is the Swift file name
-without its extension, and `{test}` is the test name. Set another layout in a scope for a
-different snapshot folder.
-
-## Xcode source membership
-
-The source membership check follows the file references and build phases of each Xcode project.
-Synchronized groups keep their target exclusions. When a source path depends on a build setting
-gspot cannot resolve, the check fails with an error instead of a partial result.
+`__Snapshots__/{file}/{test}.*` beside the test file. The [xctest kit](/reference/kits/xctest/)
+lists the checks of Swift tests.

@@ -8,13 +8,6 @@ The Python rules span five files: this one (modules, imports, interfaces, docstr
 points), Typing, Design (functions and classes), Flow (control flow, errors, logging,
 resources), and Packaging (installs and dependencies).
 
-Ruff owns formatting and import order, reports docstring shape and naming case, and
-basedpyright checks types. The python structure checks report the order of a module, a name
-missing from `__all__` or its underscore, and `__all__` above the definitions or out of
-order. They also report a comment among the imports, a lazy `__getattr__`, a module-level
-singleton, a placeholder docstring, and a function or file over its limit. This guide holds
-the decisions behind them and the rules no tool sees.
-
 ## Core Python philosophy
 
 Write readable Python before clever Python: explicit data flow, clear names, small functions,
@@ -46,15 +39,12 @@ is never restricted to ASCII.
 
 ## Environment and configuration
 
-Environment variables are external text input. The configuration owner parses and validates
-them once before the values pass inward. Secrets live in environment variables or a secret
-manager, never in source, examples, tests, or checked-in configuration. A missing required
-secret fails at startup rather than falling back to a real-looking default.
-
 An importable module never depends on an active shell, a virtual environment, the working directory, or a
 globally installed package. Imports resolve through project configuration, editable
 installs, `python -m`, or the configured environment. Virtual environments and package caches
 are not committed.
+
+The configuration owner takes the environment as a mapping, so a test passes its own:
 
 ```python
 def get_config(environ: Mapping[str, str]) -> AppConfig:
@@ -76,13 +66,6 @@ def get_config(environ: Mapping[str, str]) -> AppConfig:
         raise ValueError(message)
     return AppConfig(max_items=max_items)
 ```
-
-### Configuration ownership
-
-<!-- level: all -->
-
-`os.environ` and `os.getenv` are read in the configuration owner alone, and framework-owned
-entrypoints keep to their declared boundaries.
 
 ## Module structure
 
@@ -136,15 +119,13 @@ replaces removing a helper that only forwards a call.
 
 ## Comments and docstrings
 
-Comments and docstrings describe present behavior only: no change history, no mention of
-removed or renamed code, no file paths unless essential and stable, complete sentences, and
-clean grammar. A comment explains intent, invariants, edge cases, and non-obvious choices such
-as a format constraint or a resource lifetime; it does not narrate obvious code. When a native
-linter needs a suppression for an unavoidable external contract, keep it narrow with the
-reason on or above the directive. A deterministic random generator may need a security-rule
-exception for simulation and must never produce tokens. Unfinished work lives in the issue
-tracker, not in `TODO`, `FIXME`, `XXX`, or `HACK`. A comment may link to an issue that explains
-an existing constraint while describing current behavior.
+Comments and docstrings are complete sentences in clean grammar. A comment explains intent,
+invariants, edge cases, and non-obvious choices such as a format constraint or a resource lifetime;
+it does not narrate obvious code. When a native linter needs a suppression for an unavoidable
+external contract, keep it narrow with the reason on or above the directive. A deterministic random
+generator may need a security-rule exception for simulation and must never produce tokens.
+Unfinished work lives in the issue tracker, not in `TODO`, `FIXME`, `XXX`, or `HACK`. A comment may
+link to an issue that explains an existing constraint while describing current behavior.
 
 Docstrings match their signatures and behavior at both levels, in the project's declared
 convention. That is an explicit pydoclint style when one is set. Otherwise, it is the Google

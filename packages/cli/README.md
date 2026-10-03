@@ -9,7 +9,7 @@ choices live in one policy file, `gspot.toml`.
 gspot runs on Node.js 22 or newer, or on Bun. In a JavaScript or TypeScript repository:
 
 ```shell
-npm install --save-dev @gspothq/cli
+npm install --save-dev --save-exact @gspothq/cli
 npx gspot init
 ```
 
@@ -17,7 +17,7 @@ In any other repository, install it once with `npm install --global @gspothq/cli
 `gspot init`.
 
 `init` reads the repository and shows a plan before it writes anything: the checks for your
-languages, the linter configuration under `.gspot/`, the guides for coding agents, and the Git
+languages, the linter configuration under `.gspot/`, the rules for coding agents, and the Git
 hooks.
 
 ## Documentation

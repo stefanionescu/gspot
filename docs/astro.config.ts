@@ -74,12 +74,12 @@ export default defineConfig({
                         { label: 'Fix findings', slug: 'guides/findings' },
                         { label: 'The policy file', slug: 'guides/customize' },
                         { label: 'Coding agents', slug: 'guides/agents' },
-                        { label: 'Hooks and CI', slug: 'guides/hooks-and-ci' },
+                        { label: 'Hooks and CI', slug: 'guides/hooks' },
                         { label: 'Generated files', slug: 'guides/generated-files' },
                         { label: 'Monorepos', slug: 'guides/scopes' },
                         { label: 'Team profiles', slug: 'guides/profiles' },
                         { label: 'Package managers', slug: 'guides/without-mise' },
-                        { label: 'Custom checks', slug: 'guides/custom-checks' },
+                        { label: 'Custom checks', slug: 'guides/project-checks' },
                         { label: 'Tests and coverage', slug: 'guides/testing' },
                         { label: 'Dependency licenses', slug: 'guides/dependency-licenses' },
                         { label: 'Security', slug: 'guides/security' },
@@ -103,7 +103,7 @@ export default defineConfig({
                         {
                             label: 'Checks',
                             collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/rules' } }],
+                            items: [{ autogenerate: { directory: 'reference/checks' } }],
                         },
                         {
                             label: 'ESLint plugin',

@@ -4,11 +4,6 @@ title: Svelte
 
 # Svelte
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 These rules cover Svelte 5 components, runes, props and events, markup, and data loading in SvelteKit.
 
 ## Components
@@ -63,7 +58,7 @@ Name a callback prop for what happened: `onsave`, `onclose`.
 ## Accessibility and tests
 
 - Fix the accessibility warnings of the compiler. Do not silence them with an ignore comment.
-- Every input has a label, every image has `alt`, and every interactive element is reachable by keyboard.
+
 - Test a component through what the user sees and does, not through its internal state.
 
 ## References

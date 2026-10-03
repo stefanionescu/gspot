@@ -110,8 +110,7 @@ export function buildReport(session: Session, pinned: string | undefined): Docto
         ci,
         rules: {
             files: policy.rules.install
-                ? selectRuleFiles(session.policyFiles.policy.rules, everyManifest(session.scopes), session.repository)
-                      .length
+                ? selectRuleFiles(policy.rules, everyManifest(session.scopes), session.repository, policy.level).length
                 : 0,
         },
         version: {

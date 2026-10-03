@@ -8,7 +8,7 @@ use it on its own with ESLint 9.38.0 or newer.
 ## Install
 
 ```shell
-npm install --save-dev @gspothq/eslint-plugin
+npm install --save-dev --save-exact @gspothq/eslint-plugin
 ```
 
 ## Configure
@@ -49,7 +49,7 @@ export const endpoint = "/api/search";
 
 The corrected module has no finding. Your server still needs to answer `/api/search`.
 
-## Select server modules
+## Name your own files
 
 `require-server-only` needs to know which files hold server code, so select them yourself:
 
@@ -65,6 +65,16 @@ export default [{
 
 The rule reports a selected module without `import 'server-only'`. Add that import at the top
 of the module.
+
+The rules about where code lives have no default folders, because the folders of a project are
+its own. Without options they report nothing:
+
+- `import-direction` takes `roles`: the globs of your types, tests, harness, config, env, and
+  runtime files.
+- `env-owner` takes `owners`: the files that may read `process.env`.
+- `types-placement` takes `directory`: the folder of the type-only files.
+- `test-folders` takes `harness`: the folder the shared test helpers move to.
+- `no-cross-scope-imports` takes `scopes`: the project folders that do not import each other.
 
 ## Check TypeScript
 

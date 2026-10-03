@@ -30,6 +30,16 @@ test('recommended guides omit marked sections and retain the next heading', asyn
     expect(recommended.get(path)).toContain('## Rules not adopted');
 });
 
+test('a rule whose every section is for level all installs only at all', async () => {
+    const recommended = await generatedGuides('recommended', {});
+    const all = await generatedGuides('all', {});
+    for (const path of ['code/NAMING.md', 'language/typescript/NAMING.md', 'language/bash/NAMING.md']) {
+        expect(recommended.has(`.gspot/rules/${path}`)).toBe(false);
+        expect(all.has(`.gspot/rules/${path}`)).toBe(true);
+    }
+    expect(recommended.has('.gspot/rules/agent/TALKING.md')).toBe(true);
+});
+
 test('conditional guides follow lockfile and dependency evidence', async () => {
     const absent = await generatedGuides('all', {});
     const present = await generatedGuides('all', {
@@ -50,7 +60,7 @@ test('a kit cannot install a conditional rule its rules folder does not hold', a
         '[kit]\ntitle = "Example"\ndescription = "Example rule selection for this test."\n[rules]\n"MISSING.md" = {dependencies = ["example"]}\n',
         'kits/general/example',
     );
-    expect(() => selectRuleFiles(session.policyFiles.policy.rules, [manifest], session.repository)).toThrow(
+    expect(() => selectRuleFiles(session.policyFiles.policy.rules, [manifest], session.repository, 'all')).toThrow(
         'The rule MISSING.md of the example kit does not exist.',
     );
 });

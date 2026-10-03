@@ -187,11 +187,6 @@
     font-size: 0.8125rem;
 }
 
-.tool-directory {
-    font-size: 0.8125rem;
-    width: fit-content;
-}
-
 .home-footer {
     display: grid;
     grid-template-columns: auto 1fr auto;

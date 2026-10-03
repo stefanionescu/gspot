@@ -5,9 +5,7 @@ title: Bash Safety
 # Bash Safety
 
 Calling commands, processes and privilege, structured data, network, secrets, temporary files,
-portability, and debugging. ShellCheck reports `eval`, unquoted paths, `xargs` without `-0`,
-`find -exec sh -c` with an embedded `{}`, parsed `ls`, and `sudo` redirections; the structure
-checks of the bash kit report a discarded failure. This guide holds the decisions behind them.
+portability, and debugging.
 
 ## Calling commands
 
@@ -66,7 +64,7 @@ run_remote_checks() {
   trap 'cleanup_children; exit 143' TERM
 
   for host in "$@"; do
-    check_host "${host}" >"${tmp_dir}/${host}.log" 2>&1 &
+    check_host "${host}" >"${work_dir}/${host}.log" 2>&1 &
     child_pids+=( "$!" )
   done
 
@@ -112,7 +110,7 @@ missing files, failed validation, or permission problems. Response bodies that m
 secrets are not printed.
 
 ```bash
-installer="${tmp_dir}/install.sh"
+installer="${work_dir}/install.sh"
 curl --fail --show-error --silent --location \
   --connect-timeout 10 \
   --max-time 60 \
@@ -172,11 +170,11 @@ is kept exactly and never widened to its neighbors. `|| true` never follows a de
 command or a required installation, publishing, build, or runtime command.
 
 ```bash
-tmp_file="$(mktemp "${config_file}.XXXXXX")" || exit 1
-trap 'rm -f -- "${tmp_file}"' EXIT
-curl --fail --show-error --silent --location --output "${tmp_file}" "${config_url}" || exit 1
-jq empty "${tmp_file}" >/dev/null || exit 1
-mv -- "${tmp_file}" "${config_file}" || exit 1
+downloaded_file="$(mktemp "${config_file}.XXXXXX")" || exit 1
+trap 'rm -f -- "${downloaded_file}"' EXIT
+curl --fail --show-error --silent --location --output "${downloaded_file}" "${config_url}" || exit 1
+jq empty "${downloaded_file}" >/dev/null || exit 1
+mv -- "${downloaded_file}" "${config_file}" || exit 1
 trap - EXIT
 
 if ! mkdir "${lock_dir}"; then

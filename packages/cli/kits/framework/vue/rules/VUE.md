@@ -4,11 +4,6 @@ title: Vue
 
 # Vue
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 These rules cover Vue 3 single-file components, reactivity, props and events, templates, and stores.
 
 ## Components
@@ -59,10 +54,9 @@ Name an event for what happened, in the past tense or as a noun: `saved`, `updat
 - Local state stays in the component. Shared state goes in a store, one store for each domain.
 - A store exposes actions that say what happened. Components do not assign to store state.
 - Fetch data in a composable or a store action, never inline in a template event.
-- A composable is named `useThing` and returns reactive values when callers need reactivity.
+- A composable is named `use` and its subject, such as `useCart`, and returns reactive values when callers need reactivity.
 
 ## Accessibility and tests
 
-- Every input has a label, every image has `alt`, and every interactive element is reachable by keyboard.
 - Test a component through what the user sees and does, not through its internal refs.
 - Test a composable as a function, with no component around it where it needs none.

@@ -4,11 +4,6 @@ title: UIKit
 
 # UIKit
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 ## Framework boundaries
 
 Use UIKit for UIKit screens and components. Use SwiftUI for SwiftUI screens. Preserve the
@@ -85,9 +80,9 @@ those transitions. Keep snapshot-building code with the presentation behavior it
 
 ## Accessibility and interaction
 
-Expose meaningful labels, values, traits, and actions. Keep accessibility state correct after
-cell reuse and snapshot updates. Respect Dynamic Type, contrast, reduced motion, and supported
-input methods. Test focus and selection when content changes or a modal screen closes.
+Expose meaningful values, traits, and actions, and keep accessibility state correct after cell
+reuse and snapshot updates. Test focus and selection when content changes or a modal screen
+closes.
 
 Use layout constraints that accommodate supported sizes, safe areas, and text expansion.
 Verify the screen with the system settings and device sizes the application supports.
