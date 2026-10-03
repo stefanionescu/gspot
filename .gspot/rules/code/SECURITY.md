@@ -60,9 +60,6 @@ Keep executable scripts and event handlers outside HTML templates. JSON-LD remai
 
 - No secret in source, configuration files, examples, tests, logs, error messages, URLs, build
   arguments, image layers, or commit history.
-- Public service errors carry no stack trace, private path, schema name, internal ID, or raw
-  upstream error. Local developer diagnostics can identify the affected source and configuration.
-  Restricted logs retain only the safe context required by the logging policy.
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build.
 
 ## Supply chain

@@ -81,7 +81,7 @@ the schema.
 
 Non-default success codes go in the decorator with `fastapi.status` constants: 201 for creation,
 202 for accepted work, and 204 for a deliberate empty body. `HTTPException` is raised, never
-returned, and its `detail` holds no stack trace, path, internal ID, or secret. Existence and
+returned, and its `detail` is a public error message. Existence and
 authorization checks answer alike, so a private resource is not revealed. Global exception
 handlers return the standard error shape and never echo a validation error's body.
 

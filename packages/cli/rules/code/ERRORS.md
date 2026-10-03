@@ -34,6 +34,7 @@ needed to correct a finding. Keep credentials and unrelated private data out of 
 - Schema names, table names, column names, or function names.
 - Internal identifiers (row IDs, user IDs, session tokens).
 - Stack traces or file paths.
+- Raw upstream, provider, or database errors.
 - Implementation details (trigger names, policy names, internal state like "deleted" flags).
 
 **Always:**

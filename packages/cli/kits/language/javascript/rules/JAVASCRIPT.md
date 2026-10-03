@@ -156,7 +156,6 @@ Rules:
 - Normalize public paths before writing generated assets.
 - Validate URLs before using them in generated markup.
 - Do not log sensitive environment values.
-- Do not return stack traces from edge middleware.
 - Avoid dynamic `require` or dynamic `import` for repo-owned modules.
 - Prefer `spawn`/`execFile` with argument arrays over shell command strings.
 
@@ -170,7 +169,6 @@ Rules:
 - Handle expected failures at the owner boundary.
 - Do not catch and ignore errors unless the ignored failure is explicitly safe and documented by the local contract.
 - Preserve useful error messages in build tooling.
-- Do not expose internal stack traces in HTTP responses.
 - Clean up spawned servers or child processes in `finally` blocks.
 
 ## Comments and JSDoc

@@ -32,7 +32,6 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
   when one request performs several operations or the service has non-HTTP callers.
 - Guards run before pipes. Do not assume guard inputs have passed DTO transformation or validation.
 - Set request-size limits, security headers, and rate limits for the exposed application.
-- Keep stack traces and sensitive validation details out of production responses.
 
 ## Feature organization
 

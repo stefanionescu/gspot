@@ -83,6 +83,6 @@ Templates and root HTML files stay declarative.
 ## Edge middleware
 
 - Middleware handles redirects, headers, and locale or device negotiation. It contains no
-  product behavior and never returns a stack trace.
+  product behavior.
 - Middleware reads configuration from the platform's bindings, never from module-level state
   shared across requests.
