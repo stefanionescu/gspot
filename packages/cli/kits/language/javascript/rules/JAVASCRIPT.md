@@ -186,10 +186,5 @@ Rules:
 
 ## Generated code
 
-Generated output belongs in `dist/` or documented artifact directories, not in source roots.
-
-Rules:
-
-- Do not edit generated files as the source of truth.
 - Keep generated asset names deterministic and content-hashed where the build pipeline expects hashes.
 - Encode generated data for its output context before embedding it in a document.

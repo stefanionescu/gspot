@@ -20,7 +20,7 @@ title: Errors
 - Do not catch only to rethrow unchanged.
 - Preserve the cause when wrapping: `new Error(message, { cause })`, `raise ... from error`, `Error` conformance with an underlying error.
 - Do not swallow failures. A caught error is handled, recorded, or re-raised.
-- Do not add speculative handling for states that cannot occur under the real contract.
+
 - Run required cleanup in `finally` or the language's equivalent.
 
 ## Error messages

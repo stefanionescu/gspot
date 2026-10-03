@@ -64,6 +64,6 @@ Keep executable scripts and event handlers outside HTML templates. JSON-LD remai
 
 ## Supply chain
 
-- Pin dependencies and actions exactly; install with a frozen lockfile; respect the minimum release
-  age; scan dependencies for known advisories before every push.
+- Pin actions exactly, as the dependency rule pins packages, and scan dependencies for known
+  advisories before every push.
 - Verify checksums or signatures of downloaded binaries. Never pipe a download into an interpreter.

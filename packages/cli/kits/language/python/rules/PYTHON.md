@@ -119,15 +119,13 @@ replaces removing a helper that only forwards a call.
 
 ## Comments and docstrings
 
-Comments and docstrings describe present behavior only: no change history, no mention of
-removed or renamed code, no file paths unless essential and stable, complete sentences, and
-clean grammar. A comment explains intent, invariants, edge cases, and non-obvious choices such
-as a format constraint or a resource lifetime; it does not narrate obvious code. When a native
-linter needs a suppression for an unavoidable external contract, keep it narrow with the
-reason on or above the directive. A deterministic random generator may need a security-rule
-exception for simulation and must never produce tokens. Unfinished work lives in the issue
-tracker, not in `TODO`, `FIXME`, `XXX`, or `HACK`. A comment may link to an issue that explains
-an existing constraint while describing current behavior.
+Comments and docstrings are complete sentences in clean grammar. A comment explains intent,
+invariants, edge cases, and non-obvious choices such as a format constraint or a resource lifetime;
+it does not narrate obvious code. When a native linter needs a suppression for an unavoidable
+external contract, keep it narrow with the reason on or above the directive. A deterministic random
+generator may need a security-rule exception for simulation and must never produce tokens.
+Unfinished work lives in the issue tracker, not in `TODO`, `FIXME`, `XXX`, or `HACK`. A comment may
+link to an issue that explains an existing constraint while describing current behavior.
 
 Docstrings match their signatures and behavior at both levels, in the project's declared
 convention. That is an explicit pydoclint style when one is set. Otherwise, it is the Google

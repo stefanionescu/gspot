@@ -158,10 +158,8 @@ concurrency annotations gets `@preconcurrency import`, and `@unchecked Sendable`
 Clocks and scheduling boundaries are injected where time affects logic or tests.
 
 Typed errors serve callers with different recovery paths, and untyped `Error` only generic
-boundaries where cases add nothing. Technical errors become user-facing messages at the
-presentation boundary; status codes, SQL errors, file paths, tokens, internal IDs, and SDK
-messages never reach users. Failed operations throw, and UI loading and error display use
-explicit state enums. `fatalError` is reserved for an unrecoverable programmer error with a
-documented invariant, `assertionFailure` for an unexpected but recoverable state, and
-`precondition` for an invariant without which continuing is invalid. No speculative fallback
-handles a state the real contract cannot produce.
+boundaries where cases add nothing. Technical errors become user-facing messages at the presentation
+boundary. Failed operations throw, and UI loading and error display use explicit state enums.
+`fatalError` is reserved for an unrecoverable programmer error with a documented invariant,
+`assertionFailure` for an unexpected but recoverable state, and `precondition` for an invariant
+without which continuing is invalid.

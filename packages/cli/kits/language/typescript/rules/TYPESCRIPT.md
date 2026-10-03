@@ -27,12 +27,11 @@ enforcement or change the rule explicitly; drift is not a reason to weaken eithe
 ## Files and modules
 
 A file is UTF-8 with imports before implementation, `const` by default, and `let` only for
-reassignment. Side-effect imports are rare and explicit. No history comments, stale path
-references, or example code sit outside the working code. Direct, searchable code beats clever
-indirection, and a module comment states purpose, not change history. Diagnostics and process
-termination stay at executable boundaries. Application source, scripts, tests, generated
-files, and tooling have different lint configuration, so check the effective configuration
-for a path before assuming a rule.
+reassignment. Side-effect imports are rare and explicit, and no example code sits outside the
+working code. Direct, searchable code beats clever indirection. Diagnostics and process termination
+stay at executable boundaries. Application source, scripts, tests, generated files, and tooling have
+different lint configuration, so check the effective configuration for a path before assuming a
+rule.
 
 ### Module conventions
 
@@ -139,25 +138,19 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 }
 ```
 
-## Comments, tests, generated code, and dependencies
+## Comments, tests, and dependencies
 
 Comments document purpose, invariants, security boundaries, concurrency behavior, and runtime
-assumptions, never TypeScript syntax, restated code, or change history; type tags stay out of
-JSDoc because TypeScript owns types. Unfinished work goes to the issue tracker, not a `TODO`
-comment.
+assumptions, never TypeScript syntax or restated code; type tags stay out of JSDoc because
+TypeScript owns types. Unfinished work goes to the issue tracker, not a `TODO` comment.
 
 Tests verify behavior and mock external boundaries rather than internals. They use the
 runner's typed mock helpers instead of `any` and keep shared test types beside the support
 module that owns their contract. A documentation-only change to this guidance updates no tests.
 
-Generated TypeScript is exempt from style guidance. Generated database types are regenerated
-by their generator and never edited by hand. Hand-written wrappers around them
-stay small and owned by the boundary that needs them. When generated output violates a
-preference, fix the generator or document the exception.
-
-Native Node and TypeScript APIs come first, then approved dependencies, at exact versions.
-No lodash-style helper package for array, object, or string work, and no dependency for a
-one-line native API or a small local helper.
+Native Node and TypeScript APIs come first, then approved dependencies. No lodash-style helper
+package for array, object, or string work, and no dependency for a one-line native API or a small
+local helper.
 
 ## Declaration order
 
