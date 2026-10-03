@@ -58,7 +58,7 @@ Name a callback prop for what happened: `onsave`, `onclose`.
 ## Accessibility and tests
 
 - Fix the accessibility warnings of the compiler. Do not silence them with an ignore comment.
-- Every input has a label, every image has `alt`, and every interactive element is reachable by keyboard.
+
 - Test a component through what the user sees and does, not through its internal state.
 
 ## References

@@ -58,6 +58,5 @@ Name an event for what happened, in the past tense or as a noun: `saved`, `updat
 
 ## Accessibility and tests
 
-- Every input has a label, every image has `alt`, and every interactive element is reachable by keyboard.
 - Test a component through what the user sees and does, not through its internal refs.
 - Test a composable as a function, with no component around it where it needs none.

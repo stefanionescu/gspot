@@ -96,5 +96,3 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 
 - Interactive elements are native elements (`button`, `a`, `input`) or carry the matching role,
   keyboard handling, and focus management.
-- Every input has a label; every icon-only control has an accessible name; every image has `alt`.
-- Focus moves deliberately on route change, dialog open, and dialog close.
