@@ -23,8 +23,8 @@ approved it on October 1, 2026.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stage 41 starts the next batch
-  on `docs/trim-guides-readmes`, stacked on it.
+- Stages 36 to 40 are pull request #22, branch `refactor/rename-checks-plugin-tasks`. Stages 41 and 42 start the
+  next batch on `docs/trim-guides-readmes`, stacked on it.
 
 ### Stages
 
@@ -73,7 +73,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 39    | Add the missing scenario tests, part two               | D.5 rows 18 to 34                                                                                       | pull request #22 |
 | 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | pull request #22 |
 | 41    | Trim the guides, READMEs, and CONTRIBUTING             | E.1 to E.4; `--save-exact`; `GSPOT_JOBS` documented                                                     | in the batch     |
-| 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | not started      |
+| 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | in the batch     |
 | 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | not started      |
 | 44    | Shorten the base rules                                 | the general rows of F.1                                                                                 | not started      |
 | 45    | Shorten the kit rules                                  | the other rows of F.1, and F.2                                                                          | not started      |
@@ -458,6 +458,17 @@ The owner and the work settled these while implementing:
     - CONTRIBUTING describes the test tiers and the harness and points at the CI workflow for the jobs. The plugin
       README lists the folders its layout rules need.
     - The uninstall and build pages, `CLAUDE.md`, and the extra `docs/README.md` sections were already gone.
+- Stage 42 trimmed the reference pages and the homepage:
+    - Check pages live under `/reference/checks/`. Each ends with the command that runs the check and the ignore that
+      records an exception, and says how it runs: per file, per scope, or once. Kit pages lose their kind.
+    - The version and source line at the top of every generated page is gone; the edit link stays. A commands index
+      holds the `-C` sentence, and the settings and policy file introductions are two sentences each.
+    - The kit index listed the kind `platforms`, which no kit has, so the platform kits were missing; it reads
+      `platform` now.
+    - The homepage keeps the recorded example in the hero and three cards. The tool logos, the second example, the
+      setup grid, and the calls to action went. The assets and notices only they used went too.
+    - The README and quickstart transcripts already match `example.json`, which the acceptance suite replays, so no
+      new recording was needed.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
