@@ -1,30 +1,37 @@
-import { FUNCTIONS } from '#plugin/config/plugin.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ContentCheck } from '#plugin/types/rules.ts';
+import { lintedPath, isIndexFile } from '#plugin/files.ts';
+import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { ImplementedFunction } from '#plugin/types/plugin.ts';
-import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import { FORWARDING_NODES, TRIVIAL_STATEMENTS, STRUCTURED_EXPRESSIONS } from '#plugin/config/rules.ts';
+import type { ImplementedFunction } from '#plugin/types/syntax.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { ContentCheck, TrivialFilesOptions } from '#plugin/types/rules.ts';
+import { unwrap, totalStatements, hasConstructorState } from '#plugin/syntax.ts';
+import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/config/rules.ts';
+
+function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
+    if (annotation.type !== AST_NODE_TYPES.TSTypeReference) return true;
+    const typeArguments = annotation.typeArguments;
+    if (typeArguments === undefined) return false;
+    return typeArguments.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSTypeQuery);
+}
 
 // Declarations own their schemas or the implementations they contain.
 function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportNamedDeclaration: {
-            return node.declaration !== null && inspect(node.declaration);
+            return inspect(node.declaration);
         }
         case AST_NODE_TYPES.ClassDeclaration:
         case AST_NODE_TYPES.ClassExpression: {
             return node.body.body.some((member) => inspect(member));
         }
         case AST_NODE_TYPES.VariableDeclaration: {
-            return node.declarations.some((declaration) => declaration.init !== null && inspect(declaration.init));
+            return node.declarations.some((declaration) => inspect(declaration.init));
         }
         case AST_NODE_TYPES.TSInterfaceDeclaration: {
             return node.body.body.length > 0;
         }
         case AST_NODE_TYPES.TSTypeAliasDeclaration: {
-            return node.typeAnnotation.type !== AST_NODE_TYPES.TSTypeReference;
+            return ownsTypeShape(node.typeAnnotation);
         }
         default: {
             return undefined;
@@ -38,11 +45,12 @@ function expressionContent(node: TSESTree.Node, inspect: ContentCheck): boolean 
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
             return inspect(node.declaration);
         }
-        case AST_NODE_TYPES.TSAsExpression:
-        case AST_NODE_TYPES.TSSatisfiesExpression:
-        case AST_NODE_TYPES.TSNonNullExpression:
         case AST_NODE_TYPES.ExpressionStatement: {
             return inspect(node.expression);
+        }
+        case AST_NODE_TYPES.MethodDefinition:
+        case AST_NODE_TYPES.PropertyDefinition: {
+            return inspect(node.value);
         }
         case AST_NODE_TYPES.AwaitExpression: {
             return inspect(node.argument);
@@ -53,9 +61,8 @@ function expressionContent(node: TSESTree.Node, inspect: ContentCheck): boolean 
     }
 }
 
-// Calls own inline schemas and substantive arguments. Remaining syntax represents implementation.
-function callContent(node: TSESTree.Node, inspect: ContentCheck): boolean {
-    if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression) return true;
+// Calls own inline schemas and substantive arguments.
+function callContent(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: ContentCheck): boolean {
     if (
         node.typeArguments?.params.some(
             (parameter) => parameter.type === AST_NODE_TYPES.TSTypeLiteral && parameter.members.length > 0,
@@ -79,7 +86,9 @@ function callContent(node: TSESTree.Node, inspect: ContentCheck): boolean {
 }
 
 // Factories own the structure they construct, including structures passed to schema builders.
-function ownsStructuredValue(node: TSESTree.Node): boolean {
+function ownsStructuredValue(expression: TSESTree.Node | null): boolean {
+    const node = unwrap(expression);
+    if (node === null) return false;
     if (STRUCTURED_EXPRESSIONS.has(node.type)) return true;
     switch (node.type) {
         case AST_NODE_TYPES.TemplateLiteral: {
@@ -93,44 +102,47 @@ function ownsStructuredValue(node: TSESTree.Node): boolean {
             return callContent(node, ownsStructuredValue);
         }
         default: {
-            return expressionContent(node, ownsStructuredValue) ?? false;
+            return expressionContent(node, ownsStructuredValue) === true;
         }
     }
 }
 
-export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({
+export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
     name: 'no-trivial-files',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ maxStatements: TRIVIAL_STATEMENTS, allowIndex: false }],
+        type: 'suggestion',
         docs: {
             title: 'Keep files substantive',
             example:
-                'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Entry filenames do not exempt forwarding code.',
+                'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set allowIndex to true to permit an index barrel. In gspot, structure.reexports = index-only selects this option.',
             level: 'all',
-            summary:
-                'Finds files containing only forwarding, aliases, re-exports, or trivial functions. Owned structures, nested implementations, and type predicates remain substantive.',
-            why: 'A file needs substantial behavior or a meaningful owned schema.',
+            description:
+                'Reports files containing only forwarding, aliases, re-exports, or trivial functions. Files with structured values, implementations, schemas, or type predicates keep their behavior.',
+            why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Move unnecessary wrappers and aliases to their owner. Keep substantial implementations and schemas together.',
         },
-        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 } })],
+        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 }, allowIndex: { type: 'boolean' } })],
         messages: {
             trivial:
-                'This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.',
+                'This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.',
         },
     },
-    defaultOptions: [{ maxStatements: 2 }],
-    create(context, [options]) {
-        const max = options.maxStatements ?? TRIVIAL_STATEMENTS;
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<TrivialFilesOptions[0]>;
+        const file = lintedPath(context);
+        if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
+        const max = options.maxStatements;
         let hasImplementation = false;
-        const substantial: ContentCheck = (node) => {
-            if (FORWARDING_NODES.has(node.type) || FUNCTIONS.has(node.type)) return false;
-            if (node.type === AST_NODE_TYPES.MethodDefinition || node.type === AST_NODE_TYPES.PropertyDefinition)
-                return node.value !== null && substantial(node.value);
-            return (
-                declarationContent(node, substantial) ??
-                expressionContent(node, substantial) ??
-                callContent(node, substantial)
-            );
+        const substantial: ContentCheck = (expression) => {
+            const node = unwrap(expression);
+            if (node === null) return false;
+            if (FORWARDING_NODES.has(node.type)) return false;
+            const content = declarationContent(node, substantial) ?? expressionContent(node, substantial);
+            if (content !== undefined) return content;
+            if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression) return true;
+            return callContent(node, substantial);
         };
         return {
             ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)'(node: ImplementedFunction) {

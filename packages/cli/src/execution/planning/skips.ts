@@ -1,45 +1,95 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
-import { pathMatcher } from '#cli/repository/selectors.ts';
-import { waitingSetting } from '#cli/policy/check-state.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import ignore from 'ignore';
+import { toolName } from '#cli/tools/pins.ts';
+import { readText } from '#cli/platform/source.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { PLATFORM_LABELS } from '#cli/config/execution/planning.ts';
-import type { PlannedCheck } from '#cli/types/execution/execution.ts';
-import type { Host, Skip, RuleSkip, PlanOptions } from '#cli/types/execution/planning.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { Host, Skip, PlanOptions, NativeIgnore, SelectionStatus } from '#cli/types/execution/planning.ts';
 
-// The rules a check declares about where it runs, each with the sentence that says why it was skipped.
-const RULE_SKIPS: RuleSkip[] = [
-    {
-        applies: (spec, check) => spec.when?.kit !== undefined && !check.scope.view.kits.includes(spec.when.kit),
-        note: (spec) => `needs the ${spec.when?.kit ?? ''} configuration, which this scope does not select`,
-    },
-    {
-        applies: (spec, _check, hasGit) => spec.when?.git === true && !hasGit,
-        note: () => 'this folder is no git repository, so the check has nothing to read',
-    },
-    {
-        applies: (spec, _check, hasGit) => spec.when?.git === false && hasGit,
-        note: () => 'this folder is a git repository, so the git check covers it',
-    },
-];
+// Conditions belong to the planned check, so its declaration and scope cannot disagree.
+function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
+    const { configuration, git } = check.spec.when ?? {};
+    if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
+        return {
+            cause: 'condition',
+            note: `Needs the ${configuration} configuration, which this scope does not select.`,
+        };
+    if (git === true && !hasGit)
+        return {
+            cause: 'condition',
+            note: 'This folder is not a Git repository, so the check has no history to read.',
+        };
+    if (git === false && hasGit)
+        return { cause: 'condition', note: 'The secrets/gitleaks check scans the files of this Git repository.' };
+    return undefined;
+}
 
 // The skip an ignore entry without a rule or paths imposes, which disables the whole check.
-function ignoreSkip(check: PlannedCheck): Skip {
-    const ignored = check.scope.view
-        .ignoresFor(check.spec.name)
-        .find((entry) => entry.rule === undefined && (entry.paths === undefined || entry.paths.length === 0));
+function ignoreSkip(scope: ScopeSelection, spec: CheckSpec): SelectionStatus | undefined {
+    const ignored = scope.view
+        .ignoresFor(spec.name)
+        .find(
+            (entry) =>
+                entry.rule === undefined &&
+                (entry.paths === undefined || entry.paths.length === 0 || coversScope(entry.paths, scope.scope.path)),
+        );
     if (ignored === undefined) return undefined;
     const reason = ignored.reason === undefined ? '' : `: ${ignored.reason}`;
     return { cause: 'ignore', note: `disabled by gspot.toml${reason}` };
+}
+
+function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
+    const setting = spec.when?.setting;
+    if (setting === undefined) return undefined;
+    const value = scope.view.settings[setting];
+    const isEmpty =
+        value === undefined || value === false || value === '' || (Array.isArray(value) && value.length === 0);
+    return isEmpty ? setting : undefined;
 }
 
 // The skip the platform imposes: the check names other platforms, or its tool has no build for this host.
 function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): Skip {
     if (spec.platforms && !(spec.platforms as readonly string[]).includes(host.platform))
         return { cause: 'platform', note: `runs on ${spec.platforms.join(', ')} only; this is ${host.platform}` };
-    const missing = tool === undefined ? undefined : missingBuild(tool, host.platform, host.arch);
-    if (tool !== undefined && missing !== undefined)
-        return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
+    if (tool === undefined) return undefined;
+    const missing = missingBuild(tool, host.platform, host.arch);
+    if (missing !== undefined) return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
     return undefined;
+}
+
+// Native ignore syntax combines authored file content with the tool's saved ordered exclusions.
+function nativeIgnore(session: Session, check: PlannedCheck): NativeIgnore | undefined {
+    const file = check.spec.ignore_file;
+    if (file === undefined) return undefined;
+    const text = readText(session.root, file, session.reads);
+    const tool = toolName(check.spec);
+    const setting = tool === undefined ? undefined : check.scope.view.settings[`tools.${tool}.exclude`];
+    const lines = (Array.isArray(setting) ? setting : []).filter((line: unknown) => typeof line === 'string');
+    // Saved exclusions remain effective when their generated ignore file has no active tool consumer.
+    const matcher = ignore()
+        .add(text ?? '')
+        .add(lines);
+    return { file, matches: matcher.ignores.bind(matcher) };
+}
+
+/**
+ * The reason persistent policy selects or disables a check.
+ * @returns the reason the check is inactive, or undefined when selected
+ * @param policy the repository level and opted-in checks
+ * @param scope the effective policy for the project
+ * @param spec the declared check and enabling conditions
+ */
+export function selectionStatus(policy: Policy, scope: ScopeSelection, spec: CheckSpec): SelectionStatus | undefined {
+    if (policy.level !== 'all' && spec.level !== 'recommended' && !policy.extra_checks.includes(spec.name))
+        return { cause: 'level', note: 'disabled at level recommended' };
+    const ignored = ignoreSkip(scope, spec);
+    if (ignored !== undefined) return ignored;
+    const setting = waitingSetting(scope, spec);
+    return setting === undefined ? undefined : { cause: 'setting', note: `set ${setting} to turn this on`, setting };
 }
 
 /**
@@ -48,38 +98,44 @@ function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): S
  * @param options the run options
  * @param host the platform and architecture the run is on
  * @param hasGit whether the repository is a Git repository
+ * @param policy the repository level and opted-in checks
  * @returns the skip
  */
-export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean): Skip {
-    const ignored = ignoreSkip(check);
-    if (ignored !== undefined) return ignored;
-    const setting = waitingSetting(check.scope, check.spec);
-    if (setting !== undefined) return { cause: 'setting', note: `set ${setting} to turn this on` };
-    const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
-    if (rule !== undefined) return { cause: 'condition', note: rule.note(check.spec) };
-    const byPlatform = platformSkip(check.spec, check.tool, host);
+export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean, policy: Policy): Skip {
+    const selected = selectionStatus(policy, check.scope, check.spec);
+    if (selected !== undefined) return selected;
+    const condition = conditionSkip(check, hasGit);
+    if (condition !== undefined) return condition;
+    const byPlatform = options.includeUnsupported === true ? undefined : platformSkip(check.spec, check.tool, host);
     if (byPlatform !== undefined) return byPlatform;
     return options.skips.includes(check.spec.name) ? { cause: 'flag', note: 'skipped by --skip' } : undefined;
 }
 
 /**
- * Drops the paths an ignore entry with paths disables, skipping the check when none remain.
+ * Restrict file checks through policy exclusions and declared native ignore files.
+ * @param session the source-read owner
  * @param check the planned check
  * @returns the check with its files restricted
  */
-export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
+export function restrictIgnoredPaths(session: Session, check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.spec.runs !== 'files' || check.files.length === 0) return check;
     const ignored = check.scope.view
-        .ignoresFor(check.check)
+        .ignoresFor(check.spec.name)
         .flatMap((entry) =>
             entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0
                 ? [pathMatcher(entry.paths)]
                 : [],
         );
+    const owners = ignored.length === 0 ? [] : ['gspot.toml'];
+    const native = nativeIgnore(session, check);
+    if (native !== undefined) {
+        ignored.push(native.matches);
+        owners.push(native.file);
+    }
     if (ignored.length === 0) return check;
     const files = check.files.filter((file) => !ignored.some((matches) => matches(file.path)));
     return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
+        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${owners.join(' or ')}` } }
         : { ...check, files };
 }
 

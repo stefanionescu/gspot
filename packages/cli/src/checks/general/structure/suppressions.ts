@@ -1,17 +1,19 @@
 // Validate suppression comments against the repository reason policy.
-import { ownedBy } from '#cli/kits/owners.ts';
+import { toolName } from '#cli/tools/pins.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { ReadCache } from '#cli/types/platform/platform.ts';
-import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
-import { commentText, sourceComments } from '#cli/checks/general/structure/comments.ts';
-import type { SourceComment, SuppressionForm } from '#cli/types/checks/general/structure.ts';
-import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/execution.ts';
+import { ownedBy } from '#cli/configurations/owners.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { isReasonAccepted } from '#cli/policy/problems/reasons.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { SourceComment } from '#cli/types/parsers/comments.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { commentText, sourceComments } from '#cli/parsers/comments.ts';
+import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/parsers/comments.ts';
+import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';
+import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/runtime.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -34,7 +36,7 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
             manifest.checks.flatMap((check) =>
                 ownedBy(check.files ?? manifest.files, selected, [file], selection.scope.path).length === 0
                     ? []
-                    : [check.tool ?? check.command?.[0]],
+                    : [toolName(check)],
             ),
         ),
     );
@@ -129,7 +131,7 @@ export async function suppressions(input: EngineInput): Promise<Finding[]> {
                     `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
                 ),
             ];
-        if (!input.policyFiles.policy.requireReasons) return [];
+        if (!input.policyFiles.policy.require_reasons) return [];
         if (isReasonAccepted(entry.reason)) return [];
         return [
             findingAt(

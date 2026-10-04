@@ -1,4 +1,4 @@
 import { main } from '#cli/commands/program.ts';
-import { ARGUMENT_START } from '#cli/config/platform/platform.ts';
+import { PAIR } from '#cli/config/platform/runtime.ts';
 
-process.exitCode = await main(process.argv.slice(ARGUMENT_START));
+process.exitCode = await main(process.argv.slice(PAIR));

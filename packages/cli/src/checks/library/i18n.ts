@@ -1,16 +1,16 @@
 import { posix } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
-import type { Translations } from '#cli/types/checks/library.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { LocaleSettings } from '#cli/types/checks/library/i18n.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
-function flat(value: unknown, prefix = ''): Map<string, string> {
+function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();
     const pairs = Object.entries(value).flatMap(([key, entry]): [string, string][] => {
         const name = prefix === '' ? key : `${prefix}.${key}`;
-        return typeof entry === 'string' ? [[name, entry]] : flat(entry, name).entries().toArray();
+        return typeof entry === 'string' ? [[name, entry]] : flattenMessages(entry, name).entries().toArray();
     });
     return new Map(pairs);
 }
@@ -21,7 +21,7 @@ function dottedKeys(value: unknown): string[] {
     return Object.entries(value).flatMap(([key, entry]) => [...(key.includes('.') ? [key] : []), ...dottedKeys(entry)]);
 }
 
-function textProblem(text: string): string | undefined {
+function translationProblem(text: string): string | undefined {
     if (text.trim() === '') return 'The message is empty.';
     try {
         parse(text);
@@ -37,7 +37,7 @@ function textProblem(text: string): string | undefined {
  * @returns the findings
  */
 export function locales(input: EngineInput): Finding[] {
-    const named = input.view.tool('i18n')['locales'] as Translations | undefined;
+    const named = input.view.options('i18n')['locales'] as LocaleSettings | undefined;
     if (named?.directory === undefined) return [];
     const directory = posix.join(input.scope, named.directory);
     const base = named.base ?? 'en';
@@ -47,19 +47,28 @@ export function locales(input: EngineInput): Finding[] {
     const raw = new Map(
         files.map((path) => [path, JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as unknown]),
     );
-    const held = new Map([...raw].map(([path, value]) => [path, flat(value)]));
-    const wanted =
-        [...held].find(([path]) => posix.basename(path) === `${base}.json`)?.[1] ?? new Map<string, string>();
-    return held
+    const messagesByPath = new Map([...raw].map(([path, value]) => [path, flattenMessages(value)]));
+    const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}.json`);
+    if (baseline === undefined)
+        return [
+            findingAt(
+                input,
+                { file: posix.join(directory, `${base}.json`), line: 1 },
+                'base-locale',
+                `The base locale ${base}.json is missing from ${directory}. Restore it or choose the intended base locale.`,
+            ),
+        ];
+    const baseMessages = baseline[1];
+    return messagesByPath
         .entries()
         .flatMap(([path, messages]) => {
             const broken = [...messages].flatMap(([key, text]) => {
-                const problem = textProblem(text);
+                const problem = translationProblem(text);
                 return problem === undefined
                     ? []
                     : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${problem}`)];
             });
-            const missing = wanted
+            const missing = baseMessages
                 .keys()
                 .filter((key) => !messages.has(key))
                 .map((key) =>

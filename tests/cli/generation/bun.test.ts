@@ -1,0 +1,40 @@
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
+import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+
+test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
+    await using repository = await testdir();
+    const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
+    await createFileTree(repository.path, {
+        'gspot.toml': buildPolicy(['dependencies'], {
+            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n[agent_rules]\nenabled = false\n',
+        }),
+        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+        'bunfig.toml': original,
+    });
+    const session = await openSession(repository.path);
+    const generated = emitAll(session).configurations.find((entry) => entry.path === 'bunfig.toml')!;
+    const log = openOwnership(repository.path);
+    applyPlan(log, proposeMerge(log, generated.path, generated.changes, true));
+    const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');
+    expect(Bun.TOML.parse(installed)).toStrictEqual({
+        install: {
+            exact: true,
+            minimumReleaseAge: 1_209_600,
+            security: { scanner: '@socketsecurity/bun-security-scanner' },
+        },
+    });
+    expect(installed).toContain('# Authored installation choices');
+    expect(applyPlan(log, proposeMerge(log, generated.path, generated.changes, true))).toBe('unchanged');
+    expect(applyPlan(log, proposeRestoration(log, 'bunfig.toml'))).toBe('changed');
+    log[Symbol.dispose]();
+    expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
+});

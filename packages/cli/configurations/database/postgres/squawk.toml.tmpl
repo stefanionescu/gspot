@@ -1,0 +1,17 @@
+<%
+const through = settings['postgres.frozen_through'];
+const frozen =
+    through === 'none'
+        ? []
+        : files('.sql').filter((path) => {
+              const version = /^(\d+)/.exec(path.slice(path.lastIndexOf('/') + 1))?.[1];
+              return (
+                  version !== undefined &&
+                  (through === 'all' || (/^\d+$/.test(through) && BigInt(version) <= BigInt(through)))
+              );
+          });
+%><% const document = {
+    assume_in_transaction: settings['tools.squawk.assume_in_transaction'],
+    excluded_rules: [...rulesOff('postgres/squawk'), ...(isAll ? [] : ['prefer-bigint-over-int', 'prefer-bigint-over-smallint', 'prefer-identity', 'prefer-text-field', 'require-table-schema'])],
+    excluded_paths: frozen,
+}; recordRules(document); %><%~ toml(document).trimEnd() %>

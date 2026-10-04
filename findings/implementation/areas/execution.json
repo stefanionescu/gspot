@@ -1,0 +1,1208 @@
+[
+    {
+        "id": "areas/execution/001",
+        "source": "findings/areas/execution.md",
+        "line": 83,
+        "section": "Findings",
+        "finding": "| `platform/filesystem.ts:1,26,34,46,73,80,114,116`, `platform/root/reads.ts:1,71,91,111`, `platform/root/writes.ts:1,135,162`, `types/platform/platform.ts:105`, `tools/locate.ts:38`, `execution/tool/workspace.ts:25` | Commit 7e81c0f5 replaced \"confined\" with \"files\" by search and replace. The comments of the safety-critical file code now read as nonsense: \"A reader and writer files to one directory\", \"a files entry\", \"Removes a files file\", \"every path is files to\". | Rewrite each comment (\"confined\", \"inside the root\"). |",
+        "owner": "`platform/filesystem.ts:1,26,34,46,73,80,114,116`, `platform/root/reads.ts:1,71,91,111`, `platform/root/writes.ts:1,135,162`, `types/platform/platform.ts:105`, `tools/locate.ts:38`, `execution/tool/workspace.ts:25`",
+        "location": [
+            "packages/cli/src/platform/root",
+            "packages/cli/src/types/platform/reads.ts",
+            "packages/cli/src/tools/locate.ts",
+            "packages/cli/src/execution/snapshot/workspace.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Safety comments and docs describe confined roots, relative paths, and the correct read/write behavior. The broken search-and-replace wording is absent from these owners.",
+            "Final deterministic unit/integration verification: 2138 pass\n 2 skip\n 0 fail\n 7046 expect() calls\nRan 2140 tests across 316 files. [191.89s] (/tmp/gspot-root-owners-final-tests.log).",
+            "48 native npm/Bun/pnpm/Yarn/Python, fixer, compiler, and Vale cases passed with 441 assertions; the three Vale cases passed again after walker cleanup (/tmp/gspot-root-owners-native.log, /tmp/gspot-root-walker-final-native.log).",
+            "All 37 targeted root, command, Swift, publication, and interrupted-recovery cases passed after correcting source-path fixtures and isolating the stand-in command spec (/tmp/gspot-root-owners-repaired-tests.log).",
+            "All four TypeScript targets passed; final repository lint passed all eight checks with zero findings (/tmp/gspot-root-owners-final-types.log, /tmp/gspot-root-owners-clean-lint.json).",
+            "The final walker/root/Swift/site cases passed 51 cases, one existing skip, zero failures, with 281 assertions; native Vale passed all three cases again (/tmp/gspot-root-walker-final-tests.log, /tmp/gspot-root-walker-final-native.log).",
+            "Old source filenames, imports, method names, and helper names are absent from live consumers; source/config/types ownership stays in the dedicated behavioral folders required by this repository. Canonical apply preview has no drift or configuration reconciliation changes (/tmp/gspot-root-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/002",
+        "source": "findings/areas/execution.md",
+        "line": 84,
+        "section": "Findings",
+        "finding": "| `platform/filesystem.ts`, `platform/root/reads.ts`, `platform/root/writes.ts`, `platform/safe-paths.ts` | One concept, the confined root, is spread over four files in two folders. `root/` holds only the two halves that nothing but `filesystem.ts` imports. The module that exports `openRoot` and the path rules sit outside that folder. | Move everything into `platform/root/`: `open.ts` (was filesystem.ts), `reads.ts`, `writes.ts`, `rules.ts` (was safe-paths.ts). Move `scratchFolder` to `platform/scratch.ts`. |",
+        "owner": "`platform/filesystem.ts`, `platform/root/reads.ts`, `platform/root/writes.ts`, `platform/safe-paths.ts`",
+        "location": [
+            "packages/cli/src/platform/root/open.ts",
+            "packages/cli/src/platform/root/reads.ts",
+            "packages/cli/src/platform/root/writes.ts",
+            "packages/cli/src/platform/root/rules.ts",
+            "packages/cli/src/platform/scratch.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The root factory, reads, writes, and path rules share platform/root. Scratch-folder acquisition/disposal belongs to platform/scratch. The old filesystem and safe-paths modules are deleted.",
+            "Final deterministic unit/integration verification: 2138 pass\n 2 skip\n 0 fail\n 7046 expect() calls\nRan 2140 tests across 316 files. [191.89s] (/tmp/gspot-root-owners-final-tests.log).",
+            "48 native npm/Bun/pnpm/Yarn/Python, fixer, compiler, and Vale cases passed with 441 assertions; the three Vale cases passed again after walker cleanup (/tmp/gspot-root-owners-native.log, /tmp/gspot-root-walker-final-native.log).",
+            "All 37 targeted root, command, Swift, publication, and interrupted-recovery cases passed after correcting source-path fixtures and isolating the stand-in command spec (/tmp/gspot-root-owners-repaired-tests.log).",
+            "All four TypeScript targets passed; final repository lint passed all eight checks with zero findings (/tmp/gspot-root-owners-final-types.log, /tmp/gspot-root-owners-clean-lint.json).",
+            "The final walker/root/Swift/site cases passed 51 cases, one existing skip, zero failures, with 281 assertions; native Vale passed all three cases again (/tmp/gspot-root-walker-final-tests.log, /tmp/gspot-root-walker-final-native.log).",
+            "Old source filenames, imports, method names, and helper names are absent from live consumers; source/config/types ownership stays in the dedicated behavioral folders required by this repository. Canonical apply preview has no drift or configuration reconciliation changes (/tmp/gspot-root-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/003",
+        "source": "findings/areas/execution.md",
+        "line": 85,
+        "section": "Findings",
+        "finding": "| `platform/root/writes.ts:139` `afterWrite`, `platform/root/reads.ts:75` `parentPath`, `platform/safe-paths.ts:76,86` `privateTarget`/`mutationTarget`, `platform/filesystem.ts:136-137` `read`/`readEntry` | The names say the wrong thing. `afterWrite` is the write itself. `parentPath` returns the entry's own path. `privateTarget` and `mutationTarget` throw but read as nouns (`mutationTarget` has 10 callers). `read` and `readEntry` differ only in whether a link is read as itself. | Rename to `replaceEntry`, `checkedPath`, `assertNotPrivate`, `assertMutationTarget`, and `read`/`readKeepingLinks`. |",
+        "owner": "`platform/root/writes.ts:139` `afterWrite`, `platform/root/reads.ts:75` `parentPath`, `platform/safe-paths.ts:76,86` `privateTarget`/`mutationTarget`, `platform/filesystem.ts:136-137` `read`/`readEntry`",
+        "location": ["packages/cli/src/platform/root", "packages/cli/src/types/platform/root.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "replaceEntry, checkedPath, preparedPath, assertNotPrivate, assertMutationTarget, and readKeepingLinks name their actual contracts. The second-pass checked/prepared split supersedes the boolean create argument. All callers change together without aliases.",
+            "Final deterministic unit/integration verification: 2138 pass\n 2 skip\n 0 fail\n 7046 expect() calls\nRan 2140 tests across 316 files. [191.89s] (/tmp/gspot-root-owners-final-tests.log).",
+            "48 native npm/Bun/pnpm/Yarn/Python, fixer, compiler, and Vale cases passed with 441 assertions; the three Vale cases passed again after walker cleanup (/tmp/gspot-root-owners-native.log, /tmp/gspot-root-walker-final-native.log).",
+            "All 37 targeted root, command, Swift, publication, and interrupted-recovery cases passed after correcting source-path fixtures and isolating the stand-in command spec (/tmp/gspot-root-owners-repaired-tests.log).",
+            "All four TypeScript targets passed; final repository lint passed all eight checks with zero findings (/tmp/gspot-root-owners-final-types.log, /tmp/gspot-root-owners-clean-lint.json).",
+            "The final walker/root/Swift/site cases passed 51 cases, one existing skip, zero failures, with 281 assertions; native Vale passed all three cases again (/tmp/gspot-root-walker-final-tests.log, /tmp/gspot-root-walker-final-native.log).",
+            "Old source filenames, imports, method names, and helper names are absent from live consumers; source/config/types ownership stays in the dedicated behavioral folders required by this repository. Canonical apply preview has no drift or configuration reconciliation changes (/tmp/gspot-root-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/004",
+        "source": "findings/areas/execution.md",
+        "line": 86,
+        "section": "Findings",
+        "finding": "| `platform/root/reads.ts:33-38` used from `repository/kind.ts:124`, `execution/planning/plan.ts:176`, `repository/survey.ts:64`, `repository/scopes.ts:74,101`, `tools/mise.ts:73`, `execution/tool/placeholders.ts:99`, `execution/tool/runner.ts:144` | `Root.read` is the lifecycle reader. It refuses links and hard-linked files and says \"Lifecycle destination is not a private regular file\". Yet it reads user files such as `.gitattributes`, `.prettierignore`, `package.json`, `mise.toml` and nested configurations. `readSource` (`repository/sources.ts:38`) follows links inside the root. The same file passes one reader and fails the other. Reading the code, a symlinked `.gitattributes` makes `readRepository` throw a lifecycle error. I did not run it. | Read user files only through `readSource`/`readText`. Keep `Root.read` for files gspot owns. Error text for general reads should not say \"lifecycle\". |",
+        "owner": "`platform/root/reads.ts:33-38` used from `repository/kind.ts:124`, `execution/planning/plan.ts:176`, `repository/survey.ts:64`, `repository/scopes.ts:74,101`, `tools/mise.ts:73`, `execution/tool/placeholders.ts:99`, `execution/tool/runner.ts:144`",
+        "location": [
+            "packages/cli/src/types/platform/runtime.ts",
+            "packages/cli/src/repository/scopes.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/execution/planning/plan.ts",
+            "packages/cli/src/execution/command",
+            "packages/cli/src/tools/mise.ts",
+            "packages/cli/src/tools/npm/installer.ts",
+            "packages/cli/src/tools/python/project.ts",
+            "packages/cli/src/policy/read.ts",
+            "packages/cli/src/configurations/takeover.ts",
+            "packages/cli/src/commands/init/replaced.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Authored text uses readText/readSource, accepts inside-root symbolic links and hard links, and refuses external symbolic targets. The managed .gspot configuration reader remains Root.read, and command execution tests verify its strict identity checks.",
+            "820 affected unit/integration cases passed, one existing skip, zero failures, 3,405 assertions across 130 files (/tmp/gspot-source-reads-tests.log).",
+            "All 21 final command/config-discovery cases passed, including native command execution with an authored link and refusal of a linked managed configuration (/tmp/gspot-source-reader-consumers-repaired-tests.log).",
+            "46 native npm/Bun/pnpm/Yarn, Python installation/staged execution, fixer, and JavaScript compiler cases passed with 426 assertions across nine files (/tmp/gspot-source-reads-native.log).",
+            "All four TypeScript targets passed, and repository lint passed all eight checks with zero findings (/tmp/gspot-source-reads-final-types.log, /tmp/gspot-source-reads-final-lint.json).",
+            "Canonical apply preview has no managed drift; no config generation or installation output changed (/tmp/gspot-source-reads-apply-preview.json).",
+            "Both preview and real initialization reproduced the shared setup.cfg link failure before the fix (/tmp/gspot-init-shared-links-before.log).",
+            "Initialization takes mutation snapshots only for files selected for removal; shared authored configurations remain retained and do not enter removal rechecks. Inside-root links preserve their target text, link identity, and target mode. Later edits to retained configuration survive successful setup generation.",
+            "132 affected initialization, ownership, recovery, discovery, and apply-publication cases passed, zero failures, 591 assertions across 16 files (/tmp/gspot-init-shared-links-repaired-tests.log).",
+            "All four TypeScript targets passed after correcting the added test to read the public plan property; changed-file read-only lint passed, and the repository run passed all eight lint checks with zero findings (/tmp/gspot-init-shared-links-repaired-types.log, /tmp/gspot-init-shared-links-readonly-lint.log, /tmp/gspot-init-shared-links-repository-lint.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/005",
+        "source": "findings/areas/execution.md",
+        "line": 87,
+        "section": "Findings",
+        "finding": "| `platform/filesystem.ts:185` `readText`, `repository/packages.ts:10` `manifestText`, `repository/tsconfig.ts:12` `configurationText`, `execution/fixers.ts:19` `sourceBytes` | There are five ways to read one repository file: `readText` in platform, `readSource` in repository, about 55 inline `.read(path)?.bytes.toString('utf8')` calls, plus the private copies `manifestText` (`readText` with native paths) and `sourceBytes` (`readSource` without the cache). | Put `readSource` (bytes) and `readText` (checked UTF-8) together in `repository/sources.ts`. Delete `manifestText` and `sourceBytes`. |",
+        "owner": "`platform/filesystem.ts:185` `readText`, `repository/packages.ts:10` `manifestText`, `repository/tsconfig.ts:12` `configurationText`, `execution/fixers.ts:19` `sourceBytes`",
+        "location": [
+            "packages/cli/src/types/platform/runtime.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/parsers/mise.ts",
+            "packages/cli/src/execution/fixers.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Checked UTF-8 readText and cached bytes readSource share one owner. manifestText, sourceBytes, platform readText, and old readSourceText are deleted with all consumers updated. Manifest and mise parsing receive text; inventory I/O belongs to repository/manifests. The compiler dependency boundary intentionally retains native dependency reads while authored TS configurations use readText. Fixer before/after reads remain uncached.",
+            "820 affected unit/integration cases passed, one existing skip, zero failures, 3,405 assertions across 130 files (/tmp/gspot-source-reads-tests.log).",
+            "All 21 final command/config-discovery cases passed, including native command execution with an authored link and refusal of a linked managed configuration (/tmp/gspot-source-reader-consumers-repaired-tests.log).",
+            "46 native npm/Bun/pnpm/Yarn, Python installation/staged execution, fixer, and JavaScript compiler cases passed with 426 assertions across nine files (/tmp/gspot-source-reads-native.log).",
+            "All four TypeScript targets passed, and repository lint passed all eight checks with zero findings (/tmp/gspot-source-reads-final-types.log, /tmp/gspot-source-reads-final-lint.json).",
+            "Canonical apply preview has no managed drift; no config generation or installation output changed (/tmp/gspot-source-reads-apply-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/006",
+        "source": "findings/areas/execution.md",
+        "line": 88,
+        "section": "Findings",
+        "finding": "| `platform/git.ts:63,77,90,110` | Inside the Git wrapper file, `readGitSetting` and `hooksDirectory` call `runBlocking` directly, without the Git deadline that `runGitBlocking` adds three lines above. `gitText` calls `run` directly instead of `runGit`. `gitTrimmed` is a one-line wrapper around `gitText(...).trim()`. | Send every call through `runGit`/`runGitBlocking`. Delete `gitTrimmed`; callers write `.trim()`. |",
+        "owner": "`platform/git.ts:63,77,90,110`",
+        "location": [
+            "packages/cli/src/platform/git.ts",
+            "packages/cli/src/repository/revisions/changes.ts",
+            "packages/cli/src/repository/revisions/push.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "readGitSetting and hooksDirectory use runGitBlocking; gitText uses runGit. The trim-only gitTrimmed helper is deleted; callers trim text at their actual use.",
+            "All 220 affected integration/unit cases passed with 806 assertions across 29 files, covering exact pushed objects, SHA-1/SHA-256 snapshots, new-ref exclusions via stdin, shallow/refspec failures, hook configuration, process termination, and cancellation with open stdin (/tmp/gspot-git-owners-tests.log).",
+            "All four TypeScript targets passed. Changed-file ESLint and formatting passed; repository lint passed all eight checks with zero findings (/tmp/gspot-git-owners-types.log, /tmp/gspot-git-owners-lint.log, /tmp/gspot-git-owners-repository-lint.json).",
+            "Canonical apply preview reports no drift or configuration reconciliation changes (/tmp/gspot-git-owners-preview.json).",
+            "The CLI source has no direct Git spawn outside platform/git, no gitTrimmed alias, and no duplicate snapshot gitText or hard-coded Git deadline. Installation invokes installHooks, which uses runGitBlocking; its displayed command is not a separate execution path."
+        ]
+    },
+    {
+        "id": "areas/execution/007",
+        "source": "findings/areas/execution.md",
+        "line": 89,
+        "section": "Findings",
+        "finding": "| `execution/checkout/revision.ts:19,213-226` | A private `gitText` duplicates `platform/git.ts` `gitText` with a stdin parameter and a different message. `getHeadEntries` builds its own options: a hard-coded `30_000` (the same as `GIT_TIMEOUT_MS`) and a `cwd` that `runGit` then overwrites. | Add a `stdin` option to the platform `gitText` and delete the local copy. Call `runGit(root, argv, { cancelSignal })`. |",
+        "owner": "`execution/checkout/revision.ts:19,213-226`",
+        "location": [
+            "packages/cli/src/platform/git.ts",
+            "packages/cli/src/repository/revisions/objects.ts",
+            "packages/cli/src/execution/snapshot/revision.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The shared gitText accepts stdin through GitOptions. Git-object reads use the shared binary runner; snapshot materialization uses the shared text runner without local duplicate options or deadline.",
+            "All 220 affected integration/unit cases passed with 806 assertions across 29 files, covering exact pushed objects, SHA-1/SHA-256 snapshots, new-ref exclusions via stdin, shallow/refspec failures, hook configuration, process termination, and cancellation with open stdin (/tmp/gspot-git-owners-tests.log).",
+            "All four TypeScript targets passed. Changed-file ESLint and formatting passed; repository lint passed all eight checks with zero findings (/tmp/gspot-git-owners-types.log, /tmp/gspot-git-owners-lint.log, /tmp/gspot-git-owners-repository-lint.json).",
+            "Canonical apply preview reports no drift or configuration reconciliation changes (/tmp/gspot-git-owners-preview.json).",
+            "The CLI source has no direct Git spawn outside platform/git, no gitTrimmed alias, and no duplicate snapshot gitText or hard-coded Git deadline. Installation invokes installHooks, which uses runGitBlocking; its displayed command is not a separate execution path."
+        ]
+    },
+    {
+        "id": "areas/execution/008",
+        "source": "findings/areas/execution.md",
+        "line": 90,
+        "section": "Findings",
+        "finding": "| `execution/checkout/revision.ts:21,126,158`, `repository/revisions/changes.ts:35`, `repository/revisions/refspecs.ts:87`, `execution/checkout/installed.ts:112` | Each call spreads `...(cancelSignal === undefined ? {} : { cancelSignal })` into Git options that already accept `undefined` (`types/platform/platform.ts:61`). This is ceremony. | Pass `{ cancelSignal }`. |",
+        "owner": "`execution/checkout/revision.ts:21,126,158`, `repository/revisions/changes.ts:35`, `repository/revisions/refspecs.ts:87`, `execution/checkout/installed.ts:112`",
+        "location": [
+            "packages/cli/src/repository/revisions/changes.ts",
+            "packages/cli/src/repository/revisions/objects.ts",
+            "packages/cli/src/repository/revisions/push.ts",
+            "packages/cli/src/types/repository/revisions.ts",
+            "packages/cli/src/execution/snapshot/installed.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Git callers pass cancelSignal directly, including undefined. stdin, binary output, and cancellation are preserved.",
+            "All 220 affected integration/unit cases passed with 806 assertions across 29 files, covering exact pushed objects, SHA-1/SHA-256 snapshots, new-ref exclusions via stdin, shallow/refspec failures, hook configuration, process termination, and cancellation with open stdin (/tmp/gspot-git-owners-tests.log).",
+            "All four TypeScript targets passed. Changed-file ESLint and formatting passed; repository lint passed all eight checks with zero findings (/tmp/gspot-git-owners-types.log, /tmp/gspot-git-owners-lint.log, /tmp/gspot-git-owners-repository-lint.json).",
+            "Canonical apply preview reports no drift or configuration reconciliation changes (/tmp/gspot-git-owners-preview.json).",
+            "The CLI source has no direct Git spawn outside platform/git, no gitTrimmed alias, and no duplicate snapshot gitText or hard-coded Git deadline. Installation invokes installHooks, which uses runGitBlocking; its displayed command is not a separate execution path."
+        ]
+    },
+    {
+        "id": "areas/execution/009",
+        "source": "findings/areas/execution.md",
+        "line": 91,
+        "section": "Findings",
+        "finding": "| `platform/paths.ts:150` `buildFolder` | It has one caller (`checks/language/swift/plan.ts:25`). It names a cache folder, not a path rule. | Move it beside `openBuildCache` in `checks/language/swift/cache.ts`. |",
+        "owner": "`platform/paths.ts:150` `buildFolder`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/checks/language/swift/plan.ts",
+            "tests/tools/checks/swift-build.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildFolder lives beside openBuildCache. The sole production build-plan consumer and real harness/native consumers import it directly from the Swift cache owner.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/010",
+        "source": "findings/areas/execution.md",
+        "line": 92,
+        "section": "Findings",
+        "finding": "| `platform/environment.ts:20` `miseHome`, `tools/locate.ts:61,144` | `miseHome` returns `undefined` for the default, so both callers append the same `join(homedir(), '.local', 'share', 'mise')`. | Return the default from `miseHome`. |",
+        "owner": "`platform/environment.ts:20` `miseHome`, `tools/locate.ts:61,144`",
+        "location": [
+            "packages/cli/src/platform/environment.ts",
+            "packages/cli/src/tools/locate.ts",
+            "tests/cli/platform/environment.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "miseHome resolves MISE_DATA_DIR, XDG_DATA_HOME/mise, and the home-directory default once. Both discovery consumers drop their duplicated default. Six independent expected-path cases cover precedence, absent variables, and empty overrides using the existing test environment boundary and reliable restoration.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/011",
+        "source": "findings/areas/execution.md",
+        "line": 93,
+        "section": "Findings",
+        "finding": "| `platform/code-points.ts` | A 12-line file holds one 3-line loop with three callers. | Merge it into `platform/text.ts`. |",
+        "owner": "`platform/code-points.ts`",
+        "location": ["packages/cli/src/platform/text.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The shared codePoints loop lives with text operations; the one-function code-points module is deleted and every consumer imports the actual owner.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/012",
+        "source": "findings/areas/execution.md",
+        "line": 94,
+        "section": "Findings",
+        "finding": "| `platform/text.ts` | The file is a grab bag: typo suggestions, list wording, object helpers (`compact`, `isRecord`, `valueAt`), hashing and UTF-8 checks. | Move the object helpers to `platform/objects.ts`. Keep text, hash and bytes helpers in `text.ts`. Low priority. |",
+        "owner": "`platform/text.ts`",
+        "location": [
+            "packages/cli/src/platform/objects.ts",
+            "packages/cli/src/platform/text.ts",
+            "packages/cli/src/config/platform/text.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "compact, isRecord, and valueAt live in the shared pure object owner. Text/digest/UTF-8 operations remain in text. Text suggestion/list constants live in dedicated config/platform/text, including the LIST_LIMIT comment; every mixed consumer import is split by its actual owner.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/013",
+        "source": "findings/areas/execution.md",
+        "line": 95,
+        "section": "Findings",
+        "finding": "| `parsers/sql/modules.d.ts:9-15` | The SQL folder declares types for `spdx-expression-parse` and `spdx-satisfies`, which only `checks/general/licenses.ts` uses. | Move all three declarations to `types/modules.d.ts`. |",
+        "owner": "`parsers/sql/modules.d.ts:9-15`",
+        "location": ["packages/cli/src/types/parsers/pg.d.ts", "packages/cli/src/types/checks/general/spdx.d.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "External module declarations no longer sit in SQL parser behavior. The libpg-query contract and SPDX contracts are in dedicated behavioral types owners, following the explicit repository folder decision rather than collecting unrelated declarations in one bag.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/014",
+        "source": "findings/areas/execution.md",
+        "line": 96,
+        "section": "Findings",
+        "finding": "| `parsers/references.ts` | The name says nothing. The file finds path-like tokens in Markdown prose for two checks. | Rename it to `parsers/markdown.ts`. |",
+        "owner": "`parsers/references.ts`",
+        "location": [
+            "packages/cli/src/parsers/markdown.ts",
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/checks/general/docs.ts",
+            "packages/cli/src/checks/general/structure/stale-allowlists.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The parser is named for Markdown prose. Both actual consumers import it directly; Markdown path/fence constants have their own behavioral config owner.",
+            "All 236 affected repository, source-kind/tag, Swift build/cache, SQL lexer/parser/functions, comment extraction, Markdown path/allowlist, and initialization cases passed with 761 assertions across 32 files; one existing macOS cache-override skip remains (/tmp/gspot-parser-owner-names-tests.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-parser-owner-names-types.log, /tmp/gspot-parser-owner-names-lint.log, /tmp/gspot-parser-owner-names-repository-lint.json, /tmp/gspot-parser-owner-names-preview.json).",
+            "All old parser/reader filenames and live import references are absent. Configuration constants remain in dedicated config/parsers; shared numbered-source contracts remain in dedicated types/parsers."
+        ]
+    },
+    {
+        "id": "areas/execution/015",
+        "source": "findings/areas/execution.md",
+        "line": 97,
+        "section": "Findings",
+        "finding": "| `parsers/sql/source.ts:1,48` | \"source\" names a psql lexer. The file header is really `lineEnd`'s comment. `escapedStringAt`'s comment trails a closing brace on line 48. | Rename to `sql/lexer.ts`. Add a header and put each comment on its function. |",
+        "owner": "`parsers/sql/source.ts:1,48`",
+        "location": [
+            "packages/cli/src/parsers/sql/lexer.ts",
+            "packages/cli/src/parsers/sql/statements.ts",
+            "packages/cli/src/types/checks/general/structure.ts",
+            "packages/cli/src/config/checks/general/structure.ts",
+            "packages/cli/src/config/checks/checks.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The PostgreSQL/psql lexer is named lexer. Its module header describes tokenization and position-preserving masking; each function comment sits on its declaration.",
+            "All 236 affected repository, source-kind/tag, Swift build/cache, SQL lexer/parser/functions, comment extraction, Markdown path/allowlist, and initialization cases passed with 761 assertions across 32 files; one existing macOS cache-override skip remains (/tmp/gspot-parser-owner-names-tests.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-parser-owner-names-types.log, /tmp/gspot-parser-owner-names-lint.log, /tmp/gspot-parser-owner-names-repository-lint.json, /tmp/gspot-parser-owner-names-preview.json).",
+            "All old parser/reader filenames and live import references are absent. Configuration constants remain in dedicated config/parsers; shared numbered-source contracts remain in dedicated types/parsers."
+        ]
+    },
+    {
+        "id": "areas/execution/016",
+        "source": "findings/areas/execution.md",
+        "line": 98,
+        "section": "Findings",
+        "finding": "| `repository/jsonc.ts`, `repository/tsconfig.ts` | These are generic file-format parsers used by generation, kits, lifecycle and checks. They do not describe the repository. | Move them to `parsers/`. |",
+        "owner": "`repository/jsonc.ts`, `repository/tsconfig.ts`",
+        "location": [
+            "packages/cli/src/parsers/jsonc.ts",
+            "packages/cli/src/parsers/tsconfig.ts",
+            "packages/cli/src/parsers/schema/tsconfig.ts",
+            "packages/cli/src/config/parsers/tsconfig.ts",
+            "packages/cli/src/repository/tsconfig.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pure JSONC and TypeScript/compiler parsing are under parsers. The repository owner retains only authored/dependency file access, host injection, and contextual I/O errors. The second-pass correction requires the dependency-link boundary to survive; no forwarding alias remains. Diagnostic constants remain in config by the explicit repository decision.",
+            "All 27 focused cases passed, with one existing Windows-path skip and 119 assertions across seven files (/tmp/gspot-tsconfig-owner-tests.log). Cases cover malformed/missing compiler configuration, inherited aliases, linked authored manifests/configs, declared linked dependency configs, per-scope compiler settings, and Svelte diagnostics.",
+            "All eight native JavaScript/TypeScript compiler cases passed with 67 assertions across two files. They verify solution projects, isolated deepest scopes, authored resolution/settings, private ambient-type exclusion, and absolute/symlink build-output confinement (/tmp/gspot-tsconfig-owner-native.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-tsconfig-owner-types.log, /tmp/gspot-tsconfig-owner-final-lint.log, /tmp/gspot-tsconfig-owner-repository-lint.json, /tmp/gspot-tsconfig-owner-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/017",
+        "source": "findings/areas/execution.md",
+        "line": 99,
+        "section": "Findings",
+        "finding": "| `parsers/tree-sitter.ts:9`, `parsers/sql/statements.ts:8`, `execution/checkout/revision.ts:17` | Three per-run memo caches each keep a `WeakMap<ReadCache, Map>` with their own get-or-create code and three signatures (`context?: ParseReads`, `read?: ReadCache`, `reads?: ReadCache`). | Add one `memo` map to `ReadCache` and one helper. Use it in all three. |",
+        "owner": "`parsers/tree-sitter.ts:9`, `parsers/sql/statements.ts:8`, `execution/checkout/revision.ts:17`",
+        "location": [
+            "packages/cli/src/platform/memo.ts",
+            "packages/cli/src/types/platform/reads.ts",
+            "packages/cli/src/parsers/tree-sitter.ts",
+            "packages/cli/src/parsers/sql/statements.ts",
+            "packages/cli/src/repository/revisions/objects.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/execution/run.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One run-owned memo map and a typed stable producer key replace the three module-level WeakMaps. Tree ownership and cleanup remain explicit through ParseReads.resources; SQL uses the same reads name as source/Git readers. The one stored-value assertion is justified by the internal producer/key invariant, and parsers retain no repository dependency.",
+            "Full deterministic verification passed 2149 cases, two existing platform skips, zero failures, and 7092 assertions across 318 files (/tmp/gspot-run-memo-tests.log).",
+            "All 39 focused grammar/SQL, engine-input, source-read, SHA-1/SHA-256, gitlink, dependency, and link snapshot cases passed with 209 assertions across nine files (/tmp/gspot-run-memo-focused-tests.log).",
+            "The new public parser case verifies separate TypeScript/JavaScript grammar results, independent copied handles, SQL sharing without cache collisions, copied trees surviving resource cleanup, and safe reuse after the owner disposes its cached tree.",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-run-memo-types.log, /tmp/gspot-run-memo-lint.log, /tmp/gspot-run-memo-repository-lint.json, /tmp/gspot-run-memo-preview.json).",
+            "The three WeakMap/read-cache get-or-create implementations are deleted. Every execution/test cache constructor supplies memo explicitly; correction and snapshot boundaries create fresh source and memo maps together."
+        ]
+    },
+    {
+        "id": "areas/execution/018",
+        "source": "findings/areas/execution.md",
+        "line": 100,
+        "section": "Findings",
+        "finding": "| `repository/tree.ts:39-66,89-94` | The repository builder parses Swift itself with `parserFor` and `tree.delete()` instead of `parseSource`. Tag logic lives here instead of in `tags.ts`. \"tree\" also clashes with Git trees and tree-sitter trees. | Move `swiftSourceTags` to `repository/tags.ts` and use `parseSource`. Rename `tree.ts` to `read.ts`. |",
+        "owner": "`repository/tree.ts:39-66,89-94`",
+        "location": ["packages/cli/src/repository/read.ts", "packages/cli/src/repository/tags.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The repository inventory builder is named read. Swift tags belong to tags and parse through parseSource, disposing the returned tree in finally. The source classification and scope contracts are preserved; no private parser creation or tree alias remains in the builder.",
+            "All 236 affected repository, source-kind/tag, Swift build/cache, SQL lexer/parser/functions, comment extraction, Markdown path/allowlist, and initialization cases passed with 761 assertions across 32 files; one existing macOS cache-override skip remains (/tmp/gspot-parser-owner-names-tests.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-parser-owner-names-types.log, /tmp/gspot-parser-owner-names-lint.log, /tmp/gspot-parser-owner-names-repository-lint.json, /tmp/gspot-parser-owner-names-preview.json).",
+            "All old parser/reader filenames and live import references are absent. Configuration constants remain in dedicated config/parsers; shared numbered-source contracts remain in dedicated types/parsers."
+        ]
+    },
+    {
+        "id": "areas/execution/019",
+        "source": "findings/areas/execution.md",
+        "line": 101,
+        "section": "Findings",
+        "finding": "| `repository/locked-packages.ts`, `tools/packages/locks.ts` | Two modules parse npm, Bun, pnpm and Yarn lockfiles with separate zod schemas. `locked-packages.ts` has one caller (`checks/general/structure/stale-allowlists.ts`). | Put the per-format readers in `parsers/lockfiles.ts`. Keep only `lockMatches` and the registry rewrites in the npm tool code. |",
+        "owner": "`repository/locked-packages.ts`, `tools/packages/locks.ts`",
+        "location": [
+            "packages/cli/src/parsers/lockfiles.ts",
+            "packages/cli/src/parsers/schema/lockfiles.ts",
+            "packages/cli/src/types/parsers/lockfiles.ts",
+            "packages/cli/src/config/parsers/lockfiles.ts",
+            "packages/cli/src/tools/npm/locks.ts",
+            "packages/cli/src/config/tools/npm.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One supported-format syntax dispatcher and shared schemas serve resolved identities and npm lock operations. Root pin extraction is pure parsing; matching and registry rewrites live in the npm owner. The old repository and duplicate npm parser implementations are absent. All constants/types follow the repository folder decision. The redundant ROOT_DEPENDENCIES dispatch and one-caller pnpm forwarding function are deleted.",
+            "All 369 focused parser, repository, generation, manifest/manager, license-lock, and freshness cases passed with 1628 assertions across 68 files (/tmp/gspot-lock-parser-owner-tests.log). Existing npm v1/v3 alias/scoped/nested-version and Yarn alias/Berry identity assertions survive the test move; pnpm, Bun, and Python formats remain covered.",
+            "All 27 native npm/Bun/pnpm/Yarn cases passed with 288 assertions across five files. They cover stale/missing lock resolution, malformed-input refusal and repair, immutable clones/reinstall, authored configuration preservation, registry authentication, and failure/concurrent-edit preservation (/tmp/gspot-lock-parser-owner-native.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-lock-parser-owner-types.log, /tmp/gspot-lock-parser-owner-names-lint.log, /tmp/gspot-lock-parser-owner-repository-lint.json, /tmp/gspot-lock-parser-owner-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/020",
+        "source": "findings/areas/execution.md",
+        "line": 102,
+        "section": "Findings",
+        "finding": "| `repository/packages.ts` | The file is named for packages but reads every manifest kind (package.json, pyproject.toml, Pipfile, requirements, Package.swift). Its export is `readManifests`. | Rename it to `repository/manifests.ts`. |",
+        "owner": "`repository/packages.ts`",
+        "location": ["packages/cli/src/repository/manifests.ts", "packages/cli/src/parsers/packages.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Repository manifest I/O is named manifests. Format parsing remains under parsers/packages. The old repository/packages module and aliases are absent; supported manifest inventory and source-read cases pass in the full run.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/021",
+        "source": "findings/areas/execution.md",
+        "line": 103,
+        "section": "Findings",
+        "finding": "| `repository/packages.ts:227`, `repository/survey.ts:62-68`, `repository/scopes.ts:108`, `tools/inspect.ts:67`, `tools/locate.ts:69-80` | package.json is read five ways: validated (`readPackageManifest`), raw `JSON.parse`, inline schema parse, and two casts `as Package`. | Read repository manifests through `readPackageManifest`, with a passthrough for `simple-git-hooks`. Read installed package.json through one `installedPackage(path)` in `tools/locate.ts`. |",
+        "owner": "`repository/packages.ts:227`, `repository/survey.ts:62-68`, `repository/scopes.ts:108`, `tools/inspect.ts:67`, `tools/locate.ts:69-80`",
+        "location": [
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/parsers/schema/packages.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/repository/scopes.ts",
+            "packages/cli/src/config/generation/typescript.ts",
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/config/generation/prose.ts",
+            "packages/cli/src/config/generation/pointers.ts",
+            "packages/cli/src/config/generation/headers.ts",
+            "packages/cli/src/config/generation/bunfig.ts",
+            "packages/cli/src/config/platform/locations.ts",
+            "packages/cli/src/config/generation/templates.ts",
+            "packages/cli/src/config/generation/ci.ts",
+            "packages/cli/src/config/tools/mise.ts",
+            "packages/cli/src/tools/locate.ts",
+            "packages/cli/src/tools/inspect.ts",
+            "packages/cli/src/tools/npm/installer.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Optional authored package reads share readPackageManifest and its source boundary. Expo and tracked dependency checks explicitly retain required-missing errors. The loose schema preserves authored extension fields; public hook detection is verified for null, empty, and populated simple-git-hooks values. Installed executable metadata and library inspection share installedPackage. It receives the already-owned Root boundary for private installations and uses native reads for host metadata, preserving strict managed-link safeguards without a new forwarding wrapper.",
+            "Full deterministic verification passed 2152 cases, two existing platform skips, zero failures, and 7103 assertions across 318 files (/tmp/gspot-package-read-owner-tests.log).",
+            "All ten native npm/Bun/pnpm/Yarn project and refusal cases passed with 68 assertions across two files, covering installed version inspection, authored input/lock preservation, reinstall, lifecycle-script refusal, native-wrapper failure, registry failure, and concurrent-input edits (/tmp/gspot-package-read-owner-native.log).",
+            "All four TypeScript targets passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-package-read-owner-types.log, /tmp/gspot-package-read-owner-repository-lint.json, /tmp/gspot-package-read-owner-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/022",
+        "source": "findings/areas/execution.md",
+        "line": 104,
+        "section": "Findings",
+        "finding": "| `repository/tracked.ts:45,208`, `execution/checkout/revision.ts:125` | `git ls-files --stage -z` runs and is parsed twice in `tracked.ts`. On Windows, one `trackedEntries` call runs it twice. `revision.ts` parses the same output a third way. | One stage-listing reader that returns mode and path, used by all three. |",
+        "owner": "`repository/tracked.ts:45,208`, `execution/checkout/revision.ts:125`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/023",
+        "source": "findings/areas/execution.md",
+        "line": 105,
+        "section": "Findings",
+        "finding": "| `repository/tracked.ts:145-219` | The same block appears four times: exit 0 splits on NUL, outside Git returns nothing, else throw \"Git X failed in root\". It is in `listedPaths`, `indexedPaths`, `submodulePaths` and `isGitRepository`. | One helper. |",
+        "owner": "`repository/tracked.ts:145-219`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/024",
+        "source": "findings/areas/execution.md",
+        "line": 106,
+        "section": "Findings",
+        "finding": "| `repository/tracked.ts:86-96` `isOutsideGit` | A default parameter spawns Git, and an eslint-disable comment justifies it. | Make the probe result a required argument. Add `probeWorkTree(root)` for callers without one. |",
+        "owner": "`repository/tracked.ts:86-96` `isOutsideGit`",
+        "location": ["packages/cli/src/repository/root.ts", "packages/cli/src/repository/tracked.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "isOutsideGit requires the completed probe. probeWorkTree owns the shared stable-locale query, called explicitly at the actual root/inventory boundary; no default argument spawns Git.",
+            "Final affected repository/command/hook verification passed all 310 cases with 1488 assertions across 49 files, including every root-consuming command, linked worktrees, corrupted/missing Git, exact pushed objects, refspec exclusions, stdin, cancellation, and hook retention (/tmp/gspot-git-root-push-final-tests.log).",
+            "All four TypeScript targets passed. Final repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-git-root-push-final-types.log, /tmp/gspot-git-root-push-final-repository-lint.json, /tmp/gspot-git-root-push-preview.json).",
+            "The exact parent-replacement message and ENOTDIR code pass for direct and deeply nested tracked paths. The focused recovery/root/refspec run passed all 23 cases with 102 assertions (/tmp/gspot-git-parent-diagnostic-tests.log).",
+            "No root-discovery import remains under tracked; no refspecs module, test-only fetched-object export, unused marker argument, redundant .git path guards, undefined hash guard, or gitHash variable remains in live consumers."
+        ]
+    },
+    {
+        "id": "areas/execution/025",
+        "source": "findings/areas/execution.md",
+        "line": 107,
+        "section": "Findings",
+        "finding": "| `repository/tracked.ts:159,174` | `findRoot` (12 importers) and `isGitRepository` find the repository root. They do not list tracked files. Importers import `findRoot` from \"tracked\". | Move both to `repository/root.ts`. |",
+        "owner": "`repository/tracked.ts:159,174`",
+        "location": [
+            "packages/cli/src/repository/root.ts",
+            "packages/cli/src/commands",
+            "packages/cli/src/generation/hooks.ts",
+            "packages/cli/src/repository/read.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "findRoot and isGitRepository belong to repository/root. All command, generation, repository, and integration consumers import the actual owner; tracked owns only inventory behavior.",
+            "Final affected repository/command/hook verification passed all 310 cases with 1488 assertions across 49 files, including every root-consuming command, linked worktrees, corrupted/missing Git, exact pushed objects, refspec exclusions, stdin, cancellation, and hook retention (/tmp/gspot-git-root-push-final-tests.log).",
+            "All four TypeScript targets passed. Final repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-git-root-push-final-types.log, /tmp/gspot-git-root-push-final-repository-lint.json, /tmp/gspot-git-root-push-preview.json).",
+            "The exact parent-replacement message and ENOTDIR code pass for direct and deeply nested tracked paths. The focused recovery/root/refspec run passed all 23 cases with 102 assertions (/tmp/gspot-git-parent-diagnostic-tests.log).",
+            "No root-discovery import remains under tracked; no refspecs module, test-only fetched-object export, unused marker argument, redundant .git path guards, undefined hash guard, or gitHash variable remains in live consumers."
+        ]
+    },
+    {
+        "id": "areas/execution/026",
+        "source": "findings/areas/execution.md",
+        "line": 108,
+        "section": "Findings",
+        "finding": "| `repository/tree.ts:103-111`, `repository/scopes.ts:19,196-197,222-224,238-243,37`, `repository/packages.ts:248` | Scope entries are built in three places, with the root scope literal written twice. The dedupe-by-path loop is written twice. The `.gspot`/`node_modules` filter is copied between scopes and manifests. | `scopes.ts` exports `scopeEntry()`, `ROOT_SCOPE` and `uniqueByPath()`. Add one `isToolingPath` predicate. |",
+        "owner": "`repository/tree.ts:103-111`, `repository/scopes.ts:19,196-197,222-224,238-243,37`, `repository/packages.ts:248`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/027",
+        "source": "findings/areas/execution.md",
+        "line": 109,
+        "section": "Findings",
+        "finding": "| `repository/revisions/refspecs.ts`, `repository/revisions/changes.ts:1` | `refspecs.ts` has one importer, `push.ts`; merged they are about 264 lines. The header of `changes.ts` covers staged files only, but the file also holds `getChanged` and `getPushBase`. | Merge `refspecs.ts` into `push.ts`. Fix the header of `changes.ts`. |",
+        "owner": "`repository/revisions/refspecs.ts`, `repository/revisions/changes.ts:1`",
+        "location": [
+            "packages/cli/src/repository/revisions/push.ts",
+            "packages/cli/src/repository/revisions/changes.ts",
+            "packages/cli/src/config/repository/revisions.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Fetch mapping logic is merged into push selection, and getFetchedObjects is private. The refspec test asserts public selectPush rejection, empty fetched history, and restored history after a negative mapping. The changes header names staged, changed, and upstream-push responsibilities.",
+            "Final affected repository/command/hook verification passed all 310 cases with 1488 assertions across 49 files, including every root-consuming command, linked worktrees, corrupted/missing Git, exact pushed objects, refspec exclusions, stdin, cancellation, and hook retention (/tmp/gspot-git-root-push-final-tests.log).",
+            "All four TypeScript targets passed. Final repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-git-root-push-final-types.log, /tmp/gspot-git-root-push-final-repository-lint.json, /tmp/gspot-git-root-push-preview.json).",
+            "The exact parent-replacement message and ENOTDIR code pass for direct and deeply nested tracked paths. The focused recovery/root/refspec run passed all 23 cases with 102 assertions (/tmp/gspot-git-parent-diagnostic-tests.log).",
+            "No root-discovery import remains under tracked; no refspecs module, test-only fetched-object export, unused marker argument, redundant .git path guards, undefined hash guard, or gitHash variable remains in live consumers."
+        ]
+    },
+    {
+        "id": "areas/execution/028",
+        "source": "findings/areas/execution.md",
+        "line": 110,
+        "section": "Findings",
+        "finding": "| `tools/packages/` | \"packages\" also means Vale packages (`tools/vale.ts`) and manifests (`repository/packages.ts`). `environment.ts` clashes with `platform/environment.ts`. `identity.ts` and `commands.ts` say nothing. | Rename to `tools/npm/` with `registry.ts`, `manager.ts`, `install.ts`. |",
+        "owner": "`tools/packages/`",
+        "location": [
+            "packages/cli/src/tools/npm/installer.ts",
+            "packages/cli/src/tools/npm/registry.ts",
+            "packages/cli/src/tools/npm/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The npm installation owner now has manager, registry, and install modules. All consumers and native tool-suite paths use the current owners; the former identity/environment/commands files are deleted.",
+            "85 focused cases passed, 297 assertions, 13 files (/tmp/gspot-package-manager-tests.log).",
+            "27 native tools cases passed, 288 assertions, 5 files: npm, Bun, pnpm, Yarn, registry authentication, refusal redaction, lock preparation, clone restoration, and runner choices (/tmp/gspot-package-manager-native-tools.log).",
+            "All four TypeScript targets passed (/tmp/gspot-package-manager-types.log); focused ESLint and Prettier are clean after the import-order repair (/tmp/gspot-package-manager-import-lint.log, /tmp/gspot-package-manager-import-format.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/029",
+        "source": "findings/areas/execution.md",
+        "line": 111,
+        "section": "Findings",
+        "finding": "| `tools/packages/identity.ts:55,67,90`, `execution/session.ts:53`, `tools/packages/commands.ts`, `tools/packages/project.ts` | \"Package manager\" has four names: `PackageTool`, `packageTool()`, `packageClient`, `client`. In this codebase \"tool\" already means a linter. | Use `PackageManager`, `packageManager()` and `parsePackageManager` everywhere. |",
+        "owner": "`tools/packages/identity.ts:55,67,90`, `execution/session.ts:53`, `tools/packages/commands.ts`, `tools/packages/project.ts`",
+        "location": [
+            "packages/cli/src/types/parsers/packages.ts",
+            "packages/cli/src/parsers/schema/packages.ts",
+            "packages/cli/src/tools/npm",
+            "packages/cli/src/execution/session.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "PackageManager, PackageManagerIdentity, PackageManagerDeclaration, packageManager, parsePackageManager, and manager fields are used consistently across production, parsers, generation, types, and tests, with no old-name aliases.",
+            "85 focused cases passed, 297 assertions, 13 files (/tmp/gspot-package-manager-tests.log).",
+            "27 native tools cases passed, 288 assertions, 5 files: npm, Bun, pnpm, Yarn, registry authentication, refusal redaction, lock preparation, clone restoration, and runner choices (/tmp/gspot-package-manager-native-tools.log).",
+            "All four TypeScript targets passed (/tmp/gspot-package-manager-types.log); focused ESLint and Prettier are clean after the import-order repair (/tmp/gspot-package-manager-import-lint.log, /tmp/gspot-package-manager-import-format.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/030",
+        "source": "findings/areas/execution.md",
+        "line": 112,
+        "section": "Findings",
+        "finding": "| `tools/packages/commands.ts:143,191` | `packageCommand` runs the manager. `packageInstallCommand` only returns argv. The names suggest the opposite. | Rename them to `runPackageManager` and `installArgv`. |",
+        "owner": "`tools/packages/commands.ts:143,191`",
+        "location": ["packages/cli/src/tools/npm/install.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "runPackageManager executes the selected native manager; installArgv returns its literal immutable-installation arguments. Callers and naming contracts distinguish execution from argument construction.",
+            "85 focused cases passed, 297 assertions, 13 files (/tmp/gspot-package-manager-tests.log).",
+            "27 native tools cases passed, 288 assertions, 5 files: npm, Bun, pnpm, Yarn, registry authentication, refusal redaction, lock preparation, clone restoration, and runner choices (/tmp/gspot-package-manager-native-tools.log).",
+            "All four TypeScript targets passed (/tmp/gspot-package-manager-types.log); focused ESLint and Prettier are clean after the import-order repair (/tmp/gspot-package-manager-import-lint.log, /tmp/gspot-package-manager-import-format.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/031",
+        "source": "findings/areas/execution.md",
+        "line": 113,
+        "section": "Findings",
+        "finding": "| `tools/packages/commands.ts:148-151`, `tools/packages/yarn.ts:17` | The Yarn Berry test runs twice in a row. `YARN_REGISTRY` is deleted, then `yarnSettings` deletes it again. | Use one branch and one delete. |",
+        "owner": "`tools/packages/commands.ts:148-151`, `tools/packages/yarn.ts:17`",
+        "location": ["packages/cli/src/tools/npm/install.ts", "packages/cli/src/tools/npm/yarn.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One Yarn Berry branch normalizes its environment, validates the exact manager version, and reads Yarn settings. YARN_REGISTRY is deleted once, before either native Yarn command. Classic managers keep their preflight version check.",
+            "98 focused tests passed, zero failures, 307 assertions, 14 files; the readonly test-data correction then passed its seven cases (/tmp/gspot-registry-guards-tests.log, /tmp/gspot-registry-guards-repaired-test.log).",
+            "34 actual npm/Bun/pnpm/Yarn/Python installation cases passed, zero failures, 350 assertions, six files (/tmp/gspot-registry-guards-native-tools.log).",
+            "Yarn 4.12.0 was selected explicitly through mise and passed all five Yarn lock, clone, restoration, and dependency-freshness cases, 58 assertions (/tmp/gspot-yarn-berry-version.log, /tmp/gspot-registry-guards-native-yarn-berry.log).",
+            "All four TypeScript targets passed after the readonly fixture correction; repository lint passed all eight checks with zero findings (/tmp/gspot-registry-guards-types-final.log, /tmp/gspot-registry-guards-repository-lint.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/032",
+        "source": "findings/areas/execution.md",
+        "line": 114,
+        "section": "Findings",
+        "finding": "| `tools/packages/commands.ts:51-62,156`, `tools/python.ts:120-131,151` | npm and uv each copy the registry-password guard: `[url.password, decodeURIComponent(url.password)]` and `lock.includes(v) \\|\\| lock.includes(encodeURIComponent(v))`. | Put `registryPasswords()` and `assertLockHasNoCredentials()` in `tools/credentials.ts`. |",
+        "owner": "`tools/packages/commands.ts:51-62,156`, `tools/python.ts:120-131,151`",
+        "location": [
+            "packages/cli/src/parsers/credentials.ts",
+            "packages/cli/src/tools/credentials.ts",
+            "packages/cli/src/parsers/python/tools.ts",
+            "packages/cli/src/tools/python/project.ts",
+            "packages/cli/src/tools/npm/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The shared registryPasswords parser extracts encoded/decoded passwords. npm and Python lock validation share assertLockHasNoCredentials while retaining their exact error classes and messages. The parser lives under parsers, as explicitly required for this repository; lock acquisition validation belongs to tools.",
+            "98 focused tests passed, zero failures, 307 assertions, 14 files; the readonly test-data correction then passed its seven cases (/tmp/gspot-registry-guards-tests.log, /tmp/gspot-registry-guards-repaired-test.log).",
+            "34 actual npm/Bun/pnpm/Yarn/Python installation cases passed, zero failures, 350 assertions, six files (/tmp/gspot-registry-guards-native-tools.log).",
+            "Yarn 4.12.0 was selected explicitly through mise and passed all five Yarn lock, clone, restoration, and dependency-freshness cases, 58 assertions (/tmp/gspot-yarn-berry-version.log, /tmp/gspot-registry-guards-native-yarn-berry.log).",
+            "All four TypeScript targets passed after the readonly fixture correction; repository lint passed all eight checks with zero findings (/tmp/gspot-registry-guards-types-final.log, /tmp/gspot-registry-guards-repository-lint.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/033",
+        "source": "findings/areas/execution.md",
+        "line": 115,
+        "section": "Findings",
+        "finding": "| `tools/python.ts:103-117,256-263,274-280` | The same relative-URL resolution is written twice, for `find-links` and `index`. `pythonInstallSteps` and `installPythonProject` repeat the read, validate, match-or-throw-SETUP block. | Use one local helper for each. |",
+        "owner": "`tools/python.ts:103-117,256-263,274-280`",
+        "location": ["packages/cli/src/parsers/python/tools.ts", "packages/cli/src/tools/python/project.ts"],
+        "status": "open",
+        "outcome": null,
+        "verification": [
+            "Relative find-links and index locations now use indexLocation; URL patterns belong to config/parsers/python-tools. Existing UV precedence/local-path cases and native Python installation cases pass. The separate read/validate/match planning and installation portion remains open."
+        ]
+    },
+    {
+        "id": "areas/execution/034",
+        "source": "findings/areas/execution.md",
+        "line": 116,
+        "section": "Findings",
+        "finding": "| `tools/inspect.ts:44`, `tools/packages/commands.ts:79,121`, `tools/packages/identity.ts:85` | A tool's `--version` is run four ways: sync with `VERSION_TIMEOUT_MS` and only `NO_COLOR`, async with the tool deadline, and twice as `<manager> --version` for the same manager in one install. | One `readToolVersion` in `inspect.ts`. `runPackageManager` reuses the version `packageManager()` already read. |",
+        "owner": "`tools/inspect.ts:44`, `tools/packages/commands.ts:79,121`, `tools/packages/identity.ts:85`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/035",
+        "source": "findings/areas/execution.md",
+        "line": 117,
+        "section": "Findings",
+        "finding": "| `tools/inspect.ts:1,224,237` | The header covers only version parsing. The file also locates tools, looks up pins and builds install hints. `installHint` is exported, but no other file or test uses it. | Move `toolPin` to `pins.ts`. Unexport `installHint`. Fix the header. |",
+        "owner": "`tools/inspect.ts:1,224,237`",
+        "location": ["packages/cli/src/tools/inspect.ts", "packages/cli/src/tools/pins.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "toolPin belongs to tools/pins; installHint is private and the inspect header names executable discovery, version inspection, and acquisition guidance. The former configurations/tools file is deleted; the shared command-name calculation remains with pin metadata. Applicability calculations belong to execution/planning/requirements, removing the planner/pins dependency cycle without suppressing it.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/036",
+        "source": "findings/areas/execution.md",
+        "line": 118,
+        "section": "Findings",
+        "finding": "| `tools/inspect.ts:182-190`, `tools/vale.ts:131` | `locateTool` reads `gspot.toml` and every kit manifest again to find one executable. It copies the `isExternal`/roots logic of `inspectUncached` (`inspect.ts:110-111`). Its only caller, `installPackages`, is called only by `installProsePackages`, which already holds the session. | Pass the session and use `inspectTool`. Delete `locateTool`. |",
+        "owner": "`tools/inspect.ts:182-190`, `tools/vale.ts:131`",
+        "location": ["packages/cli/src/tools/vale.ts", "packages/cli/src/tools/inspect.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Vale acquisition receives the existing Session and uses inspectTool with its declarations/cache. locateTool is deleted with every caller updated. The second-pass correction is retained: manifests were cached per process, so the removed duplicate disk read was policy; direct host-discovery and pending-installation assertions remain covered through inspection.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/037",
+        "source": "findings/areas/execution.md",
+        "line": 119,
+        "section": "Findings",
+        "finding": "| `tools/vale.ts:137` | `vale sync` runs through raw `spawn.run`, with no deadline and no tool environment. Every other tool run goes through `runToolCommand`. | Use `runToolCommand` (`runTool`). |",
+        "owner": "`tools/vale.ts:137`",
+        "location": ["packages/cli/src/tools/vale.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Vale sync uses runTool with the root view’s effective deadline and command cancellation, including reasoned timeout values. It receives the shared output environment. Canceled/timed-out/error runs preserve installed styles, redact credentials, and dispose temporary projects; corrected runs replace styles successfully.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/038",
+        "source": "findings/areas/execution.md",
+        "line": 120,
+        "section": "Findings",
+        "finding": "| `tools/vale.ts:102` `styleFiles` | It hand-rolls the recursive walk that `walkRoot` provides. `generation/vale-styles.ts:29` exports another `styleFiles` with a different meaning. | Build it on `walkRoot` and rename it `listStyleFiles`. |",
+        "owner": "`tools/vale.ts:102` `styleFiles`",
+        "location": ["packages/cli/src/tools/vale.ts", "packages/cli/src/execution/snapshot/installed.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "listStyleFiles uses walkRoot. Every consumer is updated, including snapshot dependency copying. Link-safety and pruning assertions remain intact. Generation’s styleFiles keeps its distinct generated-output meaning.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/039",
+        "source": "findings/areas/execution.md",
+        "line": 121,
+        "section": "Findings",
+        "finding": "| `tools/vale.ts:14,29,80,90,119,130` | `packageDirectories`, `packageFolder` and `packageFolders` are three different things. At call sites (`lifecycle/apply.ts`, `checks/general/prose/vale.ts`), `hasPackages`, `installPackages` and `removePackages` read as npm. | Rename to `configuredPackages`, `folderOfFile`, `installedPackageFolders` and `hasValePackages`/`installValePackages`/`removeValePackages`. |",
+        "owner": "`tools/vale.ts:14,29,80,90,119,130`",
+        "location": [
+            "packages/cli/src/tools/vale.ts",
+            "packages/cli/src/parsers/vale.ts",
+            "packages/cli/src/config/parsers/vale.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Names now distinguish configuredPackages, folderOfFile, installedPackageFolders, hasValePackages, installValePackages, and removeValePackages. Vale assignment parsing uses the existing parser’s ordered-section reader, with patterns/auxiliary package folders in config/parsers. No old-name aliases remain.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/040",
+        "source": "findings/areas/execution.md",
+        "line": 122,
+        "section": "Findings",
+        "finding": "| `types/tools/tools.ts:12,63`, `tools/pins.ts:12`, `tools/installed-files.ts:55` | `InstallationKind` and `PrivateKind` are the same `'npm' or 'python'` union. Two more files spell it inline. | Keep one type. |",
+        "owner": "`types/tools/tools.ts:12,63`, `tools/pins.ts:12`, `tools/installed-files.ts:55`",
+        "location": ["packages/cli/src/types/tools/install.ts", "packages/cli/src/tools/installed-files.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "InstallationKind is the single npm/Python installation union. PrivateKind is deleted; discovery and complete installation reads use the same contract.",
+            "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
+            "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
+            "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
+            "All four TypeScript targets passed after the reasoned-deadline correction. Read-only format/lint checks are clean across the moved owners, with the two final inspection-test imports verified separately (/tmp/gspot-vale-root-views-types.log, /tmp/gspot-vale-owners-readonly-format.log, /tmp/gspot-vale-owners-readonly-lint.log, /tmp/gspot-vale-inspect-readonly-format.log, /tmp/gspot-vale-inspect-lint-fix.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/041",
+        "source": "findings/areas/execution.md",
+        "line": 123,
+        "section": "Findings",
+        "finding": "| `execution/tool/` and `tools/`, `platform/spawn.ts:213`, `tools/command.ts:14`, `execution/tool/runner.ts:252,283`, `execution/engines.ts:113` | `execution/tool/` sits beside `tools/`. Five run functions swap the same words: `run`, `runToolCommand`, `runToolCheck`, `runCheckCommand`, `runEngineCheck`. The word \"adapter\" (`adapterTool`) appears only in `runner.ts`; the registry says engines and runners. | Rename `execution/tool/` to `execution/command/` and `execution/output/`. Rename `runToolCommand` to `runTool`, `runToolCheck` to `runCommandCheck`, `runCheckCommand` to `runEngineTool`, and `adapterTool` to `engineTool`. |",
+        "owner": "`execution/tool/` and `tools/`, `platform/spawn.ts:213`, `tools/command.ts:14`, `execution/tool/runner.ts:252,283`, `execution/engines.ts:113`",
+        "location": [
+            "packages/cli/src/execution/engines.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/execution/run.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/types/execution/command.ts",
+            "packages/cli/src/types/execution/output.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/execution/session.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Command execution now uses runCommandCheck(session, planned, options), runEngineTool, and engineTool. Executable.run passes the same named options contract; getCheckRunner returns runCommandCheck directly instead of allocating the forwarding toolCheck function. Command, output, and snapshot contracts live in their dedicated types/execution owners; the mixed types/execution/tool.ts is deleted and every consumer is updated without aliases.",
+            "The broad unit/integration run passed 2,099 cases with two explicit skips and one new-fixture failure: the output test looked up the removed general configuration. The corrected fixture and all affected output/runner/Python convention cases then passed 88 cases with zero failures and 420 assertions (/tmp/gspot-command-owner-unit-integration-final.log, /tmp/gspot-command-owner-repaired-tests.log).",
+            "Native Markdown/spelling structured reports passed two cases with 27 assertions, retaining unusual filenames, Unicode columns, filename findings, forbidden-word findings, all declared exit handling, and corrected states. Their subprocesses now use the shared remaining-budget runner (/tmp/gspot-command-owner-native-reports-final.log).",
+            "All four TypeScript targets passed; the root target also passed after the native harness change. Repository-wide lint passed all eight checks with zero findings across five ESLint scopes and 1,567 formatted files. The repaired output fixture and native file also pass focused read-only ESLint (/tmp/gspot-worker-command-owners-types.log, /tmp/gspot-command-owner-final-root-types.log, /tmp/gspot-command-owner-repository-lint.json, /tmp/gspot-command-output-fixture-lint.log, /tmp/gspot-command-native-lint-final.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/042",
+        "source": "findings/areas/execution.md",
+        "line": 124,
+        "section": "Findings",
+        "finding": "| `execution/tool/formats.ts:121-142`, `execution/tool/reports.ts`, `execution/tool/json.ts` | Output parsing is split over three files. The ESLint parser is a named-tool report, like markdownlint, typos and TruffleHog, yet it sits in `formats.ts`. | `execution/output/parse.ts` (dispatcher, regex, grouped, lines), `json.ts`, and `reports.ts` with ESLint added. |",
+        "owner": "`execution/tool/formats.ts:121-142`, `execution/tool/reports.ts`, `execution/tool/json.ts`",
+        "location": [
+            "packages/cli/src/parsers/output/parse.ts",
+            "packages/cli/src/parsers/output/json.ts",
+            "packages/cli/src/parsers/output/reports.ts",
+            "packages/cli/src/types/parsers/output.ts",
+            "packages/cli/src/config/parsers/output.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The dispatcher, generic JSON parser, and named-tool reports use one parsing owner. ESLint now joins markdownlint, typos, and TruffleHog in reports through eslintFindings. Parsing stays under parsers per the explicit user correction; types and constants stay in their dedicated folders.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/043",
+        "source": "findings/areas/execution.md",
+        "line": 125,
+        "section": "Findings",
+        "finding": "| `execution/tool/findings.ts:93,113,177`, `execution/tool/runner.ts:74`, `execution/finding.ts` | Five of seven exports classify failures, not findings. `isCrash` only wraps `isToolBroken`, which is exported only for tests. Both files define a private `parsedFindings` with different meanings. `finding.ts` and `tool/findings.ts` sit one folder apart. | Rename the file `command/failures.ts` and fold `isCrash` into `isToolBroken`. Rename the private function in `runner.ts` to `findingsOrNote`. |",
+        "owner": "`execution/tool/findings.ts:93,113,177`, `execution/tool/runner.ts:74`, `execution/finding.ts`",
+        "location": [
+            "packages/cli/src/execution/command/failures.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/config/execution/command.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Shared executionFailure, hasToolError, and bounded diagnostics live in command/failures. Output retains actual interpretation/attribution. The redundant isCrash wrapper and test-only isToolBroken export are absent; the classifier is private and the runner uses findingsOrNote. All callers import actual owners without forwarding aliases.",
+            "The full deterministic unit/integration run passed 2147 cases, two existing platform skips, zero failures, and 7072 assertions across 317 files (/tmp/gspot-shared-owners-tests.log).",
+            "All eight native report, partial-output, actionlint, spelling, and XCTest/xccov coverage cases passed with 73 assertions across five files (/tmp/gspot-shared-owners-native.log).",
+            "All four TypeScript targets passed. Changed-file ESLint/formatting and final repository lint passed; all eight repository checks report zero findings (/tmp/gspot-shared-owners-types.log, /tmp/gspot-shared-owners-lint.log, /tmp/gspot-mise-home-lint.log, /tmp/gspot-shared-owners-repository-lint.json).",
+            "Canonical apply preview reports no managed drift. No deleted code-points module imports, old text/object helper imports, buildFolder path-owner imports, or old output-owner failure imports remain in live consumers (/tmp/gspot-shared-owners-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/044",
+        "source": "findings/areas/execution.md",
+        "line": 126,
+        "section": "Findings",
+        "finding": "| `execution/tool/runner.ts:128-131,188-194`, `execution/fixers.ts:135` | Three places decide whether a tool can run, each with its own state list and message. | One `toolProblem(tool, inspection)` used by all three. |",
+        "owner": "`execution/tool/runner.ts:128-131,188-194`, `execution/fixers.ts:135`",
+        "location": [
+            "packages/cli/src/tools/inspect.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/execution/fixers.ts",
+            "packages/cli/src/types/tools/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "toolAvailability owns usable/missing/outdated/error classification for command checks, fixers and engine tools; diagnostics retain actual tool acquisition hints.",
+            "Current-plugin ESLint:10 source files,0 errors/0 warnings (/tmp/gspot-execution-consolidation-eslint.json); CLI typecheck0 (/tmp/gspot-execution-consolidation-cli-types.log).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/execution/045",
+        "source": "findings/areas/execution.md",
+        "line": 127,
+        "section": "Findings",
+        "finding": "| `execution/tool/runner.ts:160,163,199-202,269`, `execution/fixers.ts:98-102,133,145` | `prepareCommand` runs once only to learn `env` and `cwd`, then again for the real run, and a third time for the reported argv. Each run substitutes and batches every file. The isolated-workspace file list is built the same way in both files. | Split `commandEnvironment(session, planned)` from argv building. Add one `isolatedFiles(session, planned, command)`. |",
+        "owner": "`execution/tool/runner.ts:160,163,199-202,269`, `execution/fixers.ts:98-102,133,145`",
+        "location": [
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/execution/command/placeholders.ts",
+            "packages/cli/src/execution/fixers.ts",
+            "packages/cli/src/types/execution/command.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "commandEnvironment computes cwd/environment/substitutions separately from bounded argv building. Isolated source/config selection is shared through isolatedFiles; reporting expands the original argv without rebuilding batches. Fixer environment uses its actual selected tool pin.",
+            "Current-plugin ESLint:10 source files,0 errors/0 warnings (/tmp/gspot-execution-consolidation-eslint.json); CLI typecheck0 (/tmp/gspot-execution-consolidation-cli-types.log).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/execution/046",
+        "source": "findings/areas/execution.md",
+        "line": 128,
+        "section": "Findings",
+        "finding": "| `tools/command.ts:29`, `execution/tool/runner.ts:99,298`, `execution/fixers.ts:55` | `Number(view.settings['timeout'] ?? TOOL_DEADLINE.default)` is written four times. | One `toolDeadline(view)`. Let `executionFailure` take the view. |",
+        "owner": "`tools/command.ts:29`, `execution/tool/runner.ts:99,298`, `execution/fixers.ts:55`",
+        "location": [
+            "packages/cli/src/execution/command/failures.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/execution/fixers.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Shared toolDeadline reads the effective view for command execution and diagnostics; executionFailure accepts the same view. Actual timeout and reported timeout have one calculation.",
+            "Twelve focused planning/report cases passed with 51 assertions across three files, including saved Prettier exclusions after managed-ignore retirement, stable repeated emission, generic custom ignore-file negation, external-link refusal during session planning, and staged report counts (/tmp/gspot-planning-owner-regressions-final.log).",
+            "Fifteen native Vale and JavaScript compiler cases passed with 60 assertions across two files (/tmp/gspot-planning-owner-native.log). All four TypeScript targets and changed-file ESLint/formatting passed.",
+            "Repeated repository lint passed all eight checks with zero findings, and canonical apply preview reports no drift (/tmp/gspot-planning-owner-retry-lint.json and /tmp/gspot-planning-owner-final-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/047",
+        "source": "findings/areas/execution.md",
+        "line": 129,
+        "section": "Findings",
+        "finding": "| `execution/engines.ts:120`, `execution/execute.ts:57`, `execution/tool/runner.ts:259` | The empty passed `CheckResult` literal is built three times. For engines, `failureOf` runs in two nested catches. | One `emptyResult(planned)`. Leave failure mapping to `runOne`. |",
+        "owner": "`execution/engines.ts:120`, `execution/execute.ts:57`, `execution/tool/runner.ts:259`",
+        "location": [
+            "packages/cli/src/config/platform/runtime.ts",
+            "packages/cli/src/config/platform/assets.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/execution/report.ts",
+            "packages/cli/src/execution/engines.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/execution/run.ts",
+            "packages/cli/src/execution/command/runner.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "emptyResult builds the shared planned result used by three producers. Engine exceptions are classified once by executeRun/runOne; output validation keeps its external-format boundary.",
+            "Current-plugin ESLint:10 source files,0 errors/0 warnings (/tmp/gspot-execution-consolidation-eslint.json); CLI typecheck0 (/tmp/gspot-execution-consolidation-cli-types.log).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/execution/048",
+        "source": "findings/areas/execution.md",
+        "line": 130,
+        "section": "Findings",
+        "finding": "| `execution/engines.ts:24` `toolCheck` | A forwarding wrapper exists only because `runToolCheck` takes `command` third while `Executable.run` passes `staged` third. | Give `runToolCheck` an options object (`{ command, workspace }`) and register it directly. |",
+        "owner": "`execution/engines.ts:24` `toolCheck`",
+        "location": [
+            "packages/cli/src/execution/engines.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/execution/run.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/types/execution/command.ts",
+            "packages/cli/src/types/execution/output.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/execution/session.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Command execution now uses runCommandCheck(session, planned, options), runEngineTool, and engineTool. Executable.run passes the same named options contract; getCheckRunner returns runCommandCheck directly instead of allocating the forwarding toolCheck function. Command, output, and snapshot contracts live in their dedicated types/execution owners; the mixed types/execution/tool.ts is deleted and every consumer is updated without aliases.",
+            "The broad unit/integration run passed 2,099 cases with two explicit skips and one new-fixture failure: the output test looked up the removed general configuration. The corrected fixture and all affected output/runner/Python convention cases then passed 88 cases with zero failures and 420 assertions (/tmp/gspot-command-owner-unit-integration-final.log, /tmp/gspot-command-owner-repaired-tests.log).",
+            "Native Markdown/spelling structured reports passed two cases with 27 assertions, retaining unusual filenames, Unicode columns, filename findings, forbidden-word findings, all declared exit handling, and corrected states. Their subprocesses now use the shared remaining-budget runner (/tmp/gspot-command-owner-native-reports-final.log).",
+            "All four TypeScript targets passed; the root target also passed after the native harness change. Repository-wide lint passed all eight checks with zero findings across five ESLint scopes and 1,567 formatted files. The repaired output fixture and native file also pass focused read-only ESLint (/tmp/gspot-worker-command-owners-types.log, /tmp/gspot-command-owner-final-root-types.log, /tmp/gspot-command-owner-repository-lint.json, /tmp/gspot-command-output-fixture-lint.log, /tmp/gspot-command-native-lint-final.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/049",
+        "source": "findings/areas/execution.md",
+        "line": 131,
+        "section": "Findings",
+        "finding": "| `execution/execute.ts:192-198`, `execution/planning/plan.ts:159-166` | The \"has work\" filter in `executeRun` is a copy of the private `isActive`. | Export `isActive` and use it. |",
+        "owner": "`execution/execute.ts:192-198`, `execution/planning/plan.ts:159-166`",
+        "location": [
+            "packages/cli/src/execution/planning/plan.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/execution/run.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The existing isActive calculation is exported and reused by execution, preserving file, project, history, and deleted-trigger cases; the duplicated filter is gone.",
+            "Twelve focused planning/report cases passed with 51 assertions across three files, including saved Prettier exclusions after managed-ignore retirement, stable repeated emission, generic custom ignore-file negation, external-link refusal during session planning, and staged report counts (/tmp/gspot-planning-owner-regressions-final.log).",
+            "Fifteen native Vale and JavaScript compiler cases passed with 60 assertions across two files (/tmp/gspot-planning-owner-native.log). All four TypeScript targets and changed-file ESLint/formatting passed.",
+            "Repeated repository lint passed all eight checks with zero findings, and canonical apply preview reports no drift (/tmp/gspot-planning-owner-retry-lint.json and /tmp/gspot-planning-owner-final-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/050",
+        "source": "findings/areas/execution.md",
+        "line": 132,
+        "section": "Findings",
+        "finding": "| `execution/planning/plan.ts:174-183,222-231` | The generic planner hard-codes the check id `format/prettier` and reads `.prettierignore` itself. | Make it a manifest field, such as an ignore file, applied in `restrictIgnoredPaths`. |",
+        "owner": "`execution/planning/plan.ts:174-183,222-231`",
+        "location": [
+            "packages/cli/configurations/general/format/manifest.toml",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/execution/planning/plan.ts",
+            "packages/cli/src/execution/planning/skips.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "ignore_file is a declared manifest and custom-check field. restrictIgnoredPaths owns ordered native patterns and effective tool exclusions for check planning and configuredChecks. Generic planning contains no Prettier-name special case. Saved exclusions remain applicable when obsolete managed output is pruned.",
+            "Twelve focused planning/report cases passed with 51 assertions across three files, including saved Prettier exclusions after managed-ignore retirement, stable repeated emission, generic custom ignore-file negation, external-link refusal during session planning, and staged report counts (/tmp/gspot-planning-owner-regressions-final.log).",
+            "Fifteen native Vale and JavaScript compiler cases passed with 60 assertions across two files (/tmp/gspot-planning-owner-native.log). All four TypeScript targets and changed-file ESLint/formatting passed.",
+            "Repeated repository lint passed all eight checks with zero findings, and canonical apply preview reports no drift (/tmp/gspot-planning-owner-retry-lint.json and /tmp/gspot-planning-owner-final-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/051",
+        "source": "findings/areas/execution.md",
+        "line": 133,
+        "section": "Findings",
+        "finding": "| `execution/planning/files.ts:28,32,70,141`, `execution/planning/plan.ts:210` | `children.every((child) => !isInScope(file.path, child))` is written five times. | One `outsideChildren(files, children)`. |",
+        "owner": "`execution/planning/files.ts:28,32,70,141`, `execution/planning/plan.ts:210`",
+        "location": [
+            "packages/cli/src/repository/selectors.ts",
+            "packages/cli/src/execution/planning/files.ts",
+            "packages/cli/src/execution/planning/plan.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One shared isOutsideChildren path predicate replaces all repeated child-scope predicates. This retains string and tracked-file owners without inventing a mode-based array adapter; each real caller supplies its path.",
+            "Twelve focused planning/report cases passed with 51 assertions across three files, including saved Prettier exclusions after managed-ignore retirement, stable repeated emission, generic custom ignore-file negation, external-link refusal during session planning, and staged report counts (/tmp/gspot-planning-owner-regressions-final.log).",
+            "Fifteen native Vale and JavaScript compiler cases passed with 60 assertions across two files (/tmp/gspot-planning-owner-native.log). All four TypeScript targets and changed-file ESLint/formatting passed.",
+            "Repeated repository lint passed all eight checks with zero findings, and canonical apply preview reports no drift (/tmp/gspot-planning-owner-retry-lint.json and /tmp/gspot-planning-owner-final-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/052",
+        "source": "findings/areas/execution.md",
+        "line": 134,
+        "section": "Findings",
+        "finding": "| `execution/checkout/revision.ts:104-229`, `revision.ts:91,107,108,154`, `execution/tool/reports.ts:56` | `getEntries`, `getCachedEntries`, `getHeadEntries` and `getBlobs` read Git objects for three checks (postgres history, trufflehog, xcode project). They have nothing to do with checkout. The hash regex is written five times, though `config/repository/revisions.ts:4` already has `HASH_PATTERN`. | Move them to `repository/revisions/objects.ts`. Build the regexes from `HASH_PATTERN`. Rename `checkout/` to `snapshot/`, the word the comments and tests use (`tests/integration/cli/repository/snapshot/`). |",
+        "owner": "`execution/checkout/revision.ts:104-229`, `revision.ts:91,107,108,154`, `execution/tool/reports.ts:56`",
+        "location": [
+            "packages/cli/src/repository/revisions/objects.ts",
+            "packages/cli/src/parsers/git.ts",
+            "packages/cli/src/config/parsers/git.ts",
+            "packages/cli/src/types/parsers/git.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Git reads now belong to repository/revisions/objects.ts. Pure index/tree and binary-frame parsing belongs to parsers/git.ts; all parser constants and SHA-1/SHA-256 identity patterns belong to config/parsers/git.ts. GitEntry and GitFrame live under types/parsers/git.ts. Every snapshot, Postgres-history, TruffleHog, Xcode, and test caller imports the new owners with no forwarding aliases.",
+            "101 focused parser, snapshot, pushed-history, Xcode, migration-history, index, and output-contract cases passed with zero failures and 336 assertions across 15 files (/tmp/gspot-git-objects-tests-final.log). The parser cases cover binary and empty blobs, unusual UTF-8 paths, SHA-1/SHA-256, unsupported/conflicted entries, invalid UTF-8, missing objects, mismatched identities, unsafe lengths, truncation, delimiters, and trailing data.",
+            "All four TypeScript targets passed (/tmp/gspot-git-objects-types-final.log). Read-only ESLint passed all 18 affected owners after the String.raw/import-layout repairs (/tmp/gspot-git-objects-lint-final.log); those repairs also pass read-only formatting."
+        ]
+    },
+    {
+        "id": "areas/execution/053",
+        "source": "findings/areas/execution.md",
+        "line": 135,
+        "section": "Findings",
+        "finding": "| `execution/checkout/installed.ts:135-160,214`, `execution/tool/workspace.ts:24,39,120,156`, `platform/filesystem.ts:168` | Two exported `copyDependencies` copy dependency trees with the same `cp` options and different link rules. Temporary copies have four names: checkout, workspace, scratch copy, scratch folder. | Put both in `execution/snapshot/` and share one tree copy. Rename to `snapshotDependencies` and `copyWorkingDependencies`. Use one word for temporary copies. |",
+        "owner": "`execution/checkout/installed.ts:135-160,214`, `execution/tool/workspace.ts:24,39,120,156`, `platform/filesystem.ts:168`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/054",
+        "source": "findings/areas/execution.md",
+        "line": 136,
+        "section": "Findings",
+        "finding": "| `execution/tool/workspace.ts:51-57` `relocated` | It reimplements `isInside` from `platform/paths.ts:127`. | Use `isInside`. |",
+        "owner": "`execution/tool/workspace.ts:51-57` `relocated`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/execution/055",
+        "source": "findings/areas/execution.md",
+        "line": 137,
+        "section": "Findings",
+        "finding": "| `execution/run-report.ts:70`, `commands/check/content.ts:95` | The report builder writes `unstagedChanges: 0`. The caller then patches the real value into the finished report. | Pass the unstaged count in `RunOptions`. |",
+        "owner": "`execution/run-report.ts:70`, `commands/check/content.ts:95`",
+        "location": [
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/config/platform/runtime.ts",
+            "packages/cli/src/config/platform/assets.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/execution/report.ts",
+            "packages/cli/src/types/repository/revisions.ts",
+            "packages/cli/src/types/commands/check.ts",
+            "packages/cli/src/config/commands/check.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "RunReportOptions carries the staged selection count into execution. The report is built with its actual unstagedChanges count; the presentation caller no longer patches a finished report.",
+            "Twelve focused planning/report cases passed with 51 assertions across three files, including saved Prettier exclusions after managed-ignore retirement, stable repeated emission, generic custom ignore-file negation, external-link refusal during session planning, and staged report counts (/tmp/gspot-planning-owner-regressions-final.log).",
+            "Fifteen native Vale and JavaScript compiler cases passed with 60 assertions across two files (/tmp/gspot-planning-owner-native.log). All four TypeScript targets and changed-file ESLint/formatting passed.",
+            "Repeated repository lint passed all eight checks with zero findings, and canonical apply preview reports no drift (/tmp/gspot-planning-owner-retry-lint.json and /tmp/gspot-planning-owner-final-preview.json)."
+        ]
+    },
+    {
+        "id": "areas/execution/056",
+        "source": "findings/areas/execution.md",
+        "line": 138,
+        "section": "Findings",
+        "finding": "| `types/tools/tools.ts:14` | `Session` is declared under tools types, but `execution/session.ts` builds it and every command uses it. | Move it to `types/execution/session.ts`. |",
+        "owner": "`types/tools/tools.ts:14`",
+        "location": [
+            "packages/cli/src/execution/engines.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/execution/run.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/types/execution/command.ts",
+            "packages/cli/src/types/execution/output.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/execution/session.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Command execution now uses runCommandCheck(session, planned, options), runEngineTool, and engineTool. Executable.run passes the same named options contract; getCheckRunner returns runCommandCheck directly instead of allocating the forwarding toolCheck function. Command, output, and snapshot contracts live in their dedicated types/execution owners; the mixed types/execution/tool.ts is deleted and every consumer is updated without aliases.",
+            "The broad unit/integration run passed 2,099 cases with two explicit skips and one new-fixture failure: the output test looked up the removed general configuration. The corrected fixture and all affected output/runner/Python convention cases then passed 88 cases with zero failures and 420 assertions (/tmp/gspot-command-owner-unit-integration-final.log, /tmp/gspot-command-owner-repaired-tests.log).",
+            "Native Markdown/spelling structured reports passed two cases with 27 assertions, retaining unusual filenames, Unicode columns, filename findings, forbidden-word findings, all declared exit handling, and corrected states. Their subprocesses now use the shared remaining-budget runner (/tmp/gspot-command-owner-native-reports-final.log).",
+            "All four TypeScript targets passed; the root target also passed after the native harness change. Repository-wide lint passed all eight checks with zero findings across five ESLint scopes and 1,567 formatted files. The repaired output fixture and native file also pass focused read-only ESLint (/tmp/gspot-worker-command-owners-types.log, /tmp/gspot-command-owner-final-root-types.log, /tmp/gspot-command-owner-repository-lint.json, /tmp/gspot-command-output-fixture-lint.log, /tmp/gspot-command-native-lint-final.log)."
+        ]
+    },
+    {
+        "id": "areas/execution/057",
+        "source": "findings/areas/execution.md",
+        "line": 139,
+        "section": "Findings",
+        "finding": "| `tools/command.ts:6`, `tools/packages/locks.ts:23`, `execution/checkout/installed.ts:122`, `repository/kind.ts:130`; missing blank line before doc comments at `repository/tags.ts:62`, `repository/tree.ts:66`, `execution/planning/files.ts:104`, `execution/planning/plan.ts:183`, `execution/tool/placeholders.ts:135,162,181`, `execution/tool/runner.ts:243`, `tools/vale.ts:84` | Comments were moved or stranded by an automated reorder. A JSDoc sits on an import line, so the file has no header. A function's comment trails a `const`. `copyTree`'s comment sits above `copyDirectoryLink`. A section comment has nothing under it. | Put each comment back on its declaration. Add the missing file headers. |",
+        "owner": "`tools/command.ts:6`, `tools/packages/locks.ts:23`, `execution/checkout/installed.ts:122`, `repository/kind.ts:130`; missing blank line before doc comments at `repository/tags.ts:62`, `repository/tree.ts:66`, `execution/planning/files.ts:104`, `execution/planning/plan.ts:183`, `execution/tool/placeholders.ts:135,162,181`, `execution/tool/runner.ts:243`, `tools/vale.ts:84`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    }
+]

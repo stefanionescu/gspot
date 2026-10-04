@@ -1,21 +1,22 @@
 import { MAX_REEXPORTS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { lintedFile, isIndexFile } from '#plugin/files.ts';
+import { lintedPath, isIndexFile } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { MaxBarrelReexportsOptions } from '#plugin/types/rules.ts';
 
 export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany'>({
     name: 'max-barrel-reexports',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ max: MAX_REEXPORTS }],
+        type: 'suggestion',
         docs: {
-            level: 'all',
+            level: 'none',
             title: 'Limit barrel exports',
             example:
                 'With `max: 3`, four re-export statements in `src/index.ts` report `tooMany`. Remove an unnecessary re-export and update its consumers to import from the declaring module. Three remaining re-export statements meet that limit.',
-            summary: 'Finds an index file with more re-exports than the limit.',
+            description: 'Finds an index file with more re-exports than the limit.',
             why: 'A barrel that grows without bound becomes the import everyone reaches for, and every change to any file behind it touches every importer.',
-            fix: 'Import from the modules that declare the values, or split the index by area. Raise limits.barrel_reexports with a reason if the barrel is the contract.',
+            fix: 'Import from the declaring modules or split the index by area. Set the max rule option if the public API needs a different limit. In gspot, set limits.barrel_reexports.',
         },
         schema: [optionsSchema({ max: { type: 'integer', minimum: 1 } })],
         messages: {
@@ -23,11 +24,12 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
                 'This index has {{count}} re-exports; the limit is {{max}}. Import from the owning modules or split the index.',
         },
     },
-    defaultOptions: [{ max: MAX_REEXPORTS }],
-    create(context, [options]) {
-        const file = lintedFile(context);
-        if (file === undefined || !isIndexFile(file)) return {};
-        const max = options.max ?? MAX_REEXPORTS;
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<MaxBarrelReexportsOptions[0]>;
+        const file = lintedPath(context);
+        if (file === undefined || !isIndexFile(file.absolute)) return {};
+        const max = options.max;
         const nodes: TSESTree.Node[] = [];
         return {
             ExportAllDeclaration(node) {
@@ -37,8 +39,7 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
                 if (node.source) nodes.push(node);
             },
             'Program:exit'() {
-                if (nodes.length <= max) return;
-                for (const node of nodes)
+                for (const node of nodes.slice(max, max + 1))
                     context.report({
                         node,
                         messageId: 'tooMany',

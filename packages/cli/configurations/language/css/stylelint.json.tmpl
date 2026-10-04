@@ -1,0 +1,55 @@
+<%
+const off = rulesOff('css/stylelint');
+const chosen = settings['tools.stylelint.rules'];
+const ignoreAtRules = settings['tools.stylelint.ignore_at_rules'];
+const componentRules = Object.fromEntries(
+    Object.entries({
+        'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['deep', 'global', 'slotted'] }],
+        'function-no-unknown': [true, { ignoreFunctions: ['theme', 'v-bind'] }],
+    }).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined),
+);
+const document = {
+    extends: 'stylelint-config-standard',
+    ignoreFiles: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.gspot/**'],
+    rules: Object.assign(
+        {
+            'no-descending-specificity': true,
+            'at-rule-no-unknown': ignoreAtRules.length > 0 ? [true, { ignoreAtRules: ignoreAtRules }] : true,
+            'function-no-unknown': [true, { ignoreFunctions: ['theme'] }],
+            'import-notation': 'string',
+            'property-no-vendor-prefix': [
+                true,
+                { ignoreProperties: ['-webkit-text-size-adjust', '-webkit-backdrop-filter'] },
+            ],
+        },
+        Object.fromEntries(
+            (isAll
+                ? []
+                : [
+                      'no-descending-specificity',
+                      'container-name-pattern',
+                      'custom-media-pattern',
+                      'custom-property-pattern',
+                      'declaration-block-no-redundant-longhand-properties',
+                      'keyframes-name-pattern',
+                      'layer-name-pattern',
+                      'number-max-precision',
+                      'selector-class-pattern',
+                      'selector-id-pattern',
+                      'selector-not-notation',
+                  ]
+            ).map((rule) => [rule, null]),
+        ),
+        chosen,
+        Object.fromEntries(off.map((rule) => [rule, null])),
+    ),
+    overrides: [
+        {
+            files: ['*.vue', '*.svelte'],
+            customSyntax: 'postcss-html',
+            rules: componentRules,
+        },
+    ],
+};
+recordRules(document);
+%><%~ json(document) %>

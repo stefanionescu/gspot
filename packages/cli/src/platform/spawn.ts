@@ -5,8 +5,15 @@ import { execa, execaSync } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform/platform.ts';
 
+import {
+    REAP_MS,
+    DRAIN_MS,
+    FAILED_CODE,
+    MISSING_CODE,
+    MS_PER_SECOND,
+    TASKKILL_GONE_CODE,
+} from '#cli/config/platform/runtime.ts';
 import type {
     SpawnResult,
     SpawnOptions,
@@ -14,10 +21,11 @@ import type {
     AsyncSpawnOptions,
     BinarySpawnResult,
     ProcessTermination,
-} from '#cli/types/platform/platform.ts';
+} from '#cli/types/platform/runtime.ts';
 
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };
+    // A selected tool's launcher must find its sibling runtime and commands before unrelated PATH tools.
     if (isAbsolute(executable) && env['PATH'] !== undefined)
         env['PATH'] = [dirname(executable), env['PATH']].filter((value) => value !== '').join(delimiter);
     return {
@@ -47,7 +55,7 @@ function missingExecutable(executable: string, cwd: string): boolean {
 }
 
 // The result of a command whose executable file does not exist, decided before any process starts.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The three run functions share the shape of a command that never started.
+
 function notFound(executable: string): SpawnCompletion {
     return {
         code: 'ENOENT',
@@ -61,7 +69,7 @@ function notFound(executable: string): SpawnCompletion {
 }
 
 // A process that never ran, or that a launch or stream error stopped, is an execution error and not a verdict.
-function failedToRun(result: SpawnCompletion): boolean {
+function isUnfinished(result: SpawnCompletion): boolean {
     if (result.exitCode === undefined) return true;
     if (result.code !== undefined) return true;
     return result.cause !== undefined;
@@ -69,13 +77,13 @@ function failedToRun(result: SpawnCompletion): boolean {
 
 function completed(result: SpawnCompletion, started: number, diagnostic: string): SpawnResult {
     const missing = result.code === 'ENOENT';
-    const unfinished = failedToRun(result);
+    const unfinished = isUnfinished(result);
     const isErrored = result.failed && unfinished;
     const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const diagnostics: (string | undefined)[] = [diagnostic];
-    // Successful Execa results always contain exit code zero.
     if (unfinished) diagnostics.push(result.shortMessage);
     return {
+        // A run that errored can still report exit 0; report it as failed.
         code: isErrored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout,
         stderr: diagnostics.filter(Boolean).join('\n'),
@@ -113,7 +121,9 @@ function terminate(child: ChildProcess, state: ProcessTermination): void {
     }
     child.kill('SIGKILL');
     state.drainTimer = setTimeout(() => {
-        const error = new Error('Tool output did not close within 5 seconds after termination.');
+        const error = new Error(
+            `Tool output did not close within ${String(DRAIN_MS / MS_PER_SECOND)} seconds after termination.`,
+        );
         for (const stream of child.stdio) stream?.destroy(error);
     }, DRAIN_MS);
 }
@@ -209,7 +219,6 @@ async function supervisedRun(
  * @param options working directory, environment, and process controls
  * @returns captured output and termination status
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Text capture is the run every tool and Git read uses; binary capture is the other encoding of the same run.
 export async function run(command: string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     return await supervisedRun(command, options, 'utf8');
 }
@@ -236,7 +245,6 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
  * @param options working directory, environment, and process controls
  * @returns captured output and termination status
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Git reads repository objects and paths as bytes through this; text capture is the other encoding of the same run.
 export async function runBinary(command: string[], options: AsyncSpawnOptions): Promise<BinarySpawnResult> {
     // Bun requires a Node encoding name when it constructs child-process streams, so the bytes arrive as base64.
     const result = await supervisedRun(command, options, 'base64');

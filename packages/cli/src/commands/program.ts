@@ -1,46 +1,25 @@
-import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
-import { registerRemove } from '#cli/commands/remove.ts';
-import type { OutputOptions } from '#cli/types/output.ts';
+import { registerInstall } from '#cli/commands/install.ts';
+import { HELP_CODES } from '#cli/config/commands/options.ts';
 import { registerInit } from '#cli/commands/init/command.ts';
-import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
-import { HELP_CODES } from '#cli/config/commands/commands.ts';
+import type { Program } from '#cli/types/commands/program.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
-import { registerInstall } from '#cli/commands/install/command.ts';
-import type { Program, GlobalFlags } from '#cli/types/commands/commands.ts';
+import { EXIT_ERROR, RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { Option, Command, CommanderError } from '@commander-js/extra-typings';
-import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
-
-const { version: RUNNING_VERSION } = packageManifest;
-
-// Registration order is shared by help and command lookup.
-const COMMAND_REGISTRATIONS: ((program: Program) => void)[] = [
-    registerInit,
-    registerInstall,
-    registerCheck,
-    registerApply,
-    registerIgnore,
-    registerAdd,
-    registerRemove,
-    registerSet,
-    registerExplain,
-    registerDoctor,
-    registerList,
-    registerExport,
-];
+import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
+import { printError, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 // The program reads its options anywhere on the line. It hands the command every argument after the command name,
 // its own options included. An option such as --json then also ends a list option of the command where it stands.
 class GspotProgram extends Command {
-    override parseOptions(argv: string[]): { operands: string[]; unknown: string[] } {
+    override parseOptions(argv: string[]): ReturnType<Command['parseOptions']> {
         const parsed = super.parseOptions(argv);
         const [name] = parsed.operands;
         if (name === undefined || !this.commands.some((command) => command.name() === name)) return parsed;
@@ -56,20 +35,22 @@ class GspotProgram extends Command {
     }
 }
 
-function verbosityOf(options: GlobalFlags): OutputOptions['verbosity'] {
-    if (options.quiet === true) return 'quiet';
-    return options.verbose === true ? 'verbose' : 'normal';
-}
-
-function exitCodeFor(error: unknown): number {
-    if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : EXIT_ERROR;
-    if (error instanceof GspotError && error.code === 'prompt') fail(error.message);
-    else fail(`gspot did not run: ${error instanceof Error ? error.message : String(error)}`);
+function printFailure(error: unknown, isJson: boolean): number {
+    if (error instanceof CommanderError && HELP_CODES.has(error.code)) return 0;
+    const diagnostic = error instanceof Error ? error.message : String(error);
+    if (error instanceof GspotError) {
+        printError({ error: error.code, message: diagnostic });
+        return EXIT_ERROR;
+    }
+    if (isJson) {
+        const code = error instanceof CommanderError ? 'arguments' : 'failure';
+        printError({ error: code, message: diagnostic });
+    } else if (!(error instanceof CommanderError)) printError(`gspot stopped: ${diagnostic}`);
     return EXIT_ERROR;
 }
 
 /**
- * Builds the program. Exported so tests can walk it.
+ * Build the registered CLI program used by execution and the generated command reference.
  * @returns the commander program with every command registered
  */
 export function buildProgram(): Program {
@@ -86,15 +67,31 @@ export function buildProgram(): Program {
         .showSuggestionAfterError(true)
         .showHelpAfterError('(run gspot --help to see every command)')
         .exitOverride();
+    program.configureOutput({
+        writeErr: (text) => {
+            if (program.opts().json !== true) process.stderr.write(text);
+        },
+    });
     program.hook('preAction', () => {
         const options = program.opts();
         configureOutput({
-            verbosity: verbosityOf(options),
+            quiet: options.quiet === true,
             json: options.json === true,
-            color: isColorAllowed(!options.color),
+            color: isColorAllowed(options.color),
         });
     });
-    for (const register of COMMAND_REGISTRATIONS) register(program);
+    registerInit(program);
+    registerInstall(program);
+    registerCheck(program);
+    registerApply(program);
+    registerIgnore(program);
+    registerAdd(program);
+    registerRemove(program);
+    registerSet(program);
+    registerExplain(program);
+    registerDoctor(program);
+    registerList(program);
+    registerExport(program);
     // Each command takes hidden copies of the program options, which the program has already read.
     for (const command of program.commands)
         for (const option of program.options.filter((entry) => entry.long !== '--version'))
@@ -113,6 +110,12 @@ export async function main(argv: string[]): Promise<number> {
         await program.parseAsync(argv, { from: 'user' });
         return Number(process.exitCode ?? 0);
     } catch (error) {
-        return exitCodeFor(error);
+        const options = program.opts();
+        configureOutput({
+            quiet: options.quiet === true,
+            json: options.json === true,
+            color: isColorAllowed(options.color),
+        });
+        return printFailure(error, options.json === true);
     }
 }

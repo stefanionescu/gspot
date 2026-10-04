@@ -1,0 +1,6 @@
+<%
+const off = rulesOff('nginx/gixy');
+const document = off.length === 0 ? {} : { skips: off };
+recordRules(document);
+%><% for (const [name, rules] of Object.entries(document)) { %><%= name %> = <%= rules.join(',') %>
+<% } %>

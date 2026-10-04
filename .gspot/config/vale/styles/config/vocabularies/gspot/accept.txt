@@ -10,7 +10,6 @@ commitlint
 CSS
 Docker
 Drizzle
-EditorConfig Checker
 ESLint
 GitHub
 gitleaks
@@ -33,7 +32,6 @@ Next.js
 nginx
 Node
 npm
-Nx
 osv-scanner
 Periphery
 pnpm

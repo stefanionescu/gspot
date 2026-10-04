@@ -1,9 +1,8 @@
 import type { SqlNode } from '#cli/types/parsers/sql.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
-import { KEY_KINDS, PUBLIC_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database.ts';
-import type { Reader, Schema, Location, Migration, SchemaState } from '#cli/types/checks/database.ts';
+import { KEY_KINDS, PUBLIC_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres.ts';
+import type { Schema, Location, Migration, SchemaState, StatementReader } from '#cli/types/checks/database/postgres.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers qualify a relation name, and the default schema is applied in one place.
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
     return `${textOf(node['schemaname']) || PUBLIC_SCHEMA}.${textOf(node['relname'])}`;
@@ -60,7 +59,7 @@ function constraint(fields: SchemaState, at: Location, node: SqlNode, column?: s
     if (isForeign) recordForeignKey(fields, at, name, columns);
 }
 
-const created: Reader = (fields, migration, statement) => {
+const created: StatementReader = (fields, migration, statement) => {
     const table = qualified(statement.fields['relation']);
     if (fields.tables.has(table) && statement.fields['if_not_exists'] === true) return;
     forgetTable(fields, table);
@@ -90,14 +89,14 @@ const ALTERATIONS: Record<string, (fields: SchemaState, at: Location, command: S
     },
 };
 
-const altered: Reader = (fields, migration, statement) => {
+const altered: StatementReader = (fields, migration, statement) => {
     const at: Location = { migration, statement, table: qualified(statement.fields['relation']) };
     for (const command of nodesOf(statement.fields['cmds'], 'AlterTableCmd'))
         ALTERATIONS[String(command['subtype'])]?.(fields, at, command);
 };
 
 // A dropped table leaves the fields, so the checks ask nothing of a table the schema does not hold.
-const dropped: Reader = (fields, _migration, statement) => {
+const dropped: StatementReader = (fields, _migration, statement) => {
     for (const item of nodesOf(statement.fields['objects'], 'List')) {
         const parts = partsOf(item['items']);
         switch (statement.fields['removeType']) {
@@ -121,7 +120,7 @@ const dropped: Reader = (fields, _migration, statement) => {
     }
 };
 
-const READERS: Record<string, Reader> = {
+const READERS: Record<string, StatementReader> = {
     DropStmt: dropped,
     CreateStmt: created,
     AlterTableStmt: altered,

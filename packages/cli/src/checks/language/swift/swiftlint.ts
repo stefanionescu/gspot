@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { compact } from '#cli/platform/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import type { Session } from '#cli/types/tools/tools.ts';
+import { compact } from '#cli/platform/objects.ts';
+import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { swiftSources } from '#cli/checks/language/swift/sources.ts';
-import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/language/swift.ts';
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.
@@ -67,11 +67,13 @@ function restoreInline(result: CheckResult, checked: CheckResult, candidates: In
  */
 export async function swiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const result = await runToolCheck(session, planned, SWIFTLINT_COMMAND);
-    if (!['passed', 'failed'].includes(result.status) || planned.scope.view.rulesOff(planned.check).includes(DOC_RULE))
+    const result = await runCommandCheck(session, planned, { command: SWIFTLINT_COMMAND });
+    if (
+        !['passed', 'failed'].includes(result.status) ||
+        planned.scope.view.rulesOff(planned.spec.name).includes(DOC_RULE)
+    )
         return result;
-    const sources = await swiftSources({ ...session, files: planned.files });
-    try {
+    return visitSwiftSources({ ...session, files: planned.files }, async ({ sources }) => {
         const candidates = sources.flatMap((source): InlineDocumentation[] => {
             const comments = source.tree.rootNode
                 .descendantsOfType(['comment', 'multiline_comment'])
@@ -95,7 +97,9 @@ export async function swiftlint(session: Session, planned: PlannedCheck): Promis
             chmodSync(path, PRIVATE_FILE);
             writeFileSync(path, commentSource(source.text, comments));
         }
-        const checked = await runToolCheck({ ...session, root: workspace.root }, planned, SWIFTLINT_COMMAND);
+        const checked = await runCommandCheck({ ...session, root: workspace.root }, planned, {
+            command: SWIFTLINT_COMMAND,
+        });
         if (!['passed', 'failed'].includes(checked.status))
             return {
                 ...result,
@@ -107,7 +111,5 @@ export async function swiftlint(session: Session, planned: PlannedCheck): Promis
         if (result.findings.length > 0) result.status = 'failed';
         result.duration = performance.now() - started;
         return result;
-    } finally {
-        for (const source of sources) source.tree.delete();
-    }
+    });
 }

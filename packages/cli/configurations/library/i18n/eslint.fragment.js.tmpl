@@ -1,0 +1,3 @@
+<% if (isAll) { %>
+<%~ eslintModule.block({ files: ['**/*.{jsx,tsx}'], ignores: ['**/*.{test,spec}.*', '**/tests/**'], rules: { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } }, 'plugins: { i18next }') %>,
+<% } %>

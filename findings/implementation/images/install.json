@@ -1,0 +1,111 @@
+[
+    {
+        "id": "diagram/install",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "diagram/install/001",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Generate tool projects, pins, and config files from applicable consumers.",
+        "location": [
+            "packages/cli/src/execution/planning/requirements.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/lifecycle/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Applicable manifests are derived from configuredChecks; requiredToolNames includes fixers/companion tools and branches license scanners on actual package.json/pyproject.toml consumers. Generation and installation import this same owner. Shared-file tooling/runtime requirements remain documented.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    },
+    {
+        "id": "diagram/install/002",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Remove irrelevant Prettier, npm, lock, syncpack, commitlint, and schema outputs from non-JavaScript repositories.",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "diagram/install/003",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Keep required Python environment files and applicable native tool pins.",
+        "location": [
+            "packages/cli/src/execution/planning/requirements.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/lifecycle/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Applicable manifests are derived from configuredChecks; requiredToolNames includes fixers/companion tools and branches license scanners on actual package.json/pyproject.toml consumers. Generation and installation import this same owner. Shared-file tooling/runtime requirements remain documented.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    },
+    {
+        "id": "diagram/install/004",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Install agent rules only for selected applicable configurations.",
+        "location": ["packages/cli/src/rules/assemble.ts", "packages/cli/src/generation/outputs.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Rules use selected manifests and shared condition detection; enabled=false returns no rules and emits no instruction blocks. Authored-content tests belong to existing focused suites, not a second apply implementation.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    },
+    {
+        "id": "diagram/install/005",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Deliver gspot as one standalone binary without its own JavaScript runtime prerequisite.",
+        "location": ["packages/cli/src/config/tools/mise.ts", "scripts/binaries.ts", "tests/packages/binaries.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Five release target names exist. Checksum-verified mise2026.8.8 installs HTTP/exactGitHub/bareGitHub bootstrap on darwin-arm64 with PATH=/usr/bin:/bin and no Node/Bun; preserves assets, returns1 for both broken grammar checks and0 when corrected. See /tmp/gspot-mise-native-proof/verification.json. Other hosts require CI execution; no claim of remote release.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    },
+    {
+        "id": "diagram/install/006",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Retain runtimes required by applicable tools and shared file checks.",
+        "location": [
+            "packages/cli/src/execution/planning/requirements.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/lifecycle/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Applicable manifests are derived from configuredChecks; requiredToolNames includes fixers/companion tools and branches license scanners on actual package.json/pyproject.toml consumers. Generation and installation import this same owner. Shared-file tooling/runtime requirements remain documented.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    },
+    {
+        "id": "diagram/install/007",
+        "source": "findings/images/install.png",
+        "owner": "install",
+        "finding": "Keep SwiftFormat support at macOS/Linux without product MSI extraction.",
+        "location": ["packages/cli/configurations/language/swift/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "SwiftFormat tool declares macos/linux; scripts/swiftformat.ts, MSI task and workflow extraction are absent. MSI digest recommendation is superseded by agreed removal of Windows support.",
+            "Individually reviewed source, primary documentation, current file paths, and local delivery evidence in /tmp/gspot-delivery-findings-audit.json. Remote publication, protection settings, schema hosting and complete suite replay remain explicitly pending in their own rows."
+        ]
+    }
+]

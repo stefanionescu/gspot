@@ -1,0 +1,172 @@
+// Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
+import { CHECKS } from '#cli/checks/registry.ts';
+import { runText } from '#cli/output/reporter.ts';
+import { compact } from '#cli/platform/objects.ts';
+import { executeRun } from '#cli/execution/run.ts';
+import { note, warn } from '#cli/output/messages.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
+import { reproduceLine } from '#cli/execution/reproduce.ts';
+import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { Revision } from '#cli/types/execution/snapshot.ts';
+import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
+import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
+import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
+import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/selection.ts';
+import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
+import type { FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/runtime.ts';
+
+function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {
+    const failures = fixes.results.filter((result) => result.status === 'failed');
+    for (const result of failures) warn(`a fixer failed: ${result.check}: ${result.note}`);
+    const count = fixes.changed.length;
+    if (isDryRun) {
+        const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} file(s) would change`;
+        return `${fixes.diffs.join('\n')}\n${verdict}\n\n${text}`;
+    }
+    if (count === 0) note('no fixer changed anything');
+    else {
+        const shown = fixes.changed.slice(0, CHANGED_SHOWN).join(' ');
+        const more = count > CHANGED_SHOWN ? ' ...' : '';
+        warn(
+            `fixers changed ${String(count)} file(s); the changes are in the working tree and are not staged: ${shown}${more}`,
+        );
+    }
+    return text;
+}
+
+// Warns when the configured hooks are not installed in the clone the report is published to.
+function warnAboutHooks(session: Session, revision: Revision | undefined): void {
+    if (revision?.content === 'commit') return;
+    const hooks = hookStatus({
+        policy: session.policyFiles.policy,
+        repository: {
+            root: revision?.reportRoot ?? session.root,
+            hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
+        },
+    });
+    if (!hooks.ready) warn(`Configured hooks are not ready in this clone. ${hooks.text}`);
+}
+
+// The changed set a run compares against: the revision's paths, the --changed ref, or nothing for a whole push.
+async function changedSet(
+    session: Session,
+    options: CheckOptions,
+    signal: AbortSignal,
+    revision: Revision | undefined,
+): Promise<ChangedPaths | undefined> {
+    if (revision?.content === 'commit' && session.policyFiles.policy.hooks?.push_files === 'all') return undefined;
+    if (revision?.changed !== undefined) return { reference: revision.reference, paths: revision.changed };
+    return options.changed === undefined ? undefined : getChanged(session.root, options.changed, signal);
+}
+
+// The staged set a run narrows to: the revision's, the index when asked, or nothing.
+async function stagedSet(
+    session: Session,
+    options: CheckOptions,
+    signal: AbortSignal,
+    revision: Revision | undefined,
+): Promise<Selections['set']> {
+    if (revision?.staged !== undefined) return revision.staged;
+    return options.staged ? getStaged(session.root, signal) : { staged: undefined, unstaged: 0 };
+}
+
+// A pushed commit is reproduced through the push options, not through the snapshot the check ran in.
+function rewriteReproductions(checks: RunReport['checks'], options: CheckOptions): void {
+    for (const check of checks)
+        if (check.reproduce !== undefined) check.reproduce = reproduceLine(check.check, check.scope, options);
+}
+
+function buildResult(options: CheckOptions, outcome: Awaited<ReturnType<typeof executeRun>>): CheckCommandResult {
+    const reportText = runText(outcome.report, {
+        quiet: options.quiet,
+        verbose: options.verbose,
+        ...(options.hook === undefined ? {} : { hook: options.hook }),
+    });
+    const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
+    return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
+}
+
+// What the run narrows to: the changed set, the staged set, and the stage.
+async function selectionsFor(
+    session: Session,
+    options: CheckOptions,
+    signal: AbortSignal,
+    revision: Revision | undefined,
+): Promise<Selections> {
+    const changed = await changedSet(session, options, signal, revision);
+    const set = await stagedSet(session, options, signal, revision);
+    const stage: StageFilter = options.stage ?? 'all';
+    const paths = selectedPaths(session, options, [...(set.staged ?? []), ...(changed?.paths ?? [])]);
+    return { changed, set, stage, paths: paths.length === 0 ? undefined : paths };
+}
+
+// Runs the selected checks and formats their results.
+async function runSelected(
+    session: Session,
+    options: CheckOptions,
+    signal: AbortSignal,
+    revision: Revision | undefined,
+    selections: Selections,
+): Promise<CheckCommandResult> {
+    const { changed, set, stage, paths } = selections;
+    let comparison: RunOptions['comparison'];
+    if (revision !== undefined) comparison = { content: revision.content, reference: revision.reference };
+    else if (changed !== undefined) comparison = { content: 'working-tree', reference: changed.reference };
+    const outcome = await executeRun(session, {
+        checks: CHECKS,
+        ...compact({
+            stage,
+            skips: options.skips,
+            fix: options.fix,
+            isDryRun: options.isDryRun,
+            onResult: options.onResult,
+            staged: set.staged,
+            changed: changed?.paths,
+            comparison,
+            only: options.only,
+            paths,
+            messageFile: options.messageFile,
+            // A --changed run checks the commit messages and history after the merge base, not the whole history.
+            commits: revision === undefined ? changed?.commits : revision.commits,
+            historyComplete: revision?.historyComplete,
+        }),
+        unstagedChanges: set.unstaged,
+        cancelSignal: signal,
+    });
+    if (options.push !== undefined) rewriteReproductions(outcome.report.checks, options);
+    return buildResult(options, outcome);
+}
+
+/**
+ * Runs check and returns what to print.
+ * @param root the tree to check: the repository, or a snapshot of a revision.
+ * @param options the parsed flags.
+ * @param signal cancellation for the run.
+ * @param revision what the snapshot stands for, when the root is one.
+ * @returns the text, the run report, and the exit code.
+ */
+export async function checkTree(
+    root: string,
+    options: CheckOptions,
+    signal: AbortSignal,
+    revision?: Revision,
+): Promise<CheckCommandResult> {
+    assertVersionPin(root);
+    const session = await openSession(root);
+    try {
+        const stale = reconcileConfigurations(session).notes;
+        if (stale.length > 0) warn(`The saved setup is stale: ${stale.join('; ')}. Run: gspot apply`);
+    } catch (error) {
+        warn(`Setup detection could not finish: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (revision !== undefined) {
+        session.installedRoot = revision.installedRoot;
+    }
+    refuseUnknownChecks(session, options.only);
+    warnAboutHooks(session, revision);
+    const selections = await selectionsFor(session, options, signal, revision);
+    return runSelected(session, options, signal, revision, selections);
+}

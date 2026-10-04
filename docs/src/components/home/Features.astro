@@ -1,20 +1,25 @@
 ---
-// Adapted from Turborepo's Features. See /licenses/turborepo.txt.
-type Props = {
-    title: string;
-    description: string;
-    features: { title: string; description: string; image: string; href: string; link: string }[];
-};
-const { title, description, features } = Astro.props;
+import type { FeatureProps as Props } from '#docs/src/types/components.ts';
+
+const { title, description, features }: Props = Astro.props;
 ---
+
 <section class="feature-section">
     <h2>{title}</h2>
     <p class="section-description">{description}</p>
     <ul class="features">
         {features.map((feature) => (
             <li>
-                <div class="illustration"><img src={feature.image} alt="" width="640" height="432" loading="lazy" /></div>
-                <div class="feature-copy"><h3>{feature.title}</h3><p>{feature.description}</p><a href={feature.href}>{feature.link} <span aria-hidden="true">→</span></a></div>
+                <div class="illustration">
+                    <img src={feature.image} alt="" width="640" height="432" loading="lazy" />
+                </div>
+                <div class="feature-copy">
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
+                    <a href={feature.href}>
+                        {feature.link} <span aria-hidden="true">→</span>
+                    </a>
+                </div>
             </li>
         ))}
     </ul>

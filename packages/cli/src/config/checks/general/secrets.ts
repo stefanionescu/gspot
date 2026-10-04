@@ -1,7 +1,7 @@
-// The literal values checks/general/secrets reads: names, patterns, limits, and tables.
+import { HASH_SOURCE } from '#cli/config/parsers/git.ts';
 
-export const CHANGE_LINE =
-    /^:[0-7]{6} (100644|100755|120000) (?:[a-f0-9]{40}|[a-f0-9]{64}) ([a-f0-9]{40}|[a-f0-9]{64}) [AMT]$/u;
+export const CHANGE_LINE = new RegExp(`^:[0-7]{6} (100644|100755|120000) ${HASH_SOURCE} (${HASH_SOURCE}) [AMT]$`, 'u');
+
 export const DIFF_TREE = [
     'diff-tree',
     '--root',
@@ -13,4 +13,8 @@ export const DIFF_TREE = [
     '-m',
     '--diff-filter=AMT',
 ];
+
 export const COMMIT_METADATA = ['show', '--no-patch', '--no-show-signature', '--format=%an%n%ae%n%cn%n%ce%n%B'];
+
+/** Scan each selected commit, including both sides of a merge, without walking its ancestors. */
+export const GITLEAKS_LOG_OPTIONS = '--no-walk --diff-merges=separate';

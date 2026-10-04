@@ -1,43 +1,49 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
 import { print } from '#cli/output/messages.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { kitManifests } from '#cli/kits/manifests.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
-import { readRepository } from '#cli/repository/tree.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { readRepository } from '#cli/repository/read.ts';
+import { buildInitPlan } from '#cli/commands/init/plan.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
-import { proposeText } from '#cli/commands/init/propose.ts';
-import { readManifests } from '#cli/repository/packages.ts';
+import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getReplaced } from '#cli/commands/init/replaced.ts';
-import { getTooling, isReplaced } from '#cli/kits/takeover.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
-import { selectForInit } from '#cli/commands/init/selection.ts';
-import type { Tooling } from '#cli/types/repository/repository.ts';
-import type { Policy, TomlTable } from '#cli/types/policy/policy.ts';
-import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
-import { askKits, askQuestions } from '#cli/commands/init/questions.ts';
-import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
-import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
+import type { Tooling } from '#cli/types/repository/inventory.ts';
+import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
+import { getTooling, isReplaced } from '#cli/configurations/takeover.ts';
+import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
+import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { askQuestions, askConfigurations } from '#cli/commands/init/questions.ts';
+import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.isDryRun) return;
     const status = runGitBlocking(root, ['status', '--porcelain']);
-    if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
+    if (status.code !== 0)
+        throw new GspotError('selection', [`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`]);
     const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
-    if (changed.length > 0) throw new GspotError('policy', [messages.dirtyTree(changed.length)]);
+    if (changed.length > 0)
+        throw new GspotError('policy', [
+            `The working tree has ${String(changed.length)} uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.`,
+        ]);
 }
 
-// Asks which kits to keep, and selects again when the person changed the list.
+// Asks which configurations to keep, and selects again when the person changed the list.
 async function chosenSelection(
     inputs: Omit<InitInputs, 'options'>,
     options: InitOptions,
     detected: InitSelection,
 ): Promise<InitSelection> {
-    if (options.json) return detected;
-    const kept = await askKits(options, detected, inputs.manifests);
+    const kept = await askConfigurations(options, detected, inputs.manifests);
     if (kept === undefined) return detected;
-    const configurations = kept.length === 0 ? ['none'] : kept;
-    return selectForInit({ ...inputs, options: { ...options, kits: configurations, isListExact: true } });
+    const configurations = kept.length === 0 ? [NO_CONFIGURATIONS] : kept;
+    return selectForInit({ ...inputs, options: { ...options, configurations: configurations, isListExact: true } });
 }
 
 // Prints what init found, unless the caller reads JSON.
@@ -50,7 +56,7 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
     print(
         detectionText({
             files: repo.files,
-            plans: detected.rootPlans,
+            detected: detected.detected,
             scopes: detected.scopes,
             tooling,
             owned,
@@ -61,39 +67,26 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
     );
 }
 
-// The policy text the plan renders to, read back the way every later command reads it.
-function policyTextFor(
-    planning: Planning,
-    settingsPlan: Parameters<typeof proposeText>[0],
-): { policyText: string; policy: Policy } {
-    const profileTables = planning.options.profile?.tables as TomlTable | undefined;
-    const policyText = proposeText(profileTables ? { ...settingsPlan, profileTables } : settingsPlan);
-    const policy = parsePolicyText(policyText, 'gspot.toml', planning.root);
-    assertPolicyComplete({ policy, text: policyText, path: 'gspot.toml' });
-    return { policyText, policy };
-}
-
 /**
  * Reads the repository, asks the questions, and builds the plan init shows before writing.
  * @param root the repository root
- * @param options the init options, with a profile's answers folded in
+ * @param options the init options, with a template's answers folded in
  * @returns the plan, the policy text, and the files it read
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
-    const manifests = kitManifests();
+    const manifests = configurationManifests();
     const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
     const fields = readManifests(root, repo.files);
     const workspace = proposedScopes(
-        root,
         repo.files,
         fields,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
     );
-    const inputs = { root, repo, fields, workspace: workspace.scopes, manifests };
+    const inputs = { root, repo, fields, workspace, manifests };
     const detected = selectForInit({ ...inputs, options });
     const tooling = getTooling(root, repo.files, fields);
-    if (!options.json) printDetection(inputs, detected, tooling);
+    printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
     const replaced = getReplaced(root, tooling, selection.selectedIds);
     const answers = await askQuestions(root, options, tooling);
@@ -101,12 +94,14 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const planning: Planning = { root, options, tooling, selection, everySelected, answers, replaced };
-    const proposed = plan(selection, answers);
-    const { policyText, policy } = policyTextFor(planning, proposed);
+    const draft = draftPolicy(selection, answers);
+    const templateTables = options.template?.tables as TomlTable | undefined;
+    const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
+    const policy = parseStrictPolicy(policyText, root);
+    const session = await openSession(root, { policy, text: policyText, path: 'gspot.toml', problems: [] });
     return {
-        plan: buildInitPlan(planning, policy, policyText),
+        plan: buildInitPlan(planning, policy, policyText, applicableManifests(session)),
         policyText,
-        runner: answers.runner,
         removed: replaced.removed,
         read: replaced.read,
     };

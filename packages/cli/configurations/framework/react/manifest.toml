@@ -1,0 +1,67 @@
+[configuration]
+title = "React"
+requires = ["javascript"]
+recommends = ["typescript", "css", "vitest", "react-dom"]
+description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload, and the Testing Library rules over test files."
+
+[detect]
+dependencies = ["react"]
+
+[[tool]]
+name = "eslint-plugin-react-hooks"
+kind = "library"
+version = "7.1.1"
+npm = "eslint-plugin-react-hooks"
+
+[[tool]]
+name = "eslint-plugin-react"
+kind = "library"
+version = "7.37.5"
+npm = "eslint-plugin-react"
+
+[[tool]]
+name = "eslint-plugin-react-refresh"
+kind = "library"
+version = "0.5.7"
+npm = "eslint-plugin-react-refresh"
+
+[[tool]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+
+[[naming.paths]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["files"]
+case = ["pascal", "kebab"]
+reason = "A component file takes the component's name."
+
+[[naming.paths]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["functions"]
+case = ["pascal", "camel"]
+reason = "A function that returns JSX is a component and takes a capital."
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+ignored_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
+
+[[eslint_rules_off]]
+rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
+files = ["**/*.tsx", "**/*.jsx"]
+reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+
+[required_eslint_rules]
+jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
+tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]

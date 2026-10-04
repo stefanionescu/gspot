@@ -1,39 +1,13 @@
-// The types of checks/language/swift in this package.
-import type { Node, Tree } from 'web-tree-sitter';
-import type { Read, Root } from '#cli/types/platform/platform.ts';
-import type { EngineInput } from '#cli/types/execution/execution.ts';
-import type { StructureProblem } from '#cli/types/checks/language/language.ts';
-
-/** The files and functions of one run, parsed one time. */
-type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] };
-
-/** One parsed Swift file of a run. */
-export type SwiftSource = { path: string; text: string; lines: string[]; tree: Tree };
+import type { Node } from 'web-tree-sitter';
+import type { Root } from '#cli/types/platform/root.ts';
+import type { SwiftSource } from '#cli/types/parsers/swift.ts';
 
 /** Source comments whose inline documentation positions need native findings restored. */
 export type InlineDocumentation = { source: SwiftSource; comments: Node[]; inline: Node[] };
 
-/** One Swift function with what the structure checks ask about it. */
-export type SwiftFunction = {
-    path: string;
-    node: Node;
-    name: string;
-    /** The statements of the body. */
-    body: Node[];
-};
-
-/** One structure analysis over the parsed Swift files. */
-export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => StructureProblem[];
-export type Pruning = {
-    folder: string;
-    files: Root;
-    desired: Map<string, Read>;
-    wanted: Set<string>;
-};
-
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {
-    /** The cache folder of this scope. */
+    /** The build folder of this scope. */
     folder: string;
     /** Where the compiler log is written. */
     log: string;
@@ -43,4 +17,10 @@ export type SwiftBuildPlan = {
 };
 
 /** The read build status and its compiler output. */
-export type SwiftBuildOutput = { code: number; output: string };
+export type SwiftBuildOutput = { code: number; output: string; source: string };
+
+/** Independent build state for each native Swift consumer. */
+export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
+
+/** Prepared source copy and its locked root, disposed by the native consumer. */
+export type PreparedSwiftBuild = { files: Root; source: string };

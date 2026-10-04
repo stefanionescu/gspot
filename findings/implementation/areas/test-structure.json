@@ -1,0 +1,634 @@
+[
+    {
+        "id": "areas/test-structure/001",
+        "source": "findings/areas/test-structure.md",
+        "line": 122,
+        "section": "Findings",
+        "finding": "| `tests/tools/cli/`, `tests/integration/cli/`, `tests/harness/cli/` | Each holds a `cli` level with no sibling package. The level repeats the package name and adds a directory to every path. In `tests/acceptance/cli`, the same word means \"commands\". | Drop the level in `tools` and `harness`. Rename the merged fast suite `tests/cli` (it names the package under test there). Rename `acceptance/cli` to `tools/commands`. |",
+        "owner": "`tests/tools/cli/`, `tests/integration/cli/`, `tests/harness/cli/`",
+        "location": ["tests/cli", "tests/tools/commands", "tests/tools/configurations", "tests/harness"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CLI unit and integration cases share cli. Native command/configuration cases share tools. The harness is flat; all 27 ordinary modules have at least two actual importers, and preload is the required Bun entrypoint.",
+            "Source caller inventory: /tmp/gspot-organization-harness-callers.json. All four compiler targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log."
+        ]
+    },
+    {
+        "id": "areas/test-structure/002",
+        "source": "findings/areas/test-structure.md",
+        "line": 123,
+        "section": "Findings",
+        "finding": "| `CONTRIBUTING.md:100-101`, `mise.toml:79`, `ci.yml:166-167` | `unit` and `integration` run in one task and one job, so no runner uses the split. The definition is not held: 145 of 188 integration files never call `runGspot`, integration spawns gspot (`commands/cancellation.test.ts:30`, `commands/push.test.ts:22`) and needs Swift (`swift/build/analyzer.test.ts:13`), and `unit/cli/output/reporter.test.ts:128` calls `main()`. | Merge both into `tests/cli` and `tests/plugin`, mirroring the source folders. Rewrite `CONTRIBUTING.md:98-109` to describe three suites by what they need. |",
+        "owner": "`CONTRIBUTING.md:100-101`, `mise.toml:79`, `ci.yml:166-167`",
+        "location": ["tests/cli", "tests/plugin", "CONTRIBUTING.md", "mise.toml"],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The agreed plan explicitly retains distinct unit and integration suites and places plugin unit tests within unit. The current directories and tasks follow that decision. Duplicate cases, unnecessary native requirements and internal mocks remain separately tracked; this override does not close them."
+        ]
+    },
+    {
+        "id": "areas/test-structure/003",
+        "source": "findings/areas/test-structure.md",
+        "line": 124,
+        "section": "Findings",
+        "finding": "| `unit/cli/sql-parser.test.ts` + `integration/cli/sql-parser.test.ts`; `unit/cli/checks/general/copied-blocks.test.ts` + `integration/cli/checks/general/copied-blocks.test.ts`; `unit/.../python/docstrings.test.ts` + `integration/.../python/docstrings.test.ts` | One subject split across two tiers under the same file name. These are the only path collisions the merge creates. | Merge each pair into one file. |",
+        "owner": "`unit/cli/sql-parser.test.ts` + `integration/cli/sql-parser.test.ts`; `unit/cli/checks/general/copied-blocks.test.ts` + `integration/cli/checks/general/copied-blocks.test.ts`; `unit/.../python/docstrings.test.ts` + `integration/.../python/docstrings.test.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/004",
+        "source": "findings/areas/test-structure.md",
+        "line": 125,
+        "section": "Findings",
+        "finding": "| `ci.yml:232-236`, `mise.toml:81-90` | `tools` and `acceptance` need the same things (pinned tools, network), run in the same job with the same shards, and overlap. Eight tools files run gspot end to end with `toolsPath` (`tools/cli/generation/javascript.test.ts:44-56`, `tools/cli/checks/bash-syntax.test.ts`), and some acceptance files never install (`acceptance/cli/spelling.test.ts`, `prose-ignore.test.ts`). | Merge them into `tests/tools`, run it once under the plugin registry, and delete `test:acceptance`. If the black-box rule for acceptance matters, see the first question below. |",
+        "owner": "`ci.yml:232-236`, `mise.toml:81-90`",
+        "location": ["tests/tools", "scripts/plugin.ts", "mise.toml", ".github/workflows/ci.yml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The current plan supersedes the earlier separate tools/acceptance decision. One tools task and one sharded CI invocation run both native families. test:acceptance is absent.",
+            "Source caller inventory: /tmp/gspot-organization-harness-callers.json. All four compiler targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log."
+        ]
+    },
+    {
+        "id": "areas/test-structure/005",
+        "source": "findings/areas/test-structure.md",
+        "line": 126,
+        "section": "Findings",
+        "finding": "| `acceptance/cli/spelling.test.ts`, `prose-ignore.test.ts`, `commits.test.ts`; `integration/cli/doctor.test.ts` | Kit tests sit under `cli` while the other general kits sit under `acceptance/kits/general`. `doctor.test.ts` sits at the root, but the source is `commands/doctor`. | Move the three kit tests to `tools/kits/general/`, and move `doctor.test.ts` to `cli/commands/`. |",
+        "owner": "`acceptance/cli/spelling.test.ts`, `prose-ignore.test.ts`, `commits.test.ts`; `integration/cli/doctor.test.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/006",
+        "source": "findings/areas/test-structure.md",
+        "line": 127,
+        "section": "Findings",
+        "finding": "| `harness/planted/cases.ts:10,127-157`, `harness/planted/push.ts:57-61` | Harness files register `describe`, `test`, and `beforeAll`, and call `expect`. `TESTING.md` says support code has no assertions and no test blocks. | Move `push.ts` into `integration/cli/commands/push.test.ts`, its only user. For `cases.ts`, see the second question below. |",
+        "owner": "`harness/planted/cases.ts:10,127-157`, `harness/planted/push.ts:57-61`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/007",
+        "source": "findings/areas/test-structure.md",
+        "line": 128,
+        "section": "Findings",
+        "finding": "| `harness/cli/command.ts:67-78`; `harness/tools/install.ts:85`; `harness/planted/push.ts:37-48`; `acceptance/cli/commits.test.ts:47,150`; `acceptance/kits/general/secrets/pushed.test.ts:29,74,116`; `integration/cli/repository/snapshot/hash-formats.test.ts:45`, `links.test.ts:78`; `tools/cli/packages/locks.test.ts:27,40`, `native.test.ts:18`; `tools/cli/lifecycle/mise-execution.test.ts:51,61` | Tests build `[process.execPath, gspot, ...]` and call `processes.run` because `spawnGspot` cannot pass stdin or options. That makes a third and fourth way to start the CLI beside `runGspot` and `spawnGspot`. | Give `spawnGspot` an options argument with `stdin` and `timeoutMs`. Replace every hand-built command with it. |",
+        "owner": "`harness/cli/command.ts:67-78`; `harness/tools/install.ts:85`; `harness/planted/push.ts:37-48`; `acceptance/cli/commits.test.ts:47,150`; `acceptance/kits/general/secrets/pushed.test.ts:29,74,116`; `integration/cli/repository/snapshot/hash-formats.test.ts:45`, `links.test.ts:78`; `tools/cli/packages/locks.test.ts:27,40`, `native.test.ts:18`; `tools/cli/lifecycle/mise-execution.test.ts:51,61`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/008",
+        "source": "findings/areas/test-structure.md",
+        "line": 129,
+        "section": "Findings",
+        "finding": "| `integration/cli/commands/cancellation.test.ts:13`, `tools/cli/lifecycle/mise-execution.test.ts:19`, `tools/cli/lifecycle/python-project.test.ts:54`; `locks.test.ts:12` and `native.test.ts:9` (`gspot as CLI`) | The CLI entry path is recomputed in three files and renamed in two, beside the exported `gspot`. | Import `gspot` from `harness/command.ts` everywhere. For tests that signal a live child, add one `startGspot(cwd, argv)` that returns the subprocess. |",
+        "owner": "`integration/cli/commands/cancellation.test.ts:13`, `tools/cli/lifecycle/mise-execution.test.ts:19`, `tools/cli/lifecycle/python-project.test.ts:54`; `locks.test.ts:12` and `native.test.ts:9` (`gspot as CLI`)",
+        "location": ["tests/harness/gspot.ts", "tests/cli/commands/cancellation.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One source entry path is derived from scripts/workspace.ts. Ordinary CLI child calls use spawnGspot; cancellation cases use startGspot and explicit child capture/disposal.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/009",
+        "source": "findings/areas/test-structure.md",
+        "line": 130,
+        "section": "Findings",
+        "finding": "| `harness/cli/command.ts:75` | `spawnGspot` merges `environmentVariables()` into the child environment, and `packages/cli/src/platform/spawn.ts:20` merges it again. | Pass only the overrides. |",
+        "owner": "`harness/cli/command.ts:75`",
+        "location": ["tests/harness/gspot.ts", "packages/cli/src/platform/spawn.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "spawnGspot passes environment overrides, and the production spawn boundary merges inherited values once. Direct Bun.spawn in startGspot owns its complete environment.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/010",
+        "source": "findings/areas/test-structure.md",
+        "line": 131,
+        "section": "Findings",
+        "finding": "| `harness/cli/command.ts:14`, `harness/package/packages.ts:7`, `harness/registry/lifecycle.ts:9`, `harness/registry/plugin.ts:9`, `harness/tools/install.ts:17`, `harness/cli/modules.ts:5-10` | The repository root is computed six times in the harness, and 19 times across tests and scripts. | Export one `root` from `harness/command.ts` and import it. |",
+        "owner": "`harness/cli/command.ts:14`, `harness/package/packages.ts:7`, `harness/registry/lifecycle.ts:9`, `harness/registry/plugin.ts:9`, `harness/tools/install.ts:17`, `harness/cli/modules.ts:5-10`",
+        "location": [
+            "scripts/workspace.ts",
+            "tests/harness/gspot.ts",
+            "tests/harness/environment.ts",
+            "scripts/registry/lifecycle.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The automation workspace owns the repository-root calculation. Test support and registry lifecycle import it directly, without forwarding exports.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/011",
+        "source": "findings/areas/test-structure.md",
+        "line": 132,
+        "section": "Findings",
+        "finding": "| `harness/cli/input.ts:11,40,56`, `harness/cli/site.ts:8`, `harness/cli/swift.ts:19`, `harness/cli/nextjs.ts:21`; `integration/cli/checks/general/licenses.test.ts:21-29` and `tools/cli/checks/licenses.test.ts:14-22` | Five builders of an `EngineInput`, each with its own way to find the scope and the check. The licenses `input()` function is copied word for word between two tiers. | Keep one builder: `buildEngineInput(root, check, { scope, paths })`. Delete `siteInput` and `swiftInput`, and delete both `input()` copies. |",
+        "owner": "`harness/cli/input.ts:11,40,56`, `harness/cli/site.ts:8`, `harness/cli/swift.ts:19`, `harness/cli/nextjs.ts:21`; `integration/cli/checks/general/licenses.test.ts:21-29` and `tools/cli/checks/licenses.test.ts:14-22`",
+        "location": [
+            "tests/harness/input.ts",
+            "tests/cli/checks/general/licenses.test.ts",
+            "tests/tools/checks/licenses.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildEngineInput selects the named check and scope from an actual session, distinguishes selected input from repository inventory, and accepts owned resources. siteInput, swiftInput and duplicate license constructors are absent.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/012",
+        "source": "findings/areas/test-structure.md",
+        "line": 133,
+        "section": "Findings",
+        "finding": "| `harness/cli/generated.ts:21-24,42-45,58-61,69-72`, `harness/cli/swift.ts:38-42`, `harness/tools/install.ts:121-131`, and 13 tests (`tools/cli/generation/*.test.ts`, `integration/cli/generation/formatting.test.ts`, `level-contract.test.ts`, both licenses tests) | `emitAll` is called three times with the same arguments in one file. `writeConfigs`, `writeSwiftlint`, `installSemgrep`, and the tests write emitted files by hand, \"the way apply writes them\". That is a second implementation of `gspot apply`. | Call `runGspot(root, ['apply'])` where a test needs the generated files. Keep `emitted` only for tests that read one generated file. Delete `writeConfigs` and `writeSwiftlint`, and use `emitted` inside `generatedFile` and `generatedEslint`. |",
+        "owner": "`harness/cli/generated.ts:21-24,42-45,58-61,69-72`, `harness/cli/swift.ts:38-42`, `harness/tools/install.ts:121-131`, and 13 tests (`tools/cli/generation/*.test.ts`, `integration/cli/generation/formatting.test.ts`, `level-contract.test.ts`, both licenses tests)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/013",
+        "source": "findings/areas/test-structure.md",
+        "line": 134,
+        "section": "Findings",
+        "finding": "| `harness/tools/install.ts:104-115` and `harness/planted/sandbox.ts:28-38`; `acceptance/kits/general/files.test.ts:148-150,194-196` | `installAtLevel` and `installTools` run the same steps with the same error text, and `files.test.ts` copies them inline twice. | Keep one `install(root, argv, { level, without })` in `harness/sandbox.ts`. Call it from `installSandbox` and the tests. |",
+        "owner": "`harness/tools/install.ts:104-115` and `harness/planted/sandbox.ts:28-38`; `acceptance/kits/general/files.test.ts:148-150,194-196`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/014",
+        "source": "findings/areas/test-structure.md",
+        "line": 135,
+        "section": "Findings",
+        "finding": "| `config/cli.ts:5`, `harness/planted/init.ts:11`, `samples/python.ts:2-12`, `harness/package/published.ts:64-80`; `acceptance/kits/general/dependencies.test.ts:13-23`, `security.test.ts:12-23`, `licenses.test.ts:12-22`, `duplication.test.ts:12-23`; `files.test.ts:13,21`, `tool/actions.test.ts:13,21` | The quiet init flag list exists in four support files and about 20 tests. The four named lists equal `initArgs([...])`. The `init:` keys in `files.test.ts:21` and `actions.test.ts:21` equal the default `QUIET_INIT`. | Keep `QUIET_INIT` and `initArgs` in `harness/policy.ts`. Replace the equal copies, delete the redundant `init:` keys, and delete `STRUCTURE_INIT`. |",
+        "owner": "`config/cli.ts:5`, `harness/planted/init.ts:11`, `samples/python.ts:2-12`, `harness/package/published.ts:64-80`; `acceptance/kits/general/dependencies.test.ts:13-23`, `security.test.ts:12-23`, `licenses.test.ts:12-22`, `duplication.test.ts:12-23`; `files.test.ts:13,21`, `tool/actions.test.ts:13,21`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/015",
+        "source": "findings/areas/test-structure.md",
+        "line": 136,
+        "section": "Findings",
+        "finding": "| `harness/cli/nextjs.ts`, `harness/cli/tooling.ts:7,25`, `harness/planted/secrets.ts:18,27,53`, `harness/registry/packages.ts:8`, `harness/tools/install.ts:121` (`installSemgrep`), `harness/cli/swift.ts:38` (`writeSwiftlint`) | Each of these helpers has one user. `tooling.ts` puts two unrelated one-user exports in one file. | Move each helper into its user. Keep only `PLANTED_KEY_ID` and `PLANTED_SETTINGS` (two users) in `harness/samples/secrets.ts`, and merge `registry/packages.ts` into `npm.ts`. |",
+        "owner": "`harness/cli/nextjs.ts`, `harness/cli/tooling.ts:7,25`, `harness/planted/secrets.ts:18,27,53`, `harness/registry/packages.ts:8`, `harness/tools/install.ts:121` (`installSemgrep`), `harness/cli/swift.ts:38` (`writeSwiftlint`)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/016",
+        "source": "findings/areas/test-structure.md",
+        "line": 137,
+        "section": "Findings",
+        "finding": "| `harness/registry/python.ts:25` and `harness/tools/python.ts:26` | Two files serve the same two tests (`tools/cli/execution/python-staged.test.ts`, `tools/cli/lifecycle/python-project.test.ts`), split only by folder theme. | Merge them into `harness/uv.ts`. |",
+        "owner": "`harness/registry/python.ts:25` and `harness/tools/python.ts:26`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/017",
+        "source": "findings/areas/test-structure.md",
+        "line": 138,
+        "section": "Findings",
+        "finding": "| `harness/cli/site.ts:8` and `samples/site.ts:2` | A helper and a sample with the same two users (`integration/cli/checks/general/site/build.test.ts`, `output.test.ts`) live in two folders. | Merge them into one file, or into the two tests once `siteInput` goes away. |",
+        "owner": "`harness/cli/site.ts:8` and `samples/site.ts:2`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/018",
+        "source": "findings/areas/test-structure.md",
+        "line": 139,
+        "section": "Findings",
+        "finding": "| `harness/cli/swift.ts:10,28-32` | A module-level `Set` collects build folders across tests, and every test file calls `removeBuildFolders` in `afterEach`. `TESTING.md` warns against global mutable test data. | Delete `swiftInput` and `removeBuildFolders`. In each test, remove `buildFolder(root)` through `await using` or a local `afterEach`. |",
+        "owner": "`harness/cli/swift.ts:10,28-32`",
+        "location": ["tests/cli/checks/language/swift", "tests/tools/checks/swift-build.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "swiftInput, removeBuildFolders and their shared mutable build-folder set are absent. Scenarios own temporary repositories and compilation resources.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/019",
+        "source": "findings/areas/test-structure.md",
+        "line": 140,
+        "section": "Findings",
+        "finding": "| `harness/expectations.ts:28` (`failure`) | It wraps `expect(fn).toThrow()` and is used in 42 files, mostly as `expect(failure(() => x)?.message).toContain(y)`. `rejection` (line 10) and the three matcher casts exist because Bun's types are wrong (commit 1c62a9b0). `failure` has no such reason. | Replace `failure` with `expect(() => x).toThrow(y)` and delete it. Keep `rejection` and the casts. |",
+        "owner": "`harness/expectations.ts:28` (`failure`)",
+        "location": ["tests/harness/expectations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The failure wrapper is absent. Rejection and the three typed Bun matchers retain their required shared contract.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/020",
+        "source": "findings/areas/test-structure.md",
+        "line": 141,
+        "section": "Findings",
+        "finding": "| `harness/plugin/planted.ts:10-15` | It wraps testdir, registers `afterAll` out of sight, and has two users. | Inline it in `no-duplicate-exports.test.ts` and `test-folders.test.ts`. |",
+        "owner": "`harness/plugin/planted.ts:10-15`",
+        "location": [
+            "tests/plugin/rules/no-duplicate-exports.test.ts",
+            "tests/plugin/rules/no-helpers-beside-tests.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The hidden planted helper is absent. Plugin tests own their temporary repositories and disposal explicitly.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/021",
+        "source": "findings/areas/test-structure.md",
+        "line": 142,
+        "section": "Findings",
+        "finding": "| `harness/planted/cases.ts:29-38,52-61,114-123`; `integration/cli/commands/ci.test.ts:22-26,67-70,109-112,138-141` | The same inline object type, with its doc comments, is written three times in `cases.ts` and four times in `ci.test.ts`. `gspot/types-placement` forbids a local alias, so authors copy the literal. | Name the type in `cases.ts`, beside `plantedCases`. For tests, see the fifth question below. |",
+        "owner": "`harness/planted/cases.ts:29-38,52-61,114-123`; `integration/cli/commands/ci.test.ts:22-26,67-70,109-112,138-141`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/022",
+        "source": "findings/areas/test-structure.md",
+        "line": 143,
+        "section": "Findings",
+        "finding": "| `harness/planted/cases.ts:89,95-97,138` | `isInProcess` is set from `installs === false`. A mode flag couples \"installs nothing\" to \"runs in-process\". | Pass the runner explicitly (`run: runGspot` or `run: spawnGspot`), or split by suite once the tiers merge. |",
+        "owner": "`harness/planted/cases.ts:89,95-97,138`",
+        "location": ["tests/harness/repository.ts", "tests/harness/check-case.ts", "tests/harness/expectations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Repository/check runners are explicit real callables; installation choice no longer secretly selects the command runner. Shared expectation functions perform assertions only and register no tests.",
+            "/tmp/gspot-tests-organization-focused-green.log: 109 pass, 0 fail, 295 assertions across 14 files",
+            "/tmp/gspot-tests-organization-types-verified.log: all four TypeScript targets pass",
+            "/tmp/gspot-tests-whole-lint-clean.json: 742 files; last five site declaration-order findings corrected and /tmp/gspot-tests-site-data-lint.json passes with zero errors/warnings",
+            "Root read the original row and the current behavior owners. The five-family final run remains pending; this closure applies only to the stated relocation, retained assertions, or metadata source."
+        ]
+    },
+    {
+        "id": "areas/test-structure/023",
+        "source": "findings/areas/test-structure.md",
+        "line": 144,
+        "section": "Findings",
+        "finding": "| `scripts/plugin.ts:6`, `scripts/acceptance.ts:5`, `scripts/package.ts:4,6,7`; `harness/registry/{lifecycle,server,plugin}.ts`, `config.yaml`; `harness/package/published.ts:20` | `mise run apply` and `mise run install` import `tests/harness/registry/plugin.ts`, so the development workflow depends on the tests. `publishRelease` has one user, `scripts/package.ts`. | Move the registry files to `scripts/registry/`, and move `publishRelease` into `scripts/package.ts`. Tests import from `scripts/registry`. |",
+        "owner": "`scripts/plugin.ts:6`, `scripts/acceptance.ts:5`, `scripts/package.ts:4,6,7`; `harness/registry/{lifecycle,server,plugin}.ts`, `config.yaml`; `harness/package/published.ts:20`",
+        "location": ["scripts/registry", "scripts/package.ts", "scripts/plugin.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Registry lifecycle is automation-owned and imports no tests. scripts/package.ts owns build/publication and the package suite. scripts/plugin.ts owns source commands and native-suite selection.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/024",
+        "source": "findings/areas/test-structure.md",
+        "line": 145,
+        "section": "Findings",
+        "finding": "| `scripts/acceptance.ts:12-38` | 53 lines check paths and allow only some `bun test` flags before calling `runSourceCommand`. `scripts/plugin.ts:12` calls the same function for gspot commands. | Delete `acceptance.ts`. Make `scripts/plugin.ts` take any command, and run `bun test ./tools` through it. |",
+        "owner": "`scripts/acceptance.ts:12-38`",
+        "location": ["scripts/plugin.ts", "mise.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The obsolete acceptance runner is absent. plugin.ts owns native orchestration, forwards Bun options, and selects tools by default.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/025",
+        "source": "findings/areas/test-structure.md",
+        "line": 146,
+        "section": "Findings",
+        "finding": "| `mise.toml:47,76,82,93`; `harness/registry/plugin.ts:56`; `harness/package/published.ts:22-24`; `packages/plugin.test.ts:76` | The plugin is built by the `setup` post-step, by `install` (through `preparePlugin`), by each test task's `depends`, by `publishRelease`, and by `plugin.test.ts`. That is three builds in the `test` job, four in each tools shard, and five in the `package` job. | Build it once in `setup`. Delete the build from `preparePlugin`, `publishRelease` (keep the CLI build), and `plugin.test.ts`, and delete the `depends` lines. |",
+        "owner": "`mise.toml:47,76,82,93`; `harness/registry/plugin.ts:56`; `harness/package/published.ts:22-24`; `packages/plugin.test.ts:76`",
+        "location": ["mise.toml", "scripts/registry/plugin.ts", "scripts/package.ts", "tests/packages/plugin.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Setup builds the plugin once. The registry consumes that build; package orchestration builds only the CLI; plugin cases consume the published suite release.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/026",
+        "source": "findings/areas/test-structure.md",
+        "line": 147,
+        "section": "Findings",
+        "finding": "| `packages/plugin.test.ts:76-126` | It starts a second Verdaccio and publishes the plugin again, inside a run where `scripts/package.ts` has already published both packages. Line 125 asserts harness cleanup, not product behavior. | Read the running release through `getPublishedRelease()`, as the four install tests do. Delete line 125. |",
+        "owner": "`packages/plugin.test.ts:76-126`",
+        "location": ["tests/packages/plugin.test.ts", "tests/harness/release.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The plugin test installs getPublishedRelease from the suite-owned registry. It starts no second registry and verifies product exports, types, rules, payload and license.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/027",
+        "source": "findings/areas/test-structure.md",
+        "line": 148,
+        "section": "Findings",
+        "finding": "| `integration/package-runner.test.ts` | It tests that `scripts/package.ts` removes its temporary registry. That is a test of test infrastructure, and it is the only non-CLI file in `integration`. | Delete it (third question below). |",
+        "owner": "`integration/package-runner.test.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/028",
+        "source": "findings/areas/test-structure.md",
+        "line": 149,
+        "section": "Findings",
+        "finding": "| `packages/install/` | The folder holds four files, and `plugin.test.ts` sits beside it. The level groups nothing. | Flatten into `tests/packages/`. |",
+        "owner": "`packages/install/`",
+        "location": ["tests/packages"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Package tests are flat, with no install layer. The complete delivered-package run passes eight tests with 433 assertions.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/029",
+        "source": "findings/areas/test-structure.md",
+        "line": 150,
+        "section": "Findings",
+        "finding": "| `harness/package/consumer.ts:39-55`; `packages/install/languages.test.ts`, `launcher.test.ts` (2), `syntax.test.ts`, `tools.test.ts` (2) | `createConsumer` returns the failed install outcome, and six places assert `installed.code` is 0. `initializeConsumer` throws instead. | Make `createConsumer` throw on a failed install, the way `initializeConsumer` does, and delete the six assertions. |",
+        "owner": "`harness/package/consumer.ts:39-55`; `packages/install/languages.test.ts`, `launcher.test.ts` (2), `syntax.test.ts`, `tools.test.ts` (2)",
+        "location": ["tests/harness/consumer.ts", "tests/packages"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "createConsumer throws with captured output after failed installation and returns an owned consumer only after success. Package scenarios test the installed product through that boundary.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/030",
+        "source": "findings/areas/test-structure.md",
+        "line": 151,
+        "section": "Findings",
+        "finding": "| `types/package.ts:4,13,16`; `types/tools.ts:6,17`; `types/cli.ts:54` | `InstalledConsumer` is `Awaited<ReturnType<typeof createConsumer>>`, which equals `CreateConsumerResult`. The types file imports a harness function. `CreatePackageProjectResult`, `PreparePythonInstallationResult`, and `InstalledRepository` each have one user, and the first two are named after a function plus `Result`. | Delete `InstalledConsumer` and use `CreateConsumerResult` (rename it `Consumer`). Rename the two `...Result` types after what they hold (`PackageProject`, `PythonInstallation`). Move each type beside its user and delete the folder. |",
+        "owner": "`types/package.ts:4,13,16`; `types/tools.ts:6,17`; `types/cli.ts:54`",
+        "location": [
+            "tests/types/harness/consumer.ts",
+            "tests/types/harness/npm.ts",
+            "tests/types/harness/python-installation.ts",
+            "tests/types/harness/repository.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Redundant function-return aliases are absent. Consumer, PackageProject, PythonInstallation and OwnedTestRepository name data under behavioral types owners, as required by the repository decision.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/031",
+        "source": "findings/areas/test-structure.md",
+        "line": 152,
+        "section": "Findings",
+        "finding": "| `config/cli.ts:2,8` | A config file imports the harness, and `MINIMAL_POLICY` is `policyOf(['bash'])`, a one-line call stored as a constant. | Move `QUIET_INIT` into `harness/policy.ts`. Replace `MINIMAL_POLICY` with `policyOf(['bash'])` in its three users. |",
+        "owner": "`config/cli.ts:2,8`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/032",
+        "source": "findings/areas/test-structure.md",
+        "line": 153,
+        "section": "Findings",
+        "finding": "| `config/timeouts.ts:3,8,10,16,21-34` | `WINDOWS_SLOWDOWN` is exported with no outside user. Nine limits have one user each (`HELP`, `LINT`, `SETUP`, `STARTUP`, `REQUEST`, `SHUTDOWN`, `ACCEPTANCE`, `PACKAGE_RUN`, `SOURCE_COMMAND`). `CONFIGURATION.md` says to group constants by domain, not in one bag. | Move each one-user limit to its user, stop exporting `WINDOWS_SLOWDOWN`, and keep `PLANTED`, `INSTALL`, and `RELEASE` in `harness/timeouts.ts`. |",
+        "owner": "`config/timeouts.ts:3,8,10,16,21-34`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/033",
+        "source": "findings/areas/test-structure.md",
+        "line": 154,
+        "section": "Findings",
+        "finding": "| 88 references to `PLANTED_TIMEOUT_MS` outside imports, 50 of them multiplied (`* 2` to `* 8`), and 24 more to `INSTALL_TIMEOUT_MS` and `RELEASE_TIMEOUT_MS`; `mise.toml:79,85`, `scripts/acceptance.ts:37`, `scripts/package.ts:24` | Almost every slow test passes its own limit. The run default (`--timeout 60000`) is written four times and already equals `PLANTED_TIMEOUT_MS` off Windows. | Set one default per suite in the task (fast 60 s, tools and packages a longer value), and keep explicit limits only for real outliers (sixth question below). |",
+        "owner": "88 references to `PLANTED_TIMEOUT_MS` outside imports, 50 of them multiplied (`* 2` to `* 8`), and 24 more to `INSTALL_TIMEOUT_MS` and `RELEASE_TIMEOUT_MS`; `mise.toml:79,85`, `scripts/acceptance.ts:37`, `scripts/package.ts:24`",
+        "location": [
+            "mise.toml",
+            "scripts/plugin.ts",
+            "scripts/package.ts",
+            "tests/config/timeouts.ts",
+            "tests/harness/command.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CLI/plugin defaults are 60000 ms; tools/packages defaults are 900000 ms. Old multiplied PLANTED/INSTALL/RELEASE limits are absent. Child deadlines consume one scenario budget; source/package orchestration also consumes a whole-suite deadline.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/034",
+        "source": "findings/areas/test-structure.md",
+        "line": 155,
+        "section": "Findings",
+        "finding": "| `samples/components.ts:2,10`; `samples/components.ts:6`, `samples/react.ts:10,14`, `acceptance/kits/framework/nextjs.test.ts:19-37` | `LIBRARIES_CLEAN` and `COMPONENT_SOURCE` are the same string. Four copies of one strict `tsconfig` differ only in `module`, `jsx`, and `lib`. | Delete `LIBRARIES_CLEAN`. Build the compiler options from one object with per-use overrides. |",
+        "owner": "`samples/components.ts:2,10`; `samples/components.ts:6`, `samples/react.ts:10,14`, `acceptance/kits/framework/nextjs.test.ts:19-37`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/035",
+        "source": "findings/areas/test-structure.md",
+        "line": 156,
+        "section": "Findings",
+        "finding": "| `samples/client-environment.json`; `samples/python.ts:14,17,23`; `samples/react.ts:18,27` | One-user samples: the JSON (`unit/plugin/rules/no-client-env.test.ts`), `TOOLS_CLEAN`, `TOOLS_MODULE`, and `STRUCTURE_LEFT_OUT` (`acceptance/kits/language/python.test.ts`), and `RENDERED_TEST` and `plantedComponent` (`integration/cli/generation/react-rules.test.ts`). | Move each into its test. |",
+        "owner": "`samples/client-environment.json`; `samples/python.ts:14,17,23`; `samples/react.ts:18,27`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/036",
+        "source": "findings/areas/test-structure.md",
+        "line": 157,
+        "section": "Findings",
+        "finding": "| `harness/planted/cases.ts:75` (`script`), `samples/bash.ts:7` (`HEAD`); `samples/typescript.ts:3` | The most used planted file (61 files) lives in the harness, not in samples, and repeats the header that `bash.ts` declares. `CONFIGURATION_ARRIVAL_PACKAGE` is named after one test but has three users. | Move `script` into `harness/samples/bash.ts` and build it from `HEAD`. Rename the package constant after what it holds (`ZOD_PACKAGE`). |",
+        "owner": "`harness/planted/cases.ts:75` (`script`), `samples/bash.ts:7` (`HEAD`); `samples/typescript.ts:3`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/037",
+        "source": "findings/areas/test-structure.md",
+        "line": 158,
+        "section": "Findings",
+        "finding": "| `tests/config/`, `tests/types/`, `tests/samples/` beside `tests/harness/`; `gspot.toml:489`, `TESTING.md` \"Placement and names\" | The rule and the policy name one support folder, but support code sits in four. | Move `config/` and `samples/` under `tests/harness/`. Move each type in `types/` beside its user. |",
+        "owner": "`tests/config/`, `tests/types/`, `tests/samples/` beside `tests/harness/`; `gspot.toml:489`, `TESTING.md` \"Placement and names\"",
+        "location": ["tests/config", "tests/types", "tests/harness"],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The current user instruction requires config/ and types/ grouped by behavioral owner. Shared support is flat in harness; data and contracts retain the required dedicated owners.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    },
+    {
+        "id": "areas/test-structure/038",
+        "source": "findings/areas/test-structure.md",
+        "line": 159,
+        "section": "Findings",
+        "finding": "| `tests/tsconfig.json` | It only extends `../tsconfig.json`. The root file already includes `tests/**`, and `check:types` (`mise.toml:60`) uses the root. | Delete it after one `bun test` run from `tests/` confirms that `#tests/*` still resolves. |",
+        "owner": "`tests/tsconfig.json`",
+        "location": ["tests/bunfig.toml", "tsconfig.json"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted redundant tests/tsconfig.json; root compiler owns tests and the #tests import map. Bun from tests/ resolves imports and preload.",
+            "/tmp/gspot-tests-organization-focused-green.log: 109 pass, 0 fail, 295 assertions across 14 files",
+            "/tmp/gspot-tests-organization-types-verified.log: all four TypeScript targets pass",
+            "Root read the original row and the current behavior owners. The five-family final run remains pending; this closure applies only to the stated relocation, retained assertions, or metadata source."
+        ]
+    },
+    {
+        "id": "areas/test-structure/039",
+        "source": "findings/areas/test-structure.md",
+        "line": 160,
+        "section": "Findings",
+        "finding": "| `tests/bunfig.toml:2` | `root = \".\"` repeats the Bun default when the tasks run from `tests/`. | Delete the line and keep the preload. |",
+        "owner": "`tests/bunfig.toml:2`",
+        "location": ["tests/bunfig.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Bun configuration contains the required preload only. Suite entrypoints own the per-suite default timeout.",
+            "/tmp/gspot-tests-organization-focused-green.log: 109 pass, 0 fail, 295 assertions across 14 files",
+            "/tmp/gspot-tests-lock-retention-final.log: 4 pass, 0 fail, 64 assertions across npm/Bun/pnpm/Yarn",
+            "Root read the original row and the current behavior owners. The five-family final run remains pending; this closure applies only to the stated relocation, retained assertions, or metadata source."
+        ]
+    },
+    {
+        "id": "areas/test-structure/040",
+        "source": "findings/areas/test-structure.md",
+        "line": 161,
+        "section": "Findings",
+        "finding": "| `harness/tools/install.ts:42-56`, `tools/cli/flags.test.ts:23-25` | `toolsPath` reads this repository's own `gspot.toml` and its installed tools to decide what goes on a sandbox `PATH`. Sandbox behavior depends on the repository's own policy, which is why CI runs `mise run install` before the tests. | See the last question below. |",
+        "owner": "`harness/tools/install.ts:42-56`, `tools/cli/flags.test.ts:23-25`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/test-structure/041",
+        "source": "findings/areas/test-structure.md",
+        "line": 162,
+        "section": "Findings",
+        "finding": "| `gspot.toml:567`; `acceptance/kits/{database,library,platform}/` | Three folders of one file each needed a policy exception to mirror the kit categories. | After the move to `tests/tools/kits/`, place those three files in the kits folder itself and delete the exception. If the owner wants the folders to match, keep the mirror and the exception instead. |",
+        "owner": "`gspot.toml:567`; `acceptance/kits/{database,library,platform}/`",
+        "location": [
+            "tests/tools/configurations/postgres.test.ts",
+            "tests/tools/configurations/libraries.test.ts",
+            "tests/tools/configurations/supabase.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Single-file Postgres, library and Supabase categories are flat in the configuration owner. Their test/config categories no longer need mirror-only folders.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log.",
+            "Complete delivered-package run: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current harness caller inventory: /tmp/gspot-organization-harness-callers.json. Final CLI/native replay and staged check remain separate completion requirements."
+        ]
+    }
+]

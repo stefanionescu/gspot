@@ -1,0 +1,50 @@
+import { format } from 'prettier';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { selectRuleFiles } from '#cli/rules/assemble.ts';
+import { managedBlock } from '#cli/rules/instructions.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { allChecks } from '#cli/configurations/declarations.ts';
+
+describe('the managed block', () => {
+    test('with no check selected it says nothing about gspot check', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]) });
+        const session = await openSession(sandbox.path);
+        const { agentRules: rules, level } = session.policyFiles.policy;
+        const selected = everyManifest(session.scopes);
+        const block = managedBlock({
+            rules,
+            files: selectRuleFiles(rules, selected, session.repository, level),
+            level,
+            hasChecks: allChecks(selected).size > 0,
+        });
+        expect(block).toContain('agent/WORKING.md');
+        expect(block).not.toContain('gspot check');
+        expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
+    });
+
+    test('with a check selected it names the command, and an excluded file leaves the index', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['spelling'], {
+                tables: '\n[agent_rules]\nexclude = ["general/engineering/code/ACCESSIBILITY.md"]\n',
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const { agentRules: rules, level } = session.policyFiles.policy;
+        const selected = everyManifest(session.scopes);
+        const block = managedBlock({
+            rules,
+            files: selectRuleFiles(rules, selected, session.repository, level),
+            level,
+            hasChecks: allChecks(selected).size > 0,
+        });
+        expect(block).toContain('Run `gspot check --staged` before committing');
+        expect(block).not.toContain('ACCESSIBILITY.md');
+        expect(block).toContain('code/TESTING.md');
+        expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
+    });
+});

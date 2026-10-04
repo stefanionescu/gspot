@@ -1,33 +1,33 @@
-// Corrections run in passes until they settle; dry runs use a scratch copy and return diffs.
+// Fixes run in passes until they settle; dry runs use a scratch copy and return diffs.
 import { createTwoFilesPatch } from 'diff';
+import { runTool } from '#cli/tools/run.ts';
+import { toolPin } from '#cli/tools/pins.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { ToolPin } from '#cli/types/kits.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
-import { TOOL_DEADLINE } from '#cli/config/policy/policy.ts';
-import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import { prepareCommand } from '#cli/execution/tool/runner.ts';
-import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import type { Root, SpawnResult } from '#cli/types/platform/platform.ts';
-import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
-import { hasToolError, executionFailure } from '#cli/execution/tool/findings.ts';
-import { scratchCopy, createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import { FIX_PASSES, FIX_DIFF_CONTEXT, FINDING_EXIT_CODES } from '#cli/config/execution/execution.ts';
-import type { FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
-
-function sourceBytes(files: Root, path: string): Buffer | undefined {
-    try {
-        return readFileSync(files.source(path));
-    } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-        return undefined;
-    }
-}
+import { unlinkSync, writeFileSync } from 'node:fs';
+import { readSource } from '#cli/platform/source.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
+import type { PreparedCommand } from '#cli/types/execution/command.ts';
+import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
+import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
+import { scratchCopy, createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
+import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
+import { FIX_PASSES, FIX_DIFF_CONTEXT, FINDING_EXIT_CODES } from '#cli/config/execution/runtime.ts';
+import type { FixReport, FixResult, FixOptions, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
-    using files = openRoot(root, 'native');
-    return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
+    const contents = new Map<string, Buffer | undefined>();
+    for (const path of paths) {
+        try {
+            contents.set(path, readSource(root, path));
+        } catch (error) {
+            if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+            contents.set(path, undefined);
+        }
+    }
+    return contents;
 }
 
 function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
@@ -41,40 +41,29 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
         .toArray();
 }
 
-function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin | undefined {
-    const name = plannedCheck.spec.fix?.[0];
-    if (name === undefined) return undefined;
-    if (plannedCheck.tool?.name === name) return plannedCheck.tool;
-    return toolPin(session.manifests.values(), name);
-}
-
-function correctionFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
-    const failure = executionFailure(
-        result,
-        planned.check,
-        Number(planned.scope.view.settings['timeout'] ?? TOOL_DEADLINE.default),
-    );
+function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
+    const failure = executionFailure(result, planned.spec.name, planned.scope.view);
     if (failure !== undefined) return failure.note;
-    // A code the check declares for findings means findings remain after the correction.
+    // A code the check declares for findings means findings remain after the fix.
     const { spec } = planned;
     const findingCodes = [spec.exit_codes, FINDING_EXIT_CODES.get(spec.output?.format)].flat();
     if ((result.code === 0 || findingCodes.includes(result.code)) && !hasToolError(spec, planned.tool, result))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
-    return [`${planned.check} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
+    return [`${planned.spec.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
 }
 
-async function runCorrection(
-    session: Session,
-    plannedCheck: PlannedCheck,
-    prepared: PreparedCommand,
-): Promise<FixResult> {
-    const check = plannedCheck.check;
-    const paths = [...new Set([...plannedCheck.files.map((file) => file.path), ...plannedCheck.triggerPaths])];
+async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+    const check = planned.spec.name;
+    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
-        const result = await runToolCommand(plannedCheck.scope.view, command.argv, prepared, session.cancelSignal);
-        const note = correctionFailure(plannedCheck, result);
+        const result = await runTool(command.argv, {
+            ...prepared,
+            timeoutSeconds: toolDeadline(planned.scope.view),
+            cancelSignal: session.cancelSignal,
+        });
+        const note = fixFailure(planned, result);
         if (note !== undefined) {
             return {
                 check,
@@ -88,31 +77,33 @@ async function runCorrection(
     return { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed };
 }
 
-async function isolatedCorrection(
+async function isolatedFix(
     session: Session,
     planned: PlannedCheck,
     root: string,
     command: string[],
     toolPath: string,
 ): Promise<FixResult> {
-    using workspace = createFileWorkspace(root, [
-        ...planned.files.map(({ path }) => path),
-        ...commandConfigurations(session, planned, command),
-    ]);
-    const prepared = prepareCommand({ ...session, root: workspace.root }, planned, command, toolPath);
-    const result = await runCorrection(session, planned, prepared);
+    using workspace = createFileWorkspace(root, isolatedFiles(session, planned, command));
+    const workspaceSession = { ...session, root: workspace.root };
+    const prepared = prepareCommand(
+        workspaceSession,
+        planned,
+        command,
+        commandEnvironment(workspaceSession, planned),
+        toolPath,
+    );
+    const result = await runFix(session, planned, prepared);
     const current = contentsOf(root, result.changed);
     const corrected = contentsOf(workspace.root, result.changed);
     using files = openRoot(root, 'native');
-    // Validate every changed source before publishing any correction bytes.
+    // Validate every changed source before publishing any fix bytes.
     const destinations = [...workspace.originals]
         .filter(([path]) => result.changed.includes(path))
         .map(([path, original]) => {
             if (current.get(path)?.equals(original) !== true)
-                throw new Error(
-                    `${path} changed while its correction was running; the isolated correction was not applied.`,
-                );
-            return [path, files.source(path)] as const;
+                throw new Error(`${path} changed while its fix was running; the isolated fix was not applied.`);
+            return [path, files.realPath(path)] as const;
         });
     for (const [path, destination] of destinations) {
         const bytes = corrected.get(path);
@@ -120,30 +111,6 @@ async function isolatedCorrection(
         else writeFileSync(destination, bytes);
     }
     return result;
-}
-
-async function executeCorrection(
-    session: Session,
-    plannedCheck: PlannedCheck,
-    workingDirectory: string,
-    command: string[],
-    tool: ToolPin,
-): Promise<FixResult> {
-    const check = plannedCheck.check;
-    const { env, cwd } = prepareCommand(session, { ...plannedCheck, tool }, command);
-    const inspection = inspectTool({ ...session, cwd }, { ...tool, env });
-    if (inspection.path === undefined || ['missing', 'outdated', 'error'].includes(inspection.state))
-        return {
-            check,
-            status: 'failed',
-            changed: [],
-            note:
-                inspection.note ?? `${tool.name} is unavailable. ${inspection.hint ?? 'Install the configured tool.'}`,
-        };
-    if (plannedCheck.spec.isolated_files === true)
-        return isolatedCorrection(session, plannedCheck, workingDirectory, command, inspection.path);
-    const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, command, inspection.path);
-    return runCorrection(session, plannedCheck, prepared);
 }
 
 // The outcome of one fixer over every pass: a failure stands, and the changed files add up.
@@ -169,9 +136,10 @@ async function fixerPasses(
         const before = contentsOf(root, paths);
         for (const { check, index } of pending)
             results.set(index, mergedResult(results.get(index), await runFixer(session, check, root)));
-        const changed = new Set(changedPaths(before, contentsOf(root, paths)));
+        const after = contentsOf(root, paths);
+        const changed = new Set(changedPaths(before, after));
         pending = checks.flatMap((check, index) => {
-            const files = check.files.filter((file) => changed.has(file.path));
+            const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
             if (files.length === 0 || results.get(index)?.status === 'failed') return [];
             return [{ check: { ...check, files, triggerPaths: [] }, index }];
         });
@@ -180,40 +148,56 @@ async function fixerPasses(
 }
 
 /**
- * Runs one correction and determines its outcome from process status and resulting bytes.
+ * Runs one fix and determines its outcome from process status and resulting bytes.
  * @param session the repository session
- * @param plannedCheck the correction and its selected files
+ * @param planned the fix and its selected files
  * @param workingDirectory the repository or scratch root
- * @returns the correction outcome, including changes made before a failure
+ * @returns the fix outcome, including changes made before a failure
  */
-export async function runFixer(
-    session: Session,
-    plannedCheck: PlannedCheck,
-    workingDirectory: string,
-): Promise<FixResult> {
+async function runFixer(session: Session, planned: PlannedCheck, workingDirectory: string): Promise<FixResult> {
+    const check = planned.spec.name;
     if (session.cancelSignal?.aborted === true)
-        return { check: plannedCheck.check, status: 'failed', changed: [], note: 'The correction was canceled.' };
-    const { spec } = plannedCheck;
-    const tool = correctionTool(session, plannedCheck);
-    const check = plannedCheck.check;
-    if (
-        spec.fix === undefined ||
-        plannedCheck.skip !== undefined ||
-        (plannedCheck.files.length === 0 && plannedCheck.triggerPaths.length === 0)
-    )
+        return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
+    if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
-    if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
-    return executeCorrection(session, plannedCheck, workingDirectory, spec.fix, tool);
+    // applyFixers selects only checks with a validated, nonempty fixer command.
+    const command = planned.spec.fix as string[];
+    const name = command[0] as string;
+    const tool = toolPin(session.manifests.values(), name, planned.manifest, planned.tool);
+    const selected = { ...planned, tool };
+    const environment = commandEnvironment(session, selected);
+    const { env, cwd } = environment;
+    const inspection = inspectTool({ ...session, cwd }, { ...tool, env });
+    const availability = toolAvailability(tool, inspection);
+    if ('status' in availability)
+        return {
+            check,
+            status: 'failed',
+            changed: [],
+            note: availability.note,
+        };
+    if (planned.spec.run_in_copy === true)
+        return isolatedFix(session, selected, workingDirectory, command, availability.path);
+    const workspaceSession = { ...session, root: workingDirectory };
+    const prepared = prepareCommand(
+        workspaceSession,
+        selected,
+        command,
+        workingDirectory === session.root ? environment : commandEnvironment(workspaceSession, selected),
+        availability.path,
+    );
+    return runFix(session, planned, prepared);
 }
 
 /**
- * Runs corrections in passes and assembles their outcomes. Dry runs always remove the scratch copy.
+ * Runs fixes in passes and assembles their outcomes. Dry runs always remove the scratch copy.
  * @param session the session
  * @param planned the planned checks
- * @param isDryRun whether to run in a scratch copy and report diffs
- * @returns the correction results, changed paths, and dry-run diffs
+ * @param options whether to run in a scratch copy and report diffs
+ * @returns the fix results, changed paths, and dry-run diffs
  */
-export async function applyFixers(session: Session, planned: PlannedCheck[], isDryRun: boolean): Promise<FixReport> {
+export async function applyFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
+    const { isDryRun } = options;
     const checks = planned.filter((check) => check.spec.fix !== undefined);
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),

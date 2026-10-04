@@ -1,15 +1,16 @@
 import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import type { TestPlan } from '#cli/types/checks/tool/xcode.ts';
-import { readPbxproj, testTargets } from '#cli/checks/tool/xcode/pbxproj.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { getBlobs, getCachedEntries } from '#cli/execution/checkout/revision.ts';
+import { parseJsonDocument } from '#cli/parsers/json.ts';
+import { testPlanSchema } from '#cli/parsers/schema/xcode.ts';
+import { readPbxproj, testTargets } from '#cli/parsers/xcode.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { getBlobs, getCachedEntries } from '#cli/repository/revisions/objects.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two checks find the folder of a project bundle; the bundle boundary is computed in one place.
+
 function folderOf(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf('.xcodeproj'));
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
@@ -72,10 +73,16 @@ export function orphanSources(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function testPlans(input: EngineInput): Finding[] {
-    const plans = trackedByExtension(input, ['.xctestplan']).map(
-        (path) => JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as TestPlan,
+    const plans = trackedByExtension(input, ['.xctestplan']).map((path) => ({
+        path,
+        read: parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), testPlanSchema),
+    }));
+    const syntax = plans.flatMap(({ path, read }) =>
+        read.error === undefined ? [] : [findingAt(input, { file: path, line: 1 }, 'syntax', read.error)],
     );
-    const planned = new Set(plans.flatMap((plan) => (plan.testTargets ?? []).map((entry) => entry.target?.name ?? '')));
+    const planned = new Set(
+        plans.flatMap(({ read }) => (read.data?.testTargets ?? []).map((entry) => entry.target?.name ?? '')),
+    );
     const schemes = trackedByExtension(input, ['.xcscheme'])
         .filter((path) => path.includes('/xcshareddata/'))
         .filter((path) => {
@@ -85,6 +92,7 @@ export function testPlans(input: EngineInput): Finding[] {
         .map((path) =>
             findingAt(input, { file: path, line: 1 }, 'scheme-plan', 'This scheme runs tests and names no test plan.'),
         );
+    if (syntax.length > 0) return [...syntax, ...schemes];
     const targets = trackedByExtension(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
         testTargets(readSource(input.root, path, input.reads).toString('utf8'))
             .filter((name) => !planned.has(name))
@@ -103,7 +111,7 @@ export function testPlans(input: EngineInput): Finding[] {
 export async function symlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
-    const entries = await getCachedEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);
+    const entries = await getCachedEntries(input.root, { kind: 'index' }, input.reads, input.cancelSignal);
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&

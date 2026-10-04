@@ -1,7 +1,7 @@
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**
@@ -40,7 +40,7 @@ export function xcconfig(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function entitlements(input: EngineInput): Finding[] {
-    const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
+    const allowed = new Set(input.view.options('tools.xcode')['entitlements_allowed'] as string[] | undefined);
     return trackedByExtension(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         return text

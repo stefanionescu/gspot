@@ -1,68 +1,55 @@
-import { staticString } from '#plugin/files.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { INDEX_PATTERNS } from '#plugin/config/rules.ts';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { IndexImportsOptions } from '#plugin/types/rules.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { posix } from 'node:path';
+import { createRule } from '#plugin/definition.ts';
+import { ASTUtils } from '@typescript-eslint/utils';
+import { INDEX_BASENAMES } from '#plugin/config/files.ts';
+import type { ImportSource } from '#plugin/types/rules.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { INTERNAL_PREFIXES, MODULE_MOCK_METHODS } from '#plugin/config/rules.ts';
 
-export const noIndexImports = createRule<IndexImportsOptions, 'index'>({
+export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',
     meta: {
-        type: 'problem',
+        defaultOptions: [],
+        type: 'suggestion',
         docs: {
             level: 'all',
             title: 'No index imports',
             example:
                 'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',
-            summary: 'Finds an import that names an index file instead of the module that declares the value.',
+            description:
+                'Finds an import that names an index file instead of the module that declares the value, including module paths in Vitest and Jest mocks.',
             why: 'An index import pulls in everything behind the barrel and hides which module the value comes from.',
             fix: 'Import from the leaf module directly.',
         },
-        schema: [
-            optionsSchema({
-                allowed: { type: 'array', items: { type: 'string' } },
-                patterns: { type: 'array', items: { type: 'string' } },
-            }),
-        ],
+        schema: [],
         messages: { index: 'Import the owning module instead of the index "{{source}}".' },
     },
-    defaultOptions: [{ allowed: [], patterns: INDEX_PATTERNS }],
-    create(context, [options]) {
-        const allowed = new Set(options.allowed);
-        const patterns = (options.patterns ?? INDEX_PATTERNS).map((pattern) => new RegExp(pattern, 'u'));
+    create(context) {
         const check = (node: TSESTree.Node | null | undefined): void => {
-            const source = staticString(node);
+            if (!node) return;
+            const source = ASTUtils.getStringIfConstant(node);
             if (
-                !node ||
-                source === undefined ||
-                allowed.has(source) ||
-                patterns.every((pattern) => !pattern.test(source))
+                source === null ||
+                !INTERNAL_PREFIXES.some((prefix) => source.startsWith(prefix)) ||
+                !INDEX_BASENAMES.has(posix.basename(source))
             )
                 return;
             context.report({ node, messageId: 'index', data: { source } });
         };
         return {
-            ImportDeclaration: (node) => {
-                check(node.source);
-            },
-            ExportAllDeclaration: (node) => {
-                check(node.source);
-            },
-            ExportNamedDeclaration: (node) => {
-                check(node.source);
-            },
-            ImportExpression: (node) => {
+            'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression'(node: ImportSource) {
                 check(node.source);
             },
             CallExpression(node) {
                 if (
                     node.callee.type !== AST_NODE_TYPES.MemberExpression ||
                     node.callee.object.type !== AST_NODE_TYPES.Identifier ||
-                    node.callee.object.name !== 'vi' ||
                     node.callee.property.type !== AST_NODE_TYPES.Identifier
                 )
                     return;
-                if (['doMock', 'importActual', 'mock'].includes(node.callee.property.name)) check(node.arguments[0]);
+                const framework = node.callee.object.name;
+                if (framework !== 'vi' && framework !== 'jest') return;
+                if (MODULE_MOCK_METHODS[framework].has(node.callee.property.name)) check(node.arguments[0]);
             },
         };
     },

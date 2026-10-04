@@ -13,7 +13,6 @@
     },
     "type": "module",
     "main": "./dist/plugin.cjs",
-    "module": "./dist/plugin.js",
     "types": "./dist/plugin.d.ts",
     "exports": {
         ".": {
@@ -32,16 +31,20 @@
     "dependencies": {
         "@typescript-eslint/typescript-estree": "8.70.0",
         "@typescript-eslint/utils": "8.70.0",
-        "picomatch": "4.0.7",
-        "typescript": "5.9.3"
+        "picomatch": "4.0.7"
     },
     "devDependencies": {
         "@types/picomatch": "4.0.2",
-        "eslint": "9.39.5"
+        "eslint": "9.39.5",
+        "typescript": "5.9.3"
     },
     "peerDependencies": {
-        "eslint": ">=9.38.0"
+        "eslint": ">=9.38.0",
+        "typescript": ">=4.8.4 <6.1.0"
     },
     "sideEffects": false,
-    "author": "Stefan Ionescu"
+    "author": "Stefan Ionescu",
+    "engines": {
+        "node": ">=22"
+    }
 }

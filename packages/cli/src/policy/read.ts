@@ -1,72 +1,79 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
-import * as messages from '#cli/policy/messages.ts';
+import { readText } from '#cli/platform/source.ts';
+import { valueAt } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { normalize } from '#cli/policy/normalize.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { buildPolicy } from '#cli/policy/normalize.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
-import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
-import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
-import { reasonProblems, pathProblems as getPathProblems } from '#cli/policy/problems.ts';
-import type { Policy, RawPolicy, PathSegment, PolicyFiles, PolicyProblem } from '#cli/types/policy/policy.ts';
+import { policySchema } from '#cli/policy/schema/policy.ts';
+import type { KeyPath } from '#cli/types/platform/document.ts';
+import { FIELD_PROBLEMS } from '#cli/config/policy/settings.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import type { Policy, RawPolicy, PolicyFile, PolicyProblem } from '#cli/types/policy/settings.ts';
+import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/problems/selection.ts';
+import { reasonProblems, restrictionProblems, pathProblems as getPathProblems } from '#cli/policy/problems/reasons.ts';
 
 function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
-    const segments = issue.path.filter((part): part is PathSegment => typeof part !== 'symbol');
+    const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
     if (issue.code !== 'unrecognized_keys') return [problemText({ path: segments, message: issue.message }, path)];
     const where = segments.map(String).join('.');
-    return issue.keys.map((key) => `${path}: ${messages.unknownKey(where, key)}`);
+    return issue.keys.map(
+        (key) =>
+            `${path}: \`${key}\` is not a setting gspot knows under ${where === '' ? 'the top level' : '[' + where + ']'}. The policy reference (gspot.dev/reference/configuration/) lists every key.`,
+    );
 }
 
-function validatedRaw(text: string, path: string): RawPolicy {
-    const result = policySchema.safeParse(parseTomlText(text, path));
+function throwProblems(problems: PolicyProblem[]): never {
+    throw new GspotError(
+        'policy',
+        problems.map((problem) => problemText(problem, POLICY_FILE)),
+    );
+}
+
+function validatedRaw(text: string): RawPolicy {
+    const result = policySchema.safeParse(parseTomlText(text, POLICY_FILE, 'policy'));
     if (!result.success)
         throw new GspotError(
             'policy',
-            result.error.issues.flatMap((issue) => issueLines(path, issue)),
+            result.error.issues.flatMap((issue) => issueLines(POLICY_FILE, issue)),
         );
     return result.data;
 }
 
-function completePolicy(path: string, raw: RawPolicy): Policy {
-    const policy = normalize(raw);
-    const unknown = unknownKitProblems(policy);
-    if (unknown.length > 0)
-        throw new GspotError(
-            'policy',
-            unknown.map((problem) => problemText(problem, path)),
-        );
+function normalizeKnownConfigurations(raw: RawPolicy): Policy {
+    const policy = buildPolicy(raw);
+    const unknown = unknownConfigurationProblems(policy);
+    if (unknown.length > 0) throwProblems(unknown);
     return policy;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three steps of recovery find the entry that owns a field problem; the field set is applied in one place.
-function ownerOf(path: PathSegment[]): PathSegment[] {
+// Strict commands and check execution validate the same effective policy, including after bad entries are removed.
+function collectProblems(policy: Policy, root: string | undefined): PolicyProblem[] {
+    return [
+        ...reasonProblems(policy),
+        ...restrictionProblems(policy),
+        ...(root === undefined ? [] : getPathProblems(root, policy)),
+        ...completenessProblems(policy),
+    ];
+}
+
+function ownerOf(path: KeyPath): KeyPath {
     const last = path.at(-1);
     return typeof last === 'string' && FIELD_PROBLEMS.has(last) ? path.slice(0, -1) : path;
 }
 
 // Deeper owners and later array entries go first, so no removal moves an owner still to be removed.
-function byRemovalOrder(left: PathSegment[], right: PathSegment[]): number {
+function byRemovalOrder(left: KeyPath, right: KeyPath): number {
     if (left.length !== right.length) return right.length - left.length;
     const [last, other] = [left.at(-1), right.at(-1)];
     return typeof last === 'number' && typeof other === 'number' ? other - last : 0;
 }
 
-// The table or array that holds the value at a path, or undefined when the path leaves the document.
-function containerOf(raw: RawPolicy, path: PathSegment[]): object | undefined {
-    let container: unknown = raw;
-    for (const segment of path) {
-        if (typeof container !== 'object' || container === null) return undefined;
-        container = (container as Record<PathSegment, unknown>)[segment];
-    }
-    return typeof container === 'object' && container !== null ? container : undefined;
-}
-
 // Removes the value an owner path names: an array entry by index, or a table field by key.
-function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
-    const container = containerOf(raw, owner.slice(0, -1));
+function dropOwner(raw: RawPolicy, owner: KeyPath): void {
+    const container = valueAt(raw, owner.slice(0, -1));
     const last = owner.at(-1);
-    if (container === undefined || last === undefined) return;
+    if (container === null || typeof container !== 'object' || last === undefined) return;
     if (Array.isArray(container)) {
         if (typeof last === 'number') container.splice(last, 1);
         return;
@@ -89,117 +96,68 @@ export function problemText(problem: PolicyProblem, file?: string): string {
 /**
  * Parse TOML and retain the parser location in policy errors.
  *
- * @param text the policy text
- * @param path the policy file, for the error
+ * @param text the TOML text
+ * @param path the source file or URL, for the error
+ * @param kind whether the document is a policy or reusable template
  * @returns the parsed table
  */
-export function parseTomlText(text: string, path: string): Record<string, unknown> {
+export function parseTomlText(text: string, path: string, kind: 'policy' | 'template'): Record<string, unknown> {
     try {
         return parseToml(text);
     } catch (error) {
         if (!(error instanceof TomlError)) throw error;
         const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
-        throw new GspotError('policy', [
-            messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail),
+        throw new GspotError(kind, [
+            `${path}:${String(error.line)}:${String(error.column)} is not valid TOML: ${detail}`,
         ]);
     }
 }
 
 /**
- * Parses and validates the text of a gspot.toml. Throws PolicyError with every problem found.
+ * Parses and validates gspot.toml. Throws GspotError('policy') with every problem found.
  *
  * @param text the file's text
- * @param path the file's name, for messages
  * @param root the repository root, when scopes are to be checked against the file system
  * @returns the normalized policy
  */
-export function parsePolicyText(text: string, path: string, root?: string): Policy {
-    const policy = normalize(validatedRaw(text, path));
-    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : getPathProblems(root, policy))];
-    if (problems.length > 0)
-        throw new GspotError(
-            'policy',
-            problems.map((problem) => problemText(problem, path)),
-        );
+export function parseStrictPolicy(text: string, root?: string): Policy {
+    const policy = normalizeKnownConfigurations(validatedRaw(text));
+    const problems = collectProblems(policy, root);
+    if (problems.length > 0) throwProblems(problems);
     return policy;
 }
 
 /**
  * Reads policy for check execution. Invalid values become findings and are excluded from the effective policy.
- * Syntax errors, unknown keys, and invalid document shapes throw `PolicyError`.
+ * Syntax errors, unknown keys, and invalid document shapes throw GspotError('policy').
  *
  * @param text the file's text.
- * @param path the file's name, for messages.
  * @param root the repository root, when scopes are to be checked against the file system.
- * @returns the policy without the wrong entries, and one finding per wrong entry.
+ * @returns the policy without invalid entries, and each located problem.
  */
-export function readPolicyText(
-    text: string,
-    path: string,
-    root?: string,
-): { policy: Policy; problems: PolicyProblem[] } {
-    const raw = validatedRaw(text, path);
-    const complete = completePolicy(path, raw);
-    // One finding per wrong value: a refused reason is also a loosening without one, and the entry is the same.
-    const found = [
-        ...new Map(
-            [
-                ...reasonProblems(complete),
-                ...(root === undefined ? [] : getPathProblems(root, complete)),
-                ...completenessProblems(complete),
-            ].map((problem) => [JSON.stringify(ownerOf(problem.path)), problem]),
-        ).values(),
-    ];
+export function readPolicyText(text: string, root?: string): Pick<PolicyFile, 'policy' | 'problems'> {
+    const raw = validatedRaw(text);
+    const complete = normalizeKnownConfigurations(raw);
+    const found = collectProblems(complete, root);
 
     if (found.length === 0) return { policy: complete, problems: [] };
     // A configurations list is settled by a root value, never by dropping the list.
-    if (found.some((problem) => ownerOf(problem.path).at(-1) === 'kits'))
-        throw new GspotError(
-            'policy',
-            found.map((problem) => problemText(problem, path)),
-        );
+    if (found.some((problem) => ownerOf(problem.path).at(-1) === 'configurations')) throwProblems(found);
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));
     for (const owner of [...owners.values()].toSorted(byRemovalOrder)) dropOwner(raw, owner);
-    const policy = completePolicy(path, raw);
-    const remaining = [
-        ...reasonProblems(policy),
-        ...(root === undefined ? [] : getPathProblems(root, policy)),
-        ...completenessProblems(policy),
-    ];
-    if (remaining.length > 0)
-        throw new GspotError(
-            'policy',
-            remaining.map((problem) => problemText(problem, path)),
-        );
+    const policy = normalizeKnownConfigurations(raw);
+    const remaining = collectProblems(policy, root);
+    if (remaining.length > 0) throwProblems(remaining);
     return { policy, problems: found };
-}
-
-/**
- * Every problem the selection and the surface find in a parsed policy. Throws PolicyError when there are any.
- * @param source the parsed policy and its authored text
- */
-export function assertPolicyComplete(source: Pick<PolicyFiles, 'policy' | 'text' | 'path'>): void {
-    const unknown = unknownKitProblems(source.policy);
-    if (unknown.length > 0)
-        throw new GspotError(
-            'policy',
-            unknown.map((problem) => problemText(problem, source.path)),
-        );
-    const problems = completenessProblems(source.policy);
-    if (problems.length > 0)
-        throw new GspotError('policy', [...new Set(problems.map((problem) => problemText(problem, source.path)))]);
 }
 
 /**
  * Refuses a policy that check reads with findings: a command that writes from the policy needs every line right.
  * @param files the policy as read
  */
-export function assertNoProblems(files: PolicyFiles): void {
+export function assertNoProblems(files: PolicyFile): void {
     if (files.problems.length === 0) return;
-    throw new GspotError(
-        'policy',
-        files.problems.map((problem) => problemText(problem, 'gspot.toml')),
-    );
+    throwProblems(files.problems);
 }
 
 /**
@@ -207,9 +165,8 @@ export function assertNoProblems(files: PolicyFiles): void {
  * @param root the repository root
  * @returns whether the file is there
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Explain, init, and tool inspection decide that a folder has a policy the same way.
 export function hasPolicy(root: string): boolean {
-    return openRoot(root).read('gspot.toml') !== undefined;
+    return readText(root, POLICY_FILE) !== undefined;
 }
 
 /**
@@ -217,11 +174,11 @@ export function hasPolicy(root: string): boolean {
  * @param root the repository root
  * @returns the policy and the file's path and text
  */
-export function readPolicy(root: string): PolicyFiles {
-    const path = join(root, 'gspot.toml');
-    const current = openRoot(root).read('gspot.toml');
-    if (current === undefined) throw new GspotError('policy', [messages.fileMissing('gspot.toml')]);
-    const text = current.bytes.toString('utf8');
-    const { policy, problems } = readPolicyText(text, 'gspot.toml', root);
+export function readPolicy(root: string): PolicyFile {
+    const path = join(root, POLICY_FILE);
+    const text = readText(root, POLICY_FILE);
+    if (text === undefined)
+        throw new GspotError('policy', [`There is no gspot.toml here. Run \`gspot init\` to create one.`]);
+    const { policy, problems } = readPolicyText(text, root);
     return { policy, path, text, problems };
 }

@@ -1,4 +1,16 @@
-// The literal values checks/language/swift reads: names, patterns, limits, and tables.
+export const DECLARATIONS = new Set([
+    'class_declaration',
+    'protocol_declaration',
+    'function_declaration',
+    'property_declaration',
+    'typealias_declaration',
+]);
+
+export const FILE_LOCAL = new Set(['private', 'fileprivate']);
+
+export const COMMENTS = new Set(['comment', 'multiline_comment']);
+
+export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
 
 export const SWIFTLINT_COMMAND = [
     'swiftlint',
@@ -10,24 +22,23 @@ export const SWIFTLINT_COMMAND = [
     'json',
     '{files}',
 ];
+
 export const DOC_RULE = 'doc_comment_style';
-export const DUPLICATE_LINES = 4;
-export const DECLARATIONS = new Set([
-    'class_declaration',
-    'protocol_declaration',
-    'function_declaration',
-    'property_declaration',
-    'typealias_declaration',
-]);
-export const FILE_LOCAL = new Set(['private', 'fileprivate']);
-export const COMMENTS = new Set(['comment', 'multiline_comment']);
+
+export const XCODE_DESTINATION = 'generic/platform=iOS Simulator';
+
+export const WORKSPACE_SUFFIX = '.xcworkspace';
+
+export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
+
+export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
+
+export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
+
+export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
 
 /** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
 export const DIRECTIVE = /^\/[/*]\s*(?:swiftlint:|swiftformat:|periphery:|sourcery:)/u;
-export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
-export const XCODE_DESTINATION = 'generic/platform=iOS Simulator';
-export const WORKSPACE_SUFFIX = '.xcworkspace';
-export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
-export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
-export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
-export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
+
+/** Selected source copies shared by the compiler, analyzer, Periphery, and coverage. */
+export const BUILD_SOURCE_DIRECTORY = 'source';

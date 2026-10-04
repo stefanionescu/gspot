@@ -1,5 +1,5 @@
 name: release
-# Release publication requires an explicit workflow dispatch.
+# Start workflow dispatch on the version tag, such as v0.1.0.
 on:
     workflow_dispatch:
 permissions:
@@ -8,20 +8,70 @@ concurrency:
     group: release-${{ github.ref }}
     cancel-in-progress: false
 jobs:
-    ci:
+    version:
         permissions:
             contents: read
             actions: read
-            security-events: write
-        uses: $/.github/workflows/ci.yml
+        outputs:
+            ci_run: ${{ steps.ci.outputs.run }}
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - name: Check out the release commit
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - name: Prepare release validation runtimes
+              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+              with:
+                  version: '2026.8.8'
+                  install: false
+            - name: Validate the release tag and plugin pin
+              shell: bash
+              run: |
+                  mise install bun node
+                  bun install --frozen-lockfile
+                  bun scripts/release/version.ts "${TAG}"
+              env:
+                  TAG: ${{ github.ref_name }}
+            - name: Require successful main CI for the exact release commit
+              id: ci
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  ci_run=$(gh run list --workflow ci.yml --commit "${RELEASE_COMMIT}" --branch main --event push --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+                  if [ -z "$ci_run" ]; then
+                      echo 'Run main CI successfully for this exact commit before releasing.' >&2
+                      exit 1
+                  fi
+                  printf 'run=%s\n' "$ci_run" >> "$GITHUB_OUTPUT"
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_COMMIT: ${{ github.sha }}
+            - name: Require a reviewed release environment
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  reviewed=$(gh api "repos/${RELEASE_REPOSITORY}/environments/release" --jq '[.protection_rules[] | select(.type == "required_reviewers") | .reviewers[]] | length > 0')
+                  if [ "$reviewed" != true ]; then
+                      echo 'Configure a required reviewer on the release environment before publishing.' >&2
+                      exit 1
+                  fi
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_REPOSITORY: ${{ github.repository }}
     publish:
-        needs: ci
+        needs: version
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         environment: release
         permissions:
             contents: write
+            actions: read
             id-token: write
+        defaults:
+            run:
+                shell: bash
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -32,27 +82,53 @@ jobs:
               with:
                   version: '2026.8.8'
                   cache: false
+                  install: false
+            - name: Install release runtimes
+              run: mise install bun node
             - name: Set up the repository
-              run: mise run --skip-tools setup
+              run: mise run setup
             - name: Check the release version
-              shell: bash
-              run: mise run --skip-tools check:release
+              run: bun scripts/release/version.ts "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
             - name: Build the CLI package
-              run: mise run --skip-tools build:cli
-            # npm trusted publishing: npm trades this job's OIDC token for a publish token that lasts one run, and
-            # records provenance. Each package names this workflow and the release environment as its trusted
-            # publisher on npmjs.com, so no token is stored anywhere.
+              run: mise run build:cli
+            - name: Download archives verified by this commit's CI
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+              with:
+                  github-token: ${{ github.token }}
+                  run-id: ${{ needs.version.outputs.ci_run }}
+                  pattern: gspot-binary-*
+                  path: verified-binaries
+            - name: Verify all standalone archive checksums
+              run: bun scripts/release/artifacts.ts verified-binaries packages/cli/dist-binaries/release
+            # First publish each package manually with a short-lived granular token. Configure this workflow and
+            # the release environment as trusted publishers on npm before using OIDC for later releases.
             - name: Publish the packages to npm
-              shell: bash
               run: |
+                  set -euo pipefail
                   for package in packages/eslint-plugin packages/cli; do
-                      npm publish "./${package}" --access public
+                      name=$(jq -r '.name' "${package}/package.json")
+                      version=$(jq -r '.version' "${package}/package.json")
+                      lookup="${RUNNER_TEMP}/npm-release.json"
+                      if npm view "${name}@${version}" version --json > "${lookup}"; then
+                          test "$(jq -r '.' "${lookup}")" = "${version}"
+                          echo "${name}@${version} is already published."
+                          continue
+                      fi
+                      if ! jq -e '.error.code == "E404"' "${lookup}" > /dev/null; then
+                          echo "Cannot verify ${name}@${version} on npm." >&2
+                          exit 1
+                      fi
+                      npm publish "./${package}"
                   done
             - name: Create the GitHub release
-              shell: bash
-              run: gh release create "${TAG}" --title "${TAG}" --generate-notes
+              run: gh release create "${TAG}" --verify-tag --title "${TAG}" --generate-notes packages/cli/dist-binaries/release/*.tar.gz packages/cli/dist-binaries/release/SHA256SUMS
               env:
                   GH_TOKEN: ${{ github.token }}
                   TAG: ${{ github.ref_name }}
+    docs:
+        needs: publish
+        uses: ./.github/workflows/docs.yml
+        with:
+            release_tag: ${{ github.ref_name }}

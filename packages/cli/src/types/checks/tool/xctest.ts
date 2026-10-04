@@ -1,7 +1,8 @@
-// The types of checks/tool/xctest in this package.
+import type { z } from 'zod';
+import type { xccovSchema } from '#cli/parsers/schema/xctest.ts';
 
-/** The part of an xccov report the coverage check reads. */
-export type XcodeCoverageReport = { targets?: { name: string; lineCoverage: number }[] };
+/** A native coverage report accepted by the xccov schema. */
+export type CoverageReport = z.infer<typeof xccovSchema>;
 
 /** One coverage floor of the policy. */
 export type CoverageFloor = { target: string; percent: number };

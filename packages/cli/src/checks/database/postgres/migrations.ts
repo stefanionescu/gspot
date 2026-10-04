@@ -1,15 +1,16 @@
 import { posix } from 'node:path';
+import { memo } from '#cli/platform/memo.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/types/checks/database.ts';
-import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database.ts';
+import { readSource } from '#cli/platform/source.ts';
+import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Migration } from '#cli/types/checks/database/postgres.ts';
+import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database/postgres.ts';
 
-const reads = new WeakMap<object, Map<string, Promise<Migration[]>>>();
+const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
 function folderOf(input: EngineInput, paths: string[]): string | undefined {
-    const named = input.view.tool('postgres')['migrations_directory'];
+    const named = input.view.options('postgres')['migrations_folder'];
     const prefix = input.scope === '' ? '' : `${input.scope}/`;
     if (typeof named === 'string' && named !== '') return `${prefix}${named.replace(/\/$/u, '')}`;
     return MIGRATION_FOLDERS.map((folder) => `${prefix}${folder}`).find((folder) =>
@@ -20,12 +21,13 @@ function folderOf(input: EngineInput, paths: string[]): string | undefined {
 async function readMigrations(input: EngineInput, paths: string[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const path of paths) {
-        const text = readSource(input.root, path, input.reads).toString('utf8');
+        const original = readSource(input.root, path, input.reads).toString('utf8');
+        const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
         const name = posix.basename(path);
-        const parsed = await sqlFile(text, input.reads);
+        const parsed = await parseSqlFile(text, input.reads);
         if (parsed.error !== undefined)
             throw new Error(
-                `SQL parse failed at ${String(parsed.error.line)}:${String(parsed.error.column)}: ${parsed.error.text}`,
+                `${path}:${String(parsed.error.line)}:${String(parsed.error.column)}: the SQL does not parse: ${parsed.error.text}`,
             );
         migrations.push({
             path,
@@ -49,19 +51,23 @@ export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
         .map((file) => file.path);
     const folder = folderOf(input, paths);
     if (folder === undefined) return [];
-    let folders = reads.get(input.reads);
-    if (folders === undefined) {
-        folders = new Map();
-        reads.set(input.reads, folders);
-    }
+    const folders = memo(input.reads, MIGRATION_MEMO);
     const key = JSON.stringify([folder, paths]);
     let migrations = folders.get(key);
     if (migrations === undefined) {
         migrations = readMigrations(
             input,
             paths
-                .filter((path) => path.startsWith(`${folder}/`) && path.endsWith('.sql'))
-                .toSorted((left, right) => left.localeCompare(right)),
+                .filter((path) => path.startsWith(`${folder}/`) && path.endsWith('.sql') && !path.endsWith('.down.sql'))
+                .map((path) => ({
+                    path,
+                    version: BigInt(MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '0'),
+                }))
+                .toSorted((left, right) => {
+                    if (left.version === right.version) return left.path.localeCompare(right.path);
+                    return left.version < right.version ? -1 : 1;
+                })
+                .map((entry) => entry.path),
         );
         folders.set(key, migrations);
     }

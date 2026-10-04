@@ -1,14 +1,15 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
-import { decodedText } from '#cli/platform/text.ts';
+import { decodeUtf8 } from '#cli/platform/text.ts';
+import type { Read } from '#cli/types/platform/root.ts';
 import { planMerge } from '#cli/lifecycle/merge/plan.ts';
-import type { Read } from '#cli/types/platform/platform.ts';
-import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Planned } from '#cli/types/lifecycle/output.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
-import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';
+import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import { isMatch, identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
-import type { BlockSpan, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
+import type { BlockSpan, BlockStyle } from '#cli/types/platform/managed-blocks.ts';
 
 import type {
     Log,
@@ -20,18 +21,27 @@ import type {
     ReplacementRequest,
 } from '#cli/types/lifecycle/ownership.ts';
 
+// An authored file is edited when its current bytes differ from the recorded gspot write.
+function isEdited(existing: OwnershipEntry | undefined, current: Read | undefined): boolean {
+    if (existing === undefined) return false;
+    if (current === undefined) return false;
+    return !isRecorded(current, existing.installed);
+}
+
 // Whether the current file must stay: an edited owned file without review, or an unowned file without replace.
 function isPreservedReplacement(
+    request: ReplacementRequest,
     existing: OwnershipEntry | undefined,
     current: Read | undefined,
-    installed: ReturnType<typeof identify>,
-    kind: OwnedKind,
-    canReplace: boolean,
-    expected: Read | undefined,
 ): boolean {
     if (current === undefined) return false;
-    if (existing === undefined) return !isMatch(current, installed) && !canReplace;
-    return !isRecorded(current, existing.installed) && kind !== 'policy' && !(canReplace && expected !== undefined);
+    const installed: Identity = identify(request.next);
+    if (existing === undefined) return !isMatch(current, installed) && request.canReplace !== true;
+    return (
+        isEdited(existing, current) &&
+        request.kind !== 'policy' &&
+        !(request.canReplace === true && request.expected !== undefined)
+    );
 }
 
 // The plan that installs the next bytes. A file gspot first records while it already holds them is adopted.
@@ -41,20 +51,12 @@ function planChange(
     existing: OwnershipEntry | undefined,
     next: Read,
     kind: OwnedKind,
-): Planned & { entry: OwnershipEntry } {
+): Planned & Required<Pick<Planned, 'entry'>> {
     const installed = identify(next);
     const status = isMatch(current, installed) ? 'unchanged' : 'changed';
     const isAdopted = existing === undefined && status === 'unchanged' && ADOPTED_KINDS.has(kind);
     const entry: OwnershipEntry = { path, kind, installed, ...(isAdopted ? { adopted: true } : {}) };
     return { path, before: current, previous: existing, after: next, entry, status };
-}
-
-// The text of a managed block's file, refused when the file is not UTF-8 text.
-function decodeText(path: string, current: Read | undefined): string {
-    if (current === undefined) return '';
-    const text = decodedText(current.bytes);
-    if (text === undefined) throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
-    return text;
 }
 
 // The next text and record when the recorded block is still in place, or undefined when it was edited away.
@@ -66,20 +68,20 @@ function planUpdate(
     body: string,
 ): PlannedBlock | undefined {
     if (recorded.style !== style || span === undefined) return undefined;
-    const start = span.start - recorded.prefix.length;
-    if (start < 0 || text.slice(start, span.end) !== recorded.installed) return undefined;
+    const start = recordedBlockStart(text, span, recorded);
+    if (start === undefined) return undefined;
     const installed = recorded.prefix + applyBlock('', body, style);
     return { nextText: text.slice(0, start) + installed + text.slice(span.end), block: { ...recorded, installed } };
 }
 
 // The next text and record for a file whose block is not recorded yet.
 function planInsert(
+    text: string,
     current: Read | undefined,
     span: BlockSpan | undefined,
     style: BlockStyle,
     body: string,
 ): PlannedBlock {
-    const text = current?.bytes.toString('utf8') ?? '';
     const nextText = applyBlock(text, body, style);
     let prefix = '';
     if (span === undefined && text !== '') prefix = text.endsWith('\n') ? '\n' : '\n\n';
@@ -112,7 +114,7 @@ function planBlock(
  */
 export function getOnDisk(log: Log, path: string, ...sides: (Read | Identity | undefined)[]): Read | undefined {
     const isLink = sides.some((side) => side?.isLink === true);
-    return isLink ? log.files.readEntry(path) : log.files.read(path);
+    return isLink ? log.files.readKeepingLinks(path) : log.files.read(path);
 }
 
 /**
@@ -122,15 +124,15 @@ export function getOnDisk(log: Log, path: string, ...sides: (Read | Identity | u
  * @returns the plan
  */
 export function proposeReplacement(log: Log, request: ReplacementRequest): Planned {
-    const { path, next, kind, canReplace = false, expected, proposed } = request;
+    const { path, next, kind, expected, proposed } = request;
     const existing = log.entryFor(path);
     log.files.validate(path, next, proposed);
     const current = getOnDisk(log, path, next, existing?.installed);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
-        throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
+        throw new Error(`${path} changed after gspot read it. Run the command again.`);
     const installed = identify(next);
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
-    if (isPreservedReplacement(existing, current, installed, kind, canReplace, expected))
+    if (isPreservedReplacement(request, existing, current))
         return { path, before: current, previous: existing, status: 'preserved' };
     if (existing !== undefined && isMatch(current, installed))
         return { path, before: current, previous: existing, status: 'unchanged' };
@@ -148,7 +150,8 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
 export function proposeBlock(log: Log, path: string, body: string, style: BlockStyle): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
-    const text = decodeText(path, current);
+    const text = current === undefined ? '' : decodeUtf8(current.bytes);
+    if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
     const span = blockSpan(text, style);
     const recorded = existing?.block;
     if (recorded !== undefined && current !== undefined) {
@@ -156,16 +159,14 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
         if (planned === undefined) return { path, before: current, previous: existing, status: 'preserved' };
         return planBlock(path, current, existing, planned);
     }
-    if (existing !== undefined && current !== undefined && !isRecorded(current, existing.installed))
-        return { path, before: current, previous: existing, status: 'preserved' };
-    return planBlock(path, current, existing, planInsert(current, span, style, body));
+    if (isEdited(existing, current)) return { path, before: current, previous: existing, status: 'preserved' };
+    return planBlock(path, current, existing, planInsert(text, current, span, style, body));
 }
 
 /**
  * Proposes merged fields in a configuration file the repository authored.
  * @param log the open log
  * @param path the file
- * @param format the file's format
  * @param changes the keys and the values they must hold
  * @param canReplace whether an unowned file may be merged into
  * @returns the plan
@@ -173,8 +174,7 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
 export function proposeMerge(
     log: Log,
     path: string,
-    format: ConfigurationFormat,
-    changes: { path: (string | number)[]; value: unknown }[],
+    changes: ConfigurationOutput['changes'],
     canReplace = false,
 ): Planned {
     const existing = log.entryFor(path);
@@ -182,7 +182,6 @@ export function proposeMerge(
     const isInstalled = isRecorded(current, existing?.installed);
     const plan = planMerge({
         path,
-        format,
         changes,
         current,
         existing,
@@ -212,9 +211,21 @@ export function proposeRetirement(log: Log, path: string, expected: Read): Plann
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     if (!isDeepStrictEqual(current, expected))
-        throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
+        throw new Error(`${path} changed after gspot read it. Run the command again.`);
     if (current === undefined) return { path, before: current, previous: existing, status: 'unchanged' };
     if (existing !== undefined && !isRecorded(current, existing.installed))
         return { path, before: current, previous: existing, status: 'preserved' };
     return { path, before: current, previous: existing, status: 'changed' };
+}
+
+/**
+ * Finds the start of a recorded managed block when its text is unchanged.
+ * @param text the current file text
+ * @param span the current block limits
+ * @param block the recorded block
+ * @returns the start, or undefined when the block changed
+ */
+export function recordedBlockStart(text: string, span: BlockSpan, block: OwnedBlock): number | undefined {
+    const start = span.start - block.prefix.length;
+    return start < 0 || text.slice(start, span.end) !== block.installed ? undefined : start;
 }

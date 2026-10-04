@@ -1,91 +1,148 @@
-import { isDeepStrictEqual } from 'node:util';
-import { allChecks } from '#cli/kits/listing.ts';
+import { resolve } from 'node:path';
+import { stringify } from 'smol-toml';
 import { readPolicy } from '#cli/policy/read.ts';
-import * as messages from '#cli/policy/messages.ts';
+import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { compact, similar } from '#cli/platform/text.ts';
+import { printResult } from '#cli/output/messages.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
-import type { TomlTable } from '#cli/types/policy/policy.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { addIgnore, removeMatching } from '#cli/policy/mutations.ts';
-import type { Program, CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
+import type { CommandResult } from '#cli/types/output.ts';
+import { similar, codeList } from '#cli/platform/text.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { compact, isRecord } from '#cli/platform/objects.ts';
+import type { Program } from '#cli/types/commands/program.ts';
+import { knownChecks } from '#cli/configurations/manifests.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
+import type { Policy, TomlTable } from '#cli/types/policy/settings.ts';
+import { commitPolicy, requireReason } from '#cli/commands/policy-edit.ts';
 
-function assertKnownCheck(checkName: string, repositoryChecks: string[]): void {
-    if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
+/**
+ * Adds an ignore: its paths join an entry with the same check, rule, reason, and expiry.
+ * An ignore with no paths covers the whole scope, so it leaves the merged entry without paths.
+ * @param raw the policy table
+ * @param entry the ignore as the command built it
+ */
+function addIgnore(raw: TomlTable, entry: TomlTable): void {
+    const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
+    const same = list.find((existing) =>
+        ['check', 'rule', 'reason', 'until'].every((field) => existing[field] === entry[field]),
+    );
+    if (same === undefined) {
+        list.push(entry);
+        raw['ignore'] = list;
         return;
     }
-
-    const known = [...allChecks().keys(), ...repositoryChecks];
-    throw new GspotError('policy', [messages.unknownCheck(checkName, similar(checkName, known))]);
+    const added = entry['paths'];
+    const existing = same['paths'];
+    if (!Array.isArray(added) || !Array.isArray(existing)) Reflect.deleteProperty(same, 'paths');
+    else same['paths'] = [...new Set([...(existing as string[]), ...(added as string[])])];
 }
 
-function buildReasonHint(o: IgnoreOptions): string {
-    const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
-    const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map((path) => quoteArgument(path)).join(' ')}`;
-    return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
+function assertKnownCheck(checkName: string, policy: Policy): void {
+    const known = knownChecks(policy.checks);
+    if (known.includes(checkName)) return;
+    throw new GspotError('policy', [
+        `There is no check called \`${checkName}\`.${similar(checkName, known).length > 0 ? ' Did you mean ' + codeList(similar(checkName, known)) + '?' : ''}`,
+    ]);
 }
 
-function buildIgnore(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
-    const entry: TomlTable = { check: o.check };
-    const lines = ['[[ignore]]', `check  = "${o.check}"`];
-    if (o.rule !== undefined) {
-        entry['rule'] = o.rule;
-        lines.push(`rule   = "${o.rule}"`);
-    }
-    if (o.paths !== undefined && o.paths.length > 0) {
-        entry['paths'] = o.paths;
-        lines.push(`paths  = ${JSON.stringify(o.paths)}`);
-    }
-    if (o.reason !== undefined) {
-        entry['reason'] = o.reason;
-        lines.push(`reason = ${JSON.stringify(o.reason)}`);
-    }
-    return { entry, lines };
+function buildReasonHint(options: IgnoreOptions): string {
+    const rule = options.rule === undefined ? '' : ` --rule ${quoteArgument(options.rule)}`;
+    const paths =
+        options.paths === undefined ? '' : ` --paths ${options.paths.map((path) => quoteArgument(path)).join(' ')}`;
+    return `gspot ignore ${quoteArgument(options.check)}${rule}${paths} --reason "..."`;
 }
 
-async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
-    const counter = { removed: 0 };
+function buildIgnore(options: IgnoreOptions): TomlTable {
+    const entry: TomlTable = { check: options.check };
+    if (options.rule !== undefined) {
+        entry['rule'] = options.rule;
+    }
+    if (options.paths !== undefined && options.paths.length > 0) {
+        entry['paths'] = options.paths;
+    }
+    if (options.reason !== undefined) {
+        entry['reason'] = options.reason;
+    }
+    if (options.until !== undefined) entry['until'] = options.until;
+    return entry;
+}
+
+async function deleteIgnore(root: string, log: Log, options: IgnoreOptions): Promise<CommandResult> {
+    let removedCount = 0;
+    const selector = {
+        check: options.check,
+        rule: options.rule,
+        ...compact({ reason: options.reason, until: options.until }),
+    };
     const committed = await commitPolicy(
         root,
-        removeMatching(
-            'ignore',
-            (entry: TomlTable): boolean =>
-                entry['check'] === o.check &&
-                (entry['rule'] ?? undefined) === o.rule &&
-                isDeepStrictEqual(entry['paths'] ?? [], o.paths ?? []),
-            counter,
-        ),
-        false,
+        log,
+        (raw) => {
+            const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
+            const kept = list.filter((entry) => {
+                if (!Object.entries(selector).every(([key, value]) => entry[key] === value)) return true;
+                const paths = entry['paths'] as string[] | undefined;
+                if (options.paths === undefined || options.paths.length === 0) {
+                    if (paths !== undefined && paths.length > 0) return true;
+                    removedCount += 1;
+                    return false;
+                }
+                if (paths === undefined) return true;
+                const removed = new Set(options.paths);
+                const remaining = paths.filter((path) => !removed.has(path));
+                if (remaining.length === paths.length) return true;
+                removedCount += 1;
+                entry['paths'] = remaining;
+                return remaining.length > 0;
+            });
+            if (kept.length === 0) Reflect.deleteProperty(raw, 'ignore');
+            else raw['ignore'] = kept;
+        },
         '',
     );
-    const noun = counter.removed === 1 ? 'entry' : 'entries';
+    if (committed.exitCode !== 0) return committed;
+    const noun = removedCount === 1 ? 'entry' : 'entries';
     const text =
-        counter.removed === 0
+        removedCount === 0
             ? 'no matching ignore entry'
-            : `removed ${String(counter.removed)} ignore ${noun} for ${o.check}`;
+            : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
     return { ...committed, text: `${text}\n` };
 }
 
 /**
  * gspot ignore: writes one [[ignore]] entry with its reason, or removes the entries that match.
- * @param o the parsed flags
+ * @param options the parsed flags
  * @returns the command result
  */
-async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
-    const root = findRoot(o.cwd);
-    assertPinMatches(root);
+async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
+    const root = findRoot(options.cwd);
+    assertVersionPin(root);
     const { policy } = readPolicy(root);
-    assertKnownCheck(
-        o.check,
-        policy.checks.map((check) => check.name),
+    assertKnownCheck(options.check, policy);
+    if (!options.remove && policy.require_reasons)
+        requireReason(options.reason, `gspot ignore ${options.check}`, buildReasonHint(options));
+    using log = openOwnership(root);
+    if (options.remove) return await deleteIgnore(root, log, options);
+    const entry = buildIgnore(options);
+    let written = '';
+    const result = await commitPolicy(
+        root,
+        log,
+        (raw) => {
+            addIgnore(raw, entry);
+            const list = raw['ignore'] as TomlTable[];
+            const saved = list.find((existing) =>
+                ['check', 'rule', 'reason', 'until'].every((key) => existing[key] === entry[key]),
+            );
+            written = stringify({ ignore: [saved] }).trimEnd();
+        },
+        'Ignore saved.',
     );
-    if (o.remove) return deleteIgnore(root, o);
-    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, buildReasonHint(o));
-    const { entry, lines } = buildIgnore(o);
-    return commitPolicy(root, addIgnore(entry), false, lines.join('\n'));
+    return result.exitCode === 0 && isRecord(result.json) && result.json['changed']
+        ? { ...result, text: `${written}\n${result.text}` }
+        : result;
 }
 
 /**
@@ -94,7 +151,8 @@ async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
  */
 export function registerIgnore(program: Program): void {
     program
-        .command('ignore <check>')
+        .command('ignore')
+        .argument('<check>', 'Check identifier to ignore or restore')
         .summary('Ignore a check or a rule')
         .description(
             'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and the configuration is applied. Every report lists the ignores, and --verbose prints each reason.',
@@ -106,18 +164,18 @@ export function registerIgnore(program: Program): void {
         .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, to the whole scope')
         .option('--rule <rule>', 'Turn off one rule of the check')
         .option('--reason <text>', 'Say why; required when require_reasons is true')
+        .option('--until <date>', 'Stop applying this ignore on YYYY-MM-DD (UTC)')
         .option('--remove', 'Delete the matching ignore')
         .action(async (check, flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(
-                (cwd) =>
-                    ignoreCommand({
-                        cwd,
-                        check,
-                        remove: flags.remove === true,
-                        ...compact({ paths: flags.paths, rule: flags.rule, reason: flags.reason }),
-                    }),
-                global,
+            const cwd = resolve(global.C ?? process.cwd());
+            printResult(
+                await ignoreCommand({
+                    cwd,
+                    check,
+                    remove: flags.remove === true,
+                    ...compact({ paths: flags.paths, rule: flags.rule, reason: flags.reason, until: flags.until }),
+                }),
             );
         });
 }

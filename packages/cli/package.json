@@ -28,15 +28,11 @@
     },
     "files": [
         "dist",
-        "kits",
-        "rules",
+        "configurations",
         "grammars"
     ],
-    "sideEffects": [
-        "./dist/gspot.js"
-    ],
     "engines": {
-        "node": ">=22"
+        "node": ">=24.2.0"
     },
     "imports": {
         "#cli/*": "./src/*",
@@ -58,7 +54,6 @@
         "execa": "9.6.1",
         "fastest-levenshtein": "1.0.16",
         "ignore": "7.0.9",
-        "import-meta-resolve": "4.2.0",
         "jsonc-parser": "3.3.1",
         "libpg-query": "18.1.4",
         "mdast-util-from-markdown": "2.0.3",
@@ -95,5 +90,8 @@
         "tree-sitter-javascript": "0.25.0",
         "tree-sitter-python": "0.25.0",
         "tree-sitter-typescript": "0.23.2"
-    }
+    },
+    "sideEffects": [
+        "./dist/gspot.js"
+    ]
 }

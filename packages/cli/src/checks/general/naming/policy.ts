@@ -1,56 +1,47 @@
-import { compact } from '#cli/platform/text.ts';
-import type { Manifest } from '#cli/types/kits.ts';
-import { shippedPolicy } from '#cli/policy/audit.ts';
+import { compact } from '#cli/platform/objects.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { namingTerms } from '#cli/parsers/schema/naming.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { compileTerms } from '#cli/checks/general/naming/match.ts';
-import { policyTables, settingValue } from '#cli/policy/settings.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
-import type { PathRule, Identifier, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
+import { tablesFor, settingValue } from '#cli/policy/settings/entries.ts';
+import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
+import type { PathRule, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
+import type { Identifier, NamingTerms, NamingLanguage, NamingTermRule } from '#cli/types/parsers/naming.ts';
 
-import type {
-    Policy,
-    ShippedRule,
-    ShippedPolicy,
-    NamingSettings,
-    SettingSurface,
-    ShippedLanguage,
-} from '#cli/types/policy/policy.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rule lists treat an empty list as no filter.
 function toSet(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Shipped and written naming rules compile to one matcher shape.
-function compileRule(rule: ShippedRule, source: string): PathRule {
+function compileRule(rule: NamingTermRule, source: string): PathRule {
     return {
         matches: pathMatcher(rule.paths),
         languages: toSet(rule.languages),
         categories: toSet(rule.categories),
         names: toSet(rule.names),
-        excludes: rule.exclude === true,
+        excludes: rule.skip === true,
         isDigitsAllowed: rule.allow_digits === true,
         allowsRepeats: rule.allow_duplicate_words === true,
-        structuralPrefix: rule.structural_prefix === undefined ? undefined : new RegExp(rule.structural_prefix, 'u'),
+        structuralPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
         caseNames: rule.case,
         source,
     };
 }
 
-function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<string, string[]> {
+function reservedTerms(shipped: NamingTerms, naming: NamingSettings): Map<string, string[]> {
     const reserved = new Map<string, string[]>();
     for (const entry of [...shipped.reserved, ...naming.reserved]) reserved.set(entry.term.toLowerCase(), entry.uses);
     return reserved;
 }
 
 function limits(
-    shipped: ShippedPolicy,
-    surface: SettingSurface,
+    shipped: NamingTerms,
+    surface: KnownSettings,
     policy: Policy,
     scope: string,
 ): EffectivePolicy['limitsFor'] {
     return (language, category) => {
-        const table: ShippedLanguage | undefined = shipped.languages[language];
+        const table: NamingLanguage | undefined = shipped.languages[language];
         const parent = CATEGORY_PARENTS[category] ?? category;
         const prefix = `naming.${language}`;
 
@@ -69,7 +60,7 @@ function limits(
     };
 }
 
-function shippedCase(table: ShippedLanguage | undefined, category: string, parent: string): string[] {
+function shippedCase(table: NamingLanguage | undefined, category: string, parent: string): string[] {
     if (table === undefined) return [];
     return table.categories[category]?.case ?? table.categories[parent]?.case ?? [];
 }
@@ -83,25 +74,24 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
  * @returns the effective policy
  */
 export function effectivePolicy(
-    surface: SettingSurface,
+    surface: KnownSettings,
     policy: Policy,
     scope: string,
-    manifests: Pick<Manifest, 'kit' | 'naming'>[] = [],
+    manifests: Pick<Manifest, 'configuration' | 'naming'>[] = [],
 ): EffectivePolicy {
-    const shipped = shippedPolicy();
-    const tables = policyTables(policy, scope).map(({ table }) => table.naming);
+    const shipped = namingTerms();
+    const tables = tablesFor(policy, scope).map(({ table }) => table.naming);
     const naming: NamingSettings = {
         ...policy.naming,
         banned: [...new Set(tables.flatMap((table) => table?.banned ?? []))],
         allowed: tables.flatMap((table) => table?.allowed ?? []),
-        external: [...new Set(tables.flatMap((table) => table?.external ?? []))],
         reserved: tables.flatMap((table) => table?.reserved ?? []),
-        dropped_groups: tables.flatMap((table) => table?.dropped_groups ?? []),
-        protocol_keys: tables.flatMap((table) => table?.protocol_keys ?? []),
-        rules: tables.flatMap((table) => table?.rules ?? []),
+        groups_off: tables.flatMap((table) => table?.groups_off ?? []),
+        fixed_keys: tables.flatMap((table) => table?.fixed_keys ?? []),
+        paths: tables.flatMap((table) => table?.paths ?? []),
     };
     const removed = new Set(
-        naming.dropped_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
+        naming.groups_off.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
     );
     const terms = [
         ...Object.entries(shipped.groups)
@@ -109,22 +99,22 @@ export function effectivePolicy(
             .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
         ...compileTerms(naming.banned, 'naming.banned'),
     ];
-    // The shipped rules first, then what the selected kits know about their own files, then the repository's.
+    // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [
-        ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
+        ...shipped.paths.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
-            (manifest.naming?.rules ?? []).map((rule) =>
-                compileRule(compact(rule), `the ${manifest.kit.name} configuration`),
+            (manifest.naming?.paths ?? []).map((rule) =>
+                compileRule(compact(rule), `the ${manifest.configuration.name} configuration`),
             ),
         ),
-        ...naming.rules.map((rule, index) => compileRule(rule, `[[naming.rules]] entry ${String(index + 1)}`)),
+        ...naming.paths.map((rule, index) => compileRule(rule, `[[naming.paths]] entry ${String(index + 1)}`)),
     ];
     return {
         terms,
         reserved: reservedTerms(shipped, naming),
-        external: new Set([...shipped.external, ...naming.external]),
+        external: new Set([...shipped.allowed, ...naming.allowed.map((entry) => entry.name)]),
         allowed: new Map(naming.allowed.map((entry) => [entry.name, entry.reason])),
-        contractProperties: new Map(naming.protocol_keys.map((entry) => [entry.file, new Set(entry.names)])),
+        contractProperties: new Map(naming.fixed_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         languages: shipped.languages,
         limitsFor: limits(shipped, surface, policy, scope),

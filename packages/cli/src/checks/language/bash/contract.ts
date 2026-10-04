@@ -1,52 +1,47 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
 import { findingAt } from '#cli/execution/finding.ts';
-import { HEADER_LINES } from '#cli/config/checks/checks.ts';
-import type { Finding } from '#cli/types/execution/execution.ts';
-import { functionAt } from '#cli/checks/language/bash/scripts.ts';
-import type { CodeLine, ScriptFile, ScriptReport } from '#cli/types/checks/language/bash.ts';
-import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import type { CodeLine } from '#cli/types/parsers/bash.ts';
+import { codeLines, withoutDeclaration } from '#cli/parsers/bash.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import type { ScriptFile, ScriptReport } from '#cli/types/checks/language/bash.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
-import {
-    codeLines,
-    withoutComment,
-    withoutDeclaration,
-    isDirectoryConstant,
-} from '#cli/checks/language/bash/code-lines.ts';
 import {
     EXIT_CALL,
     MAIN_CALL,
     REMOVE_CALL,
     STRICT_MODE,
+    RUNTIME_LINE,
     BASH_FEATURES,
     BASH_SHEBANGS,
     OTHER_SHEBANG,
     READONLY_WORD,
     HEADER_COMMENT,
     RUNTIME_HEADER,
+    DIRECTORY_START,
     SOURCE_STATEMENT,
+    BARE_COMMENT_LINE,
     INHERITED_ERREXIT,
     TOP_LEVEL_ASSIGNMENT,
+    DIRECTORY_CONSTANT_SIGNS,
     DIRECTORY_CONSTANT_PIECES,
 } from '#cli/config/checks/language/bash.ts';
 
-// The line that must be a bare comment marker.
-const HEADER_LINE = 2;
-
-// The shebang every script opens with, then the four-line header when tools.bash.platforms names its platforms.
+// The shebang every script opens with, then the four-line header when bash.platforms names its platforms.
 function headerProblems(file: ScriptFile, platforms: string | undefined, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
     if (platforms === undefined) return;
-    if (file.lines.length < HEADER_LINES || !HEADER_COMMENT.test(file.lines.slice(1, HEADER_LINES - 1).join('\n')))
-        report(HEADER_LINE, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
+    if (file.lines.length < RUNTIME_LINE || !HEADER_COMMENT.test(file.lines.slice(1, RUNTIME_LINE - 1).join('\n')))
+        report(BARE_COMMENT_LINE, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
 }
 
 function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptReport): string | undefined {
-    const runtime = RUNTIME_HEADER.exec(file.lines[HEADER_LINES - 1] ?? '');
+    const runtime = RUNTIME_HEADER.exec(file.lines[RUNTIME_LINE - 1] ?? '');
     const named = runtime?.groups?.['platforms'] ?? '';
     if (runtime === null || (named !== 'Linux' && named !== platforms)) {
-        report(HEADER_LINES, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
+        report(RUNTIME_LINE, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
         return undefined;
     }
     const version = runtime.groups as Record<'major' | 'minor', string>;
@@ -55,12 +50,18 @@ function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptRepor
 
 function versionProblems(file: ScriptFile, version: string | undefined, report: ScriptReport): void {
     if (version === undefined) return;
-    for (const [index, line] of file.lines.entries()) {
-        const code = withoutComment(line);
+    for (const [index, code] of file.code.entries()) {
         const feature = BASH_FEATURES.find(([pattern, , minimum]) => semver.lt(version, minimum) && pattern.test(code));
         if (feature !== undefined)
             report(index + 1, 'bash-version', `${feature[1]}, but the header declares Bash ${version}.`);
     }
+}
+
+// Three contract rules recognize a script-directory assignment through the same declaration syntax.
+function isDirectoryConstant(code: string): boolean {
+    return (
+        DIRECTORY_START.test(withoutDeclaration(code)) && DIRECTORY_CONSTANT_SIGNS.every((sign) => code.includes(sign))
+    );
 }
 
 function directoryProblems(code: CodeLine[], report: ScriptReport): void {
@@ -104,7 +105,7 @@ function strictModeProblems(code: CodeLine[], version: string | undefined, repor
         required.push(INHERITED_ERREXIT.statement);
     const missing = required.filter((statement) => !before.has(statement));
     if (missing.length > 0)
-        report(code[0]?.number ?? 1, 'strict-mode', `${missing.join(' and ')} come before the first command.`);
+        report(code[0]?.number ?? 1, 'strict-mode', `Put ${missing.join(' and ')} before the first command.`);
 }
 
 function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
@@ -163,57 +164,39 @@ function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
 }
 
 function fileProblems(
-    context: StructureInput,
+    input: EngineInput,
     file: ScriptFile,
     platforms: string | undefined,
     isConfigOwner: boolean,
 ): Finding[] {
     const findings: Finding[] = [];
-    headerProblems(file, platforms, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
+    const report: ScriptReport = (line, rule, text) => {
+        findings.push(findingAt(input, { file: file.path, line }, rule, text));
+    };
+    headerProblems(file, platforms, report);
     // Without the header, a script declares no Bash version, so no feature is checked against one.
-    const version =
-        platforms === undefined
-            ? undefined
-            : runtimeVersion(file, platforms, (line, rule, text) => {
-                  findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-              });
-    versionProblems(file, version, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
-    const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
-    directoryProblems(code, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
-    readonlyProblems(file, code, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
-    if (file.isExecutable)
-        strictModeProblems(code, version, (line, rule, text) => {
-            findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-        });
-    roleProblems(file, code, isConfigOwner, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
-    cleanupProblems(code, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
+    const version = platforms === undefined ? undefined : runtimeVersion(file, platforms, report);
+    versionProblems(file, version, report);
+    const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
+    directoryProblems(code, report);
+    readonlyProblems(file, code, report);
+    if (file.isExecutable) strictModeProblems(code, version, report);
+    roleProblems(file, code, isConfigOwner, report);
+    cleanupProblems(code, report);
     return findings;
 }
 
 /**
  * The findings of the interpreter contract over every Bash script; a script with another shell's shebang is left alone.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const contract: Analysis = async (context, scripts) => {
-    const runtime = context.bashSetting('platforms');
+export const contract: Engine = async (input) => {
+    const runtime = input.view.settings['bash.platforms'];
     const platforms = typeof runtime === 'string' ? runtime : undefined;
-    const owners = new Set(context.bashList('config_owners'));
-    const index = await scripts();
+    const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
+    const index = await getScriptIndex(input);
     return index.files
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => fileProblems(context, file, platforms, owners.has(file.path)));
+        .flatMap((file) => fileProblems(input, file, platforms, owners.has(file.path)));
 };

@@ -1,26 +1,10 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
-import { readFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
-import { isEnvironmentFile } from '#cli/repository/kind.ts';
+import type { Session } from '#cli/types/execution/session.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { getChanged } from '#cli/repository/revisions/changes.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import type { StageFilter } from '#cli/types/execution/execution.ts';
-import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/platform.ts';
-
-function isReadable(path: string): boolean {
-    try {
-        readFileSync(path, 'utf8');
-        return true;
-    } catch {
-        return false;
-    }
-}
 
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
@@ -29,34 +13,6 @@ function matchingFiles(session: Session, options: CheckOptions, path: string, ca
     const matches = candidates.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('selection', [`Path ${path} matches no repository files.`]);
     return matches;
-}
-
-/**
- * The refusal a run ends with before starting: a staged environment file, or an unreadable commit message.
- * @param options the parsed flags
- * @param stage the stage the run covers
- * @param staged the staged files, when the run reads the index
- * @returns the refusal, or undefined when the run may start
- */
-export function refusalFor(
-    options: CheckOptions,
-    stage: StageFilter,
-    staged: string[] | undefined,
-): CommandResult | undefined {
-    const environmentStaged = staged === undefined ? [] : staged.filter(isEnvironmentFile);
-    if (environmentStaged.length > 0)
-        return {
-            text: `An environment file is staged: ${environmentStaged.join(', ')}. Unstage it (git restore --staged <file>); only templates like .env.example belong in git.\n`,
-            json: { failed: ['secrets/env-files'], files: environmentStaged },
-            exitCode: EXIT_FINDINGS,
-        };
-    if (stage === 'message' && options.messageFile !== undefined && !isReadable(options.messageFile))
-        return {
-            text: `The commit message file ${options.messageFile} cannot be read.\n`,
-            json: { error: 'message-file' },
-            exitCode: EXIT_ERROR,
-        };
-    return undefined;
 }
 
 /**
@@ -74,12 +30,11 @@ export function selectedPaths(session: Session, options: CheckOptions, changed: 
 }
 
 /**
- * The refusal for an --only check no selected kit runs here.
+ * Refuses an --only check no selected configuration runs here.
  * @param session the open session
  * @param only the checks named on the command line
- * @returns the refusal, or undefined when every named check is known
  */
-export function unknownSelection(session: Session, only: string[] | undefined): CommandResult | undefined {
+export function refuseUnknownChecks(session: Session, only: string[] | undefined): void {
     const known = new Set([
         ...session.scopes.flatMap((scope) =>
             scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
@@ -87,27 +42,8 @@ export function unknownSelection(session: Session, only: string[] | undefined): 
         ...session.policyFiles.policy.checks.map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown === undefined) return undefined;
-    return {
-        text: `No selected kit runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
-        json: { error: 'unknown-check' },
-        exitCode: EXIT_ERROR,
-    };
-}
-
-/**
- * The files changed against the --changed ref, when one was given.
- * @param session the open session
- * @param options the parsed flags
- * @param signal cancellation for the Git commands
- * @returns the changed set, or undefined without a ref
- */
-export async function revisionSelection(
-    session: Session,
-    options: CheckOptions,
-    signal: AbortSignal,
-): Promise<ChangedPaths | undefined> {
-    if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
-        throw new GspotError('selection', ['Revision selection requires a Git repository.']);
-    return options.changed === undefined ? undefined : getChanged(session.root, options.changed, signal);
+    if (unknown !== undefined)
+        throw new GspotError('selection', [
+            `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.`,
+        ]);
 }

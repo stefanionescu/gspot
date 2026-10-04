@@ -1,73 +1,58 @@
-// The shared instances of the generation module.
-import { eta } from '#cli/generation/registry.ts';
+// Render configuration assets with the effective settings and inputs of their scope.
+import { Eta } from 'eta';
+import { collectPins } from '#cli/tools/pins.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
+import type { Session } from '#cli/types/execution/session.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
-import { policyValue, harnessFolders } from '#cli/policy/settings.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
+import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
+import { javascriptConfiguration } from '#cli/generation/jsconfig.ts';
+import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
+import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
+import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
-import type { TemplateInputs } from '#cli/types/generation/generation.ts';
-import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
-import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
-import { aliasesFor, javascriptConfiguration } from '#cli/generation/javascript.ts';
-import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
-import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting/settings.ts';
-import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
+import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/entries.ts';
+import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS } from '#cli/config/generation/typescript.ts';
+import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 
 import {
+    ETA_OPTIONS,
+    JSON_INDENT,
     BLOCK_IGNORES,
-    ESLINT_LEVELS,
     TOKEN_IGNORES,
-    JSON_EXTENSIONS,
-    COMPILER_OPTIONS,
     LEADING_NEWLINES,
-    PACKAGE_JSON_INDENT,
-    RECOMMENDED_OPTIONS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation/templates.ts';
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
     return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
 }
 
-// The entry files of a folder: what the policy declares for it, then what the kits of the deepest scope around it know.
+// The entry files of a folder: what the policy declares for it, then what the configurations of the deepest scope around it know.
 function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): string[] {
-    const layers = [
-        { path: '', table: policy },
-        ...Object.entries(policy.scopeTables)
-            .filter(([path]) => path === scope || scope.startsWith(`${path}/`))
-            .map(([path, table]) => ({ path, table })),
-    ];
-    const authored = layers.flatMap(({ path, table }) => {
+    const authored = tablesFor(policy, scope).flatMap(({ path, table }) => {
         const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
         return entries.map((pattern) => prefixed(path, pattern));
     });
     const owner = scopes
         .filter((entry) => isInScope(scope, entry.scope.path))
-        .toSorted((left, right) => right.scope.path.length - left.scope.path.length)[0];
+        .toSorted((left, right) => byScopeDepth(right.scope.path, left.scope.path))[0];
     const selected = owner?.selected ?? [];
     const declared = selected.flatMap((manifest) => manifest.entry).map((pattern) => prefixed(scope, pattern));
     return [...new Set([...authored, ...declared])];
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both scope listings order scopes shallowest first by the same comparison.
-function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
-    return scopes.toSorted(
-        (left, right) =>
-            left.scope.path.split('/').length - right.scope.path.split('/').length ||
-            left.scope.path.localeCompare(right.scope.path),
-    );
-}
-
-function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeSelection) {
+function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeSelection, manifests: Manifest[]) {
     const { view } = selection;
-    const tools = scopes.flatMap((entry) => entry.selected.flatMap((manifest) => manifest.tools));
-    const names = [...new Set(tools.map((tool) => tool.name))].toSorted((a, b) => a.localeCompare(b));
+    const tools = collectPins(manifests);
+    const names = tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name);
     const packages = [
         ...new Set(
             tools.flatMap((tool) => (tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name])),
@@ -81,131 +66,94 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                 ? []
                 : [{ name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }];
         });
+    const formatting = { policy, format: view.format, verbatim: view.verbatim('prettier'), plugins };
     return {
-        prettierConfig: (targetPath: string) =>
-            prettierConfiguration(policy, targetPath, view.extra('prettier'), plugins),
+        prettierConfig: (targetPath: string) => prettierConfiguration({ ...formatting, targetPath }),
         scope: selection.scope.path,
         scopes: scopes
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
                 path: entry.scope.path,
-                kits: entry.selected.map((manifest) => manifest.kit.name),
+                configurations: entry.selected.map((manifest) => manifest.configuration.name),
             })),
-        kitScopes: (kit: string) =>
-            byDepth(scopes.filter((entry) => entry.view.kits.includes(kit))).map((entry) => ({
-                path: entry.scope.path,
-                settings: entry.view.settings,
-                extra: entry.view.extra,
-                harness: harnessFolders(policy, entry.scope.path)[0],
-            })),
-        kits: view.kits,
+        configurationScopes: (configuration: string) =>
+            scopes
+                .filter((entry) => entry.view.configurations.includes(configuration))
+                .toSorted((left, right) => byScopeDepth(left.scope.path, right.scope.path))
+                .map((entry) => ({
+                    path: entry.scope.path,
+                    settings: entry.view.settings,
+                    verbatim: entry.view.verbatim,
+                    harness: harnessFolders(policy, entry.scope.path)[0],
+                })),
+        configurations: view.configurations,
         policy: policy,
-        view,
         format: view.format,
         settings: view.settings,
-        tool: view.tool,
+        options: view.options,
         entryFiles: (scope: string) => entryFiles(policy, scopes, scope),
         limit: view.limit,
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
-        extra: view.extra,
-        tools: names,
+        verbatim: view.verbatim,
+        toolBinaries: names,
         toolPackages: packages,
     };
 }
 
-/**
- * Share effective Markdown rules between native editor and structured CLI configurations.
- * @param view the merged view of the scope.
- * @param isAll whether the all level enables document structure conventions.
- * @returns the markdownlint rules table
- */
-function markdownlintRules(view: MergedView, isAll = false): Record<string, unknown> {
-    const rules = (view.tool('markdownlint')['rules'] ?? {}) as Record<string, unknown>;
-    const defaults =
-        rules['default'] === undefined
-            ? {
-                  default: true,
-                  MD007: { indent: view.format.indent_width },
-                  MD013: false,
-                  MD024: { siblings_only: true },
-                  MD033: false,
-                  MD041: isAll,
-                  MD045: false,
-                  MD025: isAll ? { front_matter_title: '' } : false,
-                  MD046: { style: 'fenced' },
-                  MD048: { style: 'backtick' },
-                  MD049: { style: 'underscore' },
-                  MD050: { style: 'asterisk' },
-                  MD060: false,
-              }
-            : {};
-    return {
-        ...defaults,
-        ...rules,
-        ...Object.fromEntries(view.rulesOff('markdown/markdownlint').map((rule) => [rule, false])),
-    };
-}
+/** Shared template compilation preserves identical options for targets and fragments. */
+export const eta = new Eta(ETA_OPTIONS);
 
 /**
  * The inputs every template sees.
- * @param root the repository root.
- * @param policy the repository policy.
- * @param sourceFiles the tracked files.
- * @param scopes every resolved scope.
+ * @param session the repository, policy, scope selections, and release version.
  * @param selection the scope being rendered.
- * @param version the gspot version the header names.
+ * @param manifests the applicable configuration manifests with only their required tools.
  * @returns the template inputs, with empty fragment parts the generator fills per target.
  */
-export function templateInputs(
-    root: string,
-    policy: Policy,
-    sourceFiles: TrackedFile[],
-    scopes: ScopeSelection[],
-    selection: ScopeSelection,
-    version: string,
-): TemplateInputs {
+export function templateInputs(session: Session, selection: ScopeSelection, manifests: Manifest[]): TemplateInputs {
+    const {
+        root,
+        policyFiles: { policy },
+        repository: { files: sourceFiles },
+        scopes,
+        version,
+    } = session;
     const { view } = selection;
     const files = (extension: string): string[] =>
         sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
-        ...scopeInputs(policy, scopes, selection),
+        ...scopeInputs(policy, scopes, selection, manifests),
+        ...eslintInputs(session, selection),
         javascriptConfig: (targetPath) => javascriptConfiguration(root, policy, targetPath, selection.scope.path),
-        markdownlintRules: markdownlintRules(view, policy.level === 'all'),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
-        eslintPolicy: [
-            ...structuralRuleBlocks(scopes, policy),
-            ...manifestRuleBlocks(scopes, policy),
-            ...eslintRuleBlocks(policy),
-        ],
-        eslint: () => eslintConfiguration({ root, policy, scopes, selection }),
-        eslintRuleLevels: ESLINT_LEVELS,
         isAll: policy.level === 'all',
-        typescriptOptions: policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS,
+        typescriptOptions: Object.fromEntries(
+            Object.entries(policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS).filter(
+                ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
+            ),
+        ),
         prose: {
-            styles: styleNames(),
+            rules: styleRules(),
             blockIgnores: BLOCK_IGNORES,
             tokenIgnores: TOKEN_IGNORES,
-            formats: PROSE_FORMATS,
+            formats: proseFormats(),
         },
         version: version,
         fragments: '',
         fragmentImports: '',
         fragmentFiles: [],
         fragmentSelectors: [],
-        json: (value, indent = PACKAGE_JSON_INDENT) =>
+        json: (value, indent = JSON_INDENT) =>
             JSON.stringify(value, null, indent)
                 .replaceAll('\u{2028}', String.raw`\u2028`)
                 .replaceAll('\u{2029}', String.raw`\u2029`),
         toml: stringifyToml,
         yaml: stringifyYaml,
         tomlDate: TomlDate,
-        importAliases: (scope) => aliasesFor(root, scope),
         packageWorkspaces: () => packageWorkspaces(root),
         files,
-        header: headerFor('x.toml', version),
-        headerLines: headerLines(version),
     };
 }
 
@@ -221,13 +169,13 @@ export function emitTarget(
     templatePath: string,
     targetPath: string,
     inputs: TemplateInputs,
-    isHeaderWanted = true,
+    isHeaderWanted: boolean,
 ): string {
     const rendered = eta.renderString(readAsset(templatePath), { ...inputs, targetPath });
     if (JSON_EXTENSIONS.has(extensionOf(targetPath))) {
         const format = { width: inputs.format.print_width, indent: inputs.format.indent_width };
         if (!isHeaderWanted) return jsonText(JSON.parse(rendered), format);
-        return jsonHeaderAdded(rendered, inputs.version, format);
+        return addJsonHeader(rendered, inputs.version, format);
     }
     const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;

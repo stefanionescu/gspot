@@ -1,12 +1,12 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
 import { GspotError } from '#cli/platform/errors.ts';
-import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
-import { checkContent } from '#cli/commands/check/content.ts';
+import { checkTree } from '#cli/commands/check/tree.ts';
+import type { CommandResult } from '#cli/types/output.ts';
+import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { checkOutRevision } from '#cli/execution/checkout/revision.ts';
-import type { PushSelection } from '#cli/types/repository/revisions.ts';
-import type { Checked, PushReport, CheckOptions, PushRevision, CheckCommandResult } from '#cli/types/commands/check.ts';
+import { checkOutRevision } from '#cli/execution/snapshot/revision.ts';
+import type { PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
+import type { Checked, PushReport, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
 
 // Checks one pushed commit in a snapshot of it, or undefined when the run was canceled.
 async function checkRevision(
@@ -20,7 +20,7 @@ async function checkRevision(
             root,
             { kind: 'commit', hash: revision.object },
             (checkout) =>
-                checkContent(checkout, options, signal, {
+                checkTree(checkout, options, signal, {
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',
@@ -37,7 +37,7 @@ async function checkRevision(
 }
 
 // The push report: every checked revision, the updates no check applies to, and what a cancellation left.
-function buildReport(selected: PushSelection, revisions: Checked[], signal: AbortSignal): PushReport {
+function buildPushReport(selected: PushSelection, revisions: Checked[], signal: AbortSignal): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
     const exitCode = Math.max(
         signal.aborted ? EXIT_ERROR : 0,
@@ -60,11 +60,12 @@ export function assertPushOptions(options: CheckOptions): void {
         options.staged ||
         options.changed !== undefined ||
         options.fix ||
+        options.isDryRun ||
         options.stage !== undefined ||
         options.messageFile !== undefined;
     if (hasConflict)
         throw new GspotError('selection', [
-            'Pre-push object checks cannot be combined with --staged, --changed, --fix, --hook, or --message-file.',
+            'Pre-push object checks cannot be combined with --staged, --changed, --fix, --dry-run, or --message-file.',
         ]);
 }
 
@@ -72,22 +73,17 @@ export function assertPushOptions(options: CheckOptions): void {
  * Checks the revisions Git's pre-push protocol names, each in an exact snapshot.
  * @param root the repository root.
  * @param options the parsed flags, with the pre-push input.
- * @param input what Git handed the pre-push hook.
- * @param input.input the ref and object lines on standard input.
- * @param input.remote the remote name, when Git gave one.
  * @param signal cancellation for the run.
  * @returns the text to print, the push report, and the exit code.
  */
 export async function checkPush(
     root: string,
-    options: CheckOptions,
-    input: { input: string; remote?: string },
+    options: CheckOptions & { push: NonNullable<CheckOptions['push']> },
     signal: AbortSignal,
 ): Promise<CommandResult> {
-    assertPushOptions(options);
-    const selected = await selectPush(root, input.input, input.remote, signal);
+    const selected = await selectPush(root, options.push.stdin, options.push.remote, signal);
     const revisions: Checked[] = [];
-    const rendered: string[] = [];
+    const text: string[] = [];
     for (const revision of selected.revisions) {
         const result = await checkRevision(root, options, signal, revision);
         if (result === undefined) break;
@@ -99,13 +95,13 @@ export async function checkPush(
             historyComplete: revision.historyComplete,
             report: result.report,
         });
-        rendered.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
+        text.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
     }
-    const report = buildReport(selected, revisions, signal);
+    const report = buildPushReport(selected, revisions, signal);
     if (report.canceled !== undefined)
-        rendered.push(
+        text.push(
             `Push checks canceled. References not checked: ${report.canceled.pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
         );
     const skipped = selected.skipped.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`);
-    return { text: [...rendered, ...skipped].join(''), json: report, exitCode: report.exitCode };
+    return { text: [...text, ...skipped].join(''), json: report, exitCode: report.exitCode };
 }

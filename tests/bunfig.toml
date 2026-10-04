@@ -1,3 +1,2 @@
 [test]
-root = "."
-preload = ["./harness/runtime.ts"]
+preload = ["./harness/preload.ts"]

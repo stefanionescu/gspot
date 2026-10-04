@@ -1,4 +1,5 @@
 import { hasCase } from '#cli/checks/general/naming/cases.ts';
+import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
 import { splitParts, repeatedPart } from '#cli/checks/general/naming/split.ts';
 import { isExempt, bannedTerm, isUseAllowed } from '#cli/checks/general/naming/match.ts';
@@ -6,7 +7,6 @@ import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/c
 
 import type {
     PathRule,
-    Identifier,
     NameProblem,
     NamingInputs,
     CategoryLimits,
@@ -24,7 +24,7 @@ function caseProblem(name: string, limits: CategoryLimits, isFileName: boolean):
     if (limits.caseNames.length === 0) return undefined;
     const digitless = name.replaceAll(/\d+/gu, '');
     const isMatched = limits.caseNames.some((caseName) => {
-        if (caseName === 'snake-migration') return hasCase(name, caseName);
+        if (caseName === 'timestamp-snake') return hasCase(name, caseName);
         const subject = isFileName ? digitless.replace(/\.[^.]*$/u, '') : digitless;
         return subject.split('.').every((segment) => hasCase(segment, caseName));
     });

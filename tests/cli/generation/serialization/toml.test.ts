@@ -1,0 +1,180 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
+import { parse, stringify } from 'smol-toml';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { emitFile } from '#tests/harness/generated.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { buildInitOptions } from '#tests/harness/init.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/tools/mise.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
+import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
+import { rejection, containingAll } from '#tests/harness/expectations.ts';
+
+test('typos output preserves quoted keys and paths without creating settings', async () => {
+    const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
+    const paths = ['docs/"draft"/**', String.raw`generated/\draft/**`, 'café/**'];
+    const reason = 'An upstream name.\n[files]\nextend-exclude = ["**"]';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            configurations: ['spelling'],
+            tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session);
+    const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
+    expect(target).toBeDefined();
+    const parsed = parse(target!.content);
+    expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'default',
+        'files',
+        'type',
+    ]);
+    expect(parsed['type']).toStrictEqual({
+        'gspot-policy': {
+            'extend-glob': ['gspot.toml'],
+            'extend-identifiers': {},
+            'extend-words': Object.fromEntries(words.map((word) => [word, word])),
+        },
+    });
+    expect(parsed['default']).toMatchObject({ 'extend-words': Object.fromEntries(words.map((word) => [word, word])) });
+    expect(parsed['files']).toMatchObject({ 'extend-exclude': containingAll(paths) });
+    expect(parsed['files']).not.toMatchObject({ 'extend-exclude': containingAll(['**']) });
+});
+
+test('template spelling values use the same TOML emission path', async () => {
+    const word = 'café."upstream"';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'house.template.toml': stringify({
+            template: 'house',
+            selection: 'exact',
+            configurations: ['spelling'],
+            tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
+        }),
+    });
+    const plan = await initCommand(
+        buildInitOptions(sandbox.path, {
+            from: 'house.template.toml',
+            isDryRun: true,
+            hooks: false,
+            ci: 'none',
+            runner: 'none',
+            rules: false,
+        }),
+    );
+    expect(plan.exitCode).toBe(0);
+    const policy = plan.json['policy'];
+    if (typeof policy !== 'string') throw new Error('The initialization plan has no policy text.');
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session);
+    const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
+    expect(target).toBeDefined();
+    expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
+});
+
+test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
+    const text = String.raw`café "quoted" \value # comment`;
+    const path = 'docs/"draft"/**';
+    const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
+    const option = 'custom."option"';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            configurations: ['secrets', 'dependencies', 'files', 'docs', 'python', 'postgres'],
+            format: { indent_style: 'tab' },
+            tools: {
+                gitleaks: { allowed: [{ description: text, paths: [path], patterns: [text], reason }] },
+                taplo: { formatting: { [option]: text, column_width: 88 } },
+                lychee: { exclude_urls: [{ patterns: [text], reason }] },
+            },
+            postgres: { frozen_through: 'all' },
+            ignore: [
+                { check: 'python/ruff', rule: 'F401', paths: [path], reason },
+                { check: 'dependencies/osv', rule: text, reason, until: '2099-09-20' },
+                { check: 'dependencies/osv', rule: 'GHSA-path-specific', paths: [path], reason },
+            ],
+        }),
+        'migrations/20260101_initial.sql': 'select 1;\n',
+        'sample.py': 'value = 1',
+        'sample.md': '# Sample',
+        'package.json': '{"private":true}',
+        'package-lock.json': '{"lockfileVersion":3,"packages":{}}',
+    });
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session);
+    const parsed = new Map(
+        output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
+    );
+    expect(parsed.get('.gspot/config/gitleaks.toml')).toStrictEqual({
+        extend: { useDefault: true },
+        allowlists: [{ description: text, paths: [path], regexes: [text] }],
+    });
+    expect(parsed.get('.gspot/config/osv-scanner.toml')).toMatchObject({
+        IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
+    });
+    expect(parsed.get('.gspot/config/taplo.toml')).toMatchObject({
+        formatting: { [option]: text, column_width: 88, indent_string: '\t' },
+    });
+    expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
+    expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
+    expect(parsed.get('.gspot/config/squawk.toml')).toMatchObject({
+        excluded_paths: ['migrations/20260101_initial.sql'],
+    });
+});
+
+test('an OSV expiry cannot inject another TOML table', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            configurations: ['dependencies'],
+            ignore: [
+                {
+                    check: 'dependencies/osv',
+                    rule: 'GHSA-example',
+                    reason: 'Reviewed upstream.',
+                    until: '2026-09-20\n[verbatim]\ninjected = true',
+                },
+            ],
+        }),
+    });
+    expect(await rejection(openSession(sandbox.path))).toContain('ignore.0.until');
+});
+
+test.each([
+    ['2', ['migrations/2_initial.sql']],
+    [
+        '9007199254740992',
+        ['migrations/10_next.sql', 'migrations/2_initial.sql', 'migrations/9007199254740992_large.sql'],
+    ],
+])('Squawk excludes numeric migration versions through %s without rounding', async (through, expected) => {
+    const text = await emitFile(
+        buildPolicy(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
+        '.gspot/config/squawk.toml',
+        {
+            'migrations/2_initial.sql': 'SELECT 1;\n',
+            'migrations/10_next.sql': 'SELECT 1;\n',
+            'migrations/9007199254740992_large.sql': 'SELECT 1;\n',
+            'migrations/9007199254740993_later.sql': 'SELECT 1;\n',
+        },
+    );
+    expect(parse(text)['excluded_paths']).toStrictEqual(expected);
+});
+
+test('Mise pins the native archive with its complete asset directory on PATH', async () => {
+    const text = await emitFile(buildPolicy([], { tables: 'run_with = "mise"\n' }), MISE_CONFIG_PATH);
+    expect(parse(text)['tools']).toMatchObject({
+        [GSPOT_MISE_TOOL]: {
+            version: packageManifest.version,
+            asset_pattern: 'gspot-{{ version }}-{{ os(macos="darwin") }}-{{ arch() }}.tar.gz',
+            strip_components: 1,
+        },
+    });
+    expect((parse(text)['tools'] as Record<string, unknown>)[GSPOT_MISE_TOOL]).not.toHaveProperty('filter_bins');
+});

@@ -1,0 +1,9 @@
+# Editors and gspot checks use the same ordered ignore patterns.
+package-lock.json
+pnpm-lock.yaml
+<% for (const pattern of policy.exclude) { %><%= pattern %>
+<% } %>
+<% for (const file of policy.declarations.flatMap((entry) => entry.paths)) { %><%= file %>
+<% } %>
+<% for (const pattern of options('tools.prettier').exclude ?? []) { %><%= pattern %>
+<% } %>

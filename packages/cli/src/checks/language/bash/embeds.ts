@@ -1,23 +1,23 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per line that embeds another runtime.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const embeds: Analysis = async (context, scripts) => {
-    const index = await scripts();
+export const embeds: Engine = async (input) => {
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
-        file.lines.flatMap((line, position) => {
+        file.code.flatMap((line, position) => {
             if (line.trimStart().startsWith('#')) return [];
             const embed = RUNTIME_EMBEDS.find(([pattern]) => pattern.test(line));
             if (embed === undefined) return [];
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: position + 1 },
                     'runtime-embed',
                     `This line carries ${embed[1]}; put it in its own file.`,

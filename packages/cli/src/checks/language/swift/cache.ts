@@ -1,80 +1,82 @@
-// The compiler directory a Swift build reuses between runs: locked, free of links, and holding only the sources wanted.
+// The build folder a Swift build reuses between runs: locked, confined, and holding only the sources wanted.
 import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/repository/sources.ts';
+import { readSource } from '#cli/platform/source.ts';
+import { contentDigest } from '#cli/platform/text.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
-import { statSync, lstatSync, mkdirSync } from 'node:fs';
+import type { Read, Root } from '#cli/types/platform/root.ts';
 import { cacheDirectory } from '#cli/platform/environment.ts';
-import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
-import type { Read, Root } from '#cli/types/platform/platform.ts';
-import type { Pruning } from '#cli/types/checks/language/swift.ts';
-import { PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
+import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import { PRIVATE_DIRECTORY } from '#cli/config/execution/snapshot.ts';
+import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
+import type { PreparedSwiftBuild } from '#cli/types/checks/language/swift.ts';
+import { BUILD_SOURCE_DIRECTORY } from '#cli/config/checks/language/swift.ts';
 
-// Refuses a compiler directory that holds a symbolic link anywhere, walking every folder in it.
-function assertNoLinks(folder: string, files: Root): void {
+// Confine generated links to the build folder; source preparation removes obsolete links without following them.
+function assertBuildLinksInside(folder: string, files: Root): void {
     walkRoot(files, '', (path) => {
         const entry = lstatSync(join(folder, path));
-        // The confined path refuses a link.
-        if (entry.isSymbolicLink()) files.source(path);
+        if (entry.isSymbolicLink()) {
+            try {
+                files.assertInside(path);
+            } catch (error) {
+                throw new Error(`Build folder contains an unsafe symbolic link: ${path}`, { cause: error });
+            }
+        }
         return entry.isDirectory();
     });
 }
 
-// The sources to build, each as the snapshot it must have under source/ in the compiler directory.
+// The sources to build, each as the snapshot it must have under source/ in the build folder.
 function desiredSources(root: string, paths: string[]): Map<string, Read> {
     using source = openRoot(root, 'native');
     const desired = new Map<string, Read>();
     for (const file of paths) {
-        const mode = statSync(source.source(file)).mode & MODE_BITS;
-        desired.set(`source/${file}`, { bytes: readSource(root, file), mode });
+        const mode = statSync(source.realPath(file)).mode & MODE_BITS;
+        desired.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
     }
     return desired;
 }
 
-// Removes an existing file or link absent from the build inputs.
-function removeStale(files: Root, path: string, isLink: boolean): void {
-    const current = isLink ? files.readEntry(path) : files.read(path);
-    if (current !== undefined) files.remove(path, current);
-}
-
-// Handles one entry under source/: a folder is queued and noted when unwanted, anything else unwanted is removed.
-function pruneEntry(pruning: Pruning, path: string, empty: string[]): boolean {
-    const { folder, files, desired, wanted } = pruning;
-    if (lstatSync(join(folder, path)).isSymbolicLink()) {
-        removeStale(files, path, true);
-        return false;
-    }
-    if (files.stat(path)?.isDirectory() === true) {
-        if (!wanted.has(path)) empty.push(path);
-        return true;
-    }
-    if (!desired.has(path)) removeStale(files, path, false);
-    return false;
-}
-
-// Removes every entry under source/ the build does not want, then the folders left empty, deepest first.
+// Removes unwanted files and then their containing folders, deepest first.
 function pruneSources(folder: string, files: Root, desired: Map<string, Read>): void {
-    const pruning: Pruning = {
-        folder,
-        files,
-        desired,
-        wanted: new Set(
-            [...desired.keys()].flatMap((path) => {
-                const parts = path.split('/');
-                return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
-            }),
-        ),
-    };
+    const wanted = new Set(
+        [...desired.keys()].flatMap((path) => {
+            const parts = path.split('/');
+            return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
+        }),
+    );
     const empty: string[] = [];
-    walkRoot(files, 'source', (path) => pruneEntry(pruning, path, empty));
+    walkRoot(files, BUILD_SOURCE_DIRECTORY, (path) => {
+        const entry = lstatSync(join(folder, path));
+        if (entry.isDirectory()) {
+            if (!wanted.has(path)) empty.push(path);
+            return true;
+        }
+        if (!entry.isSymbolicLink() && desired.has(path)) return false;
+        const current = entry.isSymbolicLink() ? files.readKeepingLinks(path) : files.read(path);
+        if (current !== undefined) files.remove(path, current);
+        return false;
+    });
     for (const directory of empty.toSorted((left, right) => right.length - left.length)) files.rmdir(directory);
 }
 
 /**
- * Prepare and lock one compiler directory without following existing output links.
- * @param folder the compiler directory
- * @returns the files directory, which the caller closes
+ * The private build cache for the canonical repository path.
+ * @param root the repository root
+ * @returns the cache folder for this repository
+ */
+export function buildFolder(root: string): string {
+    const identity = contentDigest(realpathSync(root));
+    return join(cacheDirectory(), identity);
+}
+
+/**
+ * Prepare and lock one build folder without following existing output links.
+ * @param folder the build folder
+ * @returns the locked root, which the caller closes
  */
 export function openBuildCache(folder: string): Root {
     const home = cacheDirectory();
@@ -84,7 +86,7 @@ export function openBuildCache(folder: string): Root {
     const files = openRoot(folder, 'native');
     try {
         files.lock('build.lock');
-        assertNoLinks(folder, files);
+        assertBuildLinksInside(folder, files);
         return files;
     } catch (error) {
         files.close();
@@ -93,20 +95,42 @@ export function openBuildCache(folder: string): Root {
 }
 
 /**
- * Restore selected sources in a stable compiler directory while retaining unchanged timestamps.
+ * Restore selected sources in a stable build folder while retaining unchanged timestamps.
  * @param root the repository root
  * @param paths the source files to build
- * @param folder the compiler directory
- * @param files the files compiler directory
- * @returns the source directory inside the compiler directory
+ * @param folder the build folder
+ * @param files the locked build folder
+ * @returns the source directory inside the build folder
  */
 export function prepareBuildSources(root: string, paths: string[], folder: string, files: Root): string {
     const desired = desiredSources(root, paths);
     pruneSources(folder, files, desired);
-    files.mkdir('source', PRIVATE_DIRECTORY);
+    files.mkdir(BUILD_SOURCE_DIRECTORY, PRIVATE_DIRECTORY);
     for (const [path, next] of desired) {
         const current = files.read(path);
         if (!isDeepStrictEqual(current, next)) files.write(path, next, current);
     }
-    return join(folder, 'source');
+    return join(folder, BUILD_SOURCE_DIRECTORY);
+}
+
+/**
+ * Lock a native build folder and prepare the exact source files its consumer needs.
+ * @param input the repository and selected source files
+ * @param folder the native consumer's build folder
+ * @returns the source path and locked root. The caller disposes a successful result; failures close it
+ */
+export function prepareBuild(input: Pick<EngineInput, 'root' | 'files'>, folder: string): PreparedSwiftBuild {
+    const files = openBuildCache(folder);
+    try {
+        const source = prepareBuildSources(
+            input.root,
+            input.files.map((file) => file.path),
+            folder,
+            files,
+        );
+        return { files, source };
+    } catch (error) {
+        files.close();
+        throw error;
+    }
 }

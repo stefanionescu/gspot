@@ -1,14 +1,18 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { pathKey } from '#cli/platform/paths.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
-import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
+import { INSTALLATION_KINDS } from '#cli/config/tools/install.ts';
+import { ruleSettingsSchema } from '#cli/parsers/schema/rules.ts';
+import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { BLOCK_STYLES } from '#cli/config/platform/managed-blocks.ts';
+import { OWNED_KINDS, MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(MODE_BITS);
 const pathSchema = z.string().superRefine((path, context) => {
     try {
-        mutationTarget(path);
+        assertMutationTarget(path);
     } catch (error) {
         context.addIssue({ code: 'custom', message: String(error) });
     }
@@ -19,12 +23,12 @@ const configurationFieldSchema = z.strictObject({
     installed: z.json(),
     original: z.json().optional(),
 });
-export const identitySchema = z.strictObject({
+const identitySchema = z.strictObject({
     hash: hashSchema,
     mode: modeSchema,
     isLink: z.literal(true).optional(),
 });
-export const fieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
+const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
     for (const [index, field] of fields.entries()) {
         for (const other of fields.slice(index + 1)) {
             const length = Math.min(field.path.length, other.path.length);
@@ -37,7 +41,7 @@ export const fieldsSchema = z.array(configurationFieldSchema).superRefine((field
     }
 });
 
-export const fileSchema = z.strictObject({
+const fileSchema = z.strictObject({
     path: pathSchema,
     kind: z.enum(OWNED_KINDS),
     installed: identitySchema.optional(),
@@ -45,8 +49,8 @@ export const fileSchema = z.strictObject({
     adopted: z.literal(true).optional(),
     configuration: z
         .strictObject({
-            format: z.enum(['json', 'yaml', 'toml']),
-            fields: fieldsSchema,
+            format: z.literal(MERGED_CONFIGURATION_FORMAT),
+            fields: configurationFieldsSchema,
             parents: z.array(keyPathSchema).optional(),
             edited: z.boolean(),
             created: z.boolean(),
@@ -54,7 +58,7 @@ export const fileSchema = z.strictObject({
         .optional(),
     block: z
         .strictObject({
-            style: z.enum(['markdown', 'hash']),
+            style: z.enum(BLOCK_STYLES),
             installed: z.string().min(1),
             original: z.string(),
             prefix: z.string(),
@@ -68,9 +72,11 @@ export const ownershipSchema = z
     .strictObject({
         version: z.literal(1),
         files: z.array(fileSchema),
-        installations: z.array(z.enum(['npm', 'python'])).optional(),
+        // Rule values from the last apply that completed every managed write.
+        rules: z.record(pathSchema, ruleSettingsSchema).optional(),
+        installing: z.array(z.enum(INSTALLATION_KINDS)).optional(),
         // The private tool folders gspot installed whole, by kind.
-        installs: z.array(z.enum(['npm', 'python'])).optional(),
+        installed: z.array(z.enum(INSTALLATION_KINDS)).optional(),
         pending: z
             .array(
                 z
@@ -99,16 +105,18 @@ export const ownershipSchema = z
     .superRefine((state, context) => {
         const paths = new Set<string>();
         for (const entry of state.files) {
-            const key = entry.path.normalize('NFC').toLowerCase();
+            const key = pathKey(entry.path);
             if (paths.has(key))
                 context.addIssue({ code: 'custom', message: `Duplicate ownership path: ${entry.path}` });
             paths.add(key);
         }
         const pendingPaths = new Set<string>();
         for (const pending of state.pending ?? []) {
-            const key = pending.path.normalize('NFC').toLowerCase();
+            const key = pathKey(pending.path);
             if (pendingPaths.has(key))
                 context.addIssue({ code: 'custom', message: `Duplicate pending path: ${pending.path}` });
             pendingPaths.add(key);
         }
     });
+
+export const fieldsSchema = fileSchema.shape.configuration.unwrap().shape.fields;

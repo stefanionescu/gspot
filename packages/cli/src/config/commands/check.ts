@@ -1,5 +1,6 @@
-// The literal values commands/check reads: names, patterns, limits, and tables.
 export const CHANGED_SHOWN = 8;
 
-/** The hooks whose checks --hook runs; the commit-msg hook passes --message-file instead. */
-export const HOOKS = ['commit', 'push'] as const;
+/** The hook names accepted by --hook; commit-msg also supplies --message-file. */
+export const HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
+
+export const CHECK_FLAG_DEFAULTS = { base: '', skip: [] as string[] };

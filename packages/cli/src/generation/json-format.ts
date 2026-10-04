@@ -1,6 +1,6 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
-import { isRecord } from '#cli/platform/text.ts';
-import type { JsonFormat } from '#cli/types/generation/generation.ts';
+import { isRecord } from '#cli/platform/objects.ts';
+import type { JsonFormat } from '#cli/types/generation/formatting.ts';
 
 function primitive(value: unknown): string | undefined {
     if (value === null || typeof value === 'number' || typeof value === 'boolean') return String(value);
@@ -61,7 +61,6 @@ function block(value: unknown, depth: number, format: JsonFormat, taken: number)
  * @param format the print width and the indent width
  * @returns the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Headers and templates write JSON the way Prettier does, with a final newline, through this one entry.
 export function jsonText(value: unknown, format: JsonFormat): string {
     return `${block(value, 0, format, 0)}\n`;
 }

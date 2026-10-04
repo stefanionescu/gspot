@@ -1,0 +1,43 @@
+/** The environment check follows the authored check selection and accepted findings. */
+export const STAGED_CASES = [
+    {
+        name: 'selected',
+        configurations: ['secrets'],
+        check: 'secrets/env-files',
+        flags: [],
+        ignore: '',
+        code: 1,
+        status: 'failed',
+        findings: [{ file: '.env', line: 1, rule: 'tracked-env' }],
+    },
+    {
+        name: 'absent',
+        configurations: [],
+        check: 'project/source',
+        flags: [],
+        ignore: '',
+        code: 0,
+        status: 'passed',
+        findings: [],
+    },
+    {
+        name: 'ignored',
+        configurations: ['secrets'],
+        check: 'secrets/env-files',
+        flags: [],
+        ignore: '\n[[ignore]]\ncheck = "secrets/env-files"\npaths = [".env"]\nreason = "This example contains public test values."\n',
+        code: 0,
+        status: 'passed',
+        findings: [],
+    },
+    {
+        name: 'skipped',
+        configurations: ['secrets'],
+        check: 'secrets/env-files',
+        flags: ['--skip', 'secrets/env-files'],
+        ignore: '',
+        code: 0,
+        status: 'skipped',
+        findings: [],
+    },
+] as const;

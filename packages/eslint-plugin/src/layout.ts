@@ -1,19 +1,13 @@
-// Ordering shared by the import and export layout rules: statements by length, then the names inside braces.
-import { BLANK, SPACES } from '#plugin/config/plugin.ts';
+import { isOwnLine } from '#plugin/comments.ts';
+import { BLANK, SPACES } from '#plugin/config/layout.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { LayoutLine, LayoutMessages } from '#plugin/types/plugin.ts';
-
-function isOwnLineComment(text: string, comment: TSESTree.Comment, before: number): boolean {
-    if (!BLANK.test(text.slice(comment.range[1], before))) return false;
-    const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
-    return BLANK.test(text.slice(lineStart, comment.range[0]));
-}
+import type { LayoutLine, LayoutMessages } from '#plugin/types/layout.ts';
 
 function segmentStart(source: TSESLint.SourceCode, node: TSESTree.Node): number {
     const text = source.getText();
     let start = node.range[0];
     for (const comment of source.getCommentsBefore(node).toReversed()) {
-        if (!isOwnLineComment(text, comment, start)) break;
+        if (!isOwnLine(source, comment) || !BLANK.test(text.slice(comment.range[1], start))) break;
         if (BLANK.test(text.slice(0, comment.range[0]))) return node.range[0];
         start = comment.range[0];
     }
@@ -30,7 +24,10 @@ function segmentEnd(source: TSESLint.SourceCode, node: TSESTree.Statement): numb
     return end;
 }
 
-function compareText(left: { sortText: string; index: number }, right: { sortText: string; index: number }): number {
+function compareText(
+    left: Pick<LayoutLine, 'sortText' | 'index'>,
+    right: Pick<LayoutLine, 'sortText' | 'index'>,
+): number {
     if (left.sortText.length !== right.sortText.length) return left.sortText.length - right.sortText.length;
     if (left.sortText !== right.sortText) return left.sortText < right.sortText ? -1 : 1;
     return left.index - right.index;

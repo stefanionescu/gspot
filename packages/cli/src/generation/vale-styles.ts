@@ -1,7 +1,7 @@
-import type { GeneratedFile } from '#cli/types/kits.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { Policy, MergedView } from '#cli/types/policy/policy.ts';
+import type { Policy, ScopeView } from '#cli/types/policy/settings.ts';
 
 import {
     MAX_LINE,
@@ -10,9 +10,9 @@ import {
     LENGTH_RULES,
     STYLE_ASSETS,
     PROSE_GRAMMARS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation/prose.ts';
 
-function renderedRule(stem: string, text: string, view: MergedView): string {
+function renderedRule(stem: string, text: string, view: ScopeView): string {
     const key = LENGTH_RULES[stem];
     const limit = key === undefined ? undefined : view.limit(key);
     if (limit === undefined) return text;
@@ -22,12 +22,12 @@ function renderedRule(stem: string, text: string, view: MergedView): string {
 }
 /**
  * The style and vocabulary files apply writes under .gspot/config/vale/styles.
- * @param policy the repository policy
- * @param view the root scope's merged view, for the docs limits
- * @returns the generated files
+ * @param policy the repository policy.
+ * @param view the root scope's merged view, for the docs limits.
+ * @returns the generated files.
  */
-export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
-    const rules = styleNames().map((stem): GeneratedFile => {
+export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
+    const rules = styleRules().map((stem): GeneratedFile => {
         const name = `${stem}.yml`;
         const asset = `${STYLE_ASSETS}${name}`;
         return {
@@ -37,10 +37,9 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
                 (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
             readOnly: true,
             kind: 'config',
-            kit: 'prose',
         };
     });
-    const shipped = readAsset('kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    const shipped = readAsset('configurations/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [
@@ -50,21 +49,24 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
             content: `${vocabulary.join('\n')}\n`,
             readOnly: true,
             kind: 'config',
-            kit: 'prose',
         },
     ];
 }
 
 /**
- * Bundled Vale style names shared by configuration and asset generation.
- * @returns the style names
+ * Read the bundled gspot Vale rules for configuration and asset generation.
+ * @returns the rule names.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The style files and the Vale configuration list the bundled styles the same way.
-export function styleNames(): string[] {
+export function styleRules(): string[] {
     return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
 }
 
-/** The [formats] lines of vale.ini: each borrowed extension, without its dot, and the format Vale reads it as. */
-export const PROSE_FORMATS: [string, string][] = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-    grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
-);
+/**
+ * Derives the Vale format mappings from the declared source grammars.
+ * @returns the extension and format pairs used by the Vale configuration.
+ */
+export function proseFormats(): [string, string][] {
+    return Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
+        grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
+    );
+}

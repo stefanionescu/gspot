@@ -1,22 +1,19 @@
-import { BLANK } from '#plugin/config/plugin.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import type { LayoutOptions } from '#plugin/types/rules.ts';
-import { isDirective, isImportLike } from '#plugin/imports.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
-import { WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/config/rules.ts';
+import { runsOf } from '#plugin/layout.ts';
+import { BLANK } from '#plugin/config/layout.ts';
+import { isImportLike } from '#plugin/imports.ts';
+import { createRule } from '#plugin/definition.ts';
+import { isOwnLine, isDirective } from '#plugin/comments.ts';
+import type { StatementStart } from '#plugin/types/layout.ts';
+import { BLANK_LINE_DISTANCE } from '#plugin/config/comments.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 // Adjacent prose lines form one comment so fixes preserve their attachment and order.
-function commentBlocks(text: string, comments: TSESTree.Comment[]): TSESTree.Comment[] {
+function commentBlocks(source: TSESLint.SourceCode): TSESTree.Comment[] {
+    const text = source.getText();
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
-    for (const comment of comments) {
-        const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
-        if (
-            comment.type !== AST_TOKEN_TYPES.Line ||
-            isDirective(comment.value) ||
-            !BLANK.test(text.slice(lineStart, comment.range[0]))
-        ) {
+    for (const comment of source.getAllComments()) {
+        if (comment.type !== AST_TOKEN_TYPES.Line || isDirective(comment.value) || !isOwnLine(source, comment)) {
             blocks.push(comment);
             previous = undefined;
             continue;
@@ -37,40 +34,28 @@ function commentBlocks(text: string, comments: TSESTree.Comment[]): TSESTree.Com
     return blocks;
 }
 
-function isTrailing(text: string, comment: TSESTree.Comment, node: TSESTree.Node): boolean {
-    if (comment.loc.start.line !== node.loc.end.line || comment.range[0] < node.range[1]) return false;
-    return BLANK.test(text.slice(node.range[1], comment.range[0]));
-}
-
-// A decorator written above export belongs to the class, and the parser starts the export statement after it.
-// The statement a reader sees starts at the decorator, so a doc comment above the decorator leads the statement.
-function firstDecorator(node: TSESTree.Node): TSESTree.Decorator | undefined {
-    const isExport =
-        node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration;
-    const declared = isExport ? node.declaration : node;
-    return declared?.type === AST_NODE_TYPES.ClassDeclaration && Array.isArray(declared.decorators)
-        ? declared.decorators[0]
-        : undefined;
-}
-
-function startOf(node: TSESTree.Node): { offset: number; line: number } {
-    const decorator = firstDecorator(node);
-    const isEarlier = decorator !== undefined && decorator.range[0] < node.range[0];
-    return isEarlier
+// The parser starts an exported decorated class at export; its leading comment belongs above the first decorator.
+function startOf(node: TSESTree.Node): StatementStart {
+    const declared =
+        node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
+            ? node.declaration
+            : node;
+    const decorator = declared?.type === AST_NODE_TYPES.ClassDeclaration ? declared.decorators[0] : undefined;
+    return decorator !== undefined && decorator.range[0] < node.range[0]
         ? { offset: decorator.range[0], line: decorator.loc.start.line }
         : { offset: node.range[0], line: node.loc.start.line };
 }
 
+// A declaration's comment can remain separated by one blank line and intervening tool directives.
 function isLeading(
-    text: string,
+    source: TSESLint.SourceCode,
     comment: TSESTree.Comment,
     node: TSESTree.Node,
-    isBlankLineAllowed: boolean,
     comments: TSESTree.Comment[],
 ): boolean {
     const start = startOf(node);
-    if (comment.range[1] > start.offset) return false;
-    let between = text.slice(comment.range[1], start.offset);
+    if (comment.range[1] > start.offset || !isOwnLine(source, comment)) return false;
+    let between = source.getText().slice(comment.range[1], start.offset);
     const directives = comments.filter(
         (directive) =>
             directive.range[0] >= comment.range[1] &&
@@ -82,85 +67,78 @@ function isLeading(
         const to = directive.range[1] - comment.range[1];
         between = between.slice(0, from) + between.slice(to).replace(/^[\t ]*\r?\n/u, '');
     }
-    if (!BLANK.test(between)) return false;
-    const distance = between.split('\n').length - 1;
-    if (distance > (isBlankLineAllowed ? BLANK_LINE_DISTANCE : ATTACHED_DISTANCE)) return false;
-    const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
-    return BLANK.test(text.slice(lineStart, comment.range[0]));
+    return BLANK.test(between) && between.split('\n').length - 1 <= BLANK_LINE_DISTANCE;
 }
 
-export const headerFirst = createRule<LayoutOptions, 'headerFirst'>({
+// Remove a whole comment line or only the whitespace before an inline comment, preserving code on that line.
+function removalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
+    const text = source.getText();
+    const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
+    const newline = text.indexOf('\n', comment.range[1]);
+    const end = newline === -1 ? text.length : newline;
+    if (isOwnLine(source, comment) && BLANK.test(text.slice(comment.range[1], end)))
+        return [lineStart, newline === -1 ? end : end + 1];
+    let start = comment.range[0];
+    while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;
+    return [start, comment.range[1]];
+}
+
+export const headerFirst = createRule<[], 'headerFirst'>({
     name: 'header-first',
     meta: {
-        type: 'layout',
+        defaultOptions: [],
+        type: 'suggestion',
         fixable: 'code',
         docs: {
             level: 'all',
-            title: 'Header comments before imports',
+            title: 'Comments before imports',
             example:
-                'A file header after an import and separated from the next declaration by two blank lines reports `headerFirst`. Move the header before the import. A comment attached to a declaration stays beside that declaration.',
-            summary: 'Finds a file comment written after the import block instead of before it.',
-            why: 'The first thing a reader sees should say what the file is; a header buried under imports is missed.',
-            fix: 'Move the comment above the first import. gspot check --fix does it.',
+                'A file header after an import reports `headerFirst`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration and a tool directive remain in place. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
+            description:
+                'Reports comments within or immediately after an import block. Exempts tool directives and comments that lead the next declaration.',
+            why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
+            fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
         },
-        schema: [optionsSchema({ allowRequire: { type: 'boolean' } })],
-        messages: { headerFirst: 'Put the file comment above the imports.' },
+        schema: [],
+        messages: { headerFirst: 'Put the comment above the imports or beside the code it explains.' },
     },
-    defaultOptions: [{ allowRequire: false }],
-    create(context, [options]) {
+    create(context) {
         const source = context.sourceCode;
         const text = source.getText();
-        const comments = commentBlocks(text, source.getAllComments());
-        const isRequireAllowed = options.allowRequire === true;
+        const comments = commentBlocks(source);
         return {
             Program(node) {
-                const firstImport = node.body.findIndex((statement) => isImportLike(statement, isRequireAllowed));
-                const first = node.body[firstImport];
-                if (first === undefined) return;
-                const offset = node.body
-                    .slice(firstImport + 1)
-                    .findIndex((statement) => !isImportLike(statement, isRequireAllowed));
-                const firstOther = offset === -1 ? -1 : firstImport + 1 + offset;
-                const other = node.body[firstOther];
-                if (other === undefined) return;
-                const run = node.body.slice(firstImport, firstOther);
-                const violating = comments.find((comment) => {
-                    if (
-                        comment.range[0] < first.range[0] ||
-                        comment.range[1] > other.range[0] ||
-                        isDirective(comment.value)
-                    )
-                        return false;
-                    if (
-                        run.some(
-                            (statement) =>
-                                (comment.range[0] >= statement.range[0] && comment.range[1] <= statement.range[1]) ||
-                                isTrailing(text, comment, statement) ||
-                                isLeading(text, comment, statement, false, comments),
-                        )
-                    )
-                        return false;
-                    return !(
-                        (comment.range[0] >= other.range[0] && comment.range[1] <= other.range[1]) ||
-                        isTrailing(text, comment, other) ||
-                        isLeading(text, comment, other, true, comments)
+                for (const run of runsOf(node.body, (statement) => isImportLike(statement, context))) {
+                    const [first] = run;
+                    const last = run.at(-1);
+                    if (first === undefined || last === undefined) continue;
+                    const other = node.body[node.body.indexOf(last) + 1];
+                    const end = other === undefined ? text.length : startOf(other).offset;
+                    const violating = comments.find(
+                        (comment) =>
+                            comment.range[0] > first.range[0] &&
+                            comment.range[1] <= end &&
+                            !isDirective(comment.value) &&
+                            !(other !== undefined && isLeading(source, comment, other, comments)),
                     );
-                });
-                if (!violating) return;
-                context.report({
-                    node: violating,
-                    messageId: 'headerFirst',
-                    fix(fixer) {
-                        const lineStart = text.lastIndexOf('\n', violating.range[0] - 1) + 1;
-                        let end = violating.range[1];
-                        while (end < text.length && WHITESPACE.test(text[end] ?? '')) end += 1;
-                        const commentText = text.slice(lineStart, violating.range[1]).trimEnd();
-                        return [
-                            fixer.insertTextBeforeRange([first.range[0], first.range[0]], `${commentText}\n\n`),
-                            fixer.removeRange([lineStart, end]),
-                        ];
-                    },
-                });
+                    if (violating === undefined) continue;
+                    const followsImports = violating.loc.start.line > last.loc.end.line;
+                    context.report({
+                        loc: violating.loc,
+                        messageId: 'headerFirst',
+                        fix(fixer) {
+                            const removal = removalRange(source, violating);
+                            if (followsImports) removal[1] += (/^\s*/u.exec(text.slice(removal[1]))?.[0] ?? '').length;
+                            return [
+                                fixer.removeRange(removal),
+                                fixer.insertTextBefore(
+                                    first,
+                                    `${source.getText(violating)}${followsImports ? '\n\n' : '\n'}`,
+                                ),
+                            ];
+                        },
+                    });
+                }
             },
         };
     },

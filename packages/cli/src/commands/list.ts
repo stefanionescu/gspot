@@ -1,30 +1,31 @@
-import { detectKits } from '#cli/kits/detect.ts';
-import { everyManifest } from '#cli/kits/select.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
+import { resolve } from 'node:path';
+import { findRoot } from '#cli/repository/root.ts';
+import { printResult } from '#cli/output/messages.ts';
 import { Argument } from '@commander-js/extra-typings';
-import { listSettings } from '#cli/policy/settings.ts';
-import { checkState } from '#cli/policy/check-state.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
-import { readManifests } from '#cli/repository/packages.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Program, ExtraRow, ToolTables, CommandResult, SettingsListing } from '#cli/types/commands/commands.ts';
+import type { CommandResult } from '#cli/types/output.ts';
+import type { Program } from '#cli/types/commands/program.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { listSettings } from '#cli/policy/settings/entries.ts';
+import { detectUnselected } from '#cli/configurations/detect.ts';
+import { selectionStatus } from '#cli/execution/planning/skips.ts';
+import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { ExtraRow, SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.
 function scopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
-function getExtras(scope: string, tools: ToolTables): ExtraRow[] {
+function getExtras(scope: string, tools: Policy['tools']): ExtraRow[] {
     return Object.entries(tools).flatMap(([tool, table]) => {
-        if (table.extra === undefined) return [];
+        if (table.verbatim === undefined) return [];
         return [
             {
                 tool,
-                keys: Object.keys(table.extra).filter((key) => key !== 'reason'),
-                ...(table.extra.reason === undefined ? {} : { reason: table.extra.reason }),
+                keys: Object.keys(table.verbatim).filter((key) => key !== 'reason'),
+                ...(table.verbatim.reason === undefined ? {} : { reason: table.verbatim.reason }),
                 scope,
             },
         ];
@@ -39,46 +40,47 @@ function buildSettingsResult(session: Session): CommandResult {
         return `${row.key.padEnd(width)}${value} ${row.direction}  ${row.source}${scopeTag(row.scope)}`;
     });
     if (extras.length > 0) {
-        lines.push('', 'not a slot');
-        for (const extra of extras)
+        lines.push('', 'custom tool options');
+        for (const verbatim of extras)
             lines.push(
-                `  tools.${extra.tool}.extra  ${extra.keys.join(', ')}  ${extra.reason ?? ''}${scopeTag(extra.scope)}`,
+                `  tools.${verbatim.tool}.verbatim  ${verbatim.keys.join(', ')}  ${verbatim.reason ?? ''}${scopeTag(verbatim.scope)}`,
             );
     }
-    return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras }, exitCode: 0 };
+    return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras } satisfies SettingsListJson, exitCode: 0 };
 }
 
-function buildKitsResult(session: Session): CommandResult {
+function buildConfigurationsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
-    const names = new Set(selected.map((manifest) => manifest.kit.name));
-    const selectedKits = selected.map((manifest) => ({
-        name: manifest.kit.name,
+    const names = new Set(selected.map((manifest) => manifest.configuration.name));
+    const selectedConfigurations = selected.map((manifest) => ({
+        name: manifest.configuration.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
                 ? manifest.checks.map((spec) => ({
                       name: spec.name,
                       scope: scope.scope.path,
-                      state: checkState(session.policyFiles.policy, scope, spec),
+                      state: statusLabel(selectionStatus(session.policyFiles.policy, scope, spec)),
                   }))
                 : [],
         ),
     }));
-    const fields = readManifests(session.root, session.repository.files);
-    const detected = detectKits(session.repository.files, session.manifests, fields)
-        .filter((detection) => !names.has(detection.kit))
-        .map((detection) => ({
-            name: detection.kit,
-            evidence: detection.evidence,
-            command: `gspot add ${detection.kit}`,
-        }));
+    const detected = detectUnselected(session.root, session.repository.files, session.manifests, selected).map(
+        ({ configuration, evidence, command }) => ({
+            name: configuration,
+            evidence,
+            command,
+        }),
+    );
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
         .values()
-        .filter((manifest) => !names.has(manifest.kit.name) && !detectedNames.has(manifest.kit.name))
-        .map((manifest) => ({ name: manifest.kit.name, description: manifest.kit.description }))
+        .filter(
+            (manifest) => !names.has(manifest.configuration.name) && !detectedNames.has(manifest.configuration.name),
+        )
+        .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
         .toArray();
     const lines = ['selected'];
-    for (const configuration of selectedKits) {
+    for (const configuration of selectedConfigurations) {
         lines.push(`  ${configuration.name}`);
         for (const check of configuration.checks)
             lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
@@ -88,14 +90,18 @@ function buildKitsResult(session: Session): CommandResult {
         lines.push(`  ${configuration.name}  ${configuration.evidence}\n    ${configuration.command}`);
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
-    return { text: `${lines.join('\n')}\n`, json: { selectedKits, detected, available }, exitCode: 0 };
+    return {
+        text: `${lines.join('\n')}\n`,
+        json: { selectedConfigurations, detected, available } satisfies ConfigurationsListJson,
+        exitCode: 0,
+    };
 }
 
 /**
- * Every setting per scope, plus every extra table under "not a slot."
- * @param policy the resolved policy
- * @param scopes the resolved settings for each scope
- * @returns the rows and the extra tables
+ * Every setting per scope, plus each authored verbatim tool-options table.
+ * @param policy the parsed repository policy
+ * @param scopes the effective settings for each scope
+ * @returns the rows and the verbatim tables
  */
 function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
     const scopeExtras = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
@@ -104,7 +110,7 @@ function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsLis
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         return listSettings(selection.surface, policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('kit'))
+            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
             .map((entry) => ({
                 key: entry.key,
                 value: entry.value,
@@ -116,6 +122,11 @@ function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsLis
     return { rows, extras: [...getExtras('', policy.tools), ...scopeExtras] };
 }
 
+function statusLabel(status: ReturnType<typeof selectionStatus>): string {
+    if (status === undefined) return 'on';
+    return status.cause === 'setting' ? `waits for ${status.setting}` : `off (${status.cause})`;
+}
+
 /**
  * List configurations and effective settings without executing checks or mutating the project.
  * @param program the command-line program
@@ -123,20 +134,22 @@ function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsLis
 export function registerList(program: Program): void {
     program
         .command('list')
-        .summary('List kits, checks, and settings')
+        .summary('List configurations, checks, and settings')
         .description(
-            'List the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.',
+            'List the selected, detected, and available configurations with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.',
         )
         .addHelpText(
             'after',
             '\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
         )
-        .addArgument(new Argument('[kind]', 'Pass settings to list the settings').choices(['settings']))
+        .addArgument(
+            new Argument('[kind]', 'List configurations or effective settings').choices(['configurations', 'settings']),
+        )
         .action(async (kind, _flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(async (cwd) => {
-                const session = await openSession(findRoot(cwd));
-                return kind === 'settings' ? buildSettingsResult(session) : buildKitsResult(session);
-            }, global);
+            const cwd = resolve(global.C ?? process.cwd());
+
+            const session = await openSession(findRoot(cwd));
+            printResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
         });
 }

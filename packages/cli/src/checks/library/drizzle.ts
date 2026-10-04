@@ -1,11 +1,12 @@
+import ts from 'typescript';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
-import { TABLE } from '#cli/config/checks/library.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { typescriptNodes } from '#cli/parsers/typescript.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
     const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });
@@ -17,36 +18,63 @@ function generatedContents(cwd: string): Map<string, Buffer> {
  * @param input the engine input
  * @returns the findings
  */
-function relations(input: EngineInput): Finding[] {
+export function relations(input: EngineInput): Finding[] {
     const files = input.files
         .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({
             path: file.path,
-            text: readSource(input.root, file.path, input.reads).toString('utf8'),
+            source: ts.createSourceFile(
+                file.path,
+                readSource(input.root, file.path, input.reads).toString('utf8'),
+                ts.ScriptTarget.Latest,
+                true,
+            ),
         }));
-    const schemaText = files.map((file) => file.text).join('\n');
-    return files.flatMap((file) =>
-        file.text
-            .matchAll(TABLE)
-            .filter((match) => {
-                const name = match.groups?.['name'] ?? '';
-                const next = file.text.indexOf('export const', match.index + 1);
-                const body = next === -1 ? file.text.slice(match.index) : file.text.slice(match.index, next);
-                return (
-                    body.includes('.references(') &&
-                    !new RegExp(String.raw`relations\(\s*${name}\b`, 'u').test(schemaText)
-                );
-            })
-            .map((match) =>
-                findingAt(
-                    input,
-                    { file: file.path, line: file.text.slice(0, match.index).split('\n').length },
-                    'relations',
-                    `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
-                ),
-            )
-            .toArray(),
+    const calls = files.flatMap((file) => typescriptNodes(file.source).filter((node) => ts.isCallExpression(node)));
+    const declared = new Set(
+        calls.flatMap((call) => {
+            if (!ts.isIdentifier(call.expression) || call.expression.text !== 'relations') return [];
+            const table = call.arguments[0];
+            return table !== undefined && ts.isIdentifier(table) ? [table.text] : [];
+        }),
     );
+    const variables = files.flatMap((file) =>
+        typescriptNodes(file.source)
+            .filter((node) => ts.isVariableDeclaration(node))
+            .map((node) => ({ file, node })),
+    );
+    const tables = variables.flatMap(({ file, node }) => {
+        const { name, initializer } = node;
+        if (!ts.isIdentifier(name) || initializer === undefined || !ts.isCallExpression(initializer)) return [];
+        const expression = initializer.expression;
+        const isTable = ts.isIdentifier(expression)
+            ? /^(?:pg|mysql|sqlite)Table$/u.test(expression.text)
+            : ts.isPropertyAccessExpression(expression) && expression.name.text === 'table';
+        if (!isTable) return [];
+        const referenced = typescriptNodes(initializer)
+            .filter((node) => ts.isCallExpression(node))
+            .some(
+                (call) => ts.isPropertyAccessExpression(call.expression) && call.expression.name.text === 'references',
+            );
+        if (!referenced) return [];
+        return [
+            {
+                path: file.path,
+                line: file.source.getLineAndCharacterOfPosition(node.getStart(file.source)).line + 1,
+                name: name.text,
+            },
+        ];
+    });
+    return tables
+        .filter((table) => !declared.has(table.name))
+        .map((table) =>
+            findingAt(
+                input,
+                { file: table.path, line: table.line },
+                'relations',
+                `${table.name} references another table and has no relations entry.`,
+            ),
+        );
 }
 
 /**
@@ -69,7 +97,7 @@ export async function migrations(input: EngineInput): Promise<Finding[]> {
     const scratch = scratchFolder.path;
     const isolated = join(scratch, input.scope);
     const before = generatedContents(isolated);
-    const result = await runCheckCommand(input, ['drizzle-kit', 'generate'], { cwd: isolated });
+    const result = await runEngineTool(input, ['drizzle-kit', 'generate'], { cwd: isolated });
     if (result.code !== 0)
         throw new Error(`The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
     const after = generatedContents(isolated);
@@ -89,9 +117,3 @@ export async function migrations(input: EngineInput): Promise<Finding[]> {
         ),
     );
 }
-
-/** The analyses this file provides, by the name a manifest check gives them. */
-export const DRIZZLE_ANALYSES: Record<string, Engine> = {
-    'drizzle/relations': relations,
-    'drizzle/migrations-fresh': migrations,
-};

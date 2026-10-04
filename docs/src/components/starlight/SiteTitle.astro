@@ -1,8 +1,11 @@
 <div class="brand-navigation">
     <a class="site-title" href="/" aria-label="gspot home">
-        <span class="brand-mark" aria-hidden="true"></span><span>gspot</span>
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>gspot</span>
     </a>
-    <a href="/guides/overview/" aria-current={Astro.url.pathname.startsWith('/guides/') ? 'location' : undefined}>Docs</a>
+    <a href="/guides/overview/" aria-current={Astro.url.pathname.startsWith('/guides/') ? 'location' : undefined}>
+        Docs
+    </a>
 </div>
 <style>
     .brand-navigation { display: flex; align-items: center; gap: 1.5rem; line-height: 1; }

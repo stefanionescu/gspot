@@ -1,0 +1,70 @@
+[configuration]
+title = "Spelling"
+always_selected = true
+description = "typos over every text file, with the words this repository allows and the reason for each."
+
+[files]
+paths = ["**"]
+kinds = ["source"]
+
+[[tool]]
+name = "typos"
+version = "1.43.5"
+mise = "typos"
+brew = "typos-cli"
+cargo = "typos-cli"
+winget = "crate-ci.typos"
+scoop = "typos"
+github = {name = "crate-ci/typos", version = "v1.43.5"}
+
+[[tool.replace]]
+file = "typos.toml"
+
+[[tool.replace]]
+file = ".typos.toml"
+
+[[tool.replace]]
+file = "_typos.toml"
+
+[[config]]
+target = ".gspot/config/typos.toml"
+tool = "typos"
+scoped = true
+
+[[check]]
+name = "typos"
+title = "Check spelling"
+example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
+fix = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+output = {format = "typos"}
+summary = "Finds misspelled words in code, comments, and documentation."
+why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
+help = "Fix the spelling, or use gspot set tools.typos.words with a word entry when it is a real name."
+
+[[setting]]
+name = "tools.typos.words"
+type = "list"
+direction = "loosening"
+default = []
+summary = "Words typos flags that this repository uses on purpose, each with a reason (the word itself counts)."
+
+[[setting]]
+name = "tools.typos.exclude"
+type = "list"
+direction = "loosening"
+default = []
+summary = "Root-relative paths typos skips, each with a reason."
+
+[[setting]]
+name = "tools.typos.locale"
+type = "string"
+direction = "neutral"
+default = "en-us"
+summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."
+
+[setting.validation]
+enum = ["en", "en-us", "en-gb", "en-ca", "en-au"]

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { functionAt } from '#cli/checks/language/bash/scripts.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
 
 // The runs of top-level source statements, each as the zero-based lines it spans. Blank lines and comments join a run.
@@ -18,12 +18,11 @@ function sourceRuns(file: ScriptFile): number[][] {
 
 /**
  * One finding per comment among a script's source statements that is not a ShellCheck directive.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const sourceComments: Analysis = async (context, scripts) => {
-    const index = await scripts();
+export const sourceComments: Engine = async (input) => {
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {
             const [first] = run;
@@ -34,7 +33,7 @@ export const sourceComments: Analysis = async (context, scripts) => {
                 if (!text.startsWith('#') || SHELLCHECK_DIRECTIVE.test(text)) return [];
                 return [
                     findingAt(
-                        context.input,
+                        input,
                         { file: file.path, line: first + offset + 1 },
                         'source-comment',
                         'No comments among source statements. Say it where the sourced file is used, or above the block.',
@@ -47,12 +46,11 @@ export const sourceComments: Analysis = async (context, scripts) => {
 
 /**
  * One finding per run of source statements that is not ordered by length, shortest first.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const sourceOrder: Analysis = async (context, scripts) => {
-    const index = await scripts();
+export const sourceOrder: Engine = async (input) => {
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {
             const statements = run.map((position) => ({ position, text: file.lines[position]?.trim() ?? '' }));
@@ -63,7 +61,7 @@ export const sourceOrder: Analysis = async (context, scripts) => {
             if (misplaced === undefined) return [];
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: misplaced.position + 1 },
                     'source-order',
                     `Source statements go shortest first: ${sorted.map((entry) => entry.text).join(', ')}.`,

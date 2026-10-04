@@ -1,31 +1,30 @@
-// The types of checks/language/bash in this package.
 import type { z } from 'zod';
-import type { matchSchema } from '#cli/checks/language/bash/ast-grep.ts';
+import type { Finding } from '#cli/types/execution/runtime.ts';
+import type { matchSchema } from '#cli/parsers/schema/ast-grep.ts';
+import type { ScriptSyntax, ScriptFunction } from '#cli/types/parsers/bash.ts';
 
-/** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
-export type ScriptFunction = { name: string; start: number; end: number; body: string[]; statements: number };
+/** How an analysis reports one problem in one file. */
+export type ScriptReport = (line: number, rule: string, text: string) => void;
 
-/** One shell script the engine reads. */
-export type ScriptFile = {
+/** One parsed shell source owned by an engine. */
+export type ScriptFile = ScriptSyntax & {
     path: string;
     text: string;
     lines: string[];
-    functions: ScriptFunction[];
     isExecutable: boolean;
-    /** Identifier tokens outside declaration lines, by name, with the lines they appear on. */
     references: Map<string, number[]>;
-    /** Names assigned at the top level, outside every function. */
-    assignments: Set<string>;
 };
 
 /** The shell scripts of one scope, with the function owners across them. */
 export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
 
-/** How an analysis reports one problem in one file. */
-export type ScriptReport = (line: number, rule: string, text: string) => void;
-
 /** A validated native structural match with zero-based line positions. */
 export type AstGrepMatch = z.infer<typeof matchSchema>;
 
-/** A line of a shell script with its comment stripped, keyed by its one-based number. */
-export type CodeLine = { number: number; code: string };
+/** One structural shell rule asset and the limit it measures. */
+export type BashRuleAsset = { asset: string; limit: string; noun: string; isDepth: boolean };
+
+/** A shell script's declared source dependencies and annotation findings. */
+export type SourceAnnotations = { sources: Set<string>; findings: Finding[] };
+/** One shell function's repository location for duplicate-body reports. */
+export type FunctionLocation = Pick<ScriptFunction, 'name'> & { file: string; line: number };

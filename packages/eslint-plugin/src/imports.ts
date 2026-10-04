@@ -1,58 +1,17 @@
-import { posix } from 'node:path';
-import { normalizePath } from '#plugin/files.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { LEADING_STAR, TS_DIRECTIVE, DIRECTIVE_PREFIXES } from '#plugin/config/plugin.ts';
-
-function aliasTarget(source: string, prefix: string, target: string): string | undefined {
-    const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
-    const bare = clean.endsWith('/') ? clean.slice(0, -1) : clean;
-    const matches = prefix.endsWith('*') ? source.startsWith(clean) : source === bare || source.startsWith(`${bare}/`);
-    if (!matches) return undefined;
-    const rest = source.slice(clean.length);
-    const base = target.endsWith('*') ? target.slice(0, -1) : target;
-    return posix.join(base, rest);
-}
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /**
- * The file an import source names, relative imports against the importer and aliases against the root; undefined for packages.
- * @param importer the importing file
- * @param source the import source as written
- * @param root the repository root
- * @param aliases alias prefix to target directory, both optionally ending in `*`
- * @returns the file's path without an extension check, or undefined
- */
-export function importFile(
-    importer: string,
-    source: string,
-    root: string,
-    aliases: Readonly<Record<string, string>> = {},
-): string | undefined {
-    if (source.startsWith('.')) {
-        const joined = posix.join(posix.dirname(importer), source);
-        return normalizePath(posix.normalize(joined));
-    }
-    const candidates = Object.entries(aliases).toSorted(
-        ([left], [right]) =>
-            right.replace(/\*$/u, '').length - left.replace(/\*$/u, '').length ||
-            Number(left.endsWith('*')) - Number(right.endsWith('*')),
-    );
-    for (const [prefix, target] of candidates) {
-        const aliased = aliasTarget(source, prefix, target);
-        if (aliased !== undefined) return normalizePath(posix.normalize(posix.join(root, aliased)));
-    }
-    return undefined;
-}
-
-/**
- * True for an import declaration or, when asked, a require statement.
+ * True for an import declaration or a CommonJS require statement.
  * @param node the statement
- * @param isRequireAllowed whether a top-level require counts as an import
+ * @param context the ESLint context with its declared source type
  * @returns whether the statement belongs to the import block
  */
-export function isImportLike(node: TSESTree.Statement, isRequireAllowed: boolean): boolean {
+export function isImportLike(
+    node: TSESTree.Statement,
+    context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
+): boolean {
     if (node.type === AST_NODE_TYPES.ImportDeclaration) return true;
-    if (!isRequireAllowed) return false;
+    if (context.languageOptions.sourceType !== 'commonjs') return false;
     if (node.type === AST_NODE_TYPES.ExpressionStatement) return isRequireCall(node.expression);
     return (
         node.type === AST_NODE_TYPES.VariableDeclaration &&
@@ -62,22 +21,10 @@ export function isImportLike(node: TSESTree.Statement, isRequireAllowed: boolean
 }
 
 /**
- * True for a comment that is a tool directive rather than prose: a suppression, a global declaration, a coverage mark.
- * @param value the comment text without its markers
- * @returns whether a tool reads the comment
- */
-export function isDirective(value: string): boolean {
-    const text = value.replace(LEADING_STAR, '').trim();
-    if (TS_DIRECTIVE.test(text)) return true;
-    return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
-}
-
-/**
  * Whether a node calls require with one argument.
  * @param node the node, which may be absent
  * @returns whether it is a require call
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The import rules, the declaration order rule, and the require statement test share this test of the call.
 export function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&

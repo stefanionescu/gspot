@@ -1,49 +1,17 @@
-import ts from 'typescript';
-import type { Node } from 'web-tree-sitter';
-import { toPosix } from '#cli/platform/paths.ts';
-import { join, dirname, relative } from 'node:path';
-import { readSource } from '#cli/repository/sources.ts';
+import { memo } from '#cli/platform/memo.ts';
+import type { Node, Tree } from 'web-tree-sitter';
+import { readSource } from '#cli/platform/source.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { SOURCE } from '#cli/config/checks/language/javascript.ts';
-import type { EngineInput } from '#cli/types/execution/execution.ts';
-import type { Edge, EdgeSource, ImportIndex } from '#cli/types/checks/language/javascript.ts';
+import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
+import type { Edge, Importer, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 
-const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();
-const projects = new WeakMap<object, Map<string, ts.CompilerOptions>>();
-
-// The resolution settings of the tsconfig.json nearest a folder, which carry the path aliases imports use.
-function compilerOptions(input: EngineInput, directory: string): ts.CompilerOptions {
-    const configuration = ts.findConfigFile(directory, (path) => ts.sys.fileExists(path)) ?? '';
-    let held = projects.get(input.reads);
-    if (held === undefined) {
-        held = new Map();
-        projects.set(input.reads, held);
-    }
-    let options = held.get(configuration);
-    if (options === undefined) {
-        const parsed =
-            configuration === ''
-                ? undefined
-                : ts.getParsedCommandLineOfConfigFile(
-                      configuration,
-                      {},
-                      { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined },
-                  );
-        options = {
-            ...parsed?.options,
-            module: ts.ModuleKind.ESNext,
-            moduleResolution: ts.ModuleResolutionKind.Bundler,
-            allowJs: true,
-            resolveJsonModule: true,
-        };
-        held.set(configuration, options);
-    }
-    return options;
-}
+const IMPORT_MEMO = { create: () => new Map<string, Promise<ImportIndex>>() };
 
 // Refuse incomplete tree-sitter parses and identify the first invalid location.
-function assertParsed(tree: NonNullable<Awaited<ReturnType<typeof parseSource>>>, path: string): void {
+function assertParsed(tree: Tree, path: string): void {
     if (!tree.rootNode.hasError) return;
     const location = (tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode).startPosition;
     throw new Error(`Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`);
@@ -91,16 +59,13 @@ function stringText(node: Node): string | undefined {
 }
 
 // The edge one importing node adds, when its module resolves to a tracked file of the scope.
-function nodeEdges(source: EdgeSource, node: Node): Edge[] {
-    const { input, path, owned } = source;
+function getNodeEdges(importer: Importer, node: Node): Edge[] {
+    const { input, path, owned, options } = importer;
     const specifier = importedModule(node);
     if (specifier === undefined) return [];
     // The file the import names; none for a package, a missing file, or a file of another kind.
-    const file = join(input.root, path);
-    const resolved = ts.resolveModuleName(specifier, file, compilerOptions(input, dirname(file)), ts.sys).resolvedModule
-        ?.resolvedFileName;
-    if (resolved === undefined) return [];
-    const target = toPosix(relative(input.root, resolved));
+    const target = modulePath(input, path, specifier, options);
+    if (target === undefined) return [];
     if (!owned.has(target)) return [];
     return [
         {
@@ -113,16 +78,15 @@ function nodeEdges(source: EdgeSource, node: Node): Edge[] {
     ];
 }
 
-async function importedEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
+async function readImportEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
     const text = readSource(input.root, path, input.reads).toString('utf8');
     const tree = await parseSource(path.endsWith('x') ? 'tsx' : 'typescript', text, input);
-    if (tree === null) throw new Error(`Cannot parse imports in ${path}.`);
     try {
         assertParsed(tree, path);
-        const source: EdgeSource = { input, path, owned };
+        const importer: Importer = { input, path, owned, options: getCompilerOptions(input, path) };
         return tree.rootNode
             .descendantsOfType(['import_statement', 'export_statement', 'call_expression'])
-            .flatMap((node) => nodeEdges(source, node));
+            .flatMap((node) => getNodeEdges(importer, node));
     } finally {
         tree.delete();
     }
@@ -133,7 +97,7 @@ async function readImports(input: EngineInput, paths: string[]): Promise<ImportI
     const owned = new Set(paths);
     const edges: ImportIndex['edges'] = [];
     for (const path of paths) {
-        const imported = await importedEdges(input, path, owned);
+        const imported = await readImportEdges(input, path, owned);
         edges.push(...imported);
         for (const { to } of imported) {
             const users = importers.get(to) ?? new Set<string>();
@@ -147,14 +111,10 @@ async function readImports(input: EngineInput, paths: string[]): Promise<ImportI
 /**
  * Resolved JavaScript and TypeScript imports owned by one scope, shared for the session.
  * @param input the check and its repository session
- * @returns source paths and the files importing each path
+ * @returns source paths, their importing files, and each resolved value-import edge with its source location
  */
-export async function scopeImports(input: EngineInput): Promise<ImportIndex> {
-    let scopes = cache.get(input.reads);
-    if (scopes === undefined) {
-        scopes = new Map();
-        cache.set(input.reads, scopes);
-    }
+export async function getScopeImports(input: EngineInput): Promise<ImportIndex> {
+    const scopes = memo(input.reads, IMPORT_MEMO);
     const children = input.scopeEntries
         .map((entry) => entry.path)
         .filter((path) => path !== input.scope && isInScope(path, input.scope));

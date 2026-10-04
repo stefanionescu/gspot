@@ -1,42 +1,95 @@
 // The durable ownership log an owner works from: its records and its recovery of an interrupted mutation.
+import { pathKey } from '#cli/platform/paths.ts';
 import { contentDigest } from '#cli/platform/text.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import type { Read, Root } from '#cli/types/platform/platform.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import type { Read, Root } from '#cli/types/platform/root.ts';
+import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
-import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import { fileMode, assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
 import type { Log, Identity, Ownership, OwnershipEntry, PendingOwnership } from '#cli/types/lifecycle/ownership.ts';
 
 // Settles one interrupted mutation: accepted when it completed, left unwritten when the file is as before or gone,
 // refused when edited. A Windows replacement removes a read-only file before its rename, so a crash can leave none.
 function recoverPending(files: Root, pending: PendingOwnership, accept: (pending: PendingOwnership) => void): void {
     const isLink = [pending.before, pending.after].some((entry) => entry?.isLink === true);
-    const current = isLink ? files.readEntry(pending.path) : files.read(pending.path);
+    const current = isLink ? files.readKeepingLinks(pending.path) : files.read(pending.path);
     if (isMatch(current, pending.after)) {
         accept(pending);
         return;
     }
     if (current !== undefined && !isMatch(current, pending.before))
         throw new Error(
-            `Interrupted lifecycle operation conflicts with edited ${pending.path}. Resolve that file before retrying.`,
+            `A previous gspot run stopped while writing ${pending.path}, and the file changed since then. Fix it by hand, then run the command again.`,
         );
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function parseState(recorded: Read | undefined): Ownership {
+function parseOwnership(recorded: Read | undefined): Ownership {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }
 
 // The recorded entry of a path, refusing a record under another spelling of the same path.
 function getEntry(entries: Map<string, OwnershipEntry>, path: string): OwnershipEntry | undefined {
-    const entry = entries.get(path.normalize('NFC').toLowerCase());
+    const entry = entries.get(pathKey(path));
     if (entry !== undefined && entry.path !== path)
         throw new Error(
-            `Generated file ${entry.path} is now written as ${path}, which differs only by letter case and is one file on some systems. Restore the old spelling, or rename it through a different name in two applies.`,
+            `Generated file ${entry.path} is now written as ${path}, which differs only by letter case and is one file on some systems. Rename it to a third name and run gspot apply, then rename it to the new spelling and run gspot apply again.`,
         );
     return entry;
+}
+
+/**
+ * Reads the log under a locked root, recovers any interrupted mutation, and prepares the next operation.
+ * @param files the locked root the log lives under
+ * @returns the log
+ */
+function openLog(files: Root): Log {
+    const logPath = `${STATE_DIRECTORY}/ownership.json`;
+    let recorded = files.read(logPath);
+    const state = parseOwnership(recorded);
+    const entries = new Map(state.files.map((entry) => [pathKey(entry.path), entry]));
+    const save = (): void => {
+        state.files = [...entries.values()];
+        ownershipSchema.parse(state);
+        const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
+        files.write(logPath, next, recorded);
+        recorded = next;
+    };
+    const accept = (pending: PendingOwnership): void => {
+        const key = pathKey(pending.path);
+        if (pending.entry === undefined) entries.delete(key);
+        else entries.set(key, pending.entry);
+    };
+    if (state.pending !== undefined) {
+        for (const pending of state.pending) recoverPending(files, pending, accept);
+        delete state.pending;
+        save();
+    }
+    return {
+        [Symbol.dispose]() {
+            files.close();
+        },
+        files,
+        state,
+        save,
+        entryFor(path) {
+            if (state.pending !== undefined)
+                throw new Error(
+                    'An interrupted mutation must be recovered before another operation. Reopen the lifecycle owner.',
+                );
+            assertMutationTarget(path);
+            return getEntry(entries, path);
+        },
+        finish() {
+            for (const pending of state.pending ?? []) accept(pending);
+            delete state.pending;
+            save();
+        },
+    };
 }
 
 /**
@@ -44,7 +97,6 @@ function getEntry(entries: Map<string, OwnershipEntry>, path: string): Ownership
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
 export function identify(file: Read): Identity {
     return {
         hash: contentDigest(file.bytes),
@@ -85,49 +137,40 @@ export function isRecorded(file: Read | undefined, recorded: Identity | undefine
 }
 
 /**
- * Reads the log under a locked root, recovers any interrupted mutation, and prepares the next operation.
- * @param files the locked root the log lives under
- * @param stateDirectory the directory under the root that holds the log
- * @returns the log
+ * Opens one locked ownership context and recovers interrupted writes and installations.
+ * @param root the repository root
+ * @returns the context, which the command disposes
  */
-export function openLog(files: Root, stateDirectory: string): Log {
-    const logPath = `${stateDirectory}/ownership.json`;
-    let recorded = files.read(logPath);
-    const state = parseState(recorded);
-    const entries = new Map(state.files.map((entry) => [entry.path.normalize('NFC').toLowerCase(), entry]));
-    const save = (): void => {
-        state.files = [...entries.values()];
-        ownershipSchema.parse(state);
-        const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
-        files.write(logPath, next, recorded);
-        recorded = next;
-    };
-    const accept = (pending: PendingOwnership): void => {
-        const key = pending.path.normalize('NFC').toLowerCase();
-        if (pending.entry === undefined) entries.delete(key);
-        else entries.set(key, pending.entry);
-    };
-    if (state.pending !== undefined) {
-        for (const pending of state.pending) recoverPending(files, pending, accept);
-        delete state.pending;
-        save();
+export function openOwnership(root: string): Log {
+    const files = openRoot(root);
+    try {
+        files.lock(`${STATE_DIRECTORY}/writer.lock`);
+        const log = openLog(files);
+        recoverInstallations(log);
+        return log;
+    } catch (error) {
+        files.close();
+        throw error;
     }
-    return {
-        files,
-        state,
-        save,
-        entryFor(path) {
-            if (state.pending !== undefined)
-                throw new Error(
-                    'An interrupted mutation must be recovered before another operation. Reopen the lifecycle owner.',
-                );
-            mutationTarget(path);
-            return getEntry(entries, path);
-        },
-        finish() {
-            for (const pending of state.pending ?? []) accept(pending);
-            delete state.pending;
-            save();
-        },
-    };
+}
+
+/**
+ * Reads ownership without creating a lock or writing files.
+ * @param root the repository root
+ * @returns the saved state, or empty ownership for a new repository
+ */
+export function getOwnership(root: string): Ownership {
+    using files = openRoot(root);
+    return parseOwnership(files.read(`${STATE_DIRECTORY}/ownership.json`));
+}
+
+/**
+ * Keeps Git's writable checkout mode when the generated bytes match a recorded read-only file.
+ * @param proposed the generated file
+ * @param current the current file
+ * @returns the snapshot to write
+ */
+export function preserveMode(proposed: Read, current: Read | undefined): Read {
+    const mode = current !== undefined && isRecorded(current, identify(proposed)) ? current.mode : fileMode(proposed);
+    return { bytes: proposed.bytes, mode };
 }

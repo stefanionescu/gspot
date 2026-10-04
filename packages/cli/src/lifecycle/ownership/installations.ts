@@ -1,32 +1,23 @@
 // A private tool installation as one unit: written beside its folder, swapped in by a rename, and recorded by kind
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
-import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
+
+import { EXECUTABLE_FILE } from '#cli/config/platform/root.ts';
 import { INSTALLATION_DIRECTORIES } from '#cli/config/lifecycle/ownership.ts';
-import type { InstalledOutput, InstallationKind } from '#cli/types/tools/tools.ts';
+import type { Log, InstallationFolders } from '#cli/types/lifecycle/ownership.ts';
+import type { InstalledOutput, InstallationKind } from '#cli/types/tools/install.ts';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing a tree and recovering an interrupted install name the side folders of a kind the same way.
-function sideFolders(kind: InstallationKind): { folder: string; staging: string; previous: string } {
+
+function sideFolders(kind: InstallationKind): InstallationFolders {
     const folder = INSTALLATION_DIRECTORIES[kind];
     return { folder, staging: `${folder}.next`, previous: `${folder}.previous` };
 }
 
 // Marks or clears an installation in progress, which tool inspection reports as pending.
-function setInProgress(log: Log, kind: InstallationKind, isInProgress: boolean): void {
-    const others = (log.state.installations ?? []).filter((entry) => entry !== kind);
-    const installations = isInProgress ? [...others, kind] : others;
-    if (installations.length === 0) delete log.state.installations;
-    else log.state.installations = installations;
-    log.save();
-}
-
-// Records whether gspot owns the finished folder of a kind.
-function setInstalled(log: Log, kind: InstallationKind, isInstalled: boolean): void {
-    const others = (log.state.installs ?? []).filter((entry) => entry !== kind);
-    const installs = isInstalled ? [...others, kind].toSorted((left, right) => left.localeCompare(right)) : others;
-    if (installs.length === 0) delete log.state.installs;
-    else log.state.installs = installs;
+function setKind(log: Log, field: 'installing' | 'installed', kind: InstallationKind, isPresent: boolean): void {
+    const others = (log.state[field] ?? []).filter((entry) => entry !== kind);
+    const kinds = isPresent ? [...others, kind].toSorted((left, right) => left.localeCompare(right)) : others;
+    log.state[field] = kinds.length === 0 ? undefined : kinds;
     log.save();
 }
 
@@ -36,10 +27,10 @@ function setInstalled(log: Log, kind: InstallationKind, isInstalled: boolean): v
  * @param log the open log
  */
 export function recoverInstallations(log: Log): void {
-    for (const kind of log.state.installations ?? []) {
+    for (const kind of log.state.installing ?? []) {
         const { folder, staging, previous } = sideFolders(kind);
         if (log.files.stat(folder) === undefined && log.files.stat(previous) !== undefined)
-            log.files.rename(previous, folder);
+            log.files.renameDirectory(previous, folder);
         log.files.removeTree(previous);
         log.files.removeTree(staging);
     }
@@ -55,10 +46,10 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
     // An install still in progress made the folder: a crash after its swap and before its record leaves it there.
-    const isOwned = state.installs?.includes(kind) === true || state.installations?.includes(kind) === true;
+    const isOwned = state.installed?.includes(kind) === true || state.installing?.includes(kind) === true;
     if (!isOwned && files.list(folder).length > 0)
-        throw new Error(`Preserved unowned ${folder}. Move it aside before installing.`);
-    setInProgress(log, kind, true);
+        throw new Error(`${folder} exists and gspot did not create it. Move it aside, then run gspot install.`);
+    setKind(log, 'installing', kind, true);
     files.removeTree(staging);
     files.mkdir(staging, EXECUTABLE_FILE);
     // A link is written after the file it names, which the write checks is there.
@@ -67,11 +58,11 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
     );
     for (const { path, file } of ordered) files.write(`${staging}${path.slice(folder.length)}`, file, undefined);
     files.removeTree(previous);
-    if (files.stat(folder) !== undefined) files.rename(folder, previous);
-    files.rename(staging, folder);
+    if (files.stat(folder) !== undefined) files.renameDirectory(folder, previous);
+    files.renameDirectory(staging, folder);
     files.removeTree(previous);
-    setInstalled(log, kind, true);
-    setInProgress(log, kind, false);
+    setKind(log, 'installed', kind, true);
+    setKind(log, 'installing', kind, false);
 }
 
 /**
@@ -80,7 +71,7 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
  * @param kind the installation
  */
 export function deleteInstallation(log: Log, kind: InstallationKind): void {
-    if (log.state.installs?.includes(kind) !== true) return;
+    if (log.state.installed?.includes(kind) !== true) return;
     log.files.removeTree(INSTALLATION_DIRECTORIES[kind]);
-    setInstalled(log, kind, false);
+    setKind(log, 'installed', kind, false);
 }

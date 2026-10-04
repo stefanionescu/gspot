@@ -1,33 +1,38 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
-import { harnessFolders } from '#cli/policy/settings.ts';
-import { aliasesFor } from '#cli/generation/javascript.ts';
+import { aliasesFor } from '#cli/repository/aliases.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
+import { runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
+import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
+import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
+import type { TemplateInputs } from '#cli/types/generation/templates.ts';
+import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
-import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/policy.ts';
+import type { Policy, ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
+import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
+import { ESLINT_LIMITS, DIRECTION_ROLES, ESLINT_CODE_FILES, ESLINT_JAVASCRIPT_LIMITS } from '#cli/config/eslint.ts';
+import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 import {
-    ESLINT_LIMITS,
-    REGISTRY_FILES,
-    DIRECTION_ROLES,
-    ESLINT_CODE_FILES,
-    DEFAULT_NODE_VERSION,
-    ESLINT_JAVASCRIPT_LIMITS,
-} from '#cli/config/generation/eslint.ts';
+    eslintModule,
+    eslintErrorRules,
+    eslintFilePatterns,
+    eslintRuleSettings,
+    serializeEslintBlock,
+} from '#cli/generation/eslint/output.ts';
 
 // The globs of a role: an element name stands for the paths of that element, and the fallback holds when unset.
 function roleGlobs(architecture: ArchitectureSettings, name: string, defaults: string[]): string[] {
     const value = architecture.roles[name];
     const entries = value === undefined ? defaults : [value].flat();
-    return entries.flatMap(
-        (entry) => architecture.elements.find((element) => element.name === entry)?.paths ?? [entry],
-    );
+    return entries.flatMap((entry) => architecture.modules.find((element) => element.name === entry)?.paths ?? [entry]);
 }
 
 // The roles import-direction orders, with the harness folders of the scope. A role the policy leaves out matches no file.
 function directionRoles(architecture: ArchitectureSettings, harness: string[]): Record<string, string[]> {
-    const types = architecture.types_directory;
     return {
-        types: roleGlobs(architecture, 'types', types === undefined ? [] : [`${types}/**`, `**/${types}/**`]),
+        types: roleGlobs(architecture, 'types', []),
         harness: harness.map((folder) => `${folder}/**`),
         ...Object.fromEntries(DIRECTION_ROLES.map((role) => [role, roleGlobs(architecture, role, [])])),
     };
@@ -60,14 +65,14 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
     const paths = ['', ...scopes.map((entry) => entry.scope.path).filter((path) => path !== '')];
     return paths.flatMap((path): EslintBlock[] => {
         const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
-        if (table === undefined || table.elements.length === 0) return [];
+        if (table === undefined || table.modules.length === 0) return [];
         const prefix = path === '' ? '' : `${path}/`;
         // Each element is a category of files, because boundaries matches its element patterns against folders only.
-        const categories = table.elements.map((element) => ({
+        const categories = table.modules.map((element) => ({
             category: element.name,
             pattern: element.paths.map((pattern) => `${prefix}${pattern}`),
         }));
-        const policies = table.edges_allowed.map((entry) => ({
+        const policies = table.imports_allowed.map((entry) => ({
             from: { file: { categories: entry.from } },
             allow: { to: { file: { categories: { anyOf: entry.to } } } },
         }));
@@ -83,9 +88,8 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
 
 // The gspot rules the all level adds: import layout, direction, ownership, and re-exports.
 function allLevelRules(context: EslintContext, aliases: Record<string, string>, roles: Record<string, string[]>) {
-    const { architecture, structure } = context.policy;
+    const { structure } = context.policy;
     const scopePaths = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
-    const config = architecture.config_directory;
     const reexports =
         structure.reexports === 'none'
             ? { 'gspot/no-reexports': 'error' }
@@ -94,15 +98,10 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
         'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
         'gspot/header-first': 'error',
-        'gspot/no-import-comments': 'error',
-        'gspot/import-layout': 'error',
-        'gspot/export-layout': 'error',
+        'gspot/sort-imports': 'error',
+        'gspot/sort-exports': 'error',
         'gspot/no-cross-folder-imports': ['error', { aliases }],
         'gspot/no-cross-scope-imports': ['error', { scopes: scopePaths }],
-        'gspot/registry-instances':
-            config === undefined
-                ? 'error'
-                : ['error', { files: [...REGISTRY_FILES, `${config}/**`, `**/${config}/**`] }],
         'gspot/private-before-public': 'error',
         'gspot/import-direction': ['error', { roles, aliases }],
         'gspot/env-owner': ['error', { owners: roles['env'] }],
@@ -110,50 +109,48 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
     };
 }
 
-// The gspot rules the policy decides: the types folder, the trivial ceilings, and the all-level set.
+// The structural ceilings and all-level rules the policy decides.
 function gspotRules(context: EslintContext, aliases: Record<string, string>, limits: EslintConfiguration['limits']) {
     const { policy, selection } = context;
     const { architecture } = policy;
     const roles = directionRoles(architecture, harnessFolders(policy, selection.scope.path));
-    const trivial = { maxStatements: limits['trivialStatements'] };
+    const trivial = limits['trivialStatements'] === undefined ? {} : { maxStatements: limits['trivialStatements'] };
     const barrels = { 'gspot/max-barrel-reexports': ['error', { max: limits['barrelReexports'] }] };
     return {
-        ...(architecture.types_directory === undefined
-            ? {}
-            : { 'gspot/types-placement': ['error', { directory: architecture.types_directory }] }),
         'gspot/no-trivial-functions': ['error', trivial],
-        'gspot/no-trivial-files': ['error', trivial],
+        'gspot/no-trivial-files': ['error', { ...trivial, allowIndex: policy.structure.reexports === 'index-only' }],
         ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),
         ...(policy.level === 'all' && policy.structure.reexports !== 'none' ? barrels : {}),
     };
 }
 
 // The limits of one language, each falling back to the general limit.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The TypeScript and JavaScript limits fall back to the general limit the same way.
-function limitsOf(view: MergedView, language: string, keys: Record<string, string>): EslintConfiguration['limits'] {
-    return Object.fromEntries(
-        Object.entries(keys).map(([name, key]) => [name, view.limit(key, language) ?? view.limit(key)]),
-    );
+
+function limitsOf(view: ScopeView, language: string, keys: Record<string, string>): EslintConfiguration['limits'] {
+    return Object.fromEntries(Object.entries(keys).map(([name, key]) => [name, view.limit(key, language)]));
 }
 
 // The file sets and plain settings [tools.eslint] holds, with their defaults.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Reading these four settings with their defaults inside eslintConfiguration puts it over the complexity limit.
-function eslintSettings(view: MergedView) {
+function eslintSettings(view: ScopeView) {
     const { settings } = view;
     return {
         testFiles: (settings['tests'] ?? []) as string[],
         scriptFiles: (settings['tools.eslint.script_files'] ?? []) as string[],
-        nodeVersion: (settings['tools.eslint.node_version'] ?? DEFAULT_NODE_VERSION) as string,
+        nodeVersion: settings['tools.eslint.node_version'] as string,
         restrictedImports: (settings['tools.eslint.restricted_imports'] ?? []) as unknown[],
     };
 }
 
-// The [tools.eslint.extra] block without its reason, when it sets anything.
-function extraBlock(view: MergedView): EslintConfiguration['extra'] {
-    const extras = view.extra('eslint');
-    if (extras === undefined) return undefined;
-    const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason'));
-    return Object.keys(entries).length === 0 ? undefined : { reason: extras['reason'], entries };
+// The [tools.eslint.verbatim] block without its reason, when it sets anything.
+function extraBlock(context: EslintContext): EslintConfiguration['verbatim'] {
+    const { policy, selection } = context;
+    const entries = selection.view.verbatim('eslint');
+    if (entries === undefined || Object.keys(entries).length === 0) return undefined;
+    const reasons = tablesFor(policy, selection.scope.path)
+        .map(({ table }) => table.tools?.['eslint']?.verbatim?.reason)
+        .filter((reason) => reason !== undefined);
+    return { reason: reasons.at(-1), entries };
 }
 
 /**
@@ -164,12 +161,11 @@ function extraBlock(view: MergedView): EslintConfiguration['extra'] {
 export function eslintConfiguration(context: EslintContext): EslintConfiguration {
     const { root, policy, scopes, selection } = context;
     const { view } = selection;
-    const tool = view.tool('eslint');
+    const tool = view.options('tools.eslint');
     const aliases = aliasesFor(root, '');
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
     const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
-    const importStyle = (tool['import_style'] ?? {}) as Record<string, string>;
-    const globals = (tool['runtimes'] ?? {}) as Record<string, string>;
+    const importStyle = (tool['import_extensions'] ?? {}) as Record<string, string>;
     return {
         aliases,
         ...eslintSettings(view),
@@ -181,21 +177,77 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                 ? {
                       'import-x/first': 'error',
                       'import-x/newline-after-import': ['error', { count: 1 }],
-                      'import-x/exports-last': 'error',
                   }
                 : {},
-        commentLevel: policy.requireReasons ? 'error' : 'off',
+        commentLevel: policy.require_reasons ? 'error' : 'off',
         importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
             files: [[glob, ESLINT_CODE_FILES]],
-            rules: { 'gspot/import-style': ['error', { style, internalPrefixes }] },
+            rules: { 'gspot/import-extensions': ['error', { style, internalPrefixes }] },
         })),
-        runtimes: Object.entries(globals).map(([glob, runtime]) => ({
-            files: [glob],
-            runtime: runtime === 'worker' ? 'serviceworker' : runtime,
-        })),
+        runtimes: runtimeBlocks(scopes),
         boundaryBlocks: boundaryBlocks(policy, scopes),
         scopeBlocks: scopeBlocks(context),
         ignoredPaths: ['**/node_modules/**', `${DOT_GSPOT}/**`, ...policy.declarations.flatMap((entry) => entry.paths)],
-        extra: extraBlock(view),
+        verbatim: extraBlock(context),
+    };
+}
+
+/**
+ * Bind rule data and preset reads to one generation run without acquiring installed tools.
+ * @param session the repository and parsed policy of this run
+ * @param selection the current scope
+ * @returns the data and callbacks used by the ESLint render assets
+ */
+export function eslintInputs(
+    session: Session,
+    selection: ScopeSelection,
+): Pick<
+    TemplateInputs,
+    | 'eslint'
+    | 'eslintPolicy'
+    | 'eslintAllRules'
+    | 'eslintModule'
+    | 'eslintFiles'
+    | 'eslintFragmentBlocks'
+    | 'eslintRuleSettings'
+    | 'serializeEslintBlock'
+    | 'eslintErrorRules'
+    | 'eslintPresets'
+> {
+    const {
+        root,
+        scopes,
+        policyFiles: { policy },
+    } = session;
+    const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
+    const presets = new Map<string, EslintPresets>();
+    let configuration: EslintConfiguration | undefined;
+    return {
+        eslint: () => (configuration ??= eslintConfiguration({ root, policy, scopes, selection })),
+        eslintPolicy: () => [
+            ...structuralRuleBlocks(scopes, policy),
+            ...manifestRuleBlocks(scopes, policy),
+            ...eslintRuleBlocks(policy),
+        ],
+        eslintAllRules: allRules,
+        eslintModule: eslintModule(allRules, policy.level === 'all', [ESLINT_CODE_FILES]),
+        eslintFiles: eslintFilePatterns(
+            [],
+            (selection.view.settings['tests'] ?? []) as string[],
+            (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
+        ),
+        eslintFragmentBlocks: [],
+        eslintRuleSettings: eslintRuleSettings,
+        eslintErrorRules,
+        serializeEslintBlock,
+        eslintPresets: (name) => {
+            let snapshot = presets.get(name);
+            if (snapshot !== undefined) return snapshot;
+            const manifest = session.manifests.get(name);
+            if (manifest === undefined) throw new Error(`No configuration owns the ${name} ESLint presets.`);
+            snapshot = readEslintPresets(manifest);
+            presets.set(name, snapshot);
+            return snapshot;
+        },
     };
 }

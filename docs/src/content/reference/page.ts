@@ -9,13 +9,7 @@ import type { ReferencePage } from '../../types/reference.ts';
  * @param owner the source file the page is generated from
  * @returns the page with its edit link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference page links its source definition at the build revision; this spells that link once.
-export function referencePage(
-    title: string,
-    description: string,
-    body: string,
-    owner = 'packages/cli/src/policy/schema.ts',
-): ReferencePage {
+export function referencePage(title: string, description: string, body: string, owner: string): ReferencePage {
     const source = `https://github.com/stefanionescu/gspot/blob/${sourceRevision}/${owner}`;
     return {
         data: { title, description, editUrl: source },
@@ -28,7 +22,6 @@ export function referencePage(
  * @param body the Markdown body
  * @returns the section
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference page drops an empty section and spells a heading this one way.
 export function section(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
@@ -48,7 +41,6 @@ export function table(header: string[], rows: string[][]): string {
  * @param text the cell text
  * @returns the escaped text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference table escapes pipes and line breaks in its cells by this one rule.
 export function cell(text: string): string {
     return text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 }

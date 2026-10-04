@@ -9,5 +9,4 @@ Pods/
 .venv/
 .env*
 *.lock
-bun.lock
 package-lock.json

@@ -1,0 +1,13 @@
+<%~ toml({
+    schema: { enabled: false },
+    formatting: {
+        indent_string: format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width),
+        column_width: format.print_width,
+        align_entries: false,
+        reorder_keys: false,
+        array_auto_expand: false,
+        array_auto_collapse: false,
+        compact_inline_tables: true,
+        ...options('tools.taplo').formatting,
+    },
+}).trimEnd() %>

@@ -1,97 +1,80 @@
-min_version = "2026.8.8"
-
 [settings]
 # Repository tasks run the CLI source, so mise does not install the published package.
-disable_tools = ["npm:@gspothq/cli"]
+disable_tools = ["github:stefanionescu/gspot"]
 
-# Tasks use installed tools; native provisioning is an explicit development step.
+# `mise run` does not install missing tools. Run `mise install` first.
 [settings.task]
 run_auto_install = false
 
+# Use npm to acquire npm tools without depending on the package manager of the consuming project.
 [settings.npm]
 package_manager = "npm"
 
-# The hooks of this checkout run `mise exec -- gspot`; the package bin resolves it to the source CLI.
+# Hooks run `mise exec -- gspot`. The launcher in scripts/ runs the source CLI.
 [env]
 _.path = ["{{config_root}}/scripts"]
 
-# Runtimes. Every kit tool the tests need comes from the manifests through `mise run pin:test-tools`.
+# gspot-tools.toml pins the applicable repository tools. mise.test.toml pins the remaining test tools.
 [tools]
 bun = "1.4.2"
-node = "24.20.0"
-pnpm = "9.9.0"
-yarn = "1.22.22"
-# Test harness tools no kit pins, and the Python tools the native tests run from PATH.
-bats = "1.14.0"
-ruff = "0.16.8"
-"pipx:sqlfluff" = "4.3.0"
-"pipx:pytest" = {version = "9.1.1", depends = ["uv"], uvx_args = "--with pytest-cov==7.1.0"}
-
-[tasks.gspot]
-description = "Run the source CLI: mise run gspot -- <command>."
-dir = "{{config_root}}"
-run = "bun packages/cli/src/main.ts"
-
-[tasks.apply]
-description = "Generate repository configuration using gspot source and the workspace plugin."
-dir = "{{config_root}}"
-run = "bun scripts/plugin.ts apply"
-
-[tasks.install]
+[tasks."install:checks"]
 description = "Install locked repository checks with the current workspace plugin."
-run = "bun scripts/plugin.ts install"
+run = "bun scripts/plugin.ts install --refresh-locks"
 
 [tasks.setup]
-description = "Install frozen dependencies, download the Swift parser, and synchronize Astro types."
+description = "Install locked dependencies, write grammars, build the plugin, and generate Astro types."
 run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/grammars.ts"]
 depends_post = ["generate:docs", "build:plugin"]
 
 [tasks."pin:test-tools"]
-description = "Write the mise pins of every kit tool from the manifests."
-run = "bun scripts/test-tools.ts"
+description = "Write and format test-tool pins absent from gspot-tools.toml; requires the test environment."
+run = [
+    "bun scripts/test-tools.ts",
+    "mise --env test exec -- bun packages/cli/src/main.ts check --only files/taplo-format --fix --quiet mise.test.toml",
+]
+
+[tasks."pin:eslint-presets"]
+description = "Refresh shipped ESLint preset data from the installed pinned tool project."
+run = "bun scripts/eslint-presets.ts .gspot"
 
 [tasks."check:pins"]
-description = "Check that every tool pin of the kit manifests exists in its registry."
-run = "bun packages/cli/scripts/pins.ts"
+description = "Check that every tool pin of the configuration manifests exists in its registry."
+run = "bun scripts/pins.ts"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."
 depends = ["generate:docs"]
-run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
-
-[tasks."check:release"]
-description = "Require TAG to match the gspot package version before publishing."
-shell = "bash -euo pipefail -c"
-run = '''test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"'''
+run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p packages/cli/tsconfig.json", "bunx tsc --noEmit -p packages/eslint-plugin/tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
 
 [tasks."build:cli"]
 description = "Build the gspot package into packages/cli/dist, with its grammars."
 run = "bun packages/cli/scripts/build.ts"
 
+[tasks."build:binaries"]
+description = "Compile standalone release archives for Linux, macOS, and Windows."
+run = "bun scripts/binaries.ts"
+
+[tasks."test:binary"]
+description = "Test the native standalone archive without Node.js or Bun on PATH."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 900000 ./packages/binaries.test.ts"
+
 [tasks."build:plugin"]
-description = "Build the standalone ESLint plugin and stage its license."
-run = "bun packages/eslint-plugin/build.ts"
+description = "Build the standalone ESLint plugin and include its license."
+run = "bun scripts/build.ts"
 
 [tasks.test]
-depends = ["build:plugin"]
-description = "Run deterministic unit and integration tests."
+description = "Run deterministic CLI and plugin tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./unit ./integration"
+run = "bun test --timeout 60000 ./cli ./plugin"
 
 [tasks."test:tools"]
-depends = ["build:plugin"]
 description = "Run native compatibility tests with the selected tools installed."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./tools"
-
-[tasks."test:acceptance"]
-description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
-dir = "{{config_root}}/tests"
-run = "bun {{config_root}}/scripts/acceptance.ts"
+run = "bun {{config_root}}/scripts/plugin.ts test"
 
 [tasks."test:package"]
-depends = ["build:plugin"]
-description = "Build and publish both packages to an isolated registry, then test consumers that install them."
+description = "Build the CLI and publish it with the built plugin to an isolated registry, then test consumers."
 dir = "{{config_root}}/tests"
 run = "bun {{config_root}}/scripts/package.ts"
 
@@ -105,12 +88,19 @@ description = "Build the documentation site and validate its local links and fra
 dir = "{{config_root}}/docs"
 run = ["bun --bun astro build", "bun links.ts"]
 
-[tasks."serve:docs"]
-alias = "dev"
+[tasks.dev]
 description = "Generate references and serve the documentation locally."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
 
-[tasks."ci:swiftformat"]
-description = "Prepare and exercise SwiftFormat on Windows."
-run = "bun scripts/swiftformat.ts"
+[tasks.check]
+description = "Run the repository checks."
+run = "bun packages/cli/src/main.ts check"
+
+[tasks."check:fix"]
+description = "Correct findings from repository checks."
+run = "bun packages/cli/src/main.ts check --fix"
+
+[tasks.build]
+description = "Build the CLI, plugin, and documentation."
+depends = ["build:cli", "build:plugin", "build:docs"]

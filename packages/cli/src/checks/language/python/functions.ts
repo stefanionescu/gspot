@@ -1,52 +1,74 @@
+import { findingAt } from '#cli/execution/finding.ts';
 import { PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
-import { docstringOf } from '#cli/checks/language/python/modules.ts';
-import type { PythonFunction } from '#cli/types/checks/language/python.ts';
-import type { StructureProblem } from '#cli/types/checks/language/language.ts';
-import { trivialText, executableStatements } from '#cli/checks/general/structure/statements.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { docstringOf, visitPythonModules } from '#cli/parsers/python/source.ts';
+import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
+
 /**
- * Report every implemented function at or below the configured statement threshold.
- * @param functions the functions of a file
- * @param threshold the statement count at or under which a function is trivial
- * @returns one problem per trivial function
+ * Report trivial Python functions and files, leaving lambdas in place.
+ * @param input the selected scope, files, and policy settings
+ * @returns the findings for that check
  */
-export function trivialFunctions(functions: PythonFunction[], threshold: number): StructureProblem[] {
-    return functions.flatMap((fn) => {
-        const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'python');
-        return count <= threshold
-            ? [
-                  {
-                      file: fn.path,
-                      line: fn.node.startPosition.row + 1,
-                      rule: 'trivial-function',
-                      text: trivialText(fn.name, count, threshold),
-                  },
-              ]
-            : [];
-    });
+export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
+    const threshold = input.view.limit('min_function_statements', 'python');
+    if (threshold === undefined) return [];
+    return visitPythonModules(input, ({ modules, functions }) => [
+        ...functions.flatMap((definition) => {
+            if (definition.node.type === 'lambda') return [];
+            const count = executableStatements(definition.body, 'python');
+            return count <= threshold
+                ? [
+                      findingAt(
+                          input,
+                          { file: definition.path, line: definition.node.startPosition.row + 1 },
+                          'trivial-function',
+                          trivialText(definition.name, count, threshold),
+                      ),
+                  ]
+                : [];
+        }),
+        ...modules
+            .filter((source) => isTrivialFile(source.tree.rootNode, 'python', threshold))
+            .map((source) =>
+                findingAt(
+                    input,
+                    {
+                        file: source.path,
+                        line:
+                            (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))
+                                ?.startPosition.row ?? 0) + 1,
+                    },
+                    'trivial-file',
+                    'This file contains only imports, aliases, forwarding, or trivial functions. Move them to their owner.',
+                ),
+            ),
+    ]);
 }
 
 /**
- * Docstrings that say nothing: a placeholder word, or the name of the function again.
- * @param functions every function of the run
- * @returns the problems
+ * Report Python docstrings that only repeat a name or placeholder.
+ * @param input the selected scope, files, and policy settings
+ * @returns the findings for that check
  */
-export function placeholderDocstrings(functions: PythonFunction[]): StructureProblem[] {
-    return functions.flatMap((fn) => {
-        const text = docstringOf(fn.node);
-        if (text === undefined) return [];
-        const plain = text
-            .toLowerCase()
-            .replaceAll(/[^a-z\d]+/gu, ' ')
-            .trim();
-        const isName = plain === fn.name.toLowerCase().replaceAll('_', ' ').trim();
-        if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
-        return [
-            {
-                file: fn.path,
-                line: fn.node.startPosition.row + 1,
-                rule: 'placeholder-docstring',
-                text: `The docstring of ${fn.name} says nothing the name does not. Say what the function does, or for whom.`,
-            },
-        ];
-    });
+export async function placeholderDocstrings(input: EngineInput): Promise<Finding[]> {
+    return visitPythonModules(input, ({ functions }) =>
+        functions.flatMap((definition) => {
+            const text = docstringOf(definition.node);
+            if (text === undefined) return [];
+            const plain = text
+                .toLowerCase()
+                .replaceAll(/[^a-z\d]+/gu, ' ')
+                .trim();
+            const isName = plain === definition.name.toLowerCase().replaceAll('_', ' ').trim();
+            if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
+            return [
+                findingAt(
+                    input,
+                    { file: definition.path, line: definition.node.startPosition.row + 1 },
+                    'placeholder-docstring',
+                    `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
+                ),
+            ];
+        }),
+    );
 }

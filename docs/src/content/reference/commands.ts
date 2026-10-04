@@ -2,41 +2,32 @@ import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
-
-// The file that registers each command, which its reference page links to.
-const COMMAND_OWNERS = new Map([
-    ['init', 'commands/init/command.ts'],
-    ['doctor', 'commands/doctor/command.ts'],
-    ['check', 'commands/check/command.ts'],
-    ['explain', 'commands/explain/command.ts'],
-    ['install', 'commands/install/command.ts'],
-]);
+import { COMMAND_OWNERS, COMMAND_EXAMPLES } from '../../config/reference.ts';
 
 // The help after the options as Markdown: the levels of set, then the exit codes and an example of every command.
 function helpSections(name: string, help: string): string {
-    const starts = ['\nLevels:\n', '\nExit codes:\n'].map((heading) => help.indexOf(heading)).filter((at) => at !== -1);
-    const contractText = help.slice(Math.min(...starts));
-    if (!contractText.includes('\nExit codes:\n') || !contractText.includes('\n\nExample:\n'))
-        throw new Error(`Command ${name} has no exits or example documentation.`);
-    return `\n${contractText
-        .replace('\nLevels:\n', '\n## Levels\n\n')
-        .replace('\nExit codes:\n', '\n## Exit codes\n\n')
-        .replace('\n\nExample:\n', '\n\n## Example\n\n```shell\n')
-        .trim()}\n\`\`\`\n`;
+    const exits = help.indexOf('\nExit codes:\n');
+    const example = help.indexOf('\n\nExample:\n');
+    if (exits === -1 || example === -1) throw new Error(`Command ${name} has no exits or example documentation.`);
+    const levels = help.indexOf('\nLevels:\n');
+    const levelText = levels === -1 ? '' : section('Levels', help.slice(levels + '\nLevels:\n'.length, exits).trim());
+    const second = COMMAND_EXAMPLES[name];
+    const examples =
+        help.slice(example + '\n\nExample:\n'.length).trim() + (second === undefined ? '' : '\n\n' + second);
+    return (
+        section('Examples', `\`\`\`shell\n${examples}\n\`\`\``) +
+        section('Exit codes', help.slice(exits + '\nExit codes:\n'.length, example).trim()) +
+        levelText
+    );
 }
 
 function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
     const [rootCommand = name] = name.split(' ', 1);
-    const owner = COMMAND_OWNERS.get(rootCommand) ?? `commands/${rootCommand}.ts`;
+    const owner = COMMAND_OWNERS[rootCommand] ?? `commands/${rootCommand}.ts`;
     const helpFormat = command.createHelp();
-    helpFormat.showGlobalOptions = true;
+    helpFormat.showGlobalOptions = false;
     const usage = helpFormat.commandUsage(command);
-    const visible = new Map(
-        [...helpFormat.visibleGlobalOptions(command), ...helpFormat.visibleOptions(command)].map((option) => [
-            option.flags,
-            option,
-        ]),
-    );
+    const visible = new Map(helpFormat.visibleOptions(command).map((option) => [option.flags, option]));
     const options = [...visible.values()].map((option) => [
         `\`${option.flags}\``,
         cell(helpFormat.optionDescription(option)),
@@ -59,19 +50,14 @@ function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
     }
     const behavior = helpSections(name, help);
     const sections = [
-        `${command.description()}\n\n\`\`\`text\n${usage}\n\`\`\`\n`,
-        behavior,
+        `\`\`\`text\n${usage}\n\`\`\`\n`,
         section('Arguments', argumentRows.length === 0 ? '' : table(['Argument', 'Meaning'], argumentRows)),
         section('Options', options.length === 0 ? '' : table(['Flag', 'Meaning'], options)),
+        behavior,
     ];
     // The page's summary line is the description's first sentence.
     const [opening = ''] = command.description().split('. ');
-    return referencePage(
-        command.summary(),
-        opening.replace(/\.$/u, ''),
-        sections.join(''),
-        `packages/cli/src/${owner}`,
-    );
+    return referencePage(`gspot ${name}`, opening.replace(/\.$/u, ''), sections.join(''), `packages/cli/src/${owner}`);
 }
 
 /**
@@ -101,7 +87,13 @@ export function commandPages(): Map<string, ReferencePage> {
         referencePage(
             'Commands',
             'Every gspot command and what it does.',
-            `Run each command from the repository root, or select the root with \`-C <dir>\`.\n\n${table(['Command', 'What it does'], rows)}\n`,
+            `Run gspot from any folder in the repository; it finds the nearest \`gspot.toml\`. \`-C <dir>\` starts in another folder. Add the [prefix for your runner](/guides/install/) to commands.\n\n${table(['Command', 'What it does'], rows)}\n\n## Global options\n\n${table(
+                ['Flag', 'Meaning'],
+                program
+                    .createHelp()
+                    .visibleOptions(program)
+                    .map((option) => [`\`${option.flags}\``, cell(program.createHelp().optionDescription(option))]),
+            )}\n`,
             'packages/cli/src/commands/program.ts',
         ),
     );

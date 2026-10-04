@@ -1,17 +1,16 @@
-// Resolving and reading paths under a files root: every parent must be a real directory and every file private.
+// Resolving and reading paths inside one root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
-import type { Proposed } from '#cli/types/platform/root.ts';
 import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
-import type { Read, Bounds, PathFormat } from '#cli/types/platform/platform.ts';
+import type { Read, Bounds, Proposed, PathFormat } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
-import { fileMode, nativePath, mutationPath, privateTarget } from '#cli/platform/safe-paths.ts';
+import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
 
-// The directory's stat, creating it first when asked and it is absent.
-function directoryStat(directory: string, create: boolean): Stats {
+// A missing parent is created; a competing creator may finish before this one does.
+function preparedDirectory(directory: string): Stats {
     try {
         return lstatSync(directory);
     } catch (error) {
-        if (!create || (error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }
     try {
         mkdirSync(directory);
@@ -56,11 +55,11 @@ function assertLinkDestination(bounds: Bounds, path: string, destination: string
 /**
  * The bounds of one root: where it is and how its paths are spelled.
  * @param canonical the real path of the root
- * @param pathFormat whether paths use forward slashes or the platform's own spelling
+ * @param pathFormat portable refuses names another supported OS reads differently; native accepts names this OS allows; both take forward slashes
  * @returns the bounds
  */
 export function boundsOf(canonical: string, pathFormat: PathFormat): Bounds {
-    const partsOf = pathFormat === 'portable' ? mutationPath : nativePath;
+    const partsOf = pathFormat === 'portable' ? portableSegments : nativeSegments;
     const locks = new Map<string, string>();
     return { canonical, pathFormat, partsOf, locks };
 }
@@ -68,18 +67,36 @@ export function boundsOf(canonical: string, pathFormat: PathFormat): Bounds {
 /**
  * The absolute path of an entry, after checking that every parent is a real directory and not a link.
  * @param bounds the root
- * @param path the files path
- * @param create whether absent parents are created
+ * @param path the root-relative path
  * @returns the absolute path
  */
-export function parentPath(bounds: Bounds, path: string, create = false): string {
+export function checkedPath(bounds: Bounds, path: string): string {
     const parts = bounds.partsOf(path);
     const leaf = parts.pop();
     if (leaf === undefined) throw new Error('A path inside the root cannot be empty.');
     let directory = bounds.canonical;
     for (const part of parts) {
         directory = join(directory, part);
-        const stat = directoryStat(directory, create);
+        const stat = lstatSync(directory);
+        if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle parent: ${path}`);
+    }
+    return join(directory, leaf);
+}
+
+/**
+ * The absolute path of an entry, creating missing parents and refusing linked or non-directory parents.
+ * @param bounds the root
+ * @param path the root-relative path
+ * @returns the absolute path after its parents are prepared
+ */
+export function preparedPath(bounds: Bounds, path: string): string {
+    const parts = bounds.partsOf(path);
+    const leaf = parts.pop();
+    if (leaf === undefined) throw new Error('A path inside the root cannot be empty.');
+    let directory = bounds.canonical;
+    for (const part of parts) {
+        directory = join(directory, part);
+        const stat = preparedDirectory(directory);
         if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle parent: ${path}`);
     }
     return join(directory, leaf);
@@ -88,13 +105,13 @@ export function parentPath(bounds: Bounds, path: string, create = false): string
 /**
  * The snapshot at a path, or undefined when nothing is there.
  * @param bounds the root
- * @param path the files path
+ * @param path the root-relative path
  * @param allowLink whether a symbolic link is read as itself instead of refused
  * @returns the snapshot
  */
 export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Read | undefined {
     try {
-        const target = parentPath(bounds, path);
+        const target = checkedPath(bounds, path);
         const stat = lstatSync(target);
         if (allowLink && stat.isSymbolicLink()) return linkRead(target, stat);
         return fileRead(target, stat, path);
@@ -108,7 +125,7 @@ export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Rea
  * Checks a snapshot's path and, for a link, its target, which must be a normalized relative path to a regular file
  * inside the root.
  * @param bounds the root.
- * @param path the files path.
+ * @param path the root-relative path.
  * @param value the snapshot.
  * @param proposed files about to be written, consulted before the disk for a link's destination.
  * @returns the link target text, or undefined for a regular file.
@@ -120,7 +137,7 @@ export function validateRead(bounds: Bounds, path: string, value: Read, proposed
     if (isUnsafeLinkTarget(bounds, value, target)) throw new Error(`Unsafe lifecycle link target: ${path}`);
     const destination = posix.join(posix.dirname(path), target);
     bounds.partsOf(destination);
-    privateTarget(destination);
+    assertNotPrivate(destination);
     if (posix.relative(posix.dirname(path), destination) !== target)
         throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
     assertLinkDestination(bounds, path, destination, proposed);

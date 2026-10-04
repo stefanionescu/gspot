@@ -1,9 +1,9 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { COMPILER_OPTIONS } from '#cli/config/generation/generation.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { DECORATOR_OPTIONS } from '#cli/config/checks/language/typescript.ts';
+import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS } from '#cli/config/generation/typescript.ts';
 
 /**
  * One finding per required option a scope's tsconfig leaves off.
@@ -18,12 +18,13 @@ export function tsconfig(input: EngineInput): Finding[] {
             .map((file) => file.path)
             .filter((path) => {
                 const name = posix.basename(path);
-                return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
+                return name.startsWith('tsconfig.') && name.endsWith('.json');
             }),
     ]);
-    const required = input.view.kits.includes('nestjs')
-        ? { ...COMPILER_OPTIONS, ...DECORATOR_OPTIONS }
-        : COMPILER_OPTIONS;
+    const compilerOptions = input.policyFiles.policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS;
+    const required = input.view.configurations.includes('nestjs')
+        ? { ...compilerOptions, ...DECORATOR_OPTIONS }
+        : compilerOptions;
     return [...candidates].flatMap((path) => {
         const parsed = getTsconfig(input.root, join(input.root, path));
         if (parsed !== undefined)

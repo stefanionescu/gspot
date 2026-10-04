@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
-import { readSource } from '#cli/repository/sources.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import type { Session } from '#cli/types/execution/session.ts';
+import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
-import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function stepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];
@@ -48,7 +48,7 @@ function replaceReference(text: string, reference: Scalar): string {
 }
 
 /**
- * Actionlint predates self-repository syntax. Substitute local references while preserving offsets.
+ * Converts self-repository references to local paths for the pinned actionlint parser, preserving offsets.
  * @param text a workflow or action file
  * @returns the text with each self-repository marker of a reference turned into a local path, at the same offsets
  */
@@ -65,7 +65,7 @@ export function actionlintSource(text: string): string {
 }
 
 /**
- * Validate current GitHub reference syntax through the supervised native parser without editing authored files.
+ * Runs actionlint. If a workflow or action uses a $/ reference, checks a temporary copy with that reference changed to ./.
  * @param session the open session
  * @param planned the planned check
  * @returns the check result
@@ -78,7 +78,7 @@ export async function actionlint(session: Session, planned: PlannedCheck): Promi
         const prepared = actionlintSource(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }
-    if (replacements.size === 0) return runToolCheck(session, planned, ACTIONLINT_COMMAND);
+    if (replacements.size === 0) return runCommandCheck(session, planned, { command: ACTIONLINT_COMMAND });
     using workspace = createFileWorkspace(
         session.root,
         session.repository.files.map((file) => file.path),
@@ -90,5 +90,5 @@ export async function actionlint(session: Session, planned: PlannedCheck): Promi
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runToolCheck({ ...session, root: workspace.root }, planned, ACTIONLINT_COMMAND);
+    return await runCommandCheck(session, planned, { command: ACTIONLINT_COMMAND, workspace: workspace.root });
 }

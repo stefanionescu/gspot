@@ -1,19 +1,21 @@
-import { lintedFile, isIndexFile } from '#plugin/files.ts';
+import { lintedPath, isIndexFile } from '#plugin/files.ts';
 import type { ReexportsOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local'>({
     name: 'no-reexports',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ allowIndex: false }],
+        type: 'suggestion',
         docs: {
             level: 'all',
-            title: 'No reexports',
+            title: 'Export values at their declaration',
             example:
                 'The following declaration reports `local`:\n\n```ts\nconst a = 1;\nexport { a };\n```\n\nExport at the declaration:\n\n```ts\nexport const a = 1;\n```',
-            summary: 'Finds a re-export: export from, export star, or an export list of local names.',
+            description:
+                'Requires exports at their declarations and rejects forwarding exports and later export lists.',
             why: 'A re-export exists to shorten an import path; it hides the owner and lets the same value arrive by two routes.',
-            fix: 'Export values where they are declared and import them from there. Set structure.reexports to index-only if the repository is a library with barrels.',
+            fix: 'Import values from their declaring modules. Set the allowIndex rule option to true if a library exposes its API through index files. In gspot, set structure.reexports to index-only.',
         },
         schema: [optionsSchema({ allowIndex: { type: 'boolean' } })],
         messages: {
@@ -22,10 +24,11 @@ export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local
             local: 'Export values at their declaration instead of listing them again.',
         },
     },
-    defaultOptions: [{ allowIndex: false }],
-    create(context, [options]) {
-        const file = lintedFile(context);
-        if (file !== undefined && options.allowIndex === true && isIndexFile(file)) return {};
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<ReexportsOptions[0]>;
+        const file = lintedPath(context);
+        if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
         return {
             ExportAllDeclaration(node) {
                 context.report({ node, messageId: 'star', data: { source: node.source.value } });

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 /**
  * One finding per tracked file over `limits.file_kb` that is neither under LFS nor declared.
@@ -18,11 +18,7 @@ export function largeFiles(input: EngineInput): Finding[] {
             (file) =>
                 file.size > limitKb * BYTES_PER_KB &&
                 !isDeclared(file.path) &&
-                !input.attributes.some(
-                    (rule) =>
-                        rule.matcher(file.path) &&
-                        rule.attributes.some((attribute) => attribute.startsWith('filter=lfs')),
-                ),
+                input.attributes.get(file.path)?.['filter'] !== 'lfs',
         )
         .map((file) =>
             findingAt(

@@ -4,11 +4,16 @@ import SiteTitle from './SiteTitle.astro';
 import ThemeSelect from './ThemeSelect.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 ---
+
 <div class="site-header">
     <SiteTitle />
-    <div class="search print:hidden"><Search /></div>
+    <div class="search print:hidden">
+        <Search />
+    </div>
     <div class="controls print:hidden">
-        <div class="social"><SocialIcons /></div>
+        <div class="social">
+            <SocialIcons />
+        </div>
         <ThemeSelect />
     </div>
 </div>

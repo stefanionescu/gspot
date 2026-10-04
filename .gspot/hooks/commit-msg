@@ -3,5 +3,5 @@
 case "$1" in /*|[A-Za-z]:*) message=$1 ;; *) message="$PWD/$1" ;; esac
 if command -v cygpath >/dev/null 2>&1; then message=$(cygpath -w "$message"); fi
 set -- "$message"
-command -v mise >/dev/null 2>&1 || { echo 'The command that runs gspot is not installed. Install gspot, then run: gspot install' >&2; exit 2; }
-GSPOT_HOOK=commit-msg exec mise exec -- gspot check --message-file "$1"
+command -v mise >/dev/null 2>&1 || { echo 'mise is not installed. Install mise, then run: mise install.' >&2; exit 2; }
+GSPOT_HOOK=commit-msg exec mise exec -- gspot check --hook commit-msg --message-file "$1"

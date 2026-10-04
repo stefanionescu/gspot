@@ -2,7 +2,8 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {},
-        "types": ["bun"]
+        "types": ["node"],
+        "lib": ["ESNext"]
     },
-    "include": ["src/**/*.ts", "build.ts"]
+    "include": ["src/**/*.ts"]
 }

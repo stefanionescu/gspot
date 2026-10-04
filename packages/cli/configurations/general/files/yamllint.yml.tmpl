@@ -1,0 +1,17 @@
+<%
+const document = {
+    extends: 'default',
+    rules: {
+        'line-length': 'disable',
+        'document-start': 'disable',
+        comments: { 'min-spaces-from-content': 1 },
+        truthy: { 'check-keys': false },
+        braces: { 'max-spaces-inside': 1 },
+        brackets: { 'max-spaces-inside': 1 },
+        indentation: { spaces: format.indent_width, 'indent-sequences': 'consistent' },
+        ...options('tools.yamllint').rules,
+        ...Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])),
+    },
+};
+recordRules(document);
+%><%~ yaml(document).trimEnd() %>

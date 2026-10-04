@@ -6,6 +6,8 @@
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true
     }
 }

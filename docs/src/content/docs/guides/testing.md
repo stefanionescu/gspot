@@ -6,12 +6,12 @@ description: Run your test suite with a coverage floor, and check Swift tests.
 gspot runs your test suite as a check at the push stage and fails it when coverage falls below
 the floor you set. Keep the test runner and its dependencies in your own project.
 
-The default floors are 0% at `recommended` and 80% at `all`. A floor you set applies at both
-levels. For a test runner without a kit, write a [custom check](/guides/project-checks/).
+The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.xctest.coverage`. A floor you set applies at both
+levels. For a test runner without a configuration, write a [custom check](/guides/repository-checks/).
 
 ## Jest
 
-Select the `jest` kit, then run the coverage check:
+Run `gspot add jest`, then run the coverage check:
 
 ```bash
 gspot check --only jest/coverage
@@ -28,16 +28,16 @@ gspot set tools.jest.coverage.functions 100
 ```
 
 Add `--scope app` to set it for the scope `app` only. The
-[policy reference](/reference/configuration/) lists every coverage setting.
+[settings reference](/reference/settings/) lists every coverage setting.
 
 The JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both
-levels. When your tests import from `bun:test`, set `tools.jest.test_module = "bun:test"`
+levels. When your tests import from `bun:test`, set `tools.jest.globals_module = "bun:test"`
 so the lint rules recognize them. That setting changes linting only; the coverage check still
 runs Jest.
 
 ## Vitest
 
-Select the `vitest` kit, with Vitest and its coverage provider installed in your project. Then
+Run `gspot add vitest`, with Vitest and its coverage provider installed in your project. Then
 run:
 
 ```bash
@@ -50,7 +50,7 @@ Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, 
 
 ## Python
 
-Select the `pytest` kit, and install pytest and pytest-cov in your project's `.venv`. Then run:
+Run `gspot add pytest`, and install pytest and pytest-cov in your project's `.venv`. Then run:
 
 ```bash
 gspot check --only pytest/coverage
@@ -62,11 +62,19 @@ application code keeps its own rules.
 
 ## Swift tests
 
-Select the `xctest` kit. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
+Run `gspot add xctest`. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
 that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
-source files keep those rules. Run `swiftlint lint` from the scope without `--config`, because
-SwiftLint ignores nested configuration when you pass one.
+source files keep those rules. `gspot check --only swift/swiftlint` reads these nested files. When configuring an editor directly, omit `--config` from SwiftLint because that option disables nested configuration.
 
 Snapshot references follow `tools.xctest.reference_layout`, by default
-`__Snapshots__/{file}/{test}.*` beside the test file. The [xctest kit](/reference/kits/xctest/)
+`__Snapshots__/{file}/{test}.*` beside the test file. The [xctest configuration](/reference/configurations/xctest/)
 lists the checks of Swift tests.
+
+To enable Swift coverage for a configured Xcode project and scheme:
+
+```shell
+gspot set tools.xctest.coverage '{"target":"Orders","percent":80}'
+gspot check --only xctest/coverage
+```
+
+Replace `Orders` with the target named in your Xcode coverage report. The check requires macOS and selected `xcode` configuration with `tools.xcode.project` and `tools.xcode.scheme`.

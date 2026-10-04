@@ -1,17 +1,18 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { runGitBlocking } from '#cli/platform/git.ts';
-import type { GeneratedFile } from '#cli/types/kits.ts';
 import { headerLines } from '#cli/generation/headers.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
-import { isGitRepository } from '#cli/repository/tracked.ts';
-import type { HookName } from '#cli/types/generation/generation.ts';
+import { isGitRepository } from '#cli/repository/root.ts';
+import type { Policy } from '#cli/types/policy/settings.ts';
+import type { HookName } from '#cli/types/generation/hooks.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { HOOK_ARGS, HOOK_FILES, RUNNER_EXEC, HOOK_UNAVAILABLE } from '#cli/config/generation/generation.ts';
+import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import { HOOK_ARGS, HOOK_FILES, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
-function hookScript(name: HookName, runner: string | undefined, prefix: string, version: string): string {
-    const program = (RUNNER_EXEC[runner ?? ''] ?? 'gspot').split(' ', 1)[0] ?? 'gspot';
+function hookScript(name: HookName, runner: Policy['run_with'], prefix: string, version: string): string {
+    const program = runner ?? 'gspot';
+    const { acquisition } = HOOK_RUNNERS[program];
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
     const absolutePath =
         name === 'commit-msg'
@@ -26,7 +27,7 @@ function hookScript(name: HookName, runner: string | undefined, prefix: string, 
         ...headerLines(version).map((line) => `# ${line}`),
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
-        `command -v ${program} >/dev/null 2>&1 || { echo '${HOOK_UNAVAILABLE}' >&2; exit 2; }`,
+        `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${acquisition}' >&2; exit 2; }`,
         `GSPOT_HOOK=${name} exec ${hookLine(name, runner)}`,
         '',
     ].join('\n');
@@ -50,9 +51,8 @@ export function hookPrefix(root: string): string {
  * @param runner the task runner the policy names, or undefined
  * @returns the command line
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The hook scripts and the lines install prints for a repository with its own hooks must name the same command.
-export function hookLine(name: HookName, runner: string | undefined): string {
-    return `${RUNNER_EXEC[runner ?? ''] ?? 'gspot'} ${HOOK_ARGS[name]}`;
+export function hookLine(name: HookName, runner: Policy['run_with']): string {
+    return `${HOOK_RUNNERS[runner ?? 'gspot'].command} ${HOOK_ARGS[name]}`;
 }
 
 /**
@@ -67,7 +67,7 @@ export function hookFiles(root: string, policy: Policy, version: string): Genera
     const prefix = hookPrefix(root);
     return HOOK_FILES.map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
-        content: hookScript(name, policy.runner, prefix, version),
+        content: hookScript(name, policy.run_with, prefix, version),
         readOnly: true,
         executable: true,
         kind: 'hook',

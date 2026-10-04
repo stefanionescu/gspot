@@ -18,2901 +18,553 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import astroPlugin from 'eslint-plugin-astro';
+import zodPlugin from 'eslint-plugin-zod';
+import jest from 'eslint-plugin-jest';
+import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';
+import reactHooks from 'eslint-plugin-react-hooks';
+import react from 'eslint-plugin-react';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import testingLibrary from 'eslint-plugin-testing-library';
+import nextPlugin from '@next/eslint-plugin-next';
+import sveltePlugin from 'eslint-plugin-svelte';
+import svelteParser from 'svelte-eslint-parser';
+import vitest from '@vitest/eslint-plugin';
+import vuePlugin from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
+import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
+import accessibility from 'eslint-plugin-jsx-a11y';
 
-// The root without a closing separator: typescript-eslint stops its tsconfig search one folder short of a root that ends in one.
+// The root has no closing separator because TypeScript's project service resolves from its containing folder.
 const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
-// The component files a selected framework adds to the code and type-checked file sets.
-const FRAGMENT_FILES = ["**/*.astro"];
-const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
-const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
-const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
-const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
-const TESTS = [
-    "**/test/**",
-    "**/tests/**",
-    "**/__tests__/**",
-    "**/*.test.*",
-    "**/*.spec.*",
-    "**/test_*.py",
-    "**/*_test.py",
-    "**/conftest.py",
-    "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
-    "scripts/**"
-];
-const SCRIPTS = [
-    "scripts/**",
-    "**/*.config.{js,mjs,cjs,ts}",
-    ".mise/tasks/**",
-    "packages/cli/scripts/**",
-    "packages/eslint-plugin/build.ts",
-    "docs/src/content/reference/**"
-];
-// The code files among the tests and scripts: a package.json under a test folder takes no code rule.
-const TEST_CODE = TESTS.flatMap((test) => CODE.map((pattern) => [test, pattern]));
-const SCRIPT_CODE = SCRIPTS.flatMap((script) => CODE.map((pattern) => [script, pattern]));
-const IS_ALL = true;
 const NODE_VERSION = ">=24.2.0";
-const RESTRICTED = [];
-const JAVASCRIPT_LIMITS = {
-    "parameters": 7,
-    "trivialStatements": 2
-};
-
-const limits = {
-    "fileLines": 300,
-    "functionLines": 60,
-    "parameters": 7,
-    "cyclomatic": 8,
-    "cognitive": 8,
-    "depth": 3,
-    "statements": 30,
-    "nestedCallbacks": 3,
-    "identicalFunctions": 3,
-    "barrelReexports": 20,
-    "trivialStatements": 2
-};
-
-const sizeRules = {
-    'max-lines': ['error', { max: limits.fileLines, skipBlankLines: true, skipComments: true }],
-    'max-lines-per-function': ['error', { max: limits.functionLines, skipBlankLines: true, skipComments: true, IIFEs: true }],
-    'max-params': ['error', { max: limits.parameters, countVoidThis: false }],
-    'max-depth': ['error', limits.depth],
-    'max-statements': ['error', limits.statements],
-    'max-nested-callbacks': ['error', limits.nestedCallbacks],
-    complexity: ['error', limits.cyclomatic],
-};
-
-// A plugin set can hold warnings, and the gate allows no warning: each rule that is on becomes an error with its options kept.
-const errorLevels = (rules) =>
-    Object.fromEntries(
-        Object.entries(rules).map(([rule, entry]) => {
-            const [level, ...options] = Array.isArray(entry) ? entry : [entry];
-            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
-        }),
-    );
-
-// One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
-// selectors join the base ones here, and each block below lists all that apply to its files.
-const BASE_SELECTORS = IS_ALL ? [
-        { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
-        { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
-        { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
-        { selector: 'TSAsExpression > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
-        { selector: 'TSTypeAssertion > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
-        { selector: 'TSAsExpression > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
-        { selector: 'TSTypeAssertion > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
-        { selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]', message: 'An empty-object fallback hides a missing value. Handle the missing case.' },
-        // The first argument is the message when it stands alone or before an options object; an error class that takes a code first is left alone.
-        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
-        { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
-] : [];
-// The selectors the selected libraries add, grouped by the files each group reads: an absent files list means every code file.
-const FRAGMENT_SELECTORS = [];
-const librarySelectorBlocks = FRAGMENT_SELECTORS.map((group) => ({
-    files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']),
-    ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`),
-    rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] },
-}));
-
-const coreRules = {
-    'no-useless-constructor': 'error',
-    'no-useless-return': 'error',
-    'no-useless-call': 'error',
-    'no-useless-rename': 'error',
-    // import-x/no-duplicates owns duplicate imports and can merge them.
-    'no-duplicate-imports': 'off',
-    eqeqeq: ['error', 'always'],
-    'no-param-reassign': 'error',
-    'prefer-const': 'error',
-    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
-    'lines-between-class-members': ['error', 'always'],
-    'no-empty': ['error', { allowEmptyCatch: false }],
-    'no-restricted-syntax': ['error', ...BASE_SELECTORS],
-};
-
-const gspotRules = { ...gspot.configs.recommended.rules, ...{
-    "gspot/types-placement": [
-        "error",
-        {
-            "directory": "types"
-        }
-    ],
-    "gspot/no-trivial-functions": [
-        "error",
-        {
-            "maxStatements": 2
-        }
-    ],
-    "gspot/no-trivial-files": [
-        "error",
-        {
-            "maxStatements": 2
-        }
-    ],
-    "gspot/no-alias-exports": "error",
-    "gspot/no-index-imports": "error",
-    "gspot/header-first": "error",
-    "gspot/no-import-comments": "error",
-    "gspot/import-layout": "error",
-    "gspot/export-layout": "error",
-    "gspot/no-cross-folder-imports": [
-        "error",
-        {
-            "aliases": {
-                "#cli/": "packages/cli/src/",
-                "#plugin/": "packages/eslint-plugin/src/",
-                "#tests/": "tests/",
-                "#docs/": "docs/",
-                "#scripts/": "packages/cli/scripts/",
-                "#cli-package": "packages/cli/package.json",
-                "#workspace-package": "package.json",
-                "#plugin-package": "packages/eslint-plugin/package.json"
-            }
-        }
-    ],
-    "gspot/no-cross-scope-imports": [
-        "error",
-        {
-            "scopes": [
-                "docs"
-            ]
-        }
-    ],
-    "gspot/registry-instances": [
-        "error",
-        {
-            "files": [
-                "**/registry.ts",
-                "**/registry.tsx",
-                "**/registry.js",
-                "config/**",
-                "**/config/**"
-            ]
-        }
-    ],
-    "gspot/private-before-public": "error",
-    "gspot/import-direction": [
-        "error",
-        {
-            "roles": {
-                "types": [
-                    "types/**",
-                    "**/types/**"
-                ],
-                "harness": [
-                    "tests/harness/**"
-                ],
-                "tests": [
-                    "tests/**",
-                    "**/*.test.*"
-                ],
-                "config": [],
-                "env": [
-                    "packages/cli/src/platform/environment.ts",
-                    "tests/harness/environment.ts"
-                ],
-                "runtime": [
-                    "src/**"
-                ]
-            },
-            "aliases": {
-                "#cli/": "packages/cli/src/",
-                "#plugin/": "packages/eslint-plugin/src/",
-                "#tests/": "tests/",
-                "#docs/": "docs/",
-                "#scripts/": "packages/cli/scripts/",
-                "#cli-package": "packages/cli/package.json",
-                "#workspace-package": "package.json",
-                "#plugin-package": "packages/eslint-plugin/package.json"
-            }
-        }
-    ],
-    "gspot/env-owner": [
-        "error",
-        {
-            "owners": [
-                "packages/cli/src/platform/environment.ts",
-                "tests/harness/environment.ts"
-            ]
-        }
-    ],
-    "gspot/no-reexports": "error"
-} };
-
-// sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
-// helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
-const sonarRules = {
-    // A file that plants only fixtures beside tests has no test in it by design.
-    'sonarjs/no-empty-test-file': 'off',
-    'sonarjs/cognitive-complexity': ['error', limits.cognitive],
-    'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
-    'sonarjs/no-all-duplicated-branches': 'error',
-    'sonarjs/no-duplicated-branches': 'error',
-    'sonarjs/no-identical-conditions': 'error',
-    'sonarjs/no-identical-expressions': 'error',
-    'sonarjs/no-element-overwrite': 'error',
-    'sonarjs/no-empty-collection': 'error',
-    'sonarjs/no-extra-arguments': 'error',
-    'sonarjs/no-use-of-empty-return-value': 'error',
-    'sonarjs/non-existent-operator': 'error',
-    'sonarjs/no-gratuitous-expressions': 'error',
-    'sonarjs/no-invariant-returns': 'error',
-    'sonarjs/for-loop-increment-sign': 'error',
-    'sonarjs/no-useless-increment': 'error',
-    'sonarjs/no-unthrown-error': 'error',
-    'sonarjs/no-collapsible-if': 'error',
-    'sonarjs/no-nested-switch': 'error',
-    'sonarjs/no-nested-template-literals': 'error',
-    'sonarjs/no-redundant-boolean': 'error',
-    'sonarjs/no-redundant-jump': 'error',
-    'sonarjs/no-same-line-conditional': 'error',
-    'sonarjs/no-small-switch': 'error',
-    'sonarjs/no-unused-collection': 'error',
-    'sonarjs/no-useless-catch': 'error',
-    'sonarjs/prefer-single-boolean-return': 'error',
-    'sonarjs/prefer-while': 'error',
-    'sonarjs/prefer-object-literal': 'error',
-    'sonarjs/no-nested-conditional': 'error',
-    'sonarjs/no-inverted-boolean-check': 'error',
-    'sonarjs/no-nested-functions': 'error',
-    'sonarjs/no-parameter-reassignment': 'error',
-    'sonarjs/no-commented-code': 'error',
-    'sonarjs/no-dead-store': 'error',
-    'sonarjs/prefer-immediate-return': 'error',
-    'sonarjs/updated-loop-counter': 'error',
-    'sonarjs/no-equals-in-for-termination': 'error',
-    'sonarjs/no-redundant-assignments': 'error',
-};
-
-const unicornRules = {
-    // The naming check owns abbreviations and filename case; two owners would give two answers.
-    'unicorn/prevent-abbreviations': 'off',
-    'unicorn/filename-case': 'off',
-    // Platform APIs and syntax trees return null; replacing it everywhere is churn without a defect.
-    'unicorn/no-null': 'off',
-    // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
-    // removes both.
-    'unicorn/no-useless-undefined': 'off',
-    // gspot/import-style owns the import shape.
-    'unicorn/import-style': 'off',
-    'unicorn/prefer-ternary': ['error', 'only-single-line'],
-    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
-    'unicorn/no-array-reduce': 'error',
-    'unicorn/no-array-for-each': 'error',
-    'unicorn/prefer-node-protocol': 'error',
-    'unicorn/no-useless-spread': 'error',
-    'unicorn/no-useless-promise-resolve-reject': 'error',
-    'unicorn/prefer-array-find': 'error',
-    'unicorn/prefer-array-flat': 'error',
-    'unicorn/prefer-array-flat-map': 'error',
-    'unicorn/prefer-at': 'error',
-    'unicorn/prefer-includes': 'error',
-    'unicorn/prefer-number-properties': 'error',
-    'unicorn/prefer-string-replace-all': 'error',
-    'unicorn/prefer-string-slice': 'error',
-    'unicorn/prefer-string-starts-ends-with': 'error',
-    'unicorn/no-typeof-undefined': 'error',
-    'unicorn/no-lonely-if': 'error',
-};
-
-const securityRules = {
-    'security/detect-buffer-noassert': 'error',
-    'security/detect-child-process': 'error',
-    'security/detect-disable-mustache-escape': 'error',
-    'security/detect-eval-with-expression': 'error',
-    'security/detect-new-buffer': 'error',
-    'security/detect-no-csrf-before-method-override': 'error',
-    // detect-non-literal-regexp is off: it flags the constructor, not the input.
-    'security/detect-non-literal-regexp': 'off',
-    'security/detect-non-literal-require': 'error',
-    'security/detect-possible-timing-attacks': 'error',
-    'security/detect-pseudoRandomBytes': 'error',
-    'security/detect-unsafe-regex': 'error',
-    // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
-    // variable; neither names a defect a linter of file paths can avoid.
-    'security/detect-object-injection': 'off',
-    'security/detect-non-literal-fs-filename': 'off',
-};
-
-const nodeRules = {
-    'n/no-deprecated-api': 'error',
-    'n/no-process-exit': 'error',
-    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
-    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
-    // TypeScript owns syntax support.
-    'n/no-unsupported-features/es-syntax': 'off',
-    'n/prefer-global/buffer': ['error', 'always'],
-    'n/prefer-global/console': ['error', 'always'],
-    'n/prefer-global/process': ['error', 'always'],
-    'n/prefer-global/url': ['error', 'always'],
-    'n/prefer-global/url-search-params': ['error', 'always'],
-    'n/prefer-promises/dns': 'error',
-    'n/prefer-promises/fs': 'error',
-    // A command-line tool reads and writes files synchronously by design.
-    'n/no-sync': 'off',
-    'n/no-callback-literal': 'error',
-    'n/no-new-require': 'error',
-    'n/no-path-concat': 'error',
-    // TypeScript and import-x resolve imports; a second resolver disagrees on aliases.
-    'n/no-missing-import': 'off',
-    'n/no-missing-require': 'off',
-    'n/no-unpublished-import': 'error',
-    'n/no-unpublished-require': 'error',
-    'n/no-extraneous-import': 'error',
-    'n/no-extraneous-require': 'error',
-};
-
-const jsdocRules = {
-    'jsdoc/require-jsdoc': ['error', { publicOnly: true, require: { FunctionDeclaration: true, ArrowFunctionExpression: true, FunctionExpression: true, MethodDefinition: true } }],
-    'jsdoc/require-description': 'error',
-    'jsdoc/require-param': 'error',
-    'jsdoc/require-param-description': 'error',
-    'jsdoc/require-param-name': 'error',
-    // TypeScript owns the types, so JSDoc carries none.
-    'jsdoc/require-param-type': 'off',
-    'jsdoc/require-returns': 'error',
-    'jsdoc/require-returns-description': 'error',
-    'jsdoc/require-returns-type': 'off',
-    'jsdoc/check-param-names': 'error',
-    'jsdoc/check-tag-names': 'error',
-    'jsdoc/check-types': 'off',
-    'jsdoc/no-undefined-types': 'off',
-    'jsdoc/valid-types': 'off',
-    'jsdoc/no-types': 'off',
-};
-
-const regexpRules = {
-    'regexp/no-super-linear-backtracking': 'error',
-    'regexp/no-empty-alternative': 'error',
-    'regexp/no-empty-capturing-group': 'error',
-    'regexp/no-empty-character-class': 'error',
-    'regexp/no-empty-group': 'error',
-    'regexp/no-empty-lookarounds-assertion': 'error',
-    'regexp/no-useless-assertions': 'error',
-    'regexp/no-useless-backreference': 'error',
-    'regexp/no-useless-character-class': 'error',
-    'regexp/no-useless-dollar-replacements': 'error',
-    'regexp/no-useless-lazy': 'error',
-    'regexp/no-useless-quantifier': 'error',
-    'regexp/no-useless-range': 'error',
-    'regexp/no-lazy-ends': 'error',
-    'regexp/no-optional-assertion': 'error',
-    'regexp/no-invalid-regexp': 'error',
-    'regexp/no-misleading-capturing-group': 'error',
-    'regexp/no-contradiction-with-assertion': 'error',
-    'regexp/strict': 'error',
-};
-
-const importRules = {
-    'import-x/export': 'error',
-    ...{
-    "import-x/first": "error",
-    "import-x/newline-after-import": [
-        "error",
-        {
-            "count": 1
-        }
-    ],
-    "import-x/exports-last": "error"
-},
-    'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: false }],
-    'import-x/no-self-import': 'error',
-    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
-    'import-x/no-empty-named-blocks': 'error',
-    'import-x/no-duplicates': 'error',
-};
-
-const commentRules = {
-    '@eslint-community/eslint-comments/require-description': "off",
-    '@eslint-community/eslint-comments/no-unused-disable': 'error',
-};
-
-// A pair of patterns in one list means both hold, so a pattern as wide as **/* still reaches code files only.
-const importStyleOverrides = [
+const RUNTIME_GLOBAL_NAMES = new Set(Object.keys({ ...globals.node, ...globals.browser, ...globals.worker, ...globals.serviceworker, ...globals['react-native'] }));
+// Keep compiler and test globals from framework presets; runtime APIs have their own file selectors.
+function stripRuntimeGlobals(block) {
+    const names = block.languageOptions?.globals;
+    if (names === undefined) return block;
+    return { ...block, languageOptions: { ...block.languageOptions, globals: Object.fromEntries(Object.entries(names).filter(([name]) => !RUNTIME_GLOBAL_NAMES.has(name))) } };
+}
+const runtimeDeclarations = [
     {
-        "files": [
-            [
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-            ]
+        "scope": "",
+        "runtime": "node",
+        "includes": [
+            "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
         ],
-        "rules": {
-            "gspot/import-style": [
-                "error",
-                {
-                    "style": "ts",
-                    "internalPrefixes": [
-                        "./",
-                        "../",
-                        "#cli/",
-                        "#plugin/",
-                        "#tests/",
-                        "#docs/",
-                        "#scripts/",
-                        "#cli-package",
-                        "#workspace-package",
-                        "#plugin-package"
-                    ]
-                }
-            ]
-        }
+        "excludes": []
+    },
+    {
+        "scope": "",
+        "runtime": "commonjs",
+        "includes": [
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
+        ],
+        "excludes": []
     }
 ];
-
-// A CommonJS file gets the Node module globals and may require; any other runtime gets its own globals.
-const runtimeOverrides = [].map(({ files, runtime }) =>
-    runtime === 'commonjs'
-        ? {
-              files,
-              languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } },
-              rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' },
-          }
-        : { files, languageOptions: { globals: globals[runtime] } },
-);
-
-const boundaryConfigs = [
-    {
-        "files": [
-            "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "settings": {
-            "boundaries/files": [
-                {
-                    "category": "main",
-                    "pattern": [
-                        "packages/cli/src/main.ts"
-                    ]
-                },
-                {
-                    "category": "commands",
-                    "pattern": [
-                        "packages/cli/src/commands/**",
-                        "packages/cli/src/config/commands/**",
-                        "packages/cli/src/types/commands/**"
-                    ]
-                },
-                {
-                    "category": "checks",
-                    "pattern": [
-                        "packages/cli/src/checks/**",
-                        "packages/cli/src/config/checks/**",
-                        "packages/cli/src/types/checks/**"
-                    ]
-                },
-                {
-                    "category": "output",
-                    "pattern": [
-                        "packages/cli/src/output/**",
-                        "packages/cli/src/config/output.ts",
-                        "packages/cli/src/types/output.ts"
-                    ]
-                },
-                {
-                    "category": "execution",
-                    "pattern": [
-                        "packages/cli/src/execution/**",
-                        "packages/cli/src/config/execution/**",
-                        "packages/cli/src/types/execution/**"
-                    ]
-                },
-                {
-                    "category": "lifecycle",
-                    "pattern": [
-                        "packages/cli/src/lifecycle/**",
-                        "packages/cli/src/config/lifecycle/**",
-                        "packages/cli/src/types/lifecycle/**"
-                    ]
-                },
-                {
-                    "category": "generation",
-                    "pattern": [
-                        "packages/cli/src/generation/**",
-                        "packages/cli/src/config/generation/**",
-                        "packages/cli/src/types/generation/**"
-                    ]
-                },
-                {
-                    "category": "tools",
-                    "pattern": [
-                        "packages/cli/src/tools/**",
-                        "packages/cli/src/config/tools/**",
-                        "packages/cli/src/types/tools/**"
-                    ]
-                },
-                {
-                    "category": "policy",
-                    "pattern": [
-                        "packages/cli/src/policy/**",
-                        "packages/cli/src/config/policy/**",
-                        "packages/cli/src/types/policy/**"
-                    ]
-                },
-                {
-                    "category": "rules",
-                    "pattern": [
-                        "packages/cli/src/rules/**",
-                        "packages/cli/src/config/rules.ts",
-                        "packages/cli/src/types/rules.ts"
-                    ]
-                },
-                {
-                    "category": "kits",
-                    "pattern": [
-                        "packages/cli/src/kits/**",
-                        "packages/cli/src/config/kits.ts",
-                        "packages/cli/src/types/kits.ts"
-                    ]
-                },
-                {
-                    "category": "repository",
-                    "pattern": [
-                        "packages/cli/src/repository/**",
-                        "packages/cli/src/config/repository/**",
-                        "packages/cli/src/types/repository/**"
-                    ]
-                },
-                {
-                    "category": "parsers",
-                    "pattern": [
-                        "packages/cli/src/parsers/**",
-                        "packages/cli/src/config/parsers/**",
-                        "packages/cli/src/types/parsers/**"
-                    ]
-                },
-                {
-                    "category": "platform",
-                    "pattern": [
-                        "packages/cli/src/platform/**",
-                        "packages/cli/src/config/platform/**",
-                        "packages/cli/src/types/platform/**"
-                    ]
-                },
-                {
-                    "category": "plugin",
-                    "pattern": [
-                        "packages/eslint-plugin/src/**"
-                    ]
-                }
-            ],
-            "boundaries/ignore": [
-                "**/*.test.*",
-                "**/*.spec.*"
-            ]
-        },
-        "rules": {
-            "boundaries/dependencies": [
-                "error",
-                {
-                    "default": "disallow",
-                    "policies": [
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "main"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "main",
-                                                "commands",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "commands"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "commands",
-                                                "checks",
-                                                "output",
-                                                "execution",
-                                                "lifecycle",
-                                                "generation",
-                                                "tools",
-                                                "policy",
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "parsers",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "checks"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "checks",
-                                                "execution",
-                                                "lifecycle",
-                                                "generation",
-                                                "tools",
-                                                "policy",
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "parsers",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "output"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "output",
-                                                "execution",
-                                                "generation",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "execution"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "execution",
-                                                "lifecycle",
-                                                "generation",
-                                                "tools",
-                                                "policy",
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "parsers",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "lifecycle"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "lifecycle",
-                                                "generation",
-                                                "tools",
-                                                "policy",
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "generation"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "generation",
-                                                "tools",
-                                                "policy",
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "tools"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "tools",
-                                                "policy",
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "policy"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "policy",
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "rules"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "rules",
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "kits"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "kits",
-                                                "repository",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "repository"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "repository",
-                                                "parsers",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "parsers"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "parsers",
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "platform"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "platform"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "plugin"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "plugin"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-];
-
-const scopeRules = [
-    {
-        "files": [
-            "docs/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
-        ],
-        "rules": {
-            "gspot/no-cross-folder-imports": [
-                "error",
-                {
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    }
-                }
-            ],
-            "gspot/import-direction": [
-                "error",
-                {
-                    "roles": {
-                        "types": [
-                            "types/**",
-                            "**/types/**"
-                        ],
-                        "harness": [
-                            "tests/harness/**"
-                        ],
-                        "tests": [
-                            "tests/**",
-                            "**/*.test.*"
-                        ],
-                        "config": [],
-                        "env": [
-                            "packages/cli/src/platform/environment.ts",
-                            "tests/harness/environment.ts"
-                        ],
-                        "runtime": [
-                            "src/**"
-                        ]
-                    },
-                    "aliases": {
-                        "#cli/": "packages/cli/src/",
-                        "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/",
-                        "#docs/": "docs/",
-                        "#scripts/": "packages/cli/scripts/",
-                        "#cli-package": "packages/cli/package.json",
-                        "#workspace-package": "package.json",
-                        "#plugin-package": "packages/eslint-plugin/package.json"
-                    },
-                    "scope": "docs"
-                }
-            ]
-        }
-    }
-];
-
-const policyRules = [
-    {
-        "scope": "",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "docs",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "docs",
-        "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ],
-            "gspot/no-trivial-functions": [
-                "error",
-                {
-                    "maxStatements": 2
-                }
-            ]
-        }
-    },
-    {
-        "scope": "docs",
-        "includes": [
-            "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$",
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$",
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-files": "off",
-            "gspot/types-placement": "off"
-        }
-    },
-    {
-        "scope": "",
-        "includes": [
-            "^(?:packages\\/cli\\/src\\/kits\\/messages\\.ts)$",
-            "^(?:packages\\/cli\\/src\\/kits\\/messages\\.ts(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$",
-            "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts)$",
-            "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "gspot/no-trivial-functions": "off"
-        }
-    },
-    {
-        "scope": "",
-        "includes": [
-            "^(?:packages\\/cli\\/package\\.json)$",
-            "^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
-        ],
-        "excludes": [],
-        "rules": {
-            "package-json/require-exports": "off"
-        }
-    }
-].flatMap(({ scope, includes, excludes, rules }) => {
+const runtimeMatchers = runtimeDeclarations.map(({ scope, includes, excludes }) => {
     const included = includes.map((source) => new RegExp(source, 's'));
     const excluded = excludes.map((source) => new RegExp(source, 's'));
+    return (path) => {
+        if (scope !== '' && !path.startsWith(`${scope}/`)) return false;
+        const local = scope === '' ? path : path.slice(scope.length + 1);
+        return included.some((pattern) => pattern.test(local)) && !excluded.some((pattern) => pattern.test(local));
+    };
+});
+function runtimeMatches(index) {
+    const matches = (file) => runtimeMatchers.findLastIndex((matcher) => matcher(relative(root, file).split(sep).join('/'))) === index;
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.runtime'), { value: { declarations: runtimeDeclarations, index } });
+    return matches;
+}
+function policyMatches(declaration) {
+    const { scope, includes, excludes, flags } = declaration;
+    const included = includes.map((source) => new RegExp(source, flags));
+    const excluded = excludes.map((source) => new RegExp(source, flags));
     const matches = (file) => {
         const path = relative(root, file).split(sep).join('/');
         return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
     };
-    Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { scope, includes, excludes, flags: 's' } });
-    const entries = Object.entries(rules);
-    return [
-        { files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) },
-        { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) },
-    ];
-});
-
-const defaults = [
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: declaration });
+    return matches;
+}
+export default [
     { ignores: [
     "**/node_modules/**",
     ".gspot/**"
 ] },
-    { files: CODE, ...eslint.configs.recommended },
-    { files: CODE, ...sonarjs.configs.recommended },
-    { files: CODE, ...unicorn.configs.recommended },
-    {
-        files: CODE,
-        plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments },
-        linterOptions: { reportUnusedDisableDirectives: 'error' },
-        languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.es2024 } },
-        settings: { node: { version: NODE_VERSION }, gspot: { root } },
-        rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
-    },
-    { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
-    ...importStyleOverrides,
-    ...scopeRules,
-    ...runtimeOverrides,
-    ...boundaryConfigs,
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["docs/**"]] })),
-...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
-    {
-        files: TYPESCRIPT,
-        plugins: { '@typescript-eslint': tseslint.plugin },
-        languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-        settings: {
-            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
-            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
-    "tsconfig.json",
-    "docs/tsconfig.json"
-] })],
-            // The boundaries rule resolves imports through the classic resolver setting.
-            'import/resolver': { typescript: { project: [
-    "tsconfig.json",
-    "docs/tsconfig.json"
-] } },
-        },
-        rules: {
-            'jsdoc/no-types': 'error',
-            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
-            '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],
-            '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
-            '@typescript-eslint/prefer-readonly': 'error',
-            '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
-            '@typescript-eslint/no-explicit-any': 'error',
-            '@typescript-eslint/no-non-null-assertion': 'error',
-            '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-            '@typescript-eslint/no-require-imports': 'off',
-            '@typescript-eslint/strict-boolean-expressions': 'error',
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
-            '@typescript-eslint/no-unnecessary-condition': 'error',
-            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-            '@typescript-eslint/only-throw-error': 'error',
-            '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
-            '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
-            'sonarjs/no-duplicate-in-composite': 'error',
-            'sonarjs/redundant-type-aliases': 'error',
-            'no-unused-vars': 'off',
-        },
-    },
-    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
-    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-...[    // The plugin ships its recommended and accessibility sets as blocks; every rule in them is an error, and a block
-    // that names no files reads .astro files only.
-    ...[...astroPlugin.configs['flat/recommended'], ...astroPlugin.configs['flat/jsx-a11y-recommended']].map((block) => ({
-        ...block,
-        ...(block.files === undefined ? { files: ['**/*.astro'] } : {}),
-        ...(block.rules === undefined ? {} : { rules: errorLevels(block.rules) }),
-    })),
-    {
-        files: ['**/*.astro'],
-        rules: {
-            'astro/no-set-html-directive': 'error',
-            'astro/no-exports-from-components': 'error',
-            'astro/no-prerender-export-outside-pages': 'error',
-            'astro/no-unused-css-selector': 'error',
-            'astro/prefer-class-list-directive': 'error',
-            'astro/prefer-object-class-list': 'error',
-            'astro/prefer-split-class-list': 'error',
-        },
-    },
-    // The Astro parser reads the frontmatter through a TypeScript program; it has no project service.
-    { files: ['**/*.astro'], languageOptions: { parserOptions: { projectService: false, project: true } } },
-    // Astro types every element of a template as any, so a callback that returns markup, such as the one a .map()
-    // renders, always reports an unsafe return. The frontmatter keeps every other type-aware rule.
-    { files: ['**/*.astro'], rules: { '@typescript-eslint/no-unsafe-return': 'off' } },
-    // A <script> of a component reaches ESLint as a file inside the component, which no tsconfig holds: it takes every
-    // rule except the type-aware ones.
-    { files: ['**/*.astro/*.ts', '**/*.astro/*.js'], ...tseslint.configs.disableTypeChecked },
 
-].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
-    ...librarySelectorBlocks,
-    { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
-    {
-        files: SCRIPT_CODE,
-        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
-    },
-    // A test needs no documentation and imports development dependencies.
-    {
-        files: TEST_CODE,
-        rules: {
-            'jsdoc/require-jsdoc': 'off',
-            'jsdoc/require-param': 'off',
-            'jsdoc/require-returns': 'off',
-            'jsdoc/require-description': 'off',
-            'jsdoc/require-param-description': 'off',
-            'jsdoc/require-returns-description': 'off',
-            'n/no-unpublished-import': 'off',
-            'n/no-unpublished-require': 'off',
+    {...eslint.configs.recommended, "rules": {"constructor-super":"error","for-direction":"error","getter-return":"error","no-async-promise-executor":"error","no-case-declarations":"error","no-class-assign":"error","no-compare-neg-zero":"error","no-cond-assign":"error","no-const-assign":"error","no-constant-binary-expression":"error","no-constant-condition":"error","no-control-regex":"error","no-debugger":"error","no-delete-var":"error","no-dupe-args":"error","no-dupe-class-members":"error","no-dupe-else-if":"error","no-dupe-keys":"error","no-duplicate-case":"error","no-empty":"error","no-empty-character-class":"error","no-empty-pattern":"error","no-empty-static-block":"error","no-ex-assign":"error","no-extra-boolean-cast":"error","no-fallthrough":"error","no-func-assign":"error","no-global-assign":"error","no-import-assign":"error","no-invalid-regexp":"error","no-irregular-whitespace":"error","no-loss-of-precision":"error","no-misleading-character-class":"error","no-new-native-nonconstructor":"error","no-nonoctal-decimal-escape":"error","no-obj-calls":"error","no-octal":"error","no-prototype-builtins":"error","no-redeclare":"error","no-regex-spaces":"error","no-self-assign":"error","no-setter-return":"error","no-shadow-restricted-names":"error","no-sparse-arrays":"error","no-this-before-super":"error","no-undef":"error","no-unexpected-multiline":"error","no-unreachable":"error","no-unsafe-finally":"error","no-unsafe-negation":"error","no-unsafe-optional-chaining":"error","no-unused-labels":"error","no-unused-private-class-members":"error","no-unused-vars":"error","no-useless-backreference":"error","no-useless-catch":"error","no-useless-escape":"error","no-with":"error","require-yield":"error","use-isnan":"error","valid-typeof":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+
+    {...sonarjs.configs.recommended, "rules": {"sonarjs/function-name":"off","sonarjs/class-name":"error","sonarjs/max-lines":"off","sonarjs/no-tab":"off","sonarjs/variable-name":"off","sonarjs/comment-regex":"off","sonarjs/no-commented-code":"off","sonarjs/elseif-without-else":"off","sonarjs/no-fallthrough":"error","sonarjs/nested-control-flow":"off","sonarjs/too-many-break-or-continue-in-loop":"off","sonarjs/max-lines-per-function":"off","sonarjs/no-nested-incdec":"off","sonarjs/no-equals-in-for-termination":"error","sonarjs/no-extra-arguments":"error","sonarjs/no-collapsible-if":"off","sonarjs/expression-complexity":"off","sonarjs/no-redundant-parentheses":"off","sonarjs/no-labels":"error","sonarjs/no-nested-assignment":"error","sonarjs/no-redundant-boolean":"error","sonarjs/prefer-single-boolean-return":"error","sonarjs/unused-import":"error","sonarjs/fixme-tag":"error","sonarjs/todo-tag":"error","sonarjs/useless-string-operation":"off","sonarjs/no-unused-function-argument":"off","sonarjs/no-duplicate-string":"off","sonarjs/no-case-label-in-switch":"error","sonarjs/no-parameter-reassignment":"error","sonarjs/no-floating-point-equality":"error","sonarjs/prefer-while":"error","sonarjs/no-sonar-comments":"off","sonarjs/no-small-switch":"error","sonarjs/no-hardcoded-ip":"error","sonarjs/label-position":"error","sonarjs/public-static-readonly":"error","sonarjs/file-header":"off","sonarjs/call-argument-line":"error","sonarjs/max-switch-cases":"error","sonarjs/no-unused-vars":"error","sonarjs/prefer-immediate-return":"off","sonarjs/function-inside-loop":"error","sonarjs/code-eval":"error","sonarjs/no-variable-usage-before-declaration":"off","sonarjs/future-reserved-words":"error","sonarjs/array-constructor":"off","sonarjs/bitwise-operators":"error","sonarjs/no-function-declaration-in-block":"off","sonarjs/no-primitive-wrappers":"error","sonarjs/for-in":"off","sonarjs/cyclomatic-complexity":"off","sonarjs/no-skipped-tests":"error","sonarjs/no-identical-expressions":"error","sonarjs/no-nested-switch":"off","sonarjs/constructor-for-side-effects":"error","sonarjs/no-dead-store":"error","sonarjs/no-identical-conditions":"error","sonarjs/no-duplicated-branches":"error","sonarjs/deprecation":"error","sonarjs/no-inverted-boolean-check":"error","sonarjs/misplaced-loop-counter":"error","sonarjs/no-nested-functions":"error","sonarjs/no-hardcoded-passwords":"error","sonarjs/sql-queries":"error","sonarjs/insecure-cookie":"error","sonarjs/no-useless-increment":"error","sonarjs/no-globals-shadowing":"error","sonarjs/no-undefined-assignment":"off","sonarjs/no-empty-test-file":"error","sonarjs/no-ignored-return":"error","sonarjs/no-wildcard-import":"off","sonarjs/arguments-order":"error","sonarjs/pseudo-random":"error","sonarjs/for-loop-increment-sign":"error","sonarjs/null-dereference":"error","sonarjs/no-selector-parameter":"error","sonarjs/updated-loop-counter":"error","sonarjs/block-scoped-var":"error","sonarjs/no-built-in-override":"off","sonarjs/prefer-object-literal":"off","sonarjs/no-ignored-exceptions":"error","sonarjs/no-gratuitous-expressions":"error","sonarjs/file-uploads":"error","sonarjs/file-permissions":"error","sonarjs/no-empty-character-class":"error","sonarjs/no-unenclosed-multiline-block":"error","sonarjs/index-of-compare-to-positive-number":"error","sonarjs/assertions-in-tests":"error","sonarjs/no-implicit-global":"error","sonarjs/no-useless-catch":"error","sonarjs/xml-parser-xxe":"error","sonarjs/non-existent-operator":"error","sonarjs/web-sql-database":"off","sonarjs/post-message":"error","sonarjs/no-array-delete":"error","sonarjs/no-alphabetical-sort":"error","sonarjs/no-fixed-wait-in-tests":"error","sonarjs/no-incomplete-assertions":"error","sonarjs/no-global-this":"error","sonarjs/new-operator-misuse":"error","sonarjs/no-delete-var":"error","sonarjs/strings-comparison":"off","sonarjs/file-name-differ-from-class":"off","sonarjs/cookie-no-httponly":"error","sonarjs/no-nested-conditional":"error","sonarjs/no-incorrect-string-concat":"off","sonarjs/different-types-comparison":"error","sonarjs/inverted-assertion-arguments":"error","sonarjs/shorthand-property-grouping":"off","sonarjs/updated-const-var":"error","sonarjs/arguments-usage":"off","sonarjs/destructuring-assignment-syntax":"off","sonarjs/no-invariant-returns":"error","sonarjs/arrow-function-convention":"off","sonarjs/class-prototype":"off","sonarjs/generator-without-yield":"error","sonarjs/no-require-or-define":"off","sonarjs/no-associative-arrays":"error","sonarjs/comma-or-logical-or-case":"error","sonarjs/no-redundant-jump":"error","sonarjs/inconsistent-function-call":"error","sonarjs/no-use-of-empty-return-value":"error","sonarjs/void-use":"error","sonarjs/operation-returning-nan":"off","sonarjs/values-not-convertible-to-numbers":"off","sonarjs/non-number-in-arithmetic-expression":"off","sonarjs/cognitive-complexity":"error","sonarjs/argument-type":"error","sonarjs/in-operator-type-error":"error","sonarjs/array-callback-without-return":"error","sonarjs/declarations-in-global-scope":"off","sonarjs/function-return-type":"error","sonarjs/no-inconsistent-returns":"off","sonarjs/no-reference-error":"off","sonarjs/no-all-duplicated-branches":"error","sonarjs/no-same-line-conditional":"error","sonarjs/conditional-indentation":"off","sonarjs/no-collection-size-mischeck":"error","sonarjs/no-unthrown-error":"error","sonarjs/no-unused-collection":"error","sonarjs/no-os-command-from-path":"error","sonarjs/no-misleading-array-reverse":"error","sonarjs/no-for-in-iterable":"off","sonarjs/no-element-overwrite":"error","sonarjs/no-identical-functions":"error","sonarjs/no-empty-collection":"error","sonarjs/no-redundant-assignments":"error","sonarjs/prefer-type-guard":"error","sonarjs/use-type-alias":"error","sonarjs/no-return-type-any":"off","sonarjs/no-implicit-dependencies":"off","sonarjs/no-useless-intersection":"error","sonarjs/weak-ssl":"error","sonarjs/no-weak-keys":"error","sonarjs/csrf":"error","sonarjs/production-debug":"error","sonarjs/prefer-default-last":"error","sonarjs/no-in-misuse":"error","sonarjs/no-duplicate-in-composite":"error","sonarjs/max-union-size":"off","sonarjs/no-undefined-argument":"error","sonarjs/no-nested-template-literals":"error","sonarjs/prefer-promise-shorthand":"error","sonarjs/os-command":"off","sonarjs/no-redundant-optional":"error","sonarjs/hashing":"error","sonarjs/bool-param-default":"off","sonarjs/no-try-promise":"error","sonarjs/unverified-certificate":"error","sonarjs/no-unsafe-unzip":"off","sonarjs/cors":"error","sonarjs/link-with-target-blank":"error","sonarjs/disabled-auto-escaping":"error","sonarjs/table-header":"error","sonarjs/no-table-as-layout":"error","sonarjs/table-header-reference":"error","sonarjs/object-alt-content":"error","sonarjs/no-clear-text-protocols":"error","sonarjs/publicly-writable-directories":"error","sonarjs/unverified-hostname":"error","sonarjs/encryption-secure-mode":"error","sonarjs/no-weak-cipher":"error","sonarjs/no-intrusive-permissions":"off","sonarjs/insecure-jwt-token":"error","sonarjs/x-powered-by":"error","sonarjs/hidden-files":"off","sonarjs/content-length":"error","sonarjs/disabled-resource-integrity":"error","sonarjs/content-security-policy":"error","sonarjs/no-mixed-content":"off","sonarjs/frame-ancestors":"off","sonarjs/no-mime-sniff":"error","sonarjs/no-referrer-policy":"error","sonarjs/strict-transport-security":"error","sonarjs/confidential-information-logging":"off","sonarjs/no-ip-forward":"off","sonarjs/empty-string-repetition":"error","sonarjs/regex-complexity":"error","sonarjs/no-incompatible-assertion-types":"error","sonarjs/anchor-precedence":"error","sonarjs/slow-regex":"error","sonarjs/no-invalid-regexp":"error","sonarjs/unused-named-groups":"error","sonarjs/no-same-argument-assert":"error","sonarjs/unicode-aware-regex":"off","sonarjs/no-misleading-character-class":"error","sonarjs/duplicates-in-character-class":"error","sonarjs/session-regeneration":"error","sonarjs/prefer-specific-assertions":"error","sonarjs/no-trivial-assertions":"error","sonarjs/test-check-exception":"error","sonarjs/stable-tests":"error","sonarjs/parameterized-tests":"error","sonarjs/no-empty-after-reluctant":"error","sonarjs/single-character-alternation":"error","sonarjs/no-code-after-done":"error","sonarjs/disabled-timeout":"error","sonarjs/chai-determinate-assertion":"error","sonarjs/aws-s3-bucket-insecure-http":"error","sonarjs/aws-s3-bucket-versioning":"error","sonarjs/aws-s3-bucket-granted-access":"error","sonarjs/no-angular-bypass-sanitization":"error","sonarjs/aws-iam-public-access":"error","sonarjs/aws-ec2-unencrypted-ebs-volume":"error","sonarjs/aws-s3-bucket-public-access":"error","sonarjs/aws-iam-all-privileges":"error","sonarjs/aws-rds-unencrypted-databases":"error","sonarjs/aws-iam-all-resources-accessible":"off","sonarjs/aws-opensearchservice-domain":"error","sonarjs/aws-iam-privilege-escalation":"error","sonarjs/aws-sagemaker-unencrypted-notebook":"error","sonarjs/aws-restricted-ip-admin-access":"error","sonarjs/no-empty-alternatives":"error","sonarjs/no-control-regex":"error","sonarjs/no-regex-spaces":"error","sonarjs/aws-sns-unencrypted-topics":"error","sonarjs/existing-groups":"error","sonarjs/aws-ec2-rds-dms-public":"error","sonarjs/aws-sqs-unencrypted-queue":"error","sonarjs/no-empty-group":"error","sonarjs/aws-efs-unencrypted":"error","sonarjs/aws-apigateway-public-api":"error","sonarjs/stateful-regex":"error","sonarjs/concise-regex":"error","sonarjs/single-char-in-character-classes":"error","sonarjs/no-hardcoded-secrets":"error","sonarjs/no-exclusive-tests":"error","sonarjs/hardcoded-secret-signatures":"error","sonarjs/jsx-no-leaked-render":"error","sonarjs/no-hook-setter-in-body":"error","sonarjs/no-useless-react-setstate":"error","sonarjs/no-uniq-key":"error","sonarjs/redundant-type-aliases":"error","sonarjs/prefer-regexp-exec":"error","sonarjs/no-internal-api-use":"error","sonarjs/prefer-read-only-props":"error","sonarjs/no-literal-call":"error","sonarjs/reduce-initial-value":"error","sonarjs/no-async-constructor":"error","sonarjs/review-blockchain-mnemonic":"error","sonarjs/dynamically-constructed-templates":"error","sonarjs/no-session-cookies-on-static-assets":"error","sonarjs/dompurify-unsafe-config":"error","sonarjs/no-duplicate-test-title":"error","sonarjs/async-test-assertions":"error","sonarjs/no-empty-test-title":"error","sonarjs/hooks-before-test-cases":"error","sonarjs/no-forced-browser-interaction":"error","sonarjs/assertions-in-test-cases":"error","sonarjs/synchronous-suite-callback":"error","sonarjs/super-linear-regex":"error","sonarjs/prefer-native-lodash-alternative":"error","sonarjs/no-default-utility-imports":"error","sonarjs/memoize-cache-key":"error","sonarjs/no-debug-commands-in-ui-tests":"error","sonarjs/no-mixed-completion-style":"error","sonarjs/no-interpolation-in-inline-snapshots":"error","sonarjs/explicit-test-skip":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+
+    {...unicorn.configs.recommended, "rules": {"no-negated-condition":"off","no-nested-ternary":"off","unicorn/better-dom-traversing":"error","unicorn/catch-error-name":"error","unicorn/consistent-assert":"error","unicorn/consistent-compound-words":"error","unicorn/consistent-date-clone":"error","unicorn/consistent-destructuring":"off","unicorn/consistent-empty-array-spread":"error","unicorn/consistent-existence-index-check":"error","unicorn/consistent-function-scoping":"error","unicorn/consistent-json-file-read":"error","unicorn/consistent-template-literal-escape":"error","unicorn/custom-error-definition":"off","unicorn/dom-node-dataset":"error","unicorn/empty-brace-spaces":"error","unicorn/error-message":"error","unicorn/escape-case":"error","unicorn/expiring-todo-comments":"error","unicorn/explicit-length-check":"error","unicorn/filename-case":"error","unicorn/import-style":"error","unicorn/isolated-functions":"error","unicorn/new-for-builtins":"error","unicorn/no-abusive-eslint-disable":"error","unicorn/no-accessor-recursion":"error","unicorn/no-anonymous-default-export":"error","unicorn/no-array-callback-reference":"error","unicorn/no-array-fill-with-reference-type":"error","unicorn/no-array-for-each":"error","unicorn/no-array-from-fill":"error","unicorn/no-array-method-this-argument":"error","unicorn/no-array-reduce":"error","unicorn/no-array-reverse":"error","unicorn/no-array-sort":"error","unicorn/no-await-expression-member":"error","unicorn/no-await-in-promise-methods":"error","unicorn/no-blob-to-file":"error","unicorn/no-canvas-to-image":"error","unicorn/no-confusing-array-splice":"error","unicorn/no-console-spaces":"error","unicorn/no-document-cookie":"error","unicorn/no-duplicate-set-values":"error","unicorn/no-empty-file":"error","unicorn/no-exports-in-scripts":"error","unicorn/no-for-loop":"error","unicorn/no-hex-escape":"error","unicorn/no-immediate-mutation":"error","unicorn/no-incorrect-query-selector":"error","unicorn/no-instanceof-builtins":"error","unicorn/no-invalid-fetch-options":"error","unicorn/no-invalid-file-input-accept":"off","unicorn/no-invalid-remove-event-listener":"error","unicorn/no-keyword-prefix":"off","unicorn/no-late-current-target-access":"error","unicorn/no-lonely-if":"error","unicorn/no-magic-array-flat-depth":"error","unicorn/no-manually-wrapped-comments":"off","unicorn/no-named-default":"error","unicorn/no-negated-condition":"error","unicorn/no-negation-in-equality-check":"error","unicorn/no-nested-ternary":"error","unicorn/no-new-array":"error","unicorn/no-new-buffer":"error","unicorn/no-null":"error","unicorn/no-object-as-default-parameter":"error","unicorn/no-process-exit":"error","unicorn/no-single-promise-in-promise-methods":"error","unicorn/no-static-only-class":"error","unicorn/no-thenable":"error","unicorn/no-this-assignment":"error","unicorn/no-this-outside-of-class":"error","unicorn/no-typeof-undefined":"error","unicorn/no-unnecessary-array-flat-depth":"error","unicorn/no-unnecessary-array-splice-count":"error","unicorn/no-unnecessary-await":"error","unicorn/no-unnecessary-nested-ternary":"error","unicorn/no-unnecessary-polyfills":"error","unicorn/no-unnecessary-slice-end":"error","unicorn/no-unreadable-array-destructuring":"error","unicorn/no-unreadable-iife":"error","unicorn/no-unused-array-method-return":"error","unicorn/no-unused-properties":"off","unicorn/no-useless-collection-argument":"error","unicorn/no-useless-error-capture-stack-trace":"error","unicorn/no-useless-fallback-in-spread":"error","unicorn/no-useless-iterator-to-array":"error","unicorn/no-useless-length-check":"error","unicorn/no-useless-promise-resolve-reject":"error","unicorn/no-useless-spread":"error","unicorn/no-useless-switch-case":"error","unicorn/no-useless-undefined":"error","unicorn/no-zero-fractions":"error","unicorn/number-literal-case":"error","unicorn/numeric-separators-style":"error","unicorn/prefer-add-event-listener":"error","unicorn/prefer-array-find":"error","unicorn/prefer-array-flat":"error","unicorn/prefer-array-flat-map":"error","unicorn/prefer-array-index-of":"error","unicorn/prefer-array-last-methods":"error","unicorn/prefer-array-some":"error","unicorn/prefer-at":"error","unicorn/prefer-bigint-literals":"error","unicorn/prefer-blob-reading-methods":"error","unicorn/prefer-class-fields":"error","unicorn/prefer-classlist-toggle":"error","unicorn/prefer-code-point":"error","unicorn/prefer-date-now":"error","unicorn/prefer-default-parameters":"error","unicorn/prefer-dom-node-append":"error","unicorn/prefer-dom-node-remove":"error","unicorn/prefer-dom-node-text-content":"error","unicorn/prefer-event-target":"error","unicorn/prefer-export-from":"error","unicorn/prefer-get-or-insert-computed":"error","unicorn/prefer-global-this":"error","unicorn/prefer-https":"error","unicorn/prefer-import-meta-properties":"off","unicorn/prefer-includes":"error","unicorn/prefer-includes-over-repeated-comparisons":"error","unicorn/prefer-iterator-concat":"off","unicorn/prefer-iterator-to-array-at-end":"error","unicorn/prefer-keyboard-event-key":"error","unicorn/prefer-logical-operator-over-ternary":"error","unicorn/prefer-math-abs":"error","unicorn/prefer-math-min-max":"error","unicorn/prefer-math-trunc":"error","unicorn/prefer-modern-dom-apis":"error","unicorn/prefer-modern-math-apis":"error","unicorn/prefer-module":"error","unicorn/prefer-native-coercion-functions":"error","unicorn/prefer-negative-index":"error","unicorn/prefer-node-protocol":"error","unicorn/prefer-number-properties":"error","unicorn/prefer-object-from-entries":"error","unicorn/prefer-optional-catch-binding":"error","unicorn/prefer-prototype-methods":"error","unicorn/prefer-query-selector":"error","unicorn/prefer-queue-microtask":"error","unicorn/prefer-reflect-apply":"error","unicorn/prefer-regexp-test":"error","unicorn/prefer-response-static-json":"error","unicorn/prefer-set-has":"error","unicorn/prefer-set-size":"error","unicorn/prefer-simple-condition-first":"error","unicorn/prefer-single-call":"error","unicorn/prefer-split-limit":"error","unicorn/prefer-spread":"error","unicorn/prefer-string-match-all":"error","unicorn/prefer-string-pad-start-end":"error","unicorn/prefer-string-raw":"error","unicorn/prefer-string-repeat":"error","unicorn/prefer-string-replace-all":"error","unicorn/prefer-string-slice":"error","unicorn/prefer-string-starts-ends-with":"error","unicorn/prefer-string-trim-start-end":"error","unicorn/prefer-structured-clone":"error","unicorn/prefer-switch":"error","unicorn/prefer-ternary":"error","unicorn/prefer-top-level-await":"error","unicorn/prefer-type-error":"error","unicorn/prevent-abbreviations":"error","unicorn/relative-url-style":"error","unicorn/require-array-join-separator":"error","unicorn/require-css-escape":"error","unicorn/require-module-attributes":"error","unicorn/require-module-specifiers":"error","unicorn/require-number-to-fixed-digits-argument":"error","unicorn/require-passive-events":"error","unicorn/require-post-message-target-origin":"off","unicorn/string-content":"off","unicorn/switch-case-braces":"error","unicorn/switch-case-break-position":"error","unicorn/template-indent":"error","unicorn/text-encoding-identifier-case":"error","unicorn/throw-new-error":"error","unicorn/try-complexity":"off"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+
+    {plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { node: { version: NODE_VERSION }, gspot: { root } }, "rules": {"max-lines":["error",{"max":300,"skipBlankLines":true,"skipComments":true}],"max-lines-per-function":["error",{"max":60,"skipBlankLines":true,"skipComments":true,"IIFEs":true}],"max-params":["error",{"max":7,"countVoidThis":false}],"max-depth":["error",3],"max-statements":["error",30],"max-nested-callbacks":["error",3],"complexity":["error",8],"no-useless-constructor":"error","no-useless-return":"error","no-useless-call":"error","no-useless-rename":"error","no-duplicate-imports":"off","eqeqeq":["error","always"],"no-param-reassign":"error","prefer-const":"error","padding-line-between-statements":["error",{"blankLine":"always","prev":["function","class"],"next":["function","class"]}],"lines-between-class-members":["error","always"],"no-empty":["error",{"allowEmptyCatch":false}],"no-restricted-syntax":["error",{"selector":"TSEnumDeclaration","message":"Use a literal union or an as-const object instead of an enum."},{"selector":"TSAsExpression[expression.type=\"TSAsExpression\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSTypeAssertion[expression.type=\"TSTypeAssertion\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSAsExpression > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSTypeAssertion > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSAsExpression > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"TSTypeAssertion > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]","message":"A message a client reads names no identifier; put the value in its own field."},{"selector":"CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]","message":"Log a stable message and pass the values as fields."}],"gspot/no-client-env":"error","gspot/no-duplicate-exports":"error","gspot/no-trivial-functions":["error",{"maxStatements":2}],"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-alias-exports":"error","gspot/no-index-imports":"error","gspot/header-first":"error","gspot/sort-imports":"error","gspot/sort-exports":"error","gspot/no-cross-folder-imports":["error",{"aliases":{"#automation/":"scripts/","#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/"}}],"gspot/no-cross-scope-imports":["error",{"scopes":["docs","packages/cli","packages/eslint-plugin","tests"]}],"gspot/private-before-public":"error","gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["src/**","packages/*/src/**"]},"aliases":{"#automation/":"scripts/","#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/"}}],"gspot/env-owner":["error",{"owners":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"]}],"gspot/no-reexports":"error","sonarjs/no-empty-test-file":"off","sonarjs/cognitive-complexity":["error",8],"sonarjs/no-identical-functions":["error",3],"sonarjs/no-all-duplicated-branches":"error","sonarjs/no-duplicated-branches":"error","sonarjs/no-identical-conditions":"error","sonarjs/no-identical-expressions":"error","sonarjs/no-element-overwrite":"error","sonarjs/no-empty-collection":"error","sonarjs/no-extra-arguments":"error","sonarjs/no-use-of-empty-return-value":"error","sonarjs/non-existent-operator":"error","sonarjs/no-gratuitous-expressions":"error","sonarjs/no-invariant-returns":"error","sonarjs/for-loop-increment-sign":"error","sonarjs/no-useless-increment":"error","sonarjs/no-unthrown-error":"error","sonarjs/no-collapsible-if":"error","sonarjs/no-nested-switch":"error","sonarjs/no-nested-template-literals":"error","sonarjs/no-redundant-boolean":"error","sonarjs/no-redundant-jump":"error","sonarjs/no-same-line-conditional":"error","sonarjs/no-small-switch":"error","sonarjs/no-unused-collection":"error","sonarjs/no-useless-catch":"error","sonarjs/prefer-single-boolean-return":"error","sonarjs/prefer-while":"error","sonarjs/prefer-object-literal":"error","sonarjs/no-nested-conditional":"error","sonarjs/no-inverted-boolean-check":"error","sonarjs/no-nested-functions":"error","sonarjs/no-parameter-reassignment":"error","sonarjs/no-commented-code":"error","sonarjs/no-dead-store":"error","sonarjs/prefer-immediate-return":"error","sonarjs/updated-loop-counter":"error","sonarjs/no-equals-in-for-termination":"error","sonarjs/no-redundant-assignments":"error","unicorn/prevent-abbreviations":"off","unicorn/filename-case":"off","unicorn/no-null":"off","unicorn/no-useless-undefined":"off","unicorn/import-style":"off","unicorn/prefer-export-from":"off","unicorn/prefer-ternary":["error","only-single-line"],"unicorn/expiring-todo-comments":["error",{"allowWarningComments":false}],"unicorn/no-array-reduce":"error","unicorn/no-array-for-each":"error","unicorn/prefer-node-protocol":"error","unicorn/no-useless-spread":"error","unicorn/no-useless-promise-resolve-reject":"error","unicorn/prefer-array-find":"error","unicorn/prefer-array-flat":"error","unicorn/prefer-array-flat-map":"error","unicorn/prefer-at":"error","unicorn/prefer-includes":"error","unicorn/prefer-number-properties":"error","unicorn/prefer-string-replace-all":"error","unicorn/prefer-string-slice":"error","unicorn/prefer-string-starts-ends-with":"error","unicorn/no-typeof-undefined":"error","unicorn/no-lonely-if":"error","security/detect-buffer-noassert":"error","security/detect-child-process":"error","security/detect-disable-mustache-escape":"error","security/detect-eval-with-expression":"error","security/detect-new-buffer":"error","security/detect-no-csrf-before-method-override":"error","security/detect-non-literal-regexp":"off","security/detect-non-literal-require":"error","security/detect-possible-timing-attacks":"error","security/detect-pseudoRandomBytes":"error","security/detect-unsafe-regex":"error","security/detect-object-injection":"off","security/detect-non-literal-fs-filename":"off","jsdoc/require-jsdoc":["error",{"publicOnly":true,"require":{"FunctionDeclaration":true,"ArrowFunctionExpression":true,"FunctionExpression":true,"MethodDefinition":true}}],"jsdoc/require-description":"error","jsdoc/require-param":"error","jsdoc/require-param-description":"error","jsdoc/require-param-name":"error","jsdoc/require-param-type":"off","jsdoc/require-returns":"error","jsdoc/require-returns-description":"error","jsdoc/require-returns-type":"off","jsdoc/check-param-names":"error","jsdoc/check-tag-names":"error","jsdoc/check-types":"off","jsdoc/no-undefined-types":"off","jsdoc/valid-types":"off","jsdoc/no-types":"off","regexp/no-super-linear-backtracking":"error","regexp/no-empty-alternative":"error","regexp/no-empty-capturing-group":"error","regexp/no-empty-character-class":"error","regexp/no-empty-group":"error","regexp/no-empty-lookarounds-assertion":"error","regexp/no-useless-assertions":"error","regexp/no-useless-backreference":"error","regexp/no-useless-character-class":"error","regexp/no-useless-dollar-replacements":"error","regexp/no-useless-lazy":"error","regexp/no-useless-quantifier":"error","regexp/no-useless-range":"error","regexp/no-lazy-ends":"error","regexp/no-optional-assertion":"error","regexp/no-invalid-regexp":"error","regexp/no-misleading-capturing-group":"error","regexp/no-contradiction-with-assertion":"error","regexp/strict":"error","import-x/first":"error","import-x/newline-after-import":["error",{"count":1}],"import-x/no-cycle":["error",{"ignoreExternal":false}],"import-x/no-self-import":"error","import-x/no-useless-path-segments":["error",{"noUselessIndex":true}],"import-x/no-empty-named-blocks":"error","import-x/no-duplicates":"error","@eslint-community/eslint-comments/require-description":"off","@eslint-community/eslint-comments/no-unused-disable":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+    {"rules": {"no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_"}]}, files: ["**/*.{js,mjs,cjs,jsx}"]},
+
+    {"rules": {"gspot/import-extensions":["error",{"style":"ts","internalPrefixes":["./","../","#automation/","#cli/","#plugin/","#tests/","#docs/","#cli-package","#workspace-package","#plugin-package","#registry/"]}]}, files: [["**/*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]]},
+
+    {"rules": {"gspot/no-cross-folder-imports":["error",{"aliases":{"#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/","#automation/":"scripts/"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["src/**","packages/*/src/**"]},"aliases":{"#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/","#automation/":"scripts/"},"scope":"docs"}]}, files: ["docs/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
+
+    {"rules": {"gspot/no-cross-folder-imports":["error",{"aliases":{"#cli/":"packages/cli/src/","#cli-package":"packages/cli/package.json","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/","#automation/":"scripts/"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["src/**","packages/*/src/**"]},"aliases":{"#cli/":"packages/cli/src/","#cli-package":"packages/cli/package.json","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#registry/":"scripts/registry/","#automation/":"scripts/"},"scope":"packages/cli"}]}, files: ["packages/cli/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
+
+    {"rules": {"gspot/no-cross-folder-imports":["error",{"aliases":{"#plugin/":"packages/eslint-plugin/src/","#plugin-package":"packages/eslint-plugin/package.json"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["src/**","packages/*/src/**"]},"aliases":{"#plugin/":"packages/eslint-plugin/src/","#plugin-package":"packages/eslint-plugin/package.json"},"scope":"packages/eslint-plugin"}]}, files: ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
+
+    {"rules": {"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["src/**","packages/*/src/**"]},"aliases":{},"scope":"tests"}]}, files: ["tests/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
+
+    {settings: {
+    "boundaries/files": [
+        {
+            "category": "main",
+            "pattern": [
+                "packages/cli/src/main.ts"
+            ]
         },
-    },
-    ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
-    // package-json/sort-collections keeps dependency lists alphabetical, unlike the shortest-first order of code:
-    // npm, pnpm, Yarn, and Bun rewrite them alphabetically on every install.
-    { files: ['**/package.json'], ...packageJson.configs.recommended },
-    { files: CODE, ...prettierConfig },
-    {
-        files: JAVASCRIPT,
-        rules: {
-            'max-params': ['error', JAVASCRIPT_LIMITS.parameters],
-            'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
-            'gspot/no-trivial-files': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+        {
+            "category": "commands",
+            "pattern": [
+                "packages/cli/src/commands/**",
+                "packages/cli/src/config/commands/**",
+                "packages/cli/src/types/commands/**"
+            ]
         },
-    },
+        {
+            "category": "checks",
+            "pattern": [
+                "packages/cli/src/checks/**",
+                "packages/cli/src/config/checks/**",
+                "packages/cli/src/types/checks/**"
+            ]
+        },
+        {
+            "category": "output",
+            "pattern": [
+                "packages/cli/src/output/**",
+                "packages/cli/src/config/output.ts",
+                "packages/cli/src/types/output.ts"
+            ]
+        },
+        {
+            "category": "execution",
+            "pattern": [
+                "packages/cli/src/execution/**",
+                "packages/cli/src/config/execution/**",
+                "packages/cli/src/types/execution/**"
+            ]
+        },
+        {
+            "category": "lifecycle",
+            "pattern": [
+                "packages/cli/src/lifecycle/**",
+                "packages/cli/src/config/lifecycle/**",
+                "packages/cli/src/types/lifecycle/**"
+            ]
+        },
+        {
+            "category": "generation",
+            "pattern": [
+                "packages/cli/src/generation/**",
+                "packages/cli/src/config/generation/**",
+                "packages/cli/src/types/generation/**"
+            ]
+        },
+        {
+            "category": "tools",
+            "pattern": [
+                "packages/cli/src/tools/**",
+                "packages/cli/src/config/tools/**",
+                "packages/cli/src/types/tools/**"
+            ]
+        },
+        {
+            "category": "policy",
+            "pattern": [
+                "packages/cli/src/policy/**",
+                "packages/cli/src/config/policy/**",
+                "packages/cli/src/types/policy/**"
+            ]
+        },
+        {
+            "category": "rules",
+            "pattern": [
+                "packages/cli/src/rules/**",
+                "packages/cli/src/config/rules.ts",
+                "packages/cli/src/types/rules.ts"
+            ]
+        },
+        {
+            "category": "configurations",
+            "pattern": [
+                "packages/cli/src/configurations/**",
+                "packages/cli/src/parsers/configurations.ts",
+                "packages/cli/src/parsers/schema/configurations/**",
+                "packages/cli/src/config/configurations.ts",
+                "packages/cli/src/types/configurations.ts"
+            ]
+        },
+        {
+            "category": "repository",
+            "pattern": [
+                "packages/cli/src/repository/**",
+                "packages/cli/src/config/repository/**",
+                "packages/cli/src/types/repository/**"
+            ]
+        },
+        {
+            "category": "tool-output",
+            "pattern": [
+                "packages/cli/src/parsers/output/**"
+            ]
+        },
+        {
+            "category": "parsers",
+            "pattern": [
+                "packages/cli/src/parsers/**",
+                "packages/cli/src/config/parsers/**",
+                "packages/cli/src/types/parsers/**"
+            ]
+        },
+        {
+            "category": "platform",
+            "pattern": [
+                "packages/cli/src/platform/**",
+                "packages/cli/src/config/platform/**",
+                "packages/cli/src/types/platform/**"
+            ]
+        },
+        {
+            "category": "plugin",
+            "pattern": [
+                "packages/eslint-plugin/src/**"
+            ]
+        }
+    ],
+    "boundaries/ignore": [
+        "**/*.test.*",
+        "**/*.spec.*"
+    ]
+}, "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["commands","checks","output","execution","lifecycle","generation","tools","policy","rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"output"}},"allow":{"to":{"file":{"categories":{"anyOf":["output","execution","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["rules","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}},{"from":{"file":{"categories":"tool-output"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","parsers","execution","repository","platform"]}}}}}]}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
+
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], files: [["**/*.{ts,tsx,mts,cts}", "**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[1], "rules": {"constructor-super":"off","getter-return":"off","no-class-assign":"off","no-const-assign":"off","no-dupe-args":"off","no-dupe-class-members":"off","no-dupe-keys":"off","no-func-assign":"off","no-import-assign":"off","no-new-native-nonconstructor":"off","no-new-symbol":"off","no-obj-calls":"off","no-redeclare":"off","no-setter-return":"off","no-this-before-super":"off","no-undef":"off","no-unreachable":"off","no-unsafe-negation":"off","no-var":"error","no-with":"off","prefer-const":"error","prefer-rest-params":"error","prefer-spread":"error"}, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], files: [["**/*.{ts,tsx,mts,cts}", "**/*"], ["**/*.astro", "**/*"], ["**/*.svelte", "**/*"], ["**/*.vue", "**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[2], "rules": {"@typescript-eslint/await-thenable":"error","@typescript-eslint/ban-ts-comment":["error",{"minimumDescriptionLength":10}],"no-array-constructor":"off","@typescript-eslint/no-array-constructor":"error","@typescript-eslint/no-array-delete":"error","@typescript-eslint/no-base-to-string":"error","@typescript-eslint/no-confusing-void-expression":"error","@typescript-eslint/no-deprecated":"error","@typescript-eslint/no-duplicate-enum-values":"error","@typescript-eslint/no-duplicate-type-constituents":"error","@typescript-eslint/no-dynamic-delete":"error","@typescript-eslint/no-empty-object-type":"error","@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-extra-non-null-assertion":"error","@typescript-eslint/no-extraneous-class":"error","@typescript-eslint/no-floating-promises":"error","@typescript-eslint/no-for-in-array":"error","@typescript-eslint/no-generated-empty-object-type":"error","no-implied-eval":"off","@typescript-eslint/no-implied-eval":"error","@typescript-eslint/no-invalid-void-type":"error","@typescript-eslint/no-meaningless-void-operator":"error","@typescript-eslint/no-misused-new":"error","@typescript-eslint/no-misused-promises":"error","@typescript-eslint/no-misused-spread":"error","@typescript-eslint/no-mixed-enums":"error","@typescript-eslint/no-namespace":"error","@typescript-eslint/no-non-null-asserted-nullish-coalescing":"error","@typescript-eslint/no-non-null-asserted-optional-chain":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-redundant-type-constituents":"error","@typescript-eslint/no-require-imports":"error","@typescript-eslint/no-this-alias":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-template-expression":"error","@typescript-eslint/no-unnecessary-type-arguments":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-type-constraint":"error","@typescript-eslint/no-unnecessary-type-conversion":"error","@typescript-eslint/no-unnecessary-type-parameters":"error","@typescript-eslint/no-unsafe-argument":"error","@typescript-eslint/no-unsafe-assignment":"error","@typescript-eslint/no-unsafe-call":"error","@typescript-eslint/no-unsafe-declaration-merging":"error","@typescript-eslint/no-unsafe-enum-comparison":"error","@typescript-eslint/no-unsafe-function-type":"error","@typescript-eslint/no-unsafe-member-access":"error","@typescript-eslint/no-unsafe-return":"error","@typescript-eslint/no-unsafe-unary-minus":"error","no-unused-expressions":"off","@typescript-eslint/no-unused-expressions":"error","no-unused-vars":"off","@typescript-eslint/no-unused-vars":"error","no-useless-constructor":"off","@typescript-eslint/no-useless-constructor":"error","@typescript-eslint/no-useless-default-assignment":"error","@typescript-eslint/no-wrapper-object-types":"error","no-throw-literal":"off","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-as-const":"error","@typescript-eslint/prefer-literal-enum-member":"error","@typescript-eslint/prefer-namespace-keyword":"error","prefer-promise-reject-errors":"off","@typescript-eslint/prefer-promise-reject-errors":"error","@typescript-eslint/prefer-reduce-type-parameter":"error","@typescript-eslint/prefer-return-this-type":"error","@typescript-eslint/related-getter-setter-pairs":"error","require-await":"off","@typescript-eslint/require-await":"error","@typescript-eslint/restrict-plus-operands":["error",{"allowAny":false,"allowBoolean":false,"allowNullish":false,"allowNumberAndString":false,"allowRegExp":false}],"@typescript-eslint/restrict-template-expressions":["error",{"allowAny":false,"allowBoolean":false,"allowNever":false,"allowNullish":false,"allowNumber":false,"allowRegExp":false}],"no-return-await":"off","@typescript-eslint/return-await":["error","error-handling-correctness-only"],"@typescript-eslint/triple-slash-reference":"error","@typescript-eslint/unbound-method":"error","@typescript-eslint/unified-signatures":"error","@typescript-eslint/use-unknown-in-catch-callback-variable":"error"}, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], files: [["**/*.{ts,tsx,mts,cts}", "**/*"], ["**/*.astro", "**/*"], ["**/*.svelte", "**/*"], ["**/*.vue", "**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] })], 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] } } }, "rules": {"jsdoc/no-types":"error","@typescript-eslint/consistent-type-definitions":["error","type"],"@typescript-eslint/consistent-type-imports":["error",{"prefer":"type-imports","fixStyle":"separate-type-imports"}],"@typescript-eslint/consistent-type-exports":["error",{"fixMixedExportsWithInlineTypeSpecifier":true}],"@typescript-eslint/switch-exhaustiveness-check":["error",{"considerDefaultExhaustiveForUnions":true}],"@typescript-eslint/prefer-readonly":"error","@typescript-eslint/require-array-sort-compare":["error",{"ignoreStringArrays":true}],"@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-floating-promises":["error",{"ignoreVoid":false}],"@typescript-eslint/no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_","ignoreUsingDeclarations":true}],"@typescript-eslint/no-require-imports":"off","@typescript-eslint/strict-boolean-expressions":"error","@typescript-eslint/explicit-module-boundary-types":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-optional-chain":"error","@typescript-eslint/no-magic-numbers":["error",{"ignoreEnums":true,"ignoreArrayIndexes":true,"ignoreReadonlyClassProperties":true,"ignoreTypeIndexes":true,"ignore":[-1,0,1]}],"@typescript-eslint/ban-ts-comment":["error",{"ts-expect-error":"allow-with-description","ts-ignore":true,"ts-nocheck":true,"minimumDescriptionLength":10}],"sonarjs/no-duplicate-in-composite":"error","sonarjs/redundant-type-aliases":"error","no-unused-vars":"off","sonarjs/no-unused-vars":"off"}, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], files: [["**/*.{ts,tsx,mts,cts}", "**/*"], ["**/*.astro", "**/*"], ["**/*.svelte", "**/*"], ["**/*.vue", "**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-magic-numbers":"off","@typescript-eslint/no-non-null-assertion":"off"}, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/test/**", "**/*.astro", "**/*"], ["**/test/**", "**/*.svelte", "**/*"], ["**/test/**", "**/*.vue", "**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/tests/**", "**/*.astro", "**/*"], ["**/tests/**", "**/*.svelte", "**/*"], ["**/tests/**", "**/*.vue", "**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/__tests__/**", "**/*.astro", "**/*"], ["**/__tests__/**", "**/*.svelte", "**/*"], ["**/__tests__/**", "**/*.vue", "**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/*.test.*", "**/*.astro", "**/*"], ["**/*.test.*", "**/*.svelte", "**/*"], ["**/*.test.*", "**/*.vue", "**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/*.spec.*", "**/*.astro", "**/*"], ["**/*.spec.*", "**/*.svelte", "**/*"], ["**/*.spec.*", "**/*.vue", "**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/test_*.py", "**/*.astro", "**/*"], ["**/test_*.py", "**/*.svelte", "**/*"], ["**/test_*.py", "**/*.vue", "**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/*_test.py", "**/*.astro", "**/*"], ["**/*_test.py", "**/*.svelte", "**/*"], ["**/*_test.py", "**/*.vue", "**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*"], ["**/conftest.py", "**/*.astro", "**/*"], ["**/conftest.py", "**/*.svelte", "**/*"], ["**/conftest.py", "**/*.vue", "**/*"]]}),
+
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[1], "rules": {"constructor-super":"off","getter-return":"off","no-class-assign":"off","no-const-assign":"off","no-dupe-args":"off","no-dupe-class-members":"off","no-dupe-keys":"off","no-func-assign":"off","no-import-assign":"off","no-new-native-nonconstructor":"off","no-new-symbol":"off","no-obj-calls":"off","no-redeclare":"off","no-setter-return":"off","no-this-before-super":"off","no-undef":"off","no-unreachable":"off","no-unsafe-negation":"off","no-var":"error","no-with":"off","prefer-const":"error","prefer-rest-params":"error","prefer-spread":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "docs/**/*"], ["**/*.astro", "docs/**/*"], ["**/*.svelte", "docs/**/*"], ["**/*.vue", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[2], "rules": {"@typescript-eslint/await-thenable":"error","@typescript-eslint/ban-ts-comment":["error",{"minimumDescriptionLength":10}],"no-array-constructor":"off","@typescript-eslint/no-array-constructor":"error","@typescript-eslint/no-array-delete":"error","@typescript-eslint/no-base-to-string":"error","@typescript-eslint/no-confusing-void-expression":"error","@typescript-eslint/no-deprecated":"error","@typescript-eslint/no-duplicate-enum-values":"error","@typescript-eslint/no-duplicate-type-constituents":"error","@typescript-eslint/no-dynamic-delete":"error","@typescript-eslint/no-empty-object-type":"error","@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-extra-non-null-assertion":"error","@typescript-eslint/no-extraneous-class":"error","@typescript-eslint/no-floating-promises":"error","@typescript-eslint/no-for-in-array":"error","@typescript-eslint/no-generated-empty-object-type":"error","no-implied-eval":"off","@typescript-eslint/no-implied-eval":"error","@typescript-eslint/no-invalid-void-type":"error","@typescript-eslint/no-meaningless-void-operator":"error","@typescript-eslint/no-misused-new":"error","@typescript-eslint/no-misused-promises":"error","@typescript-eslint/no-misused-spread":"error","@typescript-eslint/no-mixed-enums":"error","@typescript-eslint/no-namespace":"error","@typescript-eslint/no-non-null-asserted-nullish-coalescing":"error","@typescript-eslint/no-non-null-asserted-optional-chain":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-redundant-type-constituents":"error","@typescript-eslint/no-require-imports":"error","@typescript-eslint/no-this-alias":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-template-expression":"error","@typescript-eslint/no-unnecessary-type-arguments":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-type-constraint":"error","@typescript-eslint/no-unnecessary-type-conversion":"error","@typescript-eslint/no-unnecessary-type-parameters":"error","@typescript-eslint/no-unsafe-argument":"error","@typescript-eslint/no-unsafe-assignment":"error","@typescript-eslint/no-unsafe-call":"error","@typescript-eslint/no-unsafe-declaration-merging":"error","@typescript-eslint/no-unsafe-enum-comparison":"error","@typescript-eslint/no-unsafe-function-type":"error","@typescript-eslint/no-unsafe-member-access":"error","@typescript-eslint/no-unsafe-return":"error","@typescript-eslint/no-unsafe-unary-minus":"error","no-unused-expressions":"off","@typescript-eslint/no-unused-expressions":"error","no-unused-vars":"off","@typescript-eslint/no-unused-vars":"error","no-useless-constructor":"off","@typescript-eslint/no-useless-constructor":"error","@typescript-eslint/no-useless-default-assignment":"error","@typescript-eslint/no-wrapper-object-types":"error","no-throw-literal":"off","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-as-const":"error","@typescript-eslint/prefer-literal-enum-member":"error","@typescript-eslint/prefer-namespace-keyword":"error","prefer-promise-reject-errors":"off","@typescript-eslint/prefer-promise-reject-errors":"error","@typescript-eslint/prefer-reduce-type-parameter":"error","@typescript-eslint/prefer-return-this-type":"error","@typescript-eslint/related-getter-setter-pairs":"error","require-await":"off","@typescript-eslint/require-await":"error","@typescript-eslint/restrict-plus-operands":["error",{"allowAny":false,"allowBoolean":false,"allowNullish":false,"allowNumberAndString":false,"allowRegExp":false}],"@typescript-eslint/restrict-template-expressions":["error",{"allowAny":false,"allowBoolean":false,"allowNever":false,"allowNullish":false,"allowNumber":false,"allowRegExp":false}],"no-return-await":"off","@typescript-eslint/return-await":["error","error-handling-correctness-only"],"@typescript-eslint/triple-slash-reference":"error","@typescript-eslint/unbound-method":"error","@typescript-eslint/unified-signatures":"error","@typescript-eslint/use-unknown-in-catch-callback-variable":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "docs/**/*"], ["**/*.astro", "docs/**/*"], ["**/*.svelte", "docs/**/*"], ["**/*.vue", "docs/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] })], 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] } } }, "rules": {"jsdoc/no-types":"error","@typescript-eslint/consistent-type-definitions":["error","type"],"@typescript-eslint/consistent-type-imports":["error",{"prefer":"type-imports","fixStyle":"separate-type-imports"}],"@typescript-eslint/consistent-type-exports":["error",{"fixMixedExportsWithInlineTypeSpecifier":true}],"@typescript-eslint/switch-exhaustiveness-check":["error",{"considerDefaultExhaustiveForUnions":true}],"@typescript-eslint/prefer-readonly":"error","@typescript-eslint/require-array-sort-compare":["error",{"ignoreStringArrays":true}],"@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-floating-promises":["error",{"ignoreVoid":false}],"@typescript-eslint/no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_","ignoreUsingDeclarations":true}],"@typescript-eslint/no-require-imports":"off","@typescript-eslint/strict-boolean-expressions":"error","@typescript-eslint/explicit-module-boundary-types":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-optional-chain":"error","@typescript-eslint/no-magic-numbers":["error",{"ignoreEnums":true,"ignoreArrayIndexes":true,"ignoreReadonlyClassProperties":true,"ignoreTypeIndexes":true,"ignore":[-1,0,1]}],"@typescript-eslint/ban-ts-comment":["error",{"ts-expect-error":"allow-with-description","ts-ignore":true,"ts-nocheck":true,"minimumDescriptionLength":10}],"sonarjs/no-duplicate-in-composite":"error","sonarjs/redundant-type-aliases":"error","no-unused-vars":"off","sonarjs/no-unused-vars":"off"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "docs/**/*"], ["**/*.astro", "docs/**/*"], ["**/*.svelte", "docs/**/*"], ["**/*.vue", "docs/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-magic-numbers":"off","@typescript-eslint/no-non-null-assertion":"off"}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/test/**", "**/*.astro", "docs/**/*"], ["**/test/**", "**/*.svelte", "docs/**/*"], ["**/test/**", "**/*.vue", "docs/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/tests/**", "**/*.astro", "docs/**/*"], ["**/tests/**", "**/*.svelte", "docs/**/*"], ["**/tests/**", "**/*.vue", "docs/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/__tests__/**", "**/*.astro", "docs/**/*"], ["**/__tests__/**", "**/*.svelte", "docs/**/*"], ["**/__tests__/**", "**/*.vue", "docs/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/*.test.*", "**/*.astro", "docs/**/*"], ["**/*.test.*", "**/*.svelte", "docs/**/*"], ["**/*.test.*", "**/*.vue", "docs/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/*.spec.*", "**/*.astro", "docs/**/*"], ["**/*.spec.*", "**/*.svelte", "docs/**/*"], ["**/*.spec.*", "**/*.vue", "docs/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/test_*.py", "**/*.astro", "docs/**/*"], ["**/test_*.py", "**/*.svelte", "docs/**/*"], ["**/test_*.py", "**/*.vue", "docs/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/*_test.py", "**/*.astro", "docs/**/*"], ["**/*_test.py", "**/*.svelte", "docs/**/*"], ["**/*_test.py", "**/*.vue", "docs/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/conftest.py", "**/*.astro", "docs/**/*"], ["**/conftest.py", "**/*.svelte", "docs/**/*"], ["**/conftest.py", "**/*.vue", "docs/**/*"]]}),
+
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/cli/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[1], "rules": {"constructor-super":"off","getter-return":"off","no-class-assign":"off","no-const-assign":"off","no-dupe-args":"off","no-dupe-class-members":"off","no-dupe-keys":"off","no-func-assign":"off","no-import-assign":"off","no-new-native-nonconstructor":"off","no-new-symbol":"off","no-obj-calls":"off","no-redeclare":"off","no-setter-return":"off","no-this-before-super":"off","no-undef":"off","no-unreachable":"off","no-unsafe-negation":"off","no-var":"error","no-with":"off","prefer-const":"error","prefer-rest-params":"error","prefer-spread":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.astro", "packages/cli/**/*"], ["**/*.svelte", "packages/cli/**/*"], ["**/*.vue", "packages/cli/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[2], "rules": {"@typescript-eslint/await-thenable":"error","@typescript-eslint/ban-ts-comment":["error",{"minimumDescriptionLength":10}],"no-array-constructor":"off","@typescript-eslint/no-array-constructor":"error","@typescript-eslint/no-array-delete":"error","@typescript-eslint/no-base-to-string":"error","@typescript-eslint/no-confusing-void-expression":"error","@typescript-eslint/no-deprecated":"error","@typescript-eslint/no-duplicate-enum-values":"error","@typescript-eslint/no-duplicate-type-constituents":"error","@typescript-eslint/no-dynamic-delete":"error","@typescript-eslint/no-empty-object-type":"error","@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-extra-non-null-assertion":"error","@typescript-eslint/no-extraneous-class":"error","@typescript-eslint/no-floating-promises":"error","@typescript-eslint/no-for-in-array":"error","@typescript-eslint/no-generated-empty-object-type":"error","no-implied-eval":"off","@typescript-eslint/no-implied-eval":"error","@typescript-eslint/no-invalid-void-type":"error","@typescript-eslint/no-meaningless-void-operator":"error","@typescript-eslint/no-misused-new":"error","@typescript-eslint/no-misused-promises":"error","@typescript-eslint/no-misused-spread":"error","@typescript-eslint/no-mixed-enums":"error","@typescript-eslint/no-namespace":"error","@typescript-eslint/no-non-null-asserted-nullish-coalescing":"error","@typescript-eslint/no-non-null-asserted-optional-chain":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-redundant-type-constituents":"error","@typescript-eslint/no-require-imports":"error","@typescript-eslint/no-this-alias":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-template-expression":"error","@typescript-eslint/no-unnecessary-type-arguments":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-type-constraint":"error","@typescript-eslint/no-unnecessary-type-conversion":"error","@typescript-eslint/no-unnecessary-type-parameters":"error","@typescript-eslint/no-unsafe-argument":"error","@typescript-eslint/no-unsafe-assignment":"error","@typescript-eslint/no-unsafe-call":"error","@typescript-eslint/no-unsafe-declaration-merging":"error","@typescript-eslint/no-unsafe-enum-comparison":"error","@typescript-eslint/no-unsafe-function-type":"error","@typescript-eslint/no-unsafe-member-access":"error","@typescript-eslint/no-unsafe-return":"error","@typescript-eslint/no-unsafe-unary-minus":"error","no-unused-expressions":"off","@typescript-eslint/no-unused-expressions":"error","no-unused-vars":"off","@typescript-eslint/no-unused-vars":"error","no-useless-constructor":"off","@typescript-eslint/no-useless-constructor":"error","@typescript-eslint/no-useless-default-assignment":"error","@typescript-eslint/no-wrapper-object-types":"error","no-throw-literal":"off","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-as-const":"error","@typescript-eslint/prefer-literal-enum-member":"error","@typescript-eslint/prefer-namespace-keyword":"error","prefer-promise-reject-errors":"off","@typescript-eslint/prefer-promise-reject-errors":"error","@typescript-eslint/prefer-reduce-type-parameter":"error","@typescript-eslint/prefer-return-this-type":"error","@typescript-eslint/related-getter-setter-pairs":"error","require-await":"off","@typescript-eslint/require-await":"error","@typescript-eslint/restrict-plus-operands":["error",{"allowAny":false,"allowBoolean":false,"allowNullish":false,"allowNumberAndString":false,"allowRegExp":false}],"@typescript-eslint/restrict-template-expressions":["error",{"allowAny":false,"allowBoolean":false,"allowNever":false,"allowNullish":false,"allowNumber":false,"allowRegExp":false}],"no-return-await":"off","@typescript-eslint/return-await":["error","error-handling-correctness-only"],"@typescript-eslint/triple-slash-reference":"error","@typescript-eslint/unbound-method":"error","@typescript-eslint/unified-signatures":"error","@typescript-eslint/use-unknown-in-catch-callback-variable":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.astro", "packages/cli/**/*"], ["**/*.svelte", "packages/cli/**/*"], ["**/*.vue", "packages/cli/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] })], 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] } } }, "rules": {"jsdoc/no-types":"error","@typescript-eslint/consistent-type-definitions":["error","type"],"@typescript-eslint/consistent-type-imports":["error",{"prefer":"type-imports","fixStyle":"separate-type-imports"}],"@typescript-eslint/consistent-type-exports":["error",{"fixMixedExportsWithInlineTypeSpecifier":true}],"@typescript-eslint/switch-exhaustiveness-check":["error",{"considerDefaultExhaustiveForUnions":true}],"@typescript-eslint/prefer-readonly":"error","@typescript-eslint/require-array-sort-compare":["error",{"ignoreStringArrays":true}],"@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-floating-promises":["error",{"ignoreVoid":false}],"@typescript-eslint/no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_","ignoreUsingDeclarations":true}],"@typescript-eslint/no-require-imports":"off","@typescript-eslint/strict-boolean-expressions":"error","@typescript-eslint/explicit-module-boundary-types":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-optional-chain":"error","@typescript-eslint/no-magic-numbers":["error",{"ignoreEnums":true,"ignoreArrayIndexes":true,"ignoreReadonlyClassProperties":true,"ignoreTypeIndexes":true,"ignore":[-1,0,1]}],"@typescript-eslint/ban-ts-comment":["error",{"ts-expect-error":"allow-with-description","ts-ignore":true,"ts-nocheck":true,"minimumDescriptionLength":10}],"sonarjs/no-duplicate-in-composite":"error","sonarjs/redundant-type-aliases":"error","no-unused-vars":"off","sonarjs/no-unused-vars":"off"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.astro", "packages/cli/**/*"], ["**/*.svelte", "packages/cli/**/*"], ["**/*.vue", "packages/cli/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-magic-numbers":"off","@typescript-eslint/no-non-null-assertion":"off"}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/test/**", "**/*.astro", "packages/cli/**/*"], ["**/test/**", "**/*.svelte", "packages/cli/**/*"], ["**/test/**", "**/*.vue", "packages/cli/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/tests/**", "**/*.astro", "packages/cli/**/*"], ["**/tests/**", "**/*.svelte", "packages/cli/**/*"], ["**/tests/**", "**/*.vue", "packages/cli/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/__tests__/**", "**/*.astro", "packages/cli/**/*"], ["**/__tests__/**", "**/*.svelte", "packages/cli/**/*"], ["**/__tests__/**", "**/*.vue", "packages/cli/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.test.*", "**/*.astro", "packages/cli/**/*"], ["**/*.test.*", "**/*.svelte", "packages/cli/**/*"], ["**/*.test.*", "**/*.vue", "packages/cli/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.spec.*", "**/*.astro", "packages/cli/**/*"], ["**/*.spec.*", "**/*.svelte", "packages/cli/**/*"], ["**/*.spec.*", "**/*.vue", "packages/cli/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/test_*.py", "**/*.astro", "packages/cli/**/*"], ["**/test_*.py", "**/*.svelte", "packages/cli/**/*"], ["**/test_*.py", "**/*.vue", "packages/cli/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*_test.py", "**/*.astro", "packages/cli/**/*"], ["**/*_test.py", "**/*.svelte", "packages/cli/**/*"], ["**/*_test.py", "**/*.vue", "packages/cli/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/conftest.py", "**/*.astro", "packages/cli/**/*"], ["**/conftest.py", "**/*.svelte", "packages/cli/**/*"], ["**/conftest.py", "**/*.vue", "packages/cli/**/*"]]}),
+
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[1], "rules": {"constructor-super":"off","getter-return":"off","no-class-assign":"off","no-const-assign":"off","no-dupe-args":"off","no-dupe-class-members":"off","no-dupe-keys":"off","no-func-assign":"off","no-import-assign":"off","no-new-native-nonconstructor":"off","no-new-symbol":"off","no-obj-calls":"off","no-redeclare":"off","no-setter-return":"off","no-this-before-super":"off","no-undef":"off","no-unreachable":"off","no-unsafe-negation":"off","no-var":"error","no-with":"off","prefer-const":"error","prefer-rest-params":"error","prefer-spread":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*.astro", "packages/eslint-plugin/**/*"], ["**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*.vue", "packages/eslint-plugin/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[2], "rules": {"@typescript-eslint/await-thenable":"error","@typescript-eslint/ban-ts-comment":["error",{"minimumDescriptionLength":10}],"no-array-constructor":"off","@typescript-eslint/no-array-constructor":"error","@typescript-eslint/no-array-delete":"error","@typescript-eslint/no-base-to-string":"error","@typescript-eslint/no-confusing-void-expression":"error","@typescript-eslint/no-deprecated":"error","@typescript-eslint/no-duplicate-enum-values":"error","@typescript-eslint/no-duplicate-type-constituents":"error","@typescript-eslint/no-dynamic-delete":"error","@typescript-eslint/no-empty-object-type":"error","@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-extra-non-null-assertion":"error","@typescript-eslint/no-extraneous-class":"error","@typescript-eslint/no-floating-promises":"error","@typescript-eslint/no-for-in-array":"error","@typescript-eslint/no-generated-empty-object-type":"error","no-implied-eval":"off","@typescript-eslint/no-implied-eval":"error","@typescript-eslint/no-invalid-void-type":"error","@typescript-eslint/no-meaningless-void-operator":"error","@typescript-eslint/no-misused-new":"error","@typescript-eslint/no-misused-promises":"error","@typescript-eslint/no-misused-spread":"error","@typescript-eslint/no-mixed-enums":"error","@typescript-eslint/no-namespace":"error","@typescript-eslint/no-non-null-asserted-nullish-coalescing":"error","@typescript-eslint/no-non-null-asserted-optional-chain":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-redundant-type-constituents":"error","@typescript-eslint/no-require-imports":"error","@typescript-eslint/no-this-alias":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-template-expression":"error","@typescript-eslint/no-unnecessary-type-arguments":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-type-constraint":"error","@typescript-eslint/no-unnecessary-type-conversion":"error","@typescript-eslint/no-unnecessary-type-parameters":"error","@typescript-eslint/no-unsafe-argument":"error","@typescript-eslint/no-unsafe-assignment":"error","@typescript-eslint/no-unsafe-call":"error","@typescript-eslint/no-unsafe-declaration-merging":"error","@typescript-eslint/no-unsafe-enum-comparison":"error","@typescript-eslint/no-unsafe-function-type":"error","@typescript-eslint/no-unsafe-member-access":"error","@typescript-eslint/no-unsafe-return":"error","@typescript-eslint/no-unsafe-unary-minus":"error","no-unused-expressions":"off","@typescript-eslint/no-unused-expressions":"error","no-unused-vars":"off","@typescript-eslint/no-unused-vars":"error","no-useless-constructor":"off","@typescript-eslint/no-useless-constructor":"error","@typescript-eslint/no-useless-default-assignment":"error","@typescript-eslint/no-wrapper-object-types":"error","no-throw-literal":"off","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-as-const":"error","@typescript-eslint/prefer-literal-enum-member":"error","@typescript-eslint/prefer-namespace-keyword":"error","prefer-promise-reject-errors":"off","@typescript-eslint/prefer-promise-reject-errors":"error","@typescript-eslint/prefer-reduce-type-parameter":"error","@typescript-eslint/prefer-return-this-type":"error","@typescript-eslint/related-getter-setter-pairs":"error","require-await":"off","@typescript-eslint/require-await":"error","@typescript-eslint/restrict-plus-operands":["error",{"allowAny":false,"allowBoolean":false,"allowNullish":false,"allowNumberAndString":false,"allowRegExp":false}],"@typescript-eslint/restrict-template-expressions":["error",{"allowAny":false,"allowBoolean":false,"allowNever":false,"allowNullish":false,"allowNumber":false,"allowRegExp":false}],"no-return-await":"off","@typescript-eslint/return-await":["error","error-handling-correctness-only"],"@typescript-eslint/triple-slash-reference":"error","@typescript-eslint/unbound-method":"error","@typescript-eslint/unified-signatures":"error","@typescript-eslint/use-unknown-in-catch-callback-variable":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*.astro", "packages/eslint-plugin/**/*"], ["**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*.vue", "packages/eslint-plugin/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] })], 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] } } }, "rules": {"jsdoc/no-types":"error","@typescript-eslint/consistent-type-definitions":["error","type"],"@typescript-eslint/consistent-type-imports":["error",{"prefer":"type-imports","fixStyle":"separate-type-imports"}],"@typescript-eslint/consistent-type-exports":["error",{"fixMixedExportsWithInlineTypeSpecifier":true}],"@typescript-eslint/switch-exhaustiveness-check":["error",{"considerDefaultExhaustiveForUnions":true}],"@typescript-eslint/prefer-readonly":"error","@typescript-eslint/require-array-sort-compare":["error",{"ignoreStringArrays":true}],"@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-floating-promises":["error",{"ignoreVoid":false}],"@typescript-eslint/no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_","ignoreUsingDeclarations":true}],"@typescript-eslint/no-require-imports":"off","@typescript-eslint/strict-boolean-expressions":"error","@typescript-eslint/explicit-module-boundary-types":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-optional-chain":"error","@typescript-eslint/no-magic-numbers":["error",{"ignoreEnums":true,"ignoreArrayIndexes":true,"ignoreReadonlyClassProperties":true,"ignoreTypeIndexes":true,"ignore":[-1,0,1]}],"@typescript-eslint/ban-ts-comment":["error",{"ts-expect-error":"allow-with-description","ts-ignore":true,"ts-nocheck":true,"minimumDescriptionLength":10}],"sonarjs/no-duplicate-in-composite":"error","sonarjs/redundant-type-aliases":"error","no-unused-vars":"off","sonarjs/no-unused-vars":"off"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*.astro", "packages/eslint-plugin/**/*"], ["**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*.vue", "packages/eslint-plugin/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-magic-numbers":"off","@typescript-eslint/no-non-null-assertion":"off"}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/test/**", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/test/**", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/test/**", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/tests/**", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/tests/**", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/tests/**", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/__tests__/**", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/__tests__/**", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/__tests__/**", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*.test.*", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/*.test.*", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*.test.*", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*.spec.*", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/*.spec.*", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*.spec.*", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/test_*.py", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/test_*.py", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/test_*.py", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/*_test.py", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/*_test.py", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/*_test.py", "**/*.vue", "packages/eslint-plugin/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/eslint-plugin/**/*"], ["**/conftest.py", "**/*.astro", "packages/eslint-plugin/**/*"], ["**/conftest.py", "**/*.svelte", "packages/eslint-plugin/**/*"], ["**/conftest.py", "**/*.vue", "packages/eslint-plugin/**/*"]]}),
+
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[1], "rules": {"constructor-super":"off","getter-return":"off","no-class-assign":"off","no-const-assign":"off","no-dupe-args":"off","no-dupe-class-members":"off","no-dupe-keys":"off","no-func-assign":"off","no-import-assign":"off","no-new-native-nonconstructor":"off","no-new-symbol":"off","no-obj-calls":"off","no-redeclare":"off","no-setter-return":"off","no-this-before-super":"off","no-undef":"off","no-unreachable":"off","no-unsafe-negation":"off","no-var":"error","no-with":"off","prefer-const":"error","prefer-rest-params":"error","prefer-spread":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[2], "rules": {"@typescript-eslint/await-thenable":"error","@typescript-eslint/ban-ts-comment":["error",{"minimumDescriptionLength":10}],"no-array-constructor":"off","@typescript-eslint/no-array-constructor":"error","@typescript-eslint/no-array-delete":"error","@typescript-eslint/no-base-to-string":"error","@typescript-eslint/no-confusing-void-expression":"error","@typescript-eslint/no-deprecated":"error","@typescript-eslint/no-duplicate-enum-values":"error","@typescript-eslint/no-duplicate-type-constituents":"error","@typescript-eslint/no-dynamic-delete":"error","@typescript-eslint/no-empty-object-type":"error","@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-extra-non-null-assertion":"error","@typescript-eslint/no-extraneous-class":"error","@typescript-eslint/no-floating-promises":"error","@typescript-eslint/no-for-in-array":"error","@typescript-eslint/no-generated-empty-object-type":"error","no-implied-eval":"off","@typescript-eslint/no-implied-eval":"error","@typescript-eslint/no-invalid-void-type":"error","@typescript-eslint/no-meaningless-void-operator":"error","@typescript-eslint/no-misused-new":"error","@typescript-eslint/no-misused-promises":"error","@typescript-eslint/no-misused-spread":"error","@typescript-eslint/no-mixed-enums":"error","@typescript-eslint/no-namespace":"error","@typescript-eslint/no-non-null-asserted-nullish-coalescing":"error","@typescript-eslint/no-non-null-asserted-optional-chain":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-redundant-type-constituents":"error","@typescript-eslint/no-require-imports":"error","@typescript-eslint/no-this-alias":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-template-expression":"error","@typescript-eslint/no-unnecessary-type-arguments":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-type-constraint":"error","@typescript-eslint/no-unnecessary-type-conversion":"error","@typescript-eslint/no-unnecessary-type-parameters":"error","@typescript-eslint/no-unsafe-argument":"error","@typescript-eslint/no-unsafe-assignment":"error","@typescript-eslint/no-unsafe-call":"error","@typescript-eslint/no-unsafe-declaration-merging":"error","@typescript-eslint/no-unsafe-enum-comparison":"error","@typescript-eslint/no-unsafe-function-type":"error","@typescript-eslint/no-unsafe-member-access":"error","@typescript-eslint/no-unsafe-return":"error","@typescript-eslint/no-unsafe-unary-minus":"error","no-unused-expressions":"off","@typescript-eslint/no-unused-expressions":"error","no-unused-vars":"off","@typescript-eslint/no-unused-vars":"error","no-useless-constructor":"off","@typescript-eslint/no-useless-constructor":"error","@typescript-eslint/no-useless-default-assignment":"error","@typescript-eslint/no-wrapper-object-types":"error","no-throw-literal":"off","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-as-const":"error","@typescript-eslint/prefer-literal-enum-member":"error","@typescript-eslint/prefer-namespace-keyword":"error","prefer-promise-reject-errors":"off","@typescript-eslint/prefer-promise-reject-errors":"error","@typescript-eslint/prefer-reduce-type-parameter":"error","@typescript-eslint/prefer-return-this-type":"error","@typescript-eslint/related-getter-setter-pairs":"error","require-await":"off","@typescript-eslint/require-await":"error","@typescript-eslint/restrict-plus-operands":["error",{"allowAny":false,"allowBoolean":false,"allowNullish":false,"allowNumberAndString":false,"allowRegExp":false}],"@typescript-eslint/restrict-template-expressions":["error",{"allowAny":false,"allowBoolean":false,"allowNever":false,"allowNullish":false,"allowNumber":false,"allowRegExp":false}],"no-return-await":"off","@typescript-eslint/return-await":["error","error-handling-correctness-only"],"@typescript-eslint/triple-slash-reference":"error","@typescript-eslint/unbound-method":"error","@typescript-eslint/unified-signatures":"error","@typescript-eslint/use-unknown-in-catch-callback-variable":"error"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] })], 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "docs/tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "tests/tsconfig.json"
+] } } }, "rules": {"jsdoc/no-types":"error","@typescript-eslint/consistent-type-definitions":["error","type"],"@typescript-eslint/consistent-type-imports":["error",{"prefer":"type-imports","fixStyle":"separate-type-imports"}],"@typescript-eslint/consistent-type-exports":["error",{"fixMixedExportsWithInlineTypeSpecifier":true}],"@typescript-eslint/switch-exhaustiveness-check":["error",{"considerDefaultExhaustiveForUnions":true}],"@typescript-eslint/prefer-readonly":"error","@typescript-eslint/require-array-sort-compare":["error",{"ignoreStringArrays":true}],"@typescript-eslint/no-explicit-any":"error","@typescript-eslint/no-non-null-assertion":"error","@typescript-eslint/no-floating-promises":["error",{"ignoreVoid":false}],"@typescript-eslint/no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_","ignoreUsingDeclarations":true}],"@typescript-eslint/no-require-imports":"off","@typescript-eslint/strict-boolean-expressions":"error","@typescript-eslint/explicit-module-boundary-types":"error","@typescript-eslint/no-unnecessary-condition":"error","@typescript-eslint/no-unnecessary-type-assertion":"error","@typescript-eslint/no-unnecessary-boolean-literal-compare":"error","@typescript-eslint/only-throw-error":"error","@typescript-eslint/prefer-optional-chain":"error","@typescript-eslint/no-magic-numbers":["error",{"ignoreEnums":true,"ignoreArrayIndexes":true,"ignoreReadonlyClassProperties":true,"ignoreTypeIndexes":true,"ignore":[-1,0,1]}],"@typescript-eslint/ban-ts-comment":["error",{"ts-expect-error":"allow-with-description","ts-ignore":true,"ts-nocheck":true,"minimumDescriptionLength":10}],"sonarjs/no-duplicate-in-composite":"error","sonarjs/redundant-type-aliases":"error","no-unused-vars":"off","sonarjs/no-unused-vars":"off"}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-magic-numbers":"off","@typescript-eslint/no-non-null-assertion":"off"}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test/**", "**/*.astro", "tests/**/*"], ["**/test/**", "**/*.svelte", "tests/**/*"], ["**/test/**", "**/*.vue", "tests/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/tests/**", "**/*.astro", "tests/**/*"], ["**/tests/**", "**/*.svelte", "tests/**/*"], ["**/tests/**", "**/*.vue", "tests/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/__tests__/**", "**/*.astro", "tests/**/*"], ["**/__tests__/**", "**/*.svelte", "tests/**/*"], ["**/__tests__/**", "**/*.vue", "tests/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.test.*", "**/*.astro", "tests/**/*"], ["**/*.test.*", "**/*.svelte", "tests/**/*"], ["**/*.test.*", "**/*.vue", "tests/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.spec.*", "**/*.astro", "tests/**/*"], ["**/*.spec.*", "**/*.svelte", "tests/**/*"], ["**/*.spec.*", "**/*.vue", "tests/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test_*.py", "**/*.astro", "tests/**/*"], ["**/test_*.py", "**/*.svelte", "tests/**/*"], ["**/test_*.py", "**/*.vue", "tests/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*_test.py", "**/*.astro", "tests/**/*"], ["**/*_test.py", "**/*.svelte", "tests/**/*"], ["**/*_test.py", "**/*.vue", "tests/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/conftest.py", "**/*.astro", "tests/**/*"], ["**/conftest.py", "**/*.svelte", "tests/**/*"], ["**/conftest.py", "**/*.vue", "tests/**/*"]]}),
+
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][0], "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][1], "rules": {}, "ignores": [], files: [["*.astro", "docs/**/*"], ["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][2], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.js", "docs/**/*"], ["*.astro/*.js", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][3], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "docs/**/*"], ["*.astro/*.ts", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][4], "rules": {"astro/missing-client-only-directive-value":["error"],"astro/no-conflict-set-directives":["error"],"astro/no-deprecated-astro-canonicalurl":["error"],"astro/no-deprecated-astro-fetchcontent":["error"],"astro/no-deprecated-astro-resolve":["error"],"astro/no-deprecated-getentrybyslug":["error"],"astro/no-unused-define-vars-in-style":["error"],"astro/valid-compile":["error"]}, "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][0], "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][1], "rules": {}, "ignores": [], files: [["*.astro", "docs/**/*"], ["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][2], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.js", "docs/**/*"], ["*.astro/*.js", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][3], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "docs/**/*"], ["*.astro/*.ts", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][4], "rules": {"astro/jsx-a11y/alt-text":["error"],"astro/jsx-a11y/anchor-ambiguous-text":"off","astro/jsx-a11y/anchor-has-content":["error"],"astro/jsx-a11y/anchor-is-valid":["error"],"astro/jsx-a11y/aria-activedescendant-has-tabindex":["error"],"astro/jsx-a11y/aria-props":["error"],"astro/jsx-a11y/aria-proptypes":["error"],"astro/jsx-a11y/aria-role":["error"],"astro/jsx-a11y/aria-unsupported-elements":["error"],"astro/jsx-a11y/autocomplete-valid":["error"],"astro/jsx-a11y/click-events-have-key-events":["error"],"astro/jsx-a11y/control-has-associated-label":"off","astro/jsx-a11y/heading-has-content":["error"],"astro/jsx-a11y/html-has-lang":["error"],"astro/jsx-a11y/iframe-has-title":["error"],"astro/jsx-a11y/img-redundant-alt":["error"],"astro/jsx-a11y/interactive-supports-focus":["error",{"tabbable":["button","checkbox","link","searchbox","spinbutton","switch","textbox"]}],"astro/jsx-a11y/label-has-associated-control":["error"],"astro/jsx-a11y/label-has-for":"off","astro/jsx-a11y/media-has-caption":["error"],"astro/jsx-a11y/mouse-events-have-key-events":["error"],"astro/jsx-a11y/no-access-key":["error"],"astro/jsx-a11y/no-autofocus":["error"],"astro/jsx-a11y/no-distracting-elements":["error"],"astro/jsx-a11y/no-interactive-element-to-noninteractive-role":["error",{"tr":["none","presentation"],"canvas":["img"]}],"astro/jsx-a11y/no-noninteractive-element-interactions":["error",{"handlers":["onClick","onError","onLoad","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"],"alert":["onKeyUp","onKeyDown","onKeyPress"],"body":["onError","onLoad"],"dialog":["onKeyUp","onKeyDown","onKeyPress"],"iframe":["onError","onLoad"],"img":["onError","onLoad"]}],"astro/jsx-a11y/no-noninteractive-element-to-interactive-role":["error",{"ul":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"ol":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"li":["menuitem","menuitemradio","menuitemcheckbox","option","row","tab","treeitem"],"table":["grid"],"td":["gridcell"],"fieldset":["radiogroup","presentation"]}],"astro/jsx-a11y/no-noninteractive-tabindex":["error",{"tags":[],"roles":["tabpanel"],"allowExpressionValues":true}],"astro/jsx-a11y/no-redundant-roles":["error"],"astro/jsx-a11y/no-static-element-interactions":["error",{"allowExpressionValues":true,"handlers":["onClick","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"]}],"astro/jsx-a11y/role-has-required-aria-props":["error"],"astro/jsx-a11y/role-supports-aria-props":["error"],"astro/jsx-a11y/scope":["error"],"astro/jsx-a11y/tabindex-no-positive":["error"]}, "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parserOptions: { tsconfigRootDir: root } }, "rules": {"astro/no-set-html-directive":"error","astro/no-exports-from-components":"error","astro/no-prerender-export-outside-pages":"error","astro/no-unused-css-selector":"error","astro/prefer-class-list-directive":"error","astro/prefer-object-class-list":"error","astro/prefer-split-class-list":"error"}, "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parserOptions: { projectService: false, project: true } }, "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-unsafe-return":"off"}, "ignores": [], files: [["**/*.astro", "docs/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.disableTypeChecked, "rules": {"@typescript-eslint/await-thenable":"off","@typescript-eslint/consistent-return":"off","@typescript-eslint/consistent-type-exports":"off","@typescript-eslint/dot-notation":"off","@typescript-eslint/naming-convention":"off","@typescript-eslint/no-array-delete":"off","@typescript-eslint/no-base-to-string":"off","@typescript-eslint/no-confusing-void-expression":"off","@typescript-eslint/no-deprecated":"off","@typescript-eslint/no-duplicate-type-constituents":"off","@typescript-eslint/no-floating-promises":"off","@typescript-eslint/no-for-in-array":"off","@typescript-eslint/no-generated-empty-object-type":"off","@typescript-eslint/no-implied-eval":"off","@typescript-eslint/no-meaningless-void-operator":"off","@typescript-eslint/no-misused-promises":"off","@typescript-eslint/no-misused-spread":"off","@typescript-eslint/no-mixed-enums":"off","@typescript-eslint/no-redundant-type-constituents":"off","@typescript-eslint/no-unnecessary-boolean-literal-compare":"off","@typescript-eslint/no-unnecessary-condition":"off","@typescript-eslint/no-unnecessary-qualifier":"off","@typescript-eslint/no-unnecessary-template-expression":"off","@typescript-eslint/no-unnecessary-type-arguments":"off","@typescript-eslint/no-unnecessary-type-assertion":"off","@typescript-eslint/no-unnecessary-type-conversion":"off","@typescript-eslint/no-unnecessary-type-parameters":"off","@typescript-eslint/no-unsafe-argument":"off","@typescript-eslint/no-unsafe-assignment":"off","@typescript-eslint/no-unsafe-call":"off","@typescript-eslint/no-unsafe-enum-comparison":"off","@typescript-eslint/no-unsafe-member-access":"off","@typescript-eslint/no-unsafe-return":"off","@typescript-eslint/no-unsafe-type-assertion":"off","@typescript-eslint/no-unsafe-unary-minus":"off","@typescript-eslint/no-useless-default-assignment":"off","@typescript-eslint/non-nullable-type-assertion-style":"off","@typescript-eslint/only-throw-error":"off","@typescript-eslint/prefer-destructuring":"off","@typescript-eslint/prefer-find":"off","@typescript-eslint/prefer-includes":"off","@typescript-eslint/prefer-nullish-coalescing":"off","@typescript-eslint/prefer-optional-chain":"off","@typescript-eslint/prefer-promise-reject-errors":"off","@typescript-eslint/prefer-readonly":"off","@typescript-eslint/prefer-readonly-parameter-types":"off","@typescript-eslint/prefer-reduce-type-parameter":"off","@typescript-eslint/prefer-regexp-exec":"off","@typescript-eslint/prefer-return-this-type":"off","@typescript-eslint/prefer-string-starts-ends-with":"off","@typescript-eslint/promise-function-async":"off","@typescript-eslint/related-getter-setter-pairs":"off","@typescript-eslint/require-array-sort-compare":"off","@typescript-eslint/require-await":"off","@typescript-eslint/restrict-plus-operands":"off","@typescript-eslint/restrict-template-expressions":"off","@typescript-eslint/return-await":"off","@typescript-eslint/strict-boolean-expressions":"off","@typescript-eslint/strict-void-return":"off","@typescript-eslint/switch-exhaustiveness-check":"off","@typescript-eslint/unbound-method":"off","@typescript-eslint/use-unknown-in-catch-callback-variable":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "docs/**/*"], ["**/*.astro/*.js", "docs/**/*"]]}),
+
+
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][0], "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][1], "rules": {}, "ignores": [], files: [["*.astro", "tests/**/*"], ["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][2], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.js", "tests/**/*"], ["*.astro/*.js", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][3], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "tests/**/*"], ["*.astro/*.ts", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/recommended"][4], "rules": {"astro/missing-client-only-directive-value":["error"],"astro/no-conflict-set-directives":["error"],"astro/no-deprecated-astro-canonicalurl":["error"],"astro/no-deprecated-astro-fetchcontent":["error"],"astro/no-deprecated-astro-resolve":["error"],"astro/no-deprecated-getentrybyslug":["error"],"astro/no-unused-define-vars-in-style":["error"],"astro/valid-compile":["error"]}, "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][0], "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][1], "rules": {}, "ignores": [], files: [["*.astro", "tests/**/*"], ["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][2], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.js", "tests/**/*"], ["*.astro/*.js", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][3], "rules": {"prettier/prettier":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "tests/**/*"], ["*.astro/*.ts", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...astroPlugin.configs["flat/jsx-a11y-recommended"][4], "rules": {"astro/jsx-a11y/alt-text":["error"],"astro/jsx-a11y/anchor-ambiguous-text":"off","astro/jsx-a11y/anchor-has-content":["error"],"astro/jsx-a11y/anchor-is-valid":["error"],"astro/jsx-a11y/aria-activedescendant-has-tabindex":["error"],"astro/jsx-a11y/aria-props":["error"],"astro/jsx-a11y/aria-proptypes":["error"],"astro/jsx-a11y/aria-role":["error"],"astro/jsx-a11y/aria-unsupported-elements":["error"],"astro/jsx-a11y/autocomplete-valid":["error"],"astro/jsx-a11y/click-events-have-key-events":["error"],"astro/jsx-a11y/control-has-associated-label":"off","astro/jsx-a11y/heading-has-content":["error"],"astro/jsx-a11y/html-has-lang":["error"],"astro/jsx-a11y/iframe-has-title":["error"],"astro/jsx-a11y/img-redundant-alt":["error"],"astro/jsx-a11y/interactive-supports-focus":["error",{"tabbable":["button","checkbox","link","searchbox","spinbutton","switch","textbox"]}],"astro/jsx-a11y/label-has-associated-control":["error"],"astro/jsx-a11y/label-has-for":"off","astro/jsx-a11y/media-has-caption":["error"],"astro/jsx-a11y/mouse-events-have-key-events":["error"],"astro/jsx-a11y/no-access-key":["error"],"astro/jsx-a11y/no-autofocus":["error"],"astro/jsx-a11y/no-distracting-elements":["error"],"astro/jsx-a11y/no-interactive-element-to-noninteractive-role":["error",{"tr":["none","presentation"],"canvas":["img"]}],"astro/jsx-a11y/no-noninteractive-element-interactions":["error",{"handlers":["onClick","onError","onLoad","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"],"alert":["onKeyUp","onKeyDown","onKeyPress"],"body":["onError","onLoad"],"dialog":["onKeyUp","onKeyDown","onKeyPress"],"iframe":["onError","onLoad"],"img":["onError","onLoad"]}],"astro/jsx-a11y/no-noninteractive-element-to-interactive-role":["error",{"ul":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"ol":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"li":["menuitem","menuitemradio","menuitemcheckbox","option","row","tab","treeitem"],"table":["grid"],"td":["gridcell"],"fieldset":["radiogroup","presentation"]}],"astro/jsx-a11y/no-noninteractive-tabindex":["error",{"tags":[],"roles":["tabpanel"],"allowExpressionValues":true}],"astro/jsx-a11y/no-redundant-roles":["error"],"astro/jsx-a11y/no-static-element-interactions":["error",{"allowExpressionValues":true,"handlers":["onClick","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"]}],"astro/jsx-a11y/role-has-required-aria-props":["error"],"astro/jsx-a11y/role-supports-aria-props":["error"],"astro/jsx-a11y/scope":["error"],"astro/jsx-a11y/tabindex-no-positive":["error"]}, "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parserOptions: { tsconfigRootDir: root } }, "rules": {"astro/no-set-html-directive":"error","astro/no-exports-from-components":"error","astro/no-prerender-export-outside-pages":"error","astro/no-unused-css-selector":"error","astro/prefer-class-list-directive":"error","astro/prefer-object-class-list":"error","astro/prefer-split-class-list":"error"}, "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parserOptions: { projectService: false, project: true } }, "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-unsafe-return":"off"}, "ignores": [], files: [["**/*.astro", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...tseslint.configs.disableTypeChecked, "rules": {"@typescript-eslint/await-thenable":"off","@typescript-eslint/consistent-return":"off","@typescript-eslint/consistent-type-exports":"off","@typescript-eslint/dot-notation":"off","@typescript-eslint/naming-convention":"off","@typescript-eslint/no-array-delete":"off","@typescript-eslint/no-base-to-string":"off","@typescript-eslint/no-confusing-void-expression":"off","@typescript-eslint/no-deprecated":"off","@typescript-eslint/no-duplicate-type-constituents":"off","@typescript-eslint/no-floating-promises":"off","@typescript-eslint/no-for-in-array":"off","@typescript-eslint/no-generated-empty-object-type":"off","@typescript-eslint/no-implied-eval":"off","@typescript-eslint/no-meaningless-void-operator":"off","@typescript-eslint/no-misused-promises":"off","@typescript-eslint/no-misused-spread":"off","@typescript-eslint/no-mixed-enums":"off","@typescript-eslint/no-redundant-type-constituents":"off","@typescript-eslint/no-unnecessary-boolean-literal-compare":"off","@typescript-eslint/no-unnecessary-condition":"off","@typescript-eslint/no-unnecessary-qualifier":"off","@typescript-eslint/no-unnecessary-template-expression":"off","@typescript-eslint/no-unnecessary-type-arguments":"off","@typescript-eslint/no-unnecessary-type-assertion":"off","@typescript-eslint/no-unnecessary-type-conversion":"off","@typescript-eslint/no-unnecessary-type-parameters":"off","@typescript-eslint/no-unsafe-argument":"off","@typescript-eslint/no-unsafe-assignment":"off","@typescript-eslint/no-unsafe-call":"off","@typescript-eslint/no-unsafe-enum-comparison":"off","@typescript-eslint/no-unsafe-member-access":"off","@typescript-eslint/no-unsafe-return":"off","@typescript-eslint/no-unsafe-type-assertion":"off","@typescript-eslint/no-unsafe-unary-minus":"off","@typescript-eslint/no-useless-default-assignment":"off","@typescript-eslint/non-nullable-type-assertion-style":"off","@typescript-eslint/only-throw-error":"off","@typescript-eslint/prefer-destructuring":"off","@typescript-eslint/prefer-find":"off","@typescript-eslint/prefer-includes":"off","@typescript-eslint/prefer-nullish-coalescing":"off","@typescript-eslint/prefer-optional-chain":"off","@typescript-eslint/prefer-promise-reject-errors":"off","@typescript-eslint/prefer-readonly":"off","@typescript-eslint/prefer-readonly-parameter-types":"off","@typescript-eslint/prefer-reduce-type-parameter":"off","@typescript-eslint/prefer-regexp-exec":"off","@typescript-eslint/prefer-return-this-type":"off","@typescript-eslint/prefer-string-starts-ends-with":"off","@typescript-eslint/promise-function-async":"off","@typescript-eslint/related-getter-setter-pairs":"off","@typescript-eslint/require-array-sort-compare":"off","@typescript-eslint/require-await":"off","@typescript-eslint/restrict-plus-operands":"off","@typescript-eslint/restrict-template-expressions":"off","@typescript-eslint/return-await":"off","@typescript-eslint/strict-boolean-expressions":"off","@typescript-eslint/strict-void-return":"off","@typescript-eslint/switch-exhaustiveness-check":"off","@typescript-eslint/unbound-method":"off","@typescript-eslint/use-unknown-in-catch-callback-variable":"off"}, "ignores": [], files: [["**/*.astro/*.ts", "tests/**/*"], ["**/*.astro/*.js", "tests/**/*"]]}),
+
+
+stripRuntimeGlobals({plugins: { zod: zodPlugin }, "rules": {"zod/no-any-schema":"error","zod/no-coerce-boolean":"error","zod/no-empty-custom-schema":"error","zod/no-native-enum":"error","zod/no-promise-schema":"error","zod/no-throw-in-refine":"error","zod/no-number-schema-with-finite":"error","zod/prefer-top-level-string-formats":"error","zod/prefer-strict-object":"error","zod/prefer-meta":"error","zod/prefer-meta-last":"error","zod/require-brand-type-parameter":"error"}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "docs/**/*"], ["**/*.astro", "docs/**/*"], ["**/*.svelte", "docs/**/*"], ["**/*.vue", "docs/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { zod: zodPlugin }, "rules": {"zod/no-any-schema":"error","zod/no-coerce-boolean":"error","zod/no-empty-custom-schema":"error","zod/no-native-enum":"error","zod/no-promise-schema":"error","zod/no-throw-in-refine":"error","zod/no-number-schema-with-finite":"error","zod/prefer-top-level-string-formats":"error","zod/prefer-strict-object":"error","zod/prefer-meta":"error","zod/prefer-meta-last":"error","zod/require-brand-type-parameter":"error"}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "packages/cli/**/*"], ["**/*.astro", "packages/cli/**/*"], ["**/*.svelte", "packages/cli/**/*"], ["**/*.vue", "packages/cli/**/*"]]}),
+
+
+stripRuntimeGlobals({plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: "@jest/globals" } }, "rules": {"jest/no-focused-tests":"error","jest/no-disabled-tests":"error","jest/no-identical-title":"error","jest/no-standalone-expect":"error","jest/no-commented-out-tests":"error","jest/expect-expect":"error","jest/valid-describe-callback":"error","jest/no-conditional-expect":"error","jest/valid-expect":["error",{"maxArgs":1}],"jest/prefer-strict-equal":"error"}, "ignores": [], files: [["tests/**/*", "**/test/**", "tests/**/*"], ["tests/**/*", "**/tests/**", "tests/**/*"], ["tests/**/*", "**/__tests__/**", "tests/**/*"], ["tests/**/*", "**/*.test.*", "tests/**/*"], ["tests/**/*", "**/*.spec.*", "tests/**/*"], ["tests/**/*", "**/test_*.py", "tests/**/*"], ["tests/**/*", "**/*_test.py", "tests/**/*"], ["tests/**/*", "**/conftest.py", "tests/**/*"]]}),
+
+stripRuntimeGlobals({"rules": {"gspot/no-helpers-beside-tests":["error",{"harness":"tests/tests/harness"}]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*", "tests/**/*"], ["**/*.astro", "tests/**/*", "tests/**/*"], ["**/*.svelte", "tests/**/*", "tests/**/*"], ["**/*.vue", "tests/**/*", "tests/**/*"]]}),
+
+
+
+stripRuntimeGlobals({"rules": {"@typescript-eslint/no-extraneous-class":["error",{"allowWithDecorator":true}]}, "ignores": [], files: [["**/*.{ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin }, "rules": {"@darraghor/nestjs-typed/provided-injected-should-match-factory-parameters":"error","@darraghor/nestjs-typed/injectable-should-be-provided":["error",{"src":["tests/**/*.ts"],"filterFromPaths":["/dist/","/node_modules/","\\.test\\.","\\.spec\\."]}],"@darraghor/nestjs-typed/api-property-matches-property-optionality":"off","@darraghor/nestjs-typed/api-method-should-specify-api-response":"off","@darraghor/nestjs-typed/controllers-should-supply-api-tags":"off","@darraghor/nestjs-typed/api-enum-property-best-practices":"off","@darraghor/nestjs-typed/api-property-returning-array-should-set-array":"off","@darraghor/nestjs-typed/validation-pipe-should-use-forbid-unknown":"error","@darraghor/nestjs-typed/param-decorator-name-matches-route-param":"error","@darraghor/nestjs-typed/validated-non-primitive-property-needs-type-decorator":"error","@darraghor/nestjs-typed/validate-nested-of-array-should-set-each":"error","@darraghor/nestjs-typed/all-properties-are-whitelisted":"error","@darraghor/nestjs-typed/all-properties-have-explicit-defined":"error","@darraghor/nestjs-typed/api-methods-should-be-guarded":"off","@darraghor/nestjs-typed/api-method-should-specify-api-operation":"off","@darraghor/nestjs-typed/sort-module-metadata-arrays":"off","@darraghor/nestjs-typed/no-duplicate-decorators":"error","@darraghor/nestjs-typed/use-injectable-provided-token":"error","@darraghor/nestjs-typed/api-property-should-have-api-extra-models":"error","@darraghor/nestjs-typed/api-operation-summary-description-capitalized":"error","@darraghor/nestjs-typed/use-dependency-injection":"off","@darraghor/nestjs-typed/use-correct-endpoint-naming-convention":"off","@darraghor/nestjs-typed/forward-ref-injection-should-use-wrapper-type":"error","@darraghor/nestjs-typed/swagger-file-upload-should-be-documented":"off","@darraghor/nestjs-typed/uploaded-file-should-be-validated":"error"}, "ignores": [], files: [["tests/**/*", "**/*.{ts,tsx,mts,cts}", "tests/**/*"]]}),
+
+
+
+stripRuntimeGlobals({plugins: { 'react-hooks': reactHooks, react, 'react-refresh': reactRefresh }, languageOptions: react.configs.flat.recommended.languageOptions, settings: { react: { version: 'detect' } }, "rules": {"react/display-name":2,"react/jsx-key":2,"react/jsx-no-comment-textnodes":2,"react/jsx-no-duplicate-props":2,"react/jsx-no-target-blank":2,"react/jsx-no-undef":2,"react/jsx-uses-react":0,"react/jsx-uses-vars":2,"react/no-children-prop":2,"react/no-danger-with-children":2,"react/no-deprecated":2,"react/no-direct-mutation-state":2,"react/no-find-dom-node":2,"react/no-is-mounted":2,"react/no-render-return-value":2,"react/no-string-refs":2,"react/no-unescaped-entities":2,"react/no-unknown-property":2,"react/no-unsafe":0,"react/prop-types":2,"react/react-in-jsx-scope":0,"react/require-render-return":2,"react-hooks/rules-of-hooks":["error"],"react-hooks/exhaustive-deps":["error"],"react-hooks/static-components":["error"],"react-hooks/use-memo":["error"],"react-hooks/void-use-memo":["error"],"react-hooks/preserve-manual-memoization":["error"],"react-hooks/incompatible-library":["error"],"react-hooks/immutability":["error"],"react-hooks/globals":["error"],"react-hooks/refs":["error"],"react-hooks/set-state-in-effect":["error"],"react-hooks/error-boundaries":["error"],"react-hooks/purity":["error"],"react-hooks/set-state-in-render":["error"],"react-hooks/unsupported-syntax":["error"],"react-hooks/config":["error"],"react-hooks/gating":["error"],"react-refresh/only-export-components":["error",{}],"react/no-array-index-key":"error","react/self-closing-comp":"error","react/no-danger":"error","react/no-unstable-nested-components":"error","react/jsx-no-constructed-context-values":"error","react/no-object-type-as-default-prop":"error"}, "ignores": [], files: [["**/*.{js,jsx,ts,tsx}", "tests/**/*"]]}),
+stripRuntimeGlobals({plugins: { 'testing-library': testingLibrary }, "rules": {"testing-library/await-async-events":["error",{"eventModule":"userEvent"}],"testing-library/await-async-queries":["error"],"testing-library/await-async-utils":["error"],"testing-library/no-await-sync-events":["error",{"eventModules":["fire-event"]}],"testing-library/no-await-sync-queries":["error"],"testing-library/no-container":["error"],"testing-library/no-debugging-utils":["error"],"testing-library/no-dom-import":["error","react"],"testing-library/no-global-regexp-flag-in-query":["error"],"testing-library/no-manual-cleanup":["error"],"testing-library/no-node-access":["error"],"testing-library/no-promise-in-fire-event":["error"],"testing-library/no-render-in-lifecycle":["error"],"testing-library/no-unnecessary-act":["error"],"testing-library/no-wait-for-multiple-assertions":["error"],"testing-library/no-wait-for-side-effects":["error"],"testing-library/no-wait-for-snapshot":["error"],"testing-library/prefer-find-by":["error"],"testing-library/prefer-presence-queries":["error"],"testing-library/prefer-query-by-disappearance":["error"],"testing-library/prefer-screen-queries":["error"],"testing-library/render-result-naming-convention":["error"]}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test/**", "**/*.astro", "tests/**/*"], ["**/test/**", "**/*.svelte", "tests/**/*"], ["**/test/**", "**/*.vue", "tests/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/tests/**", "**/*.astro", "tests/**/*"], ["**/tests/**", "**/*.svelte", "tests/**/*"], ["**/tests/**", "**/*.vue", "tests/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/__tests__/**", "**/*.astro", "tests/**/*"], ["**/__tests__/**", "**/*.svelte", "tests/**/*"], ["**/__tests__/**", "**/*.vue", "tests/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.test.*", "**/*.astro", "tests/**/*"], ["**/*.test.*", "**/*.svelte", "tests/**/*"], ["**/*.test.*", "**/*.vue", "tests/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.spec.*", "**/*.astro", "tests/**/*"], ["**/*.spec.*", "**/*.svelte", "tests/**/*"], ["**/*.spec.*", "**/*.vue", "tests/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test_*.py", "**/*.astro", "tests/**/*"], ["**/test_*.py", "**/*.svelte", "tests/**/*"], ["**/test_*.py", "**/*.vue", "tests/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*_test.py", "**/*.astro", "tests/**/*"], ["**/*_test.py", "**/*.svelte", "tests/**/*"], ["**/*_test.py", "**/*.vue", "tests/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/conftest.py", "**/*.astro", "tests/**/*"], ["**/conftest.py", "**/*.svelte", "tests/**/*"], ["**/conftest.py", "**/*.vue", "tests/**/*"]]}),
+
+
+stripRuntimeGlobals({plugins: { '@next/next': nextPlugin }, settings: { next: { rootDir: root + '/' + "tests" } }, "rules": {"@next/next/google-font-display":"warn","@next/next/google-font-preconnect":"warn","@next/next/next-script-for-ga":"warn","@next/next/no-async-client-component":"error","@next/next/no-before-interactive-script-outside-document":"warn","@next/next/no-css-tags":"warn","@next/next/no-head-element":"warn","@next/next/no-html-link-for-pages":"off","@next/next/no-img-element":"warn","@next/next/no-location-assign-relative-destination":"warn","@next/next/no-page-custom-font":"warn","@next/next/no-styled-jsx-in-document":"warn","@next/next/no-sync-scripts":"error","@next/next/no-title-in-document-head":"warn","@next/next/no-typos":"warn","@next/next/no-unwanted-polyfillio":"warn","@next/next/inline-script-id":"error","@next/next/no-assign-module-variable":"error","@next/next/no-document-import-in-page":"error","@next/next/no-duplicate-head":"error","@next/next/no-head-import-in-document":"error","@next/next/no-script-component-in-head":"error","react-refresh/only-export-components":["error",{"allowExportNames":["experimental_ppr","dynamic","dynamicParams","revalidate","fetchCache","runtime","preferredRegion","maxDuration","metadata","generateMetadata","viewport","generateViewport","generateImageMetadata","generateSitemaps","generateStaticParams","instant","contentType","size"]}],"gspot/no-client-env":"error"}, "ignores": [], files: [["**/*.{js,jsx,ts,tsx}", "tests/**/*"]]}),
+stripRuntimeGlobals({"rules": {"gspot/require-server-only":"error"}, "ignores": [], files: [["**/server/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/server/**", "**/*.astro", "tests/**/*"], ["**/server/**", "**/*.svelte", "tests/**/*"], ["**/server/**", "**/*.vue", "tests/**/*"], ["**/*.server.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.server.*", "**/*.astro", "tests/**/*"], ["**/*.server.*", "**/*.svelte", "tests/**/*"], ["**/*.server.*", "**/*.vue", "tests/**/*"], ["**/features/*/server/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/features/*/server/**", "**/*.astro", "tests/**/*"], ["**/features/*/server/**", "**/*.svelte", "tests/**/*"], ["**/features/*/server/**", "**/*.vue", "tests/**/*"], ["**/lib/**/server.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/lib/**/server.*", "**/*.astro", "tests/**/*"], ["**/lib/**/server.*", "**/*.svelte", "tests/**/*"], ["**/lib/**/server.*", "**/*.vue", "tests/**/*"]]}),
+
+
+stripRuntimeGlobals({...sveltePlugin.configs.recommended[0], "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...sveltePlugin.configs.recommended[1], "rules": {"no-inner-declarations":"off","no-self-assign":"off","svelte/comment-directive":["error"],"svelte/system":["error"]}, "ignores": [], files: [["*.svelte", "tests/**/*"], ["**/*.svelte", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...sveltePlugin.configs.recommended[2], "rules": {}, "ignores": [], files: [["*.svelte.js", "tests/**/*"], ["*.svelte.ts", "tests/**/*"], ["**/*.svelte.js", "tests/**/*"], ["**/*.svelte.ts", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...sveltePlugin.configs.recommended[3], "rules": {"svelte/comment-directive":["error"],"svelte/infinite-reactive-loop":["error"],"svelte/no-at-debug-tags":["error"],"svelte/no-at-html-tags":["error"],"svelte/no-dom-manipulating":["error"],"svelte/no-dupe-else-if-blocks":["error"],"svelte/no-dupe-on-directives":["error"],"svelte/no-dupe-style-properties":["error"],"svelte/no-dupe-use-directives":["error"],"svelte/no-export-load-in-svelte-module-in-kit-pages":["error"],"svelte/no-immutable-reactive-statements":["error"],"svelte/no-inner-declarations":["error"],"svelte/no-inspect":["error"],"svelte/no-navigation-without-resolve":["error"],"svelte/no-not-function-handler":["error"],"svelte/no-object-in-text-mustaches":["error"],"svelte/no-raw-special-elements":["error"],"svelte/no-reactive-functions":["error"],"svelte/no-reactive-literals":["error"],"svelte/no-reactive-reassign":["error"],"svelte/no-shorthand-style-property-overrides":["error"],"svelte/no-store-async":["error"],"svelte/no-svelte-internal":["error"],"svelte/no-unknown-style-directive-property":["error"],"svelte/no-unnecessary-state-wrap":["error"],"svelte/no-unused-props":["error"],"svelte/no-unused-svelte-ignore":["error"],"svelte/no-useless-children-snippet":["error"],"svelte/no-useless-mustaches":["error"],"svelte/prefer-svelte-reactivity":["error"],"svelte/prefer-writable-derived":["error"],"svelte/require-each-key":["error"],"svelte/require-event-dispatcher-types":["error"],"svelte/require-store-reactive-access":["error"],"svelte/system":["error"],"svelte/valid-each-key":["error"],"svelte/valid-prop-names-in-kit-pages":["error"]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parser: svelteParser, parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.svelte'] } }, "rules": {"svelte/no-at-html-tags":"error","svelte/require-each-key":"error","svelte/no-target-blank":"error","svelte/button-has-type":"error","svelte/no-reactive-reassign":"error","svelte/block-lang":["error",{"script":["ts"]}],"svelte/no-useless-mustaches":"error","svelte/prefer-const":"error"}, "ignores": [], files: [["**/*.svelte", "tests/**/*"], ["**/*.svelte.js", "tests/**/*"], ["**/*.svelte.ts", "tests/**/*"]]}),
+stripRuntimeGlobals({plugins: { 'testing-library': testingLibrary }, "rules": {"testing-library/await-async-events":["error",{"eventModule":["fireEvent","userEvent"]}],"testing-library/await-async-queries":["error"],"testing-library/await-async-utils":["error"],"testing-library/no-await-sync-queries":["error"],"testing-library/no-container":["error"],"testing-library/no-debugging-utils":["error"],"testing-library/no-dom-import":["error","svelte"],"testing-library/no-global-regexp-flag-in-query":["error"],"testing-library/no-manual-cleanup":["error"],"testing-library/no-node-access":["error"],"testing-library/no-promise-in-fire-event":["error"],"testing-library/no-render-in-lifecycle":["error"],"testing-library/no-wait-for-multiple-assertions":["error"],"testing-library/no-wait-for-side-effects":["error"],"testing-library/no-wait-for-snapshot":["error"],"testing-library/prefer-find-by":["error"],"testing-library/prefer-presence-queries":["error"],"testing-library/prefer-query-by-disappearance":["error"],"testing-library/prefer-screen-queries":["error"],"testing-library/render-result-naming-convention":["error"]}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test/**", "**/*.astro", "tests/**/*"], ["**/test/**", "**/*.svelte", "tests/**/*"], ["**/test/**", "**/*.vue", "tests/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/tests/**", "**/*.astro", "tests/**/*"], ["**/tests/**", "**/*.svelte", "tests/**/*"], ["**/tests/**", "**/*.vue", "tests/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/__tests__/**", "**/*.astro", "tests/**/*"], ["**/__tests__/**", "**/*.svelte", "tests/**/*"], ["**/__tests__/**", "**/*.vue", "tests/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.test.*", "**/*.astro", "tests/**/*"], ["**/*.test.*", "**/*.svelte", "tests/**/*"], ["**/*.test.*", "**/*.vue", "tests/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.spec.*", "**/*.astro", "tests/**/*"], ["**/*.spec.*", "**/*.svelte", "tests/**/*"], ["**/*.spec.*", "**/*.vue", "tests/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test_*.py", "**/*.astro", "tests/**/*"], ["**/test_*.py", "**/*.svelte", "tests/**/*"], ["**/test_*.py", "**/*.vue", "tests/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*_test.py", "**/*.astro", "tests/**/*"], ["**/*_test.py", "**/*.svelte", "tests/**/*"], ["**/*_test.py", "**/*.vue", "tests/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/conftest.py", "**/*.astro", "tests/**/*"], ["**/conftest.py", "**/*.svelte", "tests/**/*"], ["**/conftest.py", "**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({plugins: { vitest }, "rules": {"vitest/expect-expect":"error","vitest/no-identical-title":"error","vitest/no-commented-out-tests":"error","vitest/valid-title":"error","vitest/valid-expect":"error","vitest/valid-describe-callback":"error","vitest/require-local-test-context-for-concurrent-snapshots":"error","vitest/no-import-node-test":"error","vitest/no-focused-tests":["error",{"fixable":false}],"vitest/no-disabled-tests":"error","vitest/no-standalone-expect":"error","vitest/no-conditional-expect":"error","vitest/prefer-strict-equal":"error"}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test/**", "**/*.astro", "tests/**/*"], ["**/test/**", "**/*.svelte", "tests/**/*"], ["**/test/**", "**/*.vue", "tests/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/tests/**", "**/*.astro", "tests/**/*"], ["**/tests/**", "**/*.svelte", "tests/**/*"], ["**/tests/**", "**/*.vue", "tests/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/__tests__/**", "**/*.astro", "tests/**/*"], ["**/__tests__/**", "**/*.svelte", "tests/**/*"], ["**/__tests__/**", "**/*.vue", "tests/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.test.*", "**/*.astro", "tests/**/*"], ["**/*.test.*", "**/*.svelte", "tests/**/*"], ["**/*.test.*", "**/*.vue", "tests/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.spec.*", "**/*.astro", "tests/**/*"], ["**/*.spec.*", "**/*.svelte", "tests/**/*"], ["**/*.spec.*", "**/*.vue", "tests/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test_*.py", "**/*.astro", "tests/**/*"], ["**/test_*.py", "**/*.svelte", "tests/**/*"], ["**/test_*.py", "**/*.vue", "tests/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*_test.py", "**/*.astro", "tests/**/*"], ["**/*_test.py", "**/*.svelte", "tests/**/*"], ["**/*_test.py", "**/*.vue", "tests/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/conftest.py", "**/*.astro", "tests/**/*"], ["**/conftest.py", "**/*.svelte", "tests/**/*"], ["**/conftest.py", "**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({"rules": {"gspot/no-helpers-beside-tests":["error",{"harness":"tests/tests/harness"}]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*", "tests/**/*"], ["**/*.astro", "tests/**/*", "tests/**/*"], ["**/*.svelte", "tests/**/*", "tests/**/*"], ["**/*.vue", "tests/**/*", "tests/**/*"]]}),
+
+
+
+stripRuntimeGlobals({...vuePlugin.configs['flat/recommended'][0], "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vuePlugin.configs['flat/recommended'][1], "rules": {"vue/comment-directive":["error"],"vue/jsx-uses-vars":["error"]}, "ignores": [], files: [["*.vue", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vuePlugin.configs['flat/recommended'][2], "rules": {"vue/multi-word-component-names":["error"],"vue/no-arrow-functions-in-watch":["error"],"vue/no-async-in-computed-properties":["error"],"vue/no-child-content":["error"],"vue/no-computed-properties-in-data":["error"],"vue/no-deprecated-data-object-declaration":["error"],"vue/no-deprecated-delete-set":["error"],"vue/no-deprecated-destroyed-lifecycle":["error"],"vue/no-deprecated-dollar-listeners-api":["error"],"vue/no-deprecated-dollar-scopedslots-api":["error"],"vue/no-deprecated-events-api":["error"],"vue/no-deprecated-filter":["error"],"vue/no-deprecated-functional-template":["error"],"vue/no-deprecated-html-element-is":["error"],"vue/no-deprecated-inline-template":["error"],"vue/no-deprecated-model-definition":["error"],"vue/no-deprecated-props-default-this":["error"],"vue/no-deprecated-router-link-tag-prop":["error"],"vue/no-deprecated-scope-attribute":["error"],"vue/no-deprecated-slot-attribute":["error"],"vue/no-deprecated-slot-scope-attribute":["error"],"vue/no-deprecated-v-bind-sync":["error"],"vue/no-deprecated-v-is":["error"],"vue/no-deprecated-v-on-native-modifier":["error"],"vue/no-deprecated-v-on-number-modifiers":["error"],"vue/no-deprecated-vue-config-keycodes":["error"],"vue/no-dupe-keys":["error"],"vue/no-dupe-v-else-if":["error"],"vue/no-duplicate-attributes":["error"],"vue/no-export-in-script-setup":["error"],"vue/no-expose-after-await":["error"],"vue/no-lifecycle-after-await":["error"],"vue/no-mutating-props":["error"],"vue/no-parsing-error":["error"],"vue/no-ref-as-operand":["error"],"vue/no-reserved-component-names":["error"],"vue/no-reserved-keys":["error"],"vue/no-reserved-props":["error"],"vue/no-shared-component-data":["error"],"vue/no-side-effects-in-computed-properties":["error"],"vue/no-template-key":["error"],"vue/no-textarea-mustache":["error"],"vue/no-unused-components":["error"],"vue/no-unused-vars":["error"],"vue/no-use-computed-property-like-method":["error"],"vue/no-use-v-if-with-v-for":["error"],"vue/no-useless-template-attributes":["error"],"vue/no-v-for-template-key-on-child":["error"],"vue/no-v-text-v-html-on-component":["error"],"vue/no-watch-after-await":["error"],"vue/prefer-import-from-vue":["error"],"vue/require-component-is":["error"],"vue/require-prop-type-constructor":["error"],"vue/require-render-return":["error"],"vue/require-slots-as-functions":["error"],"vue/require-toggle-inside-transition":["error"],"vue/require-v-for-key":["error"],"vue/require-valid-default-prop":["error"],"vue/return-in-computed-property":["error"],"vue/return-in-emits-validator":["error"],"vue/use-v-on-exact":["error"],"vue/valid-attribute-name":["error"],"vue/valid-define-emits":["error"],"vue/valid-define-options":["error"],"vue/valid-define-props":["error"],"vue/valid-next-tick":["error"],"vue/valid-template-root":["error"],"vue/valid-v-bind":["error"],"vue/valid-v-cloak":["error"],"vue/valid-v-else-if":["error"],"vue/valid-v-else":["error"],"vue/valid-v-for":["error"],"vue/valid-v-html":["error"],"vue/valid-v-if":["error"],"vue/valid-v-is":["error"],"vue/valid-v-memo":["error"],"vue/valid-v-model":["error"],"vue/valid-v-on":["error"],"vue/valid-v-once":["error"],"vue/valid-v-pre":["error"],"vue/valid-v-show":["error"],"vue/valid-v-slot":["error"],"vue/valid-v-text":["error"]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vuePlugin.configs['flat/recommended'][3], "rules": {"vue/attribute-hyphenation":["error"],"vue/component-definition-name-casing":["error"],"vue/first-attribute-linebreak":["error"],"vue/html-closing-bracket-newline":["error"],"vue/html-closing-bracket-spacing":["error"],"vue/html-end-tags":["error"],"vue/html-indent":["error"],"vue/html-quotes":["error"],"vue/html-self-closing":["error"],"vue/max-attributes-per-line":["error"],"vue/multiline-html-element-content-newline":["error"],"vue/mustache-interpolation-spacing":["error"],"vue/no-multi-spaces":["error"],"vue/no-spaces-around-equal-signs-in-attribute":["error"],"vue/no-template-shadow":["error"],"vue/one-component-per-file":["error"],"vue/prop-name-casing":["error"],"vue/require-default-prop":["error"],"vue/require-explicit-emits":["error"],"vue/require-prop-types":["error"],"vue/singleline-html-element-content-newline":["error"],"vue/v-bind-style":["error"],"vue/v-on-event-hyphenation":["error","always",{"autofix":true}],"vue/v-on-style":["error"],"vue/v-slot-style":["error"]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vuePlugin.configs['flat/recommended'][4], "rules": {"vue/attributes-order":["error"],"vue/block-order":["error"],"vue/no-lone-template":["error"],"vue/no-multiple-slot-args":["error"],"vue/no-required-prop-with-default":["error"],"vue/no-v-html":["error"],"vue/order-in-components":["error"],"vue/this-in-template":["error"]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vueAccessibility.configs['flat/recommended'][0], "ignores": [], files: [["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({...vueAccessibility.configs['flat/recommended'][1], "rules": {"vuejs-accessibility/alt-text":"error","vuejs-accessibility/anchor-has-content":"error","vuejs-accessibility/aria-props":"error","vuejs-accessibility/aria-role":"error","vuejs-accessibility/aria-unsupported-elements":"error","vuejs-accessibility/click-events-have-key-events":"error","vuejs-accessibility/form-control-has-label":"error","vuejs-accessibility/heading-has-content":"error","vuejs-accessibility/iframe-has-title":"error","vuejs-accessibility/interactive-supports-focus":"error","vuejs-accessibility/label-has-for":"error","vuejs-accessibility/media-has-caption":"error","vuejs-accessibility/mouse-events-have-key-events":"error","vuejs-accessibility/no-access-key":"error","vuejs-accessibility/no-autofocus":"error","vuejs-accessibility/no-distracting-elements":"error","vuejs-accessibility/no-redundant-roles":"error","vuejs-accessibility/no-static-element-interactions":"error","vuejs-accessibility/role-has-required-aria-props":"error","vuejs-accessibility/tabindex-no-positive":"error"}, "ignores": [], files: [["**/*.vue", "tests/**/*"]]}),
+
+stripRuntimeGlobals({languageOptions: { parser: vueParser, parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.vue'], sourceType: 'module' } }, "rules": {"vue/no-v-html":"error","vue/block-lang":["error",{"script":{"lang":["ts"]}}],"vue/define-props-declaration":"error","vue/define-emits-declaration":"error","vue/component-api-style":["error",["script-setup"]],"vue/no-useless-v-bind":"error","vue/prefer-true-attribute-shorthand":"error","vue/no-unused-refs":"error","vue/require-typed-ref":"error","vue/html-button-has-type":"error","vue/no-template-target-blank":"error"}, "ignores": [], files: [["**/*.vue", "tests/**/*"]]}),
+stripRuntimeGlobals({plugins: { 'testing-library': testingLibrary }, "rules": {"testing-library/await-async-events":["error",{"eventModule":["fireEvent","userEvent"]}],"testing-library/await-async-queries":["error"],"testing-library/await-async-utils":["error"],"testing-library/no-await-sync-queries":["error"],"testing-library/no-container":["error"],"testing-library/no-debugging-utils":["error"],"testing-library/no-dom-import":["error","vue"],"testing-library/no-global-regexp-flag-in-query":["error"],"testing-library/no-manual-cleanup":["error"],"testing-library/no-node-access":["error"],"testing-library/no-promise-in-fire-event":["error"],"testing-library/no-render-in-lifecycle":["error"],"testing-library/no-wait-for-multiple-assertions":["error"],"testing-library/no-wait-for-side-effects":["error"],"testing-library/no-wait-for-snapshot":["error"],"testing-library/prefer-find-by":["error"],"testing-library/prefer-presence-queries":["error"],"testing-library/prefer-query-by-disappearance":["error"],"testing-library/prefer-screen-queries":["error"],"testing-library/render-result-naming-convention":["error"]}, "ignores": [], files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test/**", "**/*.astro", "tests/**/*"], ["**/test/**", "**/*.svelte", "tests/**/*"], ["**/test/**", "**/*.vue", "tests/**/*"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/tests/**", "**/*.astro", "tests/**/*"], ["**/tests/**", "**/*.svelte", "tests/**/*"], ["**/tests/**", "**/*.vue", "tests/**/*"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/__tests__/**", "**/*.astro", "tests/**/*"], ["**/__tests__/**", "**/*.svelte", "tests/**/*"], ["**/__tests__/**", "**/*.vue", "tests/**/*"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.test.*", "**/*.astro", "tests/**/*"], ["**/*.test.*", "**/*.svelte", "tests/**/*"], ["**/*.test.*", "**/*.vue", "tests/**/*"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.spec.*", "**/*.astro", "tests/**/*"], ["**/*.spec.*", "**/*.svelte", "tests/**/*"], ["**/*.spec.*", "**/*.vue", "tests/**/*"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/test_*.py", "**/*.astro", "tests/**/*"], ["**/test_*.py", "**/*.svelte", "tests/**/*"], ["**/test_*.py", "**/*.vue", "tests/**/*"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*_test.py", "**/*.astro", "tests/**/*"], ["**/*_test.py", "**/*.svelte", "tests/**/*"], ["**/*_test.py", "**/*.vue", "tests/**/*"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/conftest.py", "**/*.astro", "tests/**/*"], ["**/conftest.py", "**/*.svelte", "tests/**/*"], ["**/conftest.py", "**/*.vue", "tests/**/*"]]}),
+
+
+stripRuntimeGlobals({plugins: { 'jsx-a11y': accessibility }, "rules": {"jsx-a11y/alt-text":"error","jsx-a11y/anchor-ambiguous-text":"off","jsx-a11y/anchor-has-content":"error","jsx-a11y/anchor-is-valid":"error","jsx-a11y/aria-activedescendant-has-tabindex":"error","jsx-a11y/aria-props":"error","jsx-a11y/aria-proptypes":"error","jsx-a11y/aria-role":"error","jsx-a11y/aria-unsupported-elements":"error","jsx-a11y/autocomplete-valid":"error","jsx-a11y/click-events-have-key-events":"error","jsx-a11y/control-has-associated-label":["off",{"ignoreElements":["audio","canvas","embed","input","textarea","tr","video"],"ignoreRoles":["grid","listbox","menu","menubar","radiogroup","row","tablist","toolbar","tree","treegrid"],"includeRoles":["alert","dialog"]}],"jsx-a11y/heading-has-content":"error","jsx-a11y/html-has-lang":"error","jsx-a11y/iframe-has-title":"error","jsx-a11y/img-redundant-alt":"error","jsx-a11y/interactive-supports-focus":["error",{"tabbable":["button","checkbox","link","searchbox","spinbutton","switch","textbox"]}],"jsx-a11y/label-has-associated-control":"error","jsx-a11y/label-has-for":"off","jsx-a11y/media-has-caption":"error","jsx-a11y/mouse-events-have-key-events":"error","jsx-a11y/no-access-key":"error","jsx-a11y/no-autofocus":"error","jsx-a11y/no-distracting-elements":"error","jsx-a11y/no-interactive-element-to-noninteractive-role":["error",{"tr":["none","presentation"],"canvas":["img"]}],"jsx-a11y/no-noninteractive-element-interactions":["error",{"handlers":["onClick","onError","onLoad","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"],"alert":["onKeyUp","onKeyDown","onKeyPress"],"body":["onError","onLoad"],"dialog":["onKeyUp","onKeyDown","onKeyPress"],"iframe":["onError","onLoad"],"img":["onError","onLoad"]}],"jsx-a11y/no-noninteractive-element-to-interactive-role":["error",{"ul":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"ol":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"li":["menuitem","menuitemradio","menuitemcheckbox","option","row","tab","treeitem"],"table":["grid"],"td":["gridcell"],"fieldset":["radiogroup","presentation"]}],"jsx-a11y/no-noninteractive-tabindex":["error",{"tags":[],"roles":["tabpanel"],"allowExpressionValues":true}],"jsx-a11y/no-redundant-roles":"error","jsx-a11y/no-static-element-interactions":["error",{"allowExpressionValues":true,"handlers":["onClick","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"]}],"jsx-a11y/role-has-required-aria-props":"error","jsx-a11y/role-supports-aria-props":"error","jsx-a11y/scope":"error","jsx-a11y/tabindex-no-positive":"error"}, "ignores": [], files: [["**/*.{js,jsx,ts,tsx}", "tests/**/*"]]}),
+
+
+
+    {languageOptions: { sourceType: "module", globals: globals["nodeBuiltin"] }, "rules": {"n/no-deprecated-api":"error","n/no-process-exit":"error","n/no-unsupported-features/node-builtins":["error",{"version":">=24.2.0","allowExperimental":true}],"n/no-unsupported-features/es-builtins":["error",{"version":">=24.2.0"}],"n/no-unsupported-features/es-syntax":"off","n/prefer-global/buffer":["error","always"],"n/prefer-global/console":["error","always"],"n/prefer-global/process":["error","always"],"n/prefer-global/url":["error","always"],"n/prefer-global/url-search-params":["error","always"],"n/prefer-promises/dns":"error","n/prefer-promises/fs":"error","n/no-sync":"off","n/no-callback-literal":"error","n/no-new-require":"error","n/no-path-concat":"error","n/no-missing-import":"off","n/no-missing-require":"off","n/no-unpublished-import":"error","n/no-unpublished-require":"error","n/no-extraneous-import":"error","n/no-extraneous-require":"error"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", runtimeMatches(0)], ["**/*.astro", runtimeMatches(0)], ["**/*.svelte", runtimeMatches(0)], ["**/*.vue", runtimeMatches(0)]]},
+
+    {languageOptions: { sourceType: "commonjs", globals: globals["node"] }, "rules": {"n/no-deprecated-api":"error","n/no-process-exit":"error","n/no-unsupported-features/node-builtins":["error",{"version":">=24.2.0","allowExperimental":true}],"n/no-unsupported-features/es-builtins":["error",{"version":">=24.2.0"}],"n/no-unsupported-features/es-syntax":"off","n/prefer-global/buffer":["error","always"],"n/prefer-global/console":["error","always"],"n/prefer-global/process":["error","always"],"n/prefer-global/url":["error","always"],"n/prefer-global/url-search-params":["error","always"],"n/prefer-promises/dns":"error","n/prefer-promises/fs":"error","n/no-sync":"off","n/no-callback-literal":"error","n/no-new-require":"error","n/no-path-concat":"error","n/no-missing-import":"off","n/no-missing-require":"off","n/no-unpublished-import":"error","n/no-unpublished-require":"error","n/no-extraneous-import":"error","n/no-extraneous-require":"error","unicorn/prefer-module":"off","@typescript-eslint/no-require-imports":"off","unicorn/import-style":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", runtimeMatches(1)], ["**/*.astro", runtimeMatches(1)], ["**/*.svelte", runtimeMatches(1)], ["**/*.vue", runtimeMatches(1)]]},
+
+    {"ignores": [], "rules": {"no-restricted-syntax":["error",{"selector":"TSEnumDeclaration","message":"Use a literal union or an as-const object instead of an enum."},{"selector":"TSAsExpression[expression.type=\"TSAsExpression\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSTypeAssertion[expression.type=\"TSTypeAssertion\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSAsExpression > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSTypeAssertion > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSAsExpression > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"TSTypeAssertion > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]","message":"A message a client reads names no identifier; put the value in its own field."},{"selector":"CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]","message":"Log a stable message and pass the values as fields."},{"selector":"CallExpression[callee.name='forwardRef']","message":"forwardRef papers over two modules that import each other. Move what both need into a third module."},{"selector":"Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))","message":"Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["**/*.vue", "tests/**/*"]]},
+
+    {"ignores": [], "rules": {"no-restricted-syntax":["error",{"selector":"TSEnumDeclaration","message":"Use a literal union or an as-const object instead of an enum."},{"selector":"TSAsExpression[expression.type=\"TSAsExpression\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSTypeAssertion[expression.type=\"TSTypeAssertion\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSAsExpression > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSTypeAssertion > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSAsExpression > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"TSTypeAssertion > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]","message":"A message a client reads names no identifier; put the value in its own field."},{"selector":"CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]","message":"Log a stable message and pass the values as fields."},{"selector":"CallExpression[callee.name='forwardRef']","message":"forwardRef papers over two modules that import each other. Move what both need into a third module."},{"selector":"Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))","message":"Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."},{"selector":"TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]","message":"A controller reaches data through a service. Inject the service, and keep the repository behind it."},{"selector":"Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]","message":"A controller reaches data through a service. Inject the service, and keep the repository behind it."}]}, files: [["**/*.controller.ts", "tests/**/*"]]},
+
+    {"ignores": ["**/test/**","**/tests/**","**/__tests__/**","**/*.test.*","**/*.spec.*","**/test_*.py","**/*_test.py","**/conftest.py","scripts/**","**/*.config.{js,mjs,cjs,ts}",".mise/tasks/**","packages/*/scripts/**","docs/src/content/reference/**"], "rules": {"no-console":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+    {"rules": {"n/no-process-exit":"off","no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_"}]}, files: [["scripts/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["scripts/**", "**/*.astro"], ["scripts/**", "**/*.svelte"], ["scripts/**", "**/*.vue"], ["**/*.config.{js,mjs,cjs,ts}", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/*.config.{js,mjs,cjs,ts}", "**/*.astro"], ["**/*.config.{js,mjs,cjs,ts}", "**/*.svelte"], ["**/*.config.{js,mjs,cjs,ts}", "**/*.vue"], [".mise/tasks/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], [".mise/tasks/**", "**/*.astro"], [".mise/tasks/**", "**/*.svelte"], [".mise/tasks/**", "**/*.vue"], ["packages/*/scripts/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["packages/*/scripts/**", "**/*.astro"], ["packages/*/scripts/**", "**/*.svelte"], ["packages/*/scripts/**", "**/*.vue"], ["docs/src/content/reference/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["docs/src/content/reference/**", "**/*.astro"], ["docs/src/content/reference/**", "**/*.svelte"], ["docs/src/content/reference/**", "**/*.vue"]]},
+    {"rules": {"jsdoc/require-jsdoc":"off","jsdoc/require-param":"off","jsdoc/require-returns":"off","jsdoc/require-description":"off","jsdoc/require-param-description":"off","jsdoc/require-returns-description":"off","n/no-unpublished-import":"off","n/no-unpublished-require":"off"}, files: [["**/test/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/test/**", "**/*.astro"], ["**/test/**", "**/*.svelte"], ["**/test/**", "**/*.vue"], ["**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/tests/**", "**/*.astro"], ["**/tests/**", "**/*.svelte"], ["**/tests/**", "**/*.vue"], ["**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/__tests__/**", "**/*.astro"], ["**/__tests__/**", "**/*.svelte"], ["**/__tests__/**", "**/*.vue"], ["**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/*.test.*", "**/*.astro"], ["**/*.test.*", "**/*.svelte"], ["**/*.test.*", "**/*.vue"], ["**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/*.spec.*", "**/*.astro"], ["**/*.spec.*", "**/*.svelte"], ["**/*.spec.*", "**/*.vue"], ["**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/test_*.py", "**/*.astro"], ["**/test_*.py", "**/*.svelte"], ["**/test_*.py", "**/*.vue"], ["**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/*_test.py", "**/*.astro"], ["**/*_test.py", "**/*.svelte"], ["**/*_test.py", "**/*.vue"], ["**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"], ["**/conftest.py", "**/*.astro"], ["**/conftest.py", "**/*.svelte"], ["**/conftest.py", "**/*.vue"]]},
+
+    {...packageJson.configs.recommended, "rules": {"package-json/no-empty-fields":"error","package-json/no-redundant-files":"error","package-json/no-redundant-publishConfig":"error","package-json/require-attribution":"error","package-json/require-description":"error","package-json/require-exports":"error","package-json/require-files":"error","package-json/require-license":"error","package-json/require-name":"error","package-json/require-repository":"error","package-json/require-sideEffects":"error","package-json/require-type":"error","package-json/require-version":"error","package-json/repository-shorthand":"error","package-json/sort-collections":"error","package-json/specify-peers-locally":"error","package-json/unique-dependencies":"error","package-json/valid-author":"error","package-json/valid-bin":"error","package-json/valid-browser":"error","package-json/valid-bugs":"error","package-json/valid-bundleDependencies":"error","package-json/valid-config":"error","package-json/valid-contributors":"error","package-json/valid-cpu":"error","package-json/valid-description":"error","package-json/valid-dependencies":"error","package-json/valid-devDependencies":"error","package-json/valid-devEngines":"error","package-json/valid-directories":"error","package-json/valid-engines":"error","package-json/valid-exports":"error","package-json/valid-files":"error","package-json/valid-funding":"error","package-json/valid-gypfile":"error","package-json/valid-homepage":"error","package-json/valid-keywords":"error","package-json/valid-libc":"error","package-json/valid-license":"error","package-json/valid-main":"error","package-json/valid-man":"error","package-json/valid-module":"error","package-json/valid-name":"error","package-json/valid-optionalDependencies":"error","package-json/valid-os":"error","package-json/valid-packageManager":"error","package-json/valid-peerDependencies":"error","package-json/valid-peerDependenciesMeta":"error","package-json/valid-private":"error","package-json/valid-publishConfig":"error","package-json/valid-repository":"error","package-json/valid-scripts":"error","package-json/valid-sideEffects":"error","package-json/valid-type":"error","package-json/valid-version":"error","package-json/valid-workspaces":"error","package-json/valid-peerDependenciesMeta-relationship":"error","package-json/valid-repository-directory":"error"}, files: ["**/package.json"]},
+
+    {...prettierConfig, "rules": {"curly":0,"no-unexpected-multiline":0,"@stylistic/lines-around-comment":0,"@stylistic/max-len":0,"@stylistic/no-confusing-arrow":0,"@stylistic/no-mixed-operators":0,"@stylistic/no-tabs":0,"@stylistic/quotes":0,"@stylistic/js/lines-around-comment":0,"@stylistic/js/max-len":0,"@stylistic/js/no-confusing-arrow":0,"@stylistic/js/no-mixed-operators":0,"@stylistic/js/no-tabs":0,"@stylistic/js/quotes":0,"@stylistic/ts/lines-around-comment":0,"@stylistic/ts/quotes":0,"@typescript-eslint/lines-around-comment":0,"@typescript-eslint/quotes":0,"babel/quotes":0,"unicorn/template-indent":0,"vue/html-self-closing":0,"vue/max-len":0,"@babel/object-curly-spacing":"off","@babel/semi":"off","@stylistic/array-bracket-newline":"off","@stylistic/array-bracket-spacing":"off","@stylistic/array-element-newline":"off","@stylistic/arrow-parens":"off","@stylistic/arrow-spacing":"off","@stylistic/block-spacing":"off","@stylistic/brace-style":"off","@stylistic/comma-dangle":"off","@stylistic/comma-spacing":"off","@stylistic/comma-style":"off","@stylistic/computed-property-spacing":"off","@stylistic/dot-location":"off","@stylistic/eol-last":"off","@stylistic/func-call-spacing":"off","@stylistic/function-call-argument-newline":"off","@stylistic/function-call-spacing":"off","@stylistic/function-paren-newline":"off","@stylistic/generator-star-spacing":"off","@stylistic/implicit-arrow-linebreak":"off","@stylistic/indent":"off","@stylistic/jsx-quotes":"off","@stylistic/key-spacing":"off","@stylistic/keyword-spacing":"off","@stylistic/linebreak-style":"off","@stylistic/max-statements-per-line":"off","@stylistic/multiline-ternary":"off","@stylistic/new-parens":"off","@stylistic/newline-per-chained-call":"off","@stylistic/no-extra-parens":"off","@stylistic/no-extra-semi":"off","@stylistic/no-floating-decimal":"off","@stylistic/no-mixed-spaces-and-tabs":"off","@stylistic/no-multi-spaces":"off","@stylistic/no-multiple-empty-lines":"off","@stylistic/no-trailing-spaces":"off","@stylistic/no-whitespace-before-property":"off","@stylistic/nonblock-statement-body-position":"off","@stylistic/object-curly-newline":"off","@stylistic/object-curly-spacing":"off","@stylistic/object-property-newline":"off","@stylistic/one-var-declaration-per-line":"off","@stylistic/operator-linebreak":"off","@stylistic/padded-blocks":"off","@stylistic/quote-props":"off","@stylistic/rest-spread-spacing":"off","@stylistic/semi":"off","@stylistic/semi-spacing":"off","@stylistic/semi-style":"off","@stylistic/space-before-blocks":"off","@stylistic/space-before-function-paren":"off","@stylistic/space-in-parens":"off","@stylistic/space-infix-ops":"off","@stylistic/space-unary-ops":"off","@stylistic/switch-colon-spacing":"off","@stylistic/template-curly-spacing":"off","@stylistic/template-tag-spacing":"off","@stylistic/wrap-iife":"off","@stylistic/wrap-regex":"off","@stylistic/yield-star-spacing":"off","@stylistic/member-delimiter-style":"off","@stylistic/type-annotation-spacing":"off","@stylistic/jsx-child-element-spacing":"off","@stylistic/jsx-closing-bracket-location":"off","@stylistic/jsx-closing-tag-location":"off","@stylistic/jsx-curly-newline":"off","@stylistic/jsx-curly-spacing":"off","@stylistic/jsx-equals-spacing":"off","@stylistic/jsx-first-prop-new-line":"off","@stylistic/jsx-indent":"off","@stylistic/jsx-indent-props":"off","@stylistic/jsx-max-props-per-line":"off","@stylistic/jsx-newline":"off","@stylistic/jsx-one-expression-per-line":"off","@stylistic/jsx-props-no-multi-spaces":"off","@stylistic/jsx-tag-spacing":"off","@stylistic/jsx-wrap-multilines":"off","@stylistic/indent-binary-ops":"off","@stylistic/type-generic-spacing":"off","@stylistic/type-named-tuple-spacing":"off","@stylistic/js/array-bracket-newline":"off","@stylistic/js/array-bracket-spacing":"off","@stylistic/js/array-element-newline":"off","@stylistic/js/arrow-parens":"off","@stylistic/js/arrow-spacing":"off","@stylistic/js/block-spacing":"off","@stylistic/js/brace-style":"off","@stylistic/js/comma-dangle":"off","@stylistic/js/comma-spacing":"off","@stylistic/js/comma-style":"off","@stylistic/js/computed-property-spacing":"off","@stylistic/js/dot-location":"off","@stylistic/js/eol-last":"off","@stylistic/js/func-call-spacing":"off","@stylistic/js/function-call-argument-newline":"off","@stylistic/js/function-call-spacing":"off","@stylistic/js/function-paren-newline":"off","@stylistic/js/generator-star-spacing":"off","@stylistic/js/implicit-arrow-linebreak":"off","@stylistic/js/indent":"off","@stylistic/js/jsx-quotes":"off","@stylistic/js/key-spacing":"off","@stylistic/js/keyword-spacing":"off","@stylistic/js/linebreak-style":"off","@stylistic/js/max-statements-per-line":"off","@stylistic/js/multiline-ternary":"off","@stylistic/js/new-parens":"off","@stylistic/js/newline-per-chained-call":"off","@stylistic/js/no-extra-parens":"off","@stylistic/js/no-extra-semi":"off","@stylistic/js/no-floating-decimal":"off","@stylistic/js/no-mixed-spaces-and-tabs":"off","@stylistic/js/no-multi-spaces":"off","@stylistic/js/no-multiple-empty-lines":"off","@stylistic/js/no-trailing-spaces":"off","@stylistic/js/no-whitespace-before-property":"off","@stylistic/js/nonblock-statement-body-position":"off","@stylistic/js/object-curly-newline":"off","@stylistic/js/object-curly-spacing":"off","@stylistic/js/object-property-newline":"off","@stylistic/js/one-var-declaration-per-line":"off","@stylistic/js/operator-linebreak":"off","@stylistic/js/padded-blocks":"off","@stylistic/js/quote-props":"off","@stylistic/js/rest-spread-spacing":"off","@stylistic/js/semi":"off","@stylistic/js/semi-spacing":"off","@stylistic/js/semi-style":"off","@stylistic/js/space-before-blocks":"off","@stylistic/js/space-before-function-paren":"off","@stylistic/js/space-in-parens":"off","@stylistic/js/space-infix-ops":"off","@stylistic/js/space-unary-ops":"off","@stylistic/js/switch-colon-spacing":"off","@stylistic/js/template-curly-spacing":"off","@stylistic/js/template-tag-spacing":"off","@stylistic/js/wrap-iife":"off","@stylistic/js/wrap-regex":"off","@stylistic/js/yield-star-spacing":"off","@stylistic/ts/block-spacing":"off","@stylistic/ts/brace-style":"off","@stylistic/ts/comma-dangle":"off","@stylistic/ts/comma-spacing":"off","@stylistic/ts/func-call-spacing":"off","@stylistic/ts/function-call-spacing":"off","@stylistic/ts/indent":"off","@stylistic/ts/key-spacing":"off","@stylistic/ts/keyword-spacing":"off","@stylistic/ts/member-delimiter-style":"off","@stylistic/ts/no-extra-parens":"off","@stylistic/ts/no-extra-semi":"off","@stylistic/ts/object-curly-spacing":"off","@stylistic/ts/semi":"off","@stylistic/ts/space-before-blocks":"off","@stylistic/ts/space-before-function-paren":"off","@stylistic/ts/space-infix-ops":"off","@stylistic/ts/type-annotation-spacing":"off","@stylistic/jsx/jsx-child-element-spacing":"off","@stylistic/jsx/jsx-closing-bracket-location":"off","@stylistic/jsx/jsx-closing-tag-location":"off","@stylistic/jsx/jsx-curly-newline":"off","@stylistic/jsx/jsx-curly-spacing":"off","@stylistic/jsx/jsx-equals-spacing":"off","@stylistic/jsx/jsx-first-prop-new-line":"off","@stylistic/jsx/jsx-indent":"off","@stylistic/jsx/jsx-indent-props":"off","@stylistic/jsx/jsx-max-props-per-line":"off","@typescript-eslint/block-spacing":"off","@typescript-eslint/brace-style":"off","@typescript-eslint/comma-dangle":"off","@typescript-eslint/comma-spacing":"off","@typescript-eslint/func-call-spacing":"off","@typescript-eslint/indent":"off","@typescript-eslint/key-spacing":"off","@typescript-eslint/keyword-spacing":"off","@typescript-eslint/member-delimiter-style":"off","@typescript-eslint/no-extra-parens":"off","@typescript-eslint/no-extra-semi":"off","@typescript-eslint/object-curly-spacing":"off","@typescript-eslint/semi":"off","@typescript-eslint/space-before-blocks":"off","@typescript-eslint/space-before-function-paren":"off","@typescript-eslint/space-infix-ops":"off","@typescript-eslint/type-annotation-spacing":"off","babel/object-curly-spacing":"off","babel/semi":"off","flowtype/boolean-style":"off","flowtype/delimiter-dangle":"off","flowtype/generic-spacing":"off","flowtype/object-type-curly-spacing":"off","flowtype/object-type-delimiter":"off","flowtype/quotes":"off","flowtype/semi":"off","flowtype/space-after-type-colon":"off","flowtype/space-before-generic-bracket":"off","flowtype/space-before-type-colon":"off","flowtype/union-intersection-spacing":"off","react/jsx-child-element-spacing":"off","react/jsx-closing-bracket-location":"off","react/jsx-closing-tag-location":"off","react/jsx-curly-newline":"off","react/jsx-curly-spacing":"off","react/jsx-equals-spacing":"off","react/jsx-first-prop-new-line":"off","react/jsx-indent":"off","react/jsx-indent-props":"off","react/jsx-max-props-per-line":"off","react/jsx-newline":"off","react/jsx-one-expression-per-line":"off","react/jsx-props-no-multi-spaces":"off","react/jsx-tag-spacing":"off","react/jsx-wrap-multilines":"off","standard/array-bracket-even-spacing":"off","standard/computed-property-even-spacing":"off","standard/object-curly-even-spacing":"off","unicorn/empty-brace-spaces":"off","unicorn/no-nested-ternary":"off","unicorn/number-literal-case":"off","vue/array-bracket-newline":"off","vue/array-bracket-spacing":"off","vue/array-element-newline":"off","vue/arrow-spacing":"off","vue/block-spacing":"off","vue/block-tag-newline":"off","vue/brace-style":"off","vue/comma-dangle":"off","vue/comma-spacing":"off","vue/comma-style":"off","vue/dot-location":"off","vue/func-call-spacing":"off","vue/html-closing-bracket-newline":"off","vue/html-closing-bracket-spacing":"off","vue/html-end-tags":"off","vue/html-indent":"off","vue/html-quotes":"off","vue/key-spacing":"off","vue/keyword-spacing":"off","vue/max-attributes-per-line":"off","vue/multiline-html-element-content-newline":"off","vue/multiline-ternary":"off","vue/mustache-interpolation-spacing":"off","vue/no-extra-parens":"off","vue/no-multi-spaces":"off","vue/no-spaces-around-equal-signs-in-attribute":"off","vue/object-curly-newline":"off","vue/object-curly-spacing":"off","vue/object-property-newline":"off","vue/operator-linebreak":"off","vue/quote-props":"off","vue/script-indent":"off","vue/singleline-html-element-content-newline":"off","vue/space-in-parens":"off","vue/space-infix-ops":"off","vue/space-unary-ops":"off","vue/template-curly-spacing":"off","space-unary-word-ops":"off","generator-star":"off","no-comma-dangle":"off","no-reserved-keys":"off","no-space-before-semi":"off","no-wrap-func":"off","space-after-function-name":"off","space-before-function-parentheses":"off","space-in-brackets":"off","no-arrow-condition":"off","space-after-keywords":"off","space-before-keywords":"off","space-return-throw-case":"off","no-spaced-func":"off","indent-legacy":"off","array-bracket-newline":"off","array-bracket-spacing":"off","array-element-newline":"off","arrow-parens":"off","arrow-spacing":"off","block-spacing":"off","brace-style":"off","comma-dangle":"off","comma-spacing":"off","comma-style":"off","computed-property-spacing":"off","dot-location":"off","eol-last":"off","func-call-spacing":"off","function-call-argument-newline":"off","function-paren-newline":"off","generator-star-spacing":"off","implicit-arrow-linebreak":"off","indent":"off","jsx-quotes":"off","key-spacing":"off","keyword-spacing":"off","linebreak-style":"off","lines-around-comment":0,"max-len":0,"max-statements-per-line":"off","multiline-ternary":"off","new-parens":"off","newline-per-chained-call":"off","no-confusing-arrow":0,"no-extra-parens":"off","no-extra-semi":"off","no-floating-decimal":"off","no-mixed-operators":0,"no-mixed-spaces-and-tabs":"off","no-multi-spaces":"off","no-multiple-empty-lines":"off","no-tabs":0,"no-trailing-spaces":"off","no-whitespace-before-property":"off","nonblock-statement-body-position":"off","object-curly-newline":"off","object-curly-spacing":"off","object-property-newline":"off","one-var-declaration-per-line":"off","operator-linebreak":"off","padded-blocks":"off","quote-props":"off","quotes":0,"rest-spread-spacing":"off","semi":"off","semi-spacing":"off","semi-style":"off","space-before-blocks":"off","space-before-function-paren":"off","space-in-parens":"off","space-infix-ops":"off","space-unary-ops":"off","switch-colon-spacing":"off","template-curly-spacing":"off","template-tag-spacing":"off","wrap-iife":"off","wrap-regex":"off","yield-star-spacing":"off","react/jsx-space-before-closing":"off"}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", "**/*.astro", "**/*.svelte", "**/*.vue"]},
+
+    {"rules": {"max-params":["error",7],"gspot/no-trivial-functions":["error",{"maxStatements":2}],"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}]}, files: ["**/*.{js,mjs,cjs,jsx}"]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"docs","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"packages/cli","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|mjs|cjs|jsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":["error",{"maxStatements":2,"allowIndex":false}],"gspot/no-trivial-functions":["error",{"maxStatements":2}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"packages/eslint-plugin","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"docs","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"docs","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"docs","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"docs","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"docs","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$","^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":"off","gspot/no-trivial-functions":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.module\\.ts\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.module\\.ts\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.module\\.ts\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.module\\.ts\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.module\\.ts\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"class-methods-use-this":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":"off","gspot/no-trivial-functions":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.tsx\\/?)$","^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.jsx\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.tsx\\/?)$","^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.jsx\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.tsx\\/?)$","^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.jsx\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.tsx\\/?)$","^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.jsx\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.tsx\\/?)$","^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.jsx\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/no-trivial-files":"off"}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(page|layout|template|default|loading|error|not-found|global-error|route|middleware|proxy)\\.(js|jsx|ts|tsx))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(page|layout|template|default|loading|error|not-found|global-error|route|middleware|proxy)\\.(js|jsx|ts|tsx))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(page|layout|template|default|loading|error|not-found|global-error|route|middleware|proxy)\\.(js|jsx|ts|tsx))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(page|layout|template|default|loading|error|not-found|global-error|route|middleware|proxy)\\.(js|jsx|ts|tsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"tests","includes":["^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(page|layout|template|default|loading|error|not-found|global-error|route|middleware|proxy)\\.(js|jsx|ts|tsx))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"gspot/instances-in-registry":["error",{"files":["**/registry.ts","**/registry.tsx","**/registry.js","packages/*/src/config/**","tests/config/**","packages/cli/src/generation/templates.ts"]}]}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.vue", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"package-json/require-exports":"off"}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
+
 ];
-const ruleLevels = {
-    "gspot/env-owner": "all",
-    "gspot/export-layout": "all",
-    "gspot/header-first": "all",
-    "gspot/import-direction": "all",
-    "gspot/import-layout": "all",
-    "gspot/import-style": "all",
-    "gspot/max-barrel-reexports": "all",
-    "gspot/no-client-env": "recommended",
-    "gspot/no-cross-folder-imports": "all",
-    "gspot/no-cross-scope-imports": "all",
-    "gspot/no-duplicate-exports": "recommended",
-    "gspot/no-alias-exports": "all",
-    "gspot/no-import-comments": "all",
-    "gspot/no-index-imports": "all",
-    "gspot/no-reexports": "all",
-    "gspot/no-trivial-files": "all",
-    "gspot/no-trivial-functions": "all",
-    "gspot/private-before-public": "all",
-    "gspot/registry-instances": "all",
-    "gspot/require-server-only": "recommended",
-    "gspot/test-folders": "all",
-    "gspot/types-placement": "all",
-    "@babel/object-curly-spacing": "recommended",
-    "@babel/semi": "recommended",
-    "@darraghor/nestjs-typed/all-properties-are-whitelisted": "recommended",
-    "@darraghor/nestjs-typed/all-properties-have-explicit-defined": "recommended",
-    "@darraghor/nestjs-typed/api-enum-property-best-practices": "recommended",
-    "@darraghor/nestjs-typed/api-method-should-specify-api-operation": "recommended",
-    "@darraghor/nestjs-typed/api-method-should-specify-api-response": "recommended",
-    "@darraghor/nestjs-typed/api-methods-should-be-guarded": "recommended",
-    "@darraghor/nestjs-typed/api-operation-summary-description-capitalized": "all",
-    "@darraghor/nestjs-typed/api-property-matches-property-optionality": "recommended",
-    "@darraghor/nestjs-typed/api-property-returning-array-should-set-array": "recommended",
-    "@darraghor/nestjs-typed/api-property-should-have-api-extra-models": "recommended",
-    "@darraghor/nestjs-typed/controllers-should-supply-api-tags": "recommended",
-    "@darraghor/nestjs-typed/forward-ref-injection-should-use-wrapper-type": "recommended",
-    "@darraghor/nestjs-typed/injectable-should-be-provided": "recommended",
-    "@darraghor/nestjs-typed/no-duplicate-decorators": "recommended",
-    "@darraghor/nestjs-typed/param-decorator-name-matches-route-param": "recommended",
-    "@darraghor/nestjs-typed/provided-injected-should-match-factory-parameters": "recommended",
-    "@darraghor/nestjs-typed/sort-module-metadata-arrays": "recommended",
-    "@darraghor/nestjs-typed/swagger-file-upload-should-be-documented": "recommended",
-    "@darraghor/nestjs-typed/uploaded-file-should-be-validated": "recommended",
-    "@darraghor/nestjs-typed/use-correct-endpoint-naming-convention": "recommended",
-    "@darraghor/nestjs-typed/use-dependency-injection": "recommended",
-    "@darraghor/nestjs-typed/use-injectable-provided-token": "recommended",
-    "@darraghor/nestjs-typed/validate-nested-of-array-should-set-each": "recommended",
-    "@darraghor/nestjs-typed/validated-non-primitive-property-needs-type-decorator": "recommended",
-    "@darraghor/nestjs-typed/validation-pipe-should-use-forbid-unknown": "recommended",
-    "@eslint-community/eslint-comments/no-unused-disable": "recommended",
-    "@eslint-community/eslint-comments/require-description": "recommended",
-    "@next/next/google-font-display": "recommended",
-    "@next/next/google-font-preconnect": "recommended",
-    "@next/next/inline-script-id": "recommended",
-    "@next/next/next-script-for-ga": "all",
-    "@next/next/no-assign-module-variable": "recommended",
-    "@next/next/no-async-client-component": "recommended",
-    "@next/next/no-before-interactive-script-outside-document": "recommended",
-    "@next/next/no-css-tags": "recommended",
-    "@next/next/no-document-import-in-page": "recommended",
-    "@next/next/no-duplicate-head": "recommended",
-    "@next/next/no-head-element": "recommended",
-    "@next/next/no-head-import-in-document": "recommended",
-    "@next/next/no-html-link-for-pages": "all",
-    "@next/next/no-img-element": "all",
-    "@next/next/no-location-assign-relative-destination": "recommended",
-    "@next/next/no-page-custom-font": "all",
-    "@next/next/no-script-component-in-head": "recommended",
-    "@next/next/no-styled-jsx-in-document": "recommended",
-    "@next/next/no-sync-scripts": "recommended",
-    "@next/next/no-title-in-document-head": "recommended",
-    "@next/next/no-typos": "recommended",
-    "@next/next/no-unwanted-polyfillio": "recommended",
-    "@react-native/no-deep-imports": "recommended",
-    "@react-native/platform-colors": "recommended",
-    "@stylistic/array-bracket-newline": "recommended",
-    "@stylistic/array-bracket-spacing": "recommended",
-    "@stylistic/array-element-newline": "recommended",
-    "@stylistic/arrow-parens": "recommended",
-    "@stylistic/arrow-spacing": "recommended",
-    "@stylistic/block-spacing": "recommended",
-    "@stylistic/brace-style": "recommended",
-    "@stylistic/comma-dangle": "recommended",
-    "@stylistic/comma-spacing": "recommended",
-    "@stylistic/comma-style": "recommended",
-    "@stylistic/computed-property-spacing": "recommended",
-    "@stylistic/dot-location": "recommended",
-    "@stylistic/eol-last": "recommended",
-    "@stylistic/func-call-spacing": "recommended",
-    "@stylistic/function-call-argument-newline": "recommended",
-    "@stylistic/function-call-spacing": "recommended",
-    "@stylistic/function-paren-newline": "recommended",
-    "@stylistic/generator-star-spacing": "recommended",
-    "@stylistic/implicit-arrow-linebreak": "recommended",
-    "@stylistic/indent": "recommended",
-    "@stylistic/indent-binary-ops": "recommended",
-    "@stylistic/js/array-bracket-newline": "recommended",
-    "@stylistic/js/array-bracket-spacing": "recommended",
-    "@stylistic/js/array-element-newline": "recommended",
-    "@stylistic/js/arrow-parens": "recommended",
-    "@stylistic/js/arrow-spacing": "recommended",
-    "@stylistic/js/block-spacing": "recommended",
-    "@stylistic/js/brace-style": "recommended",
-    "@stylistic/js/comma-dangle": "recommended",
-    "@stylistic/js/comma-spacing": "recommended",
-    "@stylistic/js/comma-style": "recommended",
-    "@stylistic/js/computed-property-spacing": "recommended",
-    "@stylistic/js/dot-location": "recommended",
-    "@stylistic/js/eol-last": "recommended",
-    "@stylistic/js/func-call-spacing": "recommended",
-    "@stylistic/js/function-call-argument-newline": "recommended",
-    "@stylistic/js/function-call-spacing": "recommended",
-    "@stylistic/js/function-paren-newline": "recommended",
-    "@stylistic/js/generator-star-spacing": "recommended",
-    "@stylistic/js/implicit-arrow-linebreak": "recommended",
-    "@stylistic/js/indent": "recommended",
-    "@stylistic/js/jsx-quotes": "recommended",
-    "@stylistic/js/key-spacing": "recommended",
-    "@stylistic/js/keyword-spacing": "recommended",
-    "@stylistic/js/linebreak-style": "recommended",
-    "@stylistic/js/lines-around-comment": "recommended",
-    "@stylistic/js/max-len": "recommended",
-    "@stylistic/js/max-statements-per-line": "recommended",
-    "@stylistic/js/multiline-ternary": "recommended",
-    "@stylistic/js/new-parens": "recommended",
-    "@stylistic/js/newline-per-chained-call": "recommended",
-    "@stylistic/js/no-confusing-arrow": "recommended",
-    "@stylistic/js/no-extra-parens": "recommended",
-    "@stylistic/js/no-extra-semi": "recommended",
-    "@stylistic/js/no-floating-decimal": "recommended",
-    "@stylistic/js/no-mixed-operators": "recommended",
-    "@stylistic/js/no-mixed-spaces-and-tabs": "recommended",
-    "@stylistic/js/no-multi-spaces": "recommended",
-    "@stylistic/js/no-multiple-empty-lines": "recommended",
-    "@stylistic/js/no-tabs": "recommended",
-    "@stylistic/js/no-trailing-spaces": "recommended",
-    "@stylistic/js/no-whitespace-before-property": "recommended",
-    "@stylistic/js/nonblock-statement-body-position": "recommended",
-    "@stylistic/js/object-curly-newline": "recommended",
-    "@stylistic/js/object-curly-spacing": "recommended",
-    "@stylistic/js/object-property-newline": "recommended",
-    "@stylistic/js/one-var-declaration-per-line": "recommended",
-    "@stylistic/js/operator-linebreak": "recommended",
-    "@stylistic/js/padded-blocks": "recommended",
-    "@stylistic/js/quote-props": "recommended",
-    "@stylistic/js/quotes": "recommended",
-    "@stylistic/js/rest-spread-spacing": "recommended",
-    "@stylistic/js/semi": "recommended",
-    "@stylistic/js/semi-spacing": "recommended",
-    "@stylistic/js/semi-style": "recommended",
-    "@stylistic/js/space-before-blocks": "recommended",
-    "@stylistic/js/space-before-function-paren": "recommended",
-    "@stylistic/js/space-in-parens": "recommended",
-    "@stylistic/js/space-infix-ops": "recommended",
-    "@stylistic/js/space-unary-ops": "recommended",
-    "@stylistic/js/switch-colon-spacing": "recommended",
-    "@stylistic/js/template-curly-spacing": "recommended",
-    "@stylistic/js/template-tag-spacing": "recommended",
-    "@stylistic/js/wrap-iife": "recommended",
-    "@stylistic/js/wrap-regex": "recommended",
-    "@stylistic/js/yield-star-spacing": "recommended",
-    "@stylistic/jsx-child-element-spacing": "recommended",
-    "@stylistic/jsx-closing-bracket-location": "recommended",
-    "@stylistic/jsx-closing-tag-location": "recommended",
-    "@stylistic/jsx-curly-newline": "recommended",
-    "@stylistic/jsx-curly-spacing": "recommended",
-    "@stylistic/jsx-equals-spacing": "recommended",
-    "@stylistic/jsx-first-prop-new-line": "recommended",
-    "@stylistic/jsx-indent": "recommended",
-    "@stylistic/jsx-indent-props": "recommended",
-    "@stylistic/jsx-max-props-per-line": "recommended",
-    "@stylistic/jsx-newline": "recommended",
-    "@stylistic/jsx-one-expression-per-line": "recommended",
-    "@stylistic/jsx-props-no-multi-spaces": "recommended",
-    "@stylistic/jsx-quotes": "recommended",
-    "@stylistic/jsx-tag-spacing": "recommended",
-    "@stylistic/jsx-wrap-multilines": "recommended",
-    "@stylistic/jsx/jsx-child-element-spacing": "recommended",
-    "@stylistic/jsx/jsx-closing-bracket-location": "recommended",
-    "@stylistic/jsx/jsx-closing-tag-location": "recommended",
-    "@stylistic/jsx/jsx-curly-newline": "recommended",
-    "@stylistic/jsx/jsx-curly-spacing": "recommended",
-    "@stylistic/jsx/jsx-equals-spacing": "recommended",
-    "@stylistic/jsx/jsx-first-prop-new-line": "recommended",
-    "@stylistic/jsx/jsx-indent": "recommended",
-    "@stylistic/jsx/jsx-indent-props": "recommended",
-    "@stylistic/jsx/jsx-max-props-per-line": "recommended",
-    "@stylistic/key-spacing": "recommended",
-    "@stylistic/keyword-spacing": "recommended",
-    "@stylistic/linebreak-style": "recommended",
-    "@stylistic/lines-around-comment": "recommended",
-    "@stylistic/max-len": "recommended",
-    "@stylistic/max-statements-per-line": "recommended",
-    "@stylistic/member-delimiter-style": "recommended",
-    "@stylistic/multiline-ternary": "recommended",
-    "@stylistic/new-parens": "recommended",
-    "@stylistic/newline-per-chained-call": "recommended",
-    "@stylistic/no-confusing-arrow": "recommended",
-    "@stylistic/no-extra-parens": "recommended",
-    "@stylistic/no-extra-semi": "recommended",
-    "@stylistic/no-floating-decimal": "recommended",
-    "@stylistic/no-mixed-operators": "recommended",
-    "@stylistic/no-mixed-spaces-and-tabs": "recommended",
-    "@stylistic/no-multi-spaces": "recommended",
-    "@stylistic/no-multiple-empty-lines": "recommended",
-    "@stylistic/no-tabs": "recommended",
-    "@stylistic/no-trailing-spaces": "recommended",
-    "@stylistic/no-whitespace-before-property": "recommended",
-    "@stylistic/nonblock-statement-body-position": "recommended",
-    "@stylistic/object-curly-newline": "recommended",
-    "@stylistic/object-curly-spacing": "recommended",
-    "@stylistic/object-property-newline": "recommended",
-    "@stylistic/one-var-declaration-per-line": "recommended",
-    "@stylistic/operator-linebreak": "recommended",
-    "@stylistic/padded-blocks": "recommended",
-    "@stylistic/quote-props": "recommended",
-    "@stylistic/quotes": "recommended",
-    "@stylistic/rest-spread-spacing": "recommended",
-    "@stylistic/semi": "recommended",
-    "@stylistic/semi-spacing": "recommended",
-    "@stylistic/semi-style": "recommended",
-    "@stylistic/space-before-blocks": "recommended",
-    "@stylistic/space-before-function-paren": "recommended",
-    "@stylistic/space-in-parens": "recommended",
-    "@stylistic/space-infix-ops": "recommended",
-    "@stylistic/space-unary-ops": "recommended",
-    "@stylistic/switch-colon-spacing": "recommended",
-    "@stylistic/template-curly-spacing": "recommended",
-    "@stylistic/template-tag-spacing": "recommended",
-    "@stylistic/ts/block-spacing": "recommended",
-    "@stylistic/ts/brace-style": "recommended",
-    "@stylistic/ts/comma-dangle": "recommended",
-    "@stylistic/ts/comma-spacing": "recommended",
-    "@stylistic/ts/func-call-spacing": "recommended",
-    "@stylistic/ts/function-call-spacing": "recommended",
-    "@stylistic/ts/indent": "recommended",
-    "@stylistic/ts/key-spacing": "recommended",
-    "@stylistic/ts/keyword-spacing": "recommended",
-    "@stylistic/ts/lines-around-comment": "recommended",
-    "@stylistic/ts/member-delimiter-style": "recommended",
-    "@stylistic/ts/no-extra-parens": "recommended",
-    "@stylistic/ts/no-extra-semi": "recommended",
-    "@stylistic/ts/object-curly-spacing": "recommended",
-    "@stylistic/ts/quotes": "recommended",
-    "@stylistic/ts/semi": "recommended",
-    "@stylistic/ts/space-before-blocks": "recommended",
-    "@stylistic/ts/space-before-function-paren": "recommended",
-    "@stylistic/ts/space-infix-ops": "recommended",
-    "@stylistic/ts/type-annotation-spacing": "recommended",
-    "@stylistic/type-annotation-spacing": "recommended",
-    "@stylistic/type-generic-spacing": "recommended",
-    "@stylistic/type-named-tuple-spacing": "recommended",
-    "@stylistic/wrap-iife": "recommended",
-    "@stylistic/wrap-regex": "recommended",
-    "@stylistic/yield-star-spacing": "recommended",
-    "@tanstack/query/exhaustive-deps": "recommended",
-    "@tanstack/query/infinite-query-property-order": "recommended",
-    "@tanstack/query/no-rest-destructuring": "recommended",
-    "@tanstack/query/no-unstable-deps": "recommended",
-    "@tanstack/query/stable-query-client": "recommended",
-    "@typescript-eslint/await-thenable": "recommended",
-    "@typescript-eslint/ban-ts-comment": "all",
-    "@typescript-eslint/block-spacing": "recommended",
-    "@typescript-eslint/brace-style": "recommended",
-    "@typescript-eslint/comma-dangle": "recommended",
-    "@typescript-eslint/comma-spacing": "recommended",
-    "@typescript-eslint/consistent-type-definitions": "all",
-    "@typescript-eslint/consistent-type-exports": "all",
-    "@typescript-eslint/consistent-type-imports": "all",
-    "@typescript-eslint/explicit-module-boundary-types": "all",
-    "@typescript-eslint/func-call-spacing": "recommended",
-    "@typescript-eslint/indent": "recommended",
-    "@typescript-eslint/key-spacing": "recommended",
-    "@typescript-eslint/keyword-spacing": "recommended",
-    "@typescript-eslint/lines-around-comment": "recommended",
-    "@typescript-eslint/member-delimiter-style": "recommended",
-    "@typescript-eslint/no-array-constructor": "recommended",
-    "@typescript-eslint/no-array-delete": "recommended",
-    "@typescript-eslint/no-base-to-string": "recommended",
-    "@typescript-eslint/no-confusing-void-expression": "recommended",
-    "@typescript-eslint/no-deprecated": "recommended",
-    "@typescript-eslint/no-duplicate-enum-values": "recommended",
-    "@typescript-eslint/no-duplicate-type-constituents": "recommended",
-    "@typescript-eslint/no-dynamic-delete": "recommended",
-    "@typescript-eslint/no-empty-object-type": "recommended",
-    "@typescript-eslint/no-explicit-any": "all",
-    "@typescript-eslint/no-extra-non-null-assertion": "recommended",
-    "@typescript-eslint/no-extra-parens": "recommended",
-    "@typescript-eslint/no-extra-semi": "recommended",
-    "@typescript-eslint/no-extraneous-class": "all",
-    "@typescript-eslint/no-floating-promises": "recommended",
-    "@typescript-eslint/no-for-in-array": "recommended",
-    "@typescript-eslint/no-generated-empty-object-type": "recommended",
-    "@typescript-eslint/no-implied-eval": "recommended",
-    "@typescript-eslint/no-invalid-void-type": "recommended",
-    "@typescript-eslint/no-magic-numbers": "all",
-    "@typescript-eslint/no-meaningless-void-operator": "recommended",
-    "@typescript-eslint/no-misused-new": "recommended",
-    "@typescript-eslint/no-misused-promises": "recommended",
-    "@typescript-eslint/no-misused-spread": "recommended",
-    "@typescript-eslint/no-mixed-enums": "all",
-    "@typescript-eslint/no-namespace": "all",
-    "@typescript-eslint/no-non-null-asserted-nullish-coalescing": "recommended",
-    "@typescript-eslint/no-non-null-asserted-optional-chain": "recommended",
-    "@typescript-eslint/no-non-null-assertion": "all",
-    "@typescript-eslint/no-redundant-type-constituents": "recommended",
-    "@typescript-eslint/no-require-imports": "all",
-    "@typescript-eslint/no-this-alias": "all",
-    "@typescript-eslint/no-unnecessary-boolean-literal-compare": "recommended",
-    "@typescript-eslint/no-unnecessary-condition": "recommended",
-    "@typescript-eslint/no-unnecessary-template-expression": "recommended",
-    "@typescript-eslint/no-unnecessary-type-arguments": "recommended",
-    "@typescript-eslint/no-unnecessary-type-assertion": "recommended",
-    "@typescript-eslint/no-unnecessary-type-constraint": "recommended",
-    "@typescript-eslint/no-unnecessary-type-conversion": "recommended",
-    "@typescript-eslint/no-unnecessary-type-parameters": "all",
-    "@typescript-eslint/no-unsafe-argument": "recommended",
-    "@typescript-eslint/no-unsafe-assignment": "recommended",
-    "@typescript-eslint/no-unsafe-call": "recommended",
-    "@typescript-eslint/no-unsafe-declaration-merging": "recommended",
-    "@typescript-eslint/no-unsafe-enum-comparison": "recommended",
-    "@typescript-eslint/no-unsafe-function-type": "recommended",
-    "@typescript-eslint/no-unsafe-member-access": "recommended",
-    "@typescript-eslint/no-unsafe-return": "recommended",
-    "@typescript-eslint/no-unsafe-unary-minus": "recommended",
-    "@typescript-eslint/no-unused-expressions": "recommended",
-    "@typescript-eslint/no-unused-vars": "recommended",
-    "@typescript-eslint/no-useless-constructor": "recommended",
-    "@typescript-eslint/no-useless-default-assignment": "recommended",
-    "@typescript-eslint/no-wrapper-object-types": "recommended",
-    "@typescript-eslint/object-curly-spacing": "recommended",
-    "@typescript-eslint/only-throw-error": "recommended",
-    "@typescript-eslint/prefer-as-const": "recommended",
-    "@typescript-eslint/prefer-literal-enum-member": "recommended",
-    "@typescript-eslint/prefer-namespace-keyword": "recommended",
-    "@typescript-eslint/prefer-optional-chain": "recommended",
-    "@typescript-eslint/prefer-promise-reject-errors": "recommended",
-    "@typescript-eslint/prefer-readonly": "all",
-    "@typescript-eslint/prefer-reduce-type-parameter": "all",
-    "@typescript-eslint/prefer-return-this-type": "all",
-    "@typescript-eslint/quotes": "recommended",
-    "@typescript-eslint/related-getter-setter-pairs": "recommended",
-    "@typescript-eslint/require-array-sort-compare": "recommended",
-    "@typescript-eslint/require-await": "recommended",
-    "@typescript-eslint/restrict-plus-operands": "recommended",
-    "@typescript-eslint/restrict-template-expressions": "recommended",
-    "@typescript-eslint/return-await": "recommended",
-    "@typescript-eslint/semi": "recommended",
-    "@typescript-eslint/space-before-blocks": "recommended",
-    "@typescript-eslint/space-before-function-paren": "recommended",
-    "@typescript-eslint/space-infix-ops": "recommended",
-    "@typescript-eslint/strict-boolean-expressions": "all",
-    "@typescript-eslint/switch-exhaustiveness-check": "recommended",
-    "@typescript-eslint/triple-slash-reference": "all",
-    "@typescript-eslint/type-annotation-spacing": "recommended",
-    "@typescript-eslint/unbound-method": "recommended",
-    "@typescript-eslint/unified-signatures": "all",
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": "recommended",
-    "array-bracket-newline": "recommended",
-    "array-bracket-spacing": "recommended",
-    "array-element-newline": "recommended",
-    "arrow-parens": "recommended",
-    "arrow-spacing": "recommended",
-    "babel/object-curly-spacing": "recommended",
-    "babel/quotes": "recommended",
-    "babel/semi": "recommended",
-    "block-spacing": "recommended",
-    "brace-style": "recommended",
-    "class-methods-use-this": "recommended",
-    "comma-dangle": "recommended",
-    "comma-spacing": "recommended",
-    "comma-style": "recommended",
-    "complexity": "all",
-    "computed-property-spacing": "recommended",
-    "constructor-super": "recommended",
-    "curly": "recommended",
-    "dot-location": "recommended",
-    "drizzle/enforce-delete-with-where": "recommended",
-    "drizzle/enforce-update-with-where": "recommended",
-    "eol-last": "recommended",
-    "eqeqeq": "recommended",
-    "expo/no-dynamic-env-var": "recommended",
-    "expo/no-env-var-destructuring": "recommended",
-    "expo/prefer-box-shadow": "all",
-    "expo/use-dom-exports": "recommended",
-    "flowtype/boolean-style": "recommended",
-    "flowtype/delimiter-dangle": "recommended",
-    "flowtype/generic-spacing": "recommended",
-    "flowtype/object-type-curly-spacing": "recommended",
-    "flowtype/object-type-delimiter": "recommended",
-    "flowtype/quotes": "recommended",
-    "flowtype/semi": "recommended",
-    "flowtype/space-after-type-colon": "recommended",
-    "flowtype/space-before-generic-bracket": "recommended",
-    "flowtype/space-before-type-colon": "recommended",
-    "flowtype/union-intersection-spacing": "recommended",
-    "for-direction": "recommended",
-    "func-call-spacing": "recommended",
-    "function-call-argument-newline": "recommended",
-    "function-paren-newline": "recommended",
-    "generator-star": "recommended",
-    "generator-star-spacing": "recommended",
-    "getter-return": "recommended",
-    "i18next/no-literal-string": "all",
-    "implicit-arrow-linebreak": "recommended",
-    "import-x/export": "recommended",
-    "import-x/exports-last": "all",
-    "import-x/first": "recommended",
-    "import-x/newline-after-import": "recommended",
-    "import-x/no-cycle": "recommended",
-    "import-x/no-duplicates": "recommended",
-    "import-x/no-empty-named-blocks": "recommended",
-    "import-x/no-self-import": "recommended",
-    "import-x/no-useless-path-segments": "recommended",
-    "indent": "recommended",
-    "indent-legacy": "recommended",
-    "jest/expect-expect": "recommended",
-    "jest/no-commented-out-tests": "recommended",
-    "jest/no-conditional-expect": "recommended",
-    "jest/no-disabled-tests": "recommended",
-    "jest/no-focused-tests": "recommended",
-    "jest/no-identical-title": "recommended",
-    "jest/no-standalone-expect": "recommended",
-    "jest/prefer-strict-equal": "all",
-    "jest/valid-describe-callback": "recommended",
-    "jest/valid-expect": "recommended",
-    "jsdoc/check-param-names": "recommended",
-    "jsdoc/check-tag-names": "recommended",
-    "jsdoc/check-types": "recommended",
-    "jsdoc/no-types": "all",
-    "jsdoc/no-undefined-types": "recommended",
-    "jsdoc/require-description": "all",
-    "jsdoc/require-jsdoc": "all",
-    "jsdoc/require-param": "all",
-    "jsdoc/require-param-description": "all",
-    "jsdoc/require-param-name": "recommended",
-    "jsdoc/require-param-type": "recommended",
-    "jsdoc/require-returns": "all",
-    "jsdoc/require-returns-description": "all",
-    "jsdoc/require-returns-type": "recommended",
-    "jsdoc/valid-types": "recommended",
-    "jsx-a11y/accessible-emoji": "recommended",
-    "jsx-a11y/alt-text": "recommended",
-    "jsx-a11y/anchor-ambiguous-text": "recommended",
-    "jsx-a11y/anchor-has-content": "recommended",
-    "jsx-a11y/anchor-is-valid": "recommended",
-    "jsx-a11y/aria-activedescendant-has-tabindex": "recommended",
-    "jsx-a11y/aria-props": "recommended",
-    "jsx-a11y/aria-proptypes": "recommended",
-    "jsx-a11y/aria-role": "recommended",
-    "jsx-a11y/aria-unsupported-elements": "recommended",
-    "jsx-a11y/autocomplete-valid": "recommended",
-    "jsx-a11y/click-events-have-key-events": "recommended",
-    "jsx-a11y/control-has-associated-label": "recommended",
-    "jsx-a11y/heading-has-content": "recommended",
-    "jsx-a11y/html-has-lang": "recommended",
-    "jsx-a11y/iframe-has-title": "recommended",
-    "jsx-a11y/img-redundant-alt": "recommended",
-    "jsx-a11y/interactive-supports-focus": "recommended",
-    "jsx-a11y/label-has-associated-control": "recommended",
-    "jsx-a11y/label-has-for": "recommended",
-    "jsx-a11y/lang": "recommended",
-    "jsx-a11y/media-has-caption": "recommended",
-    "jsx-a11y/mouse-events-have-key-events": "recommended",
-    "jsx-a11y/no-access-key": "recommended",
-    "jsx-a11y/no-aria-hidden-on-focusable": "recommended",
-    "jsx-a11y/no-autofocus": "recommended",
-    "jsx-a11y/no-distracting-elements": "recommended",
-    "jsx-a11y/no-interactive-element-to-noninteractive-role": "recommended",
-    "jsx-a11y/no-noninteractive-element-interactions": "recommended",
-    "jsx-a11y/no-noninteractive-element-to-interactive-role": "recommended",
-    "jsx-a11y/no-noninteractive-tabindex": "recommended",
-    "jsx-a11y/no-onchange": "recommended",
-    "jsx-a11y/no-redundant-roles": "recommended",
-    "jsx-a11y/no-static-element-interactions": "recommended",
-    "jsx-a11y/prefer-tag-over-role": "recommended",
-    "jsx-a11y/role-has-required-aria-props": "recommended",
-    "jsx-a11y/role-supports-aria-props": "recommended",
-    "jsx-a11y/scope": "recommended",
-    "jsx-a11y/tabindex-no-positive": "recommended",
-    "jsx-quotes": "recommended",
-    "key-spacing": "recommended",
-    "keyword-spacing": "recommended",
-    "linebreak-style": "recommended",
-    "lines-around-comment": "recommended",
-    "lines-between-class-members": "recommended",
-    "max-depth": "all",
-    "max-len": "recommended",
-    "max-lines": "all",
-    "max-lines-per-function": "all",
-    "max-nested-callbacks": "all",
-    "max-params": "all",
-    "max-statements": "all",
-    "max-statements-per-line": "recommended",
-    "multiline-ternary": "recommended",
-    "n/no-callback-literal": "recommended",
-    "n/no-deprecated-api": "recommended",
-    "n/no-extraneous-import": "recommended",
-    "n/no-extraneous-require": "recommended",
-    "n/no-missing-import": "recommended",
-    "n/no-missing-require": "recommended",
-    "n/no-new-require": "recommended",
-    "n/no-path-concat": "recommended",
-    "n/no-process-exit": "all",
-    "n/no-sync": "recommended",
-    "n/no-unpublished-import": "recommended",
-    "n/no-unpublished-require": "recommended",
-    "n/no-unsupported-features/es-builtins": "recommended",
-    "n/no-unsupported-features/es-syntax": "recommended",
-    "n/no-unsupported-features/node-builtins": "recommended",
-    "n/prefer-global/buffer": "all",
-    "n/prefer-global/console": "all",
-    "n/prefer-global/process": "all",
-    "n/prefer-global/url": "all",
-    "n/prefer-global/url-search-params": "all",
-    "n/prefer-promises/dns": "all",
-    "n/prefer-promises/fs": "all",
-    "new-parens": "recommended",
-    "newline-per-chained-call": "recommended",
-    "no-array-constructor": "recommended",
-    "no-arrow-condition": "recommended",
-    "no-async-promise-executor": "recommended",
-    "no-case-declarations": "recommended",
-    "no-class-assign": "recommended",
-    "no-comma-dangle": "recommended",
-    "no-compare-neg-zero": "recommended",
-    "no-cond-assign": "recommended",
-    "no-confusing-arrow": "recommended",
-    "no-console": "all",
-    "no-const-assign": "recommended",
-    "no-constant-binary-expression": "recommended",
-    "no-constant-condition": "recommended",
-    "no-control-regex": "recommended",
-    "no-debugger": "recommended",
-    "no-delete-var": "recommended",
-    "no-dupe-args": "recommended",
-    "no-dupe-class-members": "recommended",
-    "no-dupe-else-if": "recommended",
-    "no-dupe-keys": "recommended",
-    "no-duplicate-case": "recommended",
-    "no-duplicate-imports": "recommended",
-    "no-empty": "recommended",
-    "no-empty-character-class": "recommended",
-    "no-empty-pattern": "recommended",
-    "no-empty-static-block": "recommended",
-    "no-ex-assign": "recommended",
-    "no-extra-boolean-cast": "recommended",
-    "no-extra-parens": "recommended",
-    "no-extra-semi": "recommended",
-    "no-fallthrough": "recommended",
-    "no-floating-decimal": "recommended",
-    "no-func-assign": "recommended",
-    "no-global-assign": "recommended",
-    "no-implied-eval": "recommended",
-    "no-import-assign": "recommended",
-    "no-inner-declarations": "recommended",
-    "no-invalid-regexp": "recommended",
-    "no-irregular-whitespace": "recommended",
-    "no-loss-of-precision": "recommended",
-    "no-misleading-character-class": "recommended",
-    "no-mixed-operators": "recommended",
-    "no-mixed-spaces-and-tabs": "recommended",
-    "no-multi-spaces": "recommended",
-    "no-multiple-empty-lines": "recommended",
-    "no-negated-condition": "recommended",
-    "no-nested-ternary": "recommended",
-    "no-new-native-nonconstructor": "recommended",
-    "no-new-symbol": "recommended",
-    "no-nonoctal-decimal-escape": "recommended",
-    "no-obj-calls": "recommended",
-    "no-octal": "recommended",
-    "no-param-reassign": "all",
-    "no-prototype-builtins": "recommended",
-    "no-redeclare": "recommended",
-    "no-regex-spaces": "recommended",
-    "no-reserved-keys": "recommended",
-    "no-restricted-imports": "all",
-    "no-restricted-syntax": "all",
-    "no-return-await": "recommended",
-    "no-self-assign": "recommended",
-    "no-setter-return": "recommended",
-    "no-shadow-restricted-names": "recommended",
-    "no-space-before-semi": "recommended",
-    "no-spaced-func": "recommended",
-    "no-sparse-arrays": "recommended",
-    "no-tabs": "recommended",
-    "no-this-before-super": "recommended",
-    "no-throw-literal": "recommended",
-    "no-trailing-spaces": "recommended",
-    "no-undef": "recommended",
-    "no-unexpected-multiline": "recommended",
-    "no-unreachable": "recommended",
-    "no-unsafe-finally": "recommended",
-    "no-unsafe-negation": "recommended",
-    "no-unsafe-optional-chaining": "recommended",
-    "no-unused-expressions": "recommended",
-    "no-unused-labels": "recommended",
-    "no-unused-private-class-members": "recommended",
-    "no-unused-vars": "recommended",
-    "no-useless-backreference": "recommended",
-    "no-useless-call": "recommended",
-    "no-useless-catch": "recommended",
-    "no-useless-constructor": "recommended",
-    "no-useless-escape": "recommended",
-    "no-useless-rename": "recommended",
-    "no-useless-return": "recommended",
-    "no-var": "recommended",
-    "no-whitespace-before-property": "recommended",
-    "no-with": "recommended",
-    "no-wrap-func": "recommended",
-    "nonblock-statement-body-position": "recommended",
-    "object-curly-newline": "recommended",
-    "object-curly-spacing": "recommended",
-    "object-property-newline": "recommended",
-    "one-var-declaration-per-line": "recommended",
-    "operator-linebreak": "recommended",
-    "package-json/no-empty-fields": "recommended",
-    "package-json/no-redundant-files": "recommended",
-    "package-json/no-redundant-publishConfig": "recommended",
-    "package-json/repository-shorthand": "all",
-    "package-json/require-attribution": "all",
-    "package-json/require-description": "all",
-    "package-json/require-exports": "all",
-    "package-json/require-files": "all",
-    "package-json/require-license": "recommended",
-    "package-json/require-name": "all",
-    "package-json/require-repository": "all",
-    "package-json/require-sideEffects": "all",
-    "package-json/require-type": "all",
-    "package-json/require-version": "all",
-    "package-json/sort-collections": "all",
-    "package-json/specify-peers-locally": "recommended",
-    "package-json/unique-dependencies": "recommended",
-    "package-json/valid-author": "recommended",
-    "package-json/valid-bin": "recommended",
-    "package-json/valid-browser": "recommended",
-    "package-json/valid-bugs": "recommended",
-    "package-json/valid-bundleDependencies": "recommended",
-    "package-json/valid-config": "recommended",
-    "package-json/valid-contributors": "recommended",
-    "package-json/valid-cpu": "recommended",
-    "package-json/valid-dependencies": "recommended",
-    "package-json/valid-description": "recommended",
-    "package-json/valid-devDependencies": "recommended",
-    "package-json/valid-devEngines": "recommended",
-    "package-json/valid-directories": "recommended",
-    "package-json/valid-engines": "recommended",
-    "package-json/valid-exports": "recommended",
-    "package-json/valid-files": "recommended",
-    "package-json/valid-funding": "recommended",
-    "package-json/valid-gypfile": "recommended",
-    "package-json/valid-homepage": "recommended",
-    "package-json/valid-keywords": "recommended",
-    "package-json/valid-libc": "recommended",
-    "package-json/valid-license": "recommended",
-    "package-json/valid-main": "recommended",
-    "package-json/valid-man": "recommended",
-    "package-json/valid-module": "recommended",
-    "package-json/valid-name": "recommended",
-    "package-json/valid-optionalDependencies": "recommended",
-    "package-json/valid-os": "recommended",
-    "package-json/valid-packageManager": "recommended",
-    "package-json/valid-peerDependencies": "recommended",
-    "package-json/valid-peerDependenciesMeta": "recommended",
-    "package-json/valid-peerDependenciesMeta-relationship": "recommended",
-    "package-json/valid-private": "recommended",
-    "package-json/valid-publishConfig": "recommended",
-    "package-json/valid-repository": "recommended",
-    "package-json/valid-repository-directory": "recommended",
-    "package-json/valid-scripts": "recommended",
-    "package-json/valid-sideEffects": "recommended",
-    "package-json/valid-type": "recommended",
-    "package-json/valid-version": "recommended",
-    "package-json/valid-workspaces": "recommended",
-    "padded-blocks": "recommended",
-    "padding-line-between-statements": "recommended",
-    "prefer-const": "recommended",
-    "prefer-promise-reject-errors": "recommended",
-    "prefer-rest-params": "recommended",
-    "prefer-spread": "recommended",
-    "quote-props": "recommended",
-    "quotes": "recommended",
-    "react-hooks/config": "recommended",
-    "react-hooks/error-boundaries": "recommended",
-    "react-hooks/exhaustive-deps": "recommended",
-    "react-hooks/gating": "recommended",
-    "react-hooks/globals": "recommended",
-    "react-hooks/immutability": "recommended",
-    "react-hooks/incompatible-library": "recommended",
-    "react-hooks/preserve-manual-memoization": "recommended",
-    "react-hooks/purity": "recommended",
-    "react-hooks/refs": "recommended",
-    "react-hooks/rules-of-hooks": "recommended",
-    "react-hooks/set-state-in-effect": "recommended",
-    "react-hooks/set-state-in-render": "recommended",
-    "react-hooks/static-components": "recommended",
-    "react-hooks/unsupported-syntax": "recommended",
-    "react-hooks/use-memo": "recommended",
-    "react-hooks/void-use-memo": "recommended",
-    "react-native/no-color-literals": "all",
-    "react-native/no-inline-styles": "all",
-    "react-native/no-raw-text": "recommended",
-    "react-native/no-single-element-style-arrays": "recommended",
-    "react-native/no-unused-styles": "recommended",
-    "react-native/split-platform-components": "all",
-    "react-refresh/only-export-components": "recommended",
-    "react/display-name": "all",
-    "react/jsx-child-element-spacing": "recommended",
-    "react/jsx-closing-bracket-location": "recommended",
-    "react/jsx-closing-tag-location": "recommended",
-    "react/jsx-curly-newline": "recommended",
-    "react/jsx-curly-spacing": "recommended",
-    "react/jsx-equals-spacing": "recommended",
-    "react/jsx-first-prop-new-line": "recommended",
-    "react/jsx-indent": "recommended",
-    "react/jsx-indent-props": "recommended",
-    "react/jsx-key": "recommended",
-    "react/jsx-max-props-per-line": "recommended",
-    "react/jsx-newline": "recommended",
-    "react/jsx-no-comment-textnodes": "recommended",
-    "react/jsx-no-constructed-context-values": "recommended",
-    "react/jsx-no-duplicate-props": "recommended",
-    "react/jsx-no-target-blank": "recommended",
-    "react/jsx-no-undef": "recommended",
-    "react/jsx-one-expression-per-line": "recommended",
-    "react/jsx-props-no-multi-spaces": "recommended",
-    "react/jsx-space-before-closing": "recommended",
-    "react/jsx-tag-spacing": "recommended",
-    "react/jsx-uses-react": "recommended",
-    "react/jsx-uses-vars": "recommended",
-    "react/jsx-wrap-multilines": "recommended",
-    "react/no-array-index-key": "all",
-    "react/no-children-prop": "recommended",
-    "react/no-danger": "all",
-    "react/no-danger-with-children": "recommended",
-    "react/no-deprecated": "recommended",
-    "react/no-direct-mutation-state": "recommended",
-    "react/no-find-dom-node": "recommended",
-    "react/no-is-mounted": "recommended",
-    "react/no-object-type-as-default-prop": "recommended",
-    "react/no-render-return-value": "recommended",
-    "react/no-string-refs": "recommended",
-    "react/no-unescaped-entities": "recommended",
-    "react/no-unknown-property": "recommended",
-    "react/no-unsafe": "recommended",
-    "react/no-unstable-nested-components": "recommended",
-    "react/prop-types": "all",
-    "react/react-in-jsx-scope": "recommended",
-    "react/require-render-return": "recommended",
-    "react/self-closing-comp": "recommended",
-    "regexp/no-contradiction-with-assertion": "recommended",
-    "regexp/no-empty-alternative": "recommended",
-    "regexp/no-empty-capturing-group": "recommended",
-    "regexp/no-empty-character-class": "recommended",
-    "regexp/no-empty-group": "recommended",
-    "regexp/no-empty-lookarounds-assertion": "recommended",
-    "regexp/no-invalid-regexp": "recommended",
-    "regexp/no-lazy-ends": "recommended",
-    "regexp/no-misleading-capturing-group": "recommended",
-    "regexp/no-optional-assertion": "recommended",
-    "regexp/no-super-linear-backtracking": "recommended",
-    "regexp/no-useless-assertions": "recommended",
-    "regexp/no-useless-backreference": "recommended",
-    "regexp/no-useless-character-class": "recommended",
-    "regexp/no-useless-dollar-replacements": "recommended",
-    "regexp/no-useless-lazy": "recommended",
-    "regexp/no-useless-quantifier": "recommended",
-    "regexp/no-useless-range": "recommended",
-    "regexp/strict": "recommended",
-    "require-await": "recommended",
-    "require-yield": "recommended",
-    "rest-spread-spacing": "recommended",
-    "security/detect-buffer-noassert": "recommended",
-    "security/detect-child-process": "all",
-    "security/detect-disable-mustache-escape": "recommended",
-    "security/detect-eval-with-expression": "recommended",
-    "security/detect-new-buffer": "recommended",
-    "security/detect-no-csrf-before-method-override": "recommended",
-    "security/detect-non-literal-fs-filename": "recommended",
-    "security/detect-non-literal-regexp": "recommended",
-    "security/detect-non-literal-require": "all",
-    "security/detect-object-injection": "recommended",
-    "security/detect-possible-timing-attacks": "recommended",
-    "security/detect-pseudoRandomBytes": "recommended",
-    "security/detect-unsafe-regex": "recommended",
-    "semi": "recommended",
-    "semi-spacing": "recommended",
-    "semi-style": "recommended",
-    "sonarjs/anchor-precedence": "recommended",
-    "sonarjs/argument-type": "recommended",
-    "sonarjs/arguments-order": "recommended",
-    "sonarjs/arguments-usage": "recommended",
-    "sonarjs/array-callback-without-return": "recommended",
-    "sonarjs/array-constructor": "recommended",
-    "sonarjs/arrow-function-convention": "recommended",
-    "sonarjs/assertions-in-test-cases": "recommended",
-    "sonarjs/assertions-in-tests": "recommended",
-    "sonarjs/async-test-assertions": "recommended",
-    "sonarjs/aws-apigateway-public-api": "recommended",
-    "sonarjs/aws-ec2-rds-dms-public": "recommended",
-    "sonarjs/aws-ec2-unencrypted-ebs-volume": "recommended",
-    "sonarjs/aws-efs-unencrypted": "recommended",
-    "sonarjs/aws-iam-all-privileges": "recommended",
-    "sonarjs/aws-iam-all-resources-accessible": "recommended",
-    "sonarjs/aws-iam-privilege-escalation": "recommended",
-    "sonarjs/aws-iam-public-access": "recommended",
-    "sonarjs/aws-opensearchservice-domain": "recommended",
-    "sonarjs/aws-rds-unencrypted-databases": "recommended",
-    "sonarjs/aws-restricted-ip-admin-access": "recommended",
-    "sonarjs/aws-s3-bucket-granted-access": "recommended",
-    "sonarjs/aws-s3-bucket-insecure-http": "recommended",
-    "sonarjs/aws-s3-bucket-public-access": "recommended",
-    "sonarjs/aws-s3-bucket-versioning": "recommended",
-    "sonarjs/aws-sagemaker-unencrypted-notebook": "recommended",
-    "sonarjs/aws-sns-unencrypted-topics": "recommended",
-    "sonarjs/aws-sqs-unencrypted-queue": "recommended",
-    "sonarjs/bitwise-operators": "all",
-    "sonarjs/block-scoped-var": "recommended",
-    "sonarjs/bool-param-default": "recommended",
-    "sonarjs/call-argument-line": "recommended",
-    "sonarjs/chai-determinate-assertion": "recommended",
-    "sonarjs/class-name": "all",
-    "sonarjs/class-prototype": "recommended",
-    "sonarjs/code-eval": "recommended",
-    "sonarjs/cognitive-complexity": "all",
-    "sonarjs/comma-or-logical-or-case": "recommended",
-    "sonarjs/comment-regex": "recommended",
-    "sonarjs/concise-regex": "recommended",
-    "sonarjs/conditional-indentation": "recommended",
-    "sonarjs/confidential-information-logging": "recommended",
-    "sonarjs/constructor-for-side-effects": "all",
-    "sonarjs/content-length": "recommended",
-    "sonarjs/content-security-policy": "recommended",
-    "sonarjs/cookie-no-httponly": "recommended",
-    "sonarjs/cors": "recommended",
-    "sonarjs/csrf": "recommended",
-    "sonarjs/cyclomatic-complexity": "recommended",
-    "sonarjs/declarations-in-global-scope": "recommended",
-    "sonarjs/deprecation": "recommended",
-    "sonarjs/destructuring-assignment-syntax": "recommended",
-    "sonarjs/different-types-comparison": "recommended",
-    "sonarjs/disabled-auto-escaping": "recommended",
-    "sonarjs/disabled-resource-integrity": "recommended",
-    "sonarjs/disabled-timeout": "recommended",
-    "sonarjs/dompurify-unsafe-config": "recommended",
-    "sonarjs/duplicates-in-character-class": "recommended",
-    "sonarjs/dynamically-constructed-templates": "recommended",
-    "sonarjs/elseif-without-else": "recommended",
-    "sonarjs/empty-string-repetition": "recommended",
-    "sonarjs/encryption-secure-mode": "recommended",
-    "sonarjs/existing-groups": "recommended",
-    "sonarjs/explicit-test-skip": "recommended",
-    "sonarjs/expression-complexity": "recommended",
-    "sonarjs/file-header": "recommended",
-    "sonarjs/file-name-differ-from-class": "recommended",
-    "sonarjs/file-permissions": "recommended",
-    "sonarjs/file-uploads": "recommended",
-    "sonarjs/fixme-tag": "all",
-    "sonarjs/for-in": "recommended",
-    "sonarjs/for-loop-increment-sign": "recommended",
-    "sonarjs/frame-ancestors": "recommended",
-    "sonarjs/function-inside-loop": "recommended",
-    "sonarjs/function-name": "recommended",
-    "sonarjs/function-return-type": "recommended",
-    "sonarjs/future-reserved-words": "recommended",
-    "sonarjs/generator-without-yield": "recommended",
-    "sonarjs/hardcoded-secret-signatures": "recommended",
-    "sonarjs/hashing": "recommended",
-    "sonarjs/hidden-files": "recommended",
-    "sonarjs/hooks-before-test-cases": "all",
-    "sonarjs/in-operator-type-error": "recommended",
-    "sonarjs/inconsistent-function-call": "recommended",
-    "sonarjs/index-of-compare-to-positive-number": "recommended",
-    "sonarjs/insecure-cookie": "recommended",
-    "sonarjs/insecure-jwt-token": "recommended",
-    "sonarjs/inverted-assertion-arguments": "recommended",
-    "sonarjs/jsx-no-leaked-render": "recommended",
-    "sonarjs/label-position": "recommended",
-    "sonarjs/link-with-target-blank": "recommended",
-    "sonarjs/max-lines": "recommended",
-    "sonarjs/max-lines-per-function": "recommended",
-    "sonarjs/max-switch-cases": "all",
-    "sonarjs/max-union-size": "recommended",
-    "sonarjs/memoize-cache-key": "recommended",
-    "sonarjs/misplaced-loop-counter": "recommended",
-    "sonarjs/nested-control-flow": "recommended",
-    "sonarjs/new-operator-misuse": "recommended",
-    "sonarjs/no-all-duplicated-branches": "recommended",
-    "sonarjs/no-alphabetical-sort": "recommended",
-    "sonarjs/no-angular-bypass-sanitization": "recommended",
-    "sonarjs/no-array-delete": "recommended",
-    "sonarjs/no-associative-arrays": "recommended",
-    "sonarjs/no-async-constructor": "recommended",
-    "sonarjs/no-built-in-override": "recommended",
-    "sonarjs/no-case-label-in-switch": "recommended",
-    "sonarjs/no-clear-text-protocols": "recommended",
-    "sonarjs/no-code-after-done": "recommended",
-    "sonarjs/no-collapsible-if": "recommended",
-    "sonarjs/no-collection-size-mischeck": "recommended",
-    "sonarjs/no-commented-code": "all",
-    "sonarjs/no-control-regex": "recommended",
-    "sonarjs/no-dead-store": "recommended",
-    "sonarjs/no-debug-commands-in-ui-tests": "recommended",
-    "sonarjs/no-default-utility-imports": "all",
-    "sonarjs/no-delete-var": "recommended",
-    "sonarjs/no-duplicate-in-composite": "recommended",
-    "sonarjs/no-duplicate-string": "recommended",
-    "sonarjs/no-duplicate-test-title": "recommended",
-    "sonarjs/no-duplicated-branches": "recommended",
-    "sonarjs/no-element-overwrite": "recommended",
-    "sonarjs/no-empty-after-reluctant": "recommended",
-    "sonarjs/no-empty-alternatives": "recommended",
-    "sonarjs/no-empty-character-class": "recommended",
-    "sonarjs/no-empty-collection": "recommended",
-    "sonarjs/no-empty-group": "recommended",
-    "sonarjs/no-empty-test-file": "recommended",
-    "sonarjs/no-empty-test-title": "recommended",
-    "sonarjs/no-equals-in-for-termination": "recommended",
-    "sonarjs/no-exclusive-tests": "recommended",
-    "sonarjs/no-extra-arguments": "recommended",
-    "sonarjs/no-fallthrough": "recommended",
-    "sonarjs/no-fixed-wait-in-tests": "all",
-    "sonarjs/no-floating-point-equality": "recommended",
-    "sonarjs/no-for-in-iterable": "recommended",
-    "sonarjs/no-forced-browser-interaction": "recommended",
-    "sonarjs/no-function-declaration-in-block": "recommended",
-    "sonarjs/no-global-this": "all",
-    "sonarjs/no-globals-shadowing": "recommended",
-    "sonarjs/no-gratuitous-expressions": "recommended",
-    "sonarjs/no-hardcoded-ip": "all",
-    "sonarjs/no-hardcoded-passwords": "recommended",
-    "sonarjs/no-hardcoded-secrets": "recommended",
-    "sonarjs/no-hook-setter-in-body": "recommended",
-    "sonarjs/no-identical-conditions": "recommended",
-    "sonarjs/no-identical-expressions": "recommended",
-    "sonarjs/no-identical-functions": "all",
-    "sonarjs/no-ignored-exceptions": "recommended",
-    "sonarjs/no-ignored-return": "recommended",
-    "sonarjs/no-implicit-dependencies": "recommended",
-    "sonarjs/no-implicit-global": "recommended",
-    "sonarjs/no-in-misuse": "recommended",
-    "sonarjs/no-incompatible-assertion-types": "recommended",
-    "sonarjs/no-incomplete-assertions": "recommended",
-    "sonarjs/no-inconsistent-returns": "recommended",
-    "sonarjs/no-incorrect-string-concat": "recommended",
-    "sonarjs/no-internal-api-use": "recommended",
-    "sonarjs/no-interpolation-in-inline-snapshots": "recommended",
-    "sonarjs/no-intrusive-permissions": "recommended",
-    "sonarjs/no-invalid-regexp": "recommended",
-    "sonarjs/no-invariant-returns": "recommended",
-    "sonarjs/no-inverted-boolean-check": "all",
-    "sonarjs/no-ip-forward": "recommended",
-    "sonarjs/no-labels": "all",
-    "sonarjs/no-literal-call": "recommended",
-    "sonarjs/no-mime-sniff": "recommended",
-    "sonarjs/no-misleading-array-reverse": "recommended",
-    "sonarjs/no-misleading-character-class": "recommended",
-    "sonarjs/no-mixed-completion-style": "recommended",
-    "sonarjs/no-mixed-content": "recommended",
-    "sonarjs/no-nested-assignment": "all",
-    "sonarjs/no-nested-conditional": "all",
-    "sonarjs/no-nested-functions": "all",
-    "sonarjs/no-nested-incdec": "recommended",
-    "sonarjs/no-nested-switch": "all",
-    "sonarjs/no-nested-template-literals": "all",
-    "sonarjs/no-os-command-from-path": "recommended",
-    "sonarjs/no-parameter-reassignment": "all",
-    "sonarjs/no-primitive-wrappers": "recommended",
-    "sonarjs/no-redundant-assignments": "recommended",
-    "sonarjs/no-redundant-boolean": "recommended",
-    "sonarjs/no-redundant-jump": "recommended",
-    "sonarjs/no-redundant-optional": "recommended",
-    "sonarjs/no-redundant-parentheses": "recommended",
-    "sonarjs/no-reference-error": "recommended",
-    "sonarjs/no-referrer-policy": "recommended",
-    "sonarjs/no-regex-spaces": "recommended",
-    "sonarjs/no-require-or-define": "recommended",
-    "sonarjs/no-return-type-any": "recommended",
-    "sonarjs/no-same-argument-assert": "recommended",
-    "sonarjs/no-same-line-conditional": "all",
-    "sonarjs/no-selector-parameter": "all",
-    "sonarjs/no-session-cookies-on-static-assets": "recommended",
-    "sonarjs/no-skipped-tests": "recommended",
-    "sonarjs/no-small-switch": "all",
-    "sonarjs/no-sonar-comments": "recommended",
-    "sonarjs/no-tab": "recommended",
-    "sonarjs/no-table-as-layout": "recommended",
-    "sonarjs/no-trivial-assertions": "recommended",
-    "sonarjs/no-try-promise": "recommended",
-    "sonarjs/no-undefined-argument": "all",
-    "sonarjs/no-undefined-assignment": "recommended",
-    "sonarjs/no-unenclosed-multiline-block": "recommended",
-    "sonarjs/no-uniq-key": "recommended",
-    "sonarjs/no-unsafe-unzip": "recommended",
-    "sonarjs/no-unthrown-error": "recommended",
-    "sonarjs/no-unused-collection": "recommended",
-    "sonarjs/no-unused-function-argument": "recommended",
-    "sonarjs/no-unused-vars": "recommended",
-    "sonarjs/no-use-of-empty-return-value": "recommended",
-    "sonarjs/no-useless-catch": "recommended",
-    "sonarjs/no-useless-increment": "recommended",
-    "sonarjs/no-useless-intersection": "recommended",
-    "sonarjs/no-useless-react-setstate": "recommended",
-    "sonarjs/no-variable-usage-before-declaration": "recommended",
-    "sonarjs/no-weak-cipher": "recommended",
-    "sonarjs/no-weak-keys": "recommended",
-    "sonarjs/no-wildcard-import": "recommended",
-    "sonarjs/non-existent-operator": "recommended",
-    "sonarjs/non-number-in-arithmetic-expression": "recommended",
-    "sonarjs/null-dereference": "recommended",
-    "sonarjs/object-alt-content": "recommended",
-    "sonarjs/operation-returning-nan": "recommended",
-    "sonarjs/os-command": "recommended",
-    "sonarjs/parameterized-tests": "all",
-    "sonarjs/post-message": "recommended",
-    "sonarjs/prefer-default-last": "all",
-    "sonarjs/prefer-immediate-return": "all",
-    "sonarjs/prefer-native-lodash-alternative": "all",
-    "sonarjs/prefer-object-literal": "all",
-    "sonarjs/prefer-promise-shorthand": "all",
-    "sonarjs/prefer-read-only-props": "all",
-    "sonarjs/prefer-regexp-exec": "all",
-    "sonarjs/prefer-single-boolean-return": "all",
-    "sonarjs/prefer-specific-assertions": "all",
-    "sonarjs/prefer-type-guard": "all",
-    "sonarjs/prefer-while": "all",
-    "sonarjs/production-debug": "recommended",
-    "sonarjs/pseudo-random": "recommended",
-    "sonarjs/public-static-readonly": "all",
-    "sonarjs/publicly-writable-directories": "recommended",
-    "sonarjs/reduce-initial-value": "recommended",
-    "sonarjs/redundant-type-aliases": "recommended",
-    "sonarjs/regex-complexity": "all",
-    "sonarjs/review-blockchain-mnemonic": "recommended",
-    "sonarjs/session-regeneration": "recommended",
-    "sonarjs/shorthand-property-grouping": "recommended",
-    "sonarjs/single-char-in-character-classes": "recommended",
-    "sonarjs/single-character-alternation": "recommended",
-    "sonarjs/slow-regex": "recommended",
-    "sonarjs/sql-queries": "recommended",
-    "sonarjs/stable-tests": "recommended",
-    "sonarjs/stateful-regex": "recommended",
-    "sonarjs/strict-transport-security": "recommended",
-    "sonarjs/strings-comparison": "recommended",
-    "sonarjs/super-linear-regex": "recommended",
-    "sonarjs/synchronous-suite-callback": "recommended",
-    "sonarjs/table-header": "recommended",
-    "sonarjs/table-header-reference": "recommended",
-    "sonarjs/test-check-exception": "recommended",
-    "sonarjs/todo-tag": "all",
-    "sonarjs/too-many-break-or-continue-in-loop": "recommended",
-    "sonarjs/unicode-aware-regex": "recommended",
-    "sonarjs/unused-import": "recommended",
-    "sonarjs/unused-named-groups": "recommended",
-    "sonarjs/unverified-certificate": "recommended",
-    "sonarjs/unverified-hostname": "recommended",
-    "sonarjs/updated-const-var": "recommended",
-    "sonarjs/updated-loop-counter": "recommended",
-    "sonarjs/use-type-alias": "all",
-    "sonarjs/useless-string-operation": "recommended",
-    "sonarjs/values-not-convertible-to-numbers": "recommended",
-    "sonarjs/variable-name": "recommended",
-    "sonarjs/void-use": "recommended",
-    "sonarjs/weak-ssl": "recommended",
-    "sonarjs/web-sql-database": "recommended",
-    "sonarjs/x-powered-by": "recommended",
-    "sonarjs/xml-parser-xxe": "recommended",
-    "space-after-function-name": "recommended",
-    "space-after-keywords": "recommended",
-    "space-before-blocks": "recommended",
-    "space-before-function-paren": "recommended",
-    "space-before-function-parentheses": "recommended",
-    "space-before-keywords": "recommended",
-    "space-in-brackets": "recommended",
-    "space-in-parens": "recommended",
-    "space-infix-ops": "recommended",
-    "space-return-throw-case": "recommended",
-    "space-unary-ops": "recommended",
-    "space-unary-word-ops": "recommended",
-    "standard/array-bracket-even-spacing": "recommended",
-    "standard/computed-property-even-spacing": "recommended",
-    "standard/object-curly-even-spacing": "recommended",
-    "svelte/block-lang": "all",
-    "svelte/button-has-type": "recommended",
-    "svelte/comment-directive": "recommended",
-    "svelte/infinite-reactive-loop": "recommended",
-    "svelte/no-at-debug-tags": "recommended",
-    "svelte/no-at-html-tags": "all",
-    "svelte/no-dom-manipulating": "all",
-    "svelte/no-dupe-else-if-blocks": "recommended",
-    "svelte/no-dupe-on-directives": "recommended",
-    "svelte/no-dupe-style-properties": "recommended",
-    "svelte/no-dupe-use-directives": "recommended",
-    "svelte/no-export-load-in-svelte-module-in-kit-pages": "recommended",
-    "svelte/no-immutable-reactive-statements": "recommended",
-    "svelte/no-inner-declarations": "recommended",
-    "svelte/no-inspect": "recommended",
-    "svelte/no-navigation-without-resolve": "recommended",
-    "svelte/no-not-function-handler": "recommended",
-    "svelte/no-object-in-text-mustaches": "recommended",
-    "svelte/no-raw-special-elements": "recommended",
-    "svelte/no-reactive-functions": "recommended",
-    "svelte/no-reactive-literals": "recommended",
-    "svelte/no-reactive-reassign": "recommended",
-    "svelte/no-shorthand-style-property-overrides": "recommended",
-    "svelte/no-store-async": "recommended",
-    "svelte/no-svelte-internal": "recommended",
-    "svelte/no-target-blank": "recommended",
-    "svelte/no-unknown-style-directive-property": "recommended",
-    "svelte/no-unnecessary-state-wrap": "recommended",
-    "svelte/no-unused-props": "recommended",
-    "svelte/no-unused-svelte-ignore": "recommended",
-    "svelte/no-useless-children-snippet": "recommended",
-    "svelte/no-useless-mustaches": "recommended",
-    "svelte/prefer-const": "recommended",
-    "svelte/prefer-svelte-reactivity": "recommended",
-    "svelte/prefer-writable-derived": "recommended",
-    "svelte/require-each-key": "recommended",
-    "svelte/require-event-dispatcher-types": "all",
-    "svelte/require-store-reactive-access": "recommended",
-    "svelte/system": "recommended",
-    "svelte/valid-each-key": "recommended",
-    "svelte/valid-prop-names-in-kit-pages": "recommended",
-    "switch-colon-spacing": "recommended",
-    "template-curly-spacing": "recommended",
-    "template-tag-spacing": "recommended",
-    "testing-library/await-async-events": "recommended",
-    "testing-library/await-async-queries": "recommended",
-    "testing-library/await-async-utils": "recommended",
-    "testing-library/no-await-sync-events": "recommended",
-    "testing-library/no-await-sync-queries": "recommended",
-    "testing-library/no-container": "all",
-    "testing-library/no-debugging-utils": "recommended",
-    "testing-library/no-dom-import": "recommended",
-    "testing-library/no-global-regexp-flag-in-query": "recommended",
-    "testing-library/no-manual-cleanup": "recommended",
-    "testing-library/no-node-access": "all",
-    "testing-library/no-promise-in-fire-event": "recommended",
-    "testing-library/no-render-in-lifecycle": "all",
-    "testing-library/no-unnecessary-act": "recommended",
-    "testing-library/no-wait-for-multiple-assertions": "recommended",
-    "testing-library/no-wait-for-side-effects": "recommended",
-    "testing-library/no-wait-for-snapshot": "recommended",
-    "testing-library/prefer-find-by": "recommended",
-    "testing-library/prefer-presence-queries": "recommended",
-    "testing-library/prefer-query-by-disappearance": "recommended",
-    "testing-library/prefer-screen-queries": "all",
-    "testing-library/render-result-naming-convention": "all",
-    "unicorn/better-dom-traversing": "all",
-    "unicorn/catch-error-name": "all",
-    "unicorn/consistent-assert": "all",
-    "unicorn/consistent-compound-words": "all",
-    "unicorn/consistent-date-clone": "all",
-    "unicorn/consistent-destructuring": "all",
-    "unicorn/consistent-empty-array-spread": "all",
-    "unicorn/consistent-existence-index-check": "recommended",
-    "unicorn/consistent-function-scoping": "all",
-    "unicorn/consistent-json-file-read": "all",
-    "unicorn/consistent-template-literal-escape": "all",
-    "unicorn/custom-error-definition": "all",
-    "unicorn/dom-node-dataset": "all",
-    "unicorn/empty-brace-spaces": "recommended",
-    "unicorn/error-message": "recommended",
-    "unicorn/escape-case": "recommended",
-    "unicorn/expiring-todo-comments": "all",
-    "unicorn/explicit-length-check": "all",
-    "unicorn/filename-case": "all",
-    "unicorn/import-style": "all",
-    "unicorn/isolated-functions": "all",
-    "unicorn/new-for-builtins": "recommended",
-    "unicorn/no-abusive-eslint-disable": "recommended",
-    "unicorn/no-accessor-recursion": "recommended",
-    "unicorn/no-anonymous-default-export": "all",
-    "unicorn/no-array-callback-reference": "recommended",
-    "unicorn/no-array-fill-with-reference-type": "recommended",
-    "unicorn/no-array-for-each": "all",
-    "unicorn/no-array-from-fill": "all",
-    "unicorn/no-array-method-this-argument": "all",
-    "unicorn/no-array-reduce": "all",
-    "unicorn/no-array-reverse": "all",
-    "unicorn/no-array-sort": "all",
-    "unicorn/no-await-expression-member": "all",
-    "unicorn/no-await-in-promise-methods": "recommended",
-    "unicorn/no-blob-to-file": "all",
-    "unicorn/no-canvas-to-image": "all",
-    "unicorn/no-confusing-array-splice": "all",
-    "unicorn/no-console-spaces": "recommended",
-    "unicorn/no-document-cookie": "all",
-    "unicorn/no-duplicate-set-values": "recommended",
-    "unicorn/no-empty-file": "all",
-    "unicorn/no-exports-in-scripts": "all",
-    "unicorn/no-for-loop": "all",
-    "unicorn/no-hex-escape": "all",
-    "unicorn/no-immediate-mutation": "all",
-    "unicorn/no-incorrect-query-selector": "recommended",
-    "unicorn/no-instanceof-builtins": "recommended",
-    "unicorn/no-invalid-fetch-options": "recommended",
-    "unicorn/no-invalid-file-input-accept": "all",
-    "unicorn/no-invalid-remove-event-listener": "recommended",
-    "unicorn/no-keyword-prefix": "all",
-    "unicorn/no-late-current-target-access": "recommended",
-    "unicorn/no-lonely-if": "all",
-    "unicorn/no-magic-array-flat-depth": "all",
-    "unicorn/no-manually-wrapped-comments": "recommended",
-    "unicorn/no-named-default": "all",
-    "unicorn/no-negated-condition": "all",
-    "unicorn/no-negation-in-equality-check": "all",
-    "unicorn/no-nested-ternary": "all",
-    "unicorn/no-new-array": "all",
-    "unicorn/no-new-buffer": "recommended",
-    "unicorn/no-null": "all",
-    "unicorn/no-object-as-default-parameter": "recommended",
-    "unicorn/no-process-exit": "all",
-    "unicorn/no-single-promise-in-promise-methods": "all",
-    "unicorn/no-static-only-class": "all",
-    "unicorn/no-thenable": "recommended",
-    "unicorn/no-this-assignment": "all",
-    "unicorn/no-this-outside-of-class": "recommended",
-    "unicorn/no-typeof-undefined": "all",
-    "unicorn/no-unnecessary-array-flat-depth": "all",
-    "unicorn/no-unnecessary-array-splice-count": "all",
-    "unicorn/no-unnecessary-await": "recommended",
-    "unicorn/no-unnecessary-nested-ternary": "all",
-    "unicorn/no-unnecessary-polyfills": "recommended",
-    "unicorn/no-unnecessary-slice-end": "all",
-    "unicorn/no-unreadable-array-destructuring": "all",
-    "unicorn/no-unreadable-iife": "all",
-    "unicorn/no-unused-array-method-return": "recommended",
-    "unicorn/no-unused-properties": "all",
-    "unicorn/no-useless-collection-argument": "recommended",
-    "unicorn/no-useless-error-capture-stack-trace": "recommended",
-    "unicorn/no-useless-fallback-in-spread": "recommended",
-    "unicorn/no-useless-iterator-to-array": "recommended",
-    "unicorn/no-useless-length-check": "recommended",
-    "unicorn/no-useless-promise-resolve-reject": "recommended",
-    "unicorn/no-useless-spread": "recommended",
-    "unicorn/no-useless-switch-case": "all",
-    "unicorn/no-useless-undefined": "all",
-    "unicorn/no-zero-fractions": "recommended",
-    "unicorn/number-literal-case": "recommended",
-    "unicorn/numeric-separators-style": "recommended",
-    "unicorn/prefer-add-event-listener": "all",
-    "unicorn/prefer-array-find": "all",
-    "unicorn/prefer-array-flat": "all",
-    "unicorn/prefer-array-flat-map": "all",
-    "unicorn/prefer-array-index-of": "all",
-    "unicorn/prefer-array-last-methods": "all",
-    "unicorn/prefer-array-some": "all",
-    "unicorn/prefer-at": "all",
-    "unicorn/prefer-bigint-literals": "all",
-    "unicorn/prefer-blob-reading-methods": "all",
-    "unicorn/prefer-class-fields": "all",
-    "unicorn/prefer-classlist-toggle": "all",
-    "unicorn/prefer-code-point": "recommended",
-    "unicorn/prefer-date-now": "all",
-    "unicorn/prefer-default-parameters": "all",
-    "unicorn/prefer-dom-node-append": "all",
-    "unicorn/prefer-dom-node-remove": "all",
-    "unicorn/prefer-dom-node-text-content": "all",
-    "unicorn/prefer-event-target": "all",
-    "unicorn/prefer-export-from": "all",
-    "unicorn/prefer-get-or-insert-computed": "all",
-    "unicorn/prefer-global-this": "all",
-    "unicorn/prefer-https": "recommended",
-    "unicorn/prefer-import-meta-properties": "all",
-    "unicorn/prefer-includes": "all",
-    "unicorn/prefer-includes-over-repeated-comparisons": "all",
-    "unicorn/prefer-iterator-concat": "all",
-    "unicorn/prefer-iterator-to-array-at-end": "all",
-    "unicorn/prefer-keyboard-event-key": "all",
-    "unicorn/prefer-logical-operator-over-ternary": "all",
-    "unicorn/prefer-math-abs": "all",
-    "unicorn/prefer-math-min-max": "all",
-    "unicorn/prefer-math-trunc": "all",
-    "unicorn/prefer-modern-dom-apis": "all",
-    "unicorn/prefer-modern-math-apis": "all",
-    "unicorn/prefer-module": "all",
-    "unicorn/prefer-native-coercion-functions": "all",
-    "unicorn/prefer-negative-index": "all",
-    "unicorn/prefer-node-protocol": "recommended",
-    "unicorn/prefer-number-properties": "all",
-    "unicorn/prefer-object-from-entries": "all",
-    "unicorn/prefer-optional-catch-binding": "all",
-    "unicorn/prefer-prototype-methods": "all",
-    "unicorn/prefer-query-selector": "all",
-    "unicorn/prefer-queue-microtask": "all",
-    "unicorn/prefer-reflect-apply": "all",
-    "unicorn/prefer-regexp-test": "all",
-    "unicorn/prefer-response-static-json": "all",
-    "unicorn/prefer-set-has": "all",
-    "unicorn/prefer-set-size": "all",
-    "unicorn/prefer-simple-condition-first": "all",
-    "unicorn/prefer-single-call": "all",
-    "unicorn/prefer-split-limit": "all",
-    "unicorn/prefer-spread": "all",
-    "unicorn/prefer-string-match-all": "all",
-    "unicorn/prefer-string-pad-start-end": "all",
-    "unicorn/prefer-string-raw": "all",
-    "unicorn/prefer-string-repeat": "all",
-    "unicorn/prefer-string-replace-all": "all",
-    "unicorn/prefer-string-slice": "all",
-    "unicorn/prefer-string-starts-ends-with": "all",
-    "unicorn/prefer-string-trim-start-end": "all",
-    "unicorn/prefer-structured-clone": "all",
-    "unicorn/prefer-switch": "all",
-    "unicorn/prefer-ternary": "all",
-    "unicorn/prefer-top-level-await": "all",
-    "unicorn/prefer-type-error": "all",
-    "unicorn/prevent-abbreviations": "all",
-    "unicorn/relative-url-style": "all",
-    "unicorn/require-array-join-separator": "recommended",
-    "unicorn/require-css-escape": "recommended",
-    "unicorn/require-module-attributes": "recommended",
-    "unicorn/require-module-specifiers": "recommended",
-    "unicorn/require-number-to-fixed-digits-argument": "recommended",
-    "unicorn/require-passive-events": "all",
-    "unicorn/require-post-message-target-origin": "all",
-    "unicorn/string-content": "all",
-    "unicorn/switch-case-braces": "recommended",
-    "unicorn/switch-case-break-position": "recommended",
-    "unicorn/template-indent": "recommended",
-    "unicorn/text-encoding-identifier-case": "recommended",
-    "unicorn/throw-new-error": "recommended",
-    "unicorn/try-complexity": "all",
-    "use-isnan": "recommended",
-    "valid-typeof": "recommended",
-    "vitest/expect-expect": "recommended",
-    "vitest/no-commented-out-tests": "recommended",
-    "vitest/no-conditional-expect": "recommended",
-    "vitest/no-disabled-tests": "recommended",
-    "vitest/no-focused-tests": "recommended",
-    "vitest/no-identical-title": "recommended",
-    "vitest/no-import-node-test": "all",
-    "vitest/no-standalone-expect": "recommended",
-    "vitest/prefer-strict-equal": "all",
-    "vitest/require-local-test-context-for-concurrent-snapshots": "recommended",
-    "vitest/valid-describe-callback": "recommended",
-    "vitest/valid-expect": "recommended",
-    "vitest/valid-title": "all",
-    "vue/array-bracket-newline": "recommended",
-    "vue/array-bracket-spacing": "recommended",
-    "vue/array-element-newline": "recommended",
-    "vue/arrow-spacing": "recommended",
-    "vue/attribute-hyphenation": "all",
-    "vue/attributes-order": "all",
-    "vue/block-lang": "all",
-    "vue/block-order": "all",
-    "vue/block-spacing": "recommended",
-    "vue/block-tag-newline": "recommended",
-    "vue/brace-style": "recommended",
-    "vue/comma-dangle": "recommended",
-    "vue/comma-spacing": "recommended",
-    "vue/comma-style": "recommended",
-    "vue/comment-directive": "recommended",
-    "vue/component-api-style": "all",
-    "vue/component-definition-name-casing": "all",
-    "vue/define-emits-declaration": "all",
-    "vue/define-props-declaration": "all",
-    "vue/dot-location": "recommended",
-    "vue/first-attribute-linebreak": "recommended",
-    "vue/func-call-spacing": "recommended",
-    "vue/html-button-has-type": "recommended",
-    "vue/html-closing-bracket-newline": "recommended",
-    "vue/html-closing-bracket-spacing": "recommended",
-    "vue/html-end-tags": "recommended",
-    "vue/html-indent": "recommended",
-    "vue/html-quotes": "recommended",
-    "vue/html-self-closing": "recommended",
-    "vue/jsx-uses-vars": "recommended",
-    "vue/key-spacing": "recommended",
-    "vue/keyword-spacing": "recommended",
-    "vue/max-attributes-per-line": "recommended",
-    "vue/max-len": "recommended",
-    "vue/multi-word-component-names": "all",
-    "vue/multiline-html-element-content-newline": "recommended",
-    "vue/multiline-ternary": "recommended",
-    "vue/mustache-interpolation-spacing": "recommended",
-    "vue/no-arrow-functions-in-watch": "recommended",
-    "vue/no-async-in-computed-properties": "recommended",
-    "vue/no-child-content": "recommended",
-    "vue/no-computed-properties-in-data": "recommended",
-    "vue/no-deprecated-data-object-declaration": "recommended",
-    "vue/no-deprecated-delete-set": "recommended",
-    "vue/no-deprecated-destroyed-lifecycle": "recommended",
-    "vue/no-deprecated-dollar-listeners-api": "recommended",
-    "vue/no-deprecated-dollar-scopedslots-api": "recommended",
-    "vue/no-deprecated-events-api": "recommended",
-    "vue/no-deprecated-filter": "recommended",
-    "vue/no-deprecated-functional-template": "recommended",
-    "vue/no-deprecated-html-element-is": "recommended",
-    "vue/no-deprecated-inline-template": "recommended",
-    "vue/no-deprecated-model-definition": "recommended",
-    "vue/no-deprecated-props-default-this": "recommended",
-    "vue/no-deprecated-router-link-tag-prop": "recommended",
-    "vue/no-deprecated-scope-attribute": "recommended",
-    "vue/no-deprecated-slot-attribute": "recommended",
-    "vue/no-deprecated-slot-scope-attribute": "recommended",
-    "vue/no-deprecated-v-bind-sync": "recommended",
-    "vue/no-deprecated-v-is": "recommended",
-    "vue/no-deprecated-v-on-native-modifier": "recommended",
-    "vue/no-deprecated-v-on-number-modifiers": "recommended",
-    "vue/no-deprecated-vue-config-keycodes": "recommended",
-    "vue/no-dupe-keys": "recommended",
-    "vue/no-dupe-v-else-if": "recommended",
-    "vue/no-duplicate-attributes": "recommended",
-    "vue/no-export-in-script-setup": "recommended",
-    "vue/no-expose-after-await": "recommended",
-    "vue/no-extra-parens": "recommended",
-    "vue/no-lifecycle-after-await": "recommended",
-    "vue/no-lone-template": "recommended",
-    "vue/no-multi-spaces": "recommended",
-    "vue/no-multiple-slot-args": "recommended",
-    "vue/no-mutating-props": "recommended",
-    "vue/no-parsing-error": "recommended",
-    "vue/no-ref-as-operand": "recommended",
-    "vue/no-required-prop-with-default": "recommended",
-    "vue/no-reserved-component-names": "recommended",
-    "vue/no-reserved-keys": "recommended",
-    "vue/no-reserved-props": "recommended",
-    "vue/no-shared-component-data": "recommended",
-    "vue/no-side-effects-in-computed-properties": "recommended",
-    "vue/no-spaces-around-equal-signs-in-attribute": "recommended",
-    "vue/no-template-key": "recommended",
-    "vue/no-template-shadow": "recommended",
-    "vue/no-template-target-blank": "recommended",
-    "vue/no-textarea-mustache": "recommended",
-    "vue/no-unused-components": "recommended",
-    "vue/no-unused-refs": "recommended",
-    "vue/no-unused-vars": "recommended",
-    "vue/no-use-computed-property-like-method": "recommended",
-    "vue/no-use-v-if-with-v-for": "recommended",
-    "vue/no-useless-template-attributes": "recommended",
-    "vue/no-useless-v-bind": "recommended",
-    "vue/no-v-for-template-key-on-child": "recommended",
-    "vue/no-v-html": "all",
-    "vue/no-v-text-v-html-on-component": "recommended",
-    "vue/no-watch-after-await": "recommended",
-    "vue/object-curly-newline": "recommended",
-    "vue/object-curly-spacing": "recommended",
-    "vue/object-property-newline": "recommended",
-    "vue/one-component-per-file": "all",
-    "vue/operator-linebreak": "recommended",
-    "vue/order-in-components": "all",
-    "vue/prefer-import-from-vue": "recommended",
-    "vue/prefer-true-attribute-shorthand": "recommended",
-    "vue/prop-name-casing": "all",
-    "vue/quote-props": "recommended",
-    "vue/require-component-is": "recommended",
-    "vue/require-default-prop": "all",
-    "vue/require-explicit-emits": "recommended",
-    "vue/require-prop-type-constructor": "recommended",
-    "vue/require-prop-types": "recommended",
-    "vue/require-render-return": "recommended",
-    "vue/require-slots-as-functions": "recommended",
-    "vue/require-toggle-inside-transition": "recommended",
-    "vue/require-typed-ref": "recommended",
-    "vue/require-v-for-key": "recommended",
-    "vue/require-valid-default-prop": "recommended",
-    "vue/return-in-computed-property": "recommended",
-    "vue/return-in-emits-validator": "recommended",
-    "vue/script-indent": "recommended",
-    "vue/singleline-html-element-content-newline": "recommended",
-    "vue/space-in-parens": "recommended",
-    "vue/space-infix-ops": "recommended",
-    "vue/space-unary-ops": "recommended",
-    "vue/template-curly-spacing": "recommended",
-    "vue/this-in-template": "all",
-    "vue/use-v-on-exact": "recommended",
-    "vue/v-bind-style": "all",
-    "vue/v-on-event-hyphenation": "all",
-    "vue/v-on-style": "all",
-    "vue/v-slot-style": "all",
-    "vue/valid-attribute-name": "recommended",
-    "vue/valid-define-emits": "recommended",
-    "vue/valid-define-options": "recommended",
-    "vue/valid-define-props": "recommended",
-    "vue/valid-next-tick": "recommended",
-    "vue/valid-template-root": "recommended",
-    "vue/valid-v-bind": "recommended",
-    "vue/valid-v-cloak": "recommended",
-    "vue/valid-v-else": "recommended",
-    "vue/valid-v-else-if": "recommended",
-    "vue/valid-v-for": "recommended",
-    "vue/valid-v-html": "recommended",
-    "vue/valid-v-if": "recommended",
-    "vue/valid-v-is": "recommended",
-    "vue/valid-v-memo": "recommended",
-    "vue/valid-v-model": "recommended",
-    "vue/valid-v-on": "recommended",
-    "vue/valid-v-once": "recommended",
-    "vue/valid-v-pre": "recommended",
-    "vue/valid-v-show": "recommended",
-    "vue/valid-v-slot": "recommended",
-    "vue/valid-v-text": "recommended",
-    "vuejs-accessibility/alt-text": "recommended",
-    "vuejs-accessibility/anchor-has-content": "recommended",
-    "vuejs-accessibility/aria-props": "recommended",
-    "vuejs-accessibility/aria-role": "recommended",
-    "vuejs-accessibility/aria-unsupported-elements": "recommended",
-    "vuejs-accessibility/click-events-have-key-events": "recommended",
-    "vuejs-accessibility/form-control-has-label": "recommended",
-    "vuejs-accessibility/heading-has-content": "recommended",
-    "vuejs-accessibility/iframe-has-title": "recommended",
-    "vuejs-accessibility/interactive-supports-focus": "recommended",
-    "vuejs-accessibility/label-has-for": "recommended",
-    "vuejs-accessibility/media-has-caption": "recommended",
-    "vuejs-accessibility/mouse-events-have-key-events": "recommended",
-    "vuejs-accessibility/no-access-key": "recommended",
-    "vuejs-accessibility/no-autofocus": "recommended",
-    "vuejs-accessibility/no-distracting-elements": "recommended",
-    "vuejs-accessibility/no-redundant-roles": "recommended",
-    "vuejs-accessibility/no-static-element-interactions": "recommended",
-    "vuejs-accessibility/role-has-required-aria-props": "recommended",
-    "vuejs-accessibility/tabindex-no-positive": "recommended",
-    "wrap-iife": "recommended",
-    "wrap-regex": "recommended",
-    "yield-star-spacing": "recommended",
-    "zod/no-any-schema": "all",
-    "zod/no-coerce-boolean": "recommended",
-    "zod/no-empty-custom-schema": "recommended",
-    "zod/no-native-enum": "all",
-    "zod/no-number-schema-with-finite": "recommended",
-    "zod/no-promise-schema": "recommended",
-    "zod/no-throw-in-refine": "recommended",
-    "zod/prefer-meta": "recommended",
-    "zod/prefer-meta-last": "all",
-    "zod/prefer-strict-object": "all",
-    "zod/prefer-top-level-string-formats": "recommended",
-    "zod/require-brand-type-parameter": "recommended",
-    "astro/missing-client-only-directive-value": "recommended",
-    "astro/no-conflict-set-directives": "recommended",
-    "astro/no-deprecated-astro-canonicalurl": "recommended",
-    "astro/no-deprecated-astro-fetchcontent": "recommended",
-    "astro/no-deprecated-astro-resolve": "recommended",
-    "astro/no-deprecated-getentrybyslug": "recommended",
-    "astro/no-unused-define-vars-in-style": "recommended",
-    "astro/valid-compile": "recommended",
-    "astro/jsx-a11y/alt-text": "recommended",
-    "astro/jsx-a11y/anchor-ambiguous-text": "recommended",
-    "astro/jsx-a11y/anchor-has-content": "recommended",
-    "astro/jsx-a11y/anchor-is-valid": "recommended",
-    "astro/jsx-a11y/aria-activedescendant-has-tabindex": "recommended",
-    "astro/jsx-a11y/aria-props": "recommended",
-    "astro/jsx-a11y/aria-proptypes": "recommended",
-    "astro/jsx-a11y/aria-role": "recommended",
-    "astro/jsx-a11y/aria-unsupported-elements": "recommended",
-    "astro/jsx-a11y/autocomplete-valid": "recommended",
-    "astro/jsx-a11y/click-events-have-key-events": "recommended",
-    "astro/jsx-a11y/control-has-associated-label": "recommended",
-    "astro/jsx-a11y/heading-has-content": "recommended",
-    "astro/jsx-a11y/html-has-lang": "recommended",
-    "astro/jsx-a11y/iframe-has-title": "recommended",
-    "astro/jsx-a11y/img-redundant-alt": "recommended",
-    "astro/jsx-a11y/interactive-supports-focus": "recommended",
-    "astro/jsx-a11y/label-has-associated-control": "recommended",
-    "astro/jsx-a11y/media-has-caption": "recommended",
-    "astro/jsx-a11y/mouse-events-have-key-events": "recommended",
-    "astro/jsx-a11y/no-access-key": "recommended",
-    "astro/jsx-a11y/no-autofocus": "recommended",
-    "astro/jsx-a11y/no-distracting-elements": "recommended",
-    "astro/jsx-a11y/no-interactive-element-to-noninteractive-role": "recommended",
-    "astro/jsx-a11y/no-noninteractive-element-interactions": "recommended",
-    "astro/jsx-a11y/no-noninteractive-element-to-interactive-role": "recommended",
-    "astro/jsx-a11y/no-noninteractive-tabindex": "recommended",
-    "astro/jsx-a11y/no-redundant-roles": "recommended",
-    "astro/jsx-a11y/no-static-element-interactions": "recommended",
-    "astro/jsx-a11y/role-has-required-aria-props": "recommended",
-    "astro/jsx-a11y/role-supports-aria-props": "recommended",
-    "astro/jsx-a11y/scope": "recommended",
-    "astro/jsx-a11y/tabindex-no-positive": "recommended",
-    "astro/no-set-html-directive": "all",
-    "astro/no-exports-from-components": "recommended",
-    "astro/no-prerender-export-outside-pages": "recommended",
-    "astro/no-unused-css-selector": "all",
-    "astro/prefer-class-list-directive": "all",
-    "astro/prefer-object-class-list": "all",
-    "astro/prefer-split-class-list": "all"
-};
-const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
-    ...entry,
-    rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
-        [name, !IS_ALL && ruleLevels[name] === 'all' ? 'off' : value])),
-});
-export default [...selectedDefaults,
-
-...policyRules];

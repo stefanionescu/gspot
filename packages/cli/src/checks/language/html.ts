@@ -1,11 +1,12 @@
 import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import type { MarkupProblem, MarkupAttribute } from '#cli/types/checks/language/html.ts';
+import type { ParsedSource } from '#cli/types/parsers/source.ts';
+import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import type { PathAllowance } from '#cli/types/policy/settings.ts';
+import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     LETTERS,
@@ -18,14 +19,22 @@ import {
     DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/config/checks/language/html.ts';
 
-// The text with every placeholder mark pair removed.
+// Remove each delimiter kind in order so an inner placeholder cannot cut an outer interpolation short.
 function withoutPlaceholders(text: string): string {
     let rest = text;
-    for (const [open, close] of PLACEHOLDER_MARKS) rest = withoutMarks(rest, open, close);
+    for (const [open, close] of PLACEHOLDER_MARKS) {
+        let start = rest.indexOf(open);
+        while (start !== -1) {
+            const end = rest.indexOf(close, start + open.length);
+            if (end === -1) break;
+            rest = rest.slice(0, start) + rest.slice(end + close.length);
+            start = rest.indexOf(open);
+        }
+    }
     return rest;
 }
 
-function attributes(element: Node): MarkupAttribute[] {
+function getAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
     const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
     return (tag?.namedChildren ?? [])
@@ -39,15 +48,15 @@ function attributes(element: Node): MarkupAttribute[] {
 }
 
 // Script and active-document contexts can execute data URLs. Image and text resources are inert.
-function isActiveResource(attribute: MarkupAttribute, url: URL, kind: string): boolean {
-    if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(kind);
+function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
+    if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(scriptType);
     if (DOCUMENT_URL_ATTRIBUTES[attribute.element]?.includes(attribute.name) !== true) return false;
     const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
     return ACTIVE_DOCUMENT_TYPES.has(mediaType);
 }
 
 // Decode HTML character references before URL parsing removes embedded tabs and newlines.
-function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefined {
+function scriptScheme(attribute: MarkupAttribute, scriptType: string): string | undefined {
     if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
     const url = URL.parse(decodeHTMLAttribute(attribute.value), 'https://example.invalid');
     switch (url?.protocol) {
@@ -56,7 +65,7 @@ function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefi
             return url.protocol;
         }
         case 'data:': {
-            return isActiveResource(attribute, url, kind) ? url.protocol : undefined;
+            return isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
         }
         default: {
             return undefined;
@@ -64,72 +73,97 @@ function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefi
     }
 }
 
-// The text with the first placeholder of one kind cut out, or undefined when it holds none that closes.
-function firstCut(text: string, open: string, close: string): string | undefined {
-    const start = text.indexOf(open);
-    const end = start === -1 ? -1 : text.indexOf(close, start + open.length);
-    return end === -1 ? undefined : text.slice(0, start) + text.slice(end + close.length);
-}
-
-function withoutMarks(text: string, open: string, close: string): string {
-    let rest = text;
-    let cut = firstCut(rest, open, close);
-    while (cut !== undefined) {
-        rest = cut;
-        cut = firstCut(rest, open, close);
-    }
-    return rest;
-}
-
-function literalProblems(root: Node): MarkupProblem[] {
-    const texts = root
+function literalFindings(input: EngineInput, source: ParsedSource): Finding[] {
+    const texts = source.rootNode
         .descendantsOfType('text')
         .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
-        .map((node) => ({
-            node,
-            rule: 'literal-text',
-            text: `The text "${node.text.trim().slice(0, SHOWN_TEXT)}" belongs in the content file, with a placeholder here.`,
-        }));
-    const held = root.descendantsOfType('element').flatMap((element) =>
-        attributes(element)
-            .filter((entry) => COPY_ATTRIBUTES.has(entry.name) && LETTERS.test(withoutPlaceholders(entry.value)))
-            .map((entry) => ({
-                node: entry.node,
-                rule: 'literal-attribute',
-                text: `The ${entry.name} attribute holds literal text. Use a placeholder.`,
-            })),
+        .map((node) =>
+            findingAt(
+                input,
+                { file: source.path, line: node.startPosition.row + 1, column: node.startPosition.column + 1 },
+                'literal-text',
+                `Replace the text "${node.text.trim().slice(0, SHOWN_TEXT)}" with a placeholder for this template's content source.`,
+            ),
+        );
+    const attributes = source.rootNode.descendantsOfType('element').flatMap((element) =>
+        getAttributes(element)
+            .filter(
+                (attribute) =>
+                    COPY_ATTRIBUTES.has(attribute.name) && LETTERS.test(withoutPlaceholders(attribute.value)),
+            )
+            .map((attribute) =>
+                findingAt(
+                    input,
+                    {
+                        file: source.path,
+                        line: attribute.node.startPosition.row + 1,
+                        column: attribute.node.startPosition.column + 1,
+                    },
+                    'literal-attribute',
+                    `The ${attribute.name} attribute holds literal text. Use a placeholder.`,
+                ),
+            ),
     );
-    return [...texts, ...held];
+    return [...texts, ...attributes];
 }
 
-async function markupFindings(
-    input: EngineInput,
-    paths: string[],
-    read: (root: Node) => MarkupProblem[],
-): Promise<Finding[]> {
-    const found: Finding[] = [];
-    for (const path of paths) {
-        const tree = await parseSource('html', readSource(input.root, path, input.reads).toString('utf8'), input);
-        if (tree === null) throw new Error('The source parser returned no tree.');
-        try {
-            for (const problem of read(tree.rootNode))
-                found.push(
+function inlineFindings(input: EngineInput, source: ParsedSource): Finding[] {
+    return source.rootNode
+        .descendantsOfType('script_element')
+        .filter((element) =>
+            element.namedChildren.some((child) => child.type === 'raw_text' && child.text.trim() !== ''),
+        )
+        .flatMap((element) => {
+            const attributes = getAttributes(element);
+            const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+            if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((entry) => entry.name === 'src')) return [];
+            return [
+                findingAt(
+                    input,
+                    {
+                        file: source.path,
+                        line: element.startPosition.row + 1,
+                        column: element.startPosition.column + 1,
+                    },
+                    'inline-script',
+                    'Move executable inline script to a script file.',
+                ),
+            ];
+        });
+}
+
+function attributeFindings(input: EngineInput, source: ParsedSource): Finding[] {
+    return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
+        const attributes = getAttributes(element);
+        const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+        return attributes.flatMap((attribute) => {
+            const position = {
+                file: source.path,
+                line: attribute.node.startPosition.row + 1,
+                column: attribute.node.startPosition.column + 1,
+            };
+            if (/^on[a-z]+$/u.test(attribute.name))
+                return [
                     findingAt(
                         input,
-                        {
-                            file: path,
-                            line: problem.node.startPosition.row + 1,
-                            column: problem.node.startPosition.column + 1,
-                        },
-                        problem.rule,
-                        problem.text,
+                        position,
+                        'handler-attribute',
+                        `The ${attribute.name} attribute is inline script. Attach the handler from a script file.`,
                     ),
-                );
-        } finally {
-            tree.delete();
-        }
-    }
-    return found;
+                ];
+            const scheme = scriptScheme(attribute, scriptType);
+            return scheme === undefined
+                ? []
+                : [
+                      findingAt(
+                          input,
+                          position,
+                          'script-link',
+                          `A ${scheme} URL embeds executable content. Use an external file.`,
+                      ),
+                  ];
+        });
+    });
 }
 
 /**
@@ -137,9 +171,15 @@ async function markupFindings(
  * @param input the engine input
  * @returns the findings
  */
-function scripts(input: EngineInput): Promise<Finding[]> {
-    const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
-    return markupFindings(input, paths, scriptProblems);
+export async function scripts(input: EngineInput): Promise<Finding[]> {
+    const files = input.files
+        .filter((file) => file.kind === 'source')
+        .map((file) => ({ path: file.path, grammar: 'html' as const }));
+    const findings: Finding[] = [];
+    await visitParsedSources({ ...input, files }, (source) =>
+        findings.push(...inlineFindings(input, source), ...attributeFindings(input, source)),
+    );
+    return findings;
 }
 
 /**
@@ -147,69 +187,17 @@ function scripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-function literals(input: EngineInput): Finding[] | Promise<Finding[]> {
-    const tool = input.view.tool('html');
+export async function literals(input: EngineInput): Promise<Finding[]> {
+    const tool = input.view.options('html');
     const templates = (tool['templates'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
-    const excluded = ((tool['literals_allowed'] as { paths: string[] }[] | undefined) ?? []).flatMap(
-        (entry) => entry.paths,
-    );
+    const excluded = ((tool['literals_allowed'] as PathAllowance[] | undefined) ?? []).flatMap((entry) => entry.paths);
     const isTemplate = pathMatcher(templates);
     const isExcluded = pathMatcher(excluded);
-    const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
-    return markupFindings(input, paths, literalProblems);
+    const files = input.files
+        .filter((file) => isTemplate(file.path) && !isExcluded(file.path))
+        .map((file) => ({ path: file.path, grammar: 'html' as const }));
+    const findings: Finding[] = [];
+    await visitParsedSources({ ...input, files }, (source) => findings.push(...literalFindings(input, source)));
+    return findings;
 }
-
-/**
- * Inline script, handler attributes, and script links in one parsed HTML document.
- * @param root the root node of the document
- * @returns the problems, each at its node
- */
-export function scriptProblems(root: Node): MarkupProblem[] {
-    const inline = root.descendantsOfType('script_element').flatMap((element): MarkupProblem[] => {
-        const held = attributes(element);
-        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
-        const body = element.namedChildren.find((child) => child.type === 'raw_text')?.text.trim() ?? '';
-        const isInert = INERT_SCRIPT_TYPES.has(kind) || held.some((entry) => entry.name === 'src');
-        return isInert || body === ''
-            ? []
-            : [
-                  {
-                      node: element,
-                      rule: 'inline-script',
-                      text: 'Move executable inline script to a script file.',
-                  },
-              ];
-    });
-    const handlers = root.descendantsOfType(['element', 'script_element']).flatMap((element) => {
-        const held = attributes(element);
-        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
-        return held.flatMap((entry): MarkupProblem[] => {
-            if (/^on[a-z]+$/u.test(entry.name))
-                return [
-                    {
-                        node: entry.node,
-                        rule: 'handler-attribute',
-                        text: `The ${entry.name} attribute is inline script. Attach the handler from a script file.`,
-                    },
-                ];
-            const scheme = scriptScheme(entry, kind);
-            return scheme === undefined
-                ? []
-                : [
-                      {
-                          node: entry.node,
-                          rule: 'script-link',
-                          text: `A ${scheme} URL embeds executable content. Use an external file.`,
-                      },
-                  ];
-        });
-    });
-    return [...inline, ...handlers];
-}
-
-/** The analyses this file provides, by the name a manifest check gives them. */
-export const HTML_ANALYSES: Record<string, Engine> = {
-    'html/scripts': scripts,
-    'html/literals': literals,
-};

@@ -1,53 +1,57 @@
-// The init command: its flags, the profile's answers, and the run from detection to the written setup.
-import { compact } from '#cli/platform/text.ts';
+// The init command: its flags, the template's answers, and the run from detection to the written setup.
+import { resolve } from 'node:path';
 import { hasPolicy } from '#cli/policy/read.ts';
-import { ciSchema } from '#cli/policy/schema.ts';
-import { write } from '#cli/commands/init/write.ts';
+import { compact } from '#cli/platform/objects.ts';
+import { findRoot } from '#cli/repository/root.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { Option } from '@commander-js/extra-typings';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { note, print } from '#cli/output/messages.ts';
+import { getTemplate } from '#cli/policy/templates.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
-import { askConfirmation } from '#cli/commands/prompts.ts';
-import { getProfile } from '#cli/policy/profiles/parse.ts';
-import type { Profile } from '#cli/types/policy/profiles.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
-import type { Program } from '#cli/types/commands/commands.ts';
-import { initPlanText } from '#cli/commands/init/plan/text.ts';
+import { writeSetup } from '#cli/commands/init/write.ts';
+import { initPlanText } from '#cli/commands/init/plan.ts';
+import { policySchema } from '#cli/policy/schema/policy.ts';
+import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import type { Program } from '#cli/types/commands/program.ts';
+import type { Template } from '#cli/types/policy/templates.ts';
 import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
-import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
+import { askConfirmation } from '#cli/commands/init/questions.ts';
+import { note, print, printResult } from '#cli/output/messages.ts';
+import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
+import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
+import type { InitResult, InitPrepared } from '#cli/types/commands/init.ts';
 
-// The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
-function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
-    if (install === undefined) return undefined;
-    return install ? 'yes' : 'no';
-}
-
-// A profile answers the questions a flag did not: its kits, hooks, workflow, runner, and rules.
-function profileAnswers(profile: Profile): Partial<InitOptions> {
-    const { tables } = profile;
-    const configurations = tables.kits ?? [];
-    const install = tables.rules?.install;
+// A template answers the questions a flag did not: its configurations, hooks, workflow, runner, and rules.
+function templateAnswers(template: Template): Partial<InitOptions> {
+    const { tables } = template;
+    const configurations = tables.configurations ?? [];
+    const install = tables.agent_rules.enabled;
     return compact({
-        kits: configurations.length === 0 ? ['none'] : configurations,
-        hooks: tables.hooks === undefined ? 'none' : 'gspot',
+        configurations: configurations.length === 0 ? [NO_CONFIGURATIONS] : configurations,
+        hooks: tables.hooks !== undefined,
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
-        runner: tables.runner ?? 'none',
-        rules: ruleAnswer(install),
+        runner: tables.run_with ?? 'none',
+        rules: install,
     });
 }
 
-// The result of an init that writes nothing: a preview, or an unreadable configuration file.
-function unwritten(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
+// Show the plan before confirmation. Dry runs and unreadable files return immediately.
+function presentPlan(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
     const { plan, policyText } = prepared;
+    print(initPlanText(plan));
     if (options.isDryRun) {
-        if (!options.json) print('--dry-run: nothing written.\n');
+        print('--dry-run: nothing written.\n');
         return { text: '', json: { root, plan, policy: policyText, dryRun: true }, exitCode: 0 };
     }
     if (plan.unread.length === 0) return undefined;
     return {
         text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
-        json: { root, plan, error: 'unreadable-config', written: false },
+        json: {
+            root,
+            plan,
+            error: 'unreadable-config',
+            message: 'A configuration file could not be read. Nothing written.',
+            written: false,
+        },
         exitCode: EXIT_ERROR,
     };
 }
@@ -60,18 +64,24 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root))
-        return { text: ALREADY_INSTALLED, json: { error: 'already-initialized' }, exitCode: EXIT_ERROR };
-    const profile = options.from === undefined ? undefined : await getProfile(options.from, options.cwd);
-    const effective = profile === undefined ? options : { ...profileAnswers(profile), ...options, profile };
+        return {
+            text: ALREADY_INSTALLED,
+            json: { error: 'already-initialized', message: ALREADY_INSTALLED.trim() },
+            exitCode: EXIT_ERROR,
+        };
+    let effective = options;
+    if (options.from !== undefined) {
+        const template = await getTemplate(options.from, options.cwd);
+        effective = { ...templateAnswers(template), ...options, template };
+    }
     const prepared = await prepare(root, effective);
     const { plan, policyText } = prepared;
-    if (!options.json) print(initPlanText(plan));
-    const early = unwritten(root, options, prepared);
+    const early = presentPlan(root, options, prepared);
     if (early !== undefined) return early;
     const isGo = await askConfirmation('Continue?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
-    const written = await write(root, options, prepared);
-    note('run gspot check to check this repository; gspot doctor checks the setup');
+    const written = await writeSetup(root, { install: options.install }, prepared);
+    if (written.exitCode === 0) note('run gspot check to check this repository; gspot doctor checks the setup');
     return {
         text: written.lines.join('\n'),
         json: {
@@ -79,6 +89,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
             plan,
             policy: policyText,
             note: written.installNote,
+            ...(written.exitCode === 0 ? {} : { error: 'installation', message: written.installNote }),
         },
         exitCode: written.exitCode,
     };
@@ -97,44 +108,52 @@ export function registerInit(program: Program): void {
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
+            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --configurations bash',
         )
         .option('--yes', 'Accept the plan without asking')
-        .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')
-        .option('--kits <kits...>', 'Use these kits at the root instead of the detected ones')
-        .option('--scope <path=kits...>', 'Add scopes, each as a path and its comma-separated kits')
+        .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo')
+        .option(
+            '--configurations <configurations...>',
+            'Use these configurations at the root instead of the detected ones',
+        )
+        .option(
+            '--scope-configurations <path=configurations...>',
+            'Add scopes, each as a path and its comma-separated configurations',
+        )
         .option('--no-install', 'Skip installing the tools and print the install command')
         .addOption(
             new Option('--ci <provider>', 'Write a CI workflow for this provider').choices(
-                ciSchema.shape.provider.options,
+                policySchema.shape.ci.unwrap().shape.provider.options,
             ),
         )
         .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
         .option('--no-rules', 'Install no rules for coding agents')
-        .option('--no-runner', 'Add gspot to no task runner')
+        .option('--no-task', 'Set up no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(
-                (cwd) =>
-                    initCommand({
-                        cwd,
-                        yes: flags.yes === true,
-                        isDryRun: flags.dryRun === true,
-                        json: global.json === true,
-                        install: flags.install,
-                        ...compact({
-                            from: flags.from,
-                            kits: flags.kits,
-                            scopes: flags.scope,
-                            hooks: flags.hooks ? undefined : ('none' as const),
-                            ci: flags.ci === false ? ('none' as const) : flags.ci,
-                            runner: flags.runner ? undefined : ('none' as const),
-                            rules: flags.rules ? undefined : ('no' as const),
-                        }),
+            if (global.json === true && flags.yes !== true)
+                throw new GspotError('prompt', [
+                    'JSON initialization requires --yes to accept the plan without prompts.',
+                ]);
+            const cwd = resolve(global.C ?? process.cwd());
+            printResult(
+                await initCommand({
+                    cwd,
+                    yes: flags.yes === true,
+                    isDryRun: flags.dryRun === true,
+                    install: flags.install,
+                    ...compact({
+                        from: flags.from,
+                        configurations: flags.configurations,
+                        scopes: flags.scopeConfigurations,
+                        hooks: flags.hooks ? undefined : false,
+                        ci: flags.ci === false ? ('none' as const) : flags.ci,
+                        runner: flags.task ? undefined : ('none' as const),
+                        rules: flags.rules ? undefined : false,
                     }),
-                global,
+                }),
             );
         });
 }

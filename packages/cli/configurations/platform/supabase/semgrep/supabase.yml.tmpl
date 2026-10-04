@@ -1,0 +1,210 @@
+<%
+const document = {
+    rules: [
+        {
+            id: 'supabase-no-raw-sql-interpolation',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: '$CLIENT.rpc(`...${$VAR}...`)\n',
+                        },
+                        {
+                            pattern: '$CLIENT.from($TABLE).select(`...${$VAR}...`)\n',
+                        },
+                    ],
+                },
+            ],
+            message:
+                'SQL injection risk: string interpolation in Supabase query. Use parameterised arguments or RPC parameters.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-89'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-no-rpc-user-input',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: '$CLIENT.rpc($NAME, req.body)',
+                        },
+                        {
+                            pattern: '$CLIENT.rpc($NAME, req.body.$FIELD)',
+                        },
+                    ],
+                },
+            ],
+            message: 'Passing raw request body to an RPC function. Validate and extract only the fields you need.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-20'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-no-service-role-in-client',
+            patterns: [
+                {
+                    pattern: 'createClient($URL, $KEY)',
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$KEY',
+                        regex: '.*(service_role|SERVICE_ROLE).*',
+                    },
+                },
+            ],
+            message:
+                'Service role key used outside admin client factory. Use the centralized admin client to audit RLS bypass usage.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-269'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-no-hardcoded-service-key',
+            patterns: [
+                {
+                    pattern: 'createClient($URL, $KEY)',
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$KEY',
+                        regex: '^"eyJhbGciOi.*',
+                    },
+                },
+            ],
+            message: 'Hardcoded JWT in createClient(). Use environment variables.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-798'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-edge-no-eval',
+            'pattern-either': [
+                {
+                    pattern: 'eval(...)',
+                },
+                {
+                    pattern: 'new Function(...)',
+                },
+            ],
+            message: 'eval()/new Function() in edge functions risks arbitrary code execution.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            paths: {
+                include: ['**/supabase/functions/**'],
+            },
+            metadata: {
+                cwe: ['CWE-94'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-edge-no-configured-import',
+            pattern: 'import($VAR)',
+            message: 'Dynamic import() in edge functions may source untrusted modules. Use static imports.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            paths: {
+                include: ['**/supabase/functions/**'],
+            },
+            metadata: {
+                cwe: ['CWE-94'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-edge-cors-wildcard-with-credentials',
+            'pattern-either': [
+                {
+                    pattern: '"Access-Control-Allow-Origin": "*"\n',
+                },
+                {
+                    pattern: "'Access-Control-Allow-Origin': '*'\n",
+                },
+            ],
+            message:
+                'Wildcard CORS origin: if used with credentials, this allows any origin to access the endpoint. Use a specific origin.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            paths: {
+                include: ['**/supabase/functions/**'],
+            },
+            metadata: {
+                cwe: ['CWE-346'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-edge-unvalidated-json-body',
+            patterns: [
+                {
+                    pattern: 'await req.json()',
+                },
+                {
+                    'pattern-not-inside': 'const $BODY = await req.json()\n...\n$SCHEMA.parse($BODY)\n',
+                },
+                {
+                    'pattern-not-inside': 'const $BODY = await req.json()\n...\n$SCHEMA.safeParse($BODY)\n',
+                },
+            ],
+            message:
+                'Request body consumed without schema validation. Use zod or similar to validate the parsed JSON.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            paths: {
+                include: ['**/supabase/functions/**'],
+            },
+            metadata: {
+                cwe: ['CWE-20'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-no-console-log-secrets',
+            patterns: [
+                {
+                    pattern: 'console.log(Deno.env.get($VAR))',
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$VAR',
+                        regex: '.*(KEY|SECRET|PASSWORD|TOKEN).*',
+                    },
+                },
+            ],
+            message: 'Logging a sensitive environment variable. Remove or mask before logging.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-532'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'supabase-rls-bypass-service-role',
+            pattern: 'createAdminClient(...)',
+            message:
+                'createAdminClient() bypasses RLS. Add a comment explaining why RLS bypass is needed for this operation.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-269'],
+                category: 'security',
+            },
+        },
+    ],
+};
+recordRules(document);
+%><%~ yaml(document).trimEnd() %>

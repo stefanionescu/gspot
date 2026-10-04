@@ -1,0 +1,2 @@
+export const GOOD_IGNORE =
+    '[[ignore]]\ncheck = "bash/shellcheck"\nreason = "The launcher script checks its own arguments."\n';

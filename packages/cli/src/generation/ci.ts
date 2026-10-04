@@ -1,7 +1,10 @@
+// Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { GeneratedFile } from '#cli/types/kits.ts';
-import type { Pipeline } from '#cli/types/generation/generation.ts';
+import type { Pipeline } from '#cli/types/generation/ci.ts';
+import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 
 import {
     MISE,
@@ -9,10 +12,11 @@ import {
     CACHE,
     RUNNERS,
     CHECKOUT,
+    CACHED_PATHS,
     NODE_VERSION,
-    MISE_CONFIG_PATH,
-    MISE_MIN_VERSION,
-} from '#cli/config/generation/generation.ts';
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
+} from '#cli/config/generation/ci.ts';
 
 // An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
 function pinned(action: string, version: string): Scalar {
@@ -47,22 +51,11 @@ function buildCheckScript(command: string, isFull: boolean): string {
         '            echo "Invalid CI comparison object" >&2',
         '            exit 2',
         '        fi',
-        `        ${command} --changed="\${base}"`,
+        `        ${command} --changed --base "\${base}"`,
         '        ;;',
         'esac',
     ].join('\n');
 }
-
-// The paths the job caches between runs: the package caches and the installed tools.
-const CACHED_PATHS = [
-    '~/.npm/_cacache',
-    '~/.bun/install/cache',
-    '~/.cache/uv',
-    '~/.cache/mise',
-    '~/.local/share/mise/installs',
-    '~/.local/share/pnpm/store',
-    '~/.yarn/berry/cache',
-];
 
 function buildJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
     const runner = RUNNERS[platform];
@@ -136,7 +129,7 @@ export function githubFile(shape: Pipeline): GeneratedFile {
         ),
     });
     const content = `${headerFor('gspot.yml', shape.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;
-    return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };
+    return { path: GITHUB_WORKFLOW, content, readOnly: true, kind: 'workflow' };
 }
 
 /**
@@ -153,7 +146,7 @@ export function gitlabFile(shape: Pipeline): GeneratedFile {
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
         buildCheckScript(`${command} check`, shape.run === 'all'),
     ].join('\n');
-    const path = '.gitlab/ci/gspot.yml';
+    const path = GITLAB_WORKFLOW;
     const content = stringify({
         gspot: {
             stage: 'test',

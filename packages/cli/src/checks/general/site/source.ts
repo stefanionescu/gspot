@@ -1,14 +1,17 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { WebManifest } from '#cli/types/parsers/site.ts';
+import { webManifestSchema } from '#cli/parsers/schema/site.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { SVGO_SAVING, TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
+
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.reads).toString('utf8');
-    const result = await runCheckCommand(input, ['svgo', '--input', '-', '--output', '-'], {
+    const result = await runEngineTool(input, ['svgo', '--input', '-', '--output', '-'], {
         cwd: input.root,
         stdin: original,
     });
@@ -96,9 +99,9 @@ export function webManifest(input: EngineInput): Finding[] {
     );
     return manifests.flatMap((file): Finding[] => {
         const text = readSource(input.root, file.path, input.reads).toString('utf8');
-        let parsed: { name?: unknown; icons?: { src?: string }[] };
+        let parsed: WebManifest;
         try {
-            parsed = JSON.parse(text) as typeof parsed;
+            parsed = webManifestSchema.parse(JSON.parse(text));
         } catch (error) {
             return [
                 findingAt(

@@ -1,11 +1,10 @@
 // The header init prints: what it found in the repository, one row per kind.
-import type { DetectionSummary } from '#cli/types/commands/init.ts';
-import { GAP_WIDTH, KIND_ROWS, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
-const GAP = ' '.repeat(GAP_WIDTH);
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten detection rows share this shape; one owner keeps the column layout.
+import type { DetectionSummary } from '#cli/types/commands/init.ts';
+import { KIND_ROWS, DETECTION_GAP, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
+
 function row(label: string, items: string[]): string | undefined {
-    return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(GAP)}`;
+    return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(DETECTION_GAP)}`;
 }
 
 function scopesRow(summary: DetectionSummary): string | undefined {
@@ -13,11 +12,8 @@ function scopesRow(summary: DetectionSummary): string | undefined {
     if (summary.scopes.length <= 1) return row('scopes', paths);
     const sources = new Set(summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.source));
     let note = 'from gspot.toml';
-    if (sources.has('project'))
-        note = sources.has('workspace')
-            ? 'a project file or a workspace declaration in each'
-            : 'a project file in each';
-    else if (sources.has('workspace')) note = 'from workspace declarations';
+    if (sources.has('project')) note = 'a project file in each';
+    if (sources.has('flag')) note = 'from --scope-configurations';
     return row('scopes', [...paths, note]);
 }
 
@@ -37,30 +33,37 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
 }
 
 function ownershipRows(summary: DetectionSummary): string[] {
-    const lines: string[] = [];
-    if (summary.owned.length > 0) lines.push(`already configured   ${summary.owned.join('  ')}`);
-    if (summary.unowned.length > 0) lines.push(`no gspot configuration      ${summary.unowned.join('  ')}`);
-    if (lines.length > 0) lines.push('');
-    return lines;
+    const lines = [row('gspot replaces', summary.owned), row('no configuration for', summary.unowned)].filter(
+        (line) => line !== undefined,
+    );
+    return lines.length === 0 ? [] : [...lines, ''];
 }
 
 /**
- * The detection header: tracked files, what each kit kind was found from, scopes, and tooling.
+ * The detection header: tracked files, what each configuration kind was found from, scopes, and tooling.
  * @param summary what init detected
  * @returns the text, ending with a blank line when tooling was found
  */
 export function detectionText(summary: DetectionSummary): string {
-    const languages = summary.plans
-        .filter((plan) => plan.kind === 'language' && summary.manifests.get(plan.kit)?.kit.auto !== true)
-        .map((plan) => `${plan.kit} ${plan.evidence.split(' ', 1)[0] ?? ''}`);
+    const languages = summary.detected
+        .filter(
+            (evidence) =>
+                evidence.kind === 'language' &&
+                summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
+        )
+        .map((evidence) => `${evidence.configuration} ${evidence.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
         row('languages', languages),
         ...KIND_ROWS.map(({ label, kind }) =>
             row(
                 label,
-                summary.plans
-                    .filter((plan) => plan.kind === kind && summary.manifests.get(plan.kit)?.kit.auto !== true)
-                    .map((plan) => `${plan.kit}  ${plan.evidence}`),
+                summary.detected
+                    .filter(
+                        (evidence) =>
+                            evidence.kind === kind &&
+                            summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
+                    )
+                    .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
             ),
         ),
         scopesRow(summary),

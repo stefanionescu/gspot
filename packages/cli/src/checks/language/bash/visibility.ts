@@ -1,19 +1,19 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
+import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const privatePrefix: Analysis = async (context, scripts) => {
-    const entries = new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')]);
-    const index = await scripts();
+export const privatePrefix: Engine = async (input) => {
+    const entries = entryFunctions(input);
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
-            if (entries.has(entry.name)) return [];
+            if (entries.has(entry.name) || index.files.every((candidate) => !candidate.references.has(entry.name)))
+                return [];
             const callers = index.files
                 .filter(
                     (candidate) =>
@@ -25,7 +25,7 @@ export const privatePrefix: Analysis = async (context, scripts) => {
             if (isPrivate && callers.length > 0)
                 return [
                     findingAt(
-                        context.input,
+                        input,
                         { file: file.path, line: entry.start },
                         'called-outside',
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
@@ -34,7 +34,7 @@ export const privatePrefix: Analysis = async (context, scripts) => {
             if (!isPrivate && callers.length === 0)
                 return [
                     findingAt(
-                        context.input,
+                        input,
                         { file: file.path, line: entry.start },
                         'unprefixed',
                         `${entry.name} is called from no other file; name it _${entry.name}.`,
@@ -47,12 +47,11 @@ export const privatePrefix: Analysis = async (context, scripts) => {
 
 /**
  * One finding per private function below a public one, and one when main is not the last function.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const privateBeforePublic: Analysis = async (context, scripts) => {
-    const index = await scripts();
+export const privateBeforePublic: Engine = async (input) => {
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
         const findings = [];
         let isPublicSeen = false;
@@ -61,7 +60,7 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
             if (isPrivate && isPublicSeen)
                 findings.push(
                     findingAt(
-                        context.input,
+                        input,
                         { file: file.path, line: entry.start },
                         'private-before-public',
                         `${entry.name} is private and sits below a public function.`,
@@ -74,7 +73,7 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
         if (main !== undefined && last !== undefined && last.name !== 'main')
             findings.push(
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: main.start },
                     'main-not-last',
                     'main is not the last function.',

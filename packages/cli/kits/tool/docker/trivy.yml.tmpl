@@ -1,9 +1,0 @@
-timeout: <%= json(`${String(settings['timeout'] ?? 600)}s`, 0) %>
-severity:
-<% for (const level of String(settings['tools.trivy.severity'] ?? 'HIGH,CRITICAL').split(',')) { %>    - <%= json(level.trim(), 0) %>
-<% } %>scan:
-    skip-dirs:
-        - node_modules
-        - .gspot
-        - .git
-ignorefile: <%= json('.gspot/config/' + (scope === '' ? '' : scope + '/') + 'trivyignore', 0) %>

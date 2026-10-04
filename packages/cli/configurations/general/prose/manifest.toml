@@ -1,0 +1,72 @@
+ignored = [
+    ".gspot/config/vale/styles/Google/",
+    ".gspot/config/vale/styles/Microsoft/",
+    ".gspot/config/vale/styles/write-good/",
+    ".gspot/config/vale/styles/proselint/",
+    ".gspot/config/vale/styles/alex/",
+    ".gspot/config/vale/styles/RedHat/",
+    ".gspot/config/vale/styles/Readability/",
+    ".gspot/config/vale/styles/Harper/",
+    ".gspot/config/vale/styles/.vale-config/",
+    ".gspot/config/vale/styles/config/dictionaries/",
+]
+
+[configuration]
+title = "Prose"
+requires = ["markdown"]
+description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
+
+[files]
+extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".css", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
+tags = ["shebang:shell"]
+
+[[tool]]
+name = "vale"
+version = "3.21.0"
+mise = "vale"
+brew = "vale"
+winget = "errata-ai.Vale"
+scoop = "vale"
+github = {name = "errata-ai/vale", version = "v3.21.0"}
+
+[[tool.replace]]
+file = ".vale.ini"
+
+[[tool.replace]]
+file = "_vale.ini"
+
+[[tool.replace]]
+file = "vale.ini"
+
+[[config]]
+target = ".gspot/config/vale.ini"
+tool = "vale"
+rule_keys = ["*.rules", "*.BasedOnStyles"]
+
+[[check]]
+name = "vale"
+tool = "vale"
+title = "Lint prose"
+example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Project names belong in the vocabulary only when they are legitimate names."
+level = "recommended"
+stage = "commit"
+summary = "Checks ambiguous dates with bundled Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
+why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
+help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or use gspot ignore prose/vale --rule <rule> --reason \"<why>\"."
+
+[[check]]
+name = "hidden"
+title = "Keep prose visible to checks"
+example = "A prose-linter disable directive in source reports a bypass finding. Remove the directive and correct the text, or record the narrowly scoped policy exception with its reason."
+level = "all"
+stage = "commit"
+summary = "Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check."
+why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
+help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
+
+[[setting]]
+name = "prose.vocabulary"
+type = "list"
+direction = "loosening"
+default = []
+summary = "Names Vale accepts as written: products, tools, people."

@@ -1,0 +1,71 @@
+[configuration]
+title = "Vue"
+requires = ["javascript"]
+recommends = ["typescript", "css", "vitest"]
+description = "Vue single-file components: ESLint reads the template and the script together, with the recommended Vue and accessibility rules as errors, and the Testing Library rules read test files."
+
+[detect]
+dependencies = ["vue"]
+extensions = [".vue"]
+
+[files]
+extensions = [".vue"]
+kinds = ["source"]
+
+[[tool]]
+name = "eslint-plugin-vue"
+eslint = {extensions = [".vue"]}
+kind = "library"
+version = "10.11.0"
+npm = "eslint-plugin-vue"
+
+[[tool]]
+name = "vue-eslint-parser"
+kind = "library"
+version = "10.4.1"
+npm = "vue-eslint-parser"
+
+[[tool]]
+name = "eslint-plugin-vuejs-accessibility"
+kind = "library"
+version = "2.6.0"
+npm = "eslint-plugin-vuejs-accessibility"
+
+[[tool]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"
+
+[[tool]]
+name = "vue-tsc"
+version = "3.3.11"
+npm = "vue-tsc"
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+component_globs = ["**/*.vue"]
+
+[[check]]
+name = "tsc"
+title = "Check Vue types"
+example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
+level = "recommended"
+stage = "push"
+runs = "scope"
+cwd = "scope"
+tool = "vue-tsc"
+replaces = "typescript/tsc"
+when = {configuration = "typescript"}
+files = {extensions = [".vue"]}
+output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
+why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
+help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
+
+[required_eslint_rules]
+vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]

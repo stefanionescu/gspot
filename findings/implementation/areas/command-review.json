@@ -1,0 +1,875 @@
+[
+    {
+        "id": "areas/commands/001",
+        "source": "findings/areas/commands.md",
+        "line": 101,
+        "section": "Findings",
+        "finding": "| `commands/ignore.ts:49-70` (`deleteIgnore`) | Bug. `--remove` replaces the whole text that `commitPolicy` returns with \"removed N ignore entries\". When apply fails after the write, the user sees a success line, exit code 2, and no reason. Any apply notes are lost too. The `counter` out-parameter exists only to build this text. | Count the matching entries in `policy.ignores` before the commit. Pass the finished description to `commitPolicy`. Delete the `counter` argument of `removeMatching`. |",
+        "owner": "`commands/ignore.ts:49-70` (`deleteIgnore`)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/002",
+        "source": "findings/areas/commands.md",
+        "line": 102,
+        "section": "Findings",
+        "finding": "| `commands/init/questions.ts:44-46` (`askCi`) | Bug. If the repository has any lint job, an explicit `--ci github` or `--ci gitlab` is ignored without a message. | Check `options.ci` first, or refuse the flag and name the lint job that blocks it. |",
+        "owner": "`commands/init/questions.ts:44-46` (`askCi`)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/003",
+        "source": "findings/areas/commands.md",
+        "line": 103,
+        "section": "Findings",
+        "finding": "| `lifecycle/write.ts:16-24, 77`, `tools/vale.ts:149-156` | `writeOutputs` runs `vale sync` over the network when no Vale packages are present. So `apply`, `set`, `ignore`, `add`, `remove`, and `init` all download packages. The help of `apply` and `set` says \"installs no tools\". | Remove `noteProsePackages` from `writeOutputs`. Add the Vale install as one more entry in `installations` in `install/steps.ts`. |",
+        "owner": "`lifecycle/write.ts:16-24, 77`, `tools/vale.ts:149-156`",
+        "location": ["packages/cli/src/generation/outputs.ts", "packages/cli/src/tools/vale.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Vale downloads remain only in the installation phases, never generation/apply. Existing repaired contract retained by the unified writer.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/004",
+        "source": "findings/areas/commands.md",
+        "line": 104,
+        "section": "Findings",
+        "finding": "| `commands/install/command.ts:18-56` vs `install/steps.ts:17-67` | Two hand-kept lists of the install steps: one for `--dry-run` (`preparation`, `previewInstallation`) and one for the real run (`installations`). They use different tests for \"Python needed\": `toolEnvironment(...).length > 0` builds the whole pyproject just to test it, while the real run uses `pythonPins(...).length === 0`. The hook line in the dry run is not what `installHooks` does. | Give each `InstallationStep` a `preview(session)` next to `run`. Build the dry run from the same array. Delete `preparation` and `previewInstallation`. |",
+        "owner": "`commands/install/command.ts:18-56` vs `install/steps.ts:17-67`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/005",
+        "source": "findings/areas/commands.md",
+        "line": 105,
+        "section": "Findings",
+        "finding": "| `install/command.ts:59-68, 97-118`, `install/steps.ts:99-131` | Wrapper chain: `installCommand` → `installEverything` → `installTools(session, true)`, and `finishInstall(session, isInstalling)` → `installTools`. The `isInstalling` flag is false only for `init --no-install`. `installCommand` turns every error into exit 2 with a hard-coded `2`, so programming errors skip the shared error path in `printCommand`. | Keep one `installTools(session)` that returns `{ note, exitCode }`. Let `init` check `options.install` itself. Delete `installEverything` and the boolean. Let unknown errors reach `printCommand`. |",
+        "owner": "`install/command.ts:59-68, 97-118`, `install/steps.ts:99-131`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/006",
+        "source": "findings/areas/commands.md",
+        "line": 106,
+        "section": "Findings",
+        "finding": "| `commands/check/command.ts:17-29, 98`, `types/commands/check.ts` `CheckFlags.changed` | `CheckCommand.parseOptions` rewrites `--changed` to `--changed=`, so `flags.changed` is `''` and never `true`. That makes `flags.changed === true ? undefined : ...` dead. I verified this with commander. Help shows `--changed [ref]`, but `gspot check --changed main` turns `main` into a path and fails with \"Path main matches no repository files\". | Make `--changed` a boolean and add `--base <ref>`, or show `--changed[=ref]` in the usage line. Delete the dead branch and the `true` member of the type. |",
+        "owner": "`commands/check/command.ts:17-29, 98`, `types/commands/check.ts` `CheckFlags.changed`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/007",
+        "source": "findings/areas/commands.md",
+        "line": 107,
+        "section": "Findings",
+        "finding": "| `check/command.ts:139`, `config/commands/check.ts:5`, `config/generation/generation.ts:70-74` | Four flags choose what `check` reads: `--staged`, `--hook commit` or `--hook push`, the hidden `--push`, and `--message-file`. The hook scripts call `--staged`, `--push`, and `--message-file`, never `--hook`. Yet the help for `--hook` says \"as that hook does\". `--hook push` does not read the pushed refs. The `--hook` choices `commit` and `push` do not match the hook names `pre-commit` and `pre-push`. | One `--hook <pre-commit or pre-push or commit-msg>` that the scripts call, which replaces `--push` and the stage meaning of `--staged`. Or delete `--hook`. See the questions. |",
+        "owner": "`check/command.ts:139`, `config/commands/check.ts:5`, `config/generation/generation.ts:70-74`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/008",
+        "source": "findings/areas/commands.md",
+        "line": 108,
+        "section": "Findings",
+        "finding": "| `execution/execute.ts:155-162` via `check/command.ts:138` | `gspot check --dry-run` without `--fix` is silently ignored. | Refuse it, the same way `--staged --fix` is refused (`check/run.ts:14-17`). |",
+        "owner": "`execution/execute.ts:155-162` via `check/command.ts:138`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/009",
+        "source": "findings/areas/commands.md",
+        "line": 109,
+        "section": "Findings",
+        "finding": "| `commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts` | One run passes through about 10 hops: action → `runCheck` → `printCommand` → `checkedCommand` → `checkCommand` (`run.ts`) → `checkStaged`, `checkPush`, or `checkContent` → `selectionsFor` → `changedSet` → `revisionSelection` → `getChanged`. `checkedCommand` and `checkCommand` differ by two letters. `run.ts` is 52 lines of routing. `changedSet` → `revisionSelection` → `getChanged` is a wrapper on a wrapper. | Merge `run.ts` into `command.ts`. Inline `revisionSelection` into `changedSet`. Rename `content.ts`/`checkContent` to `tree.ts`/`checkTree`, `unknownSelection` to `refuseUnknownChecks`, and `checkedCommand` to `runOrCancel`. |",
+        "owner": "`commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/010",
+        "source": "findings/areas/commands.md",
+        "line": 110,
+        "section": "Findings",
+        "finding": "| `check/run.ts:47-48` and `selection.ts:110-111`; `check/command.ts:51` and `push.ts:87`; `run.ts:20` and `content.ts:173` | Three guards run twice: \"Revision selection requires a Git repository.\", `assertPushOptions`, and `refusalFor` on `--staged` runs (once before the index checkout and once inside it). | Run each guard once, in the router. |",
+        "owner": "`check/run.ts:47-48` and `selection.ts:110-111`; `check/command.ts:51` and `push.ts:87`; `run.ts:20` and `content.ts:173`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/011",
+        "source": "findings/areas/commands.md",
+        "line": 111,
+        "section": "Findings",
+        "finding": "| `commands/edit.ts` | The name says nothing. The file holds the shared policy-edit pipeline (`preparePolicy`, `writePolicy`, `commitPolicy`, `requireReason`) plus `installSelection`, which only `add` and `remove` use. It sits beside real commands, so it reads like an `edit` command. | Rename to `policy-edit.ts`. Move `installSelection` into `kits.ts`. The layer edges do not allow a move to `policy/`, because `policy` may not import `lifecycle`. |",
+        "owner": "`commands/edit.ts`",
+        "location": ["packages/cli/src/commands/policy-edit.ts", "packages/cli/src/commands/configurations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy-edit names its shared policy pipeline. Add/remove own one substantive publication/installation calculation; installSelection is deleted rather than relocated as a forwarding wrapper.",
+            "Current command/reporter source passes canonical ESLint and formatting; CLI types passed before the import-only execution-owner moves (/tmp/gspot-command-ownership-final-eslint.json, /tmp/gspot-command-ownership-format-check.log, /tmp/gspot-command-ownership-final-types.log). Final shared unknown-name add caller and tree comment pass current lint (/tmp/gspot-configurations-command-shared-eslint.json, /tmp/gspot-execution-owner-final-eslint.json).",
+            "Affected coherent behavior focus:233 cases passed; its three stale message expectations were corrected and the full29-case program/template owners passed with116 assertions,0 failures (/tmp/gspot-tests-unit-assertions-focus.log, /tmp/gspot-tests-unit-assertions-correction.log). The first focus includes actual add/remove installation-failure policy preservation, unexpected failure handling, init/hooks, policy publication, template sources/omissions/empty tables, and reporter behavior.",
+            "Old edit/add/remove command files and installSelection are deleted with every actual consumer updated. Dedicated config/type ownership remains as required; final all-suite verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/commands/012",
+        "source": "findings/areas/commands.md",
+        "line": 112,
+        "section": "Findings",
+        "finding": "| `commands/add.ts`, `commands/remove.ts` | Two 69-line files with the same imports, the same `findRoot` + `assertPinMatches` + mutation + `commitPolicy` + `installSelection` flow, and the same flags. The action parameters are named `configurations` and `configuration` (`add.ts:56`, `remove.ts:56`). The `removeCommand` JSDoc says \"drops one configuration\". These are kits. | Merge into `commands/kits.ts` and rename the parameters to `kits` and `kit`. |",
+        "owner": "`commands/add.ts`, `commands/remove.ts`",
+        "location": [
+            "packages/cli/src/commands/configurations.ts",
+            "packages/cli/src/types/commands/configurations.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Add/remove share the actual applied-session pipeline, with distinct validation/mutations and precise configuration names. The agreed configuration terminology replaces the audit kit names.",
+            "Current command/reporter source passes canonical ESLint and formatting; CLI types passed before the import-only execution-owner moves (/tmp/gspot-command-ownership-final-eslint.json, /tmp/gspot-command-ownership-format-check.log, /tmp/gspot-command-ownership-final-types.log). Final shared unknown-name add caller and tree comment pass current lint (/tmp/gspot-configurations-command-shared-eslint.json, /tmp/gspot-execution-owner-final-eslint.json).",
+            "Affected coherent behavior focus:233 cases passed; its three stale message expectations were corrected and the full29-case program/template owners passed with116 assertions,0 failures (/tmp/gspot-tests-unit-assertions-focus.log, /tmp/gspot-tests-unit-assertions-correction.log). The first focus includes actual add/remove installation-failure policy preservation, unexpected failure handling, init/hooks, policy publication, template sources/omissions/empty tables, and reporter behavior.",
+            "Old edit/add/remove command files and installSelection are deleted with every actual consumer updated. Dedicated config/type ownership remains as required; final all-suite verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/commands/013",
+        "source": "findings/areas/commands.md",
+        "line": 113,
+        "section": "Findings",
+        "finding": "| `set.ts:190-195, 213-220`, `ignore.ts:61, 88` | `commitPolicy` takes `isDryRun`. `add`, `remove`, `apply`, `init`, and `install` offer `--dry-run`, but `set` and `ignore` hard-code `false`. | Add `--dry-run` to `set` and `ignore`. Each needs one line. |",
+        "owner": "`set.ts:190-195, 213-220`, `ignore.ts:61, 88`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/014",
+        "source": "findings/areas/commands.md",
+        "line": 114,
+        "section": "Findings",
+        "finding": "| `commands/print-result.ts`, `commands/program.ts:64-69` | The file name `print-result` hides its export, `printCommand`. Errors print from three functions in two files: `failureOf` and `printError` here, `exitCodeFor` in `program.ts`. The `code === 'prompt'` branch in `exitCodeFor` is dead, because `KNOWN_ERRORS` contains `'prompt'` (`config/commands/commands.ts:12`), so `printCommand` handles prompt errors first. The literal `2` appears in `print-result.ts:17`, `explain/command.ts:12`, and `install/command.ts:116`, though `EXIT_ERROR` exists. | Move `printCommand` into `program.ts`. Keep one function that turns an error into output and an exit code. Delete the prompt branch. Use `EXIT_ERROR`. |",
+        "owner": "`commands/print-result.ts`, `commands/program.ts:64-69`",
+        "location": [
+            "packages/cli/src/commands/program.ts",
+            "packages/cli/src/output/messages.ts",
+            "packages/cli/src/commands/explain/command.ts",
+            "packages/cli/src/commands/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "program.ts main has the sole public command failure catch; private printFailure maps Commander help/error and GspotError/unknown failures to shared output and EXIT_ERROR. commands/print-result.ts and printCommand are absent. No dead prompt special branch or incorrect literal error code remains in explain/install.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "/tmp/gspot-explain-current-focus.log (current existing integration+unit explain23/23,58 assertions; no fixture edits)",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/015",
+        "source": "findings/areas/commands.md",
+        "line": 115,
+        "section": "Findings",
+        "finding": "| `commands/prompts.ts` | Only `init/command.ts` and `init/questions.ts` use it. `askConfirmation` and `askChoice` repeat the same \"no terminal\" and \"cancelled\" errors. `askChoice` and `askChoices` repeat the same mapping into clack options. | Move into `init/questions.ts`. Share one `requireTerminal()` and one `toOptions()`. |",
+        "owner": "`commands/prompts.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/016",
+        "source": "findings/areas/commands.md",
+        "line": 116,
+        "section": "Findings",
+        "finding": "| `init/command.ts:21-24`, `init/questions.ts:39-53`, `types/commands/init.ts:43-45, 77-82, 116-118` | The rules answer goes from a boolean flag to `'yes'` or `'no'` (`ruleAnswer`), back to a boolean (`askRules`), then to `isRules`, then to `rules`. The hooks question is a yes/no question, but it is asked as a choice between `'gspot'` and `'none'`. | Make `InitOptions.rules` and `InitOptions.hooks` booleans and ask both with `askConfirmation`. Delete `ruleAnswer` and `HOOK_CHOICES`. Rename `isRules` to `rules`. |",
+        "owner": "`init/command.ts:21-24`, `init/questions.ts:39-53`, `types/commands/init.ts:43-45, 77-82, 116-118`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/017",
+        "source": "findings/areas/commands.md",
+        "line": 117,
+        "section": "Findings",
+        "finding": "| `types/commands/init.ts:88`, `init/prepare.ts:109` | Dead field: `InitPrepared.runner` is written and never read. | Delete it. |",
+        "owner": "`types/commands/init.ts:88`, `init/prepare.ts:109`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/018",
+        "source": "findings/areas/commands.md",
+        "line": 118,
+        "section": "Findings",
+        "finding": "| `types/commands/init.ts:4, 112, 123`, `init/plan/build.ts:94, 118`, `init/selection.ts`, `doctor/changes.ts:92` | \"Plan\" has many meanings. `InitPlan` is the gspot.toml draft. `ReplacePlan` is the plan the user sees. `plan()` and `buildInitPlan()` build the two. `KitEvidence` is imported `as Plan`, so detections become `rootPlans` and `DetectionSummary.plans`. `scopePlans` holds kit id lists. Detections are filtered as `(plan) => ...`. | Rename `InitPlan` to `PolicyDraft` and `plan()` to `draftPolicy()`, and move it to `policy-text.ts`. Rename `ReplacePlan` to `InitPlan`, `rootPlans` to `detected`, and `scopePlans` to `scopeKits`. Drop the `as Plan` alias. |",
+        "owner": "`types/commands/init.ts:4, 112, 123`, `init/plan/build.ts:94, 118`, `init/selection.ts`, `doctor/changes.ts:92`",
+        "location": [
+            "packages/cli/src/types/commands/init.ts",
+            "packages/cli/src/commands/init/policy-text.ts",
+            "packages/cli/src/commands/init/plan.ts",
+            "packages/cli/src/commands/init/detection.ts",
+            "packages/cli/src/commands/doctor/suggestions.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Init names are PolicyDraft, visible InitPlan, draftPolicy, detected, scopeConfigurations; doctor detections use evidence/configuration names. Old ReplacePlan/rootPlans/scopePlans/as Plan names have no production matches.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-init-cleanup-eslint-final.log (13 current-plugin files; zero errors/warnings)",
+            "/tmp/gspot-init-cleanup-types.log (CLI TypeScript exit 0)",
+            "/tmp/gspot-init-cleanup-format.log (Prettier exit 0)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/019",
+        "source": "findings/areas/commands.md",
+        "line": 119,
+        "section": "Findings",
+        "finding": "| `commands/init/plan/` | A subfolder holds two files for one concept. The header of `text.ts:1` mentions an \"upgrade\" plan, but no upgrade command exists. | Merge into `init/plan.ts` (about 220 lines) and fix the header. |",
+        "owner": "`commands/init/plan/`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/020",
+        "source": "findings/areas/commands.md",
+        "line": 120,
+        "section": "Findings",
+        "finding": "| `init/selection.ts:148-155` (`closure`) | Loops over ids and calls `selectKits([id])` once per id, though `selectKits` takes a list. | Use `new Set(selectKits([...ids], manifests).map((m) => m.kit.name))` and delete `closure`. |",
+        "owner": "`init/selection.ts:148-155` (`closure`)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/021",
+        "source": "findings/areas/commands.md",
+        "line": 121,
+        "section": "Findings",
+        "finding": "| `init/selection.ts:93-104, 172-175` | `heldAtRoot` and `rootLanguagesKept` apply the same rule twice: a language stays at the root only when it has source outside every scope. | Compute it in one pass. |",
+        "owner": "`init/selection.ts:93-104, 172-175`",
+        "location": ["packages/cli/src/lifecycle/selection.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "rootLanguagesKept only removes ids also in inScopes. Both downstream consumers immediately union keptRoot with inScopes, so those removed ids are restored before recommendations/reason calculation. It has no observable effect. heldAtRoot remains the actual language ownership calculation used to suppress root-owned languages in scopes. Delete rootLanguagesKept and keptRoot; pass proposedRoot plus inScopes directly to listedConfigurations and reason sets. The actual source-outside-scopes predicate then runs only in heldAtRoot. No cache, duplicate detector or new selection owner.",
+            "/tmp/gspot-init-selection-output-eslint.log (current-plugin six-file lint zero findings)",
+            "/tmp/gspot-init-selection-output-types.log (CLI types exit0)",
+            "/tmp/gspot-init-selection-output-format.log (format exit0)",
+            "/tmp/gspot-init-json-output-proof.json (seven real public CLI subprocess contracts; complete JSON records, both error cases, explicit install skip note, unchanged plain/quiet output)",
+            "Root reviewed the original finding and current behavioral owners. Broader affected suites and final integration remain separate required verification."
+        ]
+    },
+    {
+        "id": "areas/commands/022",
+        "source": "findings/areas/commands.md",
+        "line": 122,
+        "section": "Findings",
+        "finding": "| `init/command.ts:41-53, 68`, `types/commands/init.ts:40` | `initCommand` prints the plan and the dry-run line with `print()` directly. It carries `InitOptions.json` only to suppress those prints, but `output/messages.ts` already knows about `--json`. | Make `print` (or a `printRecord`) respect the global `--json` state. Delete `InitOptions.json`. |",
+        "owner": "`init/command.ts:41-53, 68`, `types/commands/init.ts:40`",
+        "location": [
+            "packages/cli/src/output/messages.ts",
+            "packages/cli/src/commands/init/command.ts",
+            "packages/cli/src/commands/init/prepare.ts",
+            "packages/cli/src/types/lifecycle/selection.ts",
+            "packages/cli/src/lifecycle/reconcile.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Only init uses print outside messages.ts. Its flag is only used for presentation guards plus JSON requires --yes refusal; reconcile passes json:true to pure selection without a presentation caller. Structured report/error output must continue to bypass human-output suppression. Make existing print suppress human records under the configured JSON state. Keep private shared JSON serialization/writing for actual error/result callers so structured output still prints one record. Delete init json field/producer/guards; print human detection/plan unconditionally via existing print boundary. Move JSON --yes argument validation to registered init action before invocation. Preserve current quiet behavior unchanged; no global output rewrite.",
+            "/tmp/gspot-init-selection-output-eslint.log (current-plugin six-file lint zero findings)",
+            "/tmp/gspot-init-selection-output-types.log (CLI types exit0)",
+            "/tmp/gspot-init-selection-output-format.log (format exit0)",
+            "/tmp/gspot-init-json-output-proof.json (seven real public CLI subprocess contracts; complete JSON records, both error cases, explicit install skip note, unchanged plain/quiet output)",
+            "Argument-first JSON without--yes refusal accepted explicitly by root.",
+            "Root reviewed the original finding and current behavioral owners. Broader affected suites and final integration remain separate required verification."
+        ]
+    },
+    {
+        "id": "areas/commands/023",
+        "source": "findings/areas/commands.md",
+        "line": 123,
+        "section": "Findings",
+        "finding": "| `init/detection.ts:39-45`, `init/prepare.ts:49` | The header \"already configured\" lists the tools whose configuration gspot will replace (`isReplaced`), which is close to the opposite meaning. The two rows pad with 3 and 6 spaces, so the columns do not line up with `DETECTION_LABEL_WIDTH`. | Use \"gspot replaces\" and \"no kit for\" and one width. |",
+        "owner": "`init/detection.ts:39-45`, `init/prepare.ts:49`",
+        "location": ["packages/cli/src/commands/init/detection.ts", "packages/cli/src/config/commands/init.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Actual detection rows say gspot replaces and no configuration for, using one shared width that fits both labels.",
+            "Current command/reporter source passes canonical ESLint and formatting; CLI types passed before the import-only execution-owner moves (/tmp/gspot-command-ownership-final-eslint.json, /tmp/gspot-command-ownership-format-check.log, /tmp/gspot-command-ownership-final-types.log). Final shared unknown-name add caller and tree comment pass current lint (/tmp/gspot-configurations-command-shared-eslint.json, /tmp/gspot-execution-owner-final-eslint.json).",
+            "Affected coherent behavior focus:233 cases passed; its three stale message expectations were corrected and the full29-case program/template owners passed with116 assertions,0 failures (/tmp/gspot-tests-unit-assertions-focus.log, /tmp/gspot-tests-unit-assertions-correction.log). The first focus includes actual add/remove installation-failure policy preservation, unexpected failure handling, init/hooks, policy publication, template sources/omissions/empty tables, and reporter behavior.",
+            "Old edit/add/remove command files and installSelection are deleted with every actual consumer updated. Dedicated config/type ownership remains as required; final all-suite verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/commands/024",
+        "source": "findings/areas/commands.md",
+        "line": 124,
+        "section": "Findings",
+        "finding": "| `init/write.ts:36, 53`, `ownership/plans.ts:130, 215`, `ReplacePlan`, `ReplaceRemovalResult` | Leftover \"replace\" wording from the takeover days. Users see \"No replace read exists\" and \"Configuration changed after replace was planned\", but no replace command exists. | Say \"changed after init read it\". Rename the types as in the plan-naming row. |",
+        "owner": "`init/write.ts:36, 53`, `ownership/plans.ts:130, 215`, `ReplacePlan`, `ReplaceRemovalResult`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/025",
+        "source": "findings/areas/commands.md",
+        "line": 125,
+        "section": "Findings",
+        "finding": "| `doctor/changes.ts`, `types/commands/doctor.ts`, `config/commands/doctor.ts:8-13`, `types/commands/commands.ts:72`, `config/commands/init.ts` `ALREADY_INSTALLED` | `getChanges`, `Changes`, `ChangeRow`, `ChangeKey`, and `CHANGE_SECTIONS` return detected kits, recommended kits, unowned configurations, existing lint jobs, and double pins. None of these is a change. The section \"changed outside gspot\" lists \"an authored lint job\". The doctor help and `ALREADY_INSTALLED` promise \"what changed since the install\". `ChangeKey` lives in the general command types file. | Rename to suggestions (`doctor/suggestions.ts`, `Suggestions`), retitle the section \"existing lint jobs\", fix both texts, and move `ChangeKey` next to doctor. |",
+        "owner": "`doctor/changes.ts`, `types/commands/doctor.ts`, `config/commands/doctor.ts:8-13`, `types/commands/commands.ts:72`, `config/commands/init.ts` `ALREADY_INSTALLED`",
+        "location": [
+            "packages/cli/src/commands/doctor/suggestions.ts",
+            "packages/cli/src/commands/doctor/command.ts",
+            "packages/cli/src/types/commands/doctor.ts",
+            "packages/cli/src/config/commands/doctor.ts",
+            "packages/cli/src/config/commands/init.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Doctor uses getSuggestions, Suggestions/SuggestionRow/SuggestionKey/SUGGESTION_SECTIONS in doctor owners. Authored jobs appear under existing lint jobs. ALREADY_INSTALLED and doctor help describe setup suggestions, without claiming changes since install.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/026",
+        "source": "findings/areas/commands.md",
+        "line": 126,
+        "section": "Findings",
+        "finding": "| `doctor/changes.ts:106-114` | Warns about `gspot.local.toml`, a file that decision D-173 removed, in a product that has no users to migrate. | Delete it (see questions). |",
+        "owner": "`doctor/changes.ts:106-114`",
+        "location": ["packages/cli/src/commands/doctor/suggestions.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted obsolete gspot.local.toml warning and filesystem reads; doctor/suggestions has no old-name branch or migration path.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/027",
+        "source": "findings/areas/commands.md",
+        "line": 127,
+        "section": "Findings",
+        "finding": "| `doctor/command.ts` | 46 lines. `DoctorOptions` is `{ cwd }`. `doctorCommand` only calls `buildReport` and `formatReport`. | Merge with `report.ts` into `doctor/command.ts`, pass `cwd` directly, and delete `DoctorOptions`. |",
+        "owner": "`doctor/command.ts`",
+        "location": ["packages/cli/src/commands/doctor/command.ts", "packages/cli/src/types/commands/doctor.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "doctorCommand takes the directory directly and owns private buildDoctorReport/formatDoctorReport. DoctorOptions and report.ts are deleted; actual Gitlinks and doctor tests call the public command, not test-only helper exports.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/028",
+        "source": "findings/areas/commands.md",
+        "line": 128,
+        "section": "Findings",
+        "finding": "| `explain/command.ts`, `explain/subjects.ts`, `explain/checks.ts`, `explain/path.ts` | `command.ts` is a 35-line wrapper around `explain()`. Explain returns `{ error }` objects, while every other command throws `GspotError`. In `checks.ts:36`, `getPin` (a tool pin) shares a name with `lifecycle/version-pin.ts` `getPin` (the gspot version). In the kit JSON, `rules` holds guide paths (`subjects.ts:37`) and the type is `ListingRow`. `explainCheck` → `buildCheckExplanation` → `describeCheck` plus `getFacts` passes 5 or 6 parameters at each step. | Merge `command.ts` into `subjects.ts` as `explain/command.ts`. Throw `GspotError`. Rename `getPin` to `findToolPin`, the field `rules` to `guides`, and `ListingRow` to `KitExplanation`. Fold `buildCheckExplanation` into `explainCheck`. |",
+        "owner": "`explain/command.ts`, `explain/subjects.ts`, `explain/checks.ts`, `explain/path.ts`",
+        "location": [
+            "packages/cli/src/commands/explain/command.ts",
+            "packages/cli/src/commands/explain/check.ts",
+            "packages/cli/src/commands/explain/path.ts",
+            "packages/cli/src/types/commands/explain.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Explain dispatch and registration share command.ts; subjects.ts deleted. Unknown subjects throw selection GspotError. check.ts replaces checks.ts; getToolPin identifies actual tool pins. ConfigurationExplanation.guide paths use guides. explainCheck computes facts directly; buildCheckExplanation hop absent.",
+            "/tmp/gspot-doctor-explain-types.log (CLI source passed)",
+            "/tmp/gspot-explain-final-lint.json (final explain format/JS passed)",
+            "/tmp/gspot-ownership-lint.json (doctor format/JS passed; lifecycle defects subsequently repaired)",
+            "/tmp/gspot-doctor-explain-tests.log (34 passed; one shared-recommendation fixture handed to tests agent for correction)",
+            "/tmp/gspot-doctor-current-focus.log (current doctor integration8/8,25 assertions; no fixture edits)",
+            "/tmp/gspot-tests-coherent-contract-focus.log (current four Gitlinks scenarios passed; reused existing proof)",
+            "Current source reread October4,2026; old paths/aliases searched directly. Historical reports retained below; final family verification remains separately tracked.",
+            "/tmp/gspot-explain-current-focus.log (current existing integration+unit explain23/23,58 assertions; no fixture edits)",
+            "Root reviewed the original exact row against current public command, schema/type/data owners. Current doctor focus passed 8 cases/25 assertions; current explain focus passed 23 cases/58 assertions. Final integration remains required separately."
+        ]
+    },
+    {
+        "id": "areas/commands/029",
+        "source": "findings/areas/commands.md",
+        "line": 129,
+        "section": "Findings",
+        "finding": "| `commands/list.ts` (output checked on this repo) | `gspot list` prints every check once per scope: all nine `structure/*` checks appear twice here. `list settings` repeats every root row for every scope and prints whole JSON arrays, which breaks the `VALUE_WIDTH` columns. The heading \"not a slot\" (`list.ts:42`) is jargon. `list [kind]` has only one choice. The variables are named `configuration` (`list.ts:81-90`). | Print one row per check with its scopes. Show a scope row only where the scope sets the value, and shorten long values. Rename the heading to \"extra tables gspot does not check\". Accept `list kits` and `list settings`. |",
+        "owner": "`commands/list.ts` (output checked on this repo)",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/030",
+        "source": "findings/areas/commands.md",
+        "line": 130,
+        "section": "Findings",
+        "finding": "| `commands/set.ts` | `shown` is computed twice (189, 212). `assertReason` (155-168) repeats the placeholder refusal that `requireReason` already makes. The file header (line 1) describes one helper. `assertRuleNotOff` prints the literal placeholder `<the check that runs X>` instead of the check name (136). The `--default` flag becomes a field called `reset`. | Compute `shown` once. Let `requireReason` do the refusal. Look up the check name. Rename the field `toDefault`. Fix the header. |",
+        "owner": "`commands/set.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/031",
+        "source": "findings/areas/commands.md",
+        "line": 131,
+        "section": "Findings",
+        "finding": "| `program.ts:22`, `apply.ts:14`, `init/write.ts:19`, `lifecycle/version-pin.ts:10`, `execution/session.ts:17` | `const { version: RUNNING_VERSION } = packageManifest` appears five times. \"Pin\" means both the gspot version pin (`getPin`, `setPin`) and tool pins. | Export the version once from `version-pin.ts`. Rename to `readVersionPin`, `writeVersionPin`, and `assertVersionPin`. |",
+        "owner": "`program.ts:22`, `apply.ts:14`, `init/write.ts:19`, `lifecycle/version-pin.ts:10`, `execution/session.ts:17`",
+        "location": ["packages/cli/src/lifecycle/version-pin.ts", "packages/cli/src/config/platform/runtime.ts"],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "Version API readVersionPin/writeVersionPin/assertVersionPin is renamed everywhere. One RUNNING_VERSION export lives in config/platform/runtime.ts under the user's later central-constants requirement, overriding lifecycle/version-pin placement.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/032",
+        "source": "findings/areas/commands.md",
+        "line": 132,
+        "section": "Findings",
+        "finding": "| `apply.ts:39`, `doctor/changes.ts:85`, `init/write.ts:59`, `lifecycle/write.ts:57`, `execution/engines.ts:96` | Five production calls (and three in `tests/harness/cli/generated.ts`) pass the same four session fields to `emitAll`. `init/write.ts:57-65` (`generatedPaths`) runs generation once more, and `writeOutputs` runs it again on line 88. The \"every output path\" list is built in three places: `init/write.ts:63`, `drift.ts:87-92`, and `outputs.ts:100`. | Change the signature to `emitAll(session)`. Have `writeOutputs` return the generated paths. Add one `outputPaths(generated)`. |",
+        "owner": "`apply.ts:39`, `doctor/changes.ts:85`, `init/write.ts:59`, `lifecycle/write.ts:57`, `execution/engines.ts:96`",
+        "location": [
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/lifecycle/apply.ts",
+            "packages/cli/src/lifecycle/drift.ts",
+            "packages/cli/src/commands/init/write.ts",
+            "packages/cli/src/tools/npm/project.ts",
+            "packages/cli/src/tools/python/project.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One emitAll calculation is consumed by initialization writes and outputPaths. Normal init resolves applicable npm/Python locks in the real preparePackageProject/preparePythonProject installation owners before committing configuration; --no-install skips resolution. outputPaths includes applicable tool-project locks, so offline apply and drift retain those paths even when no new lock was emitted. Apply notes missing/stale locks with gspot install. There is no prepareOutputs wrapper or acquisition inside emitAll/writeOutputs.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "All four native npm/Bun/pnpm/Yarn lock retention and repair cases pass, 64 assertions (/tmp/gspot-tests-lock-retention-final.log). The preceding native installation batch passed 26 other installation, clone, preservation and failure contracts (/tmp/gspot-tests-installer-correction-final.log).",
+            "Deviation: writeOutputs consumes the existing generated object and outputPaths directly; adding the same path set to ApplyReport would create redundant report state. Initialization emits once and prepares required locks before the policy commit; offline apply retains applicable lock paths."
+        ]
+    },
+    {
+        "id": "areas/commands/033",
+        "source": "findings/areas/commands.md",
+        "line": 133,
+        "section": "Findings",
+        "finding": "| `apply.ts:39`, `outputs.ts:84, 98`, `generation/kits.ts:81, 119, 141` | A `Generated` value is called `plan`, `rendered`, `out`, or `outputs`, while \"plan\" also means `Planned`, `MergePlan`, `InitPlan`, and `ReplacePlan`. | Name every `Generated` value `generated`. |",
+        "owner": "`apply.ts:39`, `outputs.ts:84, 98`, `generation/kits.ts:81, 119, 141`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/034",
+        "source": "findings/areas/commands.md",
+        "line": 134,
+        "section": "Findings",
+        "finding": "| `lifecycle/apply.ts`, `lifecycle/write.ts`, `lifecycle/ownership/apply.ts` | The names are swapped. `apply.ts` exports `writeGenerated`, and its only caller is `write.ts:66`. `write.ts` exports `writeOutputs`, which is the apply. A third file, `ownership/apply.ts`, applies plans. | Merge both into `lifecycle/apply.ts`. Rename `ownership/apply.ts` to `ownership/commit.ts`. |",
+        "owner": "`lifecycle/apply.ts`, `lifecycle/write.ts`, `lifecycle/ownership/apply.ts`",
+        "location": ["packages/cli/src/lifecycle/apply.ts", "packages/cli/src/lifecycle/ownership/commit.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One lifecycle/apply.ts owns managed writes and offline apply generation; lifecycle/write.ts is removed, and ownership/apply.ts is renamed commit.ts without old exports. Lock preparation belongs to tools/npm/project.ts and tools/python.ts, invoked before normal init configuration commit and by install. Generic prepareOutputs was deleted; apply emits offline and retains applicable lock paths.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "All four native npm/Bun/pnpm/Yarn lock retention and repair cases pass, 64 assertions (/tmp/gspot-tests-lock-retention-final.log). The preceding native installation batch passed 26 other installation, clone, preservation and failure contracts (/tmp/gspot-tests-installer-correction-final.log)."
+        ]
+    },
+    {
+        "id": "areas/commands/035",
+        "source": "findings/areas/commands.md",
+        "line": 135,
+        "section": "Findings",
+        "finding": "| `ownership/owner.ts:20-62`, `types/lifecycle/lifecycle.ts:46-71` | `buildOwner` is a facade. Of its 18 members, 14 are one-line forwards to functions that take `log`. `proposeReplacement` and `replace` unpack the `ReplacementRequest` object into six positional parameters and pack it again, so callers pass a bare `true` (`edit.ts:46-51`, `init/write.ts:79-84`, `version-pin.ts:31-36`). Four members only tests use: `applyPlan` (no caller in src), `paths`, `beginInstallation`, and `finishInstallation`. The last two repeat `setInProgress` in `installations.ts`. | Delete the four test-only members, and change those tests to use `installTree`, `replace`, and `getOwnership`. Pass `ReplacementRequest` through unchanged. See the questions on removing the facade. |",
+        "owner": "`ownership/owner.ts:20-62`, `types/lifecycle/lifecycle.ts:46-71`",
+        "location": [
+            "packages/cli/src/lifecycle/ownership/log.ts",
+            "packages/cli/src/lifecycle/ownership/plans.ts",
+            "packages/cli/src/lifecycle/ownership/commit.ts",
+            "packages/cli/src/lifecycle/ownership/installations.ts",
+            "packages/cli/src/types/lifecycle/ownership.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Owner/buildOwner facade and test-only members removed. Direct proposal, commit, installation operations consume Log. ReplacementRequest objects pass directly. Temporary install callbacks still collect prepared inputs/trees; they are the real staging boundary.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/036",
+        "source": "findings/areas/commands.md",
+        "line": 136,
+        "section": "Findings",
+        "finding": "| `ownership/owner.ts:18, 105-123` (`asOwner`) | `AsyncLocalStorage` makes `asOwner` re-entrant only so that nested helpers (`writePolicy`, `writeOutputs`, `setPin`, `retireReplaced`) can reopen it instead of receiving the owner. `commitPolicy` (`edit.ts:78`) and init `write` (`init/write.ts:75`) hold the lock while those helpers reopen it, so the reader cannot see who owns the lock. | Pass `owner` explicitly and open it once per command. See the questions. |",
+        "owner": "`ownership/owner.ts:18, 105-123` (`asOwner`)",
+        "location": [
+            "packages/cli/src/lifecycle/ownership/log.ts",
+            "packages/cli/src/types/commands",
+            "packages/cli/src/commands/configurations.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/commands/init/write.ts",
+            "packages/cli/src/tools/installation.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "AsyncLocalStorage and Owner facade removed. One explicit disposable Log is opened at each writing command boundary and retained through policy, apply, version pin, retirement, and tool installation. commitPolicy and installSelection require that exact Log; add/remove await installation before disposal. Dry-run prepares policy without acquiring the writer lock. Repository config/types remain centralized under the explicit user override.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/037",
+        "source": "findings/areas/commands.md",
+        "line": 137,
+        "section": "Findings",
+        "finding": "| `ownership/log.ts:27-30`, `ownership/owner.ts:131-137` | `ownership.json` is parsed in two functions with the same empty default. No caller passes a different `stateDirectory` to `getOwnership` or `openLog`. | Keep one parse function and drop the parameter. |",
+        "owner": "`ownership/log.ts:27-30`, `ownership/owner.ts:131-137`",
+        "location": ["packages/cli/src/lifecycle/ownership/log.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One private parseOwnership default/parser in ownership/log.ts; both read-only getOwnership and locked context use it. No stateDirectory parameter.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/038",
+        "source": "findings/areas/commands.md",
+        "line": 138,
+        "section": "Findings",
+        "finding": "| `ownership/schema.ts:71-73` | `installations` (in progress) and `installs` (finished) are near-identical names for opposite states. | Rename to `installing` and `installed`. |",
+        "owner": "`ownership/schema.ts:71-73`",
+        "location": [
+            "packages/cli/src/lifecycle/ownership/schema.ts",
+            "packages/cli/src/lifecycle/ownership/installations.ts",
+            "packages/cli/src/types/lifecycle/ownership.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Strict state uses installing/installed; no old-field readers or aliases. Root-authorized temporary development translation used locked Root.write, preserved147 records and private tree identity exactly.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/039",
+        "source": "findings/areas/commands.md",
+        "line": 139,
+        "section": "Findings",
+        "finding": "| `log.ts` (3), `schema.ts` (2), `ownership/apply.ts:24`, `generation/outputs.ts:103`, `policy/problems.ts` | `path.normalize('NFC').toLowerCase()` is written 8 times as the path key. | Add one `pathKey()` in `platform/paths.ts`. |",
+        "owner": "`log.ts` (3), `schema.ts` (2), `ownership/apply.ts:24`, `generation/outputs.ts:103`, `policy/problems.ts`",
+        "location": [
+            "packages/cli/src/platform/paths.ts",
+            "packages/cli/src/lifecycle/ownership/schema.ts",
+            "packages/cli/src/lifecycle/ownership/log.ts",
+            "packages/cli/src/lifecycle/ownership/commit.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/policy/problems/reasons.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Shared platform pathKey used by ownership schema, log and commits, generation destination validation and policy reason path identity. The function retains only its own normalization implementation.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "areas/commands/040",
+        "source": "findings/areas/commands.md",
+        "line": 140,
+        "section": "Findings",
+        "finding": "| `generation/markers.ts` | Only lifecycle files import it (`drift.ts`, `claude-file.ts`, `plans.ts`, `restoration.ts`). `currentBlock` (64-70) parses the markers again without the checks that `blockSpan` makes. | Move it to `lifecycle/managed-block.ts` and build `currentBlock` on `blockSpan`. |",
+        "owner": "`generation/markers.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/041",
+        "source": "findings/areas/commands.md",
+        "line": 141,
+        "section": "Findings",
+        "finding": "| `lifecycle/preview/` | The folder name does not match the content. It holds rule diffs for `apply --dry-run`. Its `eslint/` worker also serves the `coverage` operation for `checks/language/javascript/rules-off.ts`. The worker source is `worker.ts`, but it builds as `configuration.js` (`client.ts:23`, `scripts/build.ts:22`). `sqlfluff.ts` exports `parseIni` only for a test. `compare.ts:128` and `eslint/diff.ts:52` format the same \"Rule comparison failed\" text. | Rename the folder to `rule-diff/`. Move `client`, `declarations`, `protocol`, and `worker` to `tools/eslint/`, and build the worker as `eslint-worker.js`. Make `parseIni` private. Keep one error formatter. |",
+        "owner": "`lifecycle/preview/`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/042",
+        "source": "findings/areas/commands.md",
+        "line": 142,
+        "section": "Findings",
+        "finding": "| `generation/formatting/selectors.ts:24-86` | Dead code. The only caller of `rebaseOverrides` passes `sourceDirectory` as `''` (`settings.ts:112`). So `folderOverrides`, the basename branch of `exclusionsOf`, and the `!hasSlash` checks in `rebaseGroup` never run (about 60 lines). | Delete them and the parameter. Merge the rest into `settings.ts` as `generation/formatting.ts` and delete the folder. |",
+        "owner": "`generation/formatting/selectors.ts:24-86`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/043",
+        "source": "findings/areas/commands.md",
+        "line": 143,
+        "section": "Findings",
+        "finding": "| `generation/registry.ts` | A 5-line file that holds one `new Eta(...)`. It exists for the `gspot/registry-instances` rule (`REGISTRY_FILES` in `config/generation/eslint.ts:37`). Its header comment was copied into `templates.ts:1`. | Move `eta` into `templates.ts` if the owner allows it (see the questions). Fix the header in `templates.ts`. |",
+        "owner": "`generation/registry.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/044",
+        "source": "findings/areas/commands.md",
+        "line": 144,
+        "section": "Findings",
+        "finding": "| `generation/templates.ts:67-115, 160-210` | `templateInputs` hands about 40 keys to every template. It exposes both `view` and eight of its members (`format`, `settings`, `tool`, `limit`, `rulesOff`, `ignoresFor`, `extra`, `kits`), so a template can read the same value two ways. `eslintPolicy` is computed eagerly for every scope of every kit, while `eslint` and `prettierConfig` are lazy. The markdownlint defaults (123-148) are markdown-kit data hard-coded in TypeScript. | Expose either `view` or its members, not both. Make `eslintPolicy` lazy. Move the markdownlint defaults into the markdown kit template. |",
+        "owner": "`generation/templates.ts:67-115, 160-210`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/045",
+        "source": "findings/areas/commands.md",
+        "line": 145,
+        "section": "Findings",
+        "finding": "| `eslint/configuration.ts:118-125`, `eslint/blocks.ts:63-84`, `kits/language/javascript/eslint.config.mjs.tmpl:357-363` | Three sources set the options of `gspot/no-trivial-functions` and `gspot/no-trivial-files`: `gspotRules`, `structuralRuleBlocks` (level all, per scope and language), and a JavaScript block in the template. Also, `blocks.ts:70` tests the level inside the inner loop. | Keep `structuralRuleBlocks` for every level, delete the other two, and return early on the level test. |",
+        "owner": "`eslint/configuration.ts:118-125`, `eslint/blocks.ts:63-84`, `kits/language/javascript/eslint.config.mjs.tmpl:357-363`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/046",
+        "source": "findings/areas/commands.md",
+        "line": 146,
+        "section": "Findings",
+        "finding": "| `generation/tools/` | Three files, 121 lines. `environment.ts` `toolEnvironment` writes the Python tool `pyproject`, which its name hides. `install/command.ts:22` calls it only to test whether the list is empty. | Flatten into `generation/tool-projects.ts` with `pythonProject`, `npmProject`, and `miseFile`. They cannot move to `tools/`, because `tools` may not import `generation/headers`. |",
+        "owner": "`generation/tools/`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/047",
+        "source": "findings/areas/commands.md",
+        "line": 147,
+        "section": "Findings",
+        "finding": "| `generation/javascript.ts` | Mixes import-alias resolution (`aliasesFor`, used by `eslint/configuration.ts` and `templates.ts`) with jsconfig generation. Lines 57-59 stack a comment on top of a JSDoc block. | Rename to `jsconfig.ts`. Move `aliasesFor` to `repository/aliases.ts`. |",
+        "owner": "`generation/javascript.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/048",
+        "source": "findings/areas/commands.md",
+        "line": 148,
+        "section": "Findings",
+        "finding": "| `generation/kits.ts` | The name clashes with `src/kits/`. The file emits each kit's configuration targets and pointers. | Rename to `generation/configurations.ts`. |",
+        "owner": "`generation/kits.ts`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/049",
+        "source": "findings/areas/commands.md",
+        "line": 149,
+        "section": "Findings",
+        "finding": "| `generation/outputs.ts:23`, `templates.ts:1`, `set.ts:1`, `init/plan/text.ts:1` | Wrong comments. `outputs.ts:23` says \"Integrations for the selected hook tool\" above the CI workflow writer. The other three are copied or stale headers. | Rewrite them. |",
+        "owner": "`generation/outputs.ts:23`, `templates.ts:1`, `set.ts:1`, `init/plan/text.ts:1`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/050",
+        "source": "findings/areas/commands.md",
+        "line": 150,
+        "section": "Findings",
+        "finding": "| `outputs.ts:26, 143`, `lifecycle/write.ts:71`, `tools/vale.ts:151`, `generation/bunfig.ts:16`, `explain/checks.ts:85` | \"Is kit X selected in some scope\" is written 6 times as nested `.some(...)` calls. | Add `isKitSelected(scopes, name)` in `kits/select.ts`. |",
+        "owner": "`outputs.ts:26, 143`, `lifecycle/write.ts:71`, `tools/vale.ts:151`, `generation/bunfig.ts:16`, `explain/checks.ts:85`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/051",
+        "source": "findings/areas/commands.md",
+        "line": 151,
+        "section": "Findings",
+        "finding": "| `output/reporter.ts:26, 56, 70, 81, 95, 106, 128`, `doctor/report.ts:17, 49` | Nine functions take `colors` as a parameter, though it is the module singleton from `output/messages.ts`. In `doctor/report.ts`, the parameter shadows the import. `statusWord` and `stateLabel` are 5- and 6-case switches that only pick a color. | Use the import directly and replace each switch with a status-to-color map. |",
+        "owner": "`output/reporter.ts:26, 56, 70, 81, 95, 106, 128`, `doctor/report.ts:17, 49`",
+        "location": [
+            "packages/cli/src/output/reporter.ts",
+            "packages/cli/src/config/output.ts",
+            "packages/cli/src/commands/doctor/command.ts",
+            "packages/cli/src/config/commands/doctor.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reporters use the actual colors singleton directly. Complete status/state color data replaces switches and redundant parameters while honoring output configuration.",
+            "Current command/reporter source passes canonical ESLint and formatting; CLI types passed before the import-only execution-owner moves (/tmp/gspot-command-ownership-final-eslint.json, /tmp/gspot-command-ownership-format-check.log, /tmp/gspot-command-ownership-final-types.log). Final shared unknown-name add caller and tree comment pass current lint (/tmp/gspot-configurations-command-shared-eslint.json, /tmp/gspot-execution-owner-final-eslint.json).",
+            "Affected coherent behavior focus:233 cases passed; its three stale message expectations were corrected and the full29-case program/template owners passed with116 assertions,0 failures (/tmp/gspot-tests-unit-assertions-focus.log, /tmp/gspot-tests-unit-assertions-correction.log). The first focus includes actual add/remove installation-failure policy preservation, unexpected failure handling, init/hooks, policy publication, template sources/omissions/empty tables, and reporter behavior.",
+            "Old edit/add/remove command files and installSelection are deleted with every actual consumer updated. Dedicated config/type ownership remains as required; final all-suite verification remains pending."
+        ]
+    },
+    {
+        "id": "areas/commands/052",
+        "source": "findings/areas/commands.md",
+        "line": 152,
+        "section": "Findings",
+        "finding": "| `output/reporter.ts:188-196`, `check/command.ts:102` | `progress()` writes failed-check lines to stdout even when stdout is not a terminal, and the final report then repeats them. `messages.ts:1` says run messages go to stderr. | Send progress to stderr. |",
+        "owner": "`output/reporter.ts:188-196`, `check/command.ts:102`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/053",
+        "source": "findings/areas/commands.md",
+        "line": 153,
+        "section": "Findings",
+        "finding": "| `generation/ci.ts:27, 31, 97, 99`, `config/generation/generation.ts:36-39` | Each action pin is split across two files: the SHA in config, and the version comment that pinact verifies as a string literal in `ci.ts`. | Keep `{ sha, version }` together in one constant. |",
+        "owner": "`generation/ci.ts:27, 31, 97, 99`, `config/generation/generation.ts:36-39`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "areas/commands/054",
+        "source": "findings/areas/commands.md",
+        "line": 154,
+        "section": "Findings",
+        "finding": "| `types/{commands,lifecycle,generation}/`, `config/{commands,lifecycle,generation}/`, `types/output.ts`, `config/output.ts` | 26 files and about 1,040 lines mirror this area's folders, and most of them serve one owner. Examples: `config/commands/check.ts` holds two constants. `types/output.ts` is 5 lines. `OUTPUT_JSON_INDENT` lives in `config/lifecycle/ownership.ts`, but command output uses it (`print-result.ts:9, 15`). The `gspot.toml` settings `types_directory = \"types\"` and `config_directory = \"config\"` (lines 284-285) force this layout. That contradicts `.gspot/rules/code/NAMING-FILES.md`: \"Do not require top-level config or types buckets\". | See the questions. If the owner agrees, move each type and constant next to its only user. |",
+        "owner": "`types/{commands,lifecycle,generation}/`, `config/{commands,lifecycle,generation}/`, `types/output.ts`, `config/output.ts`",
+        "location": [
+            "packages/cli/src/config/",
+            "packages/cli/src/types/",
+            "packages/eslint-plugin/src/config/",
+            "packages/eslint-plugin/src/types/",
+            "tests/config/",
+            "tests/types/"
+        ],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "User explicitly requires config and types folders in this repository, while removing folder requirements from shipped defaults.",
+            "AGENTS.md records the repository-specific requirement.",
+            "bunx tsc --noEmit passed after restoring folders and correcting domain ownership."
+        ]
+    }
+]

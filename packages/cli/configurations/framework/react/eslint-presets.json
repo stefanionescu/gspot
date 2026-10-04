@@ -1,0 +1,136 @@
+{
+    "recommended": {
+        "package": "eslint-plugin-react",
+        "version": "7.37.5",
+        "source": "configs.flat.recommended",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "react/display-name": 2,
+                    "react/jsx-key": 2,
+                    "react/jsx-no-comment-textnodes": 2,
+                    "react/jsx-no-duplicate-props": 2,
+                    "react/jsx-no-target-blank": 2,
+                    "react/jsx-no-undef": 2,
+                    "react/jsx-uses-react": 2,
+                    "react/jsx-uses-vars": 2,
+                    "react/no-children-prop": 2,
+                    "react/no-danger-with-children": 2,
+                    "react/no-deprecated": 2,
+                    "react/no-direct-mutation-state": 2,
+                    "react/no-find-dom-node": 2,
+                    "react/no-is-mounted": 2,
+                    "react/no-render-return-value": 2,
+                    "react/no-string-refs": 2,
+                    "react/no-unescaped-entities": 2,
+                    "react/no-unknown-property": 2,
+                    "react/no-unsafe": 0,
+                    "react/prop-types": 2,
+                    "react/react-in-jsx-scope": 2,
+                    "react/require-render-return": 2
+                }
+            }
+        ]
+    },
+    "jsx": {
+        "package": "eslint-plugin-react",
+        "version": "7.37.5",
+        "source": "configs.flat.jsx-runtime",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "react/react-in-jsx-scope": 0,
+                    "react/jsx-uses-react": 0
+                }
+            }
+        ]
+    },
+    "hooks": {
+        "package": "eslint-plugin-react-hooks",
+        "version": "7.1.1",
+        "source": "configs.flat.recommended-latest",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "react-hooks/rules-of-hooks": "error",
+                    "react-hooks/exhaustive-deps": "warn",
+                    "react-hooks/static-components": "error",
+                    "react-hooks/use-memo": "error",
+                    "react-hooks/void-use-memo": "error",
+                    "react-hooks/preserve-manual-memoization": "error",
+                    "react-hooks/incompatible-library": "warn",
+                    "react-hooks/immutability": "error",
+                    "react-hooks/globals": "error",
+                    "react-hooks/refs": "error",
+                    "react-hooks/set-state-in-effect": "error",
+                    "react-hooks/error-boundaries": "error",
+                    "react-hooks/purity": "error",
+                    "react-hooks/set-state-in-render": "error",
+                    "react-hooks/unsupported-syntax": "warn",
+                    "react-hooks/config": "error",
+                    "react-hooks/gating": "error"
+                }
+            }
+        ]
+    },
+    "refresh": {
+        "package": "eslint-plugin-react-refresh",
+        "version": "0.5.7",
+        "source": "configs.recommended",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "react-refresh/only-export-components": ["error", {}]
+                }
+            }
+        ]
+    },
+    "testing": {
+        "package": "eslint-plugin-testing-library",
+        "version": "7.16.2",
+        "source": "configs.flat/react",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "testing-library/await-async-events": [
+                        "error",
+                        {
+                            "eventModule": "userEvent"
+                        }
+                    ],
+                    "testing-library/await-async-queries": "error",
+                    "testing-library/await-async-utils": "error",
+                    "testing-library/no-await-sync-events": [
+                        "error",
+                        {
+                            "eventModules": ["fire-event"]
+                        }
+                    ],
+                    "testing-library/no-await-sync-queries": "error",
+                    "testing-library/no-container": "error",
+                    "testing-library/no-debugging-utils": "warn",
+                    "testing-library/no-dom-import": ["error", "react"],
+                    "testing-library/no-global-regexp-flag-in-query": "error",
+                    "testing-library/no-manual-cleanup": "error",
+                    "testing-library/no-node-access": "error",
+                    "testing-library/no-promise-in-fire-event": "error",
+                    "testing-library/no-render-in-lifecycle": "error",
+                    "testing-library/no-unnecessary-act": "error",
+                    "testing-library/no-wait-for-multiple-assertions": "error",
+                    "testing-library/no-wait-for-side-effects": "error",
+                    "testing-library/no-wait-for-snapshot": "error",
+                    "testing-library/prefer-find-by": "error",
+                    "testing-library/prefer-presence-queries": "error",
+                    "testing-library/prefer-query-by-disappearance": "error",
+                    "testing-library/prefer-screen-queries": "error",
+                    "testing-library/render-result-naming-convention": "error"
+                }
+            }
+        ]
+    }
+}

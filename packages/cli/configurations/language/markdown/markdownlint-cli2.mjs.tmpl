@@ -1,0 +1,8 @@
+import { fileURLToPath } from 'node:url';
+
+export default {
+    config: { extends: fileURLToPath(new URL('./markdownlint.jsonc', import.meta.url)) },
+    noBanner: true,
+    noProgress: true,
+    outputFormatters: [[({ results, logMessage }) => logMessage(JSON.stringify(results))]],
+};

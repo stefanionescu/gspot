@@ -1,57 +1,30 @@
-// Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
-import { z } from 'zod';
+// Scopes come from gspot.toml or, during initialization, from tracked project files.
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
-import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { parseJsonc } from '#cli/parsers/jsonc.ts';
+import { readText } from '#cli/platform/source.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { packageManifestSchema } from '#cli/repository/packages.ts';
+import { portableSegments } from '#cli/platform/root/rules.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
+import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
-import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.
-function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
-    const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
-    return {
-        name: posix.basename(trimmed),
-        path: trimmed,
-        kits: [],
-        source,
-    };
-}
-
-// A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
-function projectScopes(files: TrackedFile[], fields: Fields[], patterns: string[]): ScopeEntry[] {
-    const lintOnly = new Set(fields.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
-    const folders = new Set<string>();
-    const sources = files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !lintOnly.has(file.path) &&
-            !file.path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT || part === 'node_modules'),
-    );
-    for (const file of sources) {
-        for (const pattern of patterns) {
-            const folder = projectFolder(file.path, pattern);
-            if (folder !== undefined && folder !== '') folders.add(folder);
-        }
-    }
-    return [...folders].map((folder) => workspaceEntry(folder, 'project'));
-}
+import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isGlob, isInScope, isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { rushProjectsSchema, workspacePatternsSchema } from '#cli/parsers/schema/repository.ts';
+import { DEPENDENCY_FOLDERS, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/inventory.ts';
 
 // Validate filesystem access before the workspace resolver reads package manifests.
-function inspectWorkspacePaths(root: string, patterns: string[]): void {
+function assertWorkspaceInsideRoot(root: string, patterns: string[]): void {
     using files = openRoot(root);
     const normalized = patterns.map((pattern) => {
         const negate = pattern.startsWith('!') ? '!' : '';
         const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
-        mutationPath(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
+        // Glob characters are not path characters; replace them so the segment rules check the rest.
+        portableSegments(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
         return `${negate}${path}`;
     });
     const ancestors = normalized.flatMap((pattern) => {
@@ -59,74 +32,81 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
         const parts = pattern.split('/');
         return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
     });
-    const paths = globPaths(root, [...ancestors, '!**/node_modules/**', '!**/.git/**'], {
+    // Private tools and installed dependencies are never authored workspace projects.
+    const excluded = [DOT_GSPOT, '.git', ...DEPENDENCY_FOLDERS].map((folder) => `!**/${folder}/**`);
+    const paths = globPaths(root, [...ancestors, ...excluded], {
         dot: true,
         onlyFiles: false,
     });
     // Every visited path is read through the root boundary, which refuses a link that leaves the repository.
     for (const path of paths) {
-        if (files.stat(path)?.isDirectory() === true) files.read(`${path}/package.json`);
+        if (files.stat(path)?.isDirectory() === true) readText(root, `${path}/package.json`);
     }
 }
 
 function workspacePackages(root: string): Package[] {
-    using files = openRoot(root);
-    const rootSource = files.read('package.json');
-    const packagePatterns = z
-        .object({ packages: z.array(z.string()).optional() })
-        .transform((value) => value.packages ?? ['packages/*']);
+    const manifest = readPackageManifest(root, 'package.json');
     const declarations = [
         {
             tool: PnpmTool,
             path: 'pnpm-workspace.yaml',
             parse: parseYaml,
-            schema: packagePatterns,
+            schema: workspacePatternsSchema,
         },
         {
             tool: LernaTool,
             path: 'lerna.json',
             parse: JSON.parse,
-            schema: packagePatterns,
+            schema: workspacePatternsSchema,
         },
         {
             tool: RushTool,
             path: 'rush.json',
             parse: parseJsonc,
-            schema: z
-                .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
-                .transform((value) => value.projects.map((project) => project.projectFolder)),
+            schema: rushProjectsSchema,
         },
     ];
     for (const { tool, path, parse, schema } of declarations) {
-        const source = files.read(path);
+        const source = readText(root, path);
         if (source === undefined || !tool.isMonorepoRootSync(root)) continue;
-        const patterns = schema.parse(parse(source.bytes.toString('utf8')));
-        inspectWorkspacePaths(root, patterns);
+        const patterns = schema.parse(parse(source));
+        assertWorkspaceInsideRoot(root, patterns);
         return tool.getPackagesSync(root).packages;
     }
-    if (rootSource === undefined) return [];
-    const { workspaces: declaration = [] } = packageManifestSchema.parse(JSON.parse(rootSource.bytes.toString('utf8')));
+    if (manifest === undefined) return [];
+    const { workspaces: declaration = [] } = manifest;
     const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
     if (workspaces.length === 0) return [];
-    inspectWorkspacePaths(root, workspaces);
+    assertWorkspaceInsideRoot(root, workspaces);
     return YarnTool.getPackagesSync(root).packages;
 }
 
-function npmScopes(root: string, byPath: Map<string, Fields>, lintOnly: string[]): ScopeEntry[] {
-    const scopes: ScopeEntry[] = [];
-    for (const rel of packageWorkspaces(root)) {
-        const fact = byPath.get(`${rel}/package.json`);
-        if (fact && isLintOnlyManifest(fact)) lintOnly.push(`${rel}/package.json`);
-        else scopes.push(workspaceEntry(rel));
+/**
+ * The scopes initialization proposes from tracked project files, excluding root and lint-only packages.
+ * @param files the repository inventory
+ * @param fields captured package manifests
+ * @param patterns project-file patterns declared by configurations
+ * @returns project scopes in path order
+ */
+export function proposedScopes(files: TrackedFile[], fields: ManifestSummary[], patterns: string[]): ScopeEntry[] {
+    const lintOnly = new Set(fields.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
+    const folders = new Set<string>();
+    const sources = files.filter(
+        (file) =>
+            file.kind === 'source' &&
+            !lintOnly.has(file.path) &&
+            !isPrivateToolPath(file.path) &&
+            !file.path.split('/').includes('node_modules'),
+    );
+    for (const file of sources) {
+        for (const pattern of patterns) {
+            const folder = projectFolder(file.path, pattern);
+            if (folder !== undefined && folder !== '') folders.add(folder);
+        }
     }
-    return scopes;
-}
-
-function memberScopes(root: string, members: string[]): ScopeEntry[] {
-    using files = openRoot(root);
-    return members
-        .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)
-        .map((member) => workspaceEntry(member));
+    return [...folders]
+        .toSorted((left, right) => left.localeCompare(right))
+        .map((path) => ({ name: posix.basename(path), path, configurations: [], source: 'project' }));
 }
 
 /**
@@ -156,7 +136,7 @@ export function projectFolder(path: string, pattern: string): string | undefined
                 const segment = window[index];
                 return (
                     segment !== undefined &&
-                    (picomatch.scan(part).isGlob ? picomatch.isMatch(segment, part, { dot: true }) : part === segment)
+                    (isGlob(part) ? picomatch.isMatch(segment, part, { dot: true }) : part === segment)
                 );
             })
         )
@@ -170,7 +150,7 @@ export function projectFolder(path: string, pattern: string): string | undefined
  * @param fields the manifest
  * @returns whether it holds tooling only
  */
-export function isLintOnlyManifest(fields: Fields): boolean {
+export function isLintOnlyManifest(fields: ManifestSummary): boolean {
     const names = Object.keys(fields.installed);
     if (names.length === 0) return false;
     return names.every((name) =>
@@ -178,54 +158,6 @@ export function isLintOnlyManifest(fields: Fields): boolean {
             (prefix) => name === prefix || name.startsWith(`${prefix}-`) || name.startsWith(`${prefix}/`),
         ),
     );
-}
-
-/**
- * Workspace packages as scopes, from every workspace format @manypkg knows plus uv. Lint-only packages are left out.
- * @param root the repository root
- * @param fields the manifests read from the tree
- * @returns the scopes in path order, and the lint-only manifests left out
- */
-export function workspaceScopes(root: string, fields: Fields[]): { scopes: ScopeEntry[]; lintOnly: string[] } {
-    const lintOnly: string[] = [];
-    const byPath = new Map(fields.map((fact) => [fact.path, fact]));
-    const found = [
-        ...npmScopes(root, byPath, lintOnly),
-        ...memberScopes(root, byPath.get('pyproject.toml')?.workspaces ?? []),
-    ];
-    const unique = new Map<string, ScopeEntry>();
-    for (const scope of found) if (!unique.has(scope.path)) unique.set(scope.path, scope);
-    return {
-        scopes: unique
-            .values()
-            .toArray()
-            .toSorted((a, b) => a.path.localeCompare(b.path)),
-        lintOnly,
-    };
-}
-
-/**
- * The scopes init proposes: every folder that holds a project file of a configuration, and every workspace member.
- * @param root the repository root
- * @param files the tracked files
- * @param fields the package manifests
- * @param projectFiles the project-file patterns of the kits
- * @returns the scopes in path order, and the lint-only manifests left out
- */
-export function proposedScopes(
-    root: string,
-    files: TrackedFile[],
-    fields: Fields[],
-    projectFiles: string[],
-): { scopes: ScopeEntry[]; lintOnly: string[] } {
-    const workspace = workspaceScopes(root, fields);
-    const unique = new Map<string, ScopeEntry>();
-    for (const scope of [...projectScopes(files, fields, projectFiles), ...workspace.scopes])
-        if (!unique.has(scope.path)) unique.set(scope.path, scope);
-    return {
-        scopes: [...unique.values()].toSorted((a, b) => a.path.localeCompare(b.path)),
-        lintOnly: workspace.lintOnly,
-    };
 }
 
 /**
@@ -238,7 +170,7 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
     const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? {
         name: 'root',
         path: '',
-        kits: [],
+        configurations: [],
         source: 'root',
     };
     return (
@@ -255,10 +187,10 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
  * @returns the scopes on the way down to the path, the path itself last
  */
 export function scopeAncestors(
-    entries: Pick<ScopeEntry, 'path' | 'kits'>[],
+    entries: Pick<ScopeEntry, 'path' | 'configurations'>[],
     path: string,
-): Pick<ScopeEntry, 'path' | 'kits'>[] {
+): Pick<ScopeEntry, 'path' | 'configurations'>[] {
     return entries
-        .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
+        .filter((entry) => isInScope(path, entry.path))
         .toSorted((left, right) => left.path.length - right.path.length);
 }

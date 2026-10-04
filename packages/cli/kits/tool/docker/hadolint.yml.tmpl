@@ -1,6 +1,0 @@
-failure-threshold: style
-<% const off = [...rulesOff('docker/hadolint'), ...(isAll ? [] : ['DL3001', 'DL3003', 'DL3010', 'DL3020', 'DL3048', 'DL4001'])]; if (off.length > 0) { %>ignored:
-<% for (const rule of off) { %>    - <%= json(rule, 0) %>
-<% } } %><% const registries = settings['tools.hadolint.trusted_registries'] ?? []; if (registries.length > 0) { %>trustedRegistries:
-<% for (const registry of registries) { %>    - <%= json(registry, 0) %>
-<% } } %>

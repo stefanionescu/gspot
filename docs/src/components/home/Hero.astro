@@ -1,47 +1,109 @@
 ---
-import example from './example.json';
-import { Code } from '@astrojs/starlight/components';
+import example from '../../config/example.json';
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
 
 const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
 if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
 const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
 ---
+
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
-        <p class="release">gspot {example.version}</p>
-        <h1 id="_top">Lint AI-generated code</h1>
-        <p class="purpose">gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents. Git hooks run the checks on every commit.</p>
+        <p class="release">Not released yet</p>
+        <h1 id="_top">Check code before it ships</h1>
+        <p class="purpose">
+            gspot configures linters for your languages and runs checks in Git hooks and CI. It also installs
+            instructions for coding agents.
+        </p>
         <nav class="hero-actions" aria-label="Start using gspot">
-            <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
-            <a href="/reference/commands/check/">View commands</a>
+            <a class="primary" href="/guides/install/">
+                Get started <span aria-hidden="true">→</span>
+            </a>
+            <a href="/reference/commands/">View commands</a>
         </nav>
-        <div class="setup-command"><p>In your repository</p><Code code="npx @gspothq/cli init" lang="sh" frame="none" /></div>
+        <p>
+            After publication, choose the setup for your repository.{' '}
+            <a href="/guides/requirements/">Check requirements first.</a>
+        </p>
+        <Tabs>
+            <TabItem label="package.json">
+                <Code
+                    code={
+                        'npm install --save-dev --save-exact @gspothq/cli\ngit add package.json package-lock.json\ngit commit -m "build: Add gspot"\nnpx gspot init'
+                    }
+                    lang="sh"
+                    frame="none"
+                />
+            </TabItem>
+            <TabItem label="mise">
+                <Code code="mise exec github:stefanionescu/gspot@0.1.0 -- gspot init" lang="sh" frame="none" />
+                <p>Choose mise as the runner. It pins the standalone CLI and required native tools.</p>
+            </TabItem>
+            <TabItem label="Global">
+                <Code code={'npm install --global @gspothq/cli@0.1.0\ngspot init'} lang="sh" frame="none" />
+                <p>One CLI version serves this machine. Match each repository's pin.</p>
+            </TabItem>
+        </Tabs>
     </div>
     <section class="hero-demo" aria-labelledby="hero-example" data-example-root>
-        <div class="demo-heading"><h2 id="hero-example">An agent commits a wrapper</h2><span>Recorded run · TypeScript · level all</span></div>
+        <div class="demo-heading">
+            <h2 id="hero-example">An agent commits a wrapper</h2>
+            <span>Findings excerpt · TypeScript · level all</span>
+        </div>
         <div class="demo-steps" role="group" aria-label="Repository example">
-            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">1. Set up</button>
-            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">2. Commit</button>
-            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">3. Fix</button>
+            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">
+                1. Set up
+            </button>
+            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">
+                2. Commit
+            </button>
+            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">
+                3. Fix
+            </button>
         </div>
         <div class="demo-panels" aria-live="polite">
             <div id="demo-policy" data-example-panel="policy" hidden>
-                <Code code={`${example.commands.install}\n${example.commands.init}\n${example.commands.level}`} lang="sh" frame="none" />
+                <Code
+                    code={`${example.commands.install}\ngit add package.json package-lock.json\ngit commit -m "build: Add gspot"\n${example.commands.init}\n${example.commands.level}\nnpx gspot install\nnpx gspot doctor`}
+                    lang="sh"
+                    frame="none"
+                />
                 <p class="demo-note">Install gspot, accept the plan, and turn on the house style.</p>
             </div>
             <div id="demo-before" data-example-panel="before">
                 <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
                 <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
-                <ul class="demo-findings">{example.findings.map((finding) => <li><code>{finding.file}:{finding.line}</code><p>{finding.message}</p><span>{finding.rule} · {finding.check}</span></li>)}</ul>
+                <ul class="demo-findings">
+                    {example.findings.map((finding) => (
+                        <li>
+                            <code>
+                                {finding.file}:{finding.line}
+                            </code>
+                            <p>{finding.message}</p>
+                            <span>
+                                {finding.rule} · {finding.check}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
                 <p class="demo-status">{summary}</p>
             </div>
             <div id="demo-after" data-example-panel="after" hidden>
-                <ul class="demo-corrections"><li>Delete <code>src/utils.ts</code>.</li><li>Call <code>calculateTotal</code> directly.</li></ul>
+                <ul class="demo-corrections">
+                    <li>
+                        Delete <code>src/utils.ts</code>.
+                    </li>
+                    <li>
+                        Call <code>calculateTotal</code> directly.
+                    </li>
+                </ul>
                 <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
                 <p class="demo-status">{example.passed}</p>
             </div>
         </div>
-        <a class="demo-guide" href="/guides/quick-start/">Run the complete example <span aria-hidden="true">→</span></a>
+        <a class="demo-guide" href="/guides/quickstart/typescript/">
+            Run the TypeScript example <span aria-hidden="true">→</span>
+        </a>
     </section>
 </section>
 <script>

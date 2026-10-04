@@ -3,10 +3,8 @@ import { Parser } from 'htmlparser2';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { globSync, statSync } from 'node:fs';
+import { ARGUMENT_START } from './src/config/links.ts';
 import type { PageLinks } from '#docs/src/types/links.ts';
-
-// The runtime and the script come before the arguments.
-const ARGUMENT_START = 2;
 
 function inspectPage(path: string, content: string): PageLinks {
     const ids = new Set<string>();

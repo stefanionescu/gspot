@@ -1,8 +1,9 @@
 import { parse as parseToml } from 'smol-toml';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { ConfigurationOutput } from '#cli/types/generation/generation.ts';
-import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation/generation.ts';
+import { readText } from '#cli/platform/source.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import { SECONDS_PER_DAY } from '#cli/config/generation/bunfig.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.
@@ -13,17 +14,16 @@ import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generatio
 export function bunConfiguration(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
     using files = openRoot(root);
     const selected = scopes
-        .filter((selection) => selection.selected.some((manifest) => manifest.kit.name === 'dependencies'))
+        .filter((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'))
         .map((selection) => ({ selection, prefix: selection.scope.path === '' ? '' : `${selection.scope.path}/` }))
         .filter(({ prefix }) => ['bun.lock', 'bun.lockb'].some((name) => files.stat(`${prefix}${name}`) !== undefined));
     return selected.map(({ selection, prefix }) => {
         const path = `${prefix}bunfig.toml`;
-        const source = files.read(path);
-        const document =
-            source === undefined ? {} : (parseToml(source.bytes.toString('utf8')) as Record<string, unknown>);
+        const source = readText(root, path);
+        const document = source === undefined ? {} : parseToml(source);
         const install = document['install'] as Record<string, unknown> | undefined;
         const { settings } = selection.view;
-        const required = Number(settings['install.min_release_age_days'] ?? DEFAULT_RELEASE_AGE_DAYS) * SECONDS_PER_DAY;
+        const required = Number(settings['dependencies.min_release_age_days']) * SECONDS_PER_DAY;
         const current = install?.['minimumReleaseAge'];
         const changes: ConfigurationOutput['changes'] = [
             {
@@ -31,9 +31,9 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
                 value: typeof current === 'number' ? Math.max(required, current) : required,
             },
         ];
-        const scanner = settings['install.scanner'];
+        const scanner = settings['dependencies.scanner'];
         if (typeof scanner === 'string' && scanner !== '')
             changes.push({ path: ['install', 'security', 'scanner'], value: scanner });
-        return { path, format: 'toml' as const, changes };
+        return { path, changes };
     });
 }

@@ -24,12 +24,13 @@
             "#plugin/*": ["./packages/eslint-plugin/src/*"],
             "#tests/*": ["./tests/*"],
             "#docs/*": ["./docs/*"],
-            "#scripts/*": ["./packages/cli/scripts/*"],
             "#cli-package": ["./packages/cli/package.json"],
             "#workspace-package": ["./package.json"],
-            "#plugin-package": ["./packages/eslint-plugin/package.json"]
+            "#plugin-package": ["./packages/eslint-plugin/package.json"],
+            "#registry/*": ["./scripts/registry/*"],
+            "#automation/*": ["./scripts/*"]
         }
     },
     "include": ["packages/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/.build"]
+    "exclude": ["**/node_modules", "packages/*/dist"]
 }

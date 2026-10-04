@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+coverage/
+.build/
+DerivedData/
+Pods/
+.venv/
+.env*
+*.lock
+package-lock.json
+<% for (const path of scopeIgnorePatterns((settings['tools.semgrep.exclude'] ?? []).flatMap((entry) => entry.paths ?? []), scope)) { %><%= path %>
+<% } %>

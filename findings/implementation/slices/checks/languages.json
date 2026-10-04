@@ -1,0 +1,1326 @@
+[
+    {
+        "id": "slices/checks-languages/001",
+        "source": "findings/slices/checks-languages.md",
+        "line": 11,
+        "section": "Checks: Languages",
+        "finding": "| `bash/code-lines.ts:25` `commentStart` | Any `#` outside quotes starts a comment. In Bash, `#` starts a comment only at the start of a word. So `$#`, `${#items[@]}`, `${name#prefix}`, and `${path##*/}` cut the line: `[[ $# -gt 0 ]]` becomes `[[ $`. Every caller of `withoutComment` loses the rest of the line. For example, unread-arguments misses `$2` in `local a=${1#-} b=$2` and reports it. | Start a comment only at the start of the line or after whitespace, `;`, `&`, `\\|`, `(`, or `)`. FINDINGS says to replace the scanner with the tree. Fix this bug until that happens. |",
+        "owner": "`bash/code-lines.ts:25` `commentStart`",
+        "location": ["packages/cli/src/parsers/bash.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Tree-sitter owns comments and masks them; positional modifiers and $# remain code. Direct AST probe covers ${1#-} and UTF-16 positions.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/002",
+        "source": "findings/slices/checks-languages.md",
+        "line": 12,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:14-17` `referencesOf` | Skips every function's whole declaration line. A one-line function such as `log() { _write \"$@\"; }` loses its call to `_write`. unused-functions then reports `_write` as never called, private-prefix asks for a rename, and boundaries misses the dependency. | On the declaration line, drop only the declared name, not the whole line. |",
+        "owner": "`bash/scripts.ts:14-17` `referencesOf`",
+        "location": ["packages/cli/src/parsers/bash.ts", "packages/cli/src/checks/language/bash/scripts.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Calls come from command nodes including one-line function bodies, while function declaration names are not call nodes. Direct probe preserved writer call and body.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/003",
+        "source": "findings/slices/checks-languages.md",
+        "line": 13,
+        "section": "Checks: Languages",
+        "finding": "| `bash/unread-arguments.ts:15-25` `argumentCount` | Splits the call on whitespace and ignores quotes, so `log \"Deploy started\"` counts as 2 arguments. A `;` or `\\|` inside quotes also cuts the call. A function that reads `$1` and gets one quoted phrase is reported. | Count the `argument` children of the tree-sitter `command` node, or at least treat a quoted span as one word. |",
+        "owner": "`bash/unread-arguments.ts:15-25` `argumentCount`",
+        "location": ["packages/cli/src/parsers/bash.ts", "packages/cli/src/checks/language/bash/unread-arguments.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Arguments come from each command argument child. The quoted Deploy started; pipe | intact phrase counts as one argument in the direct probe.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/004",
+        "source": "findings/slices/checks-languages.md",
+        "line": 14,
+        "section": "Checks: Languages",
+        "finding": "| `bash/limits.ts:11-24` `scoreFor(matches, isDepth)`; `config/checks/language/bash.ts:8` `OUTER_LEVELS` | A boolean flag picks one of two unrelated computations. In the depth branch the start value `1` never wins, because any match sets at least `OUTER_LEVELS`. `OUTER_LEVELS = 2` has no comment. | At the call site, write `rule.isDepth ? nestingDepth(own) : own.length`. Start `nestingDepth` at 0. Document that the 2 counts the match itself and the outermost block, which `nesting.yml` cannot match because nothing contains it. |",
+        "owner": "`bash/limits.ts:11-24` `scoreFor(matches, isDepth)`; `config/checks/language/bash.ts:8` `OUTER_LEVELS`",
+        "location": [
+            "packages/cli/src/checks/language/bash/limits.ts",
+            "packages/cli/src/config/checks/language/bash.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Independent nestingDepth starts at zero; OUTER_LEVELS explains matched and outermost blocks; caller explicitly chooses depth or match count.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/005",
+        "source": "findings/slices/checks-languages.md",
+        "line": 15,
+        "section": "Checks: Languages",
+        "finding": "| `bash/limits.ts:33-36,54,120` `countFindings(analysis, …)` | Takes a `RULES` key named `analysis`, looks it up again, and then guards `rule === undefined`, which cannot happen. Nothing else uses the keys (`bash-branches` …). `rule.limit.replaceAll('_', '-')` changes nothing for `branches`, `nesting`, or `assignments`. | Make `RULES` an array and pass each rule: `RULES.map((rule) => countFindings(rule, context, index))`. Use `rule.limit` as the rule ID. |",
+        "owner": "`bash/limits.ts:33-36,54,120` `countFindings(analysis, …)`",
+        "location": [
+            "packages/cli/src/checks/language/bash/limits.ts",
+            "packages/cli/src/config/checks/language/bash.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "BASH_SIZE_RULES is an array of actual query records, passed directly to countFindings; no redundant key lookup/guard or no-op rule ID replacement.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/006",
+        "source": "findings/slices/checks-languages.md",
+        "line": 16,
+        "section": "Checks: Languages",
+        "finding": "| `bash/limits.ts:68,92,113-122` `fileLines`, `functionLines`, `bashLimits` | Both helpers are typed `Analysis`, take the `scripts` thunk, and await it again, although `bashLimits` already holds `index`. `countFindings` takes the index instead. The doc says \"in one pass\", but the check runs ast-grep three times and walks the lines twice more. | Make both helpers plain functions of `(context, index)`. Reword the doc to \"Every size ceiling of a shell script.\" |",
+        "owner": "`bash/limits.ts:68,92,113-122` `fileLines`, `functionLines`, `bashLimits`",
+        "location": ["packages/cli/src/checks/language/bash/limits.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "File/function line checks consume the already held index as plain functions. Documentation no longer claims one pass.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/007",
+        "source": "findings/slices/checks-languages.md",
+        "line": 17,
+        "section": "Checks: Languages",
+        "finding": "| `bash/code-lines.ts:72-73` `isDirectoryConstant` | The suppression reason says \"Three interpreter checks\", but all three calls are in `contract.ts` (lines 68, 88, 124), and that is one check. | Move the function into `contract.ts` and write the reason as \"Three contract rules recognize …\". |",
+        "owner": "`bash/code-lines.ts:72-73` `isDirectoryConstant`",
+        "location": ["packages/cli/src/checks/language/bash/contract.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "isDirectoryConstant is private to its three actual contract rule callers, with accurate explanation.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/008",
+        "source": "findings/slices/checks-languages.md",
+        "line": 18,
+        "section": "Checks: Languages",
+        "finding": "| `bash/code-lines.ts:36` reason on `withoutComment`; `bash/embeds.ts:15`; `bash/guards.ts:69` | The reason says \"Every script check\" finds comments with this function. That is false. `embeds` and `defaults` skip only whole-line comments and then match the raw line, so a pattern inside a trailing comment is reported. `env-owner` and `safety` strip trailing comments first. | Call `withoutComment` in `embeds` and `defaults`. The reason is then true. |",
+        "owner": "`bash/code-lines.ts:36` reason on `withoutComment`; `bash/embeds.ts:15`; `bash/guards.ts:69`",
+        "location": [
+            "packages/cli/src/parsers/bash.ts",
+            "packages/cli/src/checks/language/bash/guards.ts",
+            "packages/cli/src/checks/language/bash/embeds.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Defaults and embeds read the AST-masked code rather than raw trailing comments; the dead scanner explanation was removed with its owner.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/009",
+        "source": "findings/slices/checks-languages.md",
+        "line": 19,
+        "section": "Checks: Languages",
+        "finding": "| `bash/doc-comments.ts:26-27,47,53` `summaryOf`, `problem` | `style === 'dash' ? ' - ' : ': '` is written three times. Any value other than `dash`, a typo such as `dashes` included, silently means colon. The `tools.bash.doc_style` summary (`kits/language/bash/manifest.toml:356`) never mentions `dash`. | Compute the separator once in `docComment` and pass it in place of `style`. Reject values other than `colon` and `dash`, and list both in the setting summary. Rename `problem` to `docProblem`. |",
+        "owner": "`bash/doc-comments.ts:26-27,47,53` `summaryOf`, `problem`",
+        "location": ["packages/cli/src/checks/language/bash/doc-comments.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Compute colon/dash separator once and pass to docProblem; shared manifest validation rejects unknown values and summary names both choices.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/010",
+        "source": "findings/slices/checks-languages.md",
+        "line": 20,
+        "section": "Checks: Languages",
+        "finding": "| `bash/doc-comments.ts:74`, `bash/unused-functions.ts:12`, `bash/visibility.ts:12` | `new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')])` is written three times. | Write one `entryFunctions(context)` in `scripts.ts`. |",
+        "owner": "`bash/doc-comments.ts:74`, `bash/unused-functions.ts:12`, `bash/visibility.ts:12`",
+        "location": ["packages/cli/src/checks/language/bash/scripts.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "entryFunctions is one genuine shared calculation used by documentation, unused-function, and visibility checks.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/011",
+        "source": "findings/slices/checks-languages.md",
+        "line": 21,
+        "section": "Checks: Languages",
+        "finding": "| `bash/visibility.ts:34-42` `privatePrefix` `unprefixed` | For a function that nothing calls, this check says \"name it \\_x\" and unused-functions says \"x is called from no script.\" That is two findings with conflicting fixes. | Skip functions with no references at all. unused-functions owns them. |",
+        "owner": "`bash/visibility.ts:34-42` `privatePrefix` `unprefixed`",
+        "location": ["packages/cli/src/checks/language/bash/visibility.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Unreferenced functions are skipped by private-prefix, leaving unused-functions as their sole finding owner.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/012",
+        "source": "findings/slices/checks-languages.md",
+        "line": 22,
+        "section": "Checks: Languages",
+        "finding": "| `bash/guards.ts:63` `defaults` | Reads `config_owners` with `bashSetting(...) as string[] \\| undefined`. `guards` (line 92) and `contract.ts:214` read the same setting with `bashList`. A string value here turns into a set of characters. | Use `context.bashList('config_owners')`. |",
+        "owner": "`bash/guards.ts:63` `defaults`",
+        "location": ["packages/cli/src/checks/language/bash/guards.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Defaults uses the validated declared list, with no undefined union cast and no string-as-character-set path.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/013",
+        "source": "findings/slices/checks-languages.md",
+        "line": 23,
+        "section": "Checks: Languages",
+        "finding": "| `bash/guards.ts:8-39` `markProblems` | Takes five parameters, including a tuple that it destructures on its first line. The name is vague. It also writes to `seen` as a hidden side effect. It has one caller. | Inline it into `guardFindings`, and move `seen.set` into `guards`. |",
+        "owner": "`bash/guards.ts:8-39` `markProblems`",
+        "location": ["packages/cli/src/checks/language/bash/guards.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Single-caller guard report helpers inlined into actual guard engine; seen.set is explicit beside the emitted findings.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/014",
+        "source": "findings/slices/checks-languages.md",
+        "line": 24,
+        "section": "Checks: Languages",
+        "finding": "| `bash/contract.ts:117-156` `topLevelProblem`, `libraryProblem`, `roleProblems` | Every other rule in the file reports through `report`. These two functions return `[rule, message]` tuples, and `roleProblems` unpacks them. `libraryProblem` has one caller and adds two `if` statements. `roleProblems` means \"entry or library.\" | Merge the two into `libraryLineProblems(line, file, isConfigOwner, report)`. In `fileProblems`, call `entryProblems` or a new `libraryProblems` based on `file.isExecutable`, and delete `roleProblems`. |",
+        "owner": "`bash/contract.ts:117-156` `topLevelProblem`, `libraryProblem`, `roleProblems`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "slices/checks-languages/015",
+        "source": "findings/slices/checks-languages.md",
+        "line": 25,
+        "section": "Checks: Languages",
+        "finding": "| `bash/contract.ts:33-34,41,46,49` `HEADER_LINE`, `HEADER_LINES` | Two constants one letter apart. `HEADER_LINE` is line 2. `HEADER_LINES` is a length on line 41 and the line number of the Runtime line on lines 46 and 49. | Rename them `BARE_COMMENT_LINE = 2` and `RUNTIME_LINE = 4`, and keep them in this file. |",
+        "owner": "`bash/contract.ts:33-34,41,46,49` `HEADER_LINE`, `HEADER_LINES`",
+        "location": [
+            "packages/cli/src/checks/language/bash/contract.ts",
+            "packages/cli/src/config/checks/language/bash.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "BARE_COMMENT_LINE and RUNTIME_LINE separate the one-based line meanings. Constants remain central per the agreed repository-specific folder requirement.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners.",
+            "Constants retain the dedicated config owner required by the user; only the ambiguous names changed."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/016",
+        "source": "findings/slices/checks-languages.md",
+        "line": 26,
+        "section": "Checks: Languages",
+        "finding": "| `bash/ssh.ts:40` `quotedBlocks` | `trimmed === '\"' \\|\\| trimmed === \"'\"` is dead code, because `CLOSING_QUOTE_LINE` already matches both. The block also closes on any line that ends in either quote, such as `echo \"done\"` inside the block, or a `'` when the block opened with `\"`. | Delete the two comparisons. Return the opening quote from `isBlockStart`, and close the block only on a line whose unescaped quote count closes it. |",
+        "owner": "`bash/ssh.ts:40` `quotedBlocks`",
+        "location": ["packages/cli/src/parsers/bash.ts", "packages/cli/src/checks/language/bash/ssh.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Multiline remote spans come from parsed string arguments, removing guessed line-end quote closure entirely. Direct probe retained the complete block through echo \"done\".",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/017",
+        "source": "findings/slices/checks-languages.md",
+        "line": 27,
+        "section": "Checks: Languages",
+        "finding": "| `bash/ssh.ts:18`, `checks/tool/xctest/references.ts:6`, `checks/general/files.ts:18` | Three hand-written regex escapes. | Write one `escapeRegExp` in `platform/text.ts`. `RegExp.escape` needs Node 24, and the package declares `>=22`. |",
+        "owner": "`bash/ssh.ts:18`, `checks/tool/xctest/references.ts:6`, `checks/general/files.ts:18`",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "slices/checks-languages/018",
+        "source": "findings/slices/checks-languages.md",
+        "line": 28,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:53` `build` | A generic name for \"read every script and record which file owns each function.\" | Rename it `readScriptIndex`. |",
+        "owner": "`bash/scripts.ts:53` `build`",
+        "location": ["packages/cli/src/checks/language/bash/scripts.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The generic build function is now readScriptIndex, describing its actual operation.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/019",
+        "source": "findings/slices/checks-languages.md",
+        "line": 29,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:27-36,49` `assignmentsOf`, `ScriptFile.assignments` | Computed for every script on every Bash check, but only `env-owner.ts:21` reads it. | Compute it in `env-owner`, and only for owner files. Delete the field. |",
+        "owner": "`bash/scripts.ts:27-36,49` `assignmentsOf`, `ScriptFile.assignments`",
+        "location": ["packages/cli/src/checks/language/bash/env-owner.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Top-level assignment collection is performed only on actual environment owners, from shared masked code/function ranges; unused ScriptFile.assignments field removed.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/020",
+        "source": "findings/slices/checks-languages.md",
+        "line": 30,
+        "section": "Checks: Languages",
+        "finding": "| `bash/ast-grep.ts:18-23` `astGrepMatches` doc | \"@returns the matches … by file\" is wrong, because the function returns one flat array. \"through shared execution boundaries\" tells the reader nothing. | Rewrite it as \"Runs one ast-grep rule over the files. @returns every match, with zero-based lines and a root-relative path.\" |",
+        "owner": "`bash/ast-grep.ts:18-23` `astGrepMatches` doc",
+        "location": ["packages/cli/src/checks/language/bash/limits.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Native ast-grep documentation describes a flat match list, root-relative paths, and zero-based line positions rather than nonexistent grouping.",
+            "Focused canonical source ESLint passed with no findings: /tmp/gspot-bash-parser-eslint.json.",
+            "Plugin source TypeScript check passed; CLI owned paths produced no errors (root policy imports were in flight).",
+            "Current coherent CLI TypeScript target passes: /tmp/gspot-root-policy-current-final-types.log.",
+            "Shared Bash parser regressions pass for parameter modifiers, positional reads, comments, nested/one-line functions, quoted argument spans and UTF-16 source offsets: /tmp/gspot-tests-policy-ownership-parser-final.log. Its three unrelated policy fixture failures remain open with their owners."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/021",
+        "source": "findings/slices/checks-languages.md",
+        "line": 31,
+        "section": "Checks: Languages",
+        "finding": "| `bash/env-owner.ts:6-10`, `swift/structure.ts:12-16` `ownerPaths` | Two copies of \"read `architecture.roles.env` as a list.\" | Keep one function next to the architecture policy, and call it from both checks. |",
+        "owner": "`bash/env-owner.ts:6-10`, `swift/structure.ts:12-16` `ownerPaths`",
+        "location": [
+            "packages/cli/src/checks/language/bash/env-owner.ts",
+            "packages/cli/src/checks/language/swift",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/src/policy/settings/entries.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both checks now call the one existing rolePaths(roles,'env') policy calculation. The duplicated ownerPaths functions are deleted. Scalar/list/absent role handling remains the shared established contract.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/022",
+        "source": "findings/slices/checks-languages.md",
+        "line": 32,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:69-80`, `javascript/imports.ts:18-22,153-170`, `swift/build.ts:80-87` (also `checks/database/postgres/migrations.ts:9`, `checks/general/site/build.ts:17`, `parsers/tree-sitter.ts:49-53`) | The same block is written by hand each time: a `WeakMap` keyed by `input.reads`, then a `Map` by key, then compute once. | Write one `runCache(reads, key, compute)` helper in `execution/`. The Python and Swift caches that FINDINGS asks for can use it too. |",
+        "owner": "`bash/scripts.ts:69-80`, `javascript/imports.ts:18-22,153-170`, `swift/build.ts:80-87` (also `checks/database/postgres/migrations.ts:9`, `checks/general/site/build.ts:17`, `parsers/tree-sitter.ts:49-53`)",
+        "location": [
+            "packages/cli/src/platform/memo.ts",
+            "packages/cli/src/checks/language/bash/scripts.ts",
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/checks/language/swift/build.ts",
+            "packages/cli/src/parsers/python/source.ts",
+            "packages/cli/src/parsers/swift.ts",
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "packages/cli/src/checks/general/site/build.ts",
+            "packages/cli/src/parsers/tree-sitter.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every cited handwritten per-read WeakMap cache now uses the existing platform memo contract. The final PostgreSQL cache preserves numeric ordering, forward/down separation, scopes, immutable source sharing and exact file/error positions; site memo preserves sharing and deletes ended owner entries. Python/Swift observation caches and native tree copies retain their previously verified owner/standalone disposal.",
+            "Canonical current-plugin ESLint:4ownedfiles0errors/0warnings (/tmp/gspot-site-memo-eslint.json).",
+            "FullCLI TypeScript check passed exit0 (session17458).",
+            "Actual Bunbuild and native PG contract proof passed: /tmp/gspot-site-memo-proof.ts.",
+            "Diagram/audit deviation: The existing shared cache belongs to platform/memo.ts and the run-owned ReadCache rather than a new execution helper. It has actual grammar, source-observation, build and migration consumers."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/023",
+        "source": "findings/slices/checks-languages.md",
+        "line": 33,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:94`, `html.ts:113`, `python/modules.ts:31`, `swift/sources.ts:35`, `javascript/imports.ts:119`, `bash/trivial-functions.ts:32` | Every `parseSource` call is followed by a hand-written null check. Six checks use five different messages, and four of them (`scripts.ts`, `html.ts`, `modules.ts`, `sources.ts`) do not name the file. | Make `parseSource` throw with the grammar name, and let callers add the path. Or put the throw in the `withTrees` helper that FINDINGS proposes. |",
+        "owner": "`bash/scripts.ts:94`, `html.ts:113`, `python/modules.ts:31`, `swift/sources.ts:35`, `javascript/imports.ts:119`, `bash/trivial-functions.ts:32`",
+        "location": [
+            "packages/cli/src/parsers/tree-sitter.ts",
+            "packages/cli/src/parsers/bash.ts",
+            "packages/cli/src/parsers/comments.ts",
+            "packages/cli/src/parsers/python/source.ts",
+            "packages/cli/src/parsers/swift.ts",
+            "packages/cli/src/checks/language/html.ts",
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/checks/general/structure/config-logic.ts",
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/checks/tool/xctest.ts",
+            "packages/cli/src/repository/tags.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "parseSource now returns Tree and rejects a null native parse once with the grammar name. The nine duplicated caller null refusals are removed. Actual standalone/cached caller-owned handle semantics remain unchanged.",
+            "The proof temporarily makes the actual native Swift parser return null and verifies the exact grammar diagnostic, then restores it.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/024",
+        "source": "findings/slices/checks-languages.md",
+        "line": 34,
+        "section": "Checks: Languages",
+        "finding": "| `python/structure.ts:39,57,76,112`, `sql.ts:202-203`, `swift/structure.ts:35,51`, `bash/trivial-functions.ts:14`, `bash/duplicate-functions.ts:14` | `?? FILE_LINES`, `?? FUNCTION_LINES`, `?? TRIVIAL_STATEMENTS`, `?? FUNCTION_PARAMETERS`, `?? DUPLICATE_LINES`, and `PACKAGE_EXPORTS` repeat defaults that the manifests already declare. Examples are `kits/general/structure/manifest.toml` (`limits.file_lines` 300, `limits.trivial_statements` 2), Python `package_exports` 20, and Swift `duplicate_lines` 4. Every language kit requires `structure`. Bash `limits.ts` skips the check when the limit is unset instead. One number therefore lives in two places. | Delete the code constants and the `??` fallbacks. When the limit is undefined, skip the check, as `limits.ts` does. |",
+        "owner": "`python/structure.ts:39,57,76,112`, `sql.ts:202-203`, `swift/structure.ts:35,51`, `bash/trivial-functions.ts:14`, `bash/duplicate-functions.ts:14`",
+        "location": [
+            "packages/cli/src/checks/language/python",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/src/checks/language/swift",
+            "packages/cli/src/checks/language/sql.ts",
+            "packages/cli/src/checks/language/bash/duplicate-functions.ts",
+            "packages/cli/src/checks/language/bash/trivial-functions.ts",
+            "packages/cli/src/config/checks/language/python.ts",
+            "packages/cli/src/config/checks/language/swift.ts",
+            "packages/cli/src/config/checks/language/sql.ts",
+            "packages/cli/src/config/checks/language/bash.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Duplicate code defaults FILE_LINES/FUNCTION_LINES/PACKAGE_EXPORTS/TRIVIAL_STATEMENTS/FUNCTION_PARAMETERS/DUPLICATE_LINES and all cited fallback consumers are removed. Empty limits skip before source reads; the now-empty config/checks/language/documentation.ts is deleted.",
+            "SQL preserves independent applicability: a parameter-only limit produces only parameter findings; a trivial-only limit produces trivial-function/file findings; both absent skip; positive configured boundaries pass.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/025",
+        "source": "findings/slices/checks-languages.md",
+        "line": 35,
+        "section": "Checks: Languages",
+        "finding": "| `python/structure.ts:110-113` `python/package-exports` | Reads `input.view.settings['limits.python.package_exports']` and tests it with `typeof`. Every other limit goes through `input.view.limit(key, language)`, which finds this key too. | Use `input.view.limit('package_exports', 'python')`. |",
+        "owner": "`python/structure.ts:110-113` `python/package-exports`",
+        "location": ["packages/cli/src/checks/language/python", "packages/cli/src/checks/registry.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Python package exports now reads view.limit('package_exports','python'), with the same missing-limit skip contract as every language ceiling. No direct settings read or typeof fallback remains.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/026",
+        "source": "findings/slices/checks-languages.md",
+        "line": 36,
+        "section": "Checks: Languages",
+        "finding": "| `python/structure.ts:123` `PYTHON_ANALYSES` doc | Says the entries after the spread \"run the project's tools.\" Only `import-linter` runs a tool. `pip-installs` and `stale-exclusions` read files and settings. | Rewrite it as \"then the checks that do not parse Python,\" or delete it when the registry is flattened. |",
+        "owner": "`python/structure.ts:123` `PYTHON_ANALYSES` doc",
+        "location": ["packages/cli/src/checks/registry.ts", "packages/cli/src/checks/language/python"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The earlier flat registry removes PYTHON_ANALYSES and its misleading spread-map doc. Current plain engines contain no claim that non-parser checks all execute tools.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/027",
+        "source": "findings/slices/checks-languages.md",
+        "line": 37,
+        "section": "Checks: Languages",
+        "finding": "| `python/functions.ts:14`, `python/modules.ts:79`, `swift/sources.ts:56`, `swift/bodies.ts:12` | Every Python lambda counts as one statement. With the default limit of 2, every `key=lambda item: item.name` is reported as `<anonymous> has 1 statement … Inline it into its callers`. The kit's own rule recommends exactly that lambda (`kits/language/python/rules/DESIGN.md:62-63`). Swift closures are reported the same way, under the name `lambda_literal`. `swift/bodies.ts:12` tests for `'lambda'`, a Python node type that Swift never produces, so that branch is dead. | Leave lambdas and closures out of trivial-functions, and update the two unit-test expectations in `tests/unit/cli/checks/statements.test.ts`. Delete the dead branch. |",
+        "owner": "`python/functions.ts:14`, `python/modules.ts:79`, `swift/sources.ts:56`, `swift/bodies.ts:12`",
+        "location": [
+            "packages/cli/src/checks/language/python/functions.ts",
+            "packages/cli/src/checks/language/swift/functions.ts",
+            "packages/cli/src/parsers/python/source.ts",
+            "packages/cli/src/parsers/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The repaired Python lambda and Swift lambda_literal exemption remains intact through parser ownership/cache moves. Actual grammar proof reports the trivial named function and leaves the equivalent lambda/closure in place; substantial function positive remains clean.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/028",
+        "source": "findings/slices/checks-languages.md",
+        "line": 38,
+        "section": "Checks: Languages",
+        "finding": "| `swift/sources.ts:45-49,76` `functionsOf` | `name?.text ?? node.type` puts tree-sitter node names into finding messages: `computed_getter has 1 statement`, `init_declaration …`, and `lambda_literal …`. The doc says \"Every function declared at the top level or inside a type,\" but the function also returns closures, accessors, property observers, and nested functions. | Map each node type to a word (`init`, `getter of count`, `closure`). Correct the doc. |",
+        "owner": "`swift/sources.ts:45-49,76` `functionsOf`",
+        "location": ["packages/cli/src/parsers/swift.ts", "packages/cli/src/config/parsers/swift.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Swift initializers, closures, property accessors, subscript accessors and observers now have plain labels (init, closure, getter of value, getter of subscript). The reader doc explicitly includes nested functions/accessors/observers/closures. No grammar node identifier appears as its fallback finding label.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/029",
+        "source": "findings/slices/checks-languages.md",
+        "line": 39,
+        "section": "Checks: Languages",
+        "finding": "| `swift/sources.ts:12-19` `visibilityOf` | Strips `(set)`, so `private(set) var count` reads as `private`. Its getter is internal, but `privateBeforePublic` reports it as file-local. This happens only to top-level properties. The function is exported, but only `order.ts` uses it. | Skip a modifier that ends in `(set)`, and fall back to the next modifier or `internal`. Move the function into `order.ts`. |",
+        "owner": "`swift/sources.ts:12-19` `visibilityOf`",
+        "location": ["packages/cli/src/checks/language/swift/private-before-public.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "visibilityOf is now private in its actual check owner, skips setter-only modifiers, and preserves the next getter visibility or internal. Actual grammar proof verifies private(set) count is shared and a following private function reports at line2.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/030",
+        "source": "findings/slices/checks-languages.md",
+        "line": 40,
+        "section": "Checks: Languages",
+        "finding": "| `swift/order.ts:45-61` `envOwner` | The scan for `ENVIRONMENT_READ` is written twice. When no owner is declared and two files read the environment, Swift reports every reader. Bash `env-owner` reports nothing in that case. One check name has two behaviors. | Collect the read lines of each source once. Pick one rule for \"no owner declared,\" and apply it in both languages. |",
+        "owner": "`swift/order.ts:45-61` `envOwner`",
+        "location": [
+            "packages/cli/src/checks/language/swift/env-owner.ts",
+            "packages/cli/src/checks/language/swift",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/src/checks/language/bash/env-owner.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both languages skip when no environment owner is declared. Swift collects each matching AST navigation read once, deduplicates reading lines, ignores comments/string literals and accepts spaces between member tokens; declared owner paths retain their exemption.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/031",
+        "source": "findings/slices/checks-languages.md",
+        "line": 41,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:18,30`, `config/checks/language/swift.ts:32` `MACOS_PRIVATE_PATH` | Three expressions strip the macOS `/private/tmp` and `/private/var` prefix. | Write one `withoutPrivatePrefix(path)` helper. |",
+        "owner": "`swift/build.ts:18,30`, `config/checks/language/swift.ts:32` `MACOS_PRIVATE_PATH`",
+        "location": ["packages/cli/src/checks/language/swift/build.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every macOS path normalization uses withoutPrivatePrefix with the existing shared literal pattern, including matching normalized compiler-copy paths back to the original root.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/032",
+        "source": "findings/slices/checks-languages.md",
+        "line": 42,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:17` `named`, `:54` `ranBuild`, `:110` `analyze`, `:46` `sourcesWritten` | `named` is the fallback rule ID. `ranBuild` uses a past-tense verb. `analyze` is generic, because the check is `swift/swiftlint-analyze`. `sourcesWritten` expands response files. | Rename them `fallbackRule`, `runBuild`, `swiftlintAnalyze`, and `expandResponseFiles`. |",
+        "owner": "`swift/build.ts:17` `named`, `:54` `ranBuild`, `:110` `analyze`, `:46` `sourcesWritten`",
+        "location": ["packages/cli/src/checks/language/swift/build.ts", "packages/cli/src/checks/registry.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The actual variables/functions are fallbackRule, runBuild, swiftlintAnalyze and expandResponseFiles. The flat registry directly consumes swiftlintAnalyze; the old analyze export is deleted and test consumer migration is delegated to the tests owner.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/033",
+        "source": "findings/slices/checks-languages.md",
+        "line": 43,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:97,116`, `swift/cache.ts:30,70,106,111` | The folder name `source` is written six times. `swiftBuild` and `analyze` rebuild `join(plan.folder, 'source')`, because `buildOutput` drops the path that `prepareBuildSources` returned. | Use one constant, and return the source path in `SwiftBuildOutput`. |",
+        "owner": "`swift/build.ts:97,116`, `swift/cache.ts:30,70,106,111`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/checks/language/swift/build.ts",
+            "packages/cli/src/config/checks/language/swift.ts",
+            "packages/cli/src/types/checks/language/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "BUILD_SOURCE_DIRECTORY owns the copied source folder name, SwiftBuildOutput now preserves the returned source path, and consumers map diagnostics using that exact path rather than reconstructing it.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/034",
+        "source": "findings/slices/checks-languages.md",
+        "line": 44,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:56-66,144-150`, `checks/tool/xctest/coverage.ts:91-96` | Three places call `openBuildCache(plan.folder)` and then `prepareBuildSources(input.root, input.files.map(...), plan.folder, files)`. Here `folder` and `files` name the same directory. | Write one `prepareBuild(input, plan)` that returns the open root and the source path. |",
+        "owner": "`swift/build.ts:56-66,144-150`, `checks/tool/xctest/coverage.ts:91-96`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/checks/language/swift/build.ts",
+            "packages/cli/src/checks/tool/xctest.ts",
+            "packages/cli/src/types/checks/language/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "prepareBuild takes the actual selected root/files and build folder, returns the locked Root and source path, and closes the acquired Root if preparation fails. Compilation, Periphery and XCTest coverage are its three real native consumers; each disposes on success/failure.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending.",
+            "Audited deviation: The shared helper takes the folder it actually needs instead of a compiler plan; Periphery must not build an unused plan. Its three real callers prove shared source/lock preparation."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/035",
+        "source": "findings/slices/checks-languages.md",
+        "line": 45,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:131` `swiftPeriphery` | Calls `buildPlan(input, 'periphery')` only to get `plan.folder`. It builds the swift or xcodebuild command and throws it away, because Periphery runs its own build. | Move the folder computation out of `buildPlan` into its own function, and call that function here. |",
+        "owner": "`swift/build.ts:131` `swiftPeriphery`",
+        "location": [
+            "packages/cli/src/checks/language/swift/plan.ts",
+            "packages/cli/src/checks/language/swift/build.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "scopeBuildFolder owns canonical repository/scope/purpose separation. Periphery directly consumes it and no longer constructs a discarded Swift/xcodebuild argv.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/036",
+        "source": "findings/slices/checks-languages.md",
+        "line": 46,
+        "section": "Checks: Languages",
+        "finding": "| `swift/build.ts:114,132`; `python/deptry.ts:44` | `join(input.root, DOT_GSPOT, 'config', ...)` spells out `.gspot/config` by hand, although `CONFIGURATION_DIRECTORY` exists (`config/platform/locations.ts:8`) and `tsc.ts` uses it. `deptry.ts` writes `\\.gspot` into a regex. | Build both from the constants. |",
+        "owner": "`swift/build.ts:114,132`; `python/deptry.ts:44`",
+        "location": [
+            "packages/cli/src/checks/language/swift/build.ts",
+            "packages/cli/src/checks/language/python/deptry.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Swift tool configs use CONFIGURATION_DIRECTORY; deptry builds its escaped private-project segment from DOT_GSPOT through the existing escapeRegExp owner. The exact segment matches both slash styles and rejects similar directory names.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/037",
+        "source": "findings/slices/checks-languages.md",
+        "line": 47,
+        "section": "Checks: Languages",
+        "finding": "| `swift/cache.ts:15-22` `assertNoLinks`; `swift/build.ts:58` | Both call `files.source(path)` and `files.stat(...)` only for the error those calls may throw, and they drop the result. The comment \"The confined path refuses a link\" is the only hint. | In `assertNoLinks`, throw an explicit `Error` that names the link. In `build.ts`, add a comment on the `stat` call or give `Root` an `assertInside(path)` method. |",
+        "owner": "`swift/cache.ts:15-22` `assertNoLinks`; `swift/build.ts:58`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/checks/language/swift/build.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "assertBuildLinksInside calls the explicit Root.assertInside boundary and reports the unsafe link path with its original cause. Scratch deletion uses Root.removeTree, so no ignored stat or raw duplicate deletion remains.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending.",
+            "Audited deviation: The audit suggestion to refuse every link is disproved by the preserved positive two-run source-isolation contract: real builds create internal source links which later pruning removes without following. Only unsafe external/broken links are refused. Parent notified; the single Root confinement owner is retained rather than introducing another check."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/038",
+        "source": "findings/slices/checks-languages.md",
+        "line": 48,
+        "section": "Checks: Languages",
+        "finding": "| `swift/cache.ts:36` `removeStale(files, path, isLink)` | A boolean flag, and both callers pass a literal. It also deletes files, which the verb table calls `delete`, not `remove`. | Have each caller pass the entry it read (`files.readEntry(path)` or `files.read(path)`). Rename the function `deleteStale`. |",
+        "owner": "`swift/cache.ts:36` `removeStale(files, path, isLink)`",
+        "location": ["packages/cli/src/checks/language/swift/cache.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The boolean removeStale wrapper is deleted. The walker selects the actual Read/linked Read and removes it directly through Root; no replacement one-use forwarding helper is added.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending.",
+            "Audited deviation: The user requires redundant forwarding functions to be inlined. A tiny deleteStale replacement would retain the redundant wrapper; direct Root removal preserves the requested behavior without the boolean flag."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/039",
+        "source": "findings/slices/checks-languages.md",
+        "line": 49,
+        "section": "Checks: Languages",
+        "finding": "| `swift/cache.ts:42-68`, `types/checks/language/swift.ts:27` `Pruning` | An exported four-field type that exists only to pass state into `pruneEntry`, which has one caller. | Make `pruneEntry` a closure inside `pruneSources`, and delete `Pruning`. |",
+        "owner": "`swift/cache.ts:42-68`, `types/checks/language/swift.ts:27` `Pruning`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/types/checks/language/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pruning and pruneEntry are deleted. Actual desired files/directories and queued removals are owned by the substantive pruneSources closure.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/040",
+        "source": "findings/slices/checks-languages.md",
+        "line": 50,
+        "section": "Checks: Languages",
+        "finding": "| `swift/cache.ts:1,74-79`, `types/checks/language/swift.ts:36-37` | One directory has three names: \"compiler directory\" in the header and the docs, \"build cache\" in `openBuildCache`, and \"cache folder\" in `SwiftBuildPlan.folder`. | Call it \"build folder\" in all three places. |",
+        "owner": "`swift/cache.ts:1,74-79`, `types/checks/language/swift.ts:36-37`",
+        "location": [
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/checks/language/swift/plan.ts",
+            "packages/cli/src/types/checks/language/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The repeated descriptions now use build folder and distinguish its locked Root/source copy accurately.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/041",
+        "source": "findings/slices/checks-languages.md",
+        "line": 51,
+        "section": "Checks: Languages",
+        "finding": "| `swift/plan.ts:9` `text(input, key)` | The name says nothing. The function reads a string setting, or returns `''`. | Rename it `stringSetting`. |",
+        "owner": "`swift/plan.ts:9` `text(input, key)`",
+        "location": ["packages/cli/src/checks/language/swift/plan.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "text is renamed stringSetting and its three real settings reads remain; the obsolete trivial-function waiver is removed.",
+            "Canonical current-plugin ESLint:9 owned files,0 errors,0 warnings (/tmp/gspot-swift-build-eslint.json).",
+            "Full CLI TypeScript check passed with exit0 after this batch.",
+            "Actual filesystem/grammar proof passed: /tmp/gspot-swift-build-proof.ts (timestamp preservation, concurrent lock refusal, pruning nested stale outputs/internal links, unsafe-link refusal with outside bytes intact, missing-input lock cleanup/recovery, separate scoped folders, private deptry exclusion and literal-only Swift constants).",
+            "Affected38-file execution/Swift focus:248 passed with875 assertions; three stale fixture owners corrected and14 passed/45 assertions (/tmp/gspot-tests-execution-swift-contracts.log, /tmp/gspot-tests-execution-swift-correction.log). Tool inspection consumers:35 passed/92 assertions (/tmp/gspot-tests-execution-tool-inspections.log). Final five-family verification remains pending."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/042",
+        "source": "findings/slices/checks-languages.md",
+        "line": 52,
+        "section": "Checks: Languages",
+        "finding": "| `python/exports.ts:15-25` `privatePrefixes` | The name expression is computed in the filter and again in the message, with a dead `?? ''`. The message \"x is not in `__all__`, so its name starts with an underscore.\" states a false claim as a fact. | Use `flatMap` and compute the name once. Rewrite the message as \"x is not in `__all__`. Rename it \\_x, or add it to `__all__`.\" |",
+        "owner": "`python/exports.ts:15-25` `privatePrefixes`",
+        "location": ["packages/cli/src/checks/language/python/exports.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "privatePrefixes computes each top-level name once in flatMap. It now states the actual outcome and two valid fixes: the omitted name must be underscored or added to __all__. The dead empty-name fallback is deleted.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/043",
+        "source": "findings/slices/checks-languages.md",
+        "line": 53,
+        "section": "Checks: Languages",
+        "finding": "| `python/modules.ts:100-101` `exportedNames` | Calls `exportList` twice for the statement it finds. | Write one loop that returns on the first list. |",
+        "owner": "`python/modules.ts:100-101` `exportedNames`",
+        "location": ["packages/cli/src/parsers/python/source.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "exportedNames now uses one loop and returns on the first __all__ assignment. exportList is called exactly once per candidate statement. Positive names from the actual Python AST remain exact.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/044",
+        "source": "findings/slices/checks-languages.md",
+        "line": 54,
+        "section": "Checks: Languages",
+        "finding": "| `python/imports.ts:39` `singletons` | Lives in `imports.ts` but checks module variables, not imports. FINDINGS does not list this file among the misnamed ones. | Move it to `modules.ts`, or to its own `singletons.ts`. |",
+        "owner": "`python/imports.ts:39` `singletons`",
+        "location": [
+            "packages/cli/src/checks/language/python/singletons.ts",
+            "packages/cli/src/checks/language/python/imports/comments.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The substantive builtAtImport/singletons implementation now lives in its own singletons.ts check owner, not imports.ts. Imports retains only the real import-run/comment analysis; all production imports point directly at the new owner.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/045",
+        "source": "findings/slices/checks-languages.md",
+        "line": 55,
+        "section": "Checks: Languages",
+        "finding": "| `python/deptry.ts:31-35`, `python/pydoclint.ts:27-31,40-45`, `javascript/tsc.ts:102-107` | The doc comments are jargon: \"native execution boundaries,\" \"preserving native dependency scan settings,\" \"shared batching and error handling,\" and \"supervised execution status.\" | Say what each function does. For deptry, write \"Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot added, because the command-line flag replaces it.\" For pydoclint, write \"Runs pydoclint, adding --style from the Ruff docstring convention when pydoclint sets none.\" |",
+        "owner": "`python/deptry.ts:31-35`, `python/pydoclint.ts:27-31,40-45`, `javascript/tsc.ts:102-107`",
+        "location": [
+            "packages/cli/src/checks/language/python/deptry.ts",
+            "packages/cli/src/checks/language/python/pydoclint.ts",
+            "packages/cli/src/checks/language/javascript/tsc.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All cited jargon docs now explain the real deptry exclude replacement, pydoclint conditional Ruff-style selection and compiler diagnostic/command status. Native orchestration and explicit-style precedence remain unchanged.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/046",
+        "source": "findings/slices/checks-languages.md",
+        "line": 56,
+        "section": "Checks: Languages",
+        "finding": "| `python/pydoclint.ts:49` | Hard-codes `'pyproject.toml'`. `PYTHON_MANIFEST` holds that name, and `deptry.ts` and `import-linter.ts` use it. | Use `PYTHON_MANIFEST`. |",
+        "owner": "`python/pydoclint.ts:49`",
+        "location": ["packages/cli/src/checks/language/python/pydoclint.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "pydoclint now consumes the existing PYTHON_MANIFEST constant alongside deptry/import-linter, rather than spelling another project filename. The obsolete trivial-function waiver is also removed; its exported API passes current lint.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/047",
+        "source": "findings/slices/checks-languages.md",
+        "line": 57,
+        "section": "Checks: Languages",
+        "finding": "| `python/functions.ts:13,34`, `python/structure.ts:59`, `swift/bodies.ts:11,34,51` `fn`; `sql.ts:190`, `python/import-linter.ts:36` `said`; `html.ts:93,170,185` `held`; `html.ts:42,50,171,186` `kind`; `html.ts:108` `read`; `types/checks/language/sql.ts:9` `SqlAnalysis` | `fn` drops letters, which `NAMING.md` bans. `said` hides that it is a message. `held` names an attribute list in one place and a problem list in another. `kind` is the script `type` attribute. `read` is the function that finds problems. `SqlAnalysis` is a per-file input bundle, while `StructureAnalysis` is a function. | Rename them `definition`, `message` or `detail`, `attributes` or `attributeProblems`, `scriptType`, `findProblems`, and `SqlFileInput`. |",
+        "owner": "`python/functions.ts:13,34`, `python/structure.ts:59`, `swift/bodies.ts:11,34,51` `fn`; `sql.ts:190`, `python/import-linter.ts:36` `said`; `html.ts:93,170,185` `held`; `html.ts:42,50,171,186` `kind`; `html.ts:108` `read`; `types/checks/language/sql.ts:9` `SqlAnalysis`",
+        "location": [
+            "packages/cli/src/checks/language/python/functions.ts",
+            "packages/cli/src/checks/language/python",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/src/checks/language/swift/functions.ts",
+            "packages/cli/src/checks/language/sql.ts",
+            "packages/cli/src/types/checks/language/sql.ts",
+            "packages/cli/src/checks/language/python/imports/linter.ts",
+            "packages/cli/src/checks/language/html.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All cited fn/said/held/kind/read names are replaced with definition, message/detail, attributes/attributeProblems, scriptType and findProblems. SQL per-file input is now SqlFileInput throughout its producer/consumers, with no alias.",
+            "Canonical current-plugin ESLint passed across all40 owned TypeScript source files: /tmp/gspot-python-swift-eslint.json.",
+            "Both focused source proofs passed: /tmp/gspot-python-swift-proof.ts and /tmp/gspot-language-limits-proof.ts. These exercise actual WASM grammars and PostgreSQL function parsing without acquisition.",
+            "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
+            "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
+            "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/048",
+        "source": "findings/slices/checks-languages.md",
+        "line": 58,
+        "section": "Checks: Languages",
+        "finding": "| `bash/scripts.ts:68,89`, `bash/ast-grep.ts:25`, `javascript/imports.ts:152`, `python/modules.ts:24,77`, `swift/sources.ts:26,50` | Exported helpers that other files call have noun names, while `NAMING.md` says a function name starts with the action: `scriptIndex`, `scriptFunctions`, `astGrepMatches`, `scopeImports`, `pythonModules`, `functionsOf` (two of them), `swiftSources`. | Rename them `getScriptIndex`, `parseScriptFunctions`, `runAstGrep`, `getScopeImports`, `parsePythonModules`, `getFunctions`, and `parseSwiftSources`. |",
+        "owner": "`bash/scripts.ts:68,89`, `bash/ast-grep.ts:25`, `javascript/imports.ts:152`, `python/modules.ts:24,77`, `swift/sources.ts:26,50`",
+        "location": [
+            "packages/cli/src/checks/language/bash/scripts.ts",
+            "packages/cli/src/parsers/bash.ts",
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/checks/library/trpc.ts",
+            "packages/cli/src/parsers/python/source.ts",
+            "packages/cli/src/parsers/swift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The cited noun helpers are gone. Real callers use getScriptIndex/getScopeImports/getPythonFunctions/getSwiftFunctions, parseBashScript/parsePythonModule and substantive visitPythonModules/visitSwiftSources. ast-grep parser execution is deleted after the earlier AST Bash replacement proof; no runAstGrep forwarding replacement remains.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Language-specific getPythonFunctions/getSwiftFunctions avoid ambiguous imports. Substantive visitors replace redundant source factories. The obsolete ast-grep executor is removed rather than renamed; its native positive/defect replacement proof is in /tmp/gspot-bash-parser-outcomes.json.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/049",
+        "source": "findings/slices/checks-languages.md",
+        "line": 59,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/imports.ts:16-17,100` `compilerOptions`, `nodeEdges` | Calls `compilerOptions` for every import node, and `compilerOptions` runs `ts.findConfigFile`, a walk up the folders, before it checks its cache. | Get the options once per file in `importedEdges`, and pass them in. |",
+        "owner": "`javascript/imports.ts:16-17,100` `compilerOptions`, `nodeEdges`",
+        "location": [
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/repository/modules.ts",
+            "packages/cli/src/checks/general/structure/config-logic.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "getCompilerOptions now runs once for each importing source file, and the actual options are passed to every modulePath call. A source with three import nodes resolves all aliases, CommonJS and dynamic imports using one file-level options lookup; config-role imports use the same explicit contract.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/050",
+        "source": "findings/slices/checks-languages.md",
+        "line": 60,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/imports.ts:94,109` `EdgeSource`, `nodeEdges(source, node)`; `:150` doc | Here \"source\" means the importing file, but in `Edge.source` it means the import specifier. The `scopeImports` doc \"@returns source paths and the files importing each path\" leaves out `edges`, which `trpc.ts` reads. | Rename the type `Importer` and the parameter `importer`. Add `edges` to `@returns`. |",
+        "owner": "`javascript/imports.ts:94,109` `EdgeSource`, `nodeEdges(source, node)`; `:150` doc",
+        "location": [
+            "packages/cli/src/types/checks/language/javascript.ts",
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/checks/library/trpc.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Importer names the importing file and holds its project options; Edge.source remains the specifier. getScopeImports documents resolved value-import edges and positions, and its actual trpc consumer uses that same index.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/051",
+        "source": "findings/slices/checks-languages.md",
+        "line": 61,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/rules-off.ts:52-65` `rulesOff` | Writes one finding for each pair of rule and file, all at line 1 of the ESLint config. One rule turned off for 300 `.ts` files gives 300 findings at the same place. \"the configurations require it\" does not say which kit requires it. | Write one finding per rule, with the file count and the first few paths, and name the kit that requires the rule. |",
+        "owner": "`javascript/rules-off.ts:52-65` `rulesOff`",
+        "location": [
+            "packages/cli/src/checks/language/javascript/rules-off.ts",
+            "packages/cli/src/types/checks/language/javascript.ts",
+            "packages/cli/src/config/checks/language/javascript.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One disabled rule across four files now produces one finding with exact unique count, first three sorted paths, remaining count and javascript declaration owner. Native coverage still loads the config once; correcting the config produces no finding. Recommended/all selection, actual scopes, exclusions and approved rule-off decisions are preserved.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/052",
+        "source": "findings/slices/checks-languages.md",
+        "line": 62,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/tsc.ts:19,41` `validateOutputs`, `validateBuild`; `:84` `references` | Both functions throw, but the verb table reserves `validate` for reporting and `assert` for stopping. `references` is a boolean. | Rename them `assertOutputsInside`, `assertBuildInside`, and `hasReferences`. |",
+        "owner": "`javascript/tsc.ts:19,41` `validateOutputs`, `validateBuild`; `:84` `references`",
+        "location": ["packages/cli/src/checks/language/javascript/tsc.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The throwing checks are assertOutputsInside/assertBuildInside, and the boolean is hasReferences. No old names or forwarding aliases remain.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/053",
+        "source": "findings/slices/checks-languages.md",
+        "line": 63,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/tsc.ts:113` `checkjs` error | Says \"The typescript configuration declares no jsconfig target.\" The javascript kit declares that target (`kits/language/javascript/manifest.toml:195`). | Rewrite it as \"The javascript kit declares no .gspot/config/jsconfig.json target.\" |",
+        "owner": "`javascript/tsc.ts:113` `checkjs` error",
+        "location": ["packages/cli/src/checks/language/javascript/tsc.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The missing-target error identifies the javascript configuration and its actual .gspot/config/jsconfig.json target, from the shared path constant.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/054",
+        "source": "findings/slices/checks-languages.md",
+        "line": 64,
+        "section": "Checks: Languages",
+        "finding": "| `javascript/tsc.ts:97-98,131-132` | Both runners rewrite the scratch path back to the repository root, one with `replace` and one with `replaceAll`. | Write one helper, or a display-root option on `runToolCheck`, that uses `replaceAll`. |",
+        "owner": "`javascript/tsc.ts:97-98,131-132`",
+        "location": ["packages/cli/src/checks/language/javascript/tsc.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both real compiler runners call restoreCommandPaths, which replaces every scratch occurrence through replaceAll and preserves a result with no command. The repeated mixed replace/replaceAll implementation is gone.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/055",
+        "source": "findings/slices/checks-languages.md",
+        "line": 65,
+        "section": "Checks: Languages",
+        "finding": "| `typescript.ts:21` `tsconfig` | `name === 'tsconfig.json' \\|\\|` is dead code, because the right side already matches `tsconfig.json`. | Keep only `name.startsWith('tsconfig.') && name.endsWith('.json')`. |",
+        "owner": "`typescript.ts:21` `tsconfig`",
+        "location": ["packages/cli/src/checks/language/typescript.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The candidate predicate uses only startsWith(tsconfig.) and endsWith(.json); the subsumed equality branch is deleted.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/056",
+        "source": "findings/slices/checks-languages.md",
+        "line": 66,
+        "section": "Checks: Languages",
+        "finding": "| `config/checks/language/markdown.ts:11,20` `FENCE_PARSERS`; `markdown.ts:33,45` | `tsx` blocks are parsed with the `typescript` grammar, which rejects JSX, so every tsx example with markup is reported. `jsonc` blocks go to `JSON.parse`, which rejects comments and trailing commas. | Map `tsx` to the `tsx` grammar. Parse `jsonc` with `jsonc-parser`, which is already a dependency. |",
+        "owner": "`config/checks/language/markdown.ts:11,20` `FENCE_PARSERS`; `markdown.ts:33,45`",
+        "location": [
+            "packages/cli/src/parsers/markdown.ts",
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/types/parsers/markdown.ts",
+            "packages/cli/src/checks/language/markdown.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The actual TSX grammar accepts JSX, jsonc-parser accepts JSONC comments/trailing commas, and strict JSON still reports both. Parsing/literal data/types moved into the existing source parsing owners; old check-level parser data/type modules are deleted.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/057",
+        "source": "findings/slices/checks-languages.md",
+        "line": 67,
+        "section": "Checks: Languages",
+        "finding": "| `markdown.ts:85-92` `fileFindings` | The rule ID is the fence tag, so one problem has the IDs `bash`, `sh`, and `shell` (and `json`/`jsonc`, `yaml`/`yml`). The message repeats the language (\"This typescript block does not parse: typescript syntax error.\") and points at the fence, not at the error. | Use one `syntax` rule ID, or the parser name. Report the line of the first `ERROR` node: the fence line plus its row plus 1. |",
+        "owner": "`markdown.ts:85-92` `fileFindings`",
+        "location": ["packages/cli/src/parsers/markdown.ts", "packages/cli/src/checks/language/markdown.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All fence tags and aliases report one syntax ID at the first invalid body line. Actual JSON/TOML/YAML/tree/Bash diagnostics, quoted tilde and unclosed examples use their authored source offsets. The action message says Fix this code example. Native Bash execution/cancellation remains at runEngineTool.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/058",
+        "source": "findings/slices/checks-languages.md",
+        "line": 68,
+        "section": "Checks: Languages",
+        "finding": "| `markdown.ts:31,63-67` `structuredProblem`, `problemFor` | The union type of `FENCE_PARSERS` is widened to `string`, then cast back with `parser as GrammarName`. `STRUCTURED_PARSERS` and `TREE_PARSERS` repeat the map's values. | Write one map from each parser to its check function, typed by the union. Delete the two sets and the cast. |",
+        "owner": "`markdown.ts:31,63-67` `structuredProblem`, `problemFor`",
+        "location": [
+            "packages/cli/src/parsers/markdown.ts",
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/types/parsers/markdown.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One exhaustive Record<FenceParser,FenceSyntaxReader> owns parser dispatch. The repeated structured/tree sets and GrammarName cast are deleted. Unknown authored tags including constructor/__proto__ are safely ignored at the actual tag boundary, with placeholder line counts preserved.",
+            "Owned13-file current-plugin canonical ESLint:0 errors/0 warnings (/tmp/gspot-javascript-markdown-eslint.json).",
+            "Full CLI TypeScript check passed after root installation owner became coherent (session20259, exit0).",
+            "Actual parser/import/native coverage positive and defect proof passed: /tmp/gspot-javascript-markdown-proof.ts.",
+            "Root reread the original finding and actual parser/import/compiler/native-coverage owners. New persistent defect and correction cases passed in the 251-pass affected focus; its unrelated 23 fixture failures were retained and handled separately. Later final family verification remains required."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/059",
+        "source": "findings/slices/checks-languages.md",
+        "line": 69,
+        "section": "Checks: Languages",
+        "finding": "| `sql.ts:36-53` `proceduralStatements`, `sqlStatements` | The same recursive walk is written twice, and only the predicate differs. | Write one `countNodes(value, isStatement)`. |",
+        "owner": "`sql.ts:36-53` `proceduralStatements`, `sqlStatements`",
+        "location": ["packages/cli/src/checks/language/sql.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "countNodes is the single recursive walk. Its required predicate distinguishes SQL Stmt nodes from executable PL/pgSQL statements; blocks and absent/nonpositive procedural line numbers remain excluded. Native quoted SQL, standard atomic SQL and nested PL/pgSQL preserve exact thresholds and findings; no old walk or forwarding alias remains.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226)."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/060",
+        "source": "findings/slices/checks-languages.md",
+        "line": 70,
+        "section": "Checks: Languages",
+        "finding": "| `sql.ts:200-210` `functions` | Never checks the dialect or the sqlfluff excludes, and throws when the Postgres parser fails. `syntax` (lines 141 to 147) skips other dialects and excluded templates. With `tools.sqlfluff.dialect = \"mysql\"`, or with a template that sqlfluff excludes, `sql/functions` ends in an error. | Apply the same dialect and exclude checks as `syntax`, or skip files that do not parse, because `sql/syntax` already reports them. |",
+        "owner": "`sql.ts:200-210` `functions`",
+        "location": ["packages/cli/src/checks/language/sql.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both syntax and functions gate on the actual configured dialect and SQLFluff exclusions. Invalid outer SQL yields the syntax finding and no function error. MySQL and excluded SQL templates yield no PostgreSQL parser findings. Invalid quoted function bodies still throw the existing precise body diagnostic, as the unique strict-body regression requires. The manifest is the single ANSI dialect default; the redundant reader fallback is removed.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226)."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/061",
+        "source": "findings/slices/checks-languages.md",
+        "line": 71,
+        "section": "Checks: Languages",
+        "finding": "| `config/checks/language/sql.ts:5` `POSTGRES_DIALECTS` | Holds `ansi` with no comment, while the name says Postgres. | Rename it `PARSED_DIALECTS`. Add a comment saying that ANSI files go through the Postgres parser because ANSI is the sqlfluff default. |",
+        "owner": "`config/checks/language/sql.ts:5` `POSTGRES_DIALECTS`",
+        "location": ["packages/cli/src/config/checks/language/sql.ts", "packages/cli/src/checks/language/sql.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "PARSED_DIALECTS replaces POSTGRES_DIALECTS at both direct consumers. Its comment explains that ANSI is the SQLFluff default and those files use the PostgreSQL parser. No old declaration or alias remains.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226)."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/062",
+        "source": "findings/slices/checks-languages.md",
+        "line": 72,
+        "section": "Checks: Languages",
+        "finding": "| `html.ts:21-26,67-82` `withoutPlaceholders`, `firstCut`, `withoutMarks` | Three functions and a loop just to delete marked spans. | Use one regex built from `PLACEHOLDER_MARKS` (`/\\{\\{[\\s\\S]*?\\}\\}\\|\\{%[\\s\\S]*?%\\}\\|<%[\\s\\S]*?%>\\|\\$\\{[^}]*\\}/gu`) and one `replaceAll`. |",
+        "owner": "`html.ts:21-26,67-82` `withoutPlaceholders`, `firstCut`, `withoutMarks`",
+        "location": ["packages/cli/src/checks/language/html.ts", "packages/cli/src/config/checks/language/html.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The three-helper span-removal chain is one explicit calculation with the actual shared delimiter data. Native normal, multiline, repeated, mixed nested and unclosed cases preserve the previous public findings. firstCut and withoutMarks are deleted.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226).",
+            "Diagram/audit deviation: The suggested single regex is disproved by the valid mixed interpolation ${render('{{ title }}').text}: the old public literals check passes it, while the suggested regex leaves letter-bearing text and would add a false finding. Preserve one explicit span remover; no fixed nesting depths, regex patches or parallel parser were added."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/063",
+        "source": "findings/slices/checks-languages.md",
+        "line": 73,
+        "section": "Checks: Languages",
+        "finding": "| `css.ts:73-89` `bindingReads` | `styles[variant]` with a non-literal key is ignored, so every class chosen at run time is reported unused. The comment \"including where lexical shadowing hides the name\" says the opposite of the code, which leaves out reads through a shadowing local. | When a binding is read with a computed key, skip the unused-class findings for that sheet. Rewrite the comment as \"Reads through a local that shadows the binding do not count.\" |",
+        "owner": "`css.ts:73-89` `bindingReads`",
+        "location": [
+            "packages/cli/src/parsers/css.ts",
+            "packages/cli/src/checks/language/css.ts",
+            "packages/cli/src/types/parsers/css.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "bindingReads belongs to the existing CSS parsing owner. Computed import-binding access and object rest mark the importer dynamic, suppressing guessed unused-class findings while explicit missing literal reads remain findings. A shadowed local does not satisfy the imported stylesheet; the native defect/positive cases and the corrected comment prove the exact behavior. No source change was needed for this previously repaired row in this batch.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226)."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/064",
+        "source": "findings/slices/checks-languages.md",
+        "line": 74,
+        "section": "Checks: Languages",
+        "finding": "| `bash/limits.ts:80`, `python/structure.ts:51`, `sql.ts:190`, `sql.ts:103`, `bash/contract.ts:107`, `bash/unread-arguments.ts:77` (finding messages) | The grammar is wrong in `N code lines is over the ceiling`, `9 declared input parameters exceeds 7`, `set -euo pipefail come before the first command`, `argument(s)`, and `position 2, 3 is never read`. | Rewrite them as `This file has N code lines, over the ceiling of M.`, `This function declares 9 input parameters, over the limit of 7.`, `Put set -euo pipefail before the first command.`, and `… is called with up to 3 arguments but reads only $1: positions 2 and 3 are never read.` |",
+        "owner": "`bash/limits.ts:80`, `python/structure.ts:51`, `sql.ts:190`, `sql.ts:103`, `bash/contract.ts:107`, `bash/unread-arguments.ts:77` (finding messages)",
+        "location": [
+            "packages/cli/src/checks/language/bash/limits.ts",
+            "packages/cli/src/checks/language/bash/contract.ts",
+            "packages/cli/src/checks/language/bash/unread-arguments.ts",
+            "packages/cli/src/checks/language/python",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/src/checks/language/sql.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All cited messages now use grammatical subjects and quantities: file code-line ceilings, declared input parameters, Put the missing strict-mode statements before the first command, and unread positional arguments. The native proof asserts SQL messages and exact Bash singular/plural outcomes: 1 argument/position 1 is, 2 arguments/position 2 is, and positions 2 and 3 are. Existing Python and Bash limit messages were inspected in full.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226)."
+        ]
+    },
+    {
+        "id": "slices/checks-languages/065",
+        "source": "findings/slices/checks-languages.md",
+        "line": 75,
+        "section": "Checks: Languages",
+        "finding": "| `bash/boundaries.ts:100`, `bash/wrappers.ts:52`, `sql.ts:172`, `python/exports.ts:84`, `python/deptry.ts:88`, `html.ts:91` (finding messages) | These state a rule or a fact instead of the fix: `A sourced library owns behavior; this one only sources other files.`, `A deprecated alias … is deleted, not kept.`, `A block comment; write line comments, …`, `__all__ is the last statement of the module, …`, `A pip install outside the lockfile installs versions nobody reviewed.`, and `belongs in the content file` (which file?). | Lead with the action: `This library only sources other files. Source them where they are used, and delete this file.`, `Delete this deprecated alias, and call the canonical script.`, `Replace this block comment with -- line comments.`, `Move __all__ to the end of the module.`, `Add the package to pyproject.toml and install it from the lockfile.`, and name the content file the template reads. |",
+        "owner": "`bash/boundaries.ts:100`, `bash/wrappers.ts:52`, `sql.ts:172`, `python/exports.ts:84`, `python/deptry.ts:88`, `html.ts:91` (finding messages)",
+        "location": [
+            "packages/cli/src/checks/language/bash/boundaries.ts",
+            "packages/cli/src/checks/language/bash/wrappers.ts",
+            "packages/cli/src/checks/language/sql.ts",
+            "packages/cli/src/checks/language/python/exports.ts",
+            "packages/cli/src/checks/language/python/deptry.ts",
+            "packages/cli/src/checks/language/html.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every cited finding leads with the action: source the dependencies where used and delete the forwarding library; delete the deprecated alias and call the canonical script; replace SQL block comments; move __all__; add/install the Python package from the lock; replace literal template text with its content-source placeholder. Exact native public checks prove the repaired Bash and HTML wording, and all cited source messages were read.",
+            "Actual native parser/public check proof passed before the implementation and again afterward: /tmp/gspot-sql-html-proof.ts. The final proof also checks every cited message repair and dynamic/shadowed CSS bindings.",
+            "Canonical current-plugin ESLint: 15 affected files, 0 errors and 0 warnings (/tmp/gspot-sql-html-eslint.json).",
+            "Full CLI TypeScript check passed with exit 0 (session 19226).",
+            "Diagram/audit deviation: The HTML settings schema declares template path selectors and allowed literal paths, but no template-to-content-file mapping. Naming a specific content file would invent repository data. The finding names this template's content source and gives the actual replacement action; no arbitrary path or new setting was added."
+        ]
+    }
+]

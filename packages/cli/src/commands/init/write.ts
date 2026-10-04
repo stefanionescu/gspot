@@ -2,106 +2,110 @@
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
-import { writeOutputs } from '#cli/lifecycle/write.ts';
-import { gitignoreBlock } from '#cli/kits/manifests.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import type { Read } from '#cli/types/platform/root.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
-import type { Read } from '#cli/types/platform/platform.ts';
-import { asOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { isGitRepository } from '#cli/repository/tracked.ts';
-import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
-import { finishInstall } from '#cli/commands/install/steps.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import type { Written, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
-
-const { version: RUNNING_VERSION } = packageManifest;
+import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { installTools } from '#cli/lifecycle/install.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
+import { preparePackageProject } from '#cli/tools/npm/project.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { preparePythonProject } from '#cli/tools/python/project.ts';
+import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
+import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
+import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import type { Written, InitPrepared, RetirementResult } from '#cli/types/commands/init.ts';
 
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.
-function retireReplaced(
-    root: string,
-    removed: { path: string }[],
-    read: ReadonlyMap<string, Read>,
-): ReplaceRemovalResult {
-    return asOwner(root, (owner) => {
-        const result: ReplaceRemovalResult = { removed: [], preserved: [] };
-        const plans = [];
-        for (const entry of removed) {
-            if (entry.path.endsWith('/')) {
-                result.preserved.push(entry.path);
-                continue;
-            }
-            const expected = read.get(entry.path);
-            if (expected === undefined) throw new Error(`No replace read exists for ${entry.path}.`);
-            const plan = owner.proposeRetirement(entry.path, expected);
-            plans.push(plan);
-            const status = plan.status;
-            if (status === 'changed') result.removed.push(entry.path);
-            else if (status === 'preserved') result.preserved.push(entry.path);
+function retireReplaced(log: Log, removed: InitPrepared['removed'], read: ReadonlyMap<string, Read>): RetirementResult {
+    const result: RetirementResult = { removed: [], preserved: [] };
+    const plans = [];
+    for (const entry of removed) {
+        if (entry.path.endsWith('/')) {
+            result.preserved.push(entry.path);
+            continue;
         }
-        owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
-        return result;
-    });
+        const expected = read.get(entry.path);
+        if (expected === undefined)
+            throw new GspotError('policy', [`No original file was recorded for ${entry.path}. Run gspot init again.`]);
+        const plan = proposeRetirement(log, entry.path, expected);
+        plans.push(plan);
+        const status = plan.status;
+        if (status === 'changed') result.removed.push(entry.path);
+        else if (status === 'preserved') result.preserved.push(entry.path);
+    }
+    applyPlans(
+        log,
+        plans.filter((plan) => plan.status !== 'preserved'),
+    );
+    return result;
 }
 
-// Refuses to write when a configuration the replace read has changed after the plan was made.
-function assertReadUnchanged(owner: Owner, read: ReadonlyMap<string, Read>): void {
+// Refuses writes when an input changed after init read it.
+function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Read>): void {
     for (const [path, original] of read)
-        if (!isDeepStrictEqual(owner.read(path), original))
+        if (!isDeepStrictEqual(log.files.read(path), original))
             throw new GspotError('policy', [
-                `Configuration changed after replace was planned: ${path}. Run gspot init again.`,
+                `Configuration changed after init read it: ${path}. Run gspot init again.`,
             ]);
-}
-
-// The paths every generated output lands on.
-function generatedPaths(session: Session): Set<string> {
-    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    });
-    const every = [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.configurations];
-    return new Set(every.map((output) => output.path));
 }
 
 /**
  * Writes the policy and the generated files, retires the replaced configuration, and installs the tools.
  * @param root the repository root
- * @param options the init options
+ * @param options whether initialization installs the tools
  * @param prepared what init prepared
  * @returns the lines to print, the installation note, and the exit code
  */
-export async function write(root: string, options: InitOptions, prepared: InitPrepared): Promise<Written> {
-    return asOwner(root, async (owner) => {
-        assertReadUnchanged(owner, prepared.read);
-        const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
-        const replace = new Map([...prepared.read].filter(([path]) => removedPaths.has(path)));
-        owner.replace(
-            'gspot.toml',
-            { bytes: Buffer.from(prepared.policyText), mode: OWNER_WRITABLE_FILE },
-            'policy',
-            true,
-        );
-        if (isGitRepository(root)) owner.replaceBlock('.gitignore', gitignoreBlock(), 'hash');
-        const session = await openSession(root);
-        const generated = generatedPaths(session);
-        const synced = await writeOutputs(session, replace);
-        const retired = retireReplaced(
-            root,
-            prepared.removed.filter((entry) => !generated.has(entry.path)),
-            prepared.read,
-        );
-        synced.notes.push(
-            ...retired.preserved.map(
-                (path) => `retained ${path}: directory contents or subsequent edits are not authorized for deletion`,
-            ),
-        );
-        const { installNote, exitCode } = await finishInstall(session, options.install);
-        const version = colors.dim(`gspot ${RUNNING_VERSION}`);
-        return {
-            lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, version, ''],
-            installNote,
-            exitCode,
-        };
+export async function writeSetup(
+    root: string,
+    options: Pick<InitOptions, 'install'>,
+    prepared: InitPrepared,
+): Promise<Written> {
+    using log = openOwnership(root);
+    assertReadUnchanged(log, prepared.read);
+    const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
+    const reviewedOriginals = new Map([...prepared.read].filter(([path]) => removedPaths.has(path)));
+    const session = await openSession(root, {
+        policy: parseStrictPolicy(prepared.policyText, root),
+        text: prepared.policyText,
+        path: 'gspot.toml',
+        problems: [],
     });
+    const generated = emitAll(session);
+    if (options.install) {
+        await preparePackageProject(root, generated.files, log.files, { refreshLocks: false });
+        await preparePythonProject(session, generated.files, log.files, { refreshLocks: false });
+    }
+    assertReadUnchanged(log, prepared.read);
+    applyPlan(
+        log,
+        proposeReplacement(log, {
+            path: 'gspot.toml',
+            next: { bytes: Buffer.from(prepared.policyText), mode: OWNER_WRITABLE_FILE },
+            kind: 'policy',
+            canReplace: true,
+        }),
+    );
+    const generatedPaths = outputPaths(generated);
+    const applied = writeOutputs(session, log, reviewedOriginals, generated);
+    const retired = retireReplaced(
+        log,
+        prepared.removed.filter((entry) => !generatedPaths.has(entry.path)),
+        prepared.read,
+    );
+    applied.notes.push(
+        ...retired.preserved.map((path) => `kept ${path}: it is a folder, or it changed after init read it`),
+    );
+    const installed = options.install
+        ? await installTools(session, log, { refreshLocks: false })
+        : { note: 'install skipped; run: gspot install', exitCode: 0 };
+    const version = colors.dim(`gspot ${session.version}`);
+    return {
+        lines: ['written: gspot.toml, .gspot/', ...applied.notes, installed.note, version, ''],
+        installNote: installed.note,
+        exitCode: installed.exitCode,
+    };
 }

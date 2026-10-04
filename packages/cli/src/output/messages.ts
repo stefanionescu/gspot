@@ -1,40 +1,45 @@
-// Messages about the run on stderr, with levels for --quiet and --verbose.
+// Records go to stdout; informational messages, warnings, and errors go to stderr.
 import pc from 'picocolors';
 import { isCI } from 'std-env';
-import type { OutputOptions } from '#cli/types/output.ts';
+import { RESULT_JSON_INDENT } from '#cli/config/output.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/output.ts';
 
-const state: { options: OutputOptions } = { options: { verbosity: 'normal', json: false, color: false } };
+const state = { options: { quiet: false, json: false, color: false } };
+
+// Both result and failure records use the same JSON serialization and stream.
+function printJson(record: unknown): void {
+    process.stdout.write(`${JSON.stringify(record, null, RESULT_JSON_INDENT)}\n`);
+}
 
 export const colors = pc.createColors(false);
 
 /**
  * True when color is allowed: a terminal, no NO_COLOR, no CI, no --no-color.
- * @param isNoColor whether --no-color was given
+ * @param color whether the command permits color
  * @returns whether to paint
  */
-export function isColorAllowed(isNoColor: boolean): boolean {
+export function isColorAllowed(color: boolean): boolean {
     const noColor = environmentVariables()['NO_COLOR'];
-    if (isNoColor || (noColor !== undefined && noColor !== '') || isCI) return false;
+    if (!color || (noColor !== undefined && noColor !== '') || isCI) return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }
 
 /**
  * Sets the output mode for the process.
- * @param next verbosity, JSON, and color
+ * @param next quiet output, JSON, and color
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The mode and the palette change together, once per process; the state object owns both.
 export function configureOutput(next: OutputOptions): void {
     state.options = next;
     Object.assign(colors, pc.createColors(next.color));
 }
 
 /**
- * A line about the run: hints, warnings, progress. Goes to stderr, and stays quiet under --quiet.
+ * An informational line on stderr, suppressed by --quiet and --json.
  * @param text the line
  */
 export function note(text: string): void {
-    if (state.options.json || state.options.verbosity === 'quiet') return;
+    if (state.options.json || state.options.quiet) return;
     process.stderr.write(`${colors.cyan('[info]')} ${text}\n`);
 }
 
@@ -48,19 +53,33 @@ export function warn(text: string): void {
 }
 
 /**
- * An error message on stderr. Always printed.
- * @param text the message
+ * Print a diagnostic to stderr, or a structured command failure to stdout under --json.
+ * @param failure the diagnostic text or structured failure
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every error line goes to stderr with one final newline through this.
-export function fail(text: string): void {
+export function printError(failure: string | CommandFailureJson): void {
+    if (typeof failure !== 'string' && state.options.json) {
+        printJson(failure);
+        return;
+    }
+    const text = typeof failure === 'string' ? failure : failure.message;
     process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
 }
 
 /**
- * Output that is the command's record: stdout.
+ * Print the completed command in the selected format and retain its exit code.
+ * @param result the command output
+ */
+export function printResult(result: CommandResult): void {
+    if (state.options.json) printJson(result.json);
+    else if (result.text !== '') print(result.text);
+    process.exitCode = result.exitCode;
+}
+
+/**
+ * A human-readable record on stdout, suppressed when --json selects structured output.
  * @param text the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every record line goes to stdout with one final newline through this.
 export function print(text: string): void {
+    if (state.options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }

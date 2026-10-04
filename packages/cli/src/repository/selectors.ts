@@ -1,5 +1,7 @@
 import picomatch from 'picomatch';
-import type { PathExpressions } from '#cli/types/repository/repository.ts';
+import { posix } from 'node:path';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -44,9 +46,30 @@ export function pathExpressions(patterns: string[]): PathExpressions {
  * @param scope the scope path
  * @returns whether the file is in the scope
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, naming, and imports decide scope membership by this one rule, where '' is the root and holds everything.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
+}
+
+/**
+ * Lists the scopes inside another scope, excluding that scope itself.
+ * @param paths every scope path
+ * @param scope the parent scope, empty for the repository root
+ * @returns the nested paths in their original order
+ */
+export function nestedScopes(paths: readonly string[], scope: string): string[] {
+    return paths.filter((path) => path !== scope && isInScope(path, scope));
+}
+
+/**
+ * Orders scope paths from outermost to innermost, then by name.
+ * @param left the first scope path
+ * @param right the second scope path
+ * @returns the comparison result
+ */
+export function byScopeDepth(left: string, right: string): number {
+    const leftDepth = left === '' ? 0 : left.split('/').length;
+    const rightDepth = right === '' ? 0 : right.split('/').length;
+    return leftDepth - rightDepth || left.localeCompare(right);
 }
 
 /**
@@ -57,6 +80,68 @@ export function isInScope(path: string, scope: string): boolean {
 export function expandedPaths(patterns: string[]): string[] {
     return patterns.flatMap((pattern) => {
         const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;
-        return picomatch.scan(bare).isGlob ? [pattern] : [pattern, `${pattern.replace(/\/$/u, '')}/**`];
+        return isGlob(bare) ? [pattern] : [pattern, `${pattern.replace(/\/$/u, '')}/**`];
     });
+}
+
+/**
+ * Determine whether positive literal selectors cover a complete project scope.
+ * @param paths the root-relative inclusion and exclusion selectors
+ * @param scope the project scope, empty for the root
+ * @returns true only when no exclusion or partial selector leaves scope content active
+ */
+export function coversScope(paths: string[], scope: string): boolean {
+    if (paths.some((path) => path.startsWith('!'))) return false;
+    if (paths.includes('**') || paths.includes('**/*')) return true;
+    if (scope === '') return false;
+    const segments = scope.split('/');
+    return segments.some((_, index) => {
+        const literal = segments
+            .slice(0, index + 1)
+            .join('/')
+            .replaceAll(/[?*[\]{}]/gu, String.raw`\$&`);
+        return paths.includes(literal) || paths.includes(`${literal}/**`);
+    });
+}
+
+/**
+ * Determine whether a path belongs to none of the nested project scopes.
+ * @param path the repository-relative source or deleted trigger path
+ * @param children the nested project scope paths
+ * @returns whether the parent scope owns this path
+ */
+export function isOutsideChildren(path: string, children: string[]): boolean {
+    return children.every((child) => !isInScope(path, child));
+}
+
+/**
+ * Whether a repository path belongs to a private gspot tool project.
+ * @param path the repository-relative path
+ * @returns whether a .gspot folder contains the file
+ */
+export function isPrivateToolPath(path: string): boolean {
+    return path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT);
+}
+
+/**
+ * Whether picomatch interprets a selector as a glob, including brackets and extended globs.
+ * @param pattern the authored selector
+ * @returns whether the selector has glob syntax
+ */
+export function isGlob(pattern: string): boolean {
+    return picomatch.scan(pattern).isGlob;
+}
+
+/**
+ * Matches literal filenames and glob selectors against both the filename and repository path.
+ * @param names the literal filenames and glob selectors
+ * @returns the same filename matcher for detection and ownership
+ */
+export function filenameMatcher(names: string[]): (path: string) => boolean {
+    const literals = new Set(names.filter((name) => !isGlob(name)));
+    const globs = pathMatcher(names.filter((name) => isGlob(name)));
+    return (path) => {
+        const base = posix.basename(path);
+        return literals.has(base) || literals.has(path) || globs(base) || globs(path);
+    };
 }

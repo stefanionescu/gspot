@@ -1,27 +1,21 @@
-import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ClientEnvOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
-
-function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allowed: Set<string>): boolean {
-    const { parent } = node;
-    if (parent.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return false;
-    const name = memberName(parent);
-    if (name === undefined) return false;
-    return allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
-}
+import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';
+import { environmentNames, environmentReads } from '#plugin/environment.ts';
 
 export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
     name: 'no-client-env',
     meta: {
+        defaultOptions: [{ isClient: false, publicPrefixes: ['NEXT_PUBLIC_'], allowed: ENVIRONMENT_ALLOWED }],
         type: 'problem',
         docs: {
             title: 'Keep private environment values on the server',
             example:
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
-            summary: 'Finds a client module reading environment variables other than the public ones.',
+            description:
+                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env, and import.meta.env. The publicPrefixes and allowed options name public values.',
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
@@ -37,50 +31,32 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',
         },
     },
-    defaultOptions: [{ isClient: false, publicPrefixes: ['NEXT_PUBLIC_'], allowed: ['NODE_ENV'] }],
-    create(context, [options]) {
-        const prefixes = options.publicPrefixes ?? ['NEXT_PUBLIC_'];
-        const allowed = new Set(options.allowed ?? ['NODE_ENV']);
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<ClientEnvOptions[0]>;
+        const prefixes = options.publicPrefixes;
+        const allowed = new Set(options.allowed);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
-        let isClient = options.isClient === true;
+        let isClient = options.isClient;
         return {
+            ...environmentReads(context, (node) => {
+                if (!isClient) return;
+                const names = environmentNames(node);
+                if (
+                    names.length > 0 &&
+                    names.every(
+                        (name) =>
+                            name !== null && (allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
+                    )
+                )
+                    return;
+                context.report({ node, messageId: 'private', data: { public: publicText } });
+            }),
             Program(node) {
                 isClient ||= node.body.some(
                     (statement) =>
                         statement.type === AST_NODE_TYPES.ExpressionStatement && statement.directive === 'use client',
                 );
-            },
-            VariableDeclarator(node) {
-                if (
-                    !isClient ||
-                    node.init?.type !== AST_NODE_TYPES.Identifier ||
-                    node.init.name !== 'process' ||
-                    !isGlobalEnvironmentHost(context, node.init) ||
-                    node.id.type !== AST_NODE_TYPES.ObjectPattern
-                )
-                    return;
-                if (
-                    node.id.properties.some(
-                        (property) =>
-                            property.type === AST_NODE_TYPES.RestElement ||
-                            (property.key.type === AST_NODE_TYPES.Identifier
-                                ? property.key.name
-                                : String((property.key as TSESTree.Literal).value)) === 'env',
-                    )
-                )
-                    context.report({ node, messageId: 'private', data: { public: publicText } });
-            },
-            MemberExpression(node) {
-                if (
-                    !isClient ||
-                    node.object.type !== AST_NODE_TYPES.Identifier ||
-                    node.object.name !== 'process' ||
-                    !isGlobalEnvironmentHost(context, node.object) ||
-                    memberName(node) !== 'env'
-                )
-                    return;
-                if (isPublicRead(node, prefixes, allowed)) return;
-                context.report({ node, messageId: 'private', data: { public: publicText } });
             },
         };
     },

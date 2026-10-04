@@ -1,15 +1,14 @@
 import { createRule } from '#plugin/definition.ts';
 import { isRequireCall } from '#plugin/imports.ts';
 import { DECLARATIONS } from '#plugin/config/rules.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getDeclarationNames } from '#plugin/syntax.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function nameOf(statement: TSESTree.Statement): string {
+function getDeclarationName(statement: TSESTree.Statement): string {
+    if (statement.type === AST_NODE_TYPES.ExportDefaultDeclaration) return 'the default export';
     const declaration = statement.type === AST_NODE_TYPES.ExportNamedDeclaration ? statement.declaration : statement;
     if (!declaration) return 'this export';
-    const named = declaration.type === AST_NODE_TYPES.VariableDeclaration ? declaration.declarations[0] : declaration;
-    if ('id' in named && named.id?.type === AST_NODE_TYPES.Identifier) return named.id.name;
-    return 'this declaration';
+    return getDeclarationNames(declaration)[0] ?? 'declaration';
 }
 
 function isExport(statement: TSESTree.Statement): boolean {
@@ -18,7 +17,7 @@ function isExport(statement: TSESTree.Statement): boolean {
 }
 
 function isPrivateDeclaration(statement: TSESTree.Statement): boolean {
-    if (!DECLARATIONS.has(statement.type) || (statement as { declare?: boolean }).declare === true) return false;
+    if (!DECLARATIONS.has(statement.type) || ('declare' in statement && statement.declare)) return false;
     return !(
         statement.type === AST_NODE_TYPES.VariableDeclaration &&
         statement.declarations.every((declarator) => isRequireCall(declarator.init))
@@ -28,22 +27,22 @@ function isPrivateDeclaration(statement: TSESTree.Statement): boolean {
 export const privateBeforePublic = createRule<[], 'order'>({
     name: 'private-before-public',
     meta: {
-        type: 'problem',
+        defaultOptions: [],
+        type: 'suggestion',
         docs: {
             level: 'all',
             title: 'Private before public',
             example:
                 'The sequence `export const a = 1;` followed by `const b = 2;` reports `order`. Move the non-exported `b` declaration before the exported `a` declaration.',
-            summary: 'Checks that declarations the file keeps to itself come before the ones it exports.',
+            description: 'Checks that declarations the file keeps to itself come before the ones it exports.',
             why: 'The contract is what a reader wants at the end, after the parts it is built from; exports scattered among private helpers hide it.',
             fix: 'Move the non-exported declarations above every exported one, keeping their relative order.',
         },
         schema: [],
         messages: {
-            order: '{{name}} is not exported but sits below the exported {{exported}}. Private declarations come first, exports last.',
+            order: '{{name}} is not exported but sits below {{exported}}. Private declarations come first, exports last.',
         },
     },
-    defaultOptions: [],
     create(context) {
         return {
             Program(node) {
@@ -55,7 +54,7 @@ export const privateBeforePublic = createRule<[], 'order'>({
                         context.report({
                             node: statement,
                             messageId: 'order',
-                            data: { name: nameOf(statement), exported: nameOf(firstExport) },
+                            data: { name: getDeclarationName(statement), exported: getDeclarationName(firstExport) },
                         });
             },
         };

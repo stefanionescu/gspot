@@ -1,19 +1,18 @@
-// The types of execution/planning in this package.
-import type { Session } from '#cli/types/tools/tools.ts';
-import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Manifest, RawCheck, CheckSpec } from '#cli/types/kits.ts';
-import type { StageFilter, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { StageFilter, PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { Manifest, RawCheck, CheckSpec } from '#cli/types/configurations.ts';
 
 export type Skip = PlannedCheck['skip'];
-export type RuleSkip = {
-    applies: (spec: CheckSpec, check: PlannedCheck, hasGit: boolean) => boolean;
-    note: (spec: CheckSpec) => string;
-};
+
+/** The platform name and architecture a run is on. */
+export type Host = { platform: string; arch: string };
 
 export type PlanOptions = {
+    includeUnsupported?: boolean;
     commits?: string[];
     historyComplete?: boolean;
-    stage: StageFilter;
+    stage: StageFilter | 'any';
     staged?: string[];
     changed?: string[];
     only?: string[];
@@ -36,7 +35,11 @@ export type PlanInputs = {
     children: string[];
 };
 
-/** The platform name and architecture a run is on. */
-export type Host = { platform: string; arch: string };
-
 export type Stage = RawCheck['stage'];
+
+/** Saved selection state, with an enabling setting only when it is required. */
+export type SelectionStatus =
+    | { cause: 'level' | 'ignore'; note: string }
+    | { cause: 'setting'; note: string; setting: string };
+/** A declared native ignore source and its ordered path matcher. */
+export type NativeIgnore = { file: string; matches: (path: string) => boolean };

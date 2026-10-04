@@ -3,25 +3,29 @@ title: Generated files
 description: Which files gspot writes, which to commit, and which to leave alone.
 ---
 
-You edit one file, `gspot.toml`. gspot writes the rest from it. After you change the policy,
+You customize gspot in `gspot.toml`. gspot writes its managed configuration from that policy; application configuration remains authored. After you change the policy,
 run `gspot apply` to write them again.
 
 ## What gspot writes
 
-| Path                             | What it holds                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------ |
-| `.gspot/config/`                 | The configuration of every tool. A scope gets its own folder under it.                     |
-| `.gspot/rules/`                  | The rules for coding agents.                                                               |
-| `.gspot/package.json` and lock   | The npm tools gspot installs, at pinned versions.                                          |
-| `.gspot/pyproject.toml` and lock | The Python tools gspot installs, at pinned versions.                                       |
-| `.gspot/version`                 | The gspot version of the repository.                                                       |
-| Files at the repository root     | Pointers for editors and tools that look for their configuration at the root.              |
-| Managed blocks                   | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
-| Keys in shared files             | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
+| Path                                                    | What it holds                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.gspot/config/`                                        | The configuration of every tool. A scope gets its own folder under it.                     |
+| `.gspot/rules/`                                         | The rules for coding agents.                                                               |
+| `.gspot/package.json` and lock                          | The npm tools gspot installs, at pinned versions.                                          |
+| `.gspot/pyproject.toml` and lock                        | The Python tools gspot installs, at pinned versions.                                       |
+| `.gspot/version`                                        | The gspot version of the repository.                                                       |
+| Files at the repository root                            | Pointers for editors and tools that look for their configuration at the root.              |
+| Managed blocks                                          | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
+| `.gspot/hooks/`                                         | The three Git hook scripts.                                                                |
+| `.mise/conf.d/gspot-tools.toml`                         | The mise pins, when mise is selected.                                                      |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | The selected CI job.                                                                       |
+| `.swiftlint.yml` inside test folders                    | Swift test overrides, when applicable.                                                     |
+| Keys in shared files                                    | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
 
 The root files are `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
 `.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`, and
-`.swiftlint.yml`, depending on your kits. Most point at the file under `.gspot/config/`. The
+`.swiftlint.yml`, depending on your configurations. Most point at the file under `.gspot/config/`. The
 other tools get their configuration path from gspot. To use such a tool in your editor, point
 the editor at the file under `.gspot/config/`.
 
@@ -32,13 +36,14 @@ policy.
 ## What to commit
 
 Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/rules/`, the
-private manifests and locks at the root of `.gspot/`, the root files, and the managed blocks.
+applicable `.gspot/package.json` and its manager lock, `.gspot/pyproject.toml`, `.gspot/uv.lock`, `.gspot/version`, and `.gspot/hooks/`, the root files, and the managed blocks.
 After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
 
-The managed block in `.gitignore` keeps these out of Git: the installed tools, the downloaded
-style packages, and `.gspot/state/`.
+The managed block in `.gitignore` keeps these out of Git: the installed tools (`.gspot/node_modules/` and `.gspot/.venv/`), Vale style packages when prose checks need them, and `.gspot/state/`.
 
 ## What to keep
 
 `.gspot/state/` holds the record of what gspot wrote. Without it, gspot cannot tell your edits
 from its own files. Do not delete the whole `.gspot/` folder to clean up.
+
+A fresh clone has no local ownership record. gspot compares tracked generated files with the planned output before recording ownership; differing files remain conflicts. Run `gspot install` to prepare tools and hooks in the clone.

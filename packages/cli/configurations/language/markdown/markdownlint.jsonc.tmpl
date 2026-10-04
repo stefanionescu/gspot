@@ -1,0 +1,24 @@
+<%
+const rules = options('tools.markdownlint').rules ?? {};
+const defaults = rules.default === undefined ? {
+    default: true,
+    MD013: false,
+    MD024: { siblings_only: true },
+    MD033: false,
+    MD045: false,
+    MD046: { style: 'fenced' },
+    MD048: { style: 'backtick' },
+    MD049: { style: 'underscore' },
+    MD050: { style: 'asterisk' },
+    MD060: false,
+    MD007: { indent: format.indent_width },
+    MD041: isAll,
+    MD025: isAll ? { front_matter_title: '' } : false,
+} : {};
+const document = {
+    ...defaults,
+    ...rules,
+    ...Object.fromEntries(rulesOff('markdown/markdownlint').map((rule) => [rule, false])),
+};
+recordRules(document);
+%><%= json(document) %>

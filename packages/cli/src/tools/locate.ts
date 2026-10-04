@@ -1,46 +1,43 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
+
 import which from 'which';
-import { homedir } from 'node:os';
-import { toPosix } from '#cli/platform/paths.ts';
-import type { ToolPin } from '#cli/types/kits.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import { miseHome } from '#cli/platform/environment.ts';
-import type { Root } from '#cli/types/platform/platform.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
-import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
+import { parsePackageManifest } from '#cli/parsers/packages.ts';
+import type { LocateOptions } from '#cli/types/tools/install.ts';
+import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
+import { toPosix, environmentBin, executableNames } from '#cli/platform/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-const IS_WINDOWS = process.platform === 'win32';
-
-// The folders a tool of the private kind, or a host tool, is searched in. A snapshot has no private tools or virtual
+// The folders a tool of the private kind, or a host tool, is located in. A snapshot has no private tools or virtual
 // environments of its own: they run from the working tree the snapshot stands for.
-function searchDirectories(
-    root: string,
-    roots: string[],
-    privateKind: PrivateKind | undefined,
-    installedRoot: string,
-): string[] {
+function searchDirectories(root: string, options: LocateOptions): string[] {
+    const { searchFolders, privateKind, installedRoot = root } = options;
     if (privateKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
-    const binary = IS_WINDOWS ? 'Scripts' : 'bin';
-    if (privateKind === 'python') return [join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY, binary)];
-    // A snapshot links the private tools of gspot instead of copying them, so they are searched in the working tree.
-    return [...new Set(roots)].flatMap((searched) => [
+    if (privateKind === 'python') return [environmentBin(join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY))];
+    // A snapshot's private tools run from the original working tree.
+    return [...new Set(searchFolders)].flatMap((folder) => [
         join(
-            basename(searched) === DOT_GSPOT ? join(installedRoot, relative(root, searched)) : searched,
+            basename(folder) === DOT_GSPOT ? join(installedRoot, relative(root, folder)) : folder,
             'node_modules',
             '.bin',
         ),
-        join(installedRoot, relative(root, searched), '.venv', binary),
+        environmentBin(join(installedRoot, relative(root, folder), '.venv')),
     ]);
 }
 
-// Whether a candidate exists: a managed path must resolve through the files root, any other is read from disk.
+// Whether a candidate exists: a managed path must resolve through the root boundary, any other is read from disk.
 function candidateExists(files: Root, root: string, path: string): boolean {
     const local = toPosix(relative(root, path));
     if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
-        files.source(local);
+        files.assertInside(local);
         return true;
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
@@ -55,28 +52,21 @@ function repositoryCandidates(root: string, directories: string[], names: string
     return paths.filter((path) => candidateExists(files, root, path));
 }
 
-// The executables of the name on PATH and among mise's shims.
-function hostCandidates(name: string, names: string[]): string[] {
+// Resolve mise shims in the repository before tools run inside isolated source copies.
+function hostCandidates(root: string, name: string, names: string[]): string[] {
     const onPath = which.sync(name, { nothrow: true });
-    const launcherDirectory = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
+    const launcherDirectory = join(miseHome(), 'shims');
     const found = names
         .map((file) => join(launcherDirectory, file))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
-    return onPath === null ? found : [onPath, ...found];
-}
-
-// The parsed package.json at a path, or undefined when there is none or it lies outside the managed tree.
-function packageFacts(files: Root | undefined, root: string, manifest: string): Package | undefined {
-    if (files === undefined) {
-        try {
-            return JSON.parse(readFileSync(manifest, 'utf8')) as Package;
-        } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
-            throw error;
-        }
-    }
-    const text = files.read(toPosix(relative(root, manifest)))?.bytes.toString('utf8');
-    return text === undefined ? undefined : (JSON.parse(text) as Package);
+    const candidates = [...new Set(onPath === null ? found : [onPath, ...found])];
+    const mise = which.sync('mise', { nothrow: true });
+    return candidates.flatMap((path) => {
+        if (!path.startsWith(`${launcherDirectory}/`) && !path.startsWith(`${launcherDirectory}\\`)) return [path];
+        if (mise === null) return [];
+        const resolved = runBlocking([mise, 'which', name], { cwd: root, timeoutMs: VERSION_TIMEOUT_MS });
+        return resolved.code === 0 ? [resolved.stdout.trim()] : [];
+    });
 }
 
 // The version the first package.json above a folder declares for the named package, searching upward.
@@ -84,34 +74,49 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
         if (files !== undefined && !toPosix(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`)) return undefined;
-        const parsed = packageFacts(files, root, manifest);
+        const parsed = installedPackage(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
     return undefined;
 }
 
 /**
+ * Read package metadata from a private installation or a native host installation.
+ * @param files the private installation boundary, or undefined for a host installation.
+ * @param root the repository root owning the private boundary.
+ * @param manifest the absolute package.json path.
+ * @returns the validated package fields, or undefined when the file is absent.
+ */
+export function installedPackage(files: Root | undefined, root: string, manifest: string): PackageManifest | undefined {
+    try {
+        let text: string | undefined;
+        if (files === undefined) text = readFileSync(manifest, 'utf8');
+        else {
+            const directory = files.realPath(toPosix(relative(root, dirname(manifest))));
+            const path = toPosix(relative(root, join(directory, basename(manifest))));
+            text = files.read(path)?.bytes.toString('utf8');
+        }
+        return text === undefined ? undefined : parsePackageManifest(text, manifest);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
+/**
  * Every executable of the name, in the order gspot prefers them.
  * @param root the repository root.
- * @param roots the folders whose bin directories are searched, for a host tool.
  * @param name the executable name.
- * @param privateKind the private installation the tool belongs to, which restricts the search to it.
- * @param installedRoot the working tree whose virtual environments run, when the root is a snapshot of it.
+ * @param options the search folders and private installation ownership.
  * @returns the paths that exist.
  */
-export function locateCandidates(
-    root: string,
-    roots: string[],
-    name: string,
-    privateKind?: PrivateKind,
-    installedRoot = root,
-): string[] {
-    // A command that names its executable by path is that file or nothing.
+export function locateCandidates(root: string, name: string, options: LocateOptions): string[] {
+    // An absolute executable names exactly one file.
     if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
-    const names = IS_WINDOWS ? [`${name}.cmd`, `${name}.exe`, name] : [name];
-    const found = repositoryCandidates(root, searchDirectories(root, roots, privateKind, installedRoot), names);
-    if (privateKind !== undefined) return found;
-    return [...found, ...hostCandidates(name, names)];
+    const names = executableNames(name);
+    const found = repositoryCandidates(root, searchDirectories(root, options), names);
+    if (options.privateKind !== undefined) return found;
+    return [...found, ...hostCandidates(options.installedRoot ?? root, name, names)];
 }
 
 /**
@@ -124,7 +129,7 @@ export function locateCandidates(
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
     using files = toPosix(relative(root, path)).startsWith(`${DOT_GSPOT}/`) ? openRoot(root) : undefined;
-    const folder = dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path))));
+    const folder = dirname(files === undefined ? realpathSync(path) : files.realPath(toPosix(relative(root, path))));
     // A Windows shim in node_modules/.bin is a file of its own, not a link into its package, so the package is
     // found by name beside that folder.
     const start = basename(folder) === '.bin' ? join(dirname(folder), name) : folder;
@@ -134,14 +139,14 @@ export function packageVersion(root: string, path: string, name: string | undefi
 /**
  * The version mise installed for an npm tool behind one of its shims.
  * A shim is one file for every version, so the version is read from the folder mise keeps it in.
- * @param path the executable
- * @param tool the pin
- * @returns the pinned version when mise holds it, or undefined
+ * @param path the executable.
+ * @param tool the pin.
+ * @returns the pinned version when mise holds it, or undefined.
  */
 export function miseVersion(path: string, tool: ToolPin): string | undefined {
     const npm = tool.installers['npm'];
     if (npm?.version === undefined || npm.version !== tool.version) return undefined;
-    const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
+    const home = miseHome();
     if (!path.startsWith(join(home, 'shims'))) return undefined;
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
     return statSync(installed, { throwIfNoEntry: false }) === undefined ? undefined : npm.version;

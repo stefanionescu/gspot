@@ -1,5 +1,3 @@
-// The literal values checks/general/files reads: names, patterns, limits, and tables.
-
 export const ENV_KEY_GROUP = 1;
 
 /** How code reads an environment variable, by language; the first group is the key. */
@@ -11,7 +9,7 @@ export const ENV_READ_PATTERNS = [
     /os\.getenv\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
 ];
 
-/** The files the environment reads are searched in. */
+/** The files the environment reads are inspected in. */
 export const ENV_READ_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx', '.py'];
 
 /** A key line in an environment file, trimmed: the key before the equals sign. */

@@ -1,20 +1,61 @@
 import { posix } from 'node:path';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { importFile, isRequireCall } from '#plugin/imports.ts';
+import { isRequireCall } from '#plugin/imports.ts';
+import { CODE_EXTENSION } from '#plugin/config/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-import { NO_ROLES, CONTRACTS, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES, CODE_EXTENSION } from '#plugin/config/rules.ts';
+import { lintedPath, normalizePath, isAnyGlobMatch } from '#plugin/files.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { NO_ROLES, CONTRACTS, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES } from '#plugin/config/rules.ts';
 
 import type {
     ImportEdge,
     ImportNode,
+    ImportSource,
     ImportVerdict,
-    ImportDirectionRole,
+    ImportLocation,
     ImportDirectionRoles,
     ImportDirectionOptions,
     ImportDirectionMessages,
 } from '#plugin/types/rules.ts';
+
+function aliasTarget(source: string, prefix: string, target: string): string | undefined {
+    const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
+    const bare = clean.endsWith('/') ? clean.slice(0, -1) : clean;
+    const matches = prefix.endsWith('*') ? source.startsWith(clean) : source === bare || source.startsWith(`${bare}/`);
+    if (!matches) return undefined;
+    const rest = source.slice(clean.length);
+    const base = target.endsWith('*') ? target.slice(0, -1) : target;
+    return posix.join(base, rest);
+}
+
+/**
+ * The file an import source names, relative imports against the importer and aliases against the root; undefined for packages.
+ * @param importer the importing file
+ * @param source the import source as written
+ * @param root the repository root
+ * @param aliases alias prefix to target directory, both optionally ending in `*`
+ * @returns the file's path without an extension check, or undefined
+ */
+function importFile(
+    importer: string,
+    source: string,
+    root: string,
+    aliases: Readonly<Record<string, string>> = {},
+): string | undefined {
+    if (source.startsWith('.')) {
+        const joined = posix.join(posix.dirname(importer), source);
+        return normalizePath(posix.normalize(joined));
+    }
+    const candidates = Object.entries(aliases).toSorted(
+        ([left], [right]) =>
+            right.replace(/\*$/u, '').length - left.replace(/\*$/u, '').length ||
+            Number(left.endsWith('*')) - Number(right.endsWith('*')),
+    );
+    for (const [prefix, target] of candidates) {
+        const aliased = aliasTarget(source, prefix, target);
+        if (aliased !== undefined) return normalizePath(posix.normalize(posix.join(root, aliased)));
+    }
+    return undefined;
+}
 
 function isTypeOnly(node: ImportNode): boolean {
     if ('importKind' in node && node.importKind === 'type') return true;
@@ -36,7 +77,7 @@ function testsVerdict(edge: ImportEdge, contracts: string[]): ImportVerdict | un
 
 function typesVerdict(edge: ImportEdge): ImportVerdict | undefined {
     if (edge.isTypeOnly || edge.targetRole === 'types') return undefined;
-    return { messageId: 'typesToRuntime', data: { source: edge.source, role: edge.targetRole } };
+    return { messageId: 'typesToRuntime', data: { source: edge.source, target: edge.target } };
 }
 
 function verdict(edge: ImportEdge, contracts: string[]): ImportVerdict | undefined {
@@ -52,16 +93,17 @@ function verdict(edge: ImportEdge, contracts: string[]): ImportVerdict | undefin
 export const importDirection = createRule<ImportDirectionOptions, ImportDirectionMessages>({
     name: 'import-direction',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ roles: NO_ROLES, aliases: {}, scope: '' }],
+        type: 'suggestion',
         docs: {
             level: 'all',
             title: 'Import direction',
             example:
                 'With the types role on `types/**`, the runtime role on `src/**`, and `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesToRuntime`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
-            summary:
+            description:
                 'Checks the four import directions between the roles the options name: types import only types, runtime never imports tests, tests reach runtime only through contracts, and config never imports runtime.',
             why: 'An import against the direction makes a test part of the product, or a type file part of the runtime, and the build carries it.',
-            fix: 'Import from the element contract (its index, public or contracts file) or from the types directory, or move the code to the layer that may import it.',
+            fix: 'Import from the declared contract (its public or contracts file) or from the types directory, or move the code to the layer that may import it.',
         },
         schema: [
             optionsSchema({
@@ -74,44 +116,45 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                     runtime: { type: 'array', items: { type: 'string' } },
                 }),
                 aliases: { type: 'object', additionalProperties: { type: 'string' } },
-                contracts: { type: 'array', items: { type: 'string' } },
                 scope: { type: 'string' },
             }),
         ],
         messages: {
             typesToRuntime:
-                'A types file imports only types. "{{source}}" brings in {{role}} code; use import type or move the type.',
+                'A types file imports only types. "{{source}}" brings in "{{target}}"; use import type or move the type.',
             runtimeToTests: 'Runtime code imports test code through "{{source}}". Move what it needs into the runtime.',
             testsToInternals:
-                'Tests import runtime internals through "{{source}}". Import the element contract ({{contracts}}) or its types.',
+                'Tests import runtime internals through "{{source}}". Import the declared contract ({{contracts}}) or its types.',
             configToRuntime:
                 'Configuration imports runtime code through "{{source}}". Configuration holds values; the runtime reads them.',
         },
     },
-    defaultOptions: [{ roles: NO_ROLES, aliases: {}, contracts: CONTRACTS, scope: '' }],
-    create(context, [options]) {
-        const file = lintedFile(context);
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<ImportDirectionOptions[0]>;
+        const file = lintedPath(context);
         if (file === undefined) return {};
-        const root = lintedRoot(context);
-        const scope = (options.scope ?? '').replace(/\/$/u, '');
+        const { root } = file;
+        const scope = options.scope.replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
-        const roles: Required<ImportDirectionRoles> = { ...NO_ROLES, ...options.roles };
+        const roles = options.roles as Required<ImportDirectionRoles>;
         // A file's path relative to the scope, and the role the first matching glob gives it.
-        const placed = (absolute: string): { path: string; role: ImportDirectionRole } => {
-            const rel = relativeToRoot(root, absolute);
+        const placed = (absolute: string): ImportLocation => {
+            const rel = absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : absolute;
             const path = prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
-            const role = ROLE_ORDER.find((entry) => entry !== 'other' && isAnyGlobMatch(path, roles[entry])) ?? 'other';
+            const role = ROLE_ORDER.find((entry) => isAnyGlobMatch(path, roles[entry])) ?? 'other';
             return { path, role };
         };
-        const { role } = placed(file);
+        const { role } = placed(file.absolute);
         if (role === 'other') return {};
-        const contracts = options.contracts ?? CONTRACTS;
+        const contracts = CONTRACTS;
         const scopeRoot = scope === '' ? root : `${root}/${scope}`;
         const check = (node: TSESTree.Node, sourceNode: TSESTree.Node | null | undefined, typeOnly = false): void => {
-            const source = staticString(sourceNode);
+            const source =
+                sourceNode === null || sourceNode === undefined ? null : ASTUtils.getStringIfConstant(sourceNode);
             const resolved =
-                source === undefined ? undefined : importFile(file, source, scopeRoot, options.aliases ?? {});
-            if (source === undefined || resolved === undefined) return;
+                source === null ? undefined : importFile(file.absolute, source, scopeRoot, options.aliases);
+            if (source === null || resolved === undefined) return;
             const target = placed(resolved);
             const found = verdict(
                 { role, targetRole: target.role, source, target: target.path, isTypeOnly: typeOnly },
@@ -120,23 +163,14 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             if (found) context.report({ node, messageId: found.messageId, data: found.data });
         };
         return {
-            ImportDeclaration(node) {
-                check(node, node.source, isTypeOnly(node));
-            },
-            ExportAllDeclaration(node) {
-                check(node, node.source, isTypeOnly(node));
-            },
-            ImportExpression(node) {
-                check(node, node.source);
+            'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression'(node: ImportSource) {
+                check(node, node.source, node.type !== AST_NODE_TYPES.ImportExpression && isTypeOnly(node));
             },
             CallExpression(node) {
                 if (!isRequireCall(node)) return;
                 const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), 'require');
                 if (variable !== null && variable.defs.length > 0) return;
                 check(node, node.arguments[0]);
-            },
-            ExportNamedDeclaration(node) {
-                if (node.source) check(node, node.source, isTypeOnly(node));
             },
         };
     },

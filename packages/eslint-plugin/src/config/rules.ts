@@ -1,6 +1,28 @@
-// The literal values rules reads: names, patterns, limits, and tables.
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { FUNCTIONS } from '#plugin/config/syntax.ts';
 import type { ImportDirectionRole, ImportDirectionRoles } from '#plugin/types/rules.ts';
+
+// File discovery and import resolution.
+export const TEST_PATTERN = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
+
+/** Test frameworks whose imported expect function performs assertions. */
+export const ASSERTION_MODULES = new Set(['bun:test', 'vitest', '@jest/globals']);
+
+/** Files under conventional test directories may own assertions. */
+export const TEST_DIRECTORIES = ['**/tests/**', '**/__tests__/**', '**/test/**'];
+
+export const INTERNAL_PREFIXES = ['./', '../', '@/', '#'];
+
+export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
+
+export const DECLARATIONS = new Set([
+    'FunctionDeclaration',
+    'ClassDeclaration',
+    'VariableDeclaration',
+    'TSTypeAliasDeclaration',
+    'TSInterfaceDeclaration',
+    'TSEnumDeclaration',
+    'TSModuleDeclaration',
+]);
 
 // No role has a default: the folders of a project are its own, so a role the options leave out matches no file.
 export const NO_ROLES: Required<ImportDirectionRoles> = {
@@ -12,22 +34,29 @@ export const NO_ROLES: Required<ImportDirectionRoles> = {
     runtime: [],
 };
 
-export const CONTRACTS = ['index', 'public', 'contracts'];
+export const CONTRACTS = ['public', 'contracts'];
 
-export const ROLE_ORDER: ImportDirectionRole[] = ['harness', 'tests', 'types', 'env', 'config', 'runtime'];
+export const ROLE_ORDER: (keyof ImportDirectionRoles)[] = ['harness', 'tests', 'types', 'env', 'config', 'runtime'];
 
 export const TEST_ROLES = new Set<ImportDirectionRole>(['tests', 'harness']);
 
 export const CONFIG_ROLES = new Set<ImportDirectionRole>(['config', 'env']);
 
+// Barrel size and trivial statement limits.
+export const MAX_REEXPORTS = 20;
+
+/** Test framework calls that load a named module. */
+export const MODULE_MOCK_METHODS = {
+    vi: new Set(['mock', 'doMock', 'importActual']),
+    jest: new Set(['mock', 'doMock', 'requireActual']),
+};
+
 /** Object and array literals own the structure they construct. */
-export const STRUCTURED_EXPRESSIONS = new Set<AST_NODE_TYPES>([
-    AST_NODE_TYPES.ObjectExpression,
-    AST_NODE_TYPES.ArrayExpression,
-]);
+export const STRUCTURED_EXPRESSIONS = new Set<string>(['ObjectExpression', 'ArrayExpression']);
 
 /** Nodes that introduce no implementation or owned schema. */
 export const FORWARDING_NODES = new Set([
+    ...FUNCTIONS,
     'ImportDeclaration',
     'ExportAllDeclaration',
     'EmptyStatement',
@@ -36,42 +65,8 @@ export const FORWARDING_NODES = new Set([
     'TSDeclareFunction',
 ]);
 
-export const WRAPPERS = new Set(['ChainExpression', 'TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression']);
-export const DECLARATIONS = new Set([
-    'FunctionDeclaration',
-    'ClassDeclaration',
-    'VariableDeclaration',
-    'TSTypeAliasDeclaration',
-    'TSInterfaceDeclaration',
-    'TSEnumDeclaration',
-    'TSModuleDeclaration',
-]);
-export const TYPE_DECLARATIONS = new Set([
-    'TSTypeAliasDeclaration',
-    'TSInterfaceDeclaration',
-    'TSModuleDeclaration',
-    'TSDeclareFunction',
-]);
+/** JavaScript value constructors do not imply a shared application service. */
+export const VALUE_CONSTRUCTORS = new Set(['Set', 'Map', 'WeakMap', 'WeakSet', 'RegExp', 'URL', 'Date', 'Error']);
 
-export const WHITESPACE = /[\t\n\r ]/u;
-
-// File discovery and import resolution.
-export const TEST_PATTERN = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
-export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
-export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
-export const INTERNAL_PREFIXES = ['./', '../', '@/', '#'];
-export const INDEX_PATTERNS = [
-    String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,
-    String.raw`^\.{1,2}(?:/[^/]+)*/index(?:\.[cm]?[jt]sx?)?$`,
-    String.raw`^\.{1,2}/index(?:\.[cm]?[jt]sx?)?$`,
-];
-
-// Barrel size and trivial statement limits.
-export const MAX_REEXPORTS = 20;
-
-/** The statement count at or under which a function is trivial, when no option is set. */
-export const TRIVIAL_STATEMENTS = 2;
-
-/** Lines a comment may sit above its declaration: one, or two when a blank line is allowed. */
-export const ATTACHED_DISTANCE = 1;
-export const BLANK_LINE_DISTANCE = 2;
+/** Registry files accepted by the explicitly selected singleton rule. */
+export const REGISTRY_FILES = ['**/registry.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'];

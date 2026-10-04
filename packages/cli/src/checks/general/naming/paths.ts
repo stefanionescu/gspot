@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import type { Identifier } from '#cli/types/checks/general/naming.ts';
+import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { WRAPPERS, MIGRATION_PREFIX, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
 
 function baseStem(base: string): string {
@@ -9,7 +9,7 @@ function baseStem(base: string): string {
     return dot <= 0 ? base : base.slice(0, dot);
 }
 
-function segmentName(segment: string): { name: string; category: string } {
+function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
     const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
     if (bracket === undefined) return { name: segment, category: 'directories' };
     const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
@@ -19,7 +19,7 @@ function segmentName(segment: string): { name: string; category: string } {
 /**
  * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
  * @param path the file path
- * @param language the language kit the file belongs to
+ * @param language the language configuration the file belongs to
  * @returns the identifier
  */
 export function fileIdentifier(path: string, language: string): Identifier {
@@ -40,7 +40,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 /**
  * Every directory on a file's path as an identifier, from the top down. Dot folders and migration folders are skipped.
  * @param path the file path
- * @param language the language kit the file belongs to
+ * @param language the language configuration the file belongs to
  * @returns the identifiers
  */
 export function directoryIdentifiers(path: string, language: string): Identifier[] {

@@ -1,24 +1,26 @@
-import { z } from 'zod';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
-import { targetInScope } from '#cli/kits/targets.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { normalizedPythonPackage } from '#cli/repository/packages.ts';
-import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
+import { environmentExecutable } from '#cli/platform/paths.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
+import { targetInScope } from '#cli/configurations/declarations.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
-import type { LicenseException } from '#cli/types/checks/general/general.ts';
-import type { LicensedPackage } from '#cli/types/checks/general/licenses.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
-const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
-const reportSchema = z.record(z.string(), licenseSchema);
-const pythonReportSchema = z.array(
-    z.object({ Name: z.string().min(1), Version: z.string().min(1), License: z.string().min(1) }),
-);
+import type {
+    LicensedPackage,
+    ProjectLicenses,
+    LicenseAllowlist,
+    LicenseException,
+} from '#cli/types/checks/general/licenses.ts';
+
 // A license expression passes when every part of a conjunction, or one part of a choice, is allowed.
 function isAllowed(license: string, allow: Set<string>): boolean {
     try {
@@ -36,17 +38,15 @@ function verdict(name: string, license: string, exception: LicenseException | un
 }
 
 // Read through the files filesystem and verify the generated configuration against the selected policy.
-function readAllowlist(input: EngineInput): z.infer<typeof allowlistSchema> {
+function readAllowlist(input: EngineInput): LicenseAllowlist {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
     using files = openRoot(input.root);
     const content = files.read(targetInScope(input.scope, target));
     if (content === undefined)
         throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
-    const configuration: z.infer<typeof allowlistSchema> = allowlistSchema.parse(
-        JSON.parse(content.bytes.toString('utf8')),
-    );
-    const tool = input.view.tool('licenses');
+    const configuration: LicenseAllowlist = allowlistSchema.parse(JSON.parse(content.bytes.toString('utf8')));
+    const tool = input.view.options('licenses');
     if (
         !isDeepStrictEqual(configuration, {
             allowed: tool['allowed'],
@@ -67,7 +67,7 @@ function installedDirectory(start: string, name: string): string {
 }
 
 async function licenseReport(input: EngineInput, command: string[], cwd: string): Promise<unknown> {
-    const result = await runCheckCommand(input, command, { cwd });
+    const result = await runEngineTool(input, command, { cwd });
     if (result.code !== 0)
         throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
     return JSON.parse(result.stdout);
@@ -99,7 +99,7 @@ async function pythonLicenses(input: EngineInput, start: string): Promise<Licens
             '--with-system',
             '--from=mixed',
             '--python',
-            join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
+            environmentExecutable(installed, 'python'),
         ],
         isolated,
     );
@@ -113,23 +113,16 @@ const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<
     ['pyproject.toml', pythonLicenses],
 ]);
 
-export const allowlistSchema = z.object({
-    allowed: z.array(z.string().min(1)),
-    exceptions: z.array(
-        z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
-    ),
-});
-
 /**
  * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.
  * @param input the engine input
  * @returns the findings
  */
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
-    if ((input.view.settings['tools.licenses.allowed'] as string[]).length === 0) return [];
+    if ((input.view.settings['licenses.allowed'] as string[]).length === 0) return [];
     const configuration = readAllowlist(input);
     const start = join(input.root, input.scope);
-    const scans: { manifest: string; packages: LicensedPackage[] }[] = [];
+    const scans: ProjectLicenses[] = [];
     for (const [manifest, scan] of SCANNERS) {
         if (statSync(join(start, manifest), { throwIfNoEntry: false }) === undefined) continue;
         const packages = await scan(input, start);

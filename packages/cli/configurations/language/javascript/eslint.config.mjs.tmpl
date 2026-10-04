@@ -1,0 +1,322 @@
+import { relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import eslint from '@eslint/js';
+import gspot from '@gspothq/eslint-plugin';
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
+import boundaries from 'eslint-plugin-boundaries';
+import importX from 'eslint-plugin-import-x';
+import jsdoc from 'eslint-plugin-jsdoc';
+import nodePlugin from 'eslint-plugin-n';
+import packageJson from 'eslint-plugin-package-json';
+import regexp from 'eslint-plugin-regexp';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
+import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
+<%~ fragmentImports %>
+<%
+const config = eslint();
+const { code: CODE, javascript: JAVASCRIPT, tests: TEST_CODE, scripts: SCRIPT_CODE } = eslintFiles;
+const TESTS = config.testFiles;
+const SCRIPTS = config.scriptFiles;
+const IS_ALL = isAll;
+const NODE_VERSION = config.nodeVersion;
+const RESTRICTED = config.restrictedImports;
+const JAVASCRIPT_LIMITS = config.javascriptLimits;
+const limits = config.limits;
+const presets = eslintPresets('javascript');
+const sizeRules = {
+    'max-lines': ['error', { max: limits.fileLines, skipBlankLines: true, skipComments: true }],
+    'max-lines-per-function': ['error', { max: limits.functionLines, skipBlankLines: true, skipComments: true, IIFEs: true }],
+    'max-params': ['error', { max: limits.parameters, countVoidThis: false }],
+    'max-depth': ['error', limits.depth],
+    'max-statements': ['error', limits.statements],
+    'max-nested-callbacks': ['error', limits.nestedCallbacks],
+    complexity: ['error', limits.cyclomatic],
+};
+
+// One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
+// selectors join the base ones here, and each block below lists all that apply to its files.
+const BASE_SELECTORS = IS_ALL ? [
+        { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
+        { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSAsExpression > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSTypeAssertion > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSAsExpression > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'TSTypeAssertion > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]', message: 'An empty-object fallback hides a missing value. Handle the missing case.' },
+        // The first argument is the message when it stands alone or before an options object; an error class that takes a code first is left alone.
+        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
+        { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
+] : [];
+const coreRules = {
+    'no-useless-constructor': 'error',
+    'no-useless-return': 'error',
+    'no-useless-call': 'error',
+    'no-useless-rename': 'error',
+    // import-x/no-duplicates owns duplicate imports and can merge them.
+    'no-duplicate-imports': 'off',
+    eqeqeq: ['error', 'always'],
+    'no-param-reassign': 'error',
+    'prefer-const': 'error',
+    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
+    'lines-between-class-members': ['error', 'always'],
+    'no-empty': ['error', { allowEmptyCatch: false }],
+    'no-restricted-syntax': ['error', ...BASE_SELECTORS],
+};
+
+const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
+
+// sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
+// helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
+const sonarRules = {
+    // A file of fixtures beside tests contains no test cases.
+    'sonarjs/no-empty-test-file': 'off',
+    'sonarjs/cognitive-complexity': ['error', limits.cognitive],
+    'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
+    'sonarjs/no-all-duplicated-branches': 'error',
+    'sonarjs/no-duplicated-branches': 'error',
+    'sonarjs/no-identical-conditions': 'error',
+    'sonarjs/no-identical-expressions': 'error',
+    'sonarjs/no-element-overwrite': 'error',
+    'sonarjs/no-empty-collection': 'error',
+    'sonarjs/no-extra-arguments': 'error',
+    'sonarjs/no-use-of-empty-return-value': 'error',
+    'sonarjs/non-existent-operator': 'error',
+    'sonarjs/no-gratuitous-expressions': 'error',
+    'sonarjs/no-invariant-returns': 'error',
+    'sonarjs/for-loop-increment-sign': 'error',
+    'sonarjs/no-useless-increment': 'error',
+    'sonarjs/no-unthrown-error': 'error',
+    'sonarjs/no-collapsible-if': 'error',
+    'sonarjs/no-nested-switch': 'error',
+    'sonarjs/no-nested-template-literals': 'error',
+    'sonarjs/no-redundant-boolean': 'error',
+    'sonarjs/no-redundant-jump': 'error',
+    'sonarjs/no-same-line-conditional': 'error',
+    'sonarjs/no-small-switch': 'error',
+    'sonarjs/no-unused-collection': 'error',
+    'sonarjs/no-useless-catch': 'error',
+    'sonarjs/prefer-single-boolean-return': 'error',
+    'sonarjs/prefer-while': 'error',
+    'sonarjs/prefer-object-literal': 'error',
+    'sonarjs/no-nested-conditional': 'error',
+    'sonarjs/no-inverted-boolean-check': 'error',
+    'sonarjs/no-nested-functions': 'error',
+    'sonarjs/no-parameter-reassignment': 'error',
+    'sonarjs/no-commented-code': 'error',
+    'sonarjs/no-dead-store': 'error',
+    'sonarjs/prefer-immediate-return': 'error',
+    'sonarjs/updated-loop-counter': 'error',
+    'sonarjs/no-equals-in-for-termination': 'error',
+    'sonarjs/no-redundant-assignments': 'error',
+};
+
+const unicornRules = {
+    // The naming check owns abbreviations and filename case; two owners would give two answers.
+    'unicorn/prevent-abbreviations': 'off',
+    'unicorn/filename-case': 'off',
+    // Platform APIs and syntax trees return null; replacing it everywhere is churn without a defect.
+    'unicorn/no-null': 'off',
+    // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
+    // removes both.
+    'unicorn/no-useless-undefined': 'off',
+    // Import path extensions do not constrain default or named imports.
+    'unicorn/import-style': 'off',
+    // A forwarding export would contradict exports at their declarations.
+    ...(gspotRules['gspot/no-reexports'] === undefined ? {} : { 'unicorn/prefer-export-from': 'off' }),
+    'unicorn/prefer-ternary': ['error', 'only-single-line'],
+    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
+    'unicorn/no-array-reduce': 'error',
+    'unicorn/no-array-for-each': 'error',
+    'unicorn/prefer-node-protocol': 'error',
+    'unicorn/no-useless-spread': 'error',
+    'unicorn/no-useless-promise-resolve-reject': 'error',
+    'unicorn/prefer-array-find': 'error',
+    'unicorn/prefer-array-flat': 'error',
+    'unicorn/prefer-array-flat-map': 'error',
+    'unicorn/prefer-at': 'error',
+    'unicorn/prefer-includes': 'error',
+    'unicorn/prefer-number-properties': 'error',
+    'unicorn/prefer-string-replace-all': 'error',
+    'unicorn/prefer-string-slice': 'error',
+    'unicorn/prefer-string-starts-ends-with': 'error',
+    'unicorn/no-typeof-undefined': 'error',
+    'unicorn/no-lonely-if': 'error',
+};
+
+const securityRules = {
+    'security/detect-buffer-noassert': 'error',
+    'security/detect-child-process': 'error',
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-eval-with-expression': 'error',
+    'security/detect-new-buffer': 'error',
+    'security/detect-no-csrf-before-method-override': 'error',
+    // detect-non-literal-regexp is off: it flags the constructor, not the input.
+    'security/detect-non-literal-regexp': 'off',
+    'security/detect-non-literal-require': 'error',
+    'security/detect-possible-timing-attacks': 'error',
+    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-unsafe-regex': 'error',
+    // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
+    // variable; neither names a defect a linter of file paths can avoid.
+    'security/detect-object-injection': 'off',
+    'security/detect-non-literal-fs-filename': 'off',
+};
+
+const nodeRules = {
+    'n/no-deprecated-api': 'error',
+    'n/no-process-exit': 'error',
+    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
+    // TypeScript owns syntax support.
+    'n/no-unsupported-features/es-syntax': 'off',
+    'n/prefer-global/buffer': ['error', 'always'],
+    'n/prefer-global/console': ['error', 'always'],
+    'n/prefer-global/process': ['error', 'always'],
+    'n/prefer-global/url': ['error', 'always'],
+    'n/prefer-global/url-search-params': ['error', 'always'],
+    'n/prefer-promises/dns': 'error',
+    'n/prefer-promises/fs': 'error',
+    // A command-line tool reads and writes files synchronously by design.
+    'n/no-sync': 'off',
+    'n/no-callback-literal': 'error',
+    'n/no-new-require': 'error',
+    'n/no-path-concat': 'error',
+    // TypeScript and import-x resolve imports; a second resolver disagrees on aliases.
+    'n/no-missing-import': 'off',
+    'n/no-missing-require': 'off',
+    'n/no-unpublished-import': 'error',
+    'n/no-unpublished-require': 'error',
+    'n/no-extraneous-import': 'error',
+    'n/no-extraneous-require': 'error',
+};
+
+const jsdocRules = {
+    'jsdoc/require-jsdoc': ['error', { publicOnly: true, require: { FunctionDeclaration: true, ArrowFunctionExpression: true, FunctionExpression: true, MethodDefinition: true } }],
+    'jsdoc/require-description': 'error',
+    'jsdoc/require-param': 'error',
+    'jsdoc/require-param-description': 'error',
+    'jsdoc/require-param-name': 'error',
+    // TypeScript owns the types, so JSDoc carries none.
+    'jsdoc/require-param-type': 'off',
+    'jsdoc/require-returns': 'error',
+    'jsdoc/require-returns-description': 'error',
+    'jsdoc/require-returns-type': 'off',
+    'jsdoc/check-param-names': 'error',
+    'jsdoc/check-tag-names': 'error',
+    'jsdoc/check-types': 'off',
+    'jsdoc/no-undefined-types': 'off',
+    'jsdoc/valid-types': 'off',
+    'jsdoc/no-types': 'off',
+};
+
+const regexpRules = {
+    'regexp/no-super-linear-backtracking': 'error',
+    'regexp/no-empty-alternative': 'error',
+    'regexp/no-empty-capturing-group': 'error',
+    'regexp/no-empty-character-class': 'error',
+    'regexp/no-empty-group': 'error',
+    'regexp/no-empty-lookarounds-assertion': 'error',
+    'regexp/no-useless-assertions': 'error',
+    'regexp/no-useless-backreference': 'error',
+    'regexp/no-useless-character-class': 'error',
+    'regexp/no-useless-dollar-replacements': 'error',
+    'regexp/no-useless-lazy': 'error',
+    'regexp/no-useless-quantifier': 'error',
+    'regexp/no-useless-range': 'error',
+    'regexp/no-lazy-ends': 'error',
+    'regexp/no-optional-assertion': 'error',
+    'regexp/no-invalid-regexp': 'error',
+    'regexp/no-misleading-capturing-group': 'error',
+    'regexp/no-contradiction-with-assertion': 'error',
+    'regexp/strict': 'error',
+};
+
+const importRules = {
+    ...config.importLayoutRules,
+    'import-x/no-cycle': ['error', { ignoreExternal: false }],
+    'import-x/no-self-import': 'error',
+    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
+    'import-x/no-empty-named-blocks': 'error',
+    'import-x/no-duplicates': 'error',
+};
+
+const commentRules = {
+    '@eslint-community/eslint-comments/require-description': config.commentLevel,
+    '@eslint-community/eslint-comments/no-unused-disable': 'error',
+};
+
+%>
+// The root has no closing separator because TypeScript's project service resolves from its containing folder.
+const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
+const NODE_VERSION = <%= json(NODE_VERSION) %>;
+const RUNTIME_GLOBAL_NAMES = new Set(Object.keys({ ...globals.node, ...globals.browser, ...globals.worker, ...globals.serviceworker, ...globals['react-native'] }));
+// Keep compiler and test globals from framework presets; runtime APIs have their own file selectors.
+function stripRuntimeGlobals(block) {
+    const names = block.languageOptions?.globals;
+    if (names === undefined) return block;
+    return { ...block, languageOptions: { ...block.languageOptions, globals: Object.fromEntries(Object.entries(names).filter(([name]) => !RUNTIME_GLOBAL_NAMES.has(name))) } };
+}
+const runtimeDeclarations = <%= json(config.runtimes) %>;
+const runtimeMatchers = runtimeDeclarations.map(({ scope, includes, excludes }) => {
+    const included = includes.map((source) => new RegExp(source, 's'));
+    const excluded = excludes.map((source) => new RegExp(source, 's'));
+    return (path) => {
+        if (scope !== '' && !path.startsWith(`${scope}/`)) return false;
+        const local = scope === '' ? path : path.slice(scope.length + 1);
+        return included.some((pattern) => pattern.test(local)) && !excluded.some((pattern) => pattern.test(local));
+    };
+});
+function runtimeMatches(index) {
+    const matches = (file) => runtimeMatchers.findLastIndex((matcher) => matcher(relative(root, file).split(sep).join('/'))) === index;
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.runtime'), { value: { declarations: runtimeDeclarations, index } });
+    return matches;
+}
+function policyMatches(declaration) {
+    const { scope, includes, excludes, flags } = declaration;
+    const included = includes.map((source) => new RegExp(source, flags));
+    const excluded = excludes.map((source) => new RegExp(source, flags));
+    const matches = (file) => {
+        const path = relative(root, file).split(sep).join('/');
+        return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
+    };
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: declaration });
+    return matches;
+}
+export default [
+    { ignores: <%= json(config.ignoredPaths) %> },
+<% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
+    <%~ eslintModule.block({ files: CODE, ...preset }, `...${source}`) %>,
+<% } %>
+    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { node: { version: NODE_VERSION }, gspot: { root } }`) %>,
+    <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
+<% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
+    <%~ eslintModule.block(data, settings === undefined ? '' : `settings: ${json(settings)}`) %>,
+<% } if (RESTRICTED.length > 0) { %>
+    <%~ eslintModule.block({ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }) %>,
+<% } eslintModule.blocks.push(...eslintFragmentBlocks); %>
+<%~ fragments %>
+<% for (const [index, declaration] of config.runtimes.entries()) { const { runtime } = declaration; const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime); const names = runtime === 'node' ? 'nodeBuiltin' : runtime === 'commonjs' ? 'node' : runtime === 'service-worker' ? 'serviceworker' : runtime; %>
+    <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
+<% } for (const group of fragmentSelectors) { %>
+    <%~ eslintModule.block({ files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']), ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`), rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] } }) %>,
+<% } %>
+    <%~ eslintModule.block({ files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } }) %>,
+    <%~ eslintModule.block({ files: SCRIPT_CODE, rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] } }) %>,
+    <%~ eslintModule.block({ files: TEST_CODE, rules: { 'jsdoc/require-jsdoc': 'off', 'jsdoc/require-param': 'off', 'jsdoc/require-returns': 'off', 'jsdoc/require-description': 'off', 'jsdoc/require-param-description': 'off', 'jsdoc/require-returns-description': 'off', 'n/no-unpublished-import': 'off', 'n/no-unpublished-require': 'off' } }) %>,
+<% for (const [name, files, source] of [['packageJson', ['**/package.json'], 'packageJson.configs.recommended'], ['prettier', CODE, 'prettierConfig']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
+    <%~ eslintModule.block({ files, ...preset }, `...${source}`) %>,
+<% } %>
+    <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'max-params': ['error', JAVASCRIPT_LIMITS.parameters], 'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }], 'gspot/no-trivial-files': ['error', { ...gspotRules['gspot/no-trivial-files'][1], maxStatements: JAVASCRIPT_LIMITS.trivialStatements }] } }) %>,
+<% const overrides = []; if (config.verbatim !== undefined) { overrides.push(config.verbatim.entries); %>
+    // [tools.eslint.verbatim]: <%= json(config.verbatim.reason, 0) %>
+    <%= json(config.verbatim.entries) %>,
+<% } for (const { scope, includes, excludes, rules } of eslintPolicy()) { const matches = { scope: { scope, includes, excludes, flags: 's' } }; const entries = Object.entries(rules); for (const block of [{ files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) }, { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) }]) { overrides.push(block); %>
+    <%~ serializeEslintBlock(block) %>,
+<% } } recordRules(eslintRuleSettings([...eslintModule.blocks, ...overrides])); %>
+];

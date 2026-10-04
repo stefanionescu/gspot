@@ -1,0 +1,22 @@
+{
+    "recommended": {
+        "package": "@vitest/eslint-plugin",
+        "version": "1.3.4",
+        "source": "configs.recommended",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "vitest/expect-expect": "error",
+                    "vitest/no-identical-title": "error",
+                    "vitest/no-commented-out-tests": "error",
+                    "vitest/valid-title": "error",
+                    "vitest/valid-expect": "error",
+                    "vitest/valid-describe-callback": "error",
+                    "vitest/require-local-test-context-for-concurrent-snapshots": "error",
+                    "vitest/no-import-node-test": "error"
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,57 @@
+---
+title: Logging
+---
+
+# Logging
+
+## One logger
+
+<!-- level: all -->
+
+- One logger owner per process, configured at the entrypoint: level, format, redaction, transports.
+- Feature code obtains a logger from that owner. It never instantiates, configures, or adds transports.
+- `print` is for a CLI's own output.
+- A service logs to stdout. A command-line tool logs to stderr. Configure other transports at the logger.
+
+## Levels
+
+<!-- level: all -->
+
+- `debug`: noisy diagnostic detail, off in production.
+- `info`: normal lifecycle events and status.
+- `warn`: degraded, retryable, or unexpected but survivable conditions.
+- `error`: an operation failed and no caller recovered.
+- `fatal`: the process or a major owner is unusable and is shutting down.
+- Do not add custom levels.
+
+## Structure
+
+- The message string is stable, human-readable, and describes the event. Values go in structured fields, never interpolated into the message.
+- Preserve declared event names and field keys. Before you rename one, tell the user because
+  dashboards and alerts may read it.
+- Include the request trace when one is available.
+- Use stable names for request IDs, correlation IDs, provider request IDs, operation IDs, resource IDs, and safe user IDs. Propagate them to provider calls when supported.
+- Put an error object in the field the logger serializes errors from, so stack and cause are kept.
+- Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields.
+- Do not compute expensive log arguments when the level is disabled.
+
+### Field naming
+
+<!-- level: all -->
+
+Use `lower_snake_case` for new event names and field keys unless an existing operational contract defines their spelling.
+
+## Never log
+
+- Secrets, tokens, passwords, cookies, authorization headers, connection strings.
+- Personal data, raw user content, full request or response bodies, provider payloads, database rows.
+
+Redaction lives in the logger owner. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.
+
+```ts
+// Bad.
+logger.info({ headers: req.headers }, 'Incoming request');
+
+// Good.
+logger.info({ path: req.path, method: req.method, requestId }, 'Incoming request');
+```

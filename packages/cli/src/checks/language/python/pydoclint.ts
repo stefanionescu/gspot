@@ -1,28 +1,11 @@
-import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
-import { readText } from '#cli/platform/filesystem.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
-import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
-
-const pyprojectSchema = z.object({
-    tool: z
-        .object({
-            pydoclint: z.object({ style: z.unknown().optional() }).default({}),
-            ruff: z
-                .object({
-                    lint: z
-                        .object({
-                            pydocstyle: z.object({ convention: z.unknown().optional() }).default({}),
-                        })
-                        .default({ pydocstyle: {} }),
-                })
-                .default({ lint: { pydocstyle: {} } }),
-        })
-        .default({ pydoclint: {}, ruff: { lint: { pydocstyle: {} } } }),
-});
+import { readText } from '#cli/platform/source.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { pyprojectSchema } from '#cli/parsers/schema/python/style.ts';
+import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
+import { PYTHON_MANIFEST, PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
 
 /**
  * Carries the Ruff docstring convention only when pydoclint has no explicit style.
@@ -38,19 +21,17 @@ export function docstringStyle(text: string, convention?: unknown): 'google' | '
 }
 
 /**
- * Runs the native docstring checker with the compatible project convention.
- * @param session the repository and execution boundaries.
+ * Runs pydoclint, adding --style from the Ruff docstring convention when pydoclint sets none.
+ * @param session the repository and installed tools.
  * @param planned the scoped docstring check.
- * @returns the native check result with shared batching and error handling.
+ * @returns the native findings and command status.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry runs pydoclint through this function, which adds the style the project names.
 export async function pydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const style = docstringStyle(
-        readText(session.root, posix.join(planned.scope.scope.path, 'pyproject.toml')) ?? '',
+        readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '',
         planned.scope.view.settings['tools.ruff.docstring_convention'],
     );
-    return await runToolCheck(session, planned, [
-        ...PYDOCLINT_COMMAND,
-        ...(style === undefined ? [] : ['--style', style]),
-    ]);
+    return await runCommandCheck(session, planned, {
+        command: [...PYDOCLINT_COMMAND, ...(style === undefined ? [] : ['--style', style])],
+    });
 }

@@ -1,226 +1,279 @@
-// Every check gspot runs itself, keyed by check ID: the analyses of the kits, and the checks that drive their own tool.
-import { drift } from '#cli/checks/drift.ts';
+import { test } from '#cli/checks/tool/nginx.ts';
 import { lint } from '#cli/checks/tool/ansible.ts';
 import { locales } from '#cli/checks/library/i18n.ts';
-import { test } from '#cli/checks/tool/nginx/test.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { actionlint } from '#cli/checks/tool/actions.ts';
 import { boundaries } from '#cli/checks/library/trpc.ts';
 import { vale } from '#cli/checks/general/prose/vale.ts';
 import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
-import { SQL_ANALYSES } from '#cli/checks/language/sql.ts';
+import { gspotDrift } from '#cli/checks/general/gspot.ts';
+import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { jscpd } from '#cli/checks/general/duplication.ts';
 import { moduleClasses } from '#cli/checks/language/css.ts';
-import { HTML_ANALYSES } from '#cli/checks/language/html.ts';
 import { banned } from '#cli/checks/general/prose/hidden.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
-import { ANALYSES } from '#cli/checks/platform/cloudflare.ts';
 import { fresh, spectral } from '#cli/checks/tool/openapi.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { tsconfig } from '#cli/checks/language/typescript.ts';
-import { coverage } from '#cli/checks/tool/xctest/coverage.ts';
-import { deptry } from '#cli/checks/language/python/deptry.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
-import { headings } from '#cli/checks/general/docs/headings.ts';
 import { bashLimits } from '#cli/checks/language/bash/limits.ts';
 import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
-import { DRIZZLE_ANALYSES } from '#cli/checks/library/drizzle.ts';
 import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
-import { untestedRoutes } from '#cli/checks/framework/express.ts';
-import { expoDoctor } from '#cli/checks/framework/react-native.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
-import { references } from '#cli/checks/tool/xctest/references.ts';
-import { envFiles } from '#cli/checks/general/secrets/env-files.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
-import { trivyImage } from '#cli/checks/tool/docker/trivy-image.ts';
-import { build, types } from '#cli/checks/framework/nextjs/build.ts';
+import type { CheckRegistry } from '#cli/types/execution/runtime.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
-import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
-import { adminKey } from '#cli/checks/platform/supabase/admin-key.ts';
-import { install } from '#cli/checks/general/dependencies/install.ts';
+import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { tsc, checkjs } from '#cli/checks/language/javascript/tsc.ts';
 import { docComment } from '#cli/checks/language/bash/doc-comments.ts';
-import { dockerignore } from '#cli/checks/tool/docker/dockerignore.ts';
 import { guards, defaults } from '#cli/checks/language/bash/guards.ts';
-import { trufflehog } from '#cli/checks/general/secrets/trufflehog.ts';
 import { assets, xcstrings } from '#cli/checks/tool/xcode/resources.ts';
-import { check, denoLint } from '#cli/checks/platform/supabase/deno.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
-import { SWIFT_ANALYSES } from '#cli/checks/language/swift/structure.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
-import { typesFresh } from '#cli/checks/platform/supabase/types-fresh.ts';
-import { NAMING_ENGINES } from '#cli/checks/general/naming/identifiers.ts';
-import { PYTHON_ANALYSES } from '#cli/checks/language/python/structure.ts';
 import { scriptBoundaries } from '#cli/checks/language/bash/boundaries.ts';
-import { structureEngine } from '#cli/checks/general/structure/context.ts';
 import { moduleLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { getDirectories } from '#cli/checks/general/structure/folder-names.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
-import { readmeShape, readmePresent } from '#cli/checks/general/docs/readme.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts';
-import { sleeps, disabled, recording } from '#cli/checks/tool/xctest/sources.ts';
+import { siteBuild, buildReproducible } from '#cli/checks/general/site/build.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
-import { gitleaksHistory } from '#cli/checks/general/secrets/gitleaks/history.ts';
-import { siteBuilds, buildReproducible } from '#cli/checks/general/site/build.ts';
 import { stemCollisions } from '#cli/checks/general/structure/stem-collisions.ts';
 import { trivialFunctions } from '#cli/checks/language/bash/trivial-functions.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
 import { sourceOrder, sourceComments } from '#cli/checks/language/bash/sources.ts';
-import { gitleaksBaseline } from '#cli/checks/general/secrets/gitleaks/baseline.ts';
+import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
+import { envOwner as swiftEnvOwner } from '#cli/checks/language/swift/env-owner.ts';
 import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { duplicateFunctions } from '#cli/checks/language/bash/duplicate-functions.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { symlinks, testPlans, orphanSources } from '#cli/checks/tool/xcode/project.ts';
 import { rls, grants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
-import type { Engine, Executable, CheckRegistry } from '#cli/types/execution/execution.ts';
+import { singletons as pythonSingletons } from '#cli/checks/language/python/singletons.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
 import { privatePrefix, privateBeforePublic } from '#cli/checks/language/bash/visibility.ts';
-import { nextOptions, versionPairs, routeSegments } from '#cli/checks/framework/nextjs/source.ts';
+import { headings, stalePaths, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
+import { lazyExports as pythonLazyExports } from '#cli/checks/language/python/lazy-exports.ts';
+import { sleeps, coverage, disabled, recording, references } from '#cli/checks/tool/xctest.ts';
+import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/language/html.ts';
+import { deptry, pipInstalls as pythonPipInstalls } from '#cli/checks/language/python/deptry.ts';
+import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports/linter.ts';
+import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
-import { projectValid, migrationNames, storagePolicies } from '#cli/checks/platform/supabase/project.ts';
+import { importComments as swiftImportComments } from '#cli/checks/language/swift/import-comments.ts';
+import { staleExclusions as pythonStaleExclusions } from '#cli/checks/language/python/basedpyright.ts';
+import { build, types, nextOptions, versionPairs, routeSegments } from '#cli/checks/framework/nextjs.ts';
+import { envFiles, trufflehog, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
+import { importComments as pythonImportComments } from '#cli/checks/language/python/imports/comments.ts';
+import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { sizes, sitemap, brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
+import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
 
-/** The engine of each check gspot analyses itself, by check ID. */
-export const ENGINES: Record<string, Engine> = {
-    'trpc/boundaries': boundaries,
-    'react-native/expo-doctor': expoDoctor,
-    'svelte/check': svelteCheck,
-    'i18n/locales': locales,
-    'css/module-classes': moduleClasses,
-    'ansible/lint': lint,
-    'nginx/test': test,
-    'jest/coverage': jestCoverage,
-    'gspot/drift': drift,
-    'structure/config-logic': moduleLogic,
-    'structure/suppressions': suppressions,
-    'structure/stale-allowlists': staleAllowlists,
-    'structure/large-files': largeFiles,
-    'structure/tracked-dependencies': trackedDependencies,
-    'typescript/tsconfig': tsconfig,
-    'javascript/rules-off': rulesOff,
-    'docs/headings': headings,
-    'docs/stale-paths': stalePaths,
-    'docs/readme-present': readmePresent,
-    'docs/readme-shape': readmeShape,
-    'markdown/fences': fences,
-    'duplication/jscpd': jscpd,
-    'files/env-example': envExample,
-    'secrets/env-files': envFiles,
-    'security/codeql': codeql,
-    'secrets/gitleaks-baseline': gitleaksBaseline,
-    'dependencies/manifests': manifestPolicy,
-    'dependencies/lockfile-fresh': lockfileFresh,
-    'licenses/packages': licensesPackages,
-    'dependencies/install': install,
-    'dependencies/lockfile-hosts': lockfileHosts,
-    ...DRIZZLE_ANALYSES,
-    'nextjs/route-segments': routeSegments,
-    'nextjs/config': nextOptions,
-    'nextjs/tsc': types,
-    'nextjs/build': build,
-    'nextjs/version-pairs': versionPairs,
-    ...ANALYSES,
-    'site/build': siteBuilds,
-    'site/build-reproducible': buildReproducible,
-    'site/html-validate': htmlValidate,
-    'site/purgecss': deadSelectors,
-    'site/linkinator': (input) => brokenLinks(input, false),
-    'site/linkinator-external': (input) => brokenLinks(input, true),
-    'site/size': sizes,
-    'site/sitemap': sitemap,
-    'site/dead-assets': deadAssets,
-    'site/svgo': svgo,
-    'site/webmanifest': webManifest,
-    'site/security-headers': securityHeaders,
-    ...HTML_ANALYSES,
-    ...PYTHON_ANALYSES,
-    'xctest/disabled': disabled,
-    'xctest/sleep': sleeps,
-    'xctest/recording': recording,
-    'xctest/references': references,
-    'xctest/coverage': coverage,
-    'xcode/xcconfig': xcconfig,
-    'xcode/entitlements': entitlements,
-    'xcode/ats': ats,
-    'xcode/xcstrings': xcstrings,
-    'xcode/assets': assets,
-    'xcode/test-plans': testPlans,
-    'xcode/orphan-sources': orphanSources,
-    'xcode/symlinks': symlinks,
-    ...SWIFT_ANALYSES,
-    'express/untested-routes': untestedRoutes,
-    'openapi/spectral': spectral,
-    'openapi/fresh': fresh,
-    'supabase/config': projectValid,
-    'supabase/storage-policies': storagePolicies,
-    'supabase/migration-names': migrationNames,
-    'supabase/deno-lint': denoLint,
-    'supabase/deno-check': check,
-    'supabase/admin-key': adminKey,
-    'supabase/types-fresh': typesFresh,
-    'postgres/rls': rls,
-    'postgres/grants': grants,
-    'postgres/definer-search-path': definerSearchPath,
-    'postgres/foreign-key-indexes': foreignKeyIndexes,
-    'postgres/migration-order': migrationOrder,
-    'postgres/migrations-frozen': migrationsFrozen,
-    'postgres/migration-docs': migrationDocs,
-    ...SQL_ANALYSES,
-    'docker/dockerignore': dockerignore,
-    'docker/trivy-image': trivyImage,
-    'structure/lone-files': structureEngine(loneFiles),
-    'structure/prefix-collisions': structureEngine(prefixCollisions),
-    'structure/stem-collisions': structureEngine(stemCollisions),
-    'structure/folder-names': structureEngine(getDirectories),
-    'bash/limits': structureEngine(bashLimits),
-    'bash/doc-comments': structureEngine(docComment),
-    'bash/duplicate-functions': structureEngine(duplicateFunctions),
-    'bash/unused-functions': structureEngine(unusedFunctions),
-    'bash/unread-arguments': structureEngine(unreadArguments),
-    'bash/private-prefix': structureEngine(privatePrefix),
-    'bash/private-before-public': structureEngine(privateBeforePublic),
-    'bash/trivial-functions': structureEngine(trivialFunctions),
-    'bash/env-owner': structureEngine(envOwner),
-    'bash/contract': structureEngine(contract),
-    'bash/wrappers': structureEngine(wrappers),
-    'bash/embeds': structureEngine(embeds),
-    'bash/ssh-blocks': structureEngine(sshBlocks),
-    'bash/defaults': structureEngine(defaults),
-    'bash/guards': structureEngine(guards),
-    'bash/boundaries': structureEngine(scriptBoundaries),
-    'bash/safety': structureEngine(safety),
-    'bash/source-comments': structureEngine(sourceComments),
-    'bash/source-order': structureEngine(sourceOrder),
-    'prose/vale': vale,
-    'prose/hidden': banned,
-    ...NAMING_ENGINES,
+import {
+    fileLines as pythonFileLines,
+    functionLines as pythonFunctionLines,
+} from '#cli/checks/language/python/limits.ts';
+import {
+    trivialFunctions as swiftTrivialFunctions,
+    duplicateFunctions as swiftDuplicateFunctions,
+} from '#cli/checks/language/swift/functions.ts';
+import {
+    trivialFunctions as pythonTrivialFunctions,
+    placeholderDocstrings as pythonPlaceholderDocstrings,
+} from '#cli/checks/language/python/functions.ts';
+import {
+    syntax as sqlSyntax,
+    fileLines as sqlFileLines,
+    functions as sqlFunctions,
+    blockComments as sqlBlockComments,
+} from '#cli/checks/language/sql.ts';
+import {
+    headers as cloudflareHeaders,
+    wrangler as cloudflareWrangler,
+    redirects as cloudflareRedirects,
+    typesFresh as cloudflareTypesFresh,
+} from '#cli/checks/platform/cloudflare.ts';
+import {
+    exportOrder as pythonExportOrder,
+    privatePrefix as pythonPrivatePrefix,
+    packageExports as pythonPackageExports,
+    exportsAtBottom as pythonExportsAtBottom,
+    privateBeforePublic as pythonPrivateBeforePublic,
+} from '#cli/checks/language/python/exports.ts';
+import {
+    check,
+    adminKey,
+    denoLint,
+    typesFresh,
+    projectValid,
+    migrationNames,
+    storagePolicies,
+} from '#cli/checks/platform/supabase.ts';
+
+/** Every built-in implementation, keyed by its public check name. */
+export const CHECKS: CheckRegistry = {
+    'trpc/boundaries': { engine: boundaries },
+    'expo/doctor': { engine: expoDoctor },
+    'svelte/check': { engine: svelteCheck },
+    'i18n/locales': { engine: locales },
+    'css/module-classes': { engine: moduleClasses },
+    'ansible/lint': { engine: lint },
+    'nginx/test': { engine: test },
+    'jest/coverage': { engine: jestCoverage },
+    'gspot/drift': { engine: gspotDrift },
+    'structure/config-logic': { engine: moduleLogic },
+    'structure/suppressions': { engine: suppressions },
+    'structure/stale-allowlists': { engine: staleAllowlists },
+    'structure/large-files': { engine: largeFiles },
+    'structure/tracked-dependencies': { engine: trackedDependencies },
+    'typescript/tsconfig': { engine: tsconfig },
+    'javascript/rules-off': { engine: rulesOff },
+    'docs/headings': { engine: headings },
+    'docs/stale-paths': { engine: stalePaths },
+    'docs/readme-present': { engine: readmePresent },
+    'docs/readme-shape': { engine: readmeShape },
+    'markdown/fences': { engine: fences },
+    'duplication/jscpd': { engine: jscpd },
+    'files/env-example': { engine: envExample },
+    'secrets/env-files': { engine: envFiles },
+    'security/codeql': { engine: codeql },
+    'secrets/gitleaks-baseline': { engine: gitleaksBaseline },
+    'dependencies/manifests': { engine: manifestPolicy },
+    'dependencies/lockfile-fresh': { engine: lockfileFresh },
+    'licenses/packages': { engine: licensesPackages },
+    'dependencies/bun-release-age': { engine: bunReleaseAge },
+    'dependencies/lockfile-hosts': { engine: lockfileHosts },
+    'drizzle/relations': { engine: drizzleRelations },
+    'drizzle/migrations-fresh': { engine: drizzleMigrationsFresh },
+    'nextjs/route-segments': { engine: routeSegments },
+    'nextjs/config': { engine: nextOptions },
+    'nextjs/tsc': { engine: types },
+    'nextjs/build': { engine: build },
+    'nextjs/version-pairs': { engine: versionPairs },
+    'cloudflare/headers': { engine: cloudflareHeaders },
+    'cloudflare/redirects': { engine: cloudflareRedirects },
+    'cloudflare/wrangler': { engine: cloudflareWrangler },
+    'cloudflare/types-fresh': { engine: cloudflareTypesFresh },
+    'site/build': { engine: siteBuild },
+    'site/build-reproducible': { engine: buildReproducible },
+    'site/html-validate': { engine: htmlValidate },
+    'site/purgecss': { engine: deadSelectors },
+    'site/linkinator': { engine: (input) => brokenLinks(input, false) },
+    'site/linkinator-external': { engine: (input) => brokenLinks(input, true) },
+    'site/size': { engine: sizes },
+    'site/sitemap': { engine: sitemap },
+    'site/dead-assets': { engine: deadAssets },
+    'site/svgo': { engine: svgo },
+    'site/webmanifest': { engine: webManifest },
+    'site/security-headers': { engine: securityHeaders },
+    'html/scripts': { engine: htmlScripts },
+    'html/literals': { engine: htmlLiterals },
+    'python/file-lines': { engine: pythonFileLines },
+    'python/function-lines': { engine: pythonFunctionLines },
+    'python/trivial-functions': { engine: pythonTrivialFunctions },
+    'python/placeholder-docstrings': { engine: pythonPlaceholderDocstrings },
+    'python/private-prefix': { engine: pythonPrivatePrefix },
+    'python/private-before-public': { engine: pythonPrivateBeforePublic },
+    'python/exports-at-bottom': { engine: pythonExportsAtBottom },
+    'python/lazy-exports': { engine: pythonLazyExports },
+    'python/package-exports': { engine: pythonPackageExports },
+    'python/import-comments': { engine: pythonImportComments },
+    'python/export-order': { engine: pythonExportOrder },
+    'python/singletons': { engine: pythonSingletons },
+    'python/import-linter': { engine: pythonImportLinter },
+    'python/pip-installs': { engine: pythonPipInstalls },
+    'python/stale-exclusions': { engine: pythonStaleExclusions },
+    'xctest/disabled': { engine: disabled },
+    'xctest/sleep': { engine: sleeps },
+    'xctest/recording': { engine: recording },
+    'xctest/references': { engine: references },
+    'xctest/coverage': { engine: coverage },
+    'xcode/xcconfig': { engine: xcconfig },
+    'xcode/entitlements': { engine: entitlements },
+    'xcode/ats': { engine: ats },
+    'xcode/xcstrings': { engine: xcstrings },
+    'xcode/assets': { engine: assets },
+    'xcode/test-plans': { engine: testPlans },
+    'xcode/orphan-sources': { engine: orphanSources },
+    'xcode/symlinks': { engine: symlinks },
+    'swift/trivial-functions': { engine: swiftTrivialFunctions },
+    'swift/duplicate-functions': { engine: swiftDuplicateFunctions },
+    'swift/private-before-public': { engine: swiftPrivateBeforePublic },
+    'swift/env-owner': { engine: swiftEnvOwner },
+    'swift/import-comments': { engine: swiftImportComments },
+    'swift/build': { engine: swiftBuild },
+    'swift/swiftlint-analyze': { engine: swiftlintAnalyze },
+    'swift/periphery': { engine: swiftPeriphery },
+    'openapi/spectral': { engine: spectral },
+    'openapi/fresh': { engine: fresh },
+    'supabase/config': { engine: projectValid },
+    'supabase/storage-policies': { engine: storagePolicies },
+    'supabase/migration-names': { engine: migrationNames },
+    'supabase/deno-lint': { engine: denoLint },
+    'supabase/deno-check': { engine: check },
+    'supabase/admin-key': { engine: adminKey },
+    'supabase/types-fresh': { engine: typesFresh },
+    'postgres/rls': { engine: rls },
+    'postgres/grants': { engine: grants },
+    'postgres/definer-search-path': { engine: definerSearchPath },
+    'postgres/foreign-key-indexes': { engine: foreignKeyIndexes },
+    'postgres/migration-order': { engine: migrationOrder },
+    'postgres/migrations-frozen': { engine: migrationsFrozen },
+    'postgres/migration-docs': { engine: migrationDocs },
+    'sql/functions': { engine: sqlFunctions },
+    'sql/syntax': { engine: sqlSyntax },
+    'sql/block-comments': { engine: sqlBlockComments },
+    'sql/file-lines': { engine: sqlFileLines },
+    'docker/dockerignore': { engine: dockerignore },
+    'docker/trivy-image': { engine: trivyImage },
+    'structure/lone-files': { engine: loneFiles },
+    'structure/prefix-collisions': { engine: prefixCollisions },
+    'structure/stem-collisions': { engine: stemCollisions },
+    'structure/folder-names': { engine: getDirectories },
+    'bash/limits': { engine: bashLimits },
+    'bash/doc-comments': { engine: docComment },
+    'bash/duplicate-functions': { engine: duplicateFunctions },
+    'bash/unused-functions': { engine: unusedFunctions },
+    'bash/unread-arguments': { engine: unreadArguments },
+    'bash/private-prefix': { engine: privatePrefix },
+    'bash/private-before-public': { engine: privateBeforePublic },
+    'bash/trivial-functions': { engine: trivialFunctions },
+    'bash/env-owner': { engine: envOwner },
+    'bash/contract': { engine: contract },
+    'bash/wrappers': { engine: wrappers },
+    'bash/embeds': { engine: embeds },
+    'bash/ssh-blocks': { engine: sshBlocks },
+    'bash/defaults': { engine: defaults },
+    'bash/guards': { engine: guards },
+    'bash/boundaries': { engine: scriptBoundaries },
+    'bash/safety': { engine: safety },
+    'bash/source-comments': { engine: sourceComments },
+    'bash/source-order': { engine: sourceOrder },
+    'prose/vale': { engine: vale },
+    'prose/hidden': { engine: banned },
+    'naming/identifiers': { engine: namingIdentifiers },
+    'naming/paths': { engine: namingPaths },
+    'naming/policy': { engine: namingPolicy },
+    'secrets/trufflehog': { run: trufflehog },
+    'secrets/gitleaks-history': { run: gitleaksHistory },
+    'commits/commitlint-range': { run: commitlintRange },
+    'vue/tsc': { run: tsc },
+    'typescript/tsc': { run: tsc },
+    'javascript/tsc': { run: checkjs },
+    'swift/swiftlint': { run: swiftlint },
+    'python/pydoclint': { run: pydoclint },
+    'python/deptry': { run: deptry },
+    'actions/actionlint': { run: actionlint },
 };
-
-/** The checks that run their own tool and read its output, by check ID. */
-export const RUNNERS: Record<string, Executable['run']> = {
-    'secrets/trufflehog': trufflehog,
-    'secrets/gitleaks-history': gitleaksHistory,
-    'commits/commitlint-range': commitlintRange,
-    'vue/tsc': tsc,
-    'typescript/tsc': tsc,
-    'javascript/tsc': checkjs,
-    'swift/swiftlint': swiftlint,
-    'python/pydoclint': pydoclint,
-    'python/deptry': deptry,
-    'actions/actionlint': actionlint,
-};
-
-/** The registry the check command hands to the run. */
-export const CHECKS: CheckRegistry = { engines: ENGINES, runners: RUNNERS };

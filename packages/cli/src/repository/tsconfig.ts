@@ -1,14 +1,13 @@
-import { z } from 'zod';
 import ts from 'typescript';
+import { relative } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { readText } from '#cli/platform/source.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import { parseTsconfig } from '#cli/parsers/tsconfig.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
+import { portableSegments } from '#cli/platform/root/rules.ts';
 
-const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {
     const local = toPosix(relative(root, path));
     using files = openRoot(root, 'native');
@@ -16,13 +15,14 @@ function configurationText(root: string, path: string): string | undefined {
         const segments = local.split('/');
         const dependency = segments.indexOf('node_modules');
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
-            mutationPath(local);
+            // Package managers link dependency folders; follow those links, but refuse links above node_modules.
+            portableSegments(local);
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return files.read(local)?.bytes.toString('utf8');
+        return readText(root, local);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw error;
     }
 }
@@ -37,22 +37,7 @@ export function getTsconfig(root: string, path: string): ts.ParsedCommandLine | 
     try {
         const text = configurationText(root, path);
         if (text === undefined) return undefined;
-        const source = ts.parseConfigFileTextToJson(path, text);
-        if (source.error !== undefined)
-            throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
-        const raw: unknown = source.config;
-        const parsed = ts.parseJsonConfigFileContent(
-            configSchema.parse(raw),
-            { ...ts.sys, readFile: (file) => configurationText(root, file) },
-            dirname(path),
-            undefined,
-            path,
-        );
-        // Option and alias consumers also read configurations with no input files.
-        const errors = parsed.errors.filter((error) => error.code !== EMPTY_FILES && error.code !== NO_INPUTS);
-        if (errors.length > 0)
-            throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
-        return parsed;
+        return parseTsconfig(path, text, { ...ts.sys, readFile: (file) => configurationText(root, file) });
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });

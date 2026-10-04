@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/database.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { getBlobs, getHeadEntries } from '#cli/execution/checkout/revision.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 
 const cache = new WeakMap<object, Promise<Map<string, string>>>();
 
@@ -70,7 +70,13 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
     const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);
     if (newest === undefined) return findings;
-    const late = migrations.filter((migration) => migration.version < newest.version && !texts.has(migration.path));
+    const late = migrations.filter(
+        (migration) =>
+            migration.version !== '' &&
+            newest.version !== '' &&
+            BigInt(migration.version) < BigInt(newest.version) &&
+            !texts.has(migration.path),
+    );
     return [
         ...findings,
         ...late.map((migration) =>
@@ -85,21 +91,24 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each migration at or before tools.squawk.frozen_through whose text differs from the committed one.
+ * One finding for each migration at or before postgres.frozen_through whose text differs from the committed one.
  * @param input the engine input
  * @returns the findings
  */
 export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
-    const named = input.view.tool('squawk')['frozen_through'];
-    const through = typeof named === 'string' ? named : FROZEN_NONE;
+    const through = input.view.options('postgres')['frozen_through'] as string;
     if (through === FROZEN_NONE) return [];
     const migrations = await migrationsOf(input);
     const texts = await committedText(input);
     return migrations
-        .filter((migration) => through === FROZEN_ALL || migration.version <= through)
+        .filter(
+            (migration) =>
+                through === FROZEN_ALL ||
+                (migration.version !== '' && /^\d+$/u.test(through) && BigInt(migration.version) <= BigInt(through)),
+        )
         .flatMap((migration): Finding[] => {
             const committed = texts.get(migration.path);
-            if (committed === undefined || committed === migration.text) return [];
+            if (committed === undefined || (committed.split(MIGRATION_DOWN, 1)[0] ?? '') === migration.text) return [];
             return [
                 findingAt(
                     input,

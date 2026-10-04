@@ -1,11 +1,14 @@
-// What a repository already runs, read without the kits: hooks, CI files, agent files, rules and lint folders, the runner.
-import { existsSync } from 'node:fs';
+// What a repository already runs, read without the configurations: hooks, CI files, agent files, rules and lint folders, the runner.
 import { parse as parseYaml } from 'yaml';
+import { readText } from '#cli/platform/source.ts';
 import { join, dirname, basename } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
+import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
-import type { Fields, Tooling, TrackedFile } from '#cli/types/repository/repository.ts';
+import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
+import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
 import {
     LINT_PAIRS,
@@ -14,14 +17,12 @@ import {
     AGENT_FILES,
     RUNNER_LOCKS,
     TASK_RUNNERS,
+    TASK_AFTER_RUN,
     FOREIGN_CI_FILES,
     LINT_DIRECTORIES,
     RULES_DIRECTORIES,
-    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-} from '#cli/config/repository/repository.ts';
-
-// In "<runner> run <task>", the task sits two words after the runner.
-const TASK_AFTER_RUN = 2;
+    FOREIGN_HOOK_DIRECTORIES,
+} from '#cli/config/repository/inventory.ts';
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function isLintCommand(command: string): boolean {
@@ -40,31 +41,33 @@ function isLintCommand(command: string): boolean {
 function getFiles(root: string, rel: string): string[] {
     if (!existsSync(join(root, rel))) return [];
     using files = openRoot(root);
-    if (files.stat(rel)?.isDirectory() !== true) return [];
-    return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
+    let target: string;
+    try {
+        target = files.realPath(rel);
+    } catch (error) {
+        if (error instanceof Error && error.message.startsWith('Source link leaves the repository:')) return [];
+        throw error;
+    }
+    if (!statSync(target).isDirectory()) return [];
+    return readdirSync(target)
+        .toSorted((left, right) => left.localeCompare(right))
+        .filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['hooks'][number] | undefined {
     if (hooksPath === dir) return undefined;
     const files = getFiles(root, dir);
-    if (files.length === 0) return undefined;
+    if (files.length === 0 && lstatSync(join(root, dir), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
+        return undefined;
     return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
 }
 
-function detectRunner(paths: Set<string>): { runner: Tooling['runner']; runnerFile?: string } {
+function detectRunner(paths: Set<string>): RunnerSelection {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
     if (lock === undefined) return { runner: 'none' };
     return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
-}
-
-function hasPackageHooks(root: string): boolean {
-    using files = openRoot(root);
-    const source = files.read('package.json');
-    if (source === undefined) return false;
-    const manifest: unknown = JSON.parse(source.bytes.toString('utf8'));
-    return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
 }
 
 function jobCommands(job: object): string[] {
@@ -98,11 +101,12 @@ function isLintJob(name: string, job: unknown): boolean {
  * @returns each set of hooks with where it lives
  */
 export function getHooks(root: string): Tooling['hooks'] {
+    const manifest = readPackageManifest(root, 'package.json');
+    const packageHooks = manifest !== undefined && Object.hasOwn(manifest, 'simple-git-hooks');
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
-    using files = openRoot(root);
     const present: string[] = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
-        (name) => files.stat(name) !== undefined,
+        (name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined,
     );
     const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
     return [
@@ -115,12 +119,14 @@ export function getHooks(root: string): Tooling['hooks'] {
                       files: getFiles(dirname(location), basename(location)),
                   },
               ]),
-        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
+        ...FOREIGN_HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter(
+            (hook) => hook !== undefined,
+        ),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes('.pre-commit-config.yaml')
             ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]
             : []),
-        ...(hasPackageHooks(root) ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
+        ...(packageHooks ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
     ];
 }
 
@@ -129,9 +135,13 @@ export function getHooks(root: string): Tooling['hooks'] {
  * @param root the repository root
  * @param files the tracked files
  * @param fields the manifests read from the tree
- * @returns everything init lists except the tool configurations, which need the kits
+ * @returns everything init lists except the tool configurations, which need the configurations
  */
-export function surveyRepository(root: string, files: TrackedFile[], fields: Fields[]): Omit<Tooling, 'configs'> {
+export function surveyRepository(
+    root: string,
+    files: TrackedFile[],
+    fields: ManifestSummary[],
+): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
     const lintOnlyManifests = fields
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
@@ -149,8 +159,10 @@ export function surveyRepository(root: string, files: TrackedFile[], fields: Fie
             )
             .toSorted((a, b) => a.localeCompare(b)),
         agentFiles: AGENT_FILES.filter((name) => paths.has(name)),
-        rulesDirectories: RULES_DIRECTORIES.filter((name) =>
-            getFiles(root, name).some((entry) => entry.endsWith('.md')),
+        rulesDirectories: RULES_DIRECTORIES.filter(
+            (name) =>
+                lstatSync(join(root, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
+                getFiles(root, name).some((entry) => entry.endsWith('.md')),
         ),
         lintFolders: LINT_DIRECTORIES.filter((name) => getFiles(root, name).length > 0),
         lintOnlyManifests,
@@ -165,13 +177,12 @@ export function surveyRepository(root: string, files: TrackedFile[], fields: Fie
  * @returns the names of the jobs that already run a linter
  */
 export function getLintJobs(root: string, paths: string[]): string[] {
-    using files = openRoot(root);
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
-            const source = files.read(path);
+            const source = readText(root, path);
             if (source === undefined) return [];
-            const document: unknown = parseYaml(source.bytes.toString('utf8'));
+            const document: unknown = parseYaml(source);
             if (typeof document !== 'object' || document === null) return [];
             const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
             if (typeof jobs !== 'object' || jobs === null) return [];

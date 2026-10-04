@@ -1,18 +1,10 @@
-import { z } from 'zod';
 import { join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import { kitName, targetInScope } from '#cli/kits/targets.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { diagnosticSchema, svelteFailureSchema } from '#cli/parsers/schema/svelte.ts';
 import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/framework/svelte.ts';
-
-const diagnosticSchema = z.object({
-    type: z.enum(['ERROR', 'WARNING']),
-    filename: z.string().min(1),
-    start: z.object({ line: z.number().int().nonnegative(), character: z.number().int().nonnegative() }),
-    message: z.string(),
-    code: z.union([z.string(), z.number()]).optional(),
-});
+import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 
 /**
  * Reads the machine-verbose report of svelte-check.
@@ -26,7 +18,8 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
     const failure = lines
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])
         .find((text) => text !== undefined);
-    if (failure !== undefined) throw new Error(`The svelte-check run failed: ${z.string().parse(JSON.parse(failure))}`);
+    if (failure !== undefined)
+        throw new Error(`The svelte-check run failed: ${svelteFailureSchema.parse(JSON.parse(failure))}`);
     return lines.flatMap((line): Finding[] => {
         const text = DIAGNOSTIC_LINE.exec(line)?.groups?.['diagnostic'];
         if (text === undefined) return [];
@@ -55,7 +48,7 @@ export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
     // A scope with a generated TypeScript configuration is checked with its strict compiler options.
     const tsconfig = input.selection.selected
         .flatMap((manifest) => manifest.configs)
-        .find((config) => !config.fragment && kitName(config.target) === 'tsconfig');
+        .find((config) => !config.fragment && configurationName(config.target) === 'tsconfig');
     const command = [
         'svelte-check',
         '--workspace',
@@ -65,7 +58,7 @@ export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
         '--fail-on-warnings',
         ...(tsconfig === undefined ? [] : ['--tsconfig', join(input.root, targetInScope(input.scope, tsconfig))]),
     ];
-    const result = await runCheckCommand(input, command, { cwd: input.scopeRoot });
+    const result = await runEngineTool(input, command, { cwd: input.scopeRoot });
     const findings = svelteFindings(input.spec.name, input.scope, result.stdout);
     const said = `${result.stdout}\n${result.stderr}`.trim();
     if (result.code !== 0 && findings.length === 0)

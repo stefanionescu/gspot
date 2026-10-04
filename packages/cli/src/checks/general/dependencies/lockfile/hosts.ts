@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { LOCKFILES, LOCKFILE_URL, NPM_DOWNLOAD, NPM_LOCKFILES } from '#cli/config/checks/general/dependencies.ts';
+import { LOCKFILE_CLIENTS } from '#cli/config/repository/inventory.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { LOCKFILE_URL, NPM_DOWNLOAD, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -12,16 +13,16 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = NPM_LOCKFILES.has(posix.basename(path));
+    const isNpm = LOCKFILE_CLIENTS[posix.basename(path)] === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
             : text.matchAll(LOCKFILE_URL).map((match) => match[0])
         )
             .flatMap((url) => {
-                const said = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
-                if (said === undefined) return [];
-                return [findingAt(input, { file: path, line: index + 1 }, 'host', said)];
+                const diagnostic = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
+                if (diagnostic === undefined) return [];
+                return [findingAt(input, { file: path, line: index + 1 }, 'host', diagnostic)];
             })
             .toArray(),
     );
@@ -33,12 +34,13 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
  * @returns the findings
  */
 export function lockfileHosts(input: EngineInput): Finding[] {
-    const hosts = new Set(input.view.tool('dependencies')['registry_hosts'] as string[] | undefined);
+    const hosts = new Set(input.view.options('dependencies')['registry_hosts'] as string[] | undefined);
     const paths = input.files
         .map((file) => file.path)
         .filter((path) => {
             const name = posix.basename(path);
-            return LOCKFILES[name] !== undefined && name !== 'bun.lockb';
+            const client = LOCKFILE_CLIENTS[name];
+            return client !== undefined && JAVASCRIPT_CLIENTS.has(client) && name !== 'bun.lockb';
         });
     return paths.flatMap((path) => fileFindings(input, path, hosts));
 }

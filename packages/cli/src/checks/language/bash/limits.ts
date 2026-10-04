@@ -1,16 +1,46 @@
 // The size ceilings of a shell script: file and function lines, and the ast-grep counts.
+import { codeLines } from '#cli/parsers/bash.ts';
+import { relative, isAbsolute } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
+import { assetPath } from '#cli/platform/assets.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Finding } from '#cli/types/execution/execution.ts';
-import { functionAt } from '#cli/checks/language/bash/scripts.ts';
-import { codeLines } from '#cli/checks/language/bash/code-lines.ts';
-import { astGrepMatches } from '#cli/checks/language/bash/ast-grep.ts';
-import { RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
-import type { ScriptIndex, AstGrepMatch } from '#cli/types/checks/language/bash.ts';
-import type { StructureInput, StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import { fileBatches } from '#cli/execution/command/batches.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { astGrepReportSchema } from '#cli/parsers/schema/ast-grep.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { OUTER_LEVELS, BASH_SIZE_RULES } from '#cli/config/checks/language/bash.ts';
+import type { ScriptIndex, AstGrepMatch, BashRuleAsset } from '#cli/types/checks/language/bash.ts';
 
-function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
-    if (!isDepth) return matches.length;
-    let deepest = matches.length === 0 ? 0 : 1;
+/**
+ * Runs one ast-grep rule over the files.
+ * @param input the engine input
+ * @param asset the rule's asset path, such as `configurations/language/bash/ast-grep/branches.yml`
+ * @param files the files, relative to the root
+ * @returns every match, with zero-based lines and a root-relative path
+ */
+async function runAstGrep(input: EngineInput, asset: string, files: string[]): Promise<AstGrepMatch[]> {
+    if (files.length === 0) return [];
+    const root = input.root;
+    const rule = assetPath(asset);
+    const command = ['ast-grep', 'scan', '--json=compact', '-r', rule];
+    const parsed: AstGrepMatch[] = [];
+    for (const batch of fileBatches(files, command, process.platform)) {
+        const result = await runEngineTool(input, [...command, ...batch], { cwd: root });
+        if (result.code !== 0 && result.code !== 1) throw new Error(`The ast-grep run failed: ${result.stderr.trim()}`);
+        const matches = astGrepReportSchema.parse(JSON.parse(result.stdout));
+        parsed.push(...matches);
+    }
+    const selected = new Set(files);
+    return parsed.map((match) => {
+        const file = toPosix(isAbsolute(match.file) ? relative(root, match.file) : match.file);
+        if (!selected.has(file)) throw new Error(`The ast-grep report names an unselected file: ${file}`);
+        return { ...match, file };
+    });
+}
+
+function nestingDepth(matches: AstGrepMatch[]): number {
+    let deepest = 0;
     for (const match of matches) {
         const containing = matches.filter(
             (other) =>
@@ -25,18 +55,17 @@ function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
 
 /**
  * Runs one count rule over the scope's scripts and reports every function over its limit.
- * @param analysis the check's analysis name
- * @param context the check context
+ * @param rule the count query and its size limit
+ * @param input the check context
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-async function countFindings(analysis: string, context: StructureInput, index: ScriptIndex): Promise<Finding[]> {
-    const rule = RULES[analysis];
-    const ceiling = rule === undefined ? undefined : context.limit(rule.limit, 'bash');
-    if (rule === undefined || ceiling === undefined) return [];
-    const matches = await astGrepMatches(
-        context.input,
-        `kits/language/bash/ast-grep/${rule.asset}`,
+async function countFindings(rule: BashRuleAsset, input: EngineInput, index: ScriptIndex): Promise<Finding[]> {
+    const ceiling = input.view.limit(rule.limit, 'bash');
+    if (ceiling === undefined) return [];
+    const matches = await runAstGrep(
+        input,
+        `configurations/language/bash/ast-grep/${rule.asset}`,
         index.files.map((file) => file.path),
     );
     return index.files.flatMap((file) => {
@@ -45,13 +74,13 @@ async function countFindings(analysis: string, context: StructureInput, index: S
             const own = inFile.filter(
                 (match) => functionAt(file.functions, match.range.start.line + 1)?.start === entry.start,
             );
-            const score = scoreFor(own, rule.isDepth);
+            const score = rule.isDepth ? nestingDepth(own) : own.length;
             if (score <= ceiling) return [];
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: entry.start },
-                    rule.limit.replaceAll('_', '-'),
+                    rule.limit,
                     `${entry.name} has ${String(score)} ${rule.noun}, over the ceiling of ${String(ceiling)}.`,
                 ),
             ];
@@ -61,45 +90,43 @@ async function countFindings(analysis: string, context: StructureInput, index: S
 
 /**
  * One finding per script whose code lines exceed limits.bash.file_lines.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
+ * @param index the parsed shell files and functions
  * @returns the findings
  */
-const fileLines: Analysis = async (context, scripts) => {
-    const ceiling = context.limit('file_lines', 'bash');
+function fileLines(input: EngineInput, index: ScriptIndex): Finding[] {
+    const ceiling = input.view.limit('file_lines', 'bash');
     if (ceiling === undefined) return [];
-    const index = await scripts();
     return index.files.flatMap((file) => {
-        const count = codeLines(file.lines).length;
+        const count = codeLines(file.code).length;
         if (count <= ceiling) return [];
         return [
             findingAt(
-                context.input,
+                input,
                 { file: file.path, line: 1 },
                 'file-lines',
-                `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`,
+                `This file has ${String(count)} code lines, over the ceiling of ${String(ceiling)}.`,
             ),
         ];
     });
-};
+}
 
 /**
  * One finding per function whose body code lines exceed limits.bash.function_lines.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
+ * @param index the parsed shell files and functions
  * @returns the findings
  */
-const functionLines: Analysis = async (context, scripts) => {
-    const ceiling = context.limit('function_lines', 'bash');
+function functionLines(input: EngineInput, index: ScriptIndex): Finding[] {
+    const ceiling = input.view.limit('function_lines', 'bash');
     if (ceiling === undefined) return [];
-    const index = await scripts();
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
             const count = codeLines(entry.body).length;
             if (count <= ceiling) return [];
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: entry.start },
                     'function-lines',
                     `${entry.name} has ${String(count)} code lines, over the ceiling of ${String(ceiling)}.`,
@@ -107,16 +134,15 @@ const functionLines: Analysis = async (context, scripts) => {
             ];
         }),
     );
-};
+}
 
 /**
- * Every size ceiling of a shell script in one pass: file and function lines, then the ast-grep counts.
- * @param context the structure input of the scope
- * @param scripts the shell script index, read once
+ * Every size ceiling of a shell script: file and function lines, then the ast-grep counts.
+ * @param input the structure input of the scope
  * @returns the findings over a ceiling
  */
-export const bashLimits: Analysis = async (context, scripts) => {
-    const index = await scripts();
-    const counted = await Promise.all(Object.keys(RULES).map((analysis) => countFindings(analysis, context, index)));
-    return [...(await fileLines(context, scripts)), ...(await functionLines(context, scripts)), ...counted.flat()];
+export const bashLimits: Engine = async (input) => {
+    const index = await getScriptIndex(input);
+    const counted = await Promise.all(BASH_SIZE_RULES.map((rule) => countFindings(rule, input, index)));
+    return [...fileLines(input, index), ...functionLines(input, index), ...counted.flat()];
 };

@@ -3,16 +3,16 @@
 import { relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readdirSync } from 'node:fs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { getHooks } from '#cli/repository/survey.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
+import { HOOK_FILES } from '#cli/config/generation/hooks.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
-import { HOOK_FILES } from '#cli/config/generation/generation.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { Repository } from '#cli/types/repository/repository.ts';
 import { hooksDirectory, readGitSetting, runGitBlocking } from '#cli/platform/git.ts';
+import type { HookPlan, HookStatus, HookContext } from '#cli/types/lifecycle/install.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Installing the hooks, reading their status, and finding foreign hooks compare core.hooksPath with this spelling.
+
 function ownHooksPath(root: string): string {
     return `${hookPrefix(root)}${HOOKS_DIRECTORY}`;
 }
@@ -33,29 +33,41 @@ function foreignHooks(root: string): string[] {
 }
 
 /**
- * Point Git at the gspot hooks, or print the lines to add when the repository already runs other hooks.
+ * Calculate the Git setting or instructions without changing existing hooks.
  * @param options the policy and the repository
  * @param options.policy the repository policy
  * @param options.repository the repository root and whether Git is present
- * @returns the line that says what happened, or '' when the policy selects no hooks
+ * @returns the command and completion note, or instructions for existing hooks
  */
-export function installHooks({
-    policy,
-    repository,
-}: {
-    policy: Policy;
-    repository: Pick<Repository, 'root' | 'hasGit'>;
-}): string {
-    if (policy.hooks === undefined || !repository.hasGit) return '';
+export function getHookPlan({ policy, repository }: HookContext): HookPlan {
+    if (policy.hooks === undefined || !repository.hasGit) return { note: '' };
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0) {
-        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.runner)}`);
-        return `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
+        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.run_with)}`);
+        return {
+            note: `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`,
+        };
     }
     const path = ownHooksPath(repository.root);
-    const result = runGitBlocking(repository.root, ['config', 'core.hooksPath', path]);
-    if (result.code !== 0) throw new Error(`Cannot set core.hooksPath: ${result.stderr.trim()}`);
-    return `installed hooks: core.hooksPath is ${path}`;
+    return {
+        command: ['git', 'config', 'core.hooksPath', path],
+        note: `installed hooks: core.hooksPath is ${path}`,
+    };
+}
+
+/**
+ * Install the planned Git setting or report the instructions for existing hooks.
+ * @param context the policy and repository
+ * @returns what changed or which instructions the repository needs
+ */
+export function installHooks(context: HookContext): string {
+    const plan = getHookPlan(context);
+    if (plan.command !== undefined) {
+        const result = runGitBlocking(context.repository.root, plan.command.slice(1));
+        if (result.code !== 0)
+            throw new GspotError('installation', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
+    }
+    return plan.note;
 }
 
 /**
@@ -65,13 +77,7 @@ export function installHooks({
  * @param options.repository the repository root and whether Git is present
  * @returns whether the hooks are ready, and the line
  */
-export function hookStatus({
-    policy,
-    repository,
-}: {
-    policy: Policy;
-    repository: Pick<Repository, 'root' | 'hasGit'>;
-}): { ready: boolean; text: string } {
+export function hookStatus({ policy, repository }: HookContext): HookStatus {
     if (policy.hooks === undefined) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     const path = ownHooksPath(repository.root);

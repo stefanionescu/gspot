@@ -1,0 +1,48 @@
+[configuration]
+title = "Expo"
+requires = ["react-native"]
+description = "Expo applications: rules for public environment variables and DOM exports, plus Expo Doctor's project and SDK compatibility checks. React Native supplies the native component and style rules."
+
+[detect]
+dependencies = ["expo"]
+
+[files]
+filenames = ["app.json", "app.config.js", "app.config.ts", "eas.json"]
+kinds = ["source"]
+
+[[tool]]
+name = "eslint-plugin-expo"
+kind = "library"
+version = "1.1.0"
+npm = "eslint-plugin-expo"
+
+[[tool]]
+name = "expo-doctor"
+version = "1.20.4"
+npm = "expo-doctor"
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+
+[[check]]
+name = "doctor"
+tool = "expo-doctor"
+title = "Run Expo Doctor"
+example = "An Expo project whose installed `react-native` differs from the version its Expo SDK expects reports a failed Doctor check. Install the expected version with `npx expo install --check` and rerun."
+level = "recommended"
+stage = "push"
+runs = "scope"
+needs = ["network"]
+summary = "Runs Expo Doctor in the selected Expo scope and reports each failed check with its issues."
+why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
+help = "Read the issues and advice Expo Doctor prints for the failed check, then run npx expo install --check."
+
+[required_eslint_rules]
+ts = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
+js = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
+tsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
+jsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]

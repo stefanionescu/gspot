@@ -1,105 +1,115 @@
 // What the selected fragments add to a generated target: rendered text, imports, file globs, and selectors.
-
-import { eta } from '#cli/generation/registry.ts';
+import { eta } from '#cli/generation/templates.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
-import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
-import type { Manifest, ConfigurationTarget } from '#cli/types/kits.ts';
-import type { Fragment, TemplateInputs, FragmentSelector, ResolvedSelector } from '#cli/types/generation/generation.ts';
+import { ESLINT_CODE_FILES } from '#cli/config/eslint.ts';
+import type { Fragment } from '#cli/types/generation/fragments.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
+import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
+import type { TemplateInputs } from '#cli/types/generation/templates.ts';
+import { fragmentSelectorGroups } from '#cli/generation/eslint/blocks.ts';
+import type { Manifest, ConfigurationFile } from '#cli/types/configurations.ts';
+import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/output.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
-function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
-    if (owner.scoped) return selection.selected;
+function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, target: ConfigurationFile): Manifest[] {
+    if (target.scoped) return selection.selected;
     const every = [selection, ...scopes].flatMap((entry) => entry.selected);
-    return new Map(every.map((manifest) => [manifest.kit.name, manifest])).values().toArray();
-}
-
-function scopeFragment(rendered: string, selection: ScopeSelection, scopes: ScopeSelection[]): string {
-    const scope = selection.scope.path;
-    const children = scopes.map((entry) => entry.scope.path).filter((path) => path !== scope && isInScope(path, scope));
-    const pattern = scope === '' ? '**/*' : `${scope}/**/*`;
-    const excluded = children.map((path) => `${path}/**`);
-    return `...[${rendered}].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), ${JSON.stringify(pattern)}]), ignores: [...(entry.ignores ?? []), ...${JSON.stringify(excluded)}] })),`;
+    return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
 }
 
 // The rendered text of every fragment that has a template.
 function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes: ScopeSelection[]): string {
-    return fragments
-        .flatMap(({ manifest, config }) => {
-            if (config.template === undefined) return [];
-            const source = readAsset(`${manifest.dir}/${config.template}`);
-            if (!config.target.endsWith('eslint.config.mjs')) return [eta.renderString(source, inputs)];
-            return scopes
-                .filter((scope) => scope.selected.includes(manifest))
-                .map((selection) => {
-                    const rendered = eta.renderString(source, { ...inputs, ...selection.view });
-                    return scopeFragment(rendered, selection, scopes);
-                });
-        })
-        .join('\n');
-}
-
-// The paths a loosening setting allows: every entry's paths, in the order written.
-function allowedPaths(selection: ScopeSelection, setting: string): string[] {
-    const value = selection.view.settings[setting];
-    if (!Array.isArray(value)) return [];
-    return value.flatMap((entry: unknown) => {
-        const paths = typeof entry === 'object' && entry !== null ? (entry as { paths?: unknown }).paths : undefined;
-        return Array.isArray(paths) ? paths.filter((path): path is string => typeof path === 'string') : [];
-    });
+    const rendered: string[] = [];
+    for (const { manifest, config } of fragments) {
+        if (config.template === undefined) continue;
+        const source = readAsset(`${manifest.dir}/${config.template}`);
+        if (!config.target.endsWith('eslint.config.mjs')) {
+            rendered.push(eta.renderString(source, inputs));
+            continue;
+        }
+        for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
+            const scope = selection.scope.path;
+            const children = nestedScopes(
+                scopes.map((entry) => entry.scope.path),
+                scope,
+            );
+            const selectedFiles = inputs
+                .files('')
+                .filter((path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)));
+            const template = eslintModule(
+                inputs.eslintAllRules,
+                inputs.isAll,
+                [ESLINT_CODE_FILES, ...inputs.fragmentFiles],
+                {
+                    path: scope,
+                    excluded: children.map((path) => `${path}/**`),
+                },
+            );
+            const fragment = eta.renderString(source, {
+                ...inputs,
+                ...selection.view,
+                scope,
+                eslintModule: template,
+                files: (extension: string) => selectedFiles.filter((path) => path.endsWith(extension)),
+            });
+            inputs.eslintFragmentBlocks.push(...template.blocks);
+            rendered.push(fragment);
+        }
+    }
+    return rendered.join('\n');
 }
 
 /**
  * The template inputs a target's fragments contribute.
  * @param scopes every resolved scope.
  * @param selection the scope the target is written for.
- * @param owner the target.
+ * @param target the configuration target
  * @param inputs the scope's template inputs, which the fragment templates render with.
  * @returns the rendered fragments, their imports, file globs, and selector groups.
  */
 export function fragmentInputs(
     scopes: ScopeSelection[],
     selection: ScopeSelection,
-    owner: ConfigurationTarget,
+    target: ConfigurationFile,
     inputs: TemplateInputs,
-): Pick<TemplateInputs, 'fragments' | 'fragmentImports' | 'fragmentFiles' | 'fragmentSelectors'> {
-    const fragments = fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
+): Pick<
+    TemplateInputs,
+    | 'fragments'
+    | 'fragmentImports'
+    | 'fragmentFiles'
+    | 'fragmentSelectors'
+    | 'eslintFragmentBlocks'
+    | 'eslintModule'
+    | 'eslintFiles'
+> {
+    const fragments = fragmentOwners(scopes, selection, target).flatMap((manifest) =>
         manifest.configs
-            .filter((config) => config.fragment && config.target === owner.target)
+            .filter((config) => config.fragment && config.target === target.target)
             .map((config) => ({ manifest, config })),
     );
-    const rendered = renderedFragments(fragments, inputs, scopes);
+    const fragmentFiles = [...new Set(fragments.flatMap(({ config }) => config.component_globs))];
+    const config = target.target.endsWith('eslint.config.mjs') ? inputs.eslint() : undefined;
+    const eslintFiles =
+        config === undefined
+            ? inputs.eslintFiles
+            : eslintFilePatterns(fragmentFiles, config.testFiles, config.scriptFiles);
+    const eslintFragmentBlocks: TemplateInputs['eslintFragmentBlocks'] = [];
+    const rendered = renderedFragments(
+        fragments,
+        { ...inputs, fragmentFiles, eslintFragmentBlocks, eslintFiles },
+        scopes,
+    );
     const imports = fragments.flatMap(({ manifest, config }) =>
         config.imports === undefined ? [] : readAsset(`${manifest.dir}/${config.imports}`).split('\n'),
     );
     return {
         fragments: rendered,
         fragmentImports: [...new Set(imports.filter((line) => line.trim() !== ''))].join('\n'),
-        fragmentFiles: [...new Set(fragments.flatMap(({ config }) => config.components))],
-        fragmentSelectors: scopes.flatMap((scope) => {
-            const resolved = fragments
-                .filter(({ manifest }) => scope.selected.includes(manifest))
-                .flatMap(({ config }) =>
-                    config.selectors
-                        .filter((entry) => inputs.isAll || entry.level === 'recommended')
-                        .map(
-                            (entry: FragmentSelector): ResolvedSelector => ({
-                                selector: entry.selector,
-                                message: entry.message,
-                                ...(entry.files === undefined ? {} : { files: entry.files }),
-                                ...(entry.allowed === undefined ? {} : { except: allowedPaths(scope, entry.allowed) }),
-                            }),
-                        ),
-                );
-            return selectorGroups(resolved).map((group) => ({
-                ...group,
-                scope: scope.scope.path,
-                ignoredScopes: scopes
-                    .map((entry) => entry.scope.path)
-                    .filter((path) => path !== scope.scope.path && isInScope(path, scope.scope.path)),
-            }));
-        }),
+        fragmentFiles,
+        eslintFiles,
+        eslintFragmentBlocks,
+        eslintModule: eslintModule(inputs.eslintAllRules, inputs.isAll, [ESLINT_CODE_FILES, ...fragmentFiles]),
+        fragmentSelectors: fragmentSelectorGroups(scopes, fragments, inputs.isAll),
     };
 }

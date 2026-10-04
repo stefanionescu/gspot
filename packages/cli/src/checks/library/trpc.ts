@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { ArchitectureElement } from '#cli/types/policy/policy.ts';
-import { scopeImports } from '#cli/checks/language/javascript/imports.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { ArchitectureElement } from '#cli/types/policy/settings.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { getScopeImports } from '#cli/checks/language/javascript/imports.ts';
 
 /**
  * One finding for each value import that reaches into the server paths from outside them.
@@ -10,10 +10,10 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @returns the findings
  */
 export async function boundaries(input: EngineInput): Promise<Finding[]> {
-    const elements = (input.view.settings['architecture.elements'] ?? []) as ArchitectureElement[];
+    const elements = (input.view.settings['architecture.modules'] ?? []) as ArchitectureElement[];
     const server = elements.find((element) => element.name === 'server');
-    const isServer = pathMatcher(server?.paths ?? (input.view.tool('trpc')['server_files'] as string[]));
-    const index = await scopeImports(input);
+    const isServer = pathMatcher(server?.paths ?? (input.view.options('trpc')['server_files'] as string[]));
+    const index = await getScopeImports(input);
     return index.edges
         .filter(
             (edge) =>

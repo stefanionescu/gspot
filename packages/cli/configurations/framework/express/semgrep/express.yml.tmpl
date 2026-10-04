@@ -1,0 +1,90 @@
+<%
+const document = {
+    rules: [
+        {
+            id: 'express-raw-query-interpolation',
+            patterns: [
+                {
+                    pattern: '$DB.$METHOD(`...${req.$SOURCE.$FIELD}...`, ...)\n',
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$METHOD',
+                        regex: '^(query|execute|raw|\\$queryRawUnsafe)$',
+                    },
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$SOURCE',
+                        regex: '^(body|query|params)$',
+                    },
+                },
+            ],
+            message:
+                'SQL injection risk: request data is interpolated into a database call. Use parameterised queries or an ORM.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-89'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'express-unvalidated-redirect',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'res.redirect(req.body.$VALUE)\n',
+                        },
+                        {
+                            pattern: 'res.redirect(req.query.$VALUE)\n',
+                        },
+                        {
+                            pattern: 'res.redirect(req.params.$VALUE)\n',
+                        },
+                    ],
+                },
+            ],
+            message:
+                'Open redirect: request data is passed directly to res.redirect(). Validate against an allowlist of URLs.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-601'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'express-res-send-raw-input',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'res.send(req.$SOURCE.$FIELD)',
+                        },
+                        {
+                            pattern: 'res.send(`...${req.$SOURCE.$FIELD}...`)',
+                        },
+                    ],
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$SOURCE',
+                        regex: '^(body|query|params)$',
+                    },
+                },
+            ],
+            message:
+                'Reflected XSS risk: request data is sent as text or HTML. Escape HTML output or use res.json() to send JSON.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-79'],
+                category: 'security',
+            },
+        },
+    ],
+};
+recordRules(document);
+%><%~ yaml(document).trimEnd() %>

@@ -1,10 +1,8 @@
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
-import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { RuleReporter, DirectoryEntry } from '#plugin/types/plugin.ts';
-import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/plugin.ts';
+import type { LintedPath, RuleContext } from '#plugin/types/files.ts';
+import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/files.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
 
@@ -22,6 +20,24 @@ function isGlobMatch(path: string, glob: string): boolean {
     }
     return isMatch(path);
 }
+
+/**
+ * The repository root: settings.gspot.root when the config sets it, else the directory ESLint runs from.
+ * @param context the rule context
+ * @returns the root without a trailing slash
+ */
+function lintedRoot(context: RuleContext): string {
+    const settings: unknown = context.settings['gspot'];
+    if (settings === undefined) return normalizePath(context.cwd).replace(/\/$/u, '');
+    if (settings === null || typeof settings !== 'object')
+        throw new TypeError('ESLint settings.gspot must be an object.');
+    const configured = 'root' in settings ? settings.root : undefined;
+    if (configured !== undefined && typeof configured !== 'string')
+        throw new TypeError('ESLint settings.gspot.root must be a string.');
+    const root = configured ?? context.cwd;
+    return normalizePath(root).replace(/\/$/u, '');
+}
+
 /**
  * Forward slashes, no query or hash, no file:// scheme, and a Windows drive letter in upper case, so two spellings of
  * one path compare equal.
@@ -37,25 +53,15 @@ export function normalizePath(value: string): string {
 }
 
 /**
- * The file ESLint is linting, normalized, or undefined for stdin.
- * @param context the rule context
- * @returns the path, or undefined when ESLint reads stdin
+ * Resolve a relative module path against its importing file.
+ * @param importer the root-relative importing file
+ * @param source the module path as written
+ * @returns the normalized target path, or undefined for a package or alias
  */
-export function lintedFile(context: RuleReporter): string | undefined {
-    const raw = context.physicalFilename === '' ? context.filename : context.physicalFilename;
-    const normalized = normalizePath(raw);
-    return STDIN_NAMES.has(normalized) ? undefined : normalized;
-}
-
-/**
- * The repository root: settings.gspot.root when the config sets it, else the directory ESLint runs from.
- * @param context the rule context
- * @returns the root without a trailing slash
- */
-export function lintedRoot(context: RuleReporter): string {
-    const settings = (context.settings as { gspot?: { root?: string } } | undefined)?.gspot;
-    const root = settings?.root ?? context.cwd;
-    return normalizePath(root).replace(/\/$/u, '');
+export function relativeImportPath(importer: string, source: string): string | undefined {
+    if (!source.startsWith('./') && !source.startsWith('../')) return undefined;
+    const directory = posix.dirname(importer);
+    return normalizePath(posix.join(directory, source));
 }
 
 /**
@@ -63,21 +69,8 @@ export function lintedRoot(context: RuleReporter): string {
  * @param path a file path
  * @returns whether the base name is an index file
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The barrel rules decide what an index module is by this one list of names.
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
-}
-
-/**
- * Current directory entries. Read failures propagate to the caller.
- * @param dir the directory
- * @returns files and directories, sorted by name
- */
-export function readDirectory(dir: string): DirectoryEntry[] {
-    return readdirSync(dir, { withFileTypes: true })
-        .filter((entry) => entry.isFile() || entry.isDirectory())
-        .map((entry): DirectoryEntry => ({ name: entry.name, kind: entry.isDirectory() ? 'dir' : 'file' }))
-        .toSorted((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -93,23 +86,15 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
 }
 
 /**
- * The path relative to the root, or the path itself when outside it.
- * @param root the repository root
- * @param path an absolute path
- * @returns the relative path
+ * Read the linted file's absolute path, root, and root-relative path once. Standard-input names have no file path.
+ * @param context the ESLint rule context
+ * @returns the file paths, or undefined for standard input
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules make a path relative to the lint root the same way.
-export function relativeToRoot(root: string, path: string): string {
-    return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
-}
-
-/**
- * The static string of a literal node, or undefined.
- * @param node any node
- * @returns the string when the node is a string literal
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules read a literal import source the same way.
-export function staticString(node: unknown): string | undefined {
-    const literal = node as { type?: string; value?: unknown } | null | undefined;
-    return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;
+export function lintedPath(context: RuleContext): LintedPath | undefined {
+    const raw = context.physicalFilename === '' ? context.filename : context.physicalFilename;
+    const absolute = normalizePath(raw);
+    if (STDIN_NAMES.has(absolute)) return undefined;
+    const root = lintedRoot(context);
+    const relative = absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : absolute;
+    return { absolute, relative, root };
 }

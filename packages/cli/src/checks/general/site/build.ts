@@ -1,55 +1,57 @@
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { memo } from '#cli/platform/memo.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { commandArguments } from '#cli/platform/quoting.ts';
-import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
+import { parseCommand } from '#cli/parsers/command.ts';
+import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { SITE_BUILD, SHOWN_LINES, SITE_OUTPUT } from '#cli/config/checks/general/site.ts';
+import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { portableSegments, assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/general/site.ts';
 
-const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
+const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
-async function runBuild(input: EngineInput): Promise<SiteBuild> {
-    const site = input.view.tool('site');
-    const outputPath = typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : SITE_OUTPUT;
-    mutationTarget(outputPath);
-    if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
-    const folder = await scratchCopy(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
-    // The run keeps the build for the checks that read it after this one.
-    const scratch = input.resources.use(folder).path;
+async function runBuild(input: EngineInput, scratch: string): Promise<SiteBuild> {
+    const site = input.view.options('site');
+    const outputPath = site['output'] as string;
+    assertMutationTarget(outputPath);
     const cwd = join(scratch, input.scope);
-    const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : SITE_BUILD;
-    const result = await runCheckCommand(input, commandArguments(command), { cwd });
+    const command = site['build'] as string;
+    const result = await runEngineTool(input, parseCommand(command), { cwd });
     const output = join(cwd, outputPath);
     using files = openRoot(scratch);
     const isBuilt: boolean =
         result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
-    const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_LINES).join(' | ');
-    return { cwd, command, output, isBuilt, said };
+    const outputTail = [result.stderr, result.stdout]
+        .join('\n')
+        .trim()
+        .split('\n')
+        .slice(-OUTPUT_TAIL_LINES)
+        .join(' | ');
+    return { cwd, command, output, isBuilt, outputTail };
+}
+
+function outputDigests(folder: string): Map<string, string> {
+    return new Map(filesUnder(folder).map((path) => [path, contentDigest(readSource(folder, path))]));
 }
 
 /**
  * Every file under a folder, relative to it, sorted.
- * @param folder the folder
- * @returns the relative paths
+ * @param folder the folder.
+ * @returns the relative paths.
  */
 export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
     using files = openRoot(folder, 'native');
     const found: string[] = [];
     walkRoot(files, '', (path) => {
-        const entry = statSync(files.source(path));
+        const entry = statSync(files.realPath(path));
         if (entry.isFile()) found.push(path);
         return entry.isDirectory();
     });
@@ -57,23 +59,52 @@ export function filesUnder(folder: string): string[] {
 }
 
 /**
+ * Locate a built file in the original repository. Keep its project scope and output folder.
+ * @param input the scope owning the build.
+ * @param build the build's isolated project folder.
+ * @param absolute the built file's absolute path.
+ * @returns a confined repository-relative path.
+ */
+export function repositoryPath(
+    input: Pick<EngineInput, 'scope'>,
+    build: Pick<SiteBuild, 'cwd'>,
+    absolute: string,
+): string {
+    const path = toPosix(relative(build.cwd, absolute));
+    portableSegments(path);
+    return input.scope === '' ? path : `${input.scope}/${path}`;
+}
+
+/**
  * The build of the scope, run the first time a check asks and shared after that.
- * @param input the engine input
- * @returns the build
+ * @param input the engine input.
+ * @returns the build.
  */
 export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
-    const key = join(input.root, input.scope);
-    const scopeBuilds = builds.get(input.reads) ?? new Map<string, Promise<SiteBuild>>();
-    builds.set(input.reads, scopeBuilds);
-    const running = scopeBuilds.get(key) ?? runBuild(input);
+    const key = input.scopeRoot;
+    const scopeBuilds = memo(input.reads, BUILD_MEMO);
+    const held = scopeBuilds.get(key);
+    if (held !== undefined) return held;
+    const running = (async () => {
+        const resources = input.resources;
+        if (resources === undefined)
+            throw new Error('The site/build check needs temporary directories that are disposed after the run.');
+        resources.defer(() => scopeBuilds.delete(key));
+        const folder = await scratchCopy(
+            input.root,
+            input.files.map((file) => file.path),
+            input.scopeEntries.map((scope) => scope.path),
+        );
+        return runBuild(input, resources.use(folder).path);
+    })();
     scopeBuilds.set(key, running);
     return running;
 }
 
 /**
  * Requires built output before a dependent check reads it.
- * @param input the engine input
- * @returns the successful build, or a skipped-check error
+ * @param input the engine input.
+ * @returns the successful build, or a skipped-check error.
  */
 export async function requireBuild(input: EngineInput): Promise<SiteBuild> {
     const build = await cachedBuild(input);
@@ -83,39 +114,47 @@ export async function requireBuild(input: EngineInput): Promise<SiteBuild> {
 
 /**
  * One finding when the build command fails or writes no output folder.
- * @param input the engine input
- * @returns the findings
+ * @param input the engine input.
+ * @returns the findings.
  */
-export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
+export async function siteBuild(input: EngineInput): Promise<Finding[]> {
     const build = await cachedBuild(input);
     if (build.isBuilt) return [];
-    return [findingAt(input, { file: '', line: 1 }, 'build', `${build.command} did not build the site: ${build.said}`)];
+    return [
+        findingAt(
+            input,
+            { file: '', line: 1 },
+            'build',
+            `${build.command} did not build the site: ${build.outputTail}`,
+        ),
+    ];
 }
 
 /**
  * Builds a second time and compares the two outputs file by file.
- * @param input the engine input
- * @returns one finding for each file that differs, appears, or disappears
+ * @param input the engine input.
+ * @returns one finding for each file that differs, appears, or disappears.
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireBuild(input);
-    const before = new Map(
-        filesUnder(first.output).map((path) => [path, contentDigest(readSource(first.output, path))]),
+    const before = outputDigests(first.output);
+    using folder = await scratchCopy(
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
     );
-    const second = await runBuild(input);
-    if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
-    const after = new Map(
-        filesUnder(second.output).map((path) => [path, contentDigest(readSource(second.output, path))]),
-    );
+    const second = await runBuild(input, folder.path);
+    if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.outputTail}`);
+    const after = outputDigests(second.output);
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),
     );
     return differences
-        .slice(0, SHOWN_LINES)
+        .slice(0, SHOWN_DIFFERENCES)
         .map((path) =>
             findingAt(
                 input,
-                { file: path, line: 1 },
+                { file: repositoryPath(input, first, join(first.output, path)), line: 1 },
                 'not-reproducible',
                 'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
             ),

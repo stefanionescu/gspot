@@ -1,6 +1,15 @@
-// What a test expects: the error a call fails with, and a matcher typed as the value it stands in for. Bun types
-// every asymmetric matcher as any, so the three matcher functions name the type the comparison expects.
+// Shared assertions preserve exact check outcomes; test files own every registration.
 import { expect } from 'bun:test';
+import { join, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
+import { realpathSync, writeFileSync } from 'node:fs';
+import { runTestCommand } from '#tests/harness/command.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { FindingCase } from '#tests/types/harness/check-case.ts';
+import type { PackageCheckCase } from '#tests/types/packages/check-case.ts';
+import { runCheckCase, buildCorrection } from '#tests/harness/check-case.ts';
+import type { Consumer, ConsumerOptions } from '#tests/types/harness/consumer.ts';
+import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
 /**
  * Awaits a promise that must reject with an error.
@@ -8,31 +17,13 @@ import { expect } from 'bun:test';
  * @returns the message of the error it rejected with
  */
 export async function rejection(promise: Promise<unknown>): Promise<string> {
-    let settled: { rejected: true; error: unknown } | { rejected: false } = { rejected: false };
     try {
         await promise;
     } catch (error) {
-        settled = { rejected: true, error };
+        if (error instanceof Error) return error.message;
+        throw new Error(`The promise rejected with a value that is not an error: ${String(error)}`);
     }
-    if (!settled.rejected) throw new Error('The promise resolved, and a rejection was expected.');
-    if (!(settled.error instanceof Error))
-        throw new Error(`The promise rejected with a value that is not an error: ${String(settled.error)}`);
-    return settled.error.message;
-}
-
-/**
- * Runs an action that may throw and hands back what it threw.
- * @param action the call under test
- * @returns the error it threw, or undefined when it returned
- */
-export function failure(action: () => unknown): Error | undefined {
-    try {
-        action();
-    } catch (error) {
-        if (error instanceof Error) return error;
-        throw new Error(`The action threw a value that is not an error: ${String(error)}`);
-    }
-    return undefined;
+    throw new Error('The promise resolved, and a rejection was expected.');
 }
 
 /**
@@ -40,7 +31,7 @@ export function failure(action: () => unknown): Error | undefined {
  * @param shape the properties the compared object must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
+
 export function containing<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }
@@ -50,7 +41,7 @@ export function containing<T>(shape: NoInfer<Partial<T>>): T {
  * @param items the items the compared array must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
+
 export function containingAll<T>(items: NoInfer<T[]>): T[] {
     return expect.arrayContaining(items) as T[];
 }
@@ -60,7 +51,73 @@ export function containingAll<T>(items: NoInfer<T[]>): T[] {
  * @param part the text the compared string must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
+
 export function textContaining(part: string): string {
     return expect.stringContaining(part) as string;
+}
+
+/**
+ * Require a selected check to report the expected finding and pass after correction.
+ * @param repository the prepared test repository
+ * @param entry the defect, expected finding, and explicit correction
+ * @param scenario the repository's default correction
+ */
+export async function expectCheckCase(
+    repository: OwnedTestRepository,
+    entry: FindingCase,
+    scenario: RepositoryScenario,
+): Promise<void> {
+    const outcome = await runCheckCase(repository.root, entry, repository.environment, repository.run);
+    expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+    const failed = JSON.parse(outcome.stdout) as RunReport;
+    expect(failed.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+    expect(failed.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
+    const correction = await runCheckCase(
+        repository.root,
+        buildCorrection(entry, scenario),
+        repository.environment,
+        repository.run,
+    );
+    expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+    const accepted = JSON.parse(correction.stdout) as RunReport;
+    expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
+}
+
+/**
+ * Require a delivered check to report its test finding and pass after its explicit correction.
+ * @param installation the installed CLI command
+ * @param options the isolated repository and command environment
+ * @param check the defect, exact finding fields, and correction
+ */
+export async function expectPackageCheck(
+    installation: Pick<Consumer, 'command'>,
+    options: ConsumerOptions,
+    check: PackageCheckCase,
+): Promise<void> {
+    const args = [...installation.command, 'check', check.path, '--only', check.only, '--json'];
+    if (check.defect !== undefined) writeFileSync(join(options.cwd, check.path), check.defect);
+    const failed = await runTestCommand(args, options);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const report = JSON.parse(failed.stdout) as RunReport;
+    expect(report.skips).toStrictEqual([]);
+    expect(report.checks).toMatchObject([
+        {
+            check: check.only,
+            status: 'failed',
+            findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
+        },
+    ]);
+    if (check.isNpm !== undefined) {
+        const executable = toPosix(relative(realpathSync(options.cwd), report.checks[0]!.command![0]!));
+        expect(executable.startsWith('.gspot/node_modules/')).toBe(check.isNpm);
+    }
+    if ('fix' in check) {
+        const fixed = await runTestCommand([...args, '--fix'], options);
+        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    } else writeFileSync(join(options.cwd, check.path), check.corrected);
+    const passed = await runTestCommand(args, options);
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    const accepted = JSON.parse(passed.stdout) as RunReport;
+    expect(accepted.skips).toStrictEqual([]);
+    expect(accepted.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
 }

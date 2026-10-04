@@ -1,11 +1,12 @@
 import { createRule } from '#plugin/definition.ts';
 import { join, dirname, resolve } from 'node:path';
 import { EXTENSIONS } from '#plugin/config/rules.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { lintedFile, isIndexFile } from '#plugin/files.ts';
+import { getDeclarationNames } from '#plugin/syntax.ts';
+import { lintedPath, isIndexFile } from '#plugin/files.ts';
+import type { ExportSources } from '#plugin/types/rules.ts';
 import { parse } from '@typescript-eslint/typescript-estree';
 import { statSync, existsSync, readFileSync } from 'node:fs';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function moduleFile(importer: string, source: string): string | undefined {
     if (!source.startsWith('.')) return undefined;
@@ -21,56 +22,29 @@ function moduleFile(importer: string, source: string): string | undefined {
 }
 
 // Each branch tracks its ancestors so recursive star exports terminate without hiding sibling exports.
-function exportsOf(path: string, visited: Set<string>): Set<string> {
-    if (visited.has(path)) return new Set();
-    const ancestors = new Set([...visited, path]);
+function readModuleExports(path: string, sources: ExportSources): Set<string> {
+    if (sources.ancestors.has(path)) return new Set();
+    const ancestors = new Set([...sources.ancestors, path]);
     // Without a root, the parser guesses one from every configuration the process loaded, and fails on two.
-    const program = parse(readFileSync(path, 'utf8'), {
-        jsx: /\.[jt]sx$/u.test(path),
-        tsconfigRootDir: dirname(path),
-    });
+    let program = sources.modules.get(path);
+    if (program === undefined) {
+        program = parse(readFileSync(path, 'utf8'), {
+            jsx: /\.[jt]sx$/u.test(path),
+            tsconfigRootDir: dirname(path),
+        });
+        sources.modules.set(path, program);
+    }
     return new Set(
-        program.body.flatMap((statement) => namesOf(path, statement, ancestors)).filter((name) => name !== 'default'),
+        program.body
+            .flatMap((statement) => getExportNames(path, statement, { ...sources, ancestors }))
+            .filter((name) => name !== 'default'),
     );
 }
 
-function bindingNames(pattern: TSESTree.Node): string[] {
-    switch (pattern.type) {
-        case AST_NODE_TYPES.Identifier: {
-            return [pattern.name];
-        }
-        case AST_NODE_TYPES.ArrayPattern: {
-            return pattern.elements.flatMap((element) => (element === null ? [] : bindingNames(element)));
-        }
-        case AST_NODE_TYPES.ObjectPattern: {
-            return pattern.properties.flatMap((property) =>
-                bindingNames(property.type === AST_NODE_TYPES.RestElement ? property.argument : property.value),
-            );
-        }
-        case AST_NODE_TYPES.AssignmentPattern: {
-            return bindingNames(pattern.left);
-        }
-        case AST_NODE_TYPES.RestElement: {
-            return bindingNames(pattern.argument);
-        }
-        default: {
-            return [];
-        }
-    }
-}
-
-function declaredNames(declaration: TSESTree.ExportNamedDeclaration['declaration']): string[] {
-    if (!declaration) return [];
-    if ('id' in declaration && declaration.id?.type === AST_NODE_TYPES.Identifier) return [declaration.id.name];
-    if (declaration.type === AST_NODE_TYPES.VariableDeclaration)
-        return declaration.declarations.flatMap((entry) => bindingNames(entry.id));
-    return [];
-}
-
-function namesOf(file: string, statement: TSESTree.Statement, visited = new Set<string>()): string[] {
+function getExportNames(file: string, statement: TSESTree.Statement, sources: ExportSources): string[] {
     if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration)
         return [
-            ...declaredNames(statement.declaration),
+            ...getDeclarationNames(statement.declaration),
             ...statement.specifiers.map((specifier) =>
                 specifier.exported.type === AST_NODE_TYPES.Identifier
                     ? specifier.exported.name
@@ -80,34 +54,55 @@ function namesOf(file: string, statement: TSESTree.Statement, visited = new Set<
     if (statement.type !== AST_NODE_TYPES.ExportAllDeclaration || typeof statement.source.value !== 'string') return [];
     if (statement.exported !== null) return [statement.exported.name];
     const resolved = moduleFile(file, statement.source.value);
-    return resolved === undefined ? [] : [...exportsOf(resolved, visited)];
+    return resolved === undefined ? [] : [...readModuleExports(resolved, sources)];
+}
+
+// The existing typed program owns alias resolution and recursive export symbols; standalone rules keep relative resolution.
+function getTypedExports(
+    context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
+    statement: TSESTree.Statement,
+): string[] | undefined {
+    if (statement.type !== AST_NODE_TYPES.ExportAllDeclaration || statement.exported !== null) return undefined;
+    const { program, esTreeNodeToTSNodeMap: mapping } = context.sourceCode.parserServices ?? {};
+    if (!program || mapping === undefined) return undefined;
+    const checker = program.getTypeChecker();
+    const symbol = checker.getSymbolAtLocation(mapping.get(statement.source));
+    return symbol === undefined
+        ? undefined
+        : checker
+              .getExportsOfModule(symbol)
+              .map((entry) => entry.getName())
+              .filter((name) => name !== 'default');
 }
 
 export const noDuplicateExports = createRule<[], 'duplicate'>({
     name: 'no-duplicate-exports',
     meta: {
+        defaultOptions: [],
         type: 'problem',
         docs: {
             title: 'No duplicate barrel exports',
             example:
-                'If `a.ts` and `b.ts` both export `two`, an `index.ts` containing `export * from "./a";` and `export * from "./b";` reports `duplicate`. Keep the first export and replace the second with `export { three } from "./b";` when `three` is the distinct public value needed from that module.',
+                'If `a.ts` and `b.ts` both export `two`, an `index.ts` containing `export * from "./a";` and `export * from "./b";` reports `duplicate`. Export `two` from one module only, for example `export * from "./a"; export { other } from "./b";`.',
             level: 'recommended',
-            summary: 'Finds a name an index file exports twice, including through two export-all lines.',
+            description:
+                "Finds a name an index file exports twice, including through two export-all lines. With type information, sources use the project compiler's module resolution, including aliases. Without it, the rule follows relative sources.",
             why: 'Two exports of one name leave the public contract without a single clear owner.',
             fix: 'Export the name once, or alias one of the two so both are reachable.',
         },
         schema: [],
         messages: { duplicate: 'The index exports "{{name}}" twice. Export it once, or alias one of them.' },
     },
-    defaultOptions: [],
     create(context) {
-        const file = lintedFile(context);
-        if (file === undefined || !isIndexFile(file)) return {};
+        const file = lintedPath(context);
+        if (file === undefined || !isIndexFile(file.absolute)) return {};
         return {
             Program(node) {
                 const seen = new Set<string>();
+                const sources: ExportSources = { modules: new Map(), ancestors: new Set([file.absolute]) };
                 for (const statement of node.body)
-                    for (const name of namesOf(file, statement)) {
+                    for (const name of getTypedExports(context, statement) ??
+                        getExportNames(file.absolute, statement, sources)) {
                         if (seen.has(name)) context.report({ node: statement, messageId: 'duplicate', data: { name } });
                         seen.add(name);
                     }

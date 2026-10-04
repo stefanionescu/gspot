@@ -1,25 +1,33 @@
 ---
-title: Overview
-description: What gspot sets up in a repository, and where to read more.
+title: What gspot does
+description: Understand configurations, checks, settings, and the files gspot manages.
 ---
 
-gspot lints AI-generated code and installs rules for AI coding agents. Git hooks and CI run
-the checks, and a finding stops the commit.
+gspot sets up linters and checks for the languages in your repository. Git hooks run checks before commits and pushes. A finding stops the Git operation. CI runs checks again and fails its job when findings remain.
 
-`gspot init` reads your repository, shows a plan, and sets up four things:
+`gspot init` detects languages, frameworks, dependencies, and shared file types. It shows the configurations, tool requirements, and files it proposes before writing them. Your choices live in `gspot.toml`.
 
-| What                                                                                                                                                | Where            | Read more                                   |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
-| Configuration for the standard linters of your languages, such as ESLint, Ruff, and ShellCheck, with their npm and Python tools pinned in `.gspot/` | `.gspot/config/` | [Generated files](/guides/generated-files/) |
-| Checks of its own for what agents write again and again: wrappers, one-file folders, names such as `utils`, and copied code                         | `gspot.toml`     | [Fix findings](/guides/findings/)           |
-| Rules for coding agents, linked from `AGENTS.md`                                                                                                    | `.gspot/rules/`  | [Coding agents](/guides/agents/)            |
-| Git hooks, and a CI job when you ask for one                                                                                                        | `.gspot/hooks/`  | [Hooks and CI](/guides/hooks/)              |
+## Levels
 
-The default level, `recommended`, finds defects. `all` adds the house style. Your choices live
-in `gspot.toml`, described in [the policy file](/guides/customize/).
+| Level                   | What it checks                                                                                                                                  | Examples                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `recommended` (default) | Correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts                                | `bash/syntax`, `typescript/tsc`        |
+| `all`                   | Everything at `recommended`, plus conventions for vocabulary, naming, architecture, documentation, declaration order, API style, and complexity | `naming/paths`, `structure/lone-files` |
+
+At level `all`, gspot also reports unnecessary forwarding files and functions. Neither level enables experimental or preview rules. Use `gspot set level all` to select the additional conventions, or enable an individual check with `extra_checks`.
+
+## Concepts
+
+- A **configuration** is a built-in setup for a language, framework, library, platform, or concern. [Configuration reference](/reference/configurations/).
+- A **template** exports reusable configuration choices and policy for another repository. [Reuse templates](/guides/templates/).
+- **Settings** are values customized in `gspot.toml`. A **config file** is a tool's own configuration file. [Policy guide](/guides/policy/).
+- A **check** runs a tool or analyzes source and reports findings. [Check reference](/reference/checks/).
+- A **rule** is an individual lint instruction or an instruction for a coding agent. [ESLint plugin](/reference/plugin/) and [coding agents](/guides/agents/).
+- A **stage** determines when a check runs: commit, push, message, or manual. [Hooks](/guides/hooks/).
+- A **scope** identifies a project inside a repository. It has its own configurations and settings. [Monorepos](/guides/monorepos/).
+- A **runner** launches gspot through mise or a package manager. [Runners](/guides/runners/).
+- A **managed block** is a marked section gspot can update while keeping the rest of the file. A **pointer** is an editor-facing config file that refers to generated configuration. [Generated files](/guides/generated-files/).
 
 ## Next steps
 
-- [Install gspot](/guides/install/).
-- Follow the [quickstart](/guides/quick-start/): an agent's commit is rejected, then fixed.
-- Add gspot to an [existing repository](/guides/existing-repository/).
+Read the [requirements](/guides/requirements/), choose an [installation method](/guides/install/), and follow a quickstart for [TypeScript](/guides/quickstart/typescript/), [Python](/guides/quickstart/python/), or [Swift](/guides/quickstart/swift/).

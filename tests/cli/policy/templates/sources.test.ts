@@ -1,0 +1,30 @@
+// Where a template is fetched from: an https address as given, a GitHub shorthand mapped to its raw file, never http.
+import { test, spyOn, expect } from 'bun:test';
+import { getTemplate } from '#cli/policy/templates.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { TEMPLATE } from '#tests/config/cli/policy/templates-sources.ts';
+import { RAW_HOST, TEMPLATE_FILE } from '#cli/config/policy/templates.ts';
+
+test.each([
+    ['https://example.com/house.template.toml', 'https://example.com/house.template.toml'],
+    ['github:acme/policies', `${RAW_HOST}/acme/policies/HEAD/${TEMPLATE_FILE}`],
+    ['github:acme/policies/team/house.template.toml@v2', `${RAW_HOST}/acme/policies/v2/team/house.template.toml`],
+])('%s is fetched from %s', async (source, address) => {
+    using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(TEMPLATE));
+    const template = await getTemplate(source, '.');
+    expect(fetched.mock.calls[0]?.[0]).toBe(address);
+    expect(template.tables.configurations).toStrictEqual(['bash']);
+});
+
+test('a template address that answers 404 is refused with its status', async () => {
+    using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
+    expect(await rejection(getTemplate('github:acme/missing', '.'))).toContain('answered 404');
+    expect(fetched).toHaveBeenCalledTimes(1);
+});
+
+test('a template address over plain http is refused before any request', async () => {
+    using fetched = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No request is expected.'));
+    // eslint-disable-next-line unicorn/prefer-https -- reason: The test hands the reader the plain http address it refuses.
+    expect(await rejection(getTemplate('http://example.com/house.template.toml', '.'))).toContain('https, not http');
+    expect(fetched).not.toHaveBeenCalled();
+});

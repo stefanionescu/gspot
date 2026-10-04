@@ -1,32 +1,24 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
+import { readFileSync } from 'node:fs';
 import { addAbortSignal } from 'node:stream';
-import { compact } from '#cli/platform/text.ts';
+import { resolve, relative } from 'node:path';
+import { compact } from '#cli/platform/objects.ts';
 import { progress } from '#cli/output/reporter.ts';
-import { HOOKS } from '#cli/config/commands/check.ts';
-import { checkCommand } from '#cli/commands/check/run.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { EXIT_ERROR } from '#cli/config/platform/platform.ts';
-import { assertPushOptions } from '#cli/commands/check/push.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { printResult } from '#cli/output/messages.ts';
+import { checkTree } from '#cli/commands/check/tree.ts';
+import type { CommandResult } from '#cli/types/output.ts';
+import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import { Option, Command } from '@commander-js/extra-typings';
+import { PUSH_ARGUMENTS } from '#cli/config/commands/options.ts';
+import { getStaged } from '#cli/repository/revisions/changes.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { findRoot, isGitRepository } from '#cli/repository/root.ts';
+import { checkOutRevision } from '#cli/execution/snapshot/revision.ts';
+import type { Program, GlobalFlags } from '#cli/types/commands/program.ts';
+import { HOOKS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
+import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
-import { Option, Command, InvalidArgumentError } from '@commander-js/extra-typings';
-import type { Program, GlobalFlags, CommandResult } from '#cli/types/commands/commands.ts';
-
-// Git gives the pre-push hook the remote name and the remote URL.
-const PUSH_ARGUMENTS = 2;
-
-class CheckCommand extends Command<[], Record<string, unknown>, GlobalFlags> {
-    override parseOptions(argv: string[]): {
-        operands: string[];
-        unknown: string[];
-    } {
-        const end = argv.indexOf('--');
-        return super.parseOptions(
-            argv.map((argument, index) =>
-                argument === '--changed' && (end === -1 || index < end) ? '--changed=' : argument,
-            ),
-        );
-    }
-}
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
 async function readPushInput(signal: AbortSignal): Promise<string> {
@@ -46,28 +38,79 @@ async function readPushInput(signal: AbortSignal): Promise<string> {
 // Turns the pre-push invocation into check options: Git's remote name and the object updates on standard input.
 async function pushOptions(options: CheckOptions, paths: string[], signal: AbortSignal): Promise<CheckOptions> {
     if (paths.length > 0 && paths.length !== PUSH_ARGUMENTS)
-        throw new InvalidArgumentError('Pre-push expects the remote name and URL supplied by Git.');
+        throw new GspotError('selection', ['Pre-push expects the remote name and URL supplied by Git.']);
     // A refused flag stops the run before it waits for input that a terminal may never send.
     assertPushOptions(options);
     const input = await readPushInput(signal);
-    return { ...options, paths: [], push: { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
+    return { ...options, paths: [], push: { stdin: input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
+}
+
+// Checks an exact snapshot of the staged index, with the report published to the repository.
+async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
+    if (options.fix)
+        throw new GspotError('selection', [
+            'Staged checks do not run fixers. Run gspot check --fix and stage the reviewed changes.',
+        ]);
+    if (options.changed !== undefined) throw new GspotError('selection', ['Choose --staged or --changed, not both.']);
+    const set = await getStaged(root, signal);
+    return checkOutRevision(
+        root,
+        { kind: 'index' },
+        async (checkout, tree) => {
+            const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
+            return checkTree(checkout, { ...options, cwd: checkout, paths }, signal, {
+                content: 'index',
+                installedRoot: root,
+                reference: tree,
+                staged: set,
+                reportRoot: root,
+            });
+        },
+        signal,
+    );
+}
+
+// Validate command input and dispatch the selected working tree or exact snapshot.
+async function checkCommand(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
+    let selected = options;
+    if (options.isDryRun && !options.fix) throw new GspotError('selection', ['--dry-run requires --fix.']);
+    if (options.stage === 'message' && options.messageFile !== undefined) {
+        const commitFile = resolve(options.cwd, options.messageFile);
+        selected = { ...options, messageFile: commitFile };
+        try {
+            readFileSync(commitFile, 'utf8');
+        } catch (error) {
+            throw new GspotError('selection', [`The commit message file ${commitFile} cannot be read.`], {
+                cause: error,
+            });
+        }
+    }
+    if (selected.push !== undefined) return await checkPush(root, { ...selected, push: selected.push }, signal);
+    return await (selected.staged ? checkStaged(root, selected, signal) : checkTree(root, selected, signal));
 }
 
 // Runs check, or reports the cancellation when the signal fired before every selected content was checked.
-async function checkedCommand(
+async function runCancelable(
     options: CheckOptions,
     paths: string[],
     isPush: boolean,
     signal: AbortSignal,
 ): Promise<CommandResult> {
     try {
+        const root = findRoot(options.cwd);
+        if ((options.staged || isPush || options.changed !== undefined) && !isGitRepository(root))
+            throw new GspotError('selection', ['Revision selection requires a Git repository.']);
         const selected = isPush ? await pushOptions(options, paths, signal) : options;
-        return await checkCommand(selected, signal);
+        return await checkCommand(root, selected, signal);
     } catch (error) {
         if (!signal.aborted) throw error;
         return {
             text: 'Check canceled before all selected content was checked.\n',
-            json: { error: 'canceled', exitCode: EXIT_ERROR },
+            json: {
+                error: 'canceled',
+                message: 'Check canceled before all selected content was checked.',
+                exitCode: EXIT_ERROR,
+            },
             exitCode: EXIT_ERROR,
         };
     }
@@ -76,34 +119,40 @@ async function checkedCommand(
 // Runs check with an abort signal wired to the termination signals for the duration of the run.
 async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags): Promise<void> {
     const controller = new AbortController();
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The signal handlers and the finally block all call this one cancellation.
+    const hook = flags.hook ?? HOOKS.find((name) => name === environmentVariables()['GSPOT_HOOK']);
+
     const cancel = (): void => {
         controller.abort();
     };
     process.on('SIGINT', cancel);
     process.on('SIGTERM', cancel);
     try {
-        await printCommand((cwd) => {
-            const options: CheckOptions = {
-                cwd,
-                staged: flags.staged === true,
-                fix: flags.fix === true,
-                isDryRun: flags.dryRun === true,
-                skips: flags.skip ?? [],
-                quiet: global.quiet === true,
-                verbose: global.verbose === true,
-                paths,
-                ...compact({
-                    only: flags.only,
-                    changed: flags.changed === true ? undefined : flags.changed,
-                    // A message file is what the commit-msg hook passes, so it selects the message checks.
-                    stage: flags.messageFile === undefined ? flags.hook : 'message',
-                    messageFile: flags.messageFile,
-                    onResult: global.json === true ? undefined : progress(process.stdout, global.quiet === true),
-                }),
-            };
-            return checkedCommand(options, paths, flags.push === true, controller.signal);
-        }, global);
+        const cwd = resolve(global.C ?? process.cwd());
+
+        // Git passes a message file to commit-msg; an explicit file selects the same stage.
+        const options: CheckOptions = {
+            cwd,
+            staged: flags.staged === true,
+            fix: flags.fix === true,
+            isDryRun: flags.dryRun === true,
+            skips: flags.skip,
+            quiet: global.quiet === true,
+            verbose: global.verbose === true,
+            paths,
+            ...compact({
+                hook,
+                only: flags.only,
+                changed: flags.changed === true ? flags.base : undefined,
+                messageFile: flags.messageFile,
+                onResult: global.json === true ? undefined : progress(process.stdout, global.quiet === true),
+            }),
+        };
+        if (hook === 'pre-commit') {
+            options.stage = 'commit';
+            options.staged = true;
+        }
+        if (flags.messageFile !== undefined || hook === 'commit-msg') options.stage = 'message';
+        printResult(await runCancelable(options, paths, hook === 'pre-push', controller.signal));
     } finally {
         process.removeListener('SIGINT', cancel);
         process.removeListener('SIGTERM', cancel);
@@ -115,10 +164,10 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
  * @param program the commander program
  */
 export function registerCheck(program: Program): void {
-    const command = new CheckCommand('check').copyInheritedSettings(program);
+    const command = new Command<[], CheckFlags, GlobalFlags>('check').copyInheritedSettings(program);
     program.addCommand(command);
     command
-        .argument('[paths...]')
+        .argument('[paths...]', 'Repository files or folders to check; omit to check all applicable inputs')
         .summary('Run the checks')
         .description(
             'Run the selected checks and print each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.',
@@ -128,16 +177,17 @@ export function registerCheck(program: Program): void {
             '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
         .option('--only <checks...>', 'Run only these checks')
-        .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
-        .option('--staged', 'Check the staged files, as the commit hook does')
-        .option(
-            '--changed [ref]',
-            'Check the files changed from the upstream or default branch, or from --changed=<ref>',
+        .option('--staged', 'Check staged files in an exact snapshot of the index')
+        .option('--changed', 'Check files changed from the upstream or default branch')
+        .addOption(
+            new Option('--base <ref>', 'Compare changed files against this Git reference')
+                .default(CHECK_FLAG_DEFAULTS.base, 'upstream or default branch')
+                .implies({ changed: true }),
         )
         .option('--fix', 'Run every fixer, then run the checks again')
         .option('--dry-run', 'With --fix, print the diff of each fix and write nothing')
         .addOption(new Option('--hook <hook>', 'Run the checks of one Git hook, as that hook does').choices(HOOKS))
-        .option('--skip <checks...>', 'Skip these checks for this run')
+        .option('--skip <checks...>', 'Skip these checks for this run', CHECK_FLAG_DEFAULTS.skip)
         .addOption(new Option('--message-file <path>', 'Check this commit message file, as the commit-msg hook does'))
         .action(async (paths, flags, command) => {
             await runCheck(paths, flags, command.optsWithGlobals());

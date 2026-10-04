@@ -1,102 +1,188 @@
-import { removePackages } from '#cli/tools/vale.ts';
-import type { Generated } from '#cli/types/generation/generation.ts';
-import { getOwnership, preserveMode } from '#cli/lifecycle/ownership/owner.ts';
-import { VERSION_FILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
-import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
-import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-
-function configurationPlans(owner: Owner, generated: Generated, canReplace: boolean) {
-    const plans: { plan: Planned; package: boolean }[] = [];
-    for (const merge of generated.merges) {
-        plans.push({
-            package: false,
-            plan: owner.proposeMerge(merge.path, merge.format, merge.changes, canReplace),
-        });
-    }
-    for (const output of generated.configurations) {
-        plans.push({
-            package: output.path === 'package.json',
-            plan: owner.proposeMerge(output.path, output.format, output.changes, true),
-        });
-    }
-    return plans;
-}
+import { isDeepStrictEqual } from 'node:util';
+import { assertNoProblems } from '#cli/policy/read.ts';
+import type { Read } from '#cli/types/platform/root.ts';
+import { removeValePackages } from '#cli/tools/vale.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { packageLockDrift } from '#cli/tools/npm/project.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
+import { pythonLockDrift } from '#cli/tools/python/project.ts';
+import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
+import { writeVersionPin } from '#cli/lifecycle/version-pin.ts';
+import type { Generated } from '#cli/types/generation/output.ts';
+import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
+import { CONFLICT_MARKERS } from '#cli/config/lifecycle/output.ts';
+import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
+import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
+import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
+import type { Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/output.ts';
+import { proposeBlock, proposeMerge, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { VALE_CONFIG, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 // Both writing and pruning report preserved files through the same ownership result.
 function recordPreserved(report: ApplyReport, plans: Planned[]): void {
     const preserved = plans.filter((plan) => plan.status === 'preserved');
     report.preserved.push(...preserved.map((plan) => plan.path));
-    for (const plan of preserved) report.notes.push(`preserved edited or unowned ${plan.path}`);
+    for (const plan of preserved)
+        report.notes.push(`gspot did not overwrite ${plan.path}; move it aside, then run gspot apply`);
 }
 
-// An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.
-function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['retained'], hasPython: boolean): void {
-    if (!retained.packages) owner.deleteInstallation('npm');
-    if (!hasPython) owner.deleteInstallation('python');
-    if (!retained.prose) removePackages(root);
+// An installation no selected configuration needs any more goes whole, and so do the Vale packages once nothing checks prose.
+function pruneInstallations(log: Log, root: string, retained: WriteRequest['retained']): void {
+    if (!retained.packages) deleteInstallation(log, 'npm');
+    if (!retained.python) deleteInstallation(log, 'python');
+    if (!retained.prose) removeValePackages(root);
 }
 
 // The text of `CLAUDE.md` lands after the block the batch wrote to `AGENTS.md`, and the file goes.
-function moveClaudeFile(owner: Owner, report: ApplyReport): void {
-    const moves = owner.proposeClaudeMove();
-    owner.applyPlans(moves);
+function moveClaudeFile(log: Log, report: ApplyReport): void {
+    const moves = proposeClaudeMove(log);
+    applyPlans(log, moves);
     if (moves.length > 0) report.removed.push('CLAUDE.md');
 }
 
-// Every plan is prepared before the owner writes the batch.
 /**
- * Publish and prune generated files using recorded ownership and current snapshots.
- * @param owner the lifecycle owner of the repository
- * @param request generated outputs, pruning policy, and reviewed originals
+ * Writes generated outputs and removes recorded outputs no configuration needs. Every plan is made before the first write.
+ * @param log the locked ownership context.
+ * @param request generated outputs, pruning policy, and reviewed originals.
  */
-export function writeGenerated(owner: Owner, request: WriteRequest): void {
-    const { root, rendered, report, retained, replace, regenerate } = request;
-    const configurations = configurationPlans(owner, rendered, replace !== undefined);
-    const authorized = new Map([...(regenerate ?? []), ...(replace ?? [])]);
-    const replacements = rendered.files.map((file) => {
+function writeGenerated(log: Log, request: WriteRequest): void {
+    const { root, generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
+    const configurations = generated.configurations.map((output) =>
+        proposeMerge(log, output.path, output.changes, true),
+    );
+    const authorized = new Map([...(conflictedOutputs ?? []), ...(reviewedOriginals ?? [])]);
+    const replacements = generated.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
-        // A reviewed original (replace) or a file a merge broke (regenerate) is replaced whatever its bytes are.
+        // A reviewed original or a file with merge conflict markers is replaced whatever its bytes are.
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
         if (file.executable === true) mode = EXECUTABLE_FILE;
-        const replacement = preserveMode({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
-        return owner.proposeReplacement(file.path, replacement, kind, read !== undefined, read);
+        const replacement = preserveMode({ bytes: Buffer.from(file.content), mode }, log.files.read(file.path));
+        return proposeReplacement(log, {
+            path: file.path,
+            next: replacement,
+            kind,
+            canReplace: read !== undefined,
+            expected: read,
+        });
     });
-    const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
-    const generated = [...replacements, ...blocks, ...configurations.map(({ plan }) => plan)];
+    const blocks = generated.blocks.map((block) => proposeBlock(log, block.path, block.block, block.style));
+    const generatedPlans = [...replacements, ...blocks, ...configurations];
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
-    const expected = new Set([
-        'gspot.toml',
-        VERSION_FILE,
-        '.gitignore',
-        'CLAUDE.md',
-        ...generated.map(({ path }) => path),
-    ]);
+    const expected = new Set([...RETAINED_PATHS, ...outputPaths(generated), 'CLAUDE.md']);
     // Pruning restores only recorded outputs that no selected owner still needs.
-    const recorded = new Set(
-        getOwnership(root)
-            .files.filter((entry) => ['hook', 'export'].includes(entry.kind))
-            .map((entry) => entry.path),
-    );
-    const pruning = owner
-        .installedPaths()
-        .filter((path) => !(expected.has(path) || recorded.has(path)))
-        .map((path) => owner.proposeRestoration(path));
-    const plans = [...generated, ...pruning];
+    const pruning = log.state.files
+        .filter(
+            (entry) => entry.installed !== undefined && !expected.has(entry.path) && !RETAINED_KINDS.has(entry.kind),
+        )
+        .map((entry) => proposeRestoration(log, entry.path));
+    const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
-    if (replace !== undefined && conflicts.length > 0)
+    if (reviewedOriginals !== undefined && conflicts.length > 0)
         throw new Error(
-            `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
+            `These files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside, then run gspot apply. Existing tool configuration is unchanged.`,
         );
-    owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
-    moveClaudeFile(owner, report);
-    pruneInstallations(owner, root, retained, expected.has(TOOL_PYTHON_PROJECT));
+    applyPlans(
+        log,
+        plans.filter((plan) => plan.status !== 'preserved'),
+    );
+    if (request.agentRulesEnabled) moveClaudeFile(log, report);
+    pruneInstallations(log, root, retained);
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
-    report.updated.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
-    for (const { plan, package: isPackage } of configurations) {
-        if (plan.status === 'changed') (isPackage ? report.updated : report.written).push(plan.path);
-    }
+    report.updated.push(
+        ...[...blocks, ...configurations].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
+    );
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
+}
+
+function assertPolicyUnchanged(log: Log, session: Session): void {
+    if (log.files.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
+        throw new Error('The gspot.toml file changed while gspot was running. Run the command again.');
+}
+
+// A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again.
+function conflictedOutputs(log: Log, generated: Generated): Map<string, Read> {
+    const conflicted = new Map<string, Read>();
+    for (const file of generated.files) {
+        const current = log.files.read(file.path);
+        if (current !== undefined && CONFLICT_MARKERS.test(current.bytes.toString('utf8')))
+            conflicted.set(file.path, current);
+    }
+    return conflicted;
+}
+
+/**
+ * Apply generated plans through the repository's lifecycle owner.
+ * @param session the configuration and repository reads.
+ * @param log the command's locked ownership context.
+ * @param reviewedOriginals reviewed originals authorized for replacement.
+ * @param prepared the generated outputs whose locks were resolved before committing policy.
+ * @returns generated changes and preserved files.
+ */
+export function writeOutputs(
+    session: Session,
+    log: Log,
+    reviewedOriginals?: ReadonlyMap<string, Read>,
+    prepared?: Generated,
+): ApplyReport {
+    // Generation requires a valid policy. Refuse errors before writing proposed files.
+    assertNoProblems(session.policyFiles);
+
+    assertPolicyUnchanged(log, session);
+    const report: ApplyReport = {
+        preserved: [],
+        written: [],
+        unchanged: [],
+        removed: [],
+        updated: [],
+        notes: [],
+    };
+    const generated = prepared ?? emitAll(session);
+    assertPolicyUnchanged(log, session);
+    report.notes.push(...generated.notes);
+    const paths = outputPaths(generated);
+    writeGenerated(log, {
+        agentRulesEnabled: session.policyFiles.policy.agentRules.enabled,
+        root: session.root,
+        generated,
+        report,
+        retained: {
+            prose: paths.has(VALE_CONFIG),
+            packages: paths.has(TOOL_PACKAGE_PROJECT),
+            python: paths.has(TOOL_PYTHON_PROJECT),
+        },
+        reviewedOriginals,
+        conflictedOutputs: conflictedOutputs(log, generated),
+    });
+    const dependenciesChanged = generated.files.some(
+        (file) =>
+            report.written.includes(file.path) &&
+            (file.kind === 'lock' ||
+                file.kind === 'runner' ||
+                [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT].includes(file.path)),
+    );
+    const staleLocks = [
+        packageLockDrift(session.root, generated.files),
+        pythonLockDrift(session.root, generated.files),
+    ].some((lock) => lock?.kind !== undefined);
+    if (dependenciesChanged || staleLocks) report.notes.push('Tool dependencies need installation. Run: gspot install');
+    if (report.preserved.length > 0)
+        throw new Error(
+            `These edited files were not overwritten by gspot: ${report.preserved.join(', ')}. Move them aside and run gspot apply again. The version pin is unchanged.`,
+        );
+    writeVersionPin(log);
+    const rules = Object.fromEntries(
+        generated.files.flatMap((file) => (file.ruleData === undefined ? [] : [[file.path, file.ruleData]])),
+    );
+    if (!isDeepStrictEqual(log.state.rules ?? {}, rules)) {
+        if (Object.keys(rules).length === 0) delete log.state.rules;
+        else log.state.rules = rules;
+        log.save();
+    }
+    return report;
 }

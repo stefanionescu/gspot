@@ -1,11 +1,11 @@
 // Moving `CLAUDE.md` into `AGENTS.md`: its own text goes to the end of `AGENTS.md`, and the file goes.
-import { blockSpan } from '#cli/generation/markers.ts';
+import type { Read } from '#cli/types/platform/root.ts';
 import { identify } from '#cli/lifecycle/ownership/log.ts';
-import type { Read } from '#cli/types/platform/platform.ts';
+import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Planned } from '#cli/types/lifecycle/output.ts';
 import { MOVED_HEADING } from '#cli/config/lifecycle/ownership.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
 
 // The text of a file without the gspot block, trimmed; a link holds none of its own.
 function authoredText(file: Read): string {
@@ -22,7 +22,7 @@ function authoredText(file: Read): string {
  * @returns the plans, none when there is no `CLAUDE.md`
  */
 export function proposeClaudeMove(log: Log): Planned[] {
-    const claude = log.files.readEntry('CLAUDE.md');
+    const claude = log.files.readKeepingLinks('CLAUDE.md');
     if (claude === undefined) return [];
     const removal: Planned = {
         path: 'CLAUDE.md',
@@ -31,7 +31,7 @@ export function proposeClaudeMove(log: Log): Planned[] {
         status: 'changed',
     };
     const moved = authoredText(claude);
-    const agents = log.files.readEntry('AGENTS.md');
+    const agents = log.files.readKeepingLinks('AGENTS.md');
     const text = agents === undefined || agents.isLink === true ? '' : agents.bytes.toString('utf8');
     if (moved === '' || text.includes(moved)) return [removal];
     const head = text.trimEnd() === '' ? '' : `${text.trimEnd()}\n\n`;

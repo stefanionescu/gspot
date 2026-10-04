@@ -1,0 +1,1 @@
+export const MANIFEST = '{"private":true,"packageManager":"bun@1.3.11"}\n';

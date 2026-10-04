@@ -1,0 +1,4 @@
+[configuration]
+title = "Engineering guidance"
+always_selected = true
+description = "Shared instructions for coding agents, engineering work, and documentation. The agent_rules setting controls their installation."

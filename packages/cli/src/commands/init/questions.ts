@@ -1,27 +1,74 @@
-import type { Manifest } from '#cli/types/kits.ts';
+import which from 'which';
+import { note } from '#cli/output/messages.ts';
+import { readText } from '#cli/platform/source.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { readGitSetting } from '#cli/platform/git.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
-import type { Tooling } from '#cli/types/repository/repository.ts';
-import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
-import { askChoice, askChoices, askConfirmation } from '#cli/commands/prompts.ts';
-import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { isInteractive } from '#cli/platform/environment.ts';
+import { select, confirm, multiselect } from '@clack/prompts';
+import type { Tooling } from '#cli/types/repository/inventory.ts';
+import type { Choice, InitAnswers } from '#cli/types/commands/init.ts';
+import { CI_CHOICES, RUNNER_CHOICES } from '#cli/config/commands/init.ts';
+import type { InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
-const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
-    { value: 'mise', label: `mise (${MISE_CONFIG_PATH})` },
-    { value: 'bun', label: 'bun (package.json scripts)' },
-    { value: 'npm', label: 'npm (package.json scripts)' },
-    { value: 'pnpm', label: 'pnpm (package.json scripts)' },
-    { value: 'yarn', label: 'yarn (package.json scripts)' },
-    { value: 'none', label: 'none' },
-];
+// Flags and --yes answer initialization questions without opening a terminal.
+function requireTerminal(question: string, flag: string): void {
+    if (isInteractive()) return;
+    const instruction =
+        flag === '--yes' ? 'Pass --yes to accept the plan.' : `Pass ${flag}, or --yes to accept every default.`;
+    throw new GspotError('prompt', `${question} There is no terminal to ask in. ${instruction}`);
+}
+
+function toOptions<T extends string>(choices: Choice<T>[]): Parameters<typeof select<T>>[0]['options'] {
+    return choices.map(({ value, label, hint }) => ({
+        value,
+        label,
+        ...(hint === undefined ? {} : { hint }),
+    })) as Parameters<typeof select<T>>[0]['options'];
+}
+
+async function askChoice<T extends string>(
+    question: string,
+    flag: string,
+    choices: Choice<T>[],
+    initial: T,
+    useDefaults: boolean,
+): Promise<T> {
+    if (useDefaults) return initial;
+    requireTerminal(question, flag);
+    const answer = await select<T>({ message: question, options: toOptions(choices), initialValue: initial });
+    if (typeof answer === 'symbol') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
+    return answer;
+}
+
+async function askChoices<T extends string>(
+    question: string,
+    flag: string,
+    choices: Choice<T>[],
+    initial: T[],
+): Promise<T[]> {
+    if (!isInteractive()) {
+        note(`Selected: ${initial.length === 0 ? 'none' : initial.join(', ')}. Change with ${flag}.`);
+        return initial;
+    }
+    const answer = await multiselect<T>({
+        message: question,
+        options: toOptions(choices),
+        initialValues: initial,
+        required: false,
+    });
+    if (typeof answer === 'symbol') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
+    note(`Selected: ${answer.length === 0 ? 'none' : answer.join(', ')}. Change with ${flag}.`);
+    return answer;
+}
 
 function detectCi(root: string, tooling: Tooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
     using files = openRoot(root);
-    if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
+    if (readText(root, '.gitlab-ci.yml') !== undefined) return 'gitlab';
     if (files.stat('.github/workflows')?.isDirectory() === true) return 'github';
     return undefined;
 }
@@ -36,51 +83,32 @@ function proposeCi(root: string, tooling: Tooling): InitAnswers['ci'] {
     return /^gitlab\.com[:/]/u.test(host) ? 'gitlab' : 'none';
 }
 
-async function askHooks(options: InitOptions): Promise<InitAnswers['hooks']> {
-    if (options.hooks !== undefined) return options.hooks;
-    return askChoice('Install Git hooks?', '--no-hooks', HOOK_CHOICES, 'gspot', options.yes);
-}
-
-async function askCi(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers['ci']> {
-    if (options.ci === 'none' || getLintJobs(root, tooling.ci).length > 0) return 'none';
-    if (options.ci !== undefined) return options.ci;
-    return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes);
-}
-
-async function askRules(options: InitOptions): Promise<boolean> {
-    if (options.rules !== undefined) return options.rules === 'yes';
-    return askConfirmation('Install the agent rules?', '--no-rules', true, options.yes);
-}
-
-async function askRunner(options: InitOptions, tooling: Tooling): Promise<InitAnswers['runner']> {
-    if (options.runner !== undefined) return options.runner;
-    return askChoice('Task runner?', '--no-runner', RUNNER_CHOICES, tooling.runner, options.yes);
-}
-
 /**
- * Asks which kits to install: what init selected starts selected, every other shipped configuration is offered.
+ * Asks which configurations to install: what init selected starts selected, every other shipped configuration is offered.
  * @param options the init flags
  * @param selection what init selected from detection and recommendations
- * @param manifests every kit manifest
- * @returns the kit ids the person kept, or undefined when the question was not asked
+ * @param manifests every configuration manifest
+ * @returns the configuration ids the person kept, or undefined when the question was not asked
  */
-export async function askKits(
+export async function askConfigurations(
     options: InitOptions,
     selection: InitSelection,
     manifests: Map<string, Manifest>,
 ): Promise<string[] | undefined> {
-    if (options.yes || options.kits !== undefined || options.profile !== undefined) return undefined;
+    if (options.yes || options.configurations !== undefined || options.template !== undefined) return undefined;
     const choices = manifests
         .values()
         .map((manifest) => {
-            const reason = selection.how.get(manifest.kit.name);
+            const reason = selection.how.get(manifest.configuration.name);
             const hint =
-                reason === 'required' ? 'required by another selected kit' : (reason ?? manifest.kit.description);
-            return { value: manifest.kit.name, label: manifest.kit.name, hint };
+                reason === 'required'
+                    ? 'required by another selected configuration'
+                    : (reason ?? manifest.configuration.description);
+            return { value: manifest.configuration.name, label: manifest.configuration.name, hint };
         })
         .toArray();
     const initial = [...selection.selectedIds];
-    const kept = await askChoices('Which kits?', '--kits <ids>', choices, initial, options.yes);
+    const kept = await askChoices('Which configurations?', '--configurations <ids>', choices, initial);
     const isUnchanged = kept.length === initial.length && kept.every((id) => selection.selectedIds.has(id));
     return isUnchanged ? undefined : kept;
 }
@@ -93,9 +121,42 @@ export async function askKits(
  * @returns the answers
  */
 export async function askQuestions(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers> {
-    const hooks = await askHooks(options);
-    const ci = await askCi(root, options, tooling);
-    const hasRules = await askRules(options);
-    const runner = await askRunner(options, tooling);
-    return { hooks, ci, isRules: hasRules, runner };
+    const hooks = options.hooks ?? (await askConfirmation('Install Git hooks?', '--no-hooks', true, options.yes));
+    const ci =
+        options.ci ??
+        (getLintJobs(root, tooling.ci).length > 0
+            ? 'none'
+            : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes));
+    const rules = options.rules ?? (await askConfirmation('Install the agent rules?', '--no-rules', true, options.yes));
+    const runner =
+        options.runner ??
+        (await askChoice(
+            'Task runner?',
+            '--no-task',
+            RUNNER_CHOICES,
+            which.sync('mise', { nothrow: true }) === null ? tooling.runner : 'mise',
+            options.yes,
+        ));
+    return { hooks, ci, rules, runner };
+}
+
+/**
+ * Asks an initialization confirmation after flags and defaults have been considered.
+ * @param question the question shown in a terminal
+ * @param flag the flag that answers without a terminal
+ * @param defaultAnswer the answer accepted by --yes
+ * @param useDefaults whether --yes accepts that answer
+ * @returns the accepted answer
+ */
+export async function askConfirmation(
+    question: string,
+    flag: string,
+    defaultAnswer: boolean,
+    useDefaults: boolean,
+): Promise<boolean> {
+    if (useDefaults) return defaultAnswer;
+    requireTerminal(question, flag);
+    const answer = await confirm({ message: question, initialValue: defaultAnswer });
+    if (typeof answer !== 'boolean') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
+    return answer;
 }

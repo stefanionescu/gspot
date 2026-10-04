@@ -1,13 +1,14 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
+import { memo } from '#cli/platform/memo.ts';
 import { parse } from '#cli/parsers/sql/pg.ts';
-import { codePoints } from '#cli/platform/code-points.ts';
-import { withoutVariables } from '#cli/parsers/sql/source.ts';
-import type { ReadCache } from '#cli/types/platform/platform.ts';
+import { codePoints } from '#cli/platform/text.ts';
+import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-const cache = new WeakMap<ReadCache, Map<string, Promise<SqlFile>>>();
+const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
 
-function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
+function statementView(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
     return { kind, fields: (statement.stmt[kind] ?? {}) as SqlNode, start };
@@ -18,8 +19,8 @@ function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
  * @param text the SQL text
  * @returns the statements, or the parse error with its position
  */
-async function parseFile(text: string): Promise<SqlFile> {
-    const prepared = withoutVariables(text);
+async function parseSqlText(text: string): Promise<SqlFile> {
+    const prepared = maskPsqlSyntax(text);
     const source = prepared.text;
     const variables = prepared.variables;
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
@@ -33,7 +34,7 @@ async function parseFile(text: string): Promise<SqlFile> {
     return {
         source,
         variables,
-        statements: statements.map((statement) => located(bytes, statement)),
+        statements: statements.map((statement) => statementView(bytes, statement)),
         error: undefined,
     };
 }
@@ -44,7 +45,7 @@ async function parseFile(text: string): Promise<SqlFile> {
  * @param offset the index into it
  * @returns the position
  */
-export function positionAt(text: string, offset: number): { line: number; column: number } {
+export function positionAt(text: string, offset: number): Pick<NonNullable<SqlFile['error']>, 'line' | 'column'> {
     const before = text.slice(0, offset);
     const line = before.split('\n').length;
     return { line, column: offset - before.lastIndexOf('\n') };
@@ -53,19 +54,15 @@ export function positionAt(text: string, offset: number): { line: number; column
 /**
  * Reuses a PostgreSQL file parse within one source read lifetime.
  * @param text the original SQL, including supported psql syntax
- * @param read the execution reads, omitted for standalone parsing
+ * @param reads the execution reads, omitted for standalone parsing
  * @returns statements and original diagnostic positions
  */
-export function sqlFile(text: string, read?: ReadCache): Promise<SqlFile> {
-    if (read === undefined) return parseFile(text);
-    let files = cache.get(read);
-    if (files === undefined) {
-        files = new Map();
-        cache.set(read, files);
-    }
+export function parseSqlFile(text: string, reads?: ReadCache): Promise<SqlFile> {
+    if (reads === undefined) return parseSqlText(text);
+    const files = memo(reads, SQL_MEMO);
     let parsed = files.get(text);
     if (parsed === undefined) {
-        parsed = parseFile(text);
+        parsed = parseSqlText(text);
         files.set(text, parsed);
     }
     return parsed;

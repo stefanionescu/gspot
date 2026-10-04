@@ -1,0 +1,51 @@
+[configuration]
+title = "React Native"
+requires = ["react"]
+recommends = ["typescript", "jest"]
+description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
+
+[detect]
+dependencies = ["react-native"]
+
+[files]
+filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "eas.json"]
+kinds = ["source"]
+
+[[tool]]
+name = "@react-native/eslint-plugin"
+kind = "library"
+version = "0.87.1"
+npm = "@react-native/eslint-plugin"
+
+[[tool]]
+name = "eslint-plugin-react-native"
+kind = "library"
+version = "5.0.0"
+npm = "eslint-plugin-react-native"
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+
+[[config.selectors]]
+level = "all"
+selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
+message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
+
+[[config.selectors]]
+level = "all"
+selector = "JSXOpeningElement[name.name=/^(FlatList|SectionList)$/]:not(:has(JSXAttribute[name.name='keyExtractor']))"
+message = "Give the list a keyExtractor, so a row keeps its state when the list changes."
+
+[[config.selectors]]
+level = "all"
+selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
+message = "A ScrollView renders every row at once. Render a list that grows through FlatList."
+
+[[config.selectors]]
+level = "all"
+selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
+message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."

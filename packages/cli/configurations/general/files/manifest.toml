@@ -1,0 +1,236 @@
+[configuration]
+title = "Configuration Files"
+always_selected = true
+requires = ["format"]
+recommends = ["spelling"]
+description = "Checks JSON, YAML, TOML, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
+
+[files]
+extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".properties", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib", ".webmanifest"]
+filenames = [".nvmrc", ".node-version", ".python-version", "_headers", "_redirects", ".env", ".dev.vars"]
+paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]
+kinds = ["source"]
+
+[[tool]]
+name = "taplo"
+version = "0.10.0"
+min_version = "0.9.0"
+mise = "taplo"
+brew = "taplo"
+cargo = "taplo-cli"
+# No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
+github = {name = "tamasfe/taplo", version = "0.10.0"}
+
+[[tool.replace]]
+file = "taplo.toml"
+
+[[tool.replace]]
+file = ".taplo.toml"
+
+[[tool]]
+name = "yamllint"
+version = "1.38.0"
+mise = "pipx:yamllint"
+pypi = "yamllint"
+brew = "yamllint"
+
+[[tool.replace]]
+file = ".yamllint"
+
+[[tool.replace]]
+file = ".yamllint.yml"
+
+[[tool.replace]]
+file = ".yamllint.yaml"
+
+[[tool]]
+name = "v8r"
+version = "6.1.0"
+mise = "npm:v8r"
+npm = "v8r"
+
+# v8r imports this optional peer when it loads ajv-draft-04. Private tool projects must install it.
+[[tool]]
+name = "ajv"
+kind = "library"
+version = "8.20.0"
+npm = "ajv"
+
+[[tool]]
+name = "dotenv-linter"
+version = "4.0.0"
+mise = "github:dotenv-linter/dotenv-linter"
+brew = "dotenv-linter"
+cargo = "dotenv-linter"
+github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
+
+[[tool]]
+name = "plutil"
+system = true
+crash_pattern = "couldn['’]t be opened"
+platforms = ["macos"]
+
+[[tool]]
+name = "xmllint"
+system = true
+
+[[config]]
+target = ".gspot/config/taplo.toml"
+tool = "taplo"
+
+[[config]]
+target = ".gspot/config/yamllint.yml"
+tool = "yamllint"
+rule_keys = ["rules"]
+
+[[config]]
+target = ".gspot/config/v8r.yml"
+tool = "v8r"
+
+[[check]]
+name = "taplo"
+title = "Parse TOML files"
+example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
+files = {extensions = [".toml"]}
+output = {format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
+summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
+why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
+help = "Fix the line taplo names."
+
+[[check]]
+name = "taplo-format"
+title = "Format TOML files"
+example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
+fix = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
+files = {extensions = [".toml"]}
+output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
+summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
+why = "One formatter keeps a diff about the values, not the spacing."
+help = "Run gspot check --fix."
+
+[[check]]
+name = "yamllint"
+title = "Lint YAML files"
+example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
+files = {extensions = [".yaml", ".yml"]}
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
+summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
+why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
+help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
+
+[[check]]
+name = "v8r"
+title = "Validate configuration schemas"
+example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
+level = "recommended"
+stage = "push"
+runs = "files"
+needs = ["network"]
+command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
+env = {V8R_CONFIG_FILE = "{config:v8r}"}
+files = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
+output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
+summary = "Validates every configuration file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
+why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
+help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
+
+[[check]]
+name = "dotenv-linter"
+title = "Lint environment files"
+example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
+fix = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
+files = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+) (?<rule>[A-Za-z]+): (?<message>.*)$"}
+summary = "Checks every tracked environment file: key format, duplicates, quoting, ordering, and trailing spaces."
+why = "A tracked environment file is a template other people copy; a malformed line there is copied into every machine."
+help = "Run gspot check --fix, or fix the line dotenv-linter names."
+
+[[check]]
+name = "env-example"
+title = "List every environment variable in the template"
+example = "Source code reading `API_URL` while the environment template omits that key reports a missing template entry. Add `API_URL=` to `.env.example` and document the required value without committing credentials."
+level = "recommended"
+stage = "push"
+runs = "scope"
+summary = "Checks that every environment variable the code reads appears in the environment template."
+why = "A variable missing from the template is the one a new machine lacks on its first run."
+help = "Add the key to the template (.env.example or the files under dotenv.templates), or stop reading it."
+
+[[check]]
+name = "plutil"
+title = "Parse property lists"
+example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
+level = "recommended"
+stage = "commit"
+runs = "files"
+platforms = ["macos"]
+command = ["plutil", "-lint", "{files}"]
+files = {extensions = [".plist", ".entitlements"]}
+output = {format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$"}
+summary = "Parses every property list and entitlements file with plutil."
+why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
+help = "Fix the element plutil names."
+
+[[check]]
+name = "xmllint"
+title = "Validate XML"
+example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["xmllint", "--noout", "{files}"]
+files = {extensions = [".xml", ".storyboard", ".xib"]}
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
+summary = "Parses every XML file, storyboard, and xib with xmllint."
+why = "Malformed XML is refused by the reader at the worst moment."
+help = "Fix the line xmllint names."
+
+[[setting]]
+name = "tools.yamllint.rules"
+type = "table"
+direction = "rule-options"
+off_values = ["disable"]
+summary = "Options per yamllint rule, by rule name; turning a rule off is gspot ignore --rule."
+
+[[setting]]
+name = "tools.taplo.formatting"
+type = "table"
+direction = "rule-options"
+summary = "Formatting options taplo takes, by option name, on top of the shared [format] settings."
+
+[[setting]]
+name = "tools.v8r.schemas"
+type = "list"
+direction = "neutral"
+default = []
+summary = "File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema."
+
+[[setting]]
+name = "dotenv.templates"
+type = "list"
+direction = "neutral"
+default = [".env.example", ".env.template", ".env.sample", ".dev.vars.example"]
+summary = "The environment template files every key the code reads must appear in."
+
+[[setting]]
+name = "dotenv.accessor"
+type = "string"
+direction = "neutral"
+default = ""
+summary = "The name of the function the code reads environment variables through, on top of process.env and os.environ; empty means those two alone."

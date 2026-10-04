@@ -1,11 +1,11 @@
 name: ci
-# Every pull request, merge group, and push to main runs the whole suite on Linux, macOS, and Windows. The tool and
-# acceptance tests are split into four shards per platform by file count.
+# Checks, documentation, and npm package tests run on Linux. CLI, plugin, and tool tests run on
+# Linux, macOS, and Windows. Tool tests split into four shards per system. Standalone archives run
+# on each of their five release targets.
 on:
     push:
         branches: [main]
     pull_request:
-    merge_group:
     workflow_dispatch:
     workflow_call:
 permissions:
@@ -17,10 +17,6 @@ jobs:
     check:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        permissions:
-            contents: read
-        env:
-            GITHUB_TOKEN: ${{ github.token }}
         defaults:
             run:
                 shell: bash
@@ -30,69 +26,72 @@ jobs:
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - name: Install mise and the pinned tools
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
-              with:
-                  version: '2026.8.8'
-                  cache: true
-            - name: Restore the package caches
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-              with:
-                  path: |
-                      ~/.bun/install/cache
-                      ~/.cache/uv
-                  key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
+            - name: Prepare the repository
+              uses: ./.github/actions/setup
             # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
             - name: Point origin/HEAD at the default branch
               run: git remote set-head origin "${DEFAULT_BRANCH}"
               env:
                   DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-            - name: Install the XML tools and zsh that doctor expects
-              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - name: Set up the repository
-              run: mise run --skip-tools setup
             - name: Install the repository checks
               id: install
-              run: mise run --skip-tools install
+              run: mise run install:checks
             - name: Check the types
-              run: mise run --skip-tools check:types
-            # The tracked pins of the kit tools must be what the manifests write.
+              run: mise run check:types
+            # The tracked pins of the configuration tools must be what the manifests write.
             - name: Check the test tool pins
-              run: mise run --skip-tools pin:test-tools && git diff --exit-code .mise/conf.d/test-tools.toml
+              run: mise run pin:test-tools && git diff --exit-code mise.test.toml
+            - name: Detect changed pin inputs
+              id: pin-inputs
+              shell: bash
+              run: |
+                  if ! git cat-file -e "${PIN_BASE}^{commit}" 2>/dev/null ||
+                     git diff --name-only "${PIN_BASE}" HEAD -- \
+                         packages/cli/configurations bun.lock packages/cli/package.json packages/eslint-plugin/package.json \
+                         scripts/pins.ts scripts/config/pins.ts scripts/types/pins.ts scripts/parsers/releases.ts \
+                         scripts/test-tools.ts scripts/config/test-tools.ts scripts/eslint-presets.ts \
+                         scripts/config/eslint-presets.ts scripts/parsers/npm.ts scripts/types/npm.ts \
+                         packages/cli/src/config/generation/eslint.ts packages/cli/src/generation/eslint/presets.ts \
+                         packages/cli/src/parsers/schema/eslint.ts | rg .; then
+                      echo 'changed=true' >> "$GITHUB_OUTPUT"
+                  fi
+              env:
+                  PIN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+            - name: Validate changed registry pins
+              if: steps.pin-inputs.outputs.changed == 'true'
+              run: mise run check:pins
             - name: Run the repository checks
-              run: mise run --skip-tools gspot -- check
+              run: mise exec -- gspot check
             - name: Run the manual checks
               if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              run: mise run --skip-tools gspot -- check --only docs/lychee-external security/codeql security/semgrep-registry
+              run: mise exec -- gspot check --only docs/lychee-external security/codeql security/semgrep-registry
             - name: Run doctor
               if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              run: mise run --skip-tools gspot -- doctor
+              run: mise exec -- gspot doctor
     docs:
         runs-on: ubuntu-24.04
         timeout-minutes: 20
-        env:
-            GITHUB_TOKEN: ${{ github.token }}
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - name: Install mise and the pinned tools
+            - name: Install mise
               uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
                   install: false
             - name: Install Bun and Node
               run: mise install bun node
-            - name: Set up the repository
-              run: mise run --skip-tools setup
+            - name: Install workspace dependencies
+              run: bun install --frozen-lockfile
             - name: Build the site
-              run: mise run --skip-tools build:docs
+              run: mise run build:docs
     package:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         env:
-            GITHUB_TOKEN: ${{ github.token }}
+            MISE_ENV: test
         defaults:
             run:
                 shell: bash
@@ -101,24 +100,53 @@ jobs:
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - name: Install mise and the pinned tools
+            - name: Prepare the repository
+              uses: ./.github/actions/setup
+            - name: Install the repository checks
+              run: mise run install:checks
+            - name: Test the packages
+              run: mise run test:package
+    binary:
+        name: standalone (${{ matrix.target }})
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - { os: ubuntu-24.04, target: linux-x64 }
+                    - { os: ubuntu-24.04-arm, target: linux-arm64 }
+                    - { os: macos-15-intel, target: darwin-x64 }
+                    - { os: macos-15, target: darwin-arm64 }
+                    - { os: windows-2025, target: windows-x64 }
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 30
+        defaults:
+            run:
+                shell: bash
+        steps:
+            - name: Check out the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - name: Prepare standalone build runtimes
               uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
                   version: '2026.8.8'
-                  cache: true
-            - name: Restore the package caches
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+                  install: false
+            - name: Prepare the repository
+              run: |
+                  mise install bun node
+                  mise run setup
+            - name: Test the standalone archive without JavaScript runtimes on PATH
+              run: mise run test:binary
+            - name: Retain the verified standalone archive
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
+                  name: gspot-binary-${{ matrix.target }}
                   path: |
-                      ~/.bun/install/cache
-                      ~/.cache/uv
-                  key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-            - name: Set up the repository
-              run: mise run --skip-tools setup
-            - name: Install the repository checks
-              run: mise run --skip-tools install
-            - name: Test the packages
-              run: mise run --skip-tools test:package
+                      packages/cli/dist-binaries/*.tar.gz
+                      packages/cli/dist-binaries/SHA256SUMS
+                  if-no-files-found: error
+                  retention-days: 7
     test:
         strategy:
             fail-fast: false
@@ -127,7 +155,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         timeout-minutes: 45
         env:
-            GITHUB_TOKEN: ${{ github.token }}
+            MISE_ENV: test
         defaults:
             run:
                 shell: bash
@@ -137,36 +165,14 @@ jobs:
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - name: Install mise and the pinned tools
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
-              with:
-                  version: '2026.8.8'
-                  cache: true
-            - name: Restore the package caches
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-              with:
-                  path: |
-                      ~/.bun/install/cache
-                      ~/.cache/uv
-                      ~/AppData/Local/uv/cache
-                  key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-            - name: Install Linux XML tools and zsh
-              if: runner.os == 'Linux'
-              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - name: Install Bash 5 on macOS, which ships Bash 3.2
-              if: runner.os == 'macOS'
-              run: brew install bash
-            - name: Set up the repository
-              run: mise run --skip-tools setup
-            - name: Extract Windows SwiftFormat executable
-              if: runner.os == 'Windows'
-              run: mise run --skip-tools ci:swiftformat
+            - name: Prepare the repository
+              uses: ./.github/actions/setup
             - name: Install the repository checks
-              run: mise run --skip-tools install
-            - name: Run the unit and integration tests
-              run: mise run --skip-tools test
-    tools-and-acceptance:
-        name: tools and acceptance (${{ matrix.platform }} ${{ matrix.shard }}/${{ matrix.shards }})
+              run: mise run install:checks
+            - name: Run the CLI and plugin tests
+              run: mise run test
+    tools:
+        name: tools (${{ matrix.platform }} ${{ matrix.shard }}/${{ matrix.shards }})
         strategy:
             fail-fast: false
             matrix:
@@ -186,7 +192,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         timeout-minutes: 90
         env:
-            GITHUB_TOKEN: ${{ github.token }}
+            MISE_ENV: test
             SHARD: ${{ matrix.shard }}/${{ matrix.shards }}
         defaults:
             run:
@@ -197,40 +203,17 @@ jobs:
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - name: Install mise and the pinned tools
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare the repository
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  cache: true
-            - name: Restore the package caches
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-              with:
-                  path: |
-                      ~/.bun/install/cache
-                      ~/.cache/uv
-                      ~/AppData/Local/uv/cache
-                  key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-            - name: Install Linux XML tools and zsh
-              if: runner.os == 'Linux'
-              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - name: Install Bash 5 on macOS, which ships Bash 3.2
-              if: runner.os == 'macOS'
-              run: brew install bash
+                  native-tests: 'true'
             # Defender scans every file a sandbox install writes, which makes those installs run for minutes.
             - name: Stop Windows Defender scanning on this disposable runner
               if: runner.os == 'Windows'
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
-            - name: Set up the repository
-              run: mise run --skip-tools setup
-            - name: Extract Windows SwiftFormat executable
-              if: runner.os == 'Windows'
-              run: mise run --skip-tools ci:swiftformat
             - name: Install the repository checks
               id: install
-              run: mise run --skip-tools install
+              run: mise run install:checks
             - name: Run this shard of the tool tests
-              run: mise run --skip-tools test:tools -- "--shard=${SHARD}"
-            - name: Run this shard of the acceptance tests
-              if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              run: mise run --skip-tools test:acceptance -- "--shard=${SHARD}"
+              run: mise run test:tools -- "--shard=${SHARD}"

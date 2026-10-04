@@ -1,21 +1,22 @@
-import { rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { memo } from '#cli/platform/memo.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Root } from '#cli/types/platform/platform.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { buildPlan } from '#cli/checks/language/swift/plan.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { prepareBuild } from '#cli/checks/language/swift/cache.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { buildPlan, scopeBuildFolder } from '#cli/checks/language/swift/plan.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';
 import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, MACOS_PRIVATE_PATH } from '#cli/config/checks/language/swift.ts';
 
-const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
+const BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
-function diagnostics(input: EngineInput, output: string, levels: Set<string>, named: string): Finding[] {
-    const root = input.root.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
+function diagnostics(input: EngineInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
+    const root = withoutPrivatePrefix(input.root);
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = DIAGNOSTIC.exec(line)?.groups;
@@ -23,11 +24,11 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
             return [groups];
         })
         .map((groups): Finding => {
-            // SwiftLint appends the rule ID in brackets; compiler diagnostics do not.
+            // SwiftLint appends the rule ID in parentheses; compiler diagnostics do not.
             const text = groups['text'] ?? '';
             const suffix = RULE_SUFFIX.exec(text)?.groups ?? {};
             const file = groups['file'] ?? '';
-            const normalized = file.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
+            const normalized = withoutPrivatePrefix(file);
             return findingAt(
                 input,
                 {
@@ -35,7 +36,7 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
                     line: Number(groups['line']),
                     column: Number(groups['column']),
                 },
-                suffix['rule'] ?? named,
+                suffix['rule'] ?? defaultRule,
                 suffix['text'] ?? text,
             );
         });
@@ -43,7 +44,7 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
 
 // The package manager hands the compiler its sources in a response file, written as @path. The analyzer reads the
 // file names from the log and opens no response file, so each one is written out in the log.
-function sourcesWritten(line: string, folder: string, files: Root): string {
+function expandResponseFiles(line: string, folder: string, files: Root): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
         const content = files.read(toPosix(relative(folder, path)));
@@ -51,39 +52,35 @@ function sourcesWritten(line: string, folder: string, files: Root): string {
     });
 }
 
-async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+async function runBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
-    using files = openBuildCache(plan.folder);
-    if (plan.scratch !== undefined) {
-        files.stat(toPosix(relative(plan.folder, plan.scratch)));
-        rmSync(plan.scratch, { recursive: true, force: true });
-    }
-    const source = prepareBuildSources(
-        input.root,
-        input.files.map((file) => file.path),
-        plan.folder,
-        files,
-    );
+    const prepared = prepareBuild(input, plan.folder);
+    using files = prepared.files;
+    const { source } = prepared;
+    if (plan.scratch !== undefined) files.removeTree(toPosix(relative(plan.folder, plan.scratch)));
     const cwd = join(source, input.scope);
-    const result = await runCheckCommand(input, plan.argv, { cwd });
+    const result = await runEngineTool(input, plan.argv, { cwd });
     // Match SwiftLint paths and expose response-file sources in the compiler log.
     const output = `${result.stdout}\n${result.stderr}`
         .split('\n')
-        .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(MACOS_PRIVATE_PATH, '$<before>/$<folder>/'))
+        .map((line) => withoutPrivatePrefix(expandResponseFiles(line, plan.folder, files)))
         .join('\n');
     const log = toPosix(relative(plan.folder, plan.log));
     files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
-    return { output, code: result.code };
+    return { output, code: result.code, source };
 }
 
 // Share the compiler log within a command; a later command must read the current source.
 function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    const { reads } = input;
-    const scopes = builds.get(reads) ?? new Map<string, Promise<SwiftBuildOutput>>();
-    builds.set(reads, scopes);
-    const running = scopes.get(plan.folder) ?? ranBuild(input, plan);
+    const scopes = memo(input.reads, BUILD_MEMO);
+    const running = scopes.get(plan.folder) ?? runBuild(input, plan);
     scopes.set(plan.folder, running);
     return running;
+}
+
+// Normalize both macOS cache paths and compiler-log arguments with the same spelling.
+function withoutPrivatePrefix(path: string): string {
+    return path.replaceAll(MACOS_PRIVATE_PATH, '$<before>/$<folder>/');
 }
 
 /**
@@ -93,8 +90,8 @@ function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBui
  */
 export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
     const plan = buildPlan(input);
-    const { output, code } = await buildOutput(input, plan);
-    const originalPaths = output.replaceAll(join(plan.folder, 'source'), input.root);
+    const { output, code, source } = await buildOutput(input, plan);
+    const originalPaths = output.replaceAll(withoutPrivatePrefix(source), input.root);
     const found = diagnostics(input, originalPaths, new Set(['error']), 'compiler');
     if (code === 0 || found.length > 0) return found;
     const detail = output.trim();
@@ -107,14 +104,14 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function analyze(input: EngineInput): Promise<Finding[]> {
+export async function swiftlintAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = buildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const config = join(input.root, DOT_GSPOT, 'config', input.scope, 'swiftlint.yml');
+    const config = join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
-    const source = join(plan.folder, 'source');
-    const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
+    const { source } = build;
+    const result = await runEngineTool(input, argv, { cwd: join(source, input.scope) });
     const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
     const found = diagnostics(input, output, new Set(['error', 'warning']), 'analyzer');
     if (found.length === 0 && result.code !== 0)
@@ -128,8 +125,8 @@ export async function analyze(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
-    const plan = buildPlan(input, 'periphery');
-    const config = join(input.root, DOT_GSPOT, 'config', input.scope, 'periphery.yml');
+    const folder = scopeBuildFolder(input, 'periphery');
+    const config = join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'periphery.yml');
     const argv = [
         'periphery',
         'scan',
@@ -141,17 +138,14 @@ export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
         'xcode',
         '--disable-update-check',
     ];
-    using files = openBuildCache(plan.folder);
-    const source = prepareBuildSources(
-        input.root,
-        input.files.map((file) => file.path),
-        plan.folder,
-        files,
-    );
-    const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
-    const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
-    const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
-    if (found.length === 0 && result.code !== 0)
-        throw new Error(`Periphery failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return found;
+    const prepared = prepareBuild(input, folder);
+    try {
+        const result = await runEngineTool(input, argv, { cwd: join(prepared.source, input.scope) });
+        const output = `${result.stdout}\n${result.stderr}`.replaceAll(prepared.source, input.root);
+        const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
+        if (found.length === 0 && result.code !== 0) throw new Error(toolOutputDetail(result, 'Periphery failed'));
+        return found;
+    } finally {
+        prepared.files.close();
+    }
 }

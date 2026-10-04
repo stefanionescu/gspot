@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
+import { escapeRegExp } from '#cli/platform/text.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
-import { ENV_TEMPLATE_NAMES } from '#cli/config/repository/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     ENV_KEY_LINE,
@@ -12,22 +12,21 @@ import {
     ENV_READ_EXTENSIONS,
 } from '#cli/config/checks/general/files.ts';
 
-function readPatterns(input: EngineInput): RegExp[] {
-    const accessor = input.view.tool('dotenv')['accessor'];
+function envReadPatterns(input: EngineInput): RegExp[] {
+    const accessor = input.view.options('dotenv')['accessor'];
     if (typeof accessor !== 'string' || accessor === '') return ENV_READ_PATTERNS;
-    const escaped = accessor.replaceAll(/[$()*+.?[\\\]^{|}]/gu, String.raw`\$&`);
+    const escaped = escapeRegExp(accessor);
     return [...ENV_READ_PATTERNS, new RegExp(String.raw`\b${escaped}\(\s*['"]([A-Z][A-Z0-9_]*)['"]`, 'gu')];
 }
 
 /**
- * One finding per environment key the code reads and no template names; nothing when the scope has no template.
+ * Reports each environment key the code reads that no template lists. Reports nothing when the scope has no template.
  * @param input the engine input
  * @returns the findings
  */
 export function envExample(input: EngineInput): Finding[] {
-    const listed = input.view.tool('dotenv')['templates'];
-    const names = Array.isArray(listed) ? listed.map(String) : ENV_TEMPLATE_NAMES;
-    // The owned files are configuration; the reads are in code, so the whole scope is searched.
+    const names = input.view.options('dotenv')['templates'] as string[];
+    // The owned files are configuration; the reads are in code, so the whole scope is inspected.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope));
     const templates = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (templates.length === 0) return [];
@@ -40,11 +39,11 @@ export function envExample(input: EngineInput): Finding[] {
             });
         }),
     );
-    const patterns = readPatterns(input);
-    const searched = inScope.filter(
+    const patterns = envReadPatterns(input);
+    const candidates = inScope.filter(
         (file) => file.kind === 'source' && ENV_READ_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
-    return searched.flatMap((file) => {
+    return candidates.flatMap((file) => {
         const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
         const seen = new Set<string>();
         return lines.flatMap((line, index) => {

@@ -1,37 +1,52 @@
 # ![gspot](docs/public/brand/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm: unreleased](docs/public/brand/badges/npm.svg)](https://gspot.dev/guides/install/)
-[![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
+[![npm: unreleased](docs/public/brand/badges/npm.svg)](#install)
+[![Documentation source](docs/public/brand/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
 [![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
 
-gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
+gspot sets up linters and checks for the languages in your repository. Git hooks and CI run those checks. It also installs instructions for coding agents.
+
+## Status
+
+gspot is not published on npm yet. To run it from source, see [Contributing](https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md).
+
+## Requirements
+
+You need Git. The npm CLI requires Node.js 24.2 or newer, or Bun. Standalone archives include the runtime for gspot; applicable tools still require their own runtimes.
+
+Requirements follow applicable checks. Python tools need uv. npm tools need their package manager and runtime. Native tools need mise or the pinned executables on `PATH`. Shared files count: a Python project with Markdown can need npm-based Markdown checks. `gspot doctor` prints missing tools and acquisition commands.
 
 ## Install
 
-gspot runs on Node.js 22 or newer, or on Bun. In a JavaScript or TypeScript repository:
+After publication, choose by repository:
+
+| Repository                                   | Install                                                        | Run commands with                                             |
+| -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| Has `package.json`                           | Exact CLI development dependency using npm, pnpm, Yarn, or Bun | `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot` |
+| Python, Swift, or another project using mise | Download the standalone CLI through mise                       | `mise exec -- gspot`                                          |
+| Uses neither a package manager nor mise      | Exact global npm install                                       | `gspot` on `PATH`                                             |
+
+For npm:
 
 ```shell
 npm install --save-dev --save-exact @gspothq/cli
+git add package.json package-lock.json
+git commit -m "build: Add gspot"
 npx gspot init
+npx gspot doctor
 ```
 
-Install it once with `npm install --global @gspothq/cli`, then run `gspot init` in a target repository.
+Commit the install first because initialization requires a clean working tree. For other package managers, use their exact install command and commit their lockfile.
 
-`init` reads the repository and shows a plan before it writes anything:
+Without `package.json`, use `mise exec github:stefanionescu/gspot@0.1.0 -- gspot init` and choose mise. The generated mise file pins the CLI and applicable native tools. Without mise, install `npm install --global @gspothq/cli@0.1.0` and run `gspot init`. A global installation supplies one CLI version per machine; each repository pins its version in `.gspot/version`.
 
-- the checks for your languages and frameworks
-- the linter configuration it writes under `.gspot/`
-- the rules for coding agents, linked from `AGENTS.md`
-- the Git hooks that run the checks
-
-Accept the plan, and gspot writes the files and installs the tools.
+Read the initialization plan before accepting it. `--no-install` writes setup without resolving tool locks; run `gspot install` later. Guides use `gspot` as shorthand for the prefix in the table.
 
 ## What it catches
 
-An agent adds this file to a TypeScript project that runs gspot at level `all`, and calls it
-from a new `src/receipt.ts`:
+An agent adds `src/utils.ts` to a TypeScript project at level `all`. The file only forwards to `calculateTotal`, and a new `src/receipt.ts` imports it.
 
-```typescript
+```typescript title="src/utils.ts"
 import { calculateTotal } from './orders.js';
 
 /**
@@ -44,37 +59,34 @@ export function getOrderTotal(order: any): number {
 }
 ```
 
-The commit hook runs `gspot check --staged` and rejects the commit:
+At level `all`, the commit hook rejects the forwarding helper. This is a findings excerpt:
 
 ```text
 root  javascript/eslint                   failed     2 files     1.0s
-  src/utils.ts:1:1  gspot/no-trivial-files  This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.
-  src/utils.ts:8:8  gspot/no-trivial-functions  This function has 1 statement. Functions with 2 or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.
+  src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.
   src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
   src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
   src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
-    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means.
+    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation.
   reproduce: gspot check --only javascript/eslint --staged
 root  naming/paths                        failed     2 files     0.0s
   src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
-    help: Rename the file or folder, or add a path rule under [[naming.rules]] with a reason.
+    help: Rename the file or folder, or add a path rule under [[naming.paths]] with a reason.
   reproduce: gspot check --only naming/paths --staged
 
-23 checks passed, 2 checks failed, 1 check skipped, 6 findings, 2.4s (failed)
 ```
 
 Each finding names the file, the line, the rule, and what to do. The
-[quickstart](https://gspot.dev/guides/quick-start/) runs this example from an empty folder
-to the commit that passes.
+[TypeScript quickstart](docs/src/content/docs/guides/quickstart/typescript.md) shows the setup and correction.
 
 ## Documentation
 
-- [Quickstart](https://gspot.dev/guides/quick-start/): run the example above.
-- [The policy file](https://gspot.dev/guides/customize/): choose kits, change limits, and record
-  exceptions.
-- [Coding agents](https://gspot.dev/guides/agents/): the rules gspot installs.
-- [Kits](https://gspot.dev/reference/kits/): the languages, frameworks, and tools gspot covers.
-- [Contributing](CONTRIBUTING.md): work on gspot itself.
+- [What gspot does](docs/src/content/docs/guides/overview.md).
+- [Requirements and installation](docs/src/content/docs/guides/install.md).
+- [TypeScript](docs/src/content/docs/guides/quickstart/typescript.md), [Python](docs/src/content/docs/guides/quickstart/python.md), and [Swift](docs/src/content/docs/guides/quickstart/swift.md) quickstarts.
+- [Policy](docs/src/content/docs/guides/policy.md) and [template reuse](docs/src/content/docs/guides/templates.md).
+- [Coding agents](docs/src/content/docs/guides/agents.md).
+- [Contributing](CONTRIBUTING.md).
 
 ## License
 

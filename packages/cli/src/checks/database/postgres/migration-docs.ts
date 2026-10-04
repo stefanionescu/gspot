@@ -2,9 +2,9 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import { LINE_ABOVE, HEADER_LINES } from '#cli/config/checks/checks.ts';
-import type { Migration, DocProblem } from '#cli/types/checks/database.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Migration, DocProblem } from '#cli/types/checks/database/postgres.ts';
 
 import {
     PURPOSE,
@@ -14,7 +14,7 @@ import {
     DOC_SECTIONS,
     DOC_SEPARATOR,
     STATEMENT_WORDS,
-} from '#cli/config/checks/database.ts';
+} from '#cli/config/checks/database/postgres.ts';
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
     const problems: DocProblem[] = [];
@@ -104,12 +104,12 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
 }
 
 /**
- * The layout findings of every migration, when tools.postgres.docs asks for the layout.
+ * The layout findings of every migration, when postgres.docs asks for the layout.
  * @param input the engine input
  * @returns the findings
  */
 export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
-    const tool = input.view.tool('postgres');
+    const tool = input.view.options('postgres');
     const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(DOC_SECTIONS);
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>

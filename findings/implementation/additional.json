@@ -1,0 +1,37 @@
+[
+    {
+        "id": "additional/next-app-router-links",
+        "source": "findings/additional.md",
+        "line": 5,
+        "section": "Next.js link validation",
+        "finding": "The native no-html-link-for-pages rule returns no finding for an App Router anchor pointing to an existing local app/about/page.jsx route, even with the correct scope root and all level. Its App Router path normalization differs from href normalization. Preserve the Pages Router coverage and establish App Router positive and defect cases before choosing a repair or replacement.",
+        "owner": "Next.js link validation",
+        "location": [
+            "packages/cli/configurations/framework/nextjs/eslint.fragment.js.tmpl",
+            "packages/cli/src/generation/fragments.ts",
+            "tests/cli/generation/nextjs.test.ts"
+        ],
+        "status": "open",
+        "outcome": null,
+        "verification": [
+            "Original failing positive case: /tmp/gspot-next-xcode-regressions.log.",
+            "Primary installed implementation inspected in tests/node_modules/@next/eslint-plugin-next/dist/utils/url.js and rules/no-html-link-for-pages.js. Pages Router regression is separately passing; it does not prove App Router coverage."
+        ]
+    },
+    {
+        "id": "additional/source-command-marker-readiness",
+        "source": "findings/additional.md",
+        "line": 20,
+        "section": "Source-command startup marker readiness",
+        "finding": "A fixture announced registry startup by creating its JSON marker before completing the write; the observer could read an empty document. Assertions before try/finally also bypassed graceful cancellation on failure. Publish the marker atomically and include readiness in the owned cleanup scope.",
+        "owner": "Source-command cancellation fixture",
+        "location": ["tests/config/cli/automation/source-command.ts", "tests/cli/automation/source-command.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The broad run captured JSON Parse error: Unexpected EOF at the marker read (/tmp/gspot-generated-header-unit-integration.log).",
+            "Fixture publication uses prepared-file write followed by rename; readiness and marker reading are inside try/finally, which sends SIGTERM and waits before the capture disposable can use SIGKILL.",
+            "The cancellation scenario and repaired parser/check follow-up passed all 54 cases (/tmp/gspot-generated-header-repaired-tests.log); changed-owner ESLint and all TypeScript targets passed."
+        ]
+    }
+]

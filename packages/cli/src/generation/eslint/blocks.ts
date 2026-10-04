@@ -1,12 +1,14 @@
 // The rule blocks of the generated ESLint configuration: policy overrides, structural ceilings, manifest exclusions,
 // and the selector groups of framework fragments.
 import { isDeepStrictEqual } from 'node:util';
-import { policyValue } from '#cli/policy/settings.ts';
-import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
-import { pathExpressions } from '#cli/repository/selectors.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { ResolvedSelector } from '#cli/types/generation/generation.ts';
-import type { SelectorGroup, EslintSettings, EslintRuleBlock } from '#cli/types/generation/eslint.ts';
+import { LINT_CHECK } from '#cli/config/eslint.ts';
+import { isRecord } from '#cli/platform/objects.ts';
+import { activeIgnores } from '#cli/policy/settings/ignores.ts';
+import { everyTable, policyValue } from '#cli/policy/settings/entries.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { Fragment, ResolvedSelector } from '#cli/types/generation/fragments.ts';
+import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/selectors.ts';
+import type { SelectorGroup, EslintRuleBlock, ScopeEslintSettings } from '#cli/types/generation/eslint.ts';
 
 function distinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
@@ -18,17 +20,24 @@ function distinctLists(lists: string[][]): string[][] {
     });
 }
 
+// The paths a loosening setting allows: every entry's paths, in the order written.
+function allowedPaths(selection: ScopeSelection, setting: string): string[] {
+    const value = selection.view.settings[setting];
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((entry: unknown) => {
+        const paths = isRecord(entry) ? entry['paths'] : undefined;
+        return Array.isArray(paths) ? paths.filter((path): path is string => typeof path === 'string') : [];
+    });
+}
+
 /**
  * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
  * @param policy the repository policy
  * @returns one rule block per scope and path override, in the order ESLint applies them
  */
 export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
-    const tables = [
-        { scope: '', table: policy },
-        ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ scope, table })),
-    ].toSorted((first, second) => first.scope.split('/').length - second.scope.split('/').length);
-    const settings = tables.map<{ scope: string; settings: EslintSettings }>(({ scope, table }) => ({
+    const tables = everyTable(policy).toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''));
+    const settings = tables.map<ScopeEslintSettings>(({ scope = '', table }) => ({
         scope,
         settings: table.tools?.['eslint'] ?? {},
     }));
@@ -38,7 +47,7 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     const overrides = settings.flatMap(({ scope, settings }) =>
         (settings.overrides ?? []).map(({ paths, rules }) => ({ scope, ...pathExpressions(paths), rules })),
     );
-    const ignores = policy.ignores.flatMap((entry): EslintRuleBlock[] =>
+    const ignores = activeIgnores(policy).flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== LINT_CHECK
             ? []
             : [
@@ -62,20 +71,26 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
  */
 export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
     const blocks: EslintRuleBlock[] = [];
-    for (const selection of scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {
+    if (policy.level !== 'all') return blocks;
+    for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
         for (const [language, pattern] of [
             ['javascript', '**/*.{js,mjs,cjs,jsx}'],
             ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte,astro}'],
         ] as const) {
-            if (policy.level !== 'all') continue;
-            const maxStatements =
-                selection.view.limit('trivial_statements', language) ?? selection.view.limit('trivial_statements');
+            const maxStatements = selection.view.limit('min_function_statements', language);
+            const options = maxStatements === undefined ? {} : { maxStatements };
             blocks.push({
                 scope: selection.scope.path,
                 ...pathExpressions([pattern]),
                 rules: {
-                    'gspot/no-trivial-files': ['error', { maxStatements }],
-                    'gspot/no-trivial-functions': ['error', { maxStatements }],
+                    'gspot/no-trivial-files': [
+                        'error',
+                        {
+                            ...options,
+                            allowIndex: policy.structure.reexports === 'index-only',
+                        },
+                    ],
+                    'gspot/no-trivial-functions': ['error', options],
                 },
             });
         }
@@ -85,19 +100,20 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
 
 /**
  * Applies reasoned manifest exclusions after structural defaults and before authored policy.
- * @param scopes the selected kits and their owning scopes.
+ * @param scopes the selected configurations and their owning scopes.
  * @param policy the effective root policy.
  * @returns scoped rule blocks that exclude every nested scope.
  */
 export function manifestRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        const children = scopes
-            .map((entry) => entry.scope.path)
-            .filter((path) => path !== scope && (scope === '' || path.startsWith(`${scope}/`)));
+        const children = nestedScopes(
+            scopes.map((entry) => entry.scope.path),
+            scope,
+        );
         const excluded = children.map((path) => `!${path}/**`);
         return selection.selected
-            .flatMap((manifest) => manifest.rules_off)
+            .flatMap((manifest) => manifest.eslint_rules_off)
             .filter(
                 ({ when: condition }) =>
                     condition === undefined ||
@@ -144,4 +160,42 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
             ),
         });
     return groups;
+}
+
+/**
+ * Resolve the actual selectors contributed by selected fragments within each project scope.
+ * @param scopes every resolved project scope
+ * @param fragments the fragments contributing to this configuration
+ * @param isAll whether house style selectors apply
+ * @returns selector groups with their owning scope and excluded child projects
+ */
+export function fragmentSelectorGroups(
+    scopes: ScopeSelection[],
+    fragments: Fragment[],
+    isAll: boolean,
+): SelectorGroup[] {
+    return scopes.flatMap((scope) => {
+        const resolved = fragments
+            .filter(({ manifest }) => scope.selected.includes(manifest))
+            .flatMap(({ config }) =>
+                config.selectors
+                    .filter((entry) => isAll || entry.level === 'recommended')
+                    .map(
+                        (entry): ResolvedSelector => ({
+                            selector: entry.selector,
+                            message: entry.message,
+                            ...(entry.files === undefined ? {} : { files: entry.files }),
+                            ...(entry.allowed === undefined ? {} : { except: allowedPaths(scope, entry.allowed) }),
+                        }),
+                    ),
+            );
+        return selectorGroups(resolved).map((group) => ({
+            ...group,
+            scope: scope.scope.path,
+            ignoredScopes: nestedScopes(
+                scopes.map((entry) => entry.scope.path),
+                scope.scope.path,
+            ),
+        }));
+    });
 }

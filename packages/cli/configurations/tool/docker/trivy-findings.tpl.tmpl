@@ -1,0 +1,1 @@
+{{ range . }}{{ $target := .Target }}{{ range .Misconfigurations }}{{ $target }}:{{ if .CauseMetadata.StartLine }}{{ .CauseMetadata.StartLine }}{{ else }}1{{ end }}:{{ .ID }}:{{ .Title }}{{ "\n" }}{{ end }}{{ end }}

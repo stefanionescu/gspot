@@ -1,19 +1,20 @@
-import { z } from 'zod';
 import { join } from 'node:path';
-import { toolPin } from '#cli/tools/inspect.ts';
-import { readSource } from '#cli/repository/sources.ts';
+import { toolPin } from '#cli/tools/pins.ts';
+import { readSource } from '#cli/platform/source.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { scratchFolder } from '#cli/platform/filesystem.ts';
-import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { placeOf, logSchema } from '#cli/checks/general/security/sarif.ts';
-import type { AcceptedResult } from '#cli/types/checks/general/security.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { CODEQL, CODEQL_SUITE } from '#cli/config/checks/general/security.ts';
+import { sarifLogSchema } from '#cli/parsers/schema/sarif.ts';
+import { CODEQL } from '#cli/config/checks/general/security.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import { placeOf } from '#cli/checks/general/security/locations.ts';
+import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { AcceptedResult, CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
-async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {
-    const result = await runCheckCommand(input, [CODEQL, ...argv], { cwd });
+async function runCodeql(input: EngineInput, argv: string[], cwd: string): Promise<string> {
+    const result = await runEngineTool(input, [CODEQL, ...argv], { cwd });
     if (result.code !== 0)
         throw new Error(
             `${CODEQL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
@@ -21,29 +22,20 @@ async function spawned(input: EngineInput, argv: string[], cwd: string): Promise
     return result.stdout;
 }
 
-async function scanned(
+async function analyzeLanguage(
     input: EngineInput,
-    language: string,
-    suite: string,
-    work: string,
-    accepted: AcceptedResult[],
-    version: string,
+    { language, version }: CodeqlLanguage,
+    { suite, work, accepted, source }: CodeqlAnalysis,
 ): Promise<Finding[]> {
     const database = join(work, language);
     const output = join(work, `${language}.sarif`);
-    using sourceFolder = await scratchCopy(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
-    const source = sourceFolder.path;
-    await spawned(
+    await runCodeql(
         input,
         ['database', 'create', database, `--language=${language}`, '--source-root', source, '--overwrite'],
         source,
     );
     const queries = `codeql/${language}-queries@${version}:codeql-suites/${language}-${suite}.qls`;
-    await spawned(
+    await runCodeql(
         input,
         ['database', 'analyze', database, queries, '--download', '--format=sarif-latest', `--output=${output}`],
         source,
@@ -65,17 +57,29 @@ async function scanned(
  * @returns the findings the policy does not accept.
  */
 export function sarifFindings(log: unknown, check: string, accepted: AcceptedResult[], source: string): Finding[] {
-    const parsed = logSchema.parse(log);
+    const parsed = sarifLogSchema.parse(log);
     return parsed.runs.flatMap((run) => {
-        if (
-            run.invocations?.some(
+        const unsuccessful =
+            run.invocations?.filter(
                 (invocation) =>
                     invocation.executionSuccessful === false ||
                     invocation.toolExecutionNotifications?.some((notification) => notification.level === 'error') ===
                         true,
-            ) === true
-        )
-            throw new Error('CodeQL reported an unsuccessful analysis. Repair the native scan before retrying.');
+            ) ?? [];
+        if (unsuccessful.length > 0) {
+            const notifications = unsuccessful.flatMap((invocation) =>
+                (invocation.toolExecutionNotifications ?? []).filter((notification) => notification.level === 'error'),
+            );
+            const detail = notifications
+                .map((notification) => notification.message?.text)
+                .filter((text) => text !== undefined)
+                .join('\n');
+            const diagnostic =
+                detail === ''
+                    ? 'CodeQL reported an unsuccessful analysis.'
+                    : `CodeQL reported an unsuccessful analysis: ${detail}`;
+            throw new Error(diagnostic);
+        }
         return run.results
             .map((result) => ({
                 check,
@@ -97,43 +101,52 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
  * @returns the findings
  */
 export async function codeql(input: EngineInput): Promise<Finding[]> {
-    const tool = input.view.tool(CODEQL);
+    const tool = input.view.options(`tools.${CODEQL}`);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
-    const suite = (tool['suite'] as string | undefined) ?? CODEQL_SUITE;
+    const suite = tool['suite'] as string;
     const accepted = (tool['ignore'] as AcceptedResult[] | undefined) ?? [];
     for (const language of languages) {
-        mutationTarget(language);
-        mutationTarget(`${language}.sarif`);
+        assertMutationTarget(language);
+        assertMutationTarget(`${language}.sarif`);
     }
     if (languages.length === 0) return [];
-    const metadata = z
-        .object({
-            aliases: z.record(z.string(), z.string()),
-            extractors: z.record(z.string(), z.array(z.unknown())),
-        })
-        .parse(
-            JSON.parse(
-                await spawned(
-                    input,
-                    ['resolve', 'languages', '--format=betterjson', '--filter-to-languages-with-queries'],
-                    input.root,
-                ),
+    const metadata = codeqlLanguagesSchema.parse(
+        JSON.parse(
+            await runCodeql(
+                input,
+                ['resolve', 'languages', '--format=betterjson', '--filter-to-languages-with-queries'],
+                input.root,
             ),
-        );
+        ),
+    );
     const packs = toolPin(input.manifests.values(), CODEQL).query_packs;
     const selected = [...new Set(languages.map((language) => metadata.aliases[language] ?? language))].map(
         (language) => {
             const version = packs?.[language];
-            if (version === undefined || metadata.extractors[language]?.length !== 1)
-                throw new Error(`CodeQL language ${language} has no unambiguous extractor and pinned query pack.`);
+            if (version === undefined) throw new Error(`No CodeQL query pack is pinned for ${language}.`);
+            if (metadata.extractors[language]?.length !== 1)
+                throw new Error(`CodeQL has no single extractor for ${language}.`);
             return { language, version };
         },
     );
     using workFolder = scratchFolder('gspot-codeql-');
     const work = workFolder.path;
+    using sourceFolder = await scratchCopy(
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
+    );
+    const source = sourceFolder.path;
     const findings: Finding[] = [];
-    for (const { language, version } of selected) {
-        findings.push(...(await scanned(input, language, suite, work, accepted, version)));
+    for (const language of selected) {
+        try {
+            findings.push(...(await analyzeLanguage(input, language, { suite, work, accepted, source })));
+        } catch (error) {
+            throw new Error(
+                `CodeQL analysis of ${language.language} failed: ${error instanceof Error ? error.message : String(error)}`,
+                { cause: error },
+            );
+        }
     }
     return findings;
 }

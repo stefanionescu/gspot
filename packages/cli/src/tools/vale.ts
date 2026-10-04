@@ -1,32 +1,31 @@
-import { run } from '#cli/platform/spawn.ts';
-import { locateTool } from '#cli/tools/inspect.ts';
+import { join, dirname } from 'node:path';
+import { runTool } from '#cli/tools/run.ts';
+import { toolPin } from '#cli/tools/pins.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
-import type { Session } from '#cli/types/tools/tools.ts';
-import type { Root } from '#cli/types/platform/platform.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import type { Root } from '#cli/types/platform/root.ts';
+import { rootView } from '#cli/policy/settings/view.ts';
+import { parseValePackages } from '#cli/parsers/vale.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import { READ_ONLY_FILE } from '#cli/config/platform/platform.ts';
-import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
+import type { AssetInstallation } from '#cli/types/tools/install.ts';
+import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/root.ts';
+import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-// Harper also installs dictionaries beside its styles.
-function packageDirectories(files: Root): string[] | undefined {
+// Read package names only from the private Vale configuration managed by this repository.
+function configuredPackages(files: Root): string[] | undefined {
     const source = files.read(VALE_CONFIG);
     if (source === undefined) return undefined;
-    const configured = /^Packages = (.*)$/mu.exec(source.bytes.toString('utf8'))?.[1] ?? '';
-    const packages = configured
-        .split(',')
-        .map((name) => name.trim())
-        .filter((name) => name !== '')
-        .map((name) => basename(/^https?:\/\//u.test(name) ? new URL(name).pathname : name).replace(/\.zip$/u, ''));
-    if (packages.includes('Harper')) packages.push('config/dictionaries');
-    return packages;
+    return parseValePackages(source.bytes.toString('utf8'));
 }
 
 // The folder a package file belongs to: a top folder of the styles, or a folder of its config folder. A loose file
 // beside the packages belongs to none.
-function packageFolder(path: string): string[] {
+function folderOfFile(path: string): string[] {
     const [top = '', ...rest] = path.slice(STYLES_DIRECTORY.length + 1).split('/');
     const [inner = '', ...below] = rest;
     if (top === 'config') return below.length > 0 ? [`${STYLES_DIRECTORY}/config/${inner}`] : [];
@@ -43,12 +42,12 @@ function swapPackage(files: Root, synced: Root, folder: string, paths: string[])
         files.write(`${next}${path.slice(folder.length)}`, { bytes: content.bytes, mode: READ_ONLY_FILE }, undefined);
     }
     files.removeTree(folder);
-    files.rename(next, folder);
+    files.renameDirectory(next, folder);
 }
 
 // Copies the Vale configuration and the gspot style into the folder vale sync runs in.
 function stageInputs(files: Root, work: string): void {
-    const inputs = [VALE_CONFIG, ...styleFiles(files).filter((path) => !isValePackageFile(path))];
+    const inputs = [VALE_CONFIG, ...listStyleFiles(files).filter((path) => !isValePackageFile(path))];
     for (const path of inputs) {
         const content = files.read(path);
         if (content === undefined) throw new Error(`Vale setup input is missing: ${path}`);
@@ -60,9 +59,9 @@ function stageInputs(files: Root, work: string): void {
 // Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
 function replacePackages(files: Root, work: string): void {
     using synced = openRoot(work);
-    const outputs = styleFiles(synced).filter((path) => isValePackageFile(path));
-    const folders = new Set(outputs.flatMap((path) => packageFolder(path)));
-    for (const folder of packageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
+    const outputs = listStyleFiles(synced).filter((path) => isValePackageFile(path));
+    const folders = new Set(outputs.flatMap((path) => folderOfFile(path)));
+    for (const folder of installedPackageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
     for (const folder of folders)
         swapPackage(
             files,
@@ -77,19 +76,20 @@ function replacePackages(files: Root, work: string): void {
  * @param files the repository root
  * @returns the folders, relative to the root
  */
-function packageFolders(files: Root): string[] {
-    const packageFiles = styleFiles(files).filter((path) => isValePackageFile(path));
-    const folders = new Set(packageFiles.flatMap((path) => packageFolder(path)));
+function installedPackageFolders(files: Root): string[] {
+    const packageFiles = listStyleFiles(files).filter((path) => isValePackageFile(path));
+    const folders = new Set(packageFiles.flatMap((path) => folderOfFile(path)));
     return [...folders];
 }
+
 /**
  * Check whether configured upstream styles are available for a prose check.
  * @param root the repository root
  * @returns whether every required directory exists
  */
-export function hasPackages(root: string): boolean {
+export function hasValePackages(root: string): boolean {
     using files = openRoot(root);
-    const needed = packageDirectories(files);
+    const needed = configuredPackages(files);
     if (needed === undefined) return false;
     return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
 }
@@ -99,16 +99,13 @@ export function hasPackages(root: string): boolean {
  * @param files the root the styles folder is read from
  * @returns the files, relative to the root
  */
-export function styleFiles(files: Root): string[] {
+export function listStyleFiles(files: Root): string[] {
     const found: string[] = [];
-    const visit = (directory: string): void => {
-        for (const name of files.list(directory)) {
-            const path = `${directory}/${name}`;
-            if (files.stat(path)?.isDirectory() === true) visit(path);
-            else found.push(path);
-        }
-    };
-    visit(STYLES_DIRECTORY);
+    walkRoot(files, STYLES_DIRECTORY, (path) => {
+        if (files.stat(path)?.isDirectory() === true) return true;
+        found.push(path);
+        return false;
+    });
     return found;
 }
 
@@ -116,41 +113,49 @@ export function styleFiles(files: Root): string[] {
  * Deletes every installed package folder.
  * @param root the repository root
  */
-export function removePackages(root: string): void {
+export function removeValePackages(root: string): void {
     using files = openRoot(root);
-    for (const folder of packageFolders(files)) files.removeTree(folder);
+    for (const folder of installedPackageFolders(files)) files.removeTree(folder);
 }
 
 /**
  * Downloads the upstream packages the config names, and replaces the installed ones with them. Needs the network.
- * @param root the repository root
- * @param pending the installations an interrupted gspot install left pending
+ * @param session the command session holding tool declarations and inspections
  * @returns what went wrong, or undefined when the packages are in place
  */
-export async function installPackages(root: string, pending: string[] | undefined): Promise<string | undefined> {
-    const binary = locateTool(root, 'vale', pending);
-    if (binary === undefined) return 'vale is not installed';
+export async function installValePackages(session: Session): Promise<string | undefined> {
+    const { root } = session;
+    const inspection = inspectTool(session, toolPin(session.manifests.values(), 'vale'));
+    if (!isToolAvailable(inspection))
+        return inspection.note ?? `Vale is ${inspection.state}. ${inspection.hint ?? 'Run: gspot install'}`;
     using workFolder = scratchFolder('gspot-vale-');
     const work = workFolder.path;
     using files = openRoot(root);
     stageInputs(files, work);
-    const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
-    if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
+    const timeoutSeconds = Number(rootView(session.scopes).settings['tool_timeout_seconds']);
+    const result = await runTool([inspection.path, '--config', join(work, VALE_CONFIG), 'sync'], {
+        cwd: work,
+        cancelSignal: session.cancelSignal,
+        timeoutSeconds,
+    });
+    if (result.isCanceled === true) return 'Vale package sync was canceled.';
+    if (result.isTimedOut === true) return 'Vale package sync exceeded its tool deadline.';
+    if (result.code !== 0) return installationDiagnostics(result, []);
     replacePackages(files, work);
     return undefined;
 }
 
 /**
- * Install the Vale packages when a scope selects the prose kit and none are installed. The packages are not tracked, so a
- * clone gets them from apply or install.
+ * Install configured Vale packages when an applicable check needs Vale and any package is missing.
+ * A clone gets the untracked packages from install.
  * @param session the open session
  * @returns undefined when nothing was needed, an empty result after the install, or the problem when it failed
  */
-export async function installProsePackages(session: Session): Promise<{ problem?: string } | undefined> {
-    const isProse = session.scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.kit.name === 'prose'),
+export async function installProsePackages(session: Session): Promise<AssetInstallation | undefined> {
+    const isProse = applicableManifests(session).some((manifest) =>
+        manifest.tools.some((tool) => tool.name === 'vale'),
     );
-    if (!isProse || hasPackages(session.root)) return undefined;
-    const problem = await installPackages(session.root, session.installations?.(session.root));
+    if (!isProse || hasValePackages(session.root)) return undefined;
+    const problem = await installValePackages(session);
     return problem === undefined ? {} : { problem };
 }

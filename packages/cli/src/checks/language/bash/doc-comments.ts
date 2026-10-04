@@ -1,32 +1,19 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { LINE_ABOVE } from '#cli/config/checks/checks.ts';
-import type { ScriptFunction } from '#cli/types/checks/language/bash.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-
-import {
-    WORD,
-    VAGUE_WORDS,
-    ENTRY_FUNCTIONS,
-    SHELLCHECK_DIRECTIVE,
-    BASH_DOC_SECTIONS as DOC_SECTIONS,
-} from '#cli/config/checks/language/bash.ts';
+import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import type { Engine, Finding } from '#cli/types/execution/runtime.ts';
+import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { WORD, VAGUE_WORDS, BASH_DOC_SECTIONS, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
 
 function blockAbove(lines: string[], start: number): string[] {
     const block: string[] = [];
-    let index = start - LINE_ABOVE;
-    while (index >= 0) {
+    let index = start - 1;
+    while (index > 0) {
+        index -= 1;
         const trimmed = (lines[index] ?? '').trim();
         if (!trimmed.startsWith('#')) break;
         if (!SHELLCHECK_DIRECTIVE.test(trimmed)) block.unshift(trimmed);
-        index -= 1;
     }
     return block;
-}
-
-function summaryOf(line: string, name: string, style: string): string | undefined {
-    const separator = style === 'dash' ? ' - ' : ': ';
-    const head = `# ${name}${separator}`;
-    return line.startsWith(head) && line.length > head.length ? line.slice(head.length) : undefined;
 }
 
 function isMeaningful(name: string, summary: string): boolean {
@@ -39,22 +26,26 @@ function isMeaningful(name: string, summary: string): boolean {
     return words.some((word) => !nameWords.has(word));
 }
 
-function problem(entry: ScriptFunction, block: string[], style: string): { rule: string; message: string } | undefined {
+function docProblem(
+    entry: ScriptFunction,
+    block: string[],
+    separator: string,
+): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
             rule: 'missing-comment',
-            message: `${entry.name} has no comment above it; write "# ${entry.name}${style === 'dash' ? ' - ' : ': '}what it does".`,
+            message: `${entry.name} has no comment above it; write "# ${entry.name}${separator}what it does".`,
         };
-    const summary = summaryOf(first, entry.name, style);
-    if (summary === undefined)
+    const head = `# ${entry.name}${separator}`;
+    if (!first.startsWith(head) || first.length <= head.length)
         return {
             rule: 'summary-line',
-            message: `The comment above ${entry.name} does not open with "# ${entry.name}${style === 'dash' ? ' - ' : ': '}...".`,
+            message: `The comment above ${entry.name} does not open with "# ${entry.name}${separator}...".`,
         };
-    if (!isMeaningful(entry.name, summary))
+    if (!isMeaningful(entry.name, first.slice(head.length)))
         return { rule: 'vague-summary', message: `The summary of ${entry.name} says nothing beyond its name.` };
-    const positions = DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
+    const positions = BASH_DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
     if (!positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1)))
         return {
             rule: 'section-order',
@@ -65,21 +56,21 @@ function problem(entry: ScriptFunction, block: string[], style: string): { rule:
 
 /**
  * One finding per function without a summary line, with a vague summary, or with doc sections out of order.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const docComment: Analysis = async (context, scripts) => {
-    const style = context.bashText('doc_style', 'colon');
-    const entries = new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')]);
-    const index = await scripts();
+export const docComment: Engine = async (input) => {
+    const style = input.view.settings['bash.doc_style'];
+    const separator = style === 'dash' ? ' - ' : ': ';
+    const entries = entryFunctions(input);
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (entries.has(entry.name)) return [];
-            const found = problem(entry, blockAbove(file.lines, entry.start), style);
+            const found = docProblem(entry, blockAbove(file.lines, entry.start), separator);
             return found === undefined
                 ? []
-                : [findingAt(context.input, { file: file.path, line: entry.start }, found.rule, found.message)];
+                : [findingAt(input, { file: file.path, line: entry.start }, found.rule, found.message)];
         });
     });
 };

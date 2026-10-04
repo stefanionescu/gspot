@@ -1,31 +1,20 @@
-import { z } from 'zod';
-import { hasPackages } from '#cli/tools/vale.ts';
+import { parseAlerts } from '#cli/parsers/vale.ts';
+import { hasValePackages } from '#cli/tools/vale.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { join, relative, isAbsolute } from 'node:path';
-import { readSource } from '#cli/repository/sources.ts';
-import { fileBatches } from '#cli/execution/tool/batches.ts';
+import type { ValeAlert } from '#cli/types/parsers/vale.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { VALE_CONFIG } from '#cli/config/platform/locations.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { SpawnResult } from '#cli/types/platform/platform.ts';
-import { SCRIPT_TAG } from '#cli/config/checks/general/general.ts';
-import { PROSE_GRAMMARS } from '#cli/config/generation/generation.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import type { ValeAlert, ProseRoute } from '#cli/types/checks/general/prose.ts';
+import { fileBatches } from '#cli/execution/command/batches.ts';
+import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
+import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import type { ProseRoute } from '#cli/types/checks/general/prose.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
-
-const alertsSchema = z.record(
-    z.string().min(1),
-    z.array(
-        z.object({
-            Line: z.number().int().positive(),
-            Span: z.tuple([z.number().int().positive(), z.number().int().positive()]),
-            Check: z.string().min(1),
-            Message: z.string().min(1),
-        }),
-    ),
-);
 
 // Vale runs with --no-exit, so alerts leave the exit code at 0; any other code means Vale itself failed, and that is never a pass.
 function assertValeRan(result: SpawnResult): void {
@@ -47,7 +36,7 @@ async function alertsFor(input: EngineInput, group: ProseRoute[]): Promise<ValeA
             base,
             process.platform,
         )) {
-            const result = await runCheckCommand(input, [...base, ...batch], { cwd: root });
+            const result = await runEngineTool(input, [...base, ...batch], { cwd: root });
             assertValeRan(result);
             alerts.push(...parseAlerts(result.stdout));
         }
@@ -57,7 +46,7 @@ async function alertsFor(input: EngineInput, group: ProseRoute[]): Promise<ValeA
         }));
     }
     const text = readSource(root, first.path).toString('utf8');
-    const result = await runCheckCommand(input, [...base, `--ext=${first.extension}`], { cwd: root, stdin: text });
+    const result = await runEngineTool(input, [...base, `--ext=${first.extension}`], { cwd: root, stdin: text });
     assertValeRan(result);
     return parseAlerts(result.stdout).map((alert) => ({
         ...alert,
@@ -66,30 +55,12 @@ async function alertsFor(input: EngineInput, group: ProseRoute[]): Promise<ValeA
 }
 
 /**
- * Validates native Vale JSON before converting alerts to source locations.
- * @param stdout the output
- * @returns the alerts
- */
-export function parseAlerts(stdout: string): ValeAlert[] {
-    return Object.entries(alertsSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
-        alerts.map((alert) => ({
-            file: toPosix(file),
-            line: alert.Line,
-            column: alert.Span[0],
-            check: alert.Check,
-            message: alert.Message,
-        })),
-    );
-}
-
-/**
  * Runs Vale over the scope's files, by path where Vale has a grammar and through stdin elsewhere. Every alert is a finding.
  * @param input the engine input
  * @returns the findings
  */
 export async function vale(input: EngineInput): Promise<Finding[]> {
-    if (!hasPackages(input.root))
-        throw new Error('The Vale packages are not synced; run gspot apply with the network on.');
+    if (!hasValePackages(input.root)) throw new Error('The Vale packages are not installed. Run: gspot install');
     const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {

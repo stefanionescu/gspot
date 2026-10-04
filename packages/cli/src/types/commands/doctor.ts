@@ -1,17 +1,20 @@
-// The types of commands/doctor in this package.
-import type { ToolInspection } from '#cli/types/tools/tools.ts';
+import type { ToolInspection } from '#cli/types/tools/install.ts';
+import type { ConfigurationSuggestion } from '#cli/types/configurations.ts';
 
-export type Changes = {
-    detected: { kit: string; evidence: string; command: string }[];
-    recommended: { kit: string; evidence: string; command: string }[];
-    unowned: { path: string; note: string; command: string }[];
-    authored: { path: string; note: string; command: string }[];
-    pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
+export type SuggestionRow = { path: string; note: string; command: string };
+
+export type Suggestions = {
+    detected: ConfigurationSuggestion[];
+    recommended: ConfigurationSuggestion[];
+    unowned: SuggestionRow[];
+    authored: SuggestionRow[];
+    duplicateMisePins: { tool: string; version: string; places: string[]; command: string }[];
 };
+
 export type DoctorReport = {
     submodules: string[];
     tools: ToolInspection[];
-    changes: Changes;
+    suggestions: Suggestions;
     hooks: string;
     ci: string;
     rules: { files: number };
@@ -19,5 +22,7 @@ export type DoctorReport = {
     exitCode: number;
 };
 
-export type ChangeRow = { path: string; note: string; command: string };
-export type DoctorOptions = { cwd: string };
+export type SuggestionKey = 'detected' | 'recommended' | 'unowned' | 'authored';
+
+/** One suggestion category and the title printed in the doctor report. */
+export type SuggestionSection = { key: SuggestionKey; title: string };

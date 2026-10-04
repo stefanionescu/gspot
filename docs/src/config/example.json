@@ -1,0 +1,116 @@
+{
+    "version": "0.1.0",
+    "commands": {
+        "install": "npm install --save-dev --save-exact @gspothq/cli",
+        "init": "npx gspot init --yes",
+        "level": "npx gspot set level all"
+    },
+    "project": [
+        {
+            "path": "package.json",
+            "language": "json",
+            "content": "{\n    \"name\": \"orders\",\n    \"description\": \"Order totals and discounts for the shop.\",\n    \"private\": true,\n    \"type\": \"module\",\n    \"exports\": {\n        \"./*\": \"./src/*.ts\"\n    },\n    \"packageManager\": \"npm@11.19.0\"\n}\n"
+        },
+        {
+            "path": "tsconfig.json",
+            "language": "json",
+            "content": "{\n    \"compilerOptions\": {\n        \"strict\": true,\n        \"noUncheckedIndexedAccess\": true,\n        \"exactOptionalPropertyTypes\": true,\n        \"noImplicitOverride\": true,\n        \"noFallthroughCasesInSwitch\": true,\n        \"module\": \"nodenext\",\n        \"target\": \"es2022\",\n        \"noEmit\": true,\n        \"noImplicitReturns\": true,\n        \"noPropertyAccessFromIndexSignature\": true\n    },\n    \"include\": [\n        \"src\"\n    ]\n}\n"
+        },
+        {
+            "path": "README.md",
+            "language": "markdown",
+            "content": "# Orders\n\nOrder totals and discounts for the shop.\n\n## Setup\n\nRun `npm install`, then `npx gspot install`.\n"
+        },
+        {
+            "path": "LICENSE",
+            "language": "text",
+            "content": "Copyright 2026 The Orders authors. All rights reserved.\n"
+        },
+        {
+            "path": ".gitignore",
+            "language": "text",
+            "content": "node_modules/\n"
+        },
+        {
+            "path": "src/orders.ts",
+            "language": "typescript",
+            "content": "export type Order = { items: { price: number; quantity: number }[] };\n\n/**\n * The total price of an order.\n * @param order the order\n * @returns the sum of price times quantity over its items\n */\nexport function calculateTotal(order: Order): number {\n    let total = 0;\n    for (const item of order.items) total += item.price * item.quantity;\n    return total;\n}\n"
+        },
+        {
+            "path": "src/discounts.ts",
+            "language": "typescript",
+            "content": "import type { Order } from './orders.js';\n\n/**\n * The order with every price lowered by a rate.\n * @param order the order\n * @param rate the share taken off each price, from 0 to 1\n * @returns the discounted order\n */\nexport function applyDiscount(order: Order, rate: number): Order {\n    const factor = 1 - rate;\n    const items = order.items.map((item) => ({ ...item, price: item.price * factor }));\n    return { items };\n}\n"
+        }
+    ],
+    "policy": "#:schema https://gspot.dev/schema/gspot.schema.json\n\n# The policy of this repository under gspot. Every setting has a command that writes it:\n# gspot set, ignore, add, remove. Run gspot explain <anything> for what it means.\n\nlevel = \"all\"\nconfigurations = [\n    \"commits\",\n    \"dependencies\",\n    \"docs\",\n    \"files\",\n    \"javascript\",\n    \"licenses\",\n    \"markdown\",\n    \"secrets\",\n    \"spelling\",\n    \"typescript\",\n    \"naming\",\n    \"format\",\n]\nrun_with = \"npm\"\n\n[hooks]\n\n[agent_rules]\nfolder = \".gspot/rules\"\nenabled = true\n",
+    "agent": {
+        "message": "feat: Add receipt lines",
+        "files": [
+            {
+                "path": "src/utils.ts",
+                "language": "typescript",
+                "content": "import { calculateTotal } from './orders.js';\n\n/**\n * The total of an order.\n * @param order the order\n * @returns the total\n */\nexport function getOrderTotal(order: any): number {\n    return calculateTotal(order);\n}\n"
+            },
+            {
+                "path": "src/receipt.ts",
+                "language": "typescript",
+                "content": "import type { Order } from './orders.js';\nimport { getOrderTotal } from './utils.js';\n\n/**\n * The receipt lines of an order: one line per item, then the total.\n * @param order the order\n * @returns the lines\n */\nexport function receiptLines(order: Order): string[] {\n    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);\n    lines.push(`Total: ${String(getOrderTotal(order))}`);\n    return lines;\n}\n"
+            }
+        ]
+    },
+    "fix": {
+        "deleted": ["src/utils.ts"],
+        "files": [
+            {
+                "path": "src/receipt.ts",
+                "language": "typescript",
+                "content": "import { type Order, calculateTotal } from './orders.js';\n\n/**\n * The receipt lines of an order: one line per item, then the total.\n * @param order the order\n * @returns the lines\n */\nexport function receiptLines(order: Order): string[] {\n    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);\n    lines.push(`Total: ${String(calculateTotal(order))}`);\n    return lines;\n}\n"
+            }
+        ],
+        "correction": "Delete the wrapper and call calculateTotal directly, with the Order type the function already takes."
+    },
+    "rejected": "root  javascript/eslint                   failed     2 files     1.0s\n  src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.\n  src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.\n  src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.\n  src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.\n    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation.\n  reproduce: gspot check --only javascript/eslint --staged\nroot  naming/paths                        failed     2 files     0.0s\n  src/utils.ts:1:1  banned-term  typescript file \"utils\": \"utils\" is banned (roles group).\n    help: Rename the file or folder, or add a path rule under [[naming.paths]] with a reason.\n  reproduce: gspot check --only naming/paths --staged\n\n23 checks passed, 2 checks failed, 1 check skipped, 5 findings, 2.4s (failed)\n",
+    "findings": [
+        {
+            "check": "javascript/eslint",
+            "file": "src/utils.ts",
+            "line": 1,
+            "column": 1,
+            "rule": "gspot/no-trivial-files",
+            "message": "This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file."
+        },
+        {
+            "check": "javascript/eslint",
+            "file": "src/utils.ts",
+            "line": 8,
+            "column": 31,
+            "rule": "@typescript-eslint/explicit-module-boundary-types",
+            "message": "Argument 'order' should be typed with a non-any type."
+        },
+        {
+            "check": "javascript/eslint",
+            "file": "src/utils.ts",
+            "line": 8,
+            "column": 38,
+            "rule": "@typescript-eslint/no-explicit-any",
+            "message": "Unexpected any. Specify a different type."
+        },
+        {
+            "check": "javascript/eslint",
+            "file": "src/utils.ts",
+            "line": 9,
+            "column": 27,
+            "rule": "@typescript-eslint/no-unsafe-argument",
+            "message": "Unsafe argument of type `any` assigned to a parameter of type `Order`."
+        },
+        {
+            "check": "naming/paths",
+            "file": "src/utils.ts",
+            "line": 1,
+            "column": 1,
+            "rule": "banned-term",
+            "message": "typescript file \"utils\": \"utils\" is banned (roles group)."
+        }
+    ],
+    "passed": "25 checks passed, 0 checks failed, 1 check skipped, 0 findings, 2.4s"
+}

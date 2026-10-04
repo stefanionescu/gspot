@@ -1,30 +1,26 @@
+import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { rolePaths } from '#cli/policy/settings/entries.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
+import type { ParsedFile, ParsedSource } from '#cli/types/parsers/source.ts';
+import { grammarFor, visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { CONFIG_STATEMENTS, CONFIG_LOGIC_NODES, CONFIG_CALL_ALLOWED } from '#cli/config/checks/general/structure.ts';
 
-import {
-    CONFIG_STATEMENTS,
-    CONFIG_LOGIC_NODES,
-    CONFIG_CALL_ALLOWED,
-    LANGUAGE_BY_EXTENSION,
-    CONFIG_IMPORT_PREFIXES,
-} from '#cli/config/checks/general/structure.ts';
-
-function rolePaths(input: EngineInput): string[] {
-    const role = input.policyFiles.policy.architecture.roles['config'];
-    if (role === undefined) return [];
-    const listed = Array.isArray(role) ? role : [role];
-    return listed.map((path) => (path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`));
-}
-
-function isOutsideImport(node: Node): boolean {
+function isOutsideImport(
+    node: Node,
+    input: EngineInput,
+    path: string,
+    isConfig: (path: string) => boolean,
+    options: ts.CompilerOptions,
+): boolean {
     if (node.type !== 'import_statement' || node.text.startsWith('import type')) return false;
     const source = node.childForFieldName('source')?.text.slice(1, -1) ?? '';
-    return CONFIG_IMPORT_PREFIXES.every((prefix) => !source.startsWith(prefix));
+    const target = modulePath(input, path, source, options);
+    // Resolved JSON imports supply static data, even when shipped assets sit outside the configuration role.
+    return target === undefined || (!target.endsWith('.json') && !isConfig(target));
 }
 
 function isAllowedCall(node: Node): boolean {
@@ -46,44 +42,45 @@ function logicIn(node: Node, out: Node[]): void {
     for (const child of node.namedChildren) logicIn(child, out);
 }
 
-function problemsOf(root: Node): { line: number; message: string }[] {
-    const problems: { line: number; message: string }[] = [];
-    for (const statement of root.namedChildren) {
+function configurationFindings(
+    input: EngineInput,
+    source: ParsedSource,
+    isConfig: (path: string) => boolean,
+): Finding[] {
+    const findings = [];
+    const options = getCompilerOptions(input, source.path);
+    for (const statement of source.rootNode.namedChildren) {
         if (!CONFIG_STATEMENTS.has(statement.type))
-            problems.push({
-                line: statement.startPosition.row + 1,
-                message: `a ${statement.type.replaceAll('_', ' ')} is not a literal`,
-            });
-        else if (isOutsideImport(statement))
-            problems.push({
-                line: statement.startPosition.row + 1,
-                message: 'a value import from outside the config roots',
-            });
+            findings.push(
+                findingAt(
+                    input,
+                    { file: source.path, line: statement.startPosition.row + 1 },
+                    'config-logic',
+                    `Move this ${statement.type.replaceAll('_', ' ')} out of the configuration module. Keep literals here.`,
+                ),
+            );
+        else if (isOutsideImport(statement, input, source.path, isConfig, options))
+            findings.push(
+                findingAt(
+                    input,
+                    { file: source.path, line: statement.startPosition.row + 1 },
+                    'config-logic',
+                    'Import values only from configuration roots or JSON data files. Move this runtime import out of the configuration module.',
+                ),
+            );
     }
     const logic: Node[] = [];
-    logicIn(root, logic);
+    logicIn(source.rootNode, logic);
     for (const node of logic)
-        problems.push({ line: node.startPosition.row + 1, message: `a ${node.type.replaceAll('_', ' ')} is logic` });
-    return problems.toSorted((a, b) => a.line - b.line);
-}
-
-async function fileFindings(input: EngineInput, file: TrackedFile, language: string): Promise<Finding[]> {
-    const grammar = grammarFor(file.path, language);
-    if (grammar === undefined) return [];
-    const tree = await parseSource(grammar, readSource(input.root, file.path, input.reads).toString('utf8'), input);
-    if (tree === null) throw new Error('The source parser returned no tree.');
-    try {
-        return problemsOf(tree.rootNode).map((problem) =>
+        findings.push(
             findingAt(
                 input,
-                { file: file.path, line: problem.line },
+                { file: source.path, line: node.startPosition.row + 1 },
                 'config-logic',
-                `${problem.message}; a configuration module holds literals only.`,
+                `Move this ${node.type.replaceAll('_', ' ')} out of the configuration module. Keep literals here.`,
             ),
         );
-    } finally {
-        tree.delete();
-    }
+    return findings.toSorted((a, b) => a.line - b.line);
 }
 
 /**
@@ -92,13 +89,20 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
  * @returns the findings
  */
 export async function moduleLogic(input: EngineInput): Promise<Finding[]> {
-    const isConfig = pathMatcher(rolePaths(input));
-    const findings: Finding[] = [];
+    const paths = rolePaths(input.policyFiles.policy.architecture.roles, 'config').map((path) =>
+        path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`,
+    );
+    const isConfig = pathMatcher(paths);
+    const files: ParsedFile[] = [];
     for (const file of input.files) {
-        const dot = file.path.lastIndexOf('.');
-        const language = dot === -1 ? undefined : LANGUAGE_BY_EXTENSION[file.path.slice(dot)];
+        const language = file.tags.find((tag) => tag === 'typescript' || tag === 'javascript');
         if (language === undefined || file.kind !== 'source' || !isConfig(file.path)) continue;
-        findings.push(...(await fileFindings(input, file, language)));
+        const grammar = grammarFor(file.path, language);
+        if (grammar !== undefined) files.push({ path: file.path, grammar });
     }
+    const findings: Finding[] = [];
+    await visitParsedSources({ ...input, files }, (source) =>
+        findings.push(...configurationFindings(input, source, isConfig)),
+    );
     return findings;
 }

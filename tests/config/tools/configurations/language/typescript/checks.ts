@@ -1,0 +1,127 @@
+import type { FindingCase } from '#tests/types/harness/check-case.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/config/samples/typescript.ts';
+import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+
+import {
+    TYPO,
+    TOTAL,
+    WRONG,
+    RECEIPT,
+    PLAIN_JS,
+    MISSPELLED,
+    CHECK_SCRIPT,
+    ORDERS_TYPES,
+    TOTALS_TYPES,
+} from '#tests/config/tools/configurations/language/typescript/source.ts';
+
+/** Authored inputs and configuration selection for this scenario. */
+export const REPOSITORY: RepositoryScenario = {
+    configurations: ['typescript'],
+    modules: false,
+    without: [],
+    files: {
+        'package.json': TYPESCRIPT_PACKAGE,
+        'tsconfig.json':
+            '{\n    "compilerOptions": {\n        "strict": true,\n        "allowJs": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": [\n        "src",\n        "types"\n    ]\n}' +
+            '\n',
+        'jsconfig.json':
+            '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "checkJs": true,\n        "noEmit": true\n    },\n    "include": [\n        "src/**/*.js"\n    ]\n}' +
+            '\n',
+        '.gitignore': 'node_modules/\n',
+        'types/orders.ts': ORDERS_TYPES,
+        'types/totals.ts': TOTALS_TYPES,
+        'src/orders/total.ts': TOTAL,
+        'src/orders/receipt.ts': RECEIPT,
+        'src/orders/double.js':
+            '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n',
+        'src/main.ts': CHECK_SCRIPT,
+    },
+};
+
+export const CASES: FindingCase[] = [
+    {
+        check: 'typescript/tsc',
+        files: { 'src/orders/wrong.ts': WRONG },
+        expected: { file: 'src/orders/wrong.ts', rule: 'TS2322', line: 4, column: 14 },
+        corrected: {
+            files: {
+                'src/orders/wrong.ts':
+                    '// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 3;\n',
+            },
+        },
+    },
+    {
+        check: 'javascript/eslint',
+        files: {
+            'src/orders/paused.ts':
+                '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
+        },
+        expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
+    },
+    {
+        check: 'javascript/eslint',
+        files: {
+            'src/orders/back.ts':
+                "// An order module that reaches back into the entry.\nimport { receipt } from '../main.js';\n\n/** The receipt again. */\nexport const again = receipt;\n",
+        },
+        expected: { file: 'src/orders/back.ts', rule: 'boundaries/dependencies', line: 2 },
+    },
+    {
+        check: 'javascript/knip',
+        files: {
+            'src/orders/unused.ts':
+                '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
+        },
+        expected: { file: 'src/orders/unused.ts', message: 'src/orders/unused.ts' },
+        corrected: {
+            files: {
+                'src/orders/unused.ts':
+                    '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
+                'src/main.ts':
+                    CHECK_SCRIPT +
+                    "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n",
+            },
+        },
+    },
+    {
+        check: 'format/prettier',
+        files: {
+            'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
+        },
+        expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
+    },
+    {
+        check: 'format/editorconfig-checker',
+        files: {
+            'src/orders/trailing.ts':
+                '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',
+        },
+        expected: { file: 'src/orders/trailing.ts', line: 1, message: 'Trailing whitespace' },
+    },
+    {
+        check: 'spelling/typos',
+        files: { 'src/orders/typo.ts': TYPO },
+        expected: {
+            file: 'src/orders/typo.ts',
+            line: 1,
+            column: 4,
+            message: `\`${MISSPELLED}\` should be \`The\``,
+        },
+        corrected: {
+            files: {
+                'src/orders/typo.ts': '// The order of things.\n\n/** A value. */\nexport const orderCount = 1;\n',
+            },
+        },
+    },
+    {
+        check: 'javascript/tsc',
+        files: { 'src/orders/double.js': PLAIN_JS },
+        expected: { file: 'src/orders/double.js', rule: 'TS2345', line: 13, column: 28 },
+        corrected: {
+            files: {
+                'src/orders/double.js':
+                    '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n',
+            },
+        },
+    },
+];

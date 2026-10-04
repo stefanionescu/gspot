@@ -1,0 +1,19 @@
+/** Bash commands copied between two source files. */
+export const DUPLICATION_INIT = [
+    'init',
+    '--yes',
+    '--configurations',
+    'bash',
+    'duplication',
+    '--no-task',
+    '--no-ci',
+    '--no-hooks',
+    '--no-rules',
+    '--no-install',
+];
+
+/** The configurations the duplication sandbox leaves out after init. */
+export const DUPLICATION_LEFT_OUT = ['naming'];
+
+export const STEPS =
+    '    printf \'step %s of %s\\n\' "0" "$total"\n    total=$((total + 0))\n    printf \'step %s of %s\\n\' "1" "$total"\n    total=$((total + 1))\n    printf \'step %s of %s\\n\' "2" "$total"\n    total=$((total + 2))\n    printf \'step %s of %s\\n\' "3" "$total"\n    total=$((total + 3))\n    printf \'step %s of %s\\n\' "4" "$total"\n    total=$((total + 4))\n    printf \'step %s of %s\\n\' "5" "$total"\n    total=$((total + 5))\n    printf \'step %s of %s\\n\' "6" "$total"\n    total=$((total + 6))\n    printf \'step %s of %s\\n\' "7" "$total"\n    total=$((total + 7))\n    printf \'step %s of %s\\n\' "8" "$total"\n    total=$((total + 8))\n    printf \'step %s of %s\\n\' "9" "$total"\n    total=$((total + 9))\n    printf \'step %s of %s\\n\' "10" "$total"\n    total=$((total + 10))\n    printf \'step %s of %s\\n\' "11" "$total"\n    total=$((total + 11))\n    printf \'step %s of %s\\n\' "12" "$total"\n    total=$((total + 12))\n    printf \'step %s of %s\\n\' "13" "$total"\n    total=$((total + 13))\n    printf \'step %s of %s\\n\' "14" "$total"\n    total=$((total + 14))\n    printf \'step %s of %s\\n\' "15" "$total"\n    total=$((total + 15))\n    printf \'step %s of %s\\n\' "16" "$total"\n    total=$((total + 16))\n    printf \'step %s of %s\\n\' "17" "$total"\n    total=$((total + 17))\n    printf \'step %s of %s\\n\' "18" "$total"\n    total=$((total + 18))\n    printf \'step %s of %s\\n\' "19" "$total"\n    total=$((total + 19))\n    printf \'step %s of %s\\n\' "20" "$total"\n    total=$((total + 20))\n    printf \'step %s of %s\\n\' "21" "$total"\n    total=$((total + 21))\n    printf \'step %s of %s\\n\' "22" "$total"\n    total=$((total + 22))\n    printf \'step %s of %s\\n\' "23" "$total"\n    total=$((total + 23))\n    printf \'step %s of %s\\n\' "24" "$total"\n    total=$((total + 24))\n    printf \'step %s of %s\\n\' "25" "$total"\n    total=$((total + 25))\n    printf \'step %s of %s\\n\' "26" "$total"\n    total=$((total + 26))\n    printf \'step %s of %s\\n\' "27" "$total"\n    total=$((total + 27))\n    printf \'step %s of %s\\n\' "28" "$total"\n    total=$((total + 28))\n    printf \'step %s of %s\\n\' "29" "$total"\n    total=$((total + 29))';

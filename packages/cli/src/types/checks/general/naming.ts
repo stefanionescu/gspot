@@ -1,22 +1,8 @@
-// The types of checks/general/naming in this package.
-import type { ShippedLanguage } from '#cli/types/policy/policy.ts';
+import type { NamingLanguage } from '#cli/types/parsers/naming.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 
-/** One identifier an extractor found. */
-export type Identifier = {
-    file: string;
-    line: number;
-    column: number;
-    language: string;
-    category: string;
-    /** The label a finding prints, such as `typescript function`. */
-    kind: string;
-    name: string;
-    /** For a directory name: the directory path, so a path rule can match it. */
-    directory?: string;
-};
-
-/** Where an extractor puts what it finds. */
-export type ExtractSink = { file: string; language: string; out: Identifier[] };
+/** A banned term split into parts, with where it came from. */
+export type Term = { term: string; parts: string[]; source: string };
 
 /** One thing wrong with one identifier. */
 export type NameProblem = {
@@ -35,9 +21,6 @@ export type NameProblem = {
 
 /** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
 export type NamingInputs = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };
-
-/** A banned term split into parts, with where it came from. */
-export type Term = { term: string; parts: string[]; source: string };
 
 /** A path-scoped rule, compiled. */
 export type PathRule = {
@@ -64,11 +47,16 @@ export type EffectivePolicy = {
     allowed: Map<string, string | undefined>;
     contractProperties: Map<string, Set<string>>;
     rules: PathRule[];
-    languages: Record<string, ShippedLanguage>;
+    languages: Record<string, NamingLanguage>;
     limitsFor: (language: string, category: string) => CategoryLimits;
     isDigitsBanned: boolean;
     isDuplicatesBanned: boolean;
 };
 
-/** One name a statement declares, with its naming category. */
-export type SqlNamed = { category: string; name: string };
+/** Framework punctuation removed before a path segment's name is checked. */
+export type PathContainer = { open: string; close: string; category: string };
+
+/** A selected source file and its owning language configuration. */
+export type NamingSource = { file: TrackedFile; language: string };
+/** Identifier spellings associated with one file for cross-project comparisons. */
+export type FileNames = { path: string; names: string[] };

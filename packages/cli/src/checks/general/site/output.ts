@@ -1,29 +1,22 @@
-import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import { toPosix } from '#cli/platform/paths.ts';
+import { join, isAbsolute } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { BYTES_PER_KB } from '#cli/config/platform/platform.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { NameAllowance } from '#cli/types/policy/settings.ts';
 import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
-import { join, isAbsolute, relative as relativePath } from 'node:path';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { filesUnder, requireBuild } from '#cli/checks/general/site/build.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import type { SiteBuild, SizeLimit } from '#cli/types/checks/general/site.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { SizeLimit, LinkExclusion } from '#cli/types/checks/general/site.ts';
+import { POLICY_FILE, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/general/site/build.ts';
+import { purgecssReportSchema, linkinatorReportSchema, htmlValidationReportSchema } from '#cli/parsers/schema/site.ts';
 
-function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
-    const path = toPosix(relativePath(build.cwd, absolute));
-    mutationPath(path);
-    return input.scope === '' ? path : `${input.scope}/${path}`;
-}
-
-function pageOf(url: string): string[] {
+function pageOf(url: string): [string, ...string[]] {
     const path = decodeURIComponent(new URL(url, 'https://site.invalid').pathname).replace(/^\//u, '');
     if (path === '' || path.endsWith('/')) return [`${path}index.html`];
-    return path.endsWith('.html') ? [path] : [`${path}.html`, `${path}/index.html`];
+    return path.endsWith('.html') ? [path] : [path, `${path}.html`, `${path}/index.html`];
 }
 
 /**
@@ -36,7 +29,7 @@ function pageOf(url: string): string[] {
 export async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireBuild(input);
     const skipped = (
-        (input.view.tool('linkinator')['exclude_urls'] as { pattern?: string }[] | undefined) ?? []
+        (input.view.options('tools.linkinator')['exclude_urls'] as LinkExclusion[] | undefined) ?? []
     ).flatMap((entry) => (entry.pattern === undefined ? [] : [entry.pattern]));
     const skips = [
         // Linkinator serves the output on the loopback address, so an internal run skips every other host.
@@ -46,7 +39,7 @@ export async function brokenLinks(input: EngineInput, isExternal: boolean): Prom
         '^sms:',
         ...skipped,
     ].flatMap((pattern) => ['--skip', pattern]);
-    const result = await runCheckCommand(
+    const result = await runEngineTool(
         input,
         ['linkinator', '.', '--recurse', '--server-root', '.', '--format', 'json', ...skips],
         { cwd: build.output },
@@ -54,30 +47,22 @@ export async function brokenLinks(input: EngineInput, isExternal: boolean): Prom
     if (result.code !== 0 && result.code !== 1) throw new Error(`Linkinator failed: ${result.stderr}`);
     const start = result.stdout.indexOf('{');
     if (start === -1) throw new Error('Linkinator returned no JSON report.');
-    const report = z
-        .object({
-            links: z.array(
-                z.object({
-                    url: z.string(),
-                    state: z.enum(['OK', 'BROKEN', 'SKIPPED']),
-                    status: z.number().optional(),
-                    parent: z.string().optional(),
-                }),
-            ),
-        })
-        .parse(JSON.parse(result.stdout.slice(start)));
+    const report = linkinatorReportSchema.parse(JSON.parse(result.stdout.slice(start)));
     if (result.code === 1 && !report.links.some((link) => link.state === 'BROKEN'))
         throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
+    const pages = new Set(filesUnder(build.output));
     return report.links
         .filter((link) => link.state === 'BROKEN')
-        .map((link) =>
-            findingAt(
+        .map((link) => {
+            const candidates = pageOf(link.parent ?? '');
+            const page = candidates.find((path) => pages.has(path)) ?? candidates[0];
+            return findingAt(
                 input,
-                { file: toPosix(link.parent ?? ''), line: 1 },
+                { file: repositoryPath(input, build, join(build.output, page)), line: 1 },
                 'broken-link',
                 `${link.url} answers ${String(link.status ?? 0)}.`,
-            ),
-        );
+            );
+        });
 }
 
 /**
@@ -92,29 +77,18 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
         .map((path) => join(build.output, path));
     if (pages.length === 0) return [];
     const config = join(input.root, CONFIGURATION_DIRECTORY, 'html-validate-built.json');
-    const result = await runCheckCommand(
-        input,
-        ['html-validate', '--config', config, '--formatter', 'json', ...pages],
-        {
-            cwd: build.cwd,
-        },
-    );
+    const result = await runEngineTool(input, ['html-validate', '--config', config, '--formatter', 'json', ...pages], {
+        cwd: build.cwd,
+    });
     if (result.code !== 0 && result.code !== 1) throw new Error(`HTML validation failed: ${result.stderr}`);
-    const files = z
-        .array(
-            z.object({
-                filePath: z.string(),
-                messages: z.array(z.object({ ruleId: z.string(), line: z.number(), message: z.string() })),
-            }),
-        )
-        .parse(JSON.parse(result.stdout));
+    const files = htmlValidationReportSchema.parse(JSON.parse(result.stdout));
     if (result.code === 1 && files.every((file) => file.messages.length === 0))
         throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
     return files.flatMap((file) =>
         file.messages.map((entry) =>
             findingAt(
                 input,
-                { file: relative(input, build, file.filePath), line: entry.line },
+                { file: repositoryPath(input, build, file.filePath), line: entry.line },
                 entry.ruleId,
                 entry.message,
             ),
@@ -131,7 +105,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
-    const safelist = ((input.view.tool('purgecss')['safelist'] as { names?: string[] }[] | undefined) ?? []).flatMap(
+    const safelist = ((input.view.options('tools.purgecss')['safelist'] as NameAllowance[] | undefined) ?? []).flatMap(
         (entry) => entry.names ?? [],
     );
     const argv = [
@@ -144,18 +118,20 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
         '--rejected',
         ...(safelist.length === 0 ? [] : ['--safelist', ...safelist]),
     ];
-    const result = await runCheckCommand(input, argv, { cwd: build.output });
+    const result = await runEngineTool(input, argv, { cwd: build.output });
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
-    const report = z
-        .array(z.object({ file: z.string().min(1), rejected: z.array(z.string()) }))
-        .parse(JSON.parse(result.stdout));
+    const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
     return report.flatMap((sheet) =>
         sheet.rejected.map((selector) =>
             findingAt(
                 input,
                 {
-                    file: relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
+                    file: repositoryPath(
+                        input,
+                        build,
+                        isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file),
+                    ),
                     line: 1,
                 },
                 'dead-selector',
@@ -171,7 +147,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each ceiling passed
  */
 export async function sizes(input: EngineInput): Promise<Finding[]> {
-    const limits = input.view.tool('site')['sizes'] as SizeLimit[];
+    const limits = input.view.options('site')['sizes'] as SizeLimit[];
     const build = await requireBuild(input);
     const files = filesUnder(build.output);
     return limits.flatMap((limit) => {
@@ -185,7 +161,7 @@ export async function sizes(input: EngineInput): Promise<Finding[]> {
             : [
                   findingAt(
                       input,
-                      { file: limit.paths.join(', '), line: 1 },
+                      { file: POLICY_FILE, line: 1 },
                       'size',
                       `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
                   ),
@@ -209,13 +185,13 @@ export async function sitemap(input: EngineInput): Promise<Finding[]> {
         .filter((url) => url !== undefined)
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_exclude'] as string[] | undefined) ?? ['404.html']);
+    const isLeftOut = pathMatcher(input.view.options('site')['sitemap_exclude'] as string[]);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>
             findingAt(
                 input,
-                { file: 'sitemap.xml', line: 1 },
+                { file: repositoryPath(input, build, join(build.output, 'sitemap.xml')), line: 1 },
                 'missing-page',
                 `The sitemap lists ${url}, and the build wrote no such page.`,
             ),
@@ -225,7 +201,7 @@ export async function sitemap(input: EngineInput): Promise<Finding[]> {
         .map((path) =>
             findingAt(
                 input,
-                { file: path, line: 1 },
+                { file: repositoryPath(input, build, join(build.output, path)), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

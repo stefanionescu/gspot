@@ -4,36 +4,24 @@ Thumbs.db
 *.swp
 *~
 .idea/
+.vscode/
 
 # Dependencies
 node_modules/
-
-# Build output
-*.tsbuildinfo
 
 # Local environment
 .env
 .env.*
 !.env.example
-*.local
-
-# Editor settings
-.vscode/
 
 # Logs and crash output
 *.log
-npm-debug.log*
-bun-debug.log*
-
-# gspot writes its own entries here as a managed block, from `gspot init`.
-# Do not add /.gspot/ by hand.
-
-# Files copied from packages at build time
+# Grammar files that setup writes
 /packages/cli/grammars/
 
 # Build output of the workspace packages
 /packages/*/dist/
-/packages/eslint-plugin/.dist-*/
+/packages/cli/dist-binaries/
 /docs/dist/
 /docs/.astro/
 

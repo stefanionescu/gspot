@@ -1,56 +1,31 @@
-import { readSource } from '#cli/repository/sources.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput } from '#cli/types/execution/execution.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { executableStatements } from '#cli/checks/general/structure/statements.ts';
-import { IDENTIFIER, TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/language/bash.ts';
-import { withoutComment, withoutDeclaration } from '#cli/checks/language/bash/code-lines.ts';
-import type { ScriptFile, ScriptIndex, ScriptFunction } from '#cli/types/checks/language/bash.ts';
+import { memo } from '#cli/platform/memo.ts';
+import { readSource } from '#cli/platform/source.ts';
+import { parseBashScript } from '#cli/parsers/bash.ts';
+import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import { isPrivateToolPath } from '#cli/repository/selectors.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
+import { SCRIPT_TAG, ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
 
-const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();
-
-function referencesOf(lines: string[], functions: ScriptFunction[]): Map<string, number[]> {
-    const references = new Map<string, number[]>();
-    const declarations = new Set(functions.map((entry) => entry.start));
-    for (const [index, line] of lines.entries()) {
-        const number = index + 1;
-        if (declarations.has(number)) continue;
-        for (const match of withoutComment(line).matchAll(IDENTIFIER)) {
-            const found = references.get(match[0]) ?? [];
-            found.push(number);
-            references.set(match[0], found);
-        }
-    }
-    return references;
-}
-
-function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string> {
-    const names = new Set<string>();
-    for (const [index, line] of lines.entries()) {
-        if (functionAt(functions, index + 1) !== undefined) continue;
-        const code = withoutDeclaration(withoutComment(line).trim());
-        const name = TOP_LEVEL_ASSIGNMENT.exec(code)?.groups?.['name'];
-        if (name !== undefined) names.add(name);
-    }
-    return names;
-}
+const SCRIPT_MEMO = { create: () => new Map<string, Promise<ScriptIndex>>() };
 
 async function readScript(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
     const text = readSource(input.root, file.path, input.reads).toString('utf8');
-    const lines = text.split('\n');
-    const functions = await scriptFunctions(text, input);
-    return {
-        path: file.path,
-        text,
-        lines,
-        functions,
-        isExecutable: file.executable,
-        references: referencesOf(lines, functions),
-        assignments: assignmentsOf(lines, functions),
-    };
+    const syntax = await parseBashScript(text, {
+        minimumStatements: input.view.limit('min_function_statements', 'bash'),
+        context: input,
+    });
+    const references = new Map<string, number[]>();
+    for (const call of syntax.calls) {
+        const found = references.get(call.name) ?? [];
+        found.push(call.line);
+        references.set(call.name, found);
+    }
+    return { ...syntax, path: file.path, text, lines: text.split('\n'), isExecutable: file.executable, references };
 }
 
-async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
+async function readScriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
     const read: ScriptFile[] = [];
     for (const file of files) read.push(await readScript(input, file));
     const owners = new Map<string, string>();
@@ -60,67 +35,41 @@ async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIn
 }
 
 /**
- * The shell index of a scope, built on first use and shared by every analysis of the run.
- * @param input the engine input
- * @param files the shell files the check runs over
+ * Read the scope's shell index once, sharing syntax data across its checks.
+ * @param input the engine's scope-owned files and parser resources
  * @returns the index
  */
-export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
-    let perScope = cache.get(input.reads);
-    if (perScope === undefined) {
-        perScope = new Map();
-        cache.set(input.reads, perScope);
-    }
+export function getScriptIndex(input: EngineInput): Promise<ScriptIndex> {
+    const files = input.files.filter(
+        (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isPrivateToolPath(file.path),
+    );
+    const perScope = memo(input.reads, SCRIPT_MEMO);
     const key = JSON.stringify([input.scope, files.map((file) => file.path)]);
     let index = perScope.get(key);
     if (index === undefined) {
-        index = build(input, files);
+        index = readScriptIndex(input, files);
         perScope.set(key, index);
     }
     return index;
 }
 
 /**
- * The functions a shell script declares, in order.
- * @param text the script text
- * @param context optional execution reads and their resource owner
- * @returns the functions with one-based start and end lines and the lines between the braces
+ * Read the language entry functions and the project's additions once per caller.
+ * @param input the validated scope settings
+ * @returns functions exempt from file-local conventions
  */
-export async function scriptFunctions(
-    text: string,
-    context?: Pick<EngineInput, 'reads' | 'resources'>,
-): Promise<ScriptFunction[]> {
-    const tree = await parseSource('bash', text, context);
-    if (tree === null) throw new Error('The source parser returned no tree.');
-    const lines = text.split('\n');
-    try {
-        return tree.rootNode.descendantsOfType('function_definition').flatMap((node) => {
-            const name = node.childForFieldName('name')?.text ?? '';
-            if (name === '') return [];
-            const start = node.startPosition.row + 1;
-            const end = node.endPosition.row + 1;
-            return [
-                {
-                    name,
-                    start,
-                    end,
-                    body: lines.slice(start, end - 1),
-                    statements: executableStatements(node.childForFieldName('body')?.namedChildren ?? [], 'bash'),
-                },
-            ];
-        });
-    } finally {
-        tree.delete();
-    }
+export function entryFunctions(input: EngineInput): Set<string> {
+    return new Set([...ENTRY_FUNCTIONS, ...(input.view.settings['bash.entry_functions'] as string[])]);
 }
 
 /**
- * The function whose lines include a line number.
- * @param functions the file's functions
+ * Find the innermost function that contains a source line.
+ * @param functions the parsed functions
  * @param line the one-based line
  * @returns the function, or undefined at the top level
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four script checks find the function that holds a line by this one containment rule.
 export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
-    return functions.find((entry) => entry.start <= line && line <= entry.end);
+    return functions
+        .filter((entry) => entry.start <= line && line <= entry.end)
+        .toSorted((left, right) => left.end - left.start - (right.end - right.start))[0];
 }

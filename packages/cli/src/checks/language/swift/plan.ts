@@ -1,14 +1,28 @@
 import { join } from 'node:path';
-import { buildFolder } from '#cli/platform/paths.ts';
-import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import type { EngineInput } from '#cli/types/execution/execution.ts';
-import type { SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
+import { buildFolder } from '#cli/checks/language/swift/cache.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { WORKSPACE_SUFFIX, XCODE_DESTINATION } from '#cli/config/checks/language/swift.ts';
+import type { SwiftBuildPlan, SwiftBuildPurpose } from '#cli/types/checks/language/swift.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three settings are read as text by the plan, whose caller sits at the complexity limit.
-function text(input: EngineInput, key: string): string {
+function stringSetting(input: EngineInput, key: string): string {
     const found = input.view.settings[key];
     return typeof found === 'string' ? found : '';
+}
+
+/**
+ * Locate independent native build state for one project scope and consumer.
+ * @param input the repository root and project scope
+ * @param purpose the native consumer whose outputs stay separate
+ * @returns the build folder
+ */
+export function scopeBuildFolder(input: Pick<EngineInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
+    return join(
+        buildFolder(input.root),
+        'swift',
+        input.scope === '' ? 'root' : `scope-${Buffer.from(input.scope).toString('hex')}`,
+        purpose,
+    );
 }
 
 /**
@@ -17,18 +31,10 @@ function text(input: EngineInput, key: string): string {
  * @param purpose the build consumer, whose command owns a separate cache
  * @returns the plan
  */
-export function buildPlan(
-    input: EngineInput,
-    purpose: 'compile' | 'analyze' | 'coverage' | 'periphery' = 'compile',
-): SwiftBuildPlan {
-    const folder = join(
-        buildFolder(input.root),
-        'swift',
-        input.scope === '' ? 'root' : `scope-${Buffer.from(input.scope).toString('hex')}`,
-        purpose,
-    );
+export function buildPlan(input: EngineInput, purpose: SwiftBuildPurpose = 'compile'): SwiftBuildPlan {
+    const folder = scopeBuildFolder(input, purpose);
     const log = join(folder, 'build.log');
-    const project = text(input, 'tools.xcode.project');
+    const project = stringSetting(input, 'tools.xcode.project');
     if (project === '') {
         const scratch = join(folder, 'package');
         return {
@@ -38,18 +44,18 @@ export function buildPlan(
             argv: ['swift', 'build', '-v', '--scratch-path', scratch],
         };
     }
-    mutationTarget(project);
+    assertMutationTarget(project);
     const container = project.endsWith(WORKSPACE_SUFFIX) ? '-workspace' : '-project';
     const argv = [
         'xcodebuild',
         ...(purpose === 'analyze' ? ['clean'] : []),
-        'build-for-testing',
+        purpose === 'coverage' ? 'test' : 'build-for-testing',
         container,
         project,
         '-scheme',
-        text(input, 'tools.xcode.scheme'),
+        stringSetting(input, 'tools.xcode.scheme'),
         '-destination',
-        text(input, 'tools.xcode.destination') || XCODE_DESTINATION,
+        stringSetting(input, 'tools.xcode.destination') || XCODE_DESTINATION,
         '-derivedDataPath',
         join(folder, 'derived'),
         'CODE_SIGNING_ALLOWED=NO',

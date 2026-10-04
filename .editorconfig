@@ -10,8 +10,6 @@ indent_style = space
 indent_size = 4
 
 [*.{sh,bash,zsh}]
-indent_style = space
-indent_size = 4
 switch_case_indent = true
 
 [*.md]

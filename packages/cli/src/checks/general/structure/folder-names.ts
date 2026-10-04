@@ -1,27 +1,28 @@
+import { directoryOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { harnessFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { directoryOf } from '#cli/checks/general/structure/directories.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
+import { harnessFolders } from '#cli/policy/settings/entries.ts';
+import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 import { BANNED_FOLDERS, IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.
- * @param context the check context
+ * @param input the check context
  * @returns the findings
  */
-export const getDirectories: Analysis = (context) => {
+export const getDirectories: Engine = (input) => {
+    const files = structureSources(input);
     const allowed = pathMatcher(
-        context.input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),
+        input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),
     );
-    const { input } = context;
     const harnesses = new Set(
         harnessFolders(input.policyFiles.policy, input.scope).map((folder) =>
             [input.scope, folder].filter(Boolean).join('/'),
         ),
     );
     const seen = new Set<string>();
-    return context.files.flatMap((file) => {
+    return files.flatMap((file) => {
         const segments = directoryOf(file.path)
             .split('/')
             .filter((segment) => segment !== '');
@@ -38,7 +39,7 @@ export const getDirectories: Analysis = (context) => {
             seen.add(folder);
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: 1 },
                     'container-name',
                     `The folder ${folder}/ is named ${segment}, which says nothing about what it holds.`,

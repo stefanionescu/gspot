@@ -1,0 +1,3 @@
+<% for (const entry of settings['tools.trivy.ignore'] ?? []) { %># <%= json(entry.reason, 0) %>
+<%= entry.id %>
+<% } %>

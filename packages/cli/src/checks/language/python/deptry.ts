@@ -1,17 +1,20 @@
 // The dependency checks of a Python project: deptry over the declared imports, and one owner of the dependencies.
-import { z } from 'zod';
+
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { escapeRegExp } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readText } from '#cli/platform/filesystem.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { readText, readSource } from '#cli/platform/source.ts';
+import type { PathAllowance } from '#cli/types/policy/settings.ts';
+import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { deptrySchema } from '#cli/parsers/schema/python/dependencies.ts';
+import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 import {
     PIP_INSTALL,
@@ -20,29 +23,26 @@ import {
     INSTALL_EXTENSIONS,
 } from '#cli/config/checks/language/python.ts';
 
-const deptrySchema = z.object({
-    tool: z
-        .object({
-            deptry: z.object({ extend_exclude: z.array(z.string()).default([]) }).default({ extend_exclude: [] }),
-        })
-        .default({ deptry: { extend_exclude: [] } }),
-});
-
 /**
- * Exclude private tool installations while preserving native dependency scan settings.
- * @param session the repository and native execution boundaries.
+ * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot added, because the command-line flag replaces it.
+ * @param session the repository and installed tools.
  * @param planned the dependency check and its scope.
  * @returns the native dependency findings, including undeclared application imports.
  */
 export async function deptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '';
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
-    return await runToolCheck(session, planned, [
-        'deptry',
-        '.',
-        '--no-ansi',
-        ...[String.raw`(^|.*[/\\])\.gspot([/\\]|$)`, ...exclusions].flatMap((pattern) => ['--extend-exclude', pattern]),
-    ]);
+    return await runCommandCheck(session, planned, {
+        command: [
+            'deptry',
+            '.',
+            '--no-ansi',
+            ...[String.raw`(^|.*[/\\])${escapeRegExp(DOT_GSPOT)}([/\\]|$)`, ...exclusions].flatMap((pattern) => [
+                '--extend-exclude',
+                pattern,
+            ]),
+        ],
+    });
 }
 
 /**
@@ -57,7 +57,7 @@ export function pipInstalls(input: EngineInput): Finding[] {
         )
     )
         throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
-    const allowed = (input.view.tool('pip')['installs_allowed'] as { paths: string[] }[] | undefined) ?? [];
+    const allowed = (input.view.options('tools.pip')['installs_allowed'] as PathAllowance[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files.filter(
         (file) => file.kind === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
@@ -85,7 +85,7 @@ export function pipInstalls(input: EngineInput): Finding[] {
                                   input,
                                   { file: file.path, line: index + 1 },
                                   'pip-install',
-                                  'A pip install outside the lockfile installs versions nobody reviewed.',
+                                  'Add the package to pyproject.toml and install it from the lockfile.',
                               ),
                           ]
                         : [],

@@ -1,12 +1,15 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { decodedText } from '#cli/platform/text.ts';
-import { openDocument } from '#cli/lifecycle/merge/document.ts';
+import { decodeUtf8 } from '#cli/platform/text.ts';
+import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { TomlDocument } from '#cli/types/parsers/toml.ts';
+import { openTomlDocument } from '#cli/parsers/toml/document.ts';
+import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
-import type { MergeRecord } from '#cli/types/lifecycle/lifecycle.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
-import type { Field, KeyPath, MergePlan, KitDocument, MergeRequest } from '#cli/types/lifecycle/merge.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
+import type { Field, MergePlan, MergeRequest } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
 function isEmptyContainer(value: unknown): boolean {
@@ -16,24 +19,15 @@ function isEmptyContainer(value: unknown): boolean {
     return Object.keys(value).length === 0;
 }
 
-// The file text, which must be UTF-8, or the empty document of the format for a file that does not exist.
-function decodeText(request: MergeRequest): string {
-    const { current, format, path } = request;
-    if (current === undefined) return format === 'toml' ? '' : '{}\n';
-    const text = decodedText(current.bytes);
-    if (text === undefined) throw new Error(`Shared configuration is not UTF-8 text: ${path}`);
-    return text;
-}
-
-// Whether the recorded ownership rules out a plan: another format, or an edited file with no recorded fields.
-function isUnplannable(request: MergeRequest): boolean {
-    const { existing, format, current, matchesInstalled } = request;
-    if (existing?.configuration !== undefined && existing.configuration.format !== format) return true;
-    return existing !== undefined && existing.configuration === undefined && current !== undefined && !matchesInstalled;
+// An edited file with no recorded fields cannot be merged safely.
+function hasUnrecordedEdits(request: MergeRequest): boolean {
+    const { existing, current, matchesInstalled } = request;
+    if (existing === undefined || current === undefined) return false;
+    return existing.configuration === undefined && !matchesInstalled;
 }
 
 // Puts back the original value of each unrequested key, as long as the developer left it as installed.
-function retireFields(document: KitDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
+function retireFields(document: TomlDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
     const retired = recorded.filter(
         (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
     );
@@ -46,7 +40,7 @@ function retireFields(document: KitDocument, recorded: Field[], requested: Field
 
 // The field as it will be recorded, or undefined when the developer's value stands in the way of installing it.
 function planField(
-    document: KitDocument,
+    document: TomlDocument,
     request: MergeRequest,
     field: Field,
     previous: Field | undefined,
@@ -62,7 +56,7 @@ function planField(
 }
 
 // Records the containers above a key that do not exist yet, which this owner is about to create.
-function recordParents(document: KitDocument, path: KeyPath, parents: KeyPath[]): void {
+function recordParents(document: TomlDocument, path: KeyPath, parents: KeyPath[]): void {
     for (let length = 1; length < path.length; length++) {
         const parent = path.slice(0, length);
         if (document.value(parent) === undefined && !parents.some((known) => isDeepStrictEqual(known, parent)))
@@ -72,7 +66,7 @@ function recordParents(document: KitDocument, path: KeyPath, parents: KeyPath[])
 
 // Installs every requested field, returning the recorded fields, or undefined when one cannot be installed.
 function installFields(
-    document: KitDocument,
+    document: TomlDocument,
     request: MergeRequest,
     recorded: Field[],
     requested: Field[],
@@ -102,7 +96,7 @@ function buildRecord(
     const { existing, current, matchesInstalled } = request;
     const edited = recorded?.edited === true || (existing !== undefined && current !== undefined && !matchesInstalled);
     return {
-        format: request.format,
+        format: MERGED_CONFIGURATION_FORMAT,
         fields,
         ...(parents.length === 0 ? {} : { parents }),
         edited,
@@ -133,7 +127,7 @@ function planned(
  * @param keptPaths the key paths whose containers stay whatever they hold
  * @returns the created containers that still exist
  */
-export function pruneParents(document: KitDocument, parents: KeyPath[], keptPaths: KeyPath[] = []): KeyPath[] {
+export function pruneParents(document: TomlDocument, parents: KeyPath[], keptPaths: KeyPath[] = []): KeyPath[] {
     for (const parent of parents.toSorted((left, right) => right.length - left.length)) {
         if (
             keptPaths.some(
@@ -149,19 +143,20 @@ export function pruneParents(document: KitDocument, parents: KeyPath[], keptPath
 /**
  * Plans the merge of owned keys into a shared configuration file the developer keeps.
  * @param request the destination, requested fields, and read ownership
- * @returns the next snapshot with its ownership, or undefined when the recorded format differs
+ * @returns the next snapshot with its ownership, or undefined when an authored field was edited
  */
 export function planMerge(request: MergeRequest): MergePlan | undefined {
-    const { format, changes, current, existing } = request;
-    const text = decodeText(request);
-    const document = openDocument(text, format, current === undefined);
-    if (isUnplannable(request)) return undefined;
+    const { changes, current, existing } = request;
+    const text = current === undefined ? '' : decodeUtf8(current.bytes);
+    if (text === undefined) throw new Error(`${request.path} is not UTF-8 text`);
+    const document = openTomlDocument(text);
+    if (hasUnrecordedEdits(request)) return undefined;
     const requested = fieldsSchema.parse(
         changes.map((change) => ({ path: change.path, installed: z.json().parse(change.value) })),
     );
-    const recorded = existing?.configuration;
-    const parents = [...(recorded?.parents ?? [])];
-    const fields = installFields(document, request, recorded?.fields ?? [], requested, parents);
+    const recorded = existing?.configuration ?? { parents: [], fields: [] };
+    const parents = [...(recorded.parents ?? [])];
+    const fields = installFields(document, request, recorded.fields, requested, parents);
     if (fields === undefined) return undefined;
     const remaining = pruneParents(
         document,

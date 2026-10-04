@@ -1,15 +1,17 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { readPackageManifest } from '#cli/repository/packages.ts';
-import type { PackageManifest } from '#cli/types/repository/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { PathAllowance } from '#cli/types/policy/settings.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import { LOCKFILE_CLIENTS } from '#cli/config/repository/inventory.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
-    LOCKFILES,
     NPM_MANIFEST,
     EXACT_VERSION,
     DEPENDENCY_TABLES,
+    JAVASCRIPT_CLIENTS,
     NON_REGISTRY_VERSION,
 } from '#cli/config/checks/general/dependencies.ts';
 
@@ -31,27 +33,27 @@ function rootFindings(input: EngineInput, root: PackageManifest | undefined): Fi
                 input,
                 { file: NPM_MANIFEST, line: 1 },
                 'private-root',
-                'A workspace root is private, so nobody publishes it by accident.',
+                'This workspace root is not private. Set "private": true to prevent accidental publication.',
             ),
         );
     return findings;
 }
 
-function installerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
+function packageInstallerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
+    if (wanted === undefined) return [];
     const differing = manifests
         .entries()
-        .filter(([, manifest]) => wanted !== undefined && (manifest.packageManager ?? wanted) !== wanted)
+        .filter(([, manifest]) => (manifest.packageManager ?? wanted) !== wanted)
         .toArray();
     return [
-        ...rootFindings(input, root),
         ...differing.map(([path, manifest]) =>
             findingAt(
                 input,
                 { file: path, line: 1 },
                 'package-manager',
-                `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
+                `This package names ${manifest.packageManager ?? ''}; the root names ${wanted}.`,
             ),
         ),
     ];
@@ -60,8 +62,8 @@ function installerFindings(input: EngineInput, manifests: Map<string, PackageMan
 function lockfileFindings(input: EngineInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
-        const kind = LOCKFILES[posix.basename(file.path)];
-        if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
+        const kind = LOCKFILE_CLIENTS[posix.basename(file.path)];
+        if (kind !== undefined && JAVASCRIPT_CLIENTS.has(kind) && !kinds.has(kind)) kinds.set(kind, file.path);
     }
     if (kinds.size <= 1) return [];
     const listed = kinds.values().toArray().join(', ');
@@ -85,13 +87,15 @@ function lockfileFindings(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function manifestPolicy(input: EngineInput): Finding[] {
-    const allowed = (input.view.tool('dependencies')['ranges_allowed'] as { paths: string[] }[] | undefined) ?? [];
+    const allowed = (input.view.options('dependencies')['ranges_allowed'] as PathAllowance[] | undefined) ?? [];
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
         if (file.path !== NPM_MANIFEST && !file.path.endsWith(`/${NPM_MANIFEST}`)) continue;
-        manifests.set(file.path, readPackageManifest(input.root, file.path));
+        const manifest = readPackageManifest(input.root, file.path);
+        if (manifest === undefined) throw new Error(`Manifest is missing: ${file.path}`);
+        manifests.set(file.path, manifest);
     }
     const ranges = [...manifests].flatMap(([path, manifest]) => {
         if (isRangeAllowed(path)) return [];
@@ -108,5 +112,10 @@ export function manifestPolicy(input: EngineInput): Finding[] {
                 ),
         );
     });
-    return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
+    return [
+        ...ranges,
+        ...rootFindings(input, manifests.get(NPM_MANIFEST)),
+        ...packageInstallerFindings(input, manifests),
+        ...lockfileFindings(input),
+    ];
 }

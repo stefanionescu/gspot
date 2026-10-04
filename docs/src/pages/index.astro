@@ -1,27 +1,41 @@
 ---
-// Homepage composition adapted from Turborepo. See /licenses/turborepo.txt.
+import { FEATURES } from '../config/home.ts';
 import Features from '../components/home/Features.astro';
 import ThemeSelect from '../components/starlight/ThemeSelect.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-
-const features = [
-    { title: 'Catch what agents write', description: 'Besides configuring ESLint, Ruff, ShellCheck, and the other linters of your languages, gspot checks for what agents write again and again: wrappers, catch-all file names, and loose types.', image: '/brand/home/finding.svg', href: '/guides/findings/', link: 'Read and fix findings' },
-    { title: 'Stop bad commits', description: 'Git hooks run the checks on every commit and push. A finding stops the commit and says what to fix.', image: '/brand/home/policy.svg', href: '/guides/hooks/', link: 'Set up hooks and CI' },
-    { title: 'Install rules for agents', description: 'gspot installs rules that tell an agent how to write code in your repository, linked from AGENTS.md.', image: '/brand/home/agents.svg', href: '/guides/agents/', link: 'Set up coding agents' },
-];
 ---
-<StarlightPage frontmatter={{
-    title: 'Lint AI-generated code',
-    description: 'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.',
-    hero: { title: 'Lint AI-generated code' },
-    template: 'splash', editUrl: false, lastUpdated: false,
-}}>
+
+<StarlightPage
+    frontmatter={{
+        title: 'Check code before it ships',
+        description: 'gspot sets up linters and checks for your repository and installs rules for coding agents.',
+        hero: { title: 'Check code before it ships' },
+        template: 'splash',
+        editUrl: false,
+        lastUpdated: false,
+    }}
+>
     <div class="landing">
-        <Features title="What gspot does" description="It configures the linters of your languages, adds checks of its own, and runs them on every commit." features={features} />
+        <Features
+            title="What gspot does"
+            description="It configures the linters of your languages, adds checks of its own, and runs them on every commit."
+            features={FEATURES}
+        />
         <footer class="home-footer">
-            <div class="footer-about"><a href="/" class="footer-brand">gspot</a></div>
-            <nav aria-label="Footer"><a href="/guides/overview/">Docs</a><a href="https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md">Contribute</a><a href="https://github.com/stefanionescu/gspot">GitHub</a><a href="https://github.com/stefanionescu/gspot/blob/main/LICENSE.md">Apache-2.0</a></nav>
-            <div class="footer-theme"><ThemeSelect /></div>
+            <div class="footer-about">
+                <a href="/" class="footer-brand">
+                    gspot
+                </a>
+            </div>
+            <nav aria-label="Footer">
+                <a href="/guides/overview/">Docs</a>
+                <a href="https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md">Contribute</a>
+                <a href="https://github.com/stefanionescu/gspot">GitHub</a>
+                <a href="https://github.com/stefanionescu/gspot/blob/main/LICENSE.md">Apache-2.0</a>
+            </nav>
+            <div class="footer-theme">
+                <ThemeSelect />
+            </div>
         </footer>
     </div>
 </StarlightPage>

@@ -1,19 +1,19 @@
 // NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
-
+import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
+import { structureSources } from '#cli/checks/general/structure/source-files.ts';
+import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 
 import {
-    HOOK_PREFIX,
     INDEX_STEMS,
     NESTJS_KINDS,
+    HOOK_PREFIXES,
     SCRIPT_ENDING,
     TOOL_PREFIXES,
     IGNORED_FOLDERS,
     HOOK_DIRECTORIES,
-    PREFIX_COLLISIONS,
 } from '#cli/config/checks/general/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
@@ -26,7 +26,7 @@ function isNestjsName(name: string): boolean {
 }
 
 function isSkipped(directory: string, prefix: string, isAllowed: (path: string) => boolean): boolean {
-    if (prefix === HOOK_PREFIX && HOOK_DIRECTORIES.includes(directory)) return true;
+    if (HOOK_PREFIXES.has(prefix) && HOOK_DIRECTORIES.includes(directory)) return true;
     return (
         directory.split('/').some((segment) => IGNORED_FOLDERS.includes(segment)) ||
         isAllowed(directory) ||
@@ -36,19 +36,19 @@ function isSkipped(directory: string, prefix: string, isAllowed: (path: string) 
 
 /**
  * One finding per directory and prefix shared by at least the limit's worth of siblings.
- * @param context the check context
+ * @param input the check context
  * @returns the findings
  */
-export const prefixCollisions: Analysis = (context) => {
-    const { input } = context;
-    const threshold = context.limit('prefix_collisions') ?? PREFIX_COLLISIONS;
+export const prefixCollisions: Engine = (input) => {
+    const files = structureSources(input);
+    const threshold = input.view.limit('prefix_collisions') as number;
     const isAllowed = pathMatcher(
         input.policyFiles.policy.structure.prefix_collisions_allowed.flatMap((entry) => entry.paths),
     );
-    const isNest = input.selection.selected.some((manifest) => manifest.kit.name === 'nestjs');
+    const isNest = input.selection.selected.some((manifest) => manifest.configuration.name === 'nestjs');
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
-    return context.files.flatMap((file) => {
+    return files.flatMap((file) => {
         const directory = directoryOf(file.path);
         const stem = stemOf(file.path);
         const prefix = prefixOf(stem);
@@ -61,17 +61,19 @@ export const prefixCollisions: Analysis = (context) => {
             isSkipped(directory, prefix, isAllowed)
         )
             return [];
-        const peers = (tree.get(directory) ?? []).filter((entry) => {
-            if (entry.kind === 'dir')
-                return (
-                    !entry.name.startsWith('.') &&
-                    !IGNORED_FOLDERS.includes(entry.name) &&
-                    prefixOf(entry.name) === prefix
-                );
-            if (isNest && isNestjsName(entry.name)) return false;
-            const peerStem = stemOf(entry.name);
-            return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
-        });
+        const peers = (tree.get(directory) ?? [])
+            .filter((entry) => !isAllowed(posix.join(directory, entry.name)))
+            .filter((entry) => {
+                if (entry.kind === 'dir')
+                    return (
+                        !entry.name.startsWith('.') &&
+                        !IGNORED_FOLDERS.includes(entry.name) &&
+                        prefixOf(entry.name) === prefix
+                    );
+                if (isNest && isNestjsName(entry.name)) return false;
+                const peerStem = stemOf(entry.name);
+                return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
+            });
         if (
             new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : stemOf(entry.name)))).size <
             threshold
@@ -81,7 +83,7 @@ export const prefixCollisions: Analysis = (context) => {
         const names = peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : entry.name)).join(', ');
         return [
             findingAt(
-                context.input,
+                input,
                 { file: file.path, line: 1 },
                 'shared-prefix',
                 `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or allow the set with a reason.`,

@@ -1,0 +1,203 @@
+[
+    {
+        "id": "diagram/docs",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "diagram/docs/001",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "State requirements and installation by project type in both README files.",
+        "location": ["README.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/002",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "State installation by project type on the landing page.",
+        "location": ["docs/src/components/home/Hero.astro"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/003",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Expand getting-started navigation and describe what gspot does.",
+        "location": ["docs/src/config/navigation.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/004",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Add a requirements page and one installation decision table.",
+        "location": ["docs/src/content/docs/guides/requirements.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/005",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Provide separate TypeScript, Python, and Swift quickstarts.",
+        "location": ["docs/src/content/docs/guides/quickstart/typescript.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram navigation/content/reference change implemented. Language quickstart shell replay remains an independent acceptance requirement.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/006",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Provide adding to an existing repository and joining a repository guides.",
+        "location": ["docs/src/content/docs/guides/join.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/007",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Group daily use around findings, hooks, CI, and agent instructions.",
+        "location": ["docs/src/config/navigation.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/008",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Group configuration around policy, exclusions, monorepos, and reusable templates.",
+        "location": ["docs/src/config/navigation.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/009",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Provide upgrade and removal guides.",
+        "location": ["docs/src/content/docs/guides/upgrade.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/010",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Title command references by their public command.",
+        "location": ["docs/src/content/reference/commands.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/011",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Derive configuration, check, and plugin indexes from their owners.",
+        "location": ["docs/src/content/reference/collection.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/012",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Provide a readable gspot.toml reference with one section per table.",
+        "location": ["docs/src/content/reference/policy.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/013",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Document exit codes and environment variables.",
+        "location": ["docs/src/content/docs/reference/runtime.md"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Docs diagram change implemented at current location; navigation and static link/fragment validation pass.",
+            "Docs source review, static build: 321 routes and valid built local links/fragments; 36-file current-plugin ESLint, docs TypeScript, and 15 prose/Markdown/shape/spelling checks passed. /tmp/gspot-docs-agent-outcomes.json records the row evidence and scope.",
+            "Canonical policy now groups documented example/output paths into two docs.exclude entries. Complete shell quickstart replay and release/deployment verification remain tracked separately."
+        ]
+    },
+    {
+        "id": "diagram/docs/014",
+        "source": "findings/images/docs.png",
+        "owner": "docs",
+        "finding": "Deploy the static documentation output through Cloudflare Workers with release deployment and manual rollback.",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    }
+]

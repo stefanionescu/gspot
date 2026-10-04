@@ -1,10 +1,10 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
-import { isReplaced } from '#cli/kits/takeover.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
-import type { Tooling, ToolFile } from '#cli/types/repository/repository.ts';
+import { isReplaced } from '#cli/configurations/takeover.ts';
+import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 
-// Captures every owned file. The write refuses a file that changed after the plan was shown.
+// Captures files selected for removal. Retained authored content has no mutation snapshot.
 function captureOwned(root: string, owned: ToolFile[], replaced: Replaced): void {
     using files = openRoot(root);
     for (const path of new Set(owned.map((entry) => entry.path))) {
@@ -30,13 +30,19 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
  * The configuration files of the selected tools, read and sorted into what init deletes and what it leaves.
  * @param root the repository root
  * @param tooling the configuration files init found
- * @param selected the ids of the selected kits
+ * @param selected the ids of the selected configurations
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay
  */
 export function getReplaced(root: string, tooling: Tooling, selected: Set<string>): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [] };
     const owned = tooling.configs.filter(({ tool }) => isReplaced(tool, selected));
-    captureOwned(root, owned, replaced);
-    for (const entry of owned) if (replaced.read.has(entry.path)) recordOutcome(entry, replaced);
+    captureOwned(
+        root,
+        owned.filter((entry) => entry.shared !== true),
+        replaced,
+    );
+    for (const entry of owned) {
+        if (entry.shared === true || replaced.read.has(entry.path)) recordOutcome(entry, replaced);
+    }
     return replaced;
 }

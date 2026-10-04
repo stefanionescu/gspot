@@ -1,79 +1,56 @@
 ---
-title: Hooks and CI
-description: When the checks run, how the Git hooks run them, and the CI job gspot writes.
+title: Git hooks
+description: Run checks before commits and pushes and check commit messages.
 ---
 
-gspot runs the checks at three points: before a commit, before a push, and in CI. Each check
-belongs to a stage, and each point runs the checks of its stage.
+gspot installs three Git hooks when `[hooks]` is present:
 
-## Before a commit and before a push
+| Hook         | Checks                                               |
+| ------------ | ---------------------------------------------------- |
+| `pre-commit` | Commit-stage checks over staged files                |
+| `pre-push`   | Push-stage checks over every pushed revision         |
+| `commit-msg` | Message-stage checks; commitlint runs at level `all` |
 
-The commit hook runs `gspot check --staged`. It checks what you staged, not the rest of your
-working tree, and a finding stops the commit.
+At level `recommended`, a message hook can have no applicable check. A skipped check does not count as passed.
 
-The push hook checks every commit you push. It reads the changed files of those commits and runs
-the whole-project checks, such as type checks, for the projects they touch. A push can therefore
-report a finding in a file you did not change, when that file belongs to a changed project.
+The commit hook reads staged files. The push hook covers the commits Git is pushing, including intermediate commits. Whole-project checks run for affected scopes and can report a finding in another file of the same project.
 
-## How the hooks run
+## Prepare the clone
 
-The hooks are short scripts in `.gspot/hooks/`, and `gspot install` points Git at them. Run
-`gspot install` after you clone the repository; `gspot doctor` reports whether this clone runs
-the hooks. When the repository already runs hooks, such as Husky or Lefthook, gspot keeps them,
-and `gspot install` prints the line to add to each one:
+Run `gspot install` after cloning. It points Git at `.gspot/hooks/` when no other hook manager owns the hooks.
 
-```text
-pre-commit: npm exec --no -- gspot check --staged
-```
-
-`git commit --no-verify` and `git push --no-verify` skip the local hooks, and CI still runs. To
-accept a finding for good, [record an ignore](/guides/customize/#record-one-exception) instead.
-
-## Run one hook yourself
-
-```bash
-gspot check --hook commit
-gspot check --hook push
-```
-
-Checks at the `manual` stage, such as CodeQL, run only when `--only` names them:
-
-```bash
-gspot check --only security/codeql
-```
-
-## The CI job
-
-`gspot init --ci github` writes `.github/workflows/gspot.yml`. `gspot init --ci gitlab` writes
-`.gitlab/ci/gspot.yml`; include it in your pipeline:
-
-```yaml
-include:
-  - local: .gitlab/ci/gspot.yml
-```
-
-The GitHub job checks pull requests, merge queues, and pushes, and on pushes to the default branch
-it also runs the manual checks you selected. The GitLab job checks merge requests and the default
-branch. The job checks what changed
-after the comparison point, such as the pull request base; a
-first push has no base, so the job checks the whole tree. To check the whole tree on every run,
-run `gspot set ci.run all`.
-
-With mise, the job installs the pinned tools. Without mise, install the package manager, uv for
-Python tools, and the native tools on the runner.
-
-## Keep your own pipeline
-
-When init finds a lint job or Bitbucket Pipelines, it prints setup steps instead of writing a
-second workflow. On your runner, install the pinned gspot version and the runtimes, then run
-from the repository root:
+A repository with Husky, Lefthook, or an authored hook folder retains its existing hooks. gspot prints all three integration lines. Add each line to the matching hook. For an npm runner, the lines have this form:
 
 ```shell
-gspot install
-gspot check
-gspot check --only security/codeql
+# pre-commit
+npm exec --no -- gspot check --hook pre-commit
+# pre-push: preserve Git's remote arguments and standard input
+npm exec --no -- gspot check --hook pre-push -- "$@"
+# commit-msg: preserve Git's message-file argument
+npm exec --no -- gspot check --hook commit-msg --message-file "$1"
 ```
 
-Name each manual check you selected after `--only`, and keep the nonzero exit codes. For a
-machine-readable result, run `gspot check --json`. Do not upload `.gspot/state/`, installed
-dependencies, or credentials.
+Use the exact lines printed by your installation for its runner. A missing integration line leaves that hook's checks inactive.
+
+## Run a hook yourself
+
+```shell
+gspot check --hook pre-commit
+gspot check --hook commit-msg --message-file .git/COMMIT_EDITMSG
+```
+
+The pre-push hook requires Git's remote arguments and revision updates on standard input. Use `git push` to exercise that protocol. For a branch comparison outside a push:
+
+```shell
+gspot check --changed --base origin/main
+```
+
+To check the whole tree of each pushed revision:
+
+```shell
+gspot set hooks.push_files all
+```
+
+`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To accept a finding in saved policy, [record an ignore](/guides/policy/#record-one-exception).
+
+Checks at the manual stage run only when named with `--only`, for example `gspot check --only security/codeql`. See [CI](/guides/ci/) for pipeline setup.

@@ -1,81 +1,43 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import { PAIR } from '#cli/config/platform/platform.ts';
-import { functionAt } from '#cli/checks/language/bash/scripts.ts';
-import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-import { SSH_HEREDOC, SSH_BLOCK_LINES, CLOSING_QUOTE_LINE } from '#cli/config/checks/language/bash.ts';
-
-function unescapedQuotes(text: string, quote: string): number {
-    let count = 0;
-    for (let index = 0; index < text.length; index += 1)
-        if (text.charAt(index) === quote && text.charAt(index - 1) !== '\\') count += 1;
-    return count;
-}
-
-// A call of a remote function that opens a quoted block: the function names come from tools.bash.remote_functions.
-function blockStart(names: string[]): RegExp | undefined {
-    if (names.length === 0) return undefined;
-    const alternatives = names.map((name) => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)).join('|');
-    return new RegExp(String.raw`\b(?:${alternatives})\s+(?<quote>["'])`, 'u');
-}
-
-function isBlockStart(line: string, start: RegExp): boolean {
-    const match = start.exec(line);
-    const quote = match?.groups?.['quote'];
-    if (match === null || quote === undefined) return false;
-    const after = line.slice(line.indexOf(match[0]) + match[0].length);
-    return unescapedQuotes(after, quote) % PAIR === 0;
-}
-
-function quotedBlocks(file: ScriptFile, start: RegExp): { start: number; length: number }[] {
-    const blocks: { start: number; length: number }[] = [];
-    let open: { start: number; length: number } | undefined;
-    for (const [index, line] of file.lines.entries()) {
-        const trimmed = line.trimStart();
-        if (open === undefined) {
-            if (isBlockStart(trimmed, start)) open = { start: index + 1, length: 1 };
-            continue;
-        }
-        open.length += 1;
-        if (trimmed === '"' || trimmed === "'" || CLOSING_QUOTE_LINE.test(trimmed)) {
-            blocks.push(open);
-            open = undefined;
-        }
-    }
-    return blocks;
-}
+import type { Engine } from '#cli/types/execution/runtime.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { SSH_HEREDOC, SSH_BLOCK_LINES } from '#cli/config/checks/language/bash.ts';
 
 /**
  * One finding per multi-line block a remote function runs outside a named function, and per ssh heredoc without a named
  * comment above it.
- * @param context the check context
- * @param scripts the shell index
+ * @param input the check context
  * @returns the findings
  */
-export const sshBlocks: Analysis = async (context, scripts) => {
-    const start = blockStart(context.bashList('remote_functions'));
-    const index = await scripts();
+export const sshBlocks: Engine = async (input) => {
+    const remoteFunctions = new Set(input.view.settings['bash.remote_functions'] as string[]);
+    const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
-        const quoted = (start === undefined ? [] : quotedBlocks(file, start))
-            .filter((block) => block.length >= SSH_BLOCK_LINES && functionAt(file.functions, block.start) === undefined)
+        const quoted = file.quotedArguments
+            .filter(
+                (block) =>
+                    remoteFunctions.has(block.command) &&
+                    block.end - block.start + 1 >= SSH_BLOCK_LINES &&
+                    functionAt(file.functions, block.start) === undefined,
+            )
             .map((block) =>
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: block.start },
                     'unnamed-block',
-                    `A ${String(block.length)}-line remote block sits outside a named function.`,
+                    `A ${String(block.end - block.start + 1)}-line remote block sits outside a named function.`,
                 ),
             );
-        const heredocs = file.lines.flatMap((line, position) => {
+        const heredocs = file.code.flatMap((line, position) => {
             if (!SSH_HEREDOC.test(line)) return [];
             const previous = (file.lines[position - 1] ?? '').trim();
-            if (previous.startsWith('# ') && previous.includes(' - ')) return [];
+            if (/^# [A-Za-z_]\w*:\s+\S/u.test(previous)) return [];
             return [
                 findingAt(
-                    context.input,
+                    input,
                     { file: file.path, line: position + 1 },
                     'undocumented-block',
-                    'An ssh heredoc carries a "# name - what it does" line above it.',
+                    'An ssh heredoc carries a "# name: what it does" line above it.',
                 ),
             ];
         });

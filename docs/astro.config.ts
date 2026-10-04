@@ -2,12 +2,13 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { mkdirSync, copyFileSync } from 'node:fs';
+import { SIDEBAR } from './src/config/navigation.ts';
 import { sourceRevision } from './src/content/revision.ts';
 
 export default defineConfig({
     site: 'https://gspot.dev',
-    // Lower resource-management syntax before Bun evaluates CLI-backed references through Vite.
-    vite: { oxc: { target: 'es2022' } },
+    // Lower CLI syntax for Vite and keep the Markdown native loader at its installed package origin.
+    vite: { oxc: { target: 'es2022' }, environments: { prerender: { resolve: { external: ['satteri'] } } } },
     integrations: [
         {
             name: 'font-licenses',
@@ -33,7 +34,7 @@ export default defineConfig({
                 },
                 { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
                 { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
-                { tag: 'meta', attrs: { property: 'og:image:alt', content: 'gspot Sweet spot mark and wordmark' } },
+                { tag: 'meta', attrs: { property: 'og:image:alt', content: 'The gspot logo.' } },
                 { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
                 {
                     tag: 'meta',
@@ -52,69 +53,11 @@ export default defineConfig({
             routeMiddleware: './src/route-metadata.ts',
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
             description:
-                'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents',
+                'gspot sets up linters and checks for the languages in your repository and installs rules for coding agents',
             customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],
-            sidebar: [
-                {
-                    label: 'Get started',
-                    collapsed: true,
-                    items: [
-                        { label: 'Overview', slug: 'guides/overview' },
-                        { label: 'Install', slug: 'guides/install' },
-                        { label: 'Quickstart', slug: 'guides/quick-start' },
-                        { label: 'Existing repositories', slug: 'guides/existing-repository' },
-                    ],
-                },
-                {
-                    label: 'Guides',
-                    collapsed: true,
-                    items: [
-                        { label: 'Fix findings', slug: 'guides/findings' },
-                        { label: 'The policy file', slug: 'guides/customize' },
-                        { label: 'Coding agents', slug: 'guides/agents' },
-                        { label: 'Hooks and CI', slug: 'guides/hooks' },
-                        { label: 'Generated files', slug: 'guides/generated-files' },
-                        { label: 'Monorepos', slug: 'guides/scopes' },
-                        { label: 'Team profiles', slug: 'guides/profiles' },
-                        { label: 'Package managers', slug: 'guides/without-mise' },
-                        { label: 'Custom checks', slug: 'guides/project-checks' },
-                        { label: 'Tests and coverage', slug: 'guides/testing' },
-                        { label: 'Dependency licenses', slug: 'guides/dependency-licenses' },
-                        { label: 'Security', slug: 'guides/security' },
-                        { label: 'Troubleshooting', slug: 'guides/troubleshooting' },
-                    ],
-                },
-                {
-                    label: 'Reference',
-                    collapsed: true,
-                    items: [
-                        {
-                            label: 'Commands',
-                            collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/commands' } }],
-                        },
-                        {
-                            label: 'Kits',
-                            collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/kits' } }],
-                        },
-                        {
-                            label: 'Checks',
-                            collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/checks' } }],
-                        },
-                        {
-                            label: 'ESLint plugin',
-                            collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/plugin' } }],
-                        },
-                        { label: 'Settings', slug: 'reference/settings' },
-                        { label: 'Policy file', slug: 'reference/configuration' },
-                    ],
-                },
-            ],
+            sidebar: SIDEBAR,
         }),
     ],
 });

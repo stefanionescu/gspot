@@ -1,26 +1,25 @@
 import { dirname, relative } from 'node:path';
-import { isRecord } from '#cli/platform/text.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { jsoncValue } from '#cli/repository/jsonc.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
-import type { GeneratedFile } from '#cli/types/kits.ts';
-import { TARGET_PLACEHOLDER } from '#cli/config/generation/generation.ts';
-import type { PointerSpec, ConfigurationOutput } from '#cli/types/generation/generation.ts';
-
-function parsePointer(text: string, pointerPath: string): Record<string, unknown> {
-    const parsed = jsoncValue(text);
-    if (!isRecord(parsed)) throw new Error(`Shared configuration must be a valid JSON object: ${pointerPath}`);
-    return parsed;
-}
+import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { ConfigurationFile } from '#cli/types/configurations.ts';
+import { TARGET_PLACEHOLDER } from '#cli/config/generation/pointers.ts';
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
     if (typeof value !== 'string') return value;
-    const rel = toPosix(relative(dirname(pointerPath) === '.' ? '' : dirname(pointerPath), targetPath));
-    const target = rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
-    return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) =>
-        placeholder === '{target_json}' ? JSON.stringify(target) : target,
-    );
+    const relativePath = toPosix(relative(dirname(pointerPath), targetPath));
+    const target = relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
+    return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
+        if (placeholder === '{target_module}') {
+            return JSON.stringify(
+                target
+                    .split('/')
+                    .map((segment) => encodeURIComponent(segment))
+                    .join('/'),
+            );
+        }
+        return placeholder === '{target_json}' ? JSON.stringify(target) : target;
+    });
 }
 
 /**
@@ -29,15 +28,13 @@ function fillTarget(value: unknown, pointerPath: string, targetPath: string): un
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
  * @param version the gspot version
- * @param kit the kit that owns the pointer
  * @returns the generated file
  */
 export function bodyPointer(
-    pointer: PointerSpec,
+    pointer: NonNullable<ConfigurationFile['stub_file']>,
     pointerPath: string,
     targetPath: string,
     version: string,
-    kit: string,
 ): GeneratedFile {
     const body = String(fillTarget(pointer.body ?? '', pointerPath, targetPath));
     const ended = body.endsWith('\n') ? body : `${body}\n`;
@@ -46,33 +43,5 @@ export function bodyPointer(
         content: `${headerFor(pointerPath, version)}${ended}`,
         readOnly: true,
         kind: 'pointer',
-        kit,
-    };
-}
-
-/**
- * Renders a merge pointer: the existing JSON file with the merge keys set, comments kept. The file is the person's; only the named keys belong to gspot.
- * @param root the repository root
- * @param pointer the pointer spec
- * @param pointerPath the pointer's path
- * @param targetPath the generated file's path
- * @returns the path, the new text, and the keys gspot owns
- */
-export function mergePointer(
-    root: string,
-    pointer: PointerSpec,
-    pointerPath: string,
-    targetPath: string,
-): ConfigurationOutput {
-    using files = openRoot(root);
-    const text = files.read(pointerPath)?.bytes.toString('utf8') ?? '{}\n';
-    parsePointer(text, pointerPath);
-    return {
-        path: pointerPath,
-        format: 'json',
-        changes: Object.entries(pointer.merge ?? {}).map(([key, value]) => ({
-            path: [key],
-            value: fillTarget(value, pointerPath, targetPath),
-        })),
     };
 }

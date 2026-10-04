@@ -1,0 +1,23 @@
+[configuration]
+title = "Express"
+requires = ["javascript", "openapi"]
+recommends = ["security", "vitest"]
+description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
+
+[detect]
+dependencies = ["express"]
+
+[[config]]
+template = "semgrep/express.yml.tmpl"
+target = ".gspot/config/semgrep/express.yml"
+tool = "semgrep"
+rule_keys = ["rules"]
+scoped = true
+when = {configuration = "security"}
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+ignored_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."

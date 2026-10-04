@@ -1,7 +1,0 @@
-<% const entries = settings['tools.osv.ignore'] ?? []; %><%~ toml(entries.length === 0 ? {} : {
-    IgnoredVulns: entries.map((entry) => ({
-        id: entry.id,
-        ...(entry.until ? { ignoreUntil: new tomlDate(entry.until) } : {}),
-        reason: entry.reason,
-    })),
-}).trimEnd() %>

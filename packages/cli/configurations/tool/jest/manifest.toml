@@ -1,0 +1,98 @@
+[configuration]
+title = "Jest"
+requires = ["javascript"]
+description = "Jest test rules and coverage floors for repository-owned test suites."
+
+[detect]
+dependencies = ["jest"]
+filenames = ["jest.config.*"]
+
+[files]
+paths = ["**/*.{test,spec}.{ts,tsx,js,jsx}", "**/tests/**", "**/__tests__/**", "**/jest.config.*"]
+kinds = ["source"]
+
+[[tool]]
+name = "jest"
+system = true
+
+[[tool]]
+name = "eslint-plugin-jest"
+kind = "library"
+version = "29.16.6"
+npm = "eslint-plugin-jest"
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+
+[[check]]
+name = "coverage"
+title = "Check Jest coverage"
+example = "A branch that no test exercises can leave coverage below the floor configured under `tools.jest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
+level = "recommended"
+stage = "push"
+runs = "scope"
+cwd = "scope"
+files = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
+tool = "jest"
+summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
+why = "A coverage floor keeps new code from arriving untested."
+help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
+
+[[setting]]
+name = "tools.jest.coverage.lines"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source lines covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "tools.jest.coverage.branches"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source branches covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "tools.jest.coverage.functions"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source functions covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "tools.jest.coverage.statements"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source statements covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "tools.jest.globals_module"
+type = "string"
+direction = "neutral"
+default = "@jest/globals"
+summary = "The module supplying test functions for ESLint, including bun:test for Bun tests."

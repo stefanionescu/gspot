@@ -1,71 +1,73 @@
 // One session per command: the policy, the manifests, the repository, the selection, and the merged view per scope.
 import { npmPins } from '#cli/tools/pins.ts';
-import type { Manifest } from '#cli/types/kits.ts';
-import { mergeForScope } from '#cli/policy/merge.ts';
-import { selectForScope } from '#cli/kits/select.ts';
-import { kitManifests } from '#cli/kits/manifests.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { packageTool } from '#cli/tools/packages/identity.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { getOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
-import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
+import { readPolicy } from '#cli/policy/read.ts';
+import { readRepository } from '#cli/repository/read.ts';
+import { scopeView } from '#cli/policy/settings/view.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { knownSettings } from '#cli/policy/settings/known.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
+import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
+import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
+import { acquirePythonInstaller } from '#cli/tools/python/installer.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import type { Policy, PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/installer.ts';
+import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
-const { version: RUNNING_VERSION } = packageManifest;
-
-// Resolves every scope: its selected kits, settings surface, and merged view.
+// Resolves every scope: its selected configurations, settings surface, and merged view.
 function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
     return scopes.map((scope) => {
         const selected = selectForScope(policy, scope.path, manifests);
-        const surface = exposedSettings(selected, policy.level);
-        const view = mergeForScope(surface, policy, selected, scope.path);
+        const surface = knownSettings(selected, policy.level);
+        const view = scopeView(surface, policy, selected, scope.path);
         return { scope, selected, surface, view };
     });
 }
 
 /**
- * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
+ * Opens a repository session. Throws GspotError (policy or selection) when gspot.toml or configuration selection is invalid.
  * @param root the repository root
  * @param policyFiles the policy as read, read here by default
  * @returns the session
  */
-export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {
-    assertPolicyComplete(policyFiles);
-    const manifests = kitManifests();
-    const repo = await readRepository(
+export async function openSession(root: string, policyFiles: PolicyFile = readPolicy(root)): Promise<Session> {
+    const manifests = configurationManifests();
+    const repository = await readRepository(
         root,
         policyFiles.policy.declarations,
         policyFiles.policy.scopes,
         policyFiles.policy.exclude,
     );
-    const scopes = scopeSelections(policyFiles.policy, repo.scopes, manifests);
-    const runner = policyFiles.policy.runner;
-    const needsPackages =
-        Object.keys(
-            npmPins(
-                scopes.flatMap((scope) => scope.selected),
-                runner,
-            ),
-        ).length > 0;
-    const packageClient = needsPackages
-        ? await packageTool(
-              root,
-              repo.files.filter((file) => file.kind === 'source').map((file) => file.path),
-          )
-        : undefined;
-    return {
-        ...(packageClient === undefined ? {} : { packageClient }),
+    const scopes = scopeSelections(policyFiles.policy, repository.scopes, manifests);
+    let resolved: PackageInstaller | undefined;
+    let resolvedPython: Promise<string> | undefined;
+    const session: Session = {
+        pythonInstaller: () => (resolvedPython ??= acquirePythonInstaller(root, policyFiles.policy.run_with)),
+        packageInstaller() {
+            if (installer === undefined) return undefined;
+            resolved ??= inspectPackageInstaller(root, installer);
+            return resolved;
+        },
         root,
         version: RUNNING_VERSION,
         policyFiles,
         manifests,
-        repository: repo,
+        repository,
         scopes,
         inspections: new Map(),
-        installations: (path) => getOwnership(path).installations,
-        reads: { root, sources: new Map() },
+        getPendingInstallations: (path) => getOwnership(path).installing,
+        reads: { root, sources: new Map(), memo: new Map() },
     };
+    const runner = policyFiles.policy.run_with;
+    const needsPackages = Object.keys(npmPins(applicableManifests(session), runner)).length > 0;
+    const installer: PackageInstallerIdentity | undefined = needsPackages
+        ? await selectPackageInstaller(
+              root,
+              repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+          )
+        : undefined;
+    return session;
 }

@@ -1,31 +1,15 @@
-// The types of lifecycle/ownership in this package.
 import type { z } from 'zod';
-import type { Read, Root } from '#cli/types/platform/platform.ts';
 import type { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
-import type { identitySchema, ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-
-export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
-
-export type PendingOwnership = NonNullable<Ownership['pending']>[number];
-
-export type Outcome = 'changed' | 'unchanged' | 'preserved';
+import type { Read, Root, Proposed } from '#cli/types/platform/root.ts';
+import type { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 
 export type Restoration = { next?: Read };
 
+export type Outcome = 'changed' | 'unchanged' | 'preserved';
+
+export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
+
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
-
-export type Ownership = z.infer<typeof ownershipSchema>;
-export type OwnershipEntry = Ownership['files'][number];
-export type Identity = z.infer<typeof identitySchema>;
-
-/** The open log: the locked root, the recorded state, and the operations that read and write it. */
-export type Log = {
-    files: Root;
-    state: Ownership;
-    save(): void;
-    entryFor(path: string): OwnershipEntry | undefined;
-    finish(): void;
-};
 
 export type ReplacementRequest = {
     path: string;
@@ -33,8 +17,29 @@ export type ReplacementRequest = {
     kind: OwnedKind;
     canReplace?: boolean | undefined;
     expected?: Read | undefined;
-    proposed?: ReadonlyMap<string, Read | undefined> | undefined;
+    proposed?: Proposed | undefined;
 };
 
 /** The kind of file a gspot write owns. */
 export type OwnedKind = (typeof OWNED_KINDS)[number];
+
+export type PendingOwnership = NonNullable<Ownership['pending']>[number];
+
+export type Ownership = z.infer<typeof ownershipSchema>;
+
+export type OwnershipEntry = Ownership['files'][number];
+
+export type Identity = NonNullable<OwnershipEntry['installed']>;
+
+/** The open log: the locked root, the recorded state, and the operations that read and write it. */
+export type Log = {
+    [Symbol.dispose](): void;
+    files: Root;
+    state: Ownership;
+    save(): void;
+    entryFor(path: string): OwnershipEntry | undefined;
+    finish(): void;
+};
+
+/** Side folders for atomic replacement and recovery of one private tool installation. */
+export type InstallationFolders = { folder: string; staging: string; previous: string };

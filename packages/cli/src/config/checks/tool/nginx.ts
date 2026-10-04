@@ -1,11 +1,7 @@
-// The literal values checks/tool/nginx reads: names, patterns, limits, and tables.
-
-export const NGINX_ESCAPES: Record<string, string> = { t: '\t', r: '\r', n: '\n', '"': '"', "'": "'", '\\': '\\' };
-export const WORD_START_STOPS = /[\s"'{};#\\]/u;
-export const WORD_STOPS = /[\s{};\\]/u;
-export const NGINX_PUNCTUATION = new Set([';', '{', '}']);
 export const NGINX_MAIN = 'nginx.conf';
+
 export const NGINX_IMAGE = 'nginx:stable-alpine';
+
 export const CERTIFICATE_ARGUMENTS = [
     'req',
     '-x509',
@@ -17,6 +13,7 @@ export const CERTIFICATE_ARGUMENTS = [
     '-days',
     '1',
 ];
+
 export const LOCAL_NAMES = new Set(['localhost', 'unix']);
 
 export const HOST_PATTERNS = new Map([

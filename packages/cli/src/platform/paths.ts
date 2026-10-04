@@ -1,12 +1,13 @@
-// Path handling: forward slashes in selectors, the platform form for tools.
+// Path spelling and glob walks, with explicit hidden-file and symbolic-link selection.
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
-import { contentDigest } from '#cli/platform/text.ts';
 import { sep, join, posix, isAbsolute } from 'node:path';
-import { cacheDirectory } from '#cli/platform/environment.ts';
+import { EXECUTABLE_LAYOUTS } from '#cli/config/platform/paths.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
-import type { GlobWalk, GlobOptions } from '#cli/types/platform/platform.ts';
+import type { GlobWalk, PathEntry, GlobOptions, DirectoryEntry } from '#cli/types/platform/paths.ts';
+
+const hostLayout = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
 
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {
@@ -71,6 +72,15 @@ function walkPattern(
     settings: Omit<GlobWalk, 'cwd' | 'matches' | 'depth' | 'skipsHidden' | 'visited'>,
 ): void {
     const { base, glob } = picomatch.scan(pattern);
+    const parts = base.split('/').filter((part) => part !== '' && part !== '.');
+    const blocked =
+        !settings.options.followSymlinks &&
+        parts.some((_, index) => {
+            const count = index + 1;
+            const entry = lstatSync(join(cwd, ...parts.slice(0, count)), { throwIfNoEntry: false });
+            return entry?.isSymbolicLink() === true && (glob !== '' || count < parts.length);
+        });
+    if (blocked) return;
     if (glob === '') {
         visitLiteral(cwd, base, settings.options, settings.visit);
         return;
@@ -88,11 +98,38 @@ function walkPattern(
 }
 
 /**
+ * Name executable candidates in the platform's preferred shim order.
+ * @param name the executable name without a suffix
+ * @returns names used by private-package verification and tool discovery
+ */
+export function executableNames(name: string): string[] {
+    return hostLayout.executableSuffixes.map((suffix) => name + suffix);
+}
+
+/**
+ * Locate the command directory of a Python virtual environment.
+ * @param folder the environment directory
+ * @returns its Scripts directory on Windows or bin directory elsewhere
+ */
+export function environmentBin(folder: string): string {
+    return join(folder, hostLayout.environmentDirectory);
+}
+
+/**
+ * Locate one Python interpreter or console script inside its virtual environment.
+ * @param folder the environment directory
+ * @param name the executable name
+ * @returns the executable path with the platform's Python launcher suffix
+ */
+export function environmentExecutable(folder: string, name: string): string {
+    return join(environmentBin(folder), name + hostLayout.environmentSuffix);
+}
+
+/**
  * Forward slashes on every platform, for selectors, records, and output.
  * @param path a path in the platform's form
  * @returns the path with forward slashes
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Selectors, records, and output spell paths with forward slashes through this one conversion.
 export function toPosix(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
@@ -103,7 +140,6 @@ export function toPosix(path: string): string {
  * @param path the path as the tool printed it
  * @returns the path with forward slashes
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four output readers normalize tool paths the same way; one owner keeps the contract distinct from toPosix.
 export function toolPath(path: string): string {
     return path.replaceAll('\\', '/');
 }
@@ -113,7 +149,6 @@ export function toolPath(path: string): string {
  * @param path a posix path
  * @returns the path in the platform's form
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Paths handed to tools take the separator of the platform through this one conversion.
 export function toPlatform(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
 }
@@ -123,7 +158,6 @@ export function toPlatform(path: string): string {
  * @param local the path relative to the folder, with either separator
  * @returns whether the path stays inside the folder
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every boundary check, from links to tool reports, refuses a path that leaves its folder by this one test.
 export function isInside(local: string): boolean {
     return !(isAbsolute(local) || local === '..' || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
@@ -139,17 +173,6 @@ export function extensionOf(path: string): string {
     if (declaration !== undefined) return declaration;
     const index = base.lastIndexOf('.');
     return index <= 0 ? '' : base.slice(index).toLowerCase();
-}
-
-/**
- * The private build cache for the canonical repository path.
- * @param root the repository root
- * @returns the cache folder for this repository
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: It names the build folder of one repository, a hash of its real root path under the cache directory.
-export function buildFolder(root: string): string {
-    const identity = contentDigest(realpathSync(root));
-    return join(cacheDirectory(), identity);
 }
 
 /**
@@ -179,4 +202,71 @@ export function globPaths(cwd: string, patterns: string | string[], options: Glo
     };
     for (const pattern of list.filter((entry) => !entry.startsWith('!'))) walkPattern(cwd, pattern, settings);
     return [...found];
+}
+
+/**
+ * The Unicode-normalized, case-insensitive key for identifying a repository path.
+ * @param path the repository-relative path
+ * @returns its comparison key
+ */
+export function pathKey(path: string): string {
+    return path.normalize('NFC').toLowerCase();
+}
+
+/**
+ * The directory of a path, '' at the root.
+ * @param path the path
+ * @returns the directory
+ */
+export function directoryOf(path: string): string {
+    const slash = path.lastIndexOf('/');
+    return slash === -1 ? '' : path.slice(0, slash);
+}
+
+/**
+ * The base name without its extension; a declaration extension such as `.d.mts` counts as one.
+ * @param path a path
+ * @returns the stem
+ */
+export function stemOf(path: string): string {
+    const base = posix.basename(path);
+    const extension = extensionOf(base);
+    return base.slice(0, base.length - extension.length);
+}
+
+/**
+ * A grouping prefix: the stem up to its first dash or dot.
+ * @param stem a file stem
+ * @returns the prefix
+ */
+export function prefixOf(stem: string): string {
+    const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
+    return cuts.length === 0 ? stem : stem.slice(0, Math.min(...cuts));
+}
+
+/**
+ * The entries every directory holds, from the tracked files: files and the child directories they imply.
+ * @param files the tracked files
+ * @returns directory path to its entries, sorted by name
+ */
+export function directoryTree(files: readonly PathEntry[]): Map<string, DirectoryEntry[]> {
+    const tree = new Map<string, Map<string, DirectoryEntry['kind']>>();
+    const put = (directory: string, name: string, kind: DirectoryEntry['kind']): void => {
+        const entries = tree.get(directory) ?? new Map<string, DirectoryEntry['kind']>();
+        entries.set(name, kind);
+        tree.set(directory, entries);
+    };
+    for (const file of files) {
+        const segments = file.path.split('/');
+        const name = segments.pop();
+        if (name === undefined) continue;
+        for (const [depth, segment] of segments.entries()) put(segments.slice(0, depth).join('/'), segment, 'dir');
+        put(directoryOf(file.path), name, 'file');
+    }
+    return new Map(
+        [...tree].map(([directory, entries]) => [
+            directory,
+            [...entries].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => a.name.localeCompare(b.name)),
+        ]),
+    );
 }

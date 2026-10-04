@@ -1,0 +1,335 @@
+[
+    {
+        "id": "diagram/source",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "location": null,
+        "status": "open",
+        "outcome": null,
+        "verification": []
+    },
+    {
+        "id": "diagram/source/001",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Keep one flat check registry and group implementations by configuration.",
+        "location": ["packages/cli/src/checks/registry.ts", "packages/cli/src/checks"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One flat CHECKS registry imports enforcement implementations directly. Moderate Docker, nginx, Next.js, Supabase, docs, secrets and XCTest checks have configuration owners. Python and Swift checks expose direct engines; obsolete nested registries are absent.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log. Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Full staged check: 132 passed, 7 skips, 0 findings, 0 errors: /tmp/gspot-organization-authenticated-staged.json. Canonical second apply is unchanged: /tmp/gspot-organization-final-second-apply.log.",
+            "Remaining individual area/slice findings are tracked independently; no closure of unrelated behavior is inferred from organization."
+        ]
+    },
+    {
+        "id": "diagram/source/002",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Dissolve config/ constants into behavioral source modules.",
+        "location": null,
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "User requires dedicated config/ ownership in this repository.",
+            "User instructions in this conversation, October 4, 2026."
+        ]
+    },
+    {
+        "id": "diagram/source/003",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Dissolve types/ declarations into behavioral source modules.",
+        "location": null,
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "User requires dedicated types/ ownership in this repository.",
+            "User instructions in this conversation, October 4, 2026."
+        ]
+    },
+    {
+        "id": "diagram/source/004",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Flatten command wrappers and replace kits commands with add/remove configuration commands.",
+        "location": [
+            "packages/cli/src/commands/configurations.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/commands/program.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Public add/remove configuration commands own one mutation/apply/install pipeline. The command program registers actual owners. Retired kits commands and single-caller selection forwarding layers are absent; shared policy calculations remain because real editing commands use them.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log. Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Full staged check: 132 passed, 7 skips, 0 findings, 0 errors: /tmp/gspot-organization-authenticated-staged.json. Canonical second apply is unchanged: /tmp/gspot-organization-final-second-apply.log.",
+            "Remaining individual area/slice findings are tracked independently; no closure of unrelated behavior is inferred from organization."
+        ]
+    },
+    {
+        "id": "diagram/source/005",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Rename execution/tool to execution/command.",
+        "location": [
+            "packages/cli/src/execution/command",
+            "packages/cli/src/execution/snapshot",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/types/execution/command.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/execution/output.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Command execution now uses runCommandCheck(session, planned, options), runEngineTool, and engineTool. Executable.run passes the same named options contract; getCheckRunner returns runCommandCheck directly instead of allocating the forwarding toolCheck function. Command, output, and snapshot contracts live in their dedicated types/execution owners; the mixed types/execution/tool.ts is deleted and every consumer is updated without aliases.",
+            "The broad unit/integration run passed 2,099 cases with two explicit skips and one new-fixture failure: the output test looked up the removed general configuration. The corrected fixture and all affected output/runner/Python convention cases then passed 88 cases with zero failures and 420 assertions (/tmp/gspot-command-owner-unit-integration-final.log, /tmp/gspot-command-owner-repaired-tests.log).",
+            "Native Markdown/spelling structured reports passed two cases with 27 assertions, retaining unusual filenames, Unicode columns, filename findings, forbidden-word findings, all declared exit handling, and corrected states. Their subprocesses now use the shared remaining-budget runner (/tmp/gspot-command-owner-native-reports-final.log).",
+            "All four TypeScript targets passed; the root target also passed after the native harness change. Repository-wide lint passed all eight checks with zero findings across five ESLint scopes and 1,567 formatted files. The repaired output fixture and native file also pass focused read-only ESLint (/tmp/gspot-worker-command-owners-types.log, /tmp/gspot-command-owner-final-root-types.log, /tmp/gspot-command-owner-repository-lint.json, /tmp/gspot-command-output-fixture-lint.log, /tmp/gspot-command-native-lint-final.log)."
+        ]
+    },
+    {
+        "id": "diagram/source/006",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Gather temporary source copies under execution/snapshot.",
+        "location": [
+            "packages/cli/src/execution/command",
+            "packages/cli/src/execution/snapshot",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/types/execution/command.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/execution/output.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Command execution now uses runCommandCheck(session, planned, options), runEngineTool, and engineTool. Executable.run passes the same named options contract; getCheckRunner returns runCommandCheck directly instead of allocating the forwarding toolCheck function. Command, output, and snapshot contracts live in their dedicated types/execution owners; the mixed types/execution/tool.ts is deleted and every consumer is updated without aliases.",
+            "The broad unit/integration run passed 2,099 cases with two explicit skips and one new-fixture failure: the output test looked up the removed general configuration. The corrected fixture and all affected output/runner/Python convention cases then passed 88 cases with zero failures and 420 assertions (/tmp/gspot-command-owner-unit-integration-final.log, /tmp/gspot-command-owner-repaired-tests.log).",
+            "Native Markdown/spelling structured reports passed two cases with 27 assertions, retaining unusual filenames, Unicode columns, filename findings, forbidden-word findings, all declared exit handling, and corrected states. Their subprocesses now use the shared remaining-budget runner (/tmp/gspot-command-owner-native-reports-final.log).",
+            "All four TypeScript targets passed; the root target also passed after the native harness change. Repository-wide lint passed all eight checks with zero findings across five ESLint scopes and 1,567 formatted files. The repaired output fixture and native file also pass focused read-only ESLint (/tmp/gspot-worker-command-owners-types.log, /tmp/gspot-command-owner-final-root-types.log, /tmp/gspot-command-owner-repository-lint.json, /tmp/gspot-command-output-fixture-lint.log, /tmp/gspot-command-native-lint-final.log)."
+        ]
+    },
+    {
+        "id": "diagram/source/007",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Gather tool-output parsers under execution/output.",
+        "location": null,
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "User requires parsers and schemas under their parser owners; execution/output retains execution result handling.",
+            "User instructions in this conversation, October 4, 2026."
+        ]
+    },
+    {
+        "id": "diagram/source/008",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Flatten single-use generation tools/ and formatting/ folders.",
+        "location": [
+            "packages/cli/src/generation/npm.ts",
+            "packages/cli/src/generation/python.ts",
+            "packages/cli/src/generation/mise.ts",
+            "packages/cli/src/generation/formatting.ts",
+            "packages/cli/src/generation/editorconfig.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The three tool generators now live directly under generation/, and every source and test caller imports those owners; generation/tools/ is deleted. Formatting and EditorConfig generation already live directly under generation/, and no generation/formatting/ import remains.",
+            "171 generator and Python/mise integration cases passed with zero failures and 1,090 assertions across 42 files (/tmp/gspot-generator-moves-tests.log). All four TypeScript targets passed (/tmp/gspot-generator-moves-types.log). Read-only ESLint passed all seven changed owners after the import-layout repair (/tmp/gspot-generator-moves-lint-final.log); Prettier formatted the import repair without further changes.",
+            "Static private Yarn settings moved to config/tools/npm.ts without changing the generated bytes, as required by the repository-specific config/ decision."
+        ]
+    },
+    {
+        "id": "diagram/source/009",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Rename kits to configurations and consolidate their schema and loading owners.",
+        "location": [
+            "packages/cli/src/configurations",
+            "packages/cli/src/parsers/configurations.ts",
+            "packages/cli/src/parsers/schema/configurations",
+            "packages/cli/configurations"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Configuration declarations, detection, selection and asset loading use configuration owners. Shipped assets remain under built-in configurations; manifest parsing/schema behavior remains under parsers. Retired kits owners and compatibility exports are absent.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log. Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Full staged check: 132 passed, 7 skips, 0 findings, 0 errors: /tmp/gspot-organization-authenticated-staged.json. Canonical second apply is unchanged: /tmp/gspot-organization-final-second-apply.log.",
+            "Remaining individual area/slice findings are tracked independently; no closure of unrelated behavior is inferred from organization."
+        ]
+    },
+    {
+        "id": "diagram/source/010",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Keep one apply pipeline with explicit ownership context.",
+        "location": [
+            "packages/cli/src/lifecycle/apply.ts",
+            "packages/cli/src/lifecycle/ownership/log.ts",
+            "packages/cli/src/lifecycle/ownership/commit.ts",
+            "packages/cli/src/commands/init/write.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "AsyncLocalStorage and Owner facade removed. One explicit disposable Log is opened at each writing command boundary and retained through policy, apply, version pin, retirement, and tool installation. commitPolicy and installSelection require that exact Log; add/remove await installation before disposal. Dry-run prepares policy without acquiring the writer lock. Repository config/types remain centralized under the explicit user override.",
+            "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
+            "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
+            "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ]
+    },
+    {
+        "id": "diagram/source/011",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Rename lifecycle/preview to lifecycle/rule-diff.",
+        "location": ["packages/cli/src/lifecycle/rule-diff.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Rule comparison has one lifecycle/rule-diff owner; old preview/rule-diff layers and imports are absent. Offline comparison and authored-edit preservation use the actual owner.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log. Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Full staged check: 132 passed, 7 skips, 0 findings, 0 errors: /tmp/gspot-organization-authenticated-staged.json. Canonical second apply is unchanged: /tmp/gspot-organization-final-second-apply.log.",
+            "Remaining individual area/slice findings are tracked independently; no closure of unrelated behavior is inferred from organization."
+        ]
+    },
+    {
+        "id": "diagram/source/012",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Move JSONC, TypeScript configuration, and lockfile parsing to parsers.",
+        "location": [
+            "packages/cli/src/parsers/jsonc.ts",
+            "packages/cli/src/parsers/tsconfig.ts",
+            "packages/cli/src/parsers/lockfiles.ts",
+            "packages/cli/src/parsers/schema/tsconfig.ts",
+            "packages/cli/src/parsers/schema/lockfiles.ts",
+            "packages/cli/src/repository/tsconfig.ts",
+            "packages/cli/src/tools/npm/locks.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "JSONC, compiler configuration parsing, and dependency lock syntax/schema reading share the parser ownership requested by the diagram. Repository configuration I/O and dependency-link restrictions remain explicit as required by the second-pass correction; npm matching/registry operations remain with npm installation. The TypeScript move also passed eight native compiler cases and 27 focused cases (/tmp/gspot-tsconfig-owner-native.log and /tmp/gspot-tsconfig-owner-tests.log).",
+            "All 369 focused parser, repository, generation, manifest/manager, license-lock, and freshness cases passed with 1628 assertions across 68 files (/tmp/gspot-lock-parser-owner-tests.log). Existing npm v1/v3 alias/scoped/nested-version and Yarn alias/Berry identity assertions survive the test move; pnpm, Bun, and Python formats remain covered.",
+            "All 27 native npm/Bun/pnpm/Yarn cases passed with 288 assertions across five files. They cover stale/missing lock resolution, malformed-input refusal and repair, immutable clones/reinstall, authored configuration preservation, registry authentication, and failure/concurrent-edit preservation (/tmp/gspot-lock-parser-owner-native.log).",
+            "All four TypeScript targets and changed-file ESLint/formatting passed. Repository lint passed all eight checks with zero findings; canonical apply preview reports no drift (/tmp/gspot-lock-parser-owner-types.log, /tmp/gspot-lock-parser-owner-names-lint.log, /tmp/gspot-lock-parser-owner-repository-lint.json, /tmp/gspot-lock-parser-owner-preview.json)."
+        ]
+    },
+    {
+        "id": "diagram/source/013",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Use one Git runner and one deadline contract.",
+        "location": [
+            "packages/cli/src/platform/git.ts",
+            "packages/cli/src/config/platform/git.ts",
+            "packages/cli/src/types/platform/runtime.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One Git execution owner handles blocking, asynchronous text, and asynchronous binary subprocesses. All share GIT_TIMEOUT_MS while preserving explicit deadline overrides and working-directory confinement.",
+            "All 220 affected integration/unit cases passed with 806 assertions across 29 files, covering exact pushed objects, SHA-1/SHA-256 snapshots, new-ref exclusions via stdin, shallow/refspec failures, hook configuration, process termination, and cancellation with open stdin (/tmp/gspot-git-owners-tests.log).",
+            "All four TypeScript targets passed. Changed-file ESLint and formatting passed; repository lint passed all eight checks with zero findings (/tmp/gspot-git-owners-types.log, /tmp/gspot-git-owners-lint.log, /tmp/gspot-git-owners-repository-lint.json).",
+            "Canonical apply preview reports no drift or configuration reconciliation changes (/tmp/gspot-git-owners-preview.json).",
+            "The CLI source has no direct Git spawn outside platform/git, no gitTrimmed alias, and no duplicate snapshot gitText or hard-coded Git deadline. Installation invokes installHooks, which uses runGitBlocking; its displayed command is not a separate execution path."
+        ]
+    },
+    {
+        "id": "diagram/source/014",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Group policy into problems, settings, and schema.",
+        "location": [
+            "packages/cli/src/policy/problems",
+            "packages/cli/src/policy/settings",
+            "packages/cli/src/policy/schema"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation, effective settings and schemas have distinct behavioral owners. Mixed command and generation declaration bags are split under types; constants retain config ownership as required by the user. No renamed-symbol compatibility exports are introduced.",
+            "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-organization-final-types.log. Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Full staged check: 132 passed, 7 skips, 0 findings, 0 errors: /tmp/gspot-organization-authenticated-staged.json. Canonical second apply is unchanged: /tmp/gspot-organization-final-second-apply.log.",
+            "Remaining individual area/slice findings are tracked independently; no closure of unrelated behavior is inferred from organization."
+        ]
+    },
+    {
+        "id": "diagram/source/015",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Move Git-object reads into repository/revisions/objects.",
+        "location": [
+            "packages/cli/src/repository/revisions/objects.ts",
+            "packages/cli/src/parsers/git.ts",
+            "packages/cli/src/config/parsers/git.ts",
+            "packages/cli/src/types/parsers/git.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Git reads now belong to repository/revisions/objects.ts. Pure index/tree and binary-frame parsing belongs to parsers/git.ts; all parser constants and SHA-1/SHA-256 identity patterns belong to config/parsers/git.ts. GitEntry and GitFrame live under types/parsers/git.ts. Every snapshot, Postgres-history, TruffleHog, Xcode, and test caller imports the new owners with no forwarding aliases.",
+            "101 focused parser, snapshot, pushed-history, Xcode, migration-history, index, and output-contract cases passed with zero failures and 336 assertions across 15 files (/tmp/gspot-git-objects-tests-final.log). The parser cases cover binary and empty blobs, unusual UTF-8 paths, SHA-1/SHA-256, unsupported/conflicted entries, invalid UTF-8, missing objects, mismatched identities, unsafe lengths, truncation, delimiters, and trailing data.",
+            "All four TypeScript targets passed (/tmp/gspot-git-objects-types-final.log). Read-only ESLint passed all 18 affected owners after the String.raw/import-layout repairs (/tmp/gspot-git-objects-lint-final.log); those repairs also pass read-only formatting."
+        ]
+    },
+    {
+        "id": "diagram/source/016",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Group every shipped agent-rule source under a built-in configuration.",
+        "location": ["packages/cli/configurations"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every one of the 86 shipped Markdown assets has an owning ancestor configuration manifest. packages/cli/rules no longer exists; sources, manifest rule references, and generation use the configuration asset tree.",
+            "The broad unit/integration run covers configuration manifest validation, instruction selection and installation, authored instruction preservation, and disabled instruction installation. The unrelated new output-fixture failure was repaired in the focused follow-up. Individual agent-rule content/merge/conditional-installation findings remain separately tracked and are not closed by this location-only item."
+        ]
+    },
+    {
+        "id": "diagram/source/017",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Rename tools/packages to tools/npm.",
+        "location": ["packages/cli/src/tools/npm/"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "npm installation belongs to tools/npm. Registry and manager parsing retain dedicated parser/schema owners and types/config follow the explicit repository organization decision.",
+            "85 focused cases passed, 297 assertions, 13 files (/tmp/gspot-package-manager-tests.log).",
+            "27 native tools cases passed, 288 assertions, 5 files: npm, Bun, pnpm, Yarn, registry authentication, refusal redaction, lock preparation, clone restoration, and runner choices (/tmp/gspot-package-manager-native-tools.log).",
+            "All four TypeScript targets passed (/tmp/gspot-package-manager-types.log); focused ESLint and Prettier are clean after the import-order repair (/tmp/gspot-package-manager-import-lint.log, /tmp/gspot-package-manager-import-format.log)."
+        ]
+    },
+    {
+        "id": "diagram/source/018",
+        "source": "findings/images/source.png",
+        "owner": "source",
+        "finding": "Place the ESLint configuration worker under its tool owner.",
+        "location": [
+            "packages/cli/src/tools/eslint/client.ts",
+            "packages/cli/src/tools/eslint/worker.ts",
+            "gspot.toml"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The ESLint client, executable worker, and declaration reader belong to tools/eslint. Request/response schemas and inferred types remain under their parser owners, as required by the repository-specific layout. Source/npm/binary entrypoints reference the worker in its tool owner.",
+            "Worker preview and declaration-reader cases passed 34 tests with 98 assertions. The actual worker required-rule scenario also passed: later per-file disabling is detected, corrected configuration passes, malformed configuration fails, cancellation fails, and authored side effects run once (/tmp/gspot-worker-owners-tests.log, /tmp/gspot-worker-coverage-tests.log).",
+            "The unused getActiveRules export is removed; readActiveRules is private and precedes its callers. All four TypeScript targets and focused read-only lint passed. Knip and Semgrep policy paths now point to tools/eslint; canonical apply wrote only .gspot/config/knip.json, preserved every other managed output, and the next dry-run has no drift (/tmp/gspot-worker-policy-apply.json, /tmp/gspot-worker-policy-second-preview.json)."
+        ]
+    }
+]

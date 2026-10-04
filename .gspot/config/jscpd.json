@@ -5,5 +5,5 @@
     "reporters": ["console"],
     "absolute": true,
     "gitignore": true,
-    "ignore": ["**/.gspot/**", "**/*.md", "**/*.mdx"]
+    "ignore": ["**/.gspot/**", "**/*.md", "**/*.mdx", "findings/implementation/**"]
 }

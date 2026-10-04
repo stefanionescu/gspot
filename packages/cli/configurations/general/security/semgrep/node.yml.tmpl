@@ -1,0 +1,240 @@
+<%
+const document = {
+    rules: [
+        {
+            id: 'node-no-eval',
+            'pattern-either': [
+                {
+                    pattern: 'eval(...)',
+                },
+                {
+                    pattern: 'new Function(...)',
+                },
+                {
+                    pattern: 'setTimeout("...", ...)',
+                },
+            ],
+            message:
+                'Code injection risk - eval(), new Function(), and string setTimeout() allow arbitrary code execution. Use safer alternatives.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-94'],
+                category: 'security',
+            },
+        },
+        ...(isAll
+            ? [
+                  {
+                      id: 'node-no-child-process-exec',
+                      patterns: [
+                          {
+                              'pattern-either': [
+                                  {
+                                      pattern: 'exec(...)',
+                                  },
+                                  {
+                                      pattern: 'execSync(...)',
+                                  },
+                              ],
+                          },
+                      ],
+                      message:
+                          'Command injection risk - exec()/execSync() runs input through a shell. Use execFile() or spawn() with argument arrays instead.\n',
+                      languages: ['typescript', 'javascript'],
+                      severity: 'ERROR',
+                      paths: {
+                          include: ['**/api/src/'],
+                      },
+                      metadata: {
+                          cwe: ['CWE-78'],
+                          category: 'security',
+                      },
+                  },
+              ]
+            : []),
+        {
+            id: 'node-no-configured-require',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'require($VAR)',
+                        },
+                        {
+                            pattern: 'import($VAR)',
+                        },
+                    ],
+                },
+                {
+                    'pattern-not': 'require("...")',
+                },
+                {
+                    'pattern-not': 'import("...")',
+                },
+            ],
+            message:
+                'Dynamic require/import with a variable path risks loading arbitrary modules. Use static imports.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-94'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-ssrf-web-request-user-input',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: '$HTTP(req.body.$VALUE, ...)',
+                        },
+                        {
+                            pattern: '$HTTP(req.query.$VALUE, ...)',
+                        },
+                        {
+                            pattern: '$HTTP(req.params.$VALUE, ...)',
+                        },
+                    ],
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$HTTP',
+                        regex: '^f[e]tch$',
+                    },
+                },
+            ],
+            message:
+                'SSRF risk - web request called with a URL from user input. Validate and allowlist target hosts.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-918'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-no-secret-in-log',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'console.log(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'console.info(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'console.warn(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'console.error(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'console.debug(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'logger.info(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'logger.warn(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'logger.error(process.env.$VAR)',
+                        },
+                        {
+                            pattern: 'logger.debug(process.env.$VAR)',
+                        },
+                    ],
+                },
+                {
+                    'metavariable-regex': {
+                        metavariable: '$VAR',
+                        regex: '.*(KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL).*',
+                    },
+                },
+            ],
+            message: 'Sensitive environment variable logged. Remove or mask before logging.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-532'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-jwt-no-algorithm-none',
+            patterns: [
+                {
+                    pattern: 'jwt.verify($TOKEN, $SECRET)',
+                },
+                {
+                    'pattern-not': 'jwt.verify($TOKEN, $SECRET, {algorithms: ...})\n',
+                },
+            ],
+            message:
+                'jwt.verify() without explicit algorithms option may accept "none". Always pass { algorithms: ["HS256"] } or similar.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-327'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-jwt-no-decode-without-verify',
+            pattern: 'jwt.decode(...)',
+            message: 'jwt.decode() does not verify signatures. Use jwt.verify() instead.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-345'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-no-stack-trace-in-response',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'res.send({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.json({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.status(...).send({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.status(...).json({..., stack: $ERR.stack, ...})\n',
+                        },
+                    ],
+                },
+            ],
+            message:
+                'Stack traces in API responses leak internal implementation details. Log the stack server-side and return a generic error message.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-209'],
+                category: 'security',
+            },
+        },
+        {
+            id: 'node-no-interpolated-exec',
+            pattern: 'execSync(`...${$VAR}...`)',
+            message:
+                'Template literal interpolation in execSync() is a command injection vector. Use execFileSync() with an argument array instead.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-78'],
+                category: 'security',
+            },
+        },
+    ],
+};
+recordRules(document);
+%><%~ yaml(document).trimEnd() %>

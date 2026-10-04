@@ -1,26 +1,27 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
-import { z } from 'zod';
 import { join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import type { Root } from '#cli/types/platform/root.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
-import type { Root } from '#cli/types/platform/platform.ts';
-import { scratchCopy } from '#cli/execution/tool/workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { percentage, thresholdsSchema } from '#cli/policy/tools.ts';
-import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import type { Suite, JestRun, TestReport } from '#cli/types/checks/tool/jest.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { reportSchema, coverageSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
+import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
 
-const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
-const metric = z.object({ pct: percentage });
-const coverageSchema = z.object({
-    total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
-});
+import {
+    TEST_REPORT,
+    COVERAGE_SUMMARY,
+    COVERAGE_DIRECTORY,
+    COVERAGE_DIMENSIONS,
+} from '#cli/config/checks/tool/jest.ts';
 
 // Read the Jest report and refuse a run that cannot execute its suites.
 function readReport(reports: Root, stderr: string): TestReport {
-    const testFile = reports.read('tests.json');
+    const testFile = reports.read(TEST_REPORT);
     if (testFile === undefined)
         throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
     const tested = reportSchema.parse(JSON.parse(testFile.bytes.toString('utf8')));
@@ -41,12 +42,12 @@ function suitePath(source: string, suite: Suite): string {
 }
 
 // One finding per coverage dimension under its floor.
-function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof thresholdsSchema>): Finding[] {
-    const coverageFile = reports.read('coverage/coverage-summary.json');
+function coverageFindings(run: JestRun, reports: Root, settings: JestSettings): Finding[] {
+    const coverageFile = reports.read(COVERAGE_SUMMARY);
     if (coverageFile === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
     const covered = coverageSchema.parse(JSON.parse(coverageFile.bytes.toString('utf8'))).total;
-    return dimensions.flatMap((name) => {
+    return COVERAGE_DIMENSIONS.flatMap((name) => {
         const floor = settings.coverage[name];
         if (covered[name].pct >= floor) return [];
         return [
@@ -61,9 +62,9 @@ function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof 
 }
 
 // Runs Jest over the copied sources and reads its reports into findings.
-async function runJest(run: JestRun, reports: Root, settings: z.infer<typeof thresholdsSchema>): Promise<Finding[]> {
+async function runJest(run: JestRun, reports: Root, settings: JestSettings): Promise<Finding[]> {
     const { input, source, work } = run;
-    const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings.coverage[name]]));
+    const thresholds = Object.fromEntries(COVERAGE_DIMENSIONS.map((name) => [name, settings.coverage[name]]));
     const command = [
         'jest',
         '--coverage',
@@ -72,13 +73,13 @@ async function runJest(run: JestRun, reports: Root, settings: z.infer<typeof thr
         '--json',
         '--testLocationInResults',
         '--outputFile',
-        join(work, 'tests.json'),
+        join(work, TEST_REPORT),
         '--coverageDirectory',
-        join(work, 'coverage'),
+        join(work, COVERAGE_DIRECTORY),
         '--coverageReporters=json-summary',
         `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
     ];
-    const result = await runCheckCommand(input, command, { cwd: join(source, input.scope) });
+    const result = await runEngineTool(input, command, { cwd: join(source, input.scope) });
     if (result.code !== 0 && result.code !== 1)
         throw new Error(
             `Jest could not run (exit ${String(result.code)}): ${stripVTControlCharacters(result.stderr).trim()}`,
@@ -113,35 +114,13 @@ async function runJest(run: JestRun, reports: Root, settings: z.infer<typeof thr
     return findings;
 }
 
-export const reportSchema = z.object({
-    success: z.boolean(),
-    numTotalTests: z.number().int().nonnegative(),
-    numRuntimeErrorTestSuites: z.number().int().nonnegative(),
-    testResults: z.array(
-        z.object({
-            name: z.string().min(1),
-            assertionResults: z.array(
-                z.object({
-                    fullName: z.string(),
-                    status: z.enum(['passed', 'failed', 'skipped', 'pending', 'todo', 'disabled', 'focused']),
-                    failureMessages: z.array(z.string()),
-                    location: z
-                        .object({ line: z.number().int().positive(), column: z.number().int().nonnegative() })
-                        .nullable()
-                        .optional(),
-                }),
-            ),
-        }),
-    ),
-});
-
 /**
  * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
  * @param input the engine input
  * @returns the findings
  */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
-    const settings = thresholdsSchema.parse(input.view.tool('jest'));
+    const settings = thresholdsSchema.parse(input.view.options('tools.jest'));
     using work = scratchFolder('gspot-jest-');
     using reports = openRoot(work.path);
     using source = await scratchCopy(

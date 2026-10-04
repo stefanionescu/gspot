@@ -1,11 +1,11 @@
 import { join, posix, dirname } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { SHOWN_LINES } from '#cli/config/checks/checks.ts';
-import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { SpawnResult } from '#cli/types/platform/platform.ts';
-import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import { SHOWN_LINES } from '#cli/config/checks/framework/nextjs.ts';
+import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/general/dependencies.ts';
 
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
@@ -45,7 +45,7 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     for (const file of input.files) {
         const command = frozenCommand(input, file.path);
         if (command === undefined) continue;
-        const result = await runCheckCommand(input, command, {
+        const result = await runEngineTool(input, command, {
             cwd: join(workspace.root, dirname(file.path)),
             ...(command[0] === 'yarn' ? { env: { YARN_ENABLE_SCRIPTS: 'false' } } : {}),
         });

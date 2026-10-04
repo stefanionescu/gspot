@@ -1,0 +1,21 @@
+<%
+const document = {
+    extends: ['html-validate:recommended'],
+    rules: Object.assign(
+        {
+            'wcag/h37': 'error',
+            'no-autoplay': 'off',
+            'no-inline-style': 'off',
+            'no-raw-characters': 'off',
+            'void-style': 'off',
+            'doctype-style': 'off',
+            'no-trailing-whitespace': 'off',
+        },
+        Object.fromEntries(
+            (isAll ? [] : ['no-inline-style', 'prefer-button', 'prefer-native-element']).map((rule) => [rule, 'off']),
+        ),
+        Object.fromEntries(rulesOff('site/html-validate').map((rule) => [rule, 'off'])),
+    ),
+};
+recordRules(document);
+%><%~ json(document) %>

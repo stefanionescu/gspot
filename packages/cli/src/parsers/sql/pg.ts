@@ -1,14 +1,14 @@
-// The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
-import { grammarPath } from '#cli/platform/assets.ts';
+// The Postgres parser: libpg-query compiled to WebAssembly, loaded from the package.
+import { wasmPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
 import { POINTER_BYTES, ERROR_POSITION_OFFSET } from '#cli/config/parsers/sql.ts';
-import type { SqlNode, SqlTree, PgModule, SqlParse } from '#cli/types/parsers/sql.ts';
+import type { PgCall, SqlNode, SqlTree, PgModule, SqlParse, PgRuntime } from '#cli/types/parsers/sql.ts';
 
-const state: { module: Promise<PgModule> | undefined } = { module: undefined };
+const state: PgRuntime = { module: undefined };
 
 async function pgModule(): Promise<PgModule> {
     if (state.module !== undefined) return state.module;
-    state.module = createModule({ locateFile: () => grammarPath('libpg-query.wasm') });
+    state.module = createModule({ locateFile: () => wasmPath('libpg-query.wasm') });
     return state.module;
 }
 
@@ -29,6 +29,18 @@ function readParse(module: PgModule, result: number): SqlParse {
     return { tree: JSON.parse(module.UTF8ToString(treeAt)) as SqlTree, error: undefined };
 }
 
+// Keep the allocated UTF-8 input alive for either parser and release it even when the native call fails.
+function useCString<Result>(module: PgModule, text: string, call: PgCall<Result>): Result {
+    const size = module.lengthBytesUTF8(text) + 1;
+    const query = module._malloc(size);
+    try {
+        module.stringToUTF8(text, query, size);
+        return call(query);
+    } finally {
+        module._free(query);
+    }
+}
+
 /**
  * Parses SQL text as Postgres reads it.
  * @param text the SQL
@@ -36,37 +48,33 @@ function readParse(module: PgModule, result: number): SqlParse {
  */
 export async function parse(text: string): Promise<SqlParse> {
     const module = await pgModule();
-    const size = module.lengthBytesUTF8(text) + 1;
-    const query = module._malloc(size);
-    module.stringToUTF8(text, query, size);
-    const result = module._wasm_parse_query_raw(query);
-    try {
-        return readParse(module, result);
-    } finally {
-        module._free(query);
-        module._wasm_free_parse_result(result);
-    }
+    return useCString(module, text, (query) => {
+        const result = module._wasm_parse_query_raw(query);
+        try {
+            return readParse(module, result);
+        } finally {
+            module._wasm_free_parse_result(result);
+        }
+    });
 }
 
 /**
- * Parse procedural bodies using the same embedded PostgreSQL parser as SQL statements.
+ * Parse procedural bodies using the same PostgreSQL parser as SQL statements.
  * @param text the PL/pgSQL body
  * @returns the parse tree as the parser reports it
  */
 export async function parsePlpgsql(text: string): Promise<unknown> {
     const module = await pgModule();
-    const size = module.lengthBytesUTF8(text) + 1;
-    const query = module._malloc(size);
-    module.stringToUTF8(text, query, size);
-    const result = module._wasm_parse_plpgsql(query);
-    try {
-        const value = module.UTF8ToString(result);
-        if (!value.startsWith('{')) throw new Error(value);
-        return JSON.parse(value) as unknown;
-    } finally {
-        module._free(query);
-        module._wasm_free_string(result);
-    }
+    return useCString(module, text, (query) => {
+        const result = module._wasm_parse_plpgsql(query);
+        try {
+            const value = module.UTF8ToString(result);
+            if (!value.startsWith('{')) throw new Error(value);
+            return JSON.parse(value) as unknown;
+        } finally {
+            module._wasm_free_string(result);
+        }
+    });
 }
 
 /**
@@ -85,7 +93,6 @@ export function nodesOf(list: unknown, kind: string): SqlNode[] {
  * @param field the field
  * @returns the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: SQL readers take the text of a field, or '' for any other value, by this one rule.
 export function textOf(field: unknown): string {
     return typeof field === 'string' ? field : '';
 }
@@ -95,7 +102,6 @@ export function textOf(field: unknown): string {
  * @param list the field
  * @returns each part
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Names, keys, and grants read a list of String nodes the same way.
 export function partsOf(list: unknown): string[] {
     return nodesOf(list, 'String').map((node) => textOf(node['sval']));
 }

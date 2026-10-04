@@ -1,86 +1,69 @@
 import type { JSONSchema } from 'zod/v4/core';
+import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { cell, table, referencePage } from './page.ts';
-import type { ReferencePage } from '../../types/reference.ts';
-import { buildJsonSchema } from '@gspothq/cli/src/policy/json-schema.ts';
-import type { Manifest, SettingSpec } from '@gspothq/cli/src/types/kits.ts';
-import { exposedSettings } from '@gspothq/cli/src/policy/setting-surface.ts';
+import { cell, table, section, referencePage } from './page.ts';
+import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
+import { knownSettings } from '@gspothq/cli/src/policy/settings/known.ts';
+import type { ReferencePage, SettingVariant } from '../../types/reference.ts';
+import { SETTINGS_INTRO, POLICY_EXAMPLES, SCHEMA_TYPE_LABELS } from '../../config/reference.ts';
 
-const SETTINGS_INTRO = `Every key \`gspot set\` writes and \`gspot list settings\` prints, with its default at each level. A scope inherits the root and the scopes around it: a value replaces the inherited one, and a list adds to it, as [monorepos](/guides/scopes/) shows.
-
-`;
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cells of the schema table escape HTML and pipes by this one rule.
-function schemaCell(value: string): string {
-    return value
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('|', '&#124;')
-        .replaceAll('\n', ' ');
+function acceptedValue(node: JSONSchema.JSONSchema | boolean): string {
+    if (typeof node === 'boolean') return node ? 'Any value' : 'Not accepted';
+    if (node.enum !== undefined) return node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
+    if (node.anyOf !== undefined) return [...new Set(node.anyOf.map((entry) => acceptedValue(entry)))].join(' or ');
+    if (Array.isArray(node.type)) return node.type.join(' or ');
+    const type = node.type ?? 'Value';
+    return SCHEMA_TYPE_LABELS[type] ?? type;
 }
 
-function schemaRow(node: JSONSchema.JSONSchema | boolean, path: string, required: boolean): string {
-    const presence = required ? 'Required' : 'Optional';
-    if (typeof node === 'boolean')
-        return `| <code>${schemaCell(path)}</code> | ${presence} | ${node ? 'Any value' : 'Not accepted'} | |`;
-    const constraints = Object.fromEntries(
-        Object.entries(node).filter(
-            ([key, value]) =>
-                !['properties', 'items', 'anyOf', 'description'].includes(key) &&
-                (key !== 'additionalProperties' || typeof value === 'boolean'),
-        ),
-    );
-    return `| <code>${schemaCell(path)}</code> | ${presence} | <code>${schemaCell(JSON.stringify(constraints))}</code> | ${schemaCell(node.description ?? '')} |`;
-}
-
-function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, required: boolean): string[] {
-    const row = schemaRow(node, path, required);
-    if (typeof node === 'boolean') return [row];
-    const properties = Object.entries(node.properties ?? {}).flatMap(([name, child]) =>
-        schemaRows(child, `${path}.${name}`, node.required?.includes(name) === true),
-    );
-    const items = node.items === undefined ? [] : [node.items].flat();
-    const alternatives = (node.anyOf ?? []).flatMap((child, index) =>
-        schemaRows(child, `${path} (form ${String(index + 1)})`, required),
-    );
-    return [
-        row,
-        ...properties,
-        ...items.flatMap((child) => schemaRows(child, `${path}[]`, false)),
-        ...alternatives,
-        ...(typeof node.additionalProperties === 'object'
-            ? schemaRows(node.additionalProperties, `${path}.*`, false)
-            : []),
-    ];
+function schemaProperties(node: JSONSchema.JSONSchema | boolean): Record<string, JSONSchema.JSONSchema | boolean> {
+    let shape = node;
+    if (typeof node !== 'boolean' && node.type === 'array' && !Array.isArray(node.items) && node.items !== undefined)
+        shape = node.items;
+    if (typeof shape === 'boolean') return {};
+    return shape.properties ?? {};
 }
 
 /**
- * Render all policy fields from the schema used by the production reader.
- * @returns Markdown reference tables
+ * Render one readable section per policy table from its validated JSON schema.
+ * @returns Markdown examples and key tables
  */
 export function policyReference(): string {
     const schema: JSONSchema.JSONSchema = buildJsonSchema();
-    const sections = Object.entries(schema.properties ?? {}).map(
-        ([name, node]) =>
-            `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
-    );
-    return `The [machine-readable schema](/schema/gspot.schema.json) defines these fields, where \`[]\` marks an array item and \`*\` a key you choose. The policy reader also checks the selected kits, the settings they expose, and the reasons the policy asks for.\n\n${sections.join('\n')}`;
+    const sections = Object.entries(schema.properties ?? {}).map(([name, node]) => {
+        const properties = schemaProperties(node);
+        const entries = Object.keys(properties).length === 0 ? [[name, node] as const] : Object.entries(properties);
+        const topic = name === 'tools' ? 'tool options' : 'settings and defaults';
+        const rows = entries.map(([key, value]) => [
+            `\`${key}\``,
+            acceptedValue(value),
+            typeof value !== 'boolean' && value.description !== undefined
+                ? cell(value.description)
+                : `See the [settings reference](/reference/settings/) for ${topic}.`,
+        ]);
+        const example = POLICY_EXAMPLES[name];
+        return section(
+            name,
+            (example === undefined ? '' : `\`\`\`toml\n${example}\n\`\`\`\n\n`) +
+                table(['Key', 'Accepted value', 'Meaning'], rows),
+        );
+    });
+    return `Customize settings in \`gspot.toml\`, then run \`gspot apply\`. The [machine-readable JSON Schema](/schema/gspot.schema.json) defines full validation for editors. Tool and configuration-specific options are described in the [settings reference](/reference/settings/). Any limit can be set for one language as \`limits.<language>.<name>\`.\n\n${sections.join('\n')}`;
 }
 
 /**
  * The settings page: every exposed setting with its owners and the default each owner gives it.
- * @param manifests every kit manifest
+ * @param manifests every configuration manifest
  * @returns the page
  */
 export function settingsPage(manifests: Manifest[]): ReferencePage {
-    const seen = new Map<string, { setting: SettingSpec; owners: string[] }[]>();
+    const seen = new Map<string, SettingVariant[]>();
     const definitions = [
-        ...[...exposedSettings([]).specs.values()].map((setting) => ({ setting, owner: 'Repository policy' })),
+        ...[...knownSettings([]).specs.values()].map((setting) => ({ setting, owner: 'Repository policy' })),
         ...manifests.flatMap((manifest) =>
             manifest.settings.map((setting) => ({
                 setting,
-                owner: `[${manifest.kit.name}](/reference/kits/${manifest.kit.name}/)`,
+                owner: `[${manifest.configuration.name}](/reference/configurations/${manifest.configuration.name}/)`,
             })),
         ),
     ];
@@ -108,11 +91,15 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
         .map(({ setting, owners }) => {
             const recommended = setting.default;
             const all = setting.default_all ?? recommended;
+            const defaultRecommended = recommended === undefined ? 'unset' : cell(JSON.stringify(recommended));
+            const defaultAll = all === undefined ? 'unset' : cell(JSON.stringify(all));
             return [
                 `\`${setting.name}\``,
                 setting.type,
                 setting.direction,
-                `recommended: \`${recommended === undefined ? 'unset' : cell(JSON.stringify(recommended))}\`; all: \`${all === undefined ? 'unset' : cell(JSON.stringify(all))}\``,
+                isDeepStrictEqual(recommended, all)
+                    ? `\`${defaultRecommended}\``
+                    : `recommended: \`${defaultRecommended}\`; all: \`${defaultAll}\``,
                 cell(setting.summary),
                 owners.join(', '),
             ];
@@ -120,6 +107,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
     return referencePage(
         'Settings',
         'Settings exposed by gspot set, with their types, directions, defaults, and owners.',
-        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Kit'], rows)}\n`,
+        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
+        'docs/src/content/reference/policy.ts',
     );
 }

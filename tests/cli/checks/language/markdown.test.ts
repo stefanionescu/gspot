@@ -1,0 +1,73 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
+import { rejects } from 'node:assert/strict';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { fences } from '#cli/checks/language/markdown.ts';
+import { buildEngineInput } from '#tests/harness/input.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+
+test('TSX and JSONC fences use their declared syntax while JSON rejects comments', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'examples.md':
+            '```tsx\nexport const panel = <div>Hello</div>;\n```\n\n```jsonc\n{ // accepted comment\n "enabled": true,\n}\n```\n\n```json\n{ // rejected comment\n "enabled": true\n}\n```\n',
+    });
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
+    const found = await fences(
+        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['examples.md'] }),
+    );
+    expect(found).toMatchObject([{ file: 'examples.md', line: 12, rule: 'syntax' }]);
+    expect(found).toHaveLength(1);
+});
+
+test('a fenced block that does not parse in its language is a finding', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'a.md': '```json\n{"a": 1}\n```\n\n```json\n{oops\n```\n\n```toml\nkey = \n```\n\n```ts\nconst a: number = 1;\n```\n\n```text\nnot code {\n```\n',
+    });
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
+    const found = await fences(
+        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
+    );
+    expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
+        [6, 'syntax'],
+        [10, 'syntax'],
+    ]);
+});
+
+test('tilde fences and unclosed examples still report invalid code', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'a.md': '> ~~~json\n> {oops\n> ~~~~\n\n```json\n{oops\n',
+    });
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
+    const found = await fences(
+        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
+    );
+    expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
+        [2, 'syntax'],
+        [6, 'syntax'],
+    ]);
+});
+
+test('Bash examples report syntax errors, accept corrections, and stop on cancellation', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
+        'a.md': '```bash\nif then\n```\n',
+    });
+    let selected: EngineInput = buildEngineInput(await openSession(sandbox.path), 'markdown/fences', {
+        paths: ['a.md'],
+    });
+    const found = await fences(selected);
+    expect(found).toMatchObject([{ check: 'markdown/fences', file: 'a.md', line: 2, rule: 'syntax', fixable: false }]);
+    expect(found[0]!.message).toContain('syntax error');
+    writeFileSync(join(sandbox.path, 'a.md'), '```bash\nprintf "%s\\n" "Hello"\n```\n');
+    selected = buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] });
+    expect(await fences(selected)).toStrictEqual([]);
+    selected.cancelSignal = AbortSignal.abort();
+    await rejects(fences(selected), { message: 'The command was canceled.' });
+});

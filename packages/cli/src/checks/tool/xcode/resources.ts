@@ -1,21 +1,12 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
+import { parseJsonDocument } from '#cli/parsers/json.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import type { StringsFile, AssetContents } from '#cli/types/checks/tool/xcode.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
-
-// The parsed JSON of a file, or the parse error under the key error.
-function readJson(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
-    const text = readSource(input.root, path, input.reads).toString('utf8');
-    try {
-        return { value: JSON.parse(text) as unknown, error: undefined };
-    } catch (error) {
-        return { value: undefined, error: error instanceof Error ? error.message : 'The file is not JSON.' };
-    }
-}
+import { stringsFileSchema, assetContentsSchema } from '#cli/parsers/schema/xcode.ts';
 
 function setName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
@@ -31,11 +22,11 @@ function symbolOf(name: string): string {
 }
 
 function imageFindings(input: EngineInput, path: string): Finding[] {
-    const read = readJson(input, path);
+    const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), assetContentsSchema);
     const at = { file: path, line: 1 };
     if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
     if (!path.endsWith(IMAGE_SET)) return [];
-    const contents = read.value as AssetContents;
+    const contents = read.data;
     const names = (contents.images ?? []).flatMap((image) => (image.filename === undefined ? [] : [image.filename]));
     if (names.length === 0) return [findingAt(input, at, 'empty-set', 'This image set names no image file.')];
     const folder = path.slice(0, path.lastIndexOf('/'));
@@ -67,10 +58,10 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  */
 export function xcstrings(input: EngineInput): Finding[] {
     return trackedByExtension(input, ['.xcstrings']).flatMap((path) => {
-        const read = readJson(input, path);
+        const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
         if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
-        const strings = read.value as StringsFile;
+        const strings = read.data;
         const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
         const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));
         locales.delete(strings.sourceLanguage ?? 'en');

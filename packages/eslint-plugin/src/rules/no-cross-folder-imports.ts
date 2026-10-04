@@ -1,8 +1,8 @@
-import { posix } from 'node:path';
-import type { TSESTree } from '@typescript-eslint/utils';
+import { ASTUtils } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { CrossFolderImportsOptions } from '#plugin/types/rules.ts';
-import { lintedFile, lintedRoot, staticString, normalizePath, relativeToRoot } from '#plugin/files.ts';
+import { lintedPath, relativeImportPath } from '#plugin/files.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { ImportSource, CrossFolderImportsOptions } from '#plugin/types/rules.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
     for (const [prefix, directory] of Object.entries(aliases)) {
@@ -23,54 +23,52 @@ function topFolder(file: string, root: string): string | undefined {
 export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'alias' | 'escape'>({
     name: 'no-cross-folder-imports',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ aliases: {} }],
+        type: 'suggestion',
         fixable: 'code',
         docs: {
             level: 'all',
             title: 'Keep imports within folder boundaries',
             example:
                 'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`.',
-            summary: 'Finds relative imports that leave their top-level folder under a source root.',
+            description: 'Finds relative imports that leave their top-level folder under a source root.',
             why: 'A path of ../../ ties the importer to the tree shape; the alias names the folder and survives a move.',
-            fix: 'Keep relative imports within a top-level folder. gspot check --fix uses a configured alias when one exists.',
+            fix: 'Keep relative imports within a top-level folder. eslint --fix uses a configured alias when one exists.',
         },
         schema: [
             optionsSchema({
-                roots: { type: 'array', items: { type: 'string' } },
                 aliases: { type: 'object', additionalProperties: { type: 'string' } },
             }),
         ],
         messages: {
             alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
-            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',
+            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder. Import through an alias, or move the shared code into this folder.',
         },
     },
-    defaultOptions: [{ roots: [], aliases: {} }],
-    create(context, [options]) {
-        const file = lintedFile(context);
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<CrossFolderImportsOptions[0]>;
+        const file = lintedPath(context);
         if (file === undefined) return {};
-        const root = lintedRoot(context);
-        const relative = relativeToRoot(root, file);
-        const roots = options.roots ?? [];
-        const candidates =
-            roots.length === 0 ? [relative.split('/', 1)[0] ?? ''] : roots.map((entry) => posix.normalize(entry));
+        const { relative } = file;
+        const candidates = [relative.split('/', 1)[0] ?? ''];
         const sourceRoot = candidates
             .filter((entry) => entry === '.' || relative.startsWith(`${entry}/`))
             .toSorted((left, right) => right.length - left.length)[0];
         if (sourceRoot === undefined) return {};
         const folder = topFolder(relative, sourceRoot);
         if (folder === undefined) return {};
-        const aliases = options.aliases ?? {};
+        const aliases = options.aliases;
         const check = (node: TSESTree.Node | null | undefined): void => {
-            const source = staticString(node);
-            if (source === undefined) return;
-            if (!source.startsWith('./') && !source.startsWith('../')) return;
-            const joinedPath = posix.join(posix.dirname(relative), source);
-            const target = normalizePath(posix.normalize(joinedPath));
+            if (node?.type !== AST_NODE_TYPES.Literal) return;
+            const source = ASTUtils.getStringIfConstant(node);
+            if (source === null) return;
+            const target = relativeImportPath(relative, source);
+            if (target === undefined) return;
             if (topFolder(target, sourceRoot) === folder) return;
             const alias = aliasFor(target, aliases);
-            const literal = node as TSESTree.Literal;
-            const quote = literal.raw.startsWith('"') ? '"' : "'";
+            const literal = node;
+            const quote = literal.raw.charAt(0);
             if (alias === undefined) {
                 context.report({ node: literal, messageId: 'escape', data: { source, folder } });
             } else {
@@ -83,16 +81,7 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'alias
             }
         };
         return {
-            ImportDeclaration: (node) => {
-                check(node.source);
-            },
-            ExportAllDeclaration: (node) => {
-                check(node.source);
-            },
-            ExportNamedDeclaration: (node) => {
-                check(node.source);
-            },
-            ImportExpression: (node) => {
+            'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression'(node: ImportSource) {
                 check(node.source);
             },
         };

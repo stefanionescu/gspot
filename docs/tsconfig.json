@@ -9,7 +9,9 @@
     },
     "include": [
         ".astro/types.d.ts",
-        "../packages/cli/src/parsers/sql/modules.d.ts",
+        "../packages/cli/src/types/parsers/pg.d.ts",
+        "../packages/cli/src/types/platform/assets.ts",
+        "../packages/cli/src/types/checks/general/spdx.d.ts",
         "src/**/*",
         "astro.config.ts",
         "links.ts"

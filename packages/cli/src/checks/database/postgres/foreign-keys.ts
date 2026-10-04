@@ -3,7 +3,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import { schema } from '#cli/checks/database/postgres/schema.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 /**
  * One finding for each foreign key column that no index, primary key, or unique key leads with.

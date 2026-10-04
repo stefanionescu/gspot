@@ -1,58 +1,44 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { EnvOwnerOptions } from '#plugin/types/rules.ts';
+import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-
-function isEnvRead(
-    context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
-    node: TSESTree.MemberExpression,
-): boolean {
-    const property = memberName(node);
-    if (property !== 'env') return false;
-    const target = node.object;
-    if (target.type === AST_NODE_TYPES.Identifier) return isGlobalEnvironmentHost(context, target);
-    return (
-        target.type === AST_NODE_TYPES.MetaProperty && target.meta.name === 'import' && target.property.name === 'meta'
-    );
-}
+import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';
+import { environmentNames, environmentReads } from '#plugin/environment.ts';
 
 export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
     name: 'env-owner',
     meta: {
-        type: 'problem',
+        defaultOptions: [{ owners: [], allowed: ENVIRONMENT_ALLOWED }],
+        type: 'suggestion',
         docs: {
             level: 'all',
             title: 'Environment access owner',
             example:
                 'With `owners: ["src/env/**"]`, `const port = process.env.PORT;` in `src/turn/build.ts` reports an owner finding. Move the environment read to `src/env/index.ts` and pass the value to the build function.',
-            summary:
+            description:
                 'Finds an environment variable read outside the owners the options name. With no owners, it reports nothing.',
             why: 'When any file reads the environment, nobody can list what the program needs to run; one owner can.',
-            fix: 'Read the variable in the configuration owner (architecture.roles.env) and pass the value where it is used.',
+            fix: 'Set the owners rule option to the files that read environment variables, and pass their values to consumers. In gspot, set architecture.roles.env.',
         },
-        schema: [optionsSchema({ owners: { type: 'array', items: { type: 'string' } } })],
+        schema: [
+            optionsSchema({
+                owners: { type: 'array', items: { type: 'string' } },
+                allowed: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: { owner: 'Environment variables are read in {{owners}} only. Read it there and pass the value in.' },
     },
-    defaultOptions: [{ owners: [] }],
-    create(context, [options]) {
-        const file = lintedFile(context);
+    create(context, [configured]) {
+        // RuleCreator merges the declared defaults before this listener is created.
+        const options = configured as Required<EnvOwnerOptions[0]>;
+        const file = lintedPath(context);
         if (file === undefined) return {};
-        const owners = options.owners ?? [];
-        if (owners.length === 0 || isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), owners)) return {};
-        return {
-            MemberExpression(node) {
-                if (!isEnvRead(context, node)) return;
-                const { parent } = node;
-                if (
-                    parent.type === AST_NODE_TYPES.MemberExpression &&
-                    parent.object === node &&
-                    memberName(parent) === 'NODE_ENV'
-                )
-                    return;
-                context.report({ node, messageId: 'owner', data: { owners: owners.join(', ') } });
-            },
-        };
+        const owners = options.owners;
+        if (owners.length === 0 || isAnyGlobMatch(file.relative, owners)) return {};
+        const allowed = new Set(options.allowed);
+        return environmentReads(context, (node) => {
+            const names = environmentNames(node);
+            if (names.length > 0 && names.every((name) => name !== null && allowed.has(name))) return;
+            context.report({ node, messageId: 'owner', data: { owners: owners.join(', ') } });
+        });
     },
 });

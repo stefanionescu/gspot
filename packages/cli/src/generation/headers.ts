@@ -1,17 +1,15 @@
 import { extensionOf } from '#cli/platform/paths.ts';
+import { parseJsonRecord } from '#cli/parsers/json.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
-import type { JsonFormat } from '#cli/types/generation/generation.ts';
+import type { JsonFormat } from '#cli/types/generation/formatting.ts';
+import { GENERATED_JSON_KEY } from '#cli/config/parsers/generated-header.ts';
 
 import {
-    JSON_HEADER,
     HTML_EXTENSIONS,
     JSON_EXTENSIONS,
-    GENERATED_JSON_KEY,
-    HEADER_LINES_CHECKED,
-    GENERATED_HEADER_LINE,
     GENERATED_HEADER_LINES,
     SLASH_COMMENT_EXTENSIONS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation/headers.ts';
 
 function commented(lines: string[], mark: string): string {
     const marked = lines.map((line) => `${mark} ${line}`).join('\n');
@@ -21,7 +19,7 @@ function commented(lines: string[], mark: string): string {
 /**
  * The header lines for a version.
  * @param version the gspot version
- * @returns the two lines
+ * @returns the header lines
  */
 export function headerLines(version: string): string[] {
     return GENERATED_HEADER_LINES.map((line) => line.replaceAll('{{version}}', () => version));
@@ -47,25 +45,14 @@ export function headerFor(path: string, version: string): string {
 }
 
 /**
- * True when a text opens with the generated header (any version): in its first three lines, or as the first JSON key.
- * @param text a file's text
- * @returns whether gspot wrote it
- */
-export function hasHeader(text: string): boolean {
-    const lines = text.split('\n', HEADER_LINES_CHECKED + 1).slice(0, HEADER_LINES_CHECKED);
-    if (lines.some((line) => GENERATED_HEADER_LINE.test(line))) return true;
-    return JSON_HEADER.test(text) && text.includes(`"${GENERATED_JSON_KEY}"`);
-}
-
-/**
  * Puts the header into rendered JSON as the first key, formatted the way the repository's Prettier settings format it.
  * @param rendered the rendered JSON text
  * @param version the gspot version
  * @param format the print width and indent width
  * @returns the JSON text with the header key first
  */
-export function jsonHeaderAdded(rendered: string, version: string, format: JsonFormat): string {
-    const parsed = JSON.parse(rendered) as Record<string, unknown>;
+export function addJsonHeader(rendered: string, version: string, format: JsonFormat): string {
+    const parsed = parseJsonRecord(rendered);
     const ordered: Record<string, unknown> = { [GENERATED_JSON_KEY]: headerLines(version).join(' ') };
     for (const [key, value] of Object.entries(parsed)) if (key !== GENERATED_JSON_KEY) ordered[key] = value;
     return jsonText(ordered, format);

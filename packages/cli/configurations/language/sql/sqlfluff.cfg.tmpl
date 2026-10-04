@@ -1,0 +1,45 @@
+<%
+const off = [
+    ...rulesOff('sql/sqlfluff'),
+    ...(isAll ? [] : ['AM05', 'AM09', 'CV11', 'ST05', 'ST07', 'ST09']),
+];
+const document = {
+    sqlfluff: {
+        dialect: settings['tools.sqlfluff.dialect'],
+        templater: 'raw',
+        sql_file_exts: '.sql,.pgsql,.psql',
+        max_line_length: format.print_width,
+        large_file_skip_byte_limit: 0,
+        rules: [],
+        exclude_rules: off,
+    },
+    'sqlfluff:indentation': {
+        indent_unit: format.indent_style === 'tab' ? 'tab' : 'space',
+        tab_space_size: format.indent_width,
+    },
+    'sqlfluff:rules': {
+        'capitalisation.keywords': {
+            capitalisation_policy: 'upper',
+        },
+        'capitalisation.identifiers': {
+            extended_capitalisation_policy: 'lower',
+        },
+        'capitalisation.functions': {
+            extended_capitalisation_policy: 'lower',
+        },
+        'capitalisation.literals': {
+            capitalisation_policy: 'upper',
+        },
+        'capitalisation.types': {
+            extended_capitalisation_policy: 'upper',
+        },
+    },
+};
+recordRules(document);
+%><% for (const [name, section] of Object.entries(document)) { if (name === 'sqlfluff:rules') { for (const [rule, options] of Object.entries(section)) { %>[sqlfluff:rules:<%= rule %>]
+<% for (const [key, value] of Object.entries(options)) { %><%= key %> = <%= value %>
+<% } %>
+<% } } else { %>[<%= name %>]
+<% for (const [key, value] of Object.entries(section)) { if (Array.isArray(value) && value.length === 0) continue; %><%= key %> = <%= Array.isArray(value) ? value.join(', ') : value %>
+<% } %>
+<% } } %>

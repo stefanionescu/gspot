@@ -1,15 +1,14 @@
 import { dirname, basename } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { readSource } from '#cli/repository/sources.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { lockedPackages } from '#cli/repository/locked-packages.ts';
-import { pathTokens, proseLines } from '#cli/parsers/references.ts';
-import { POLICY_FILE } from '#cli/config/checks/general/structure.ts';
+import { lockedPackages } from '#cli/parsers/lockfiles.ts';
+import { pathTokens, proseLines } from '#cli/parsers/markdown.ts';
+import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import type { PathPattern } from '#cli/types/checks/general/structure.ts';
-import type { LicenseException } from '#cli/types/checks/general/general.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
+import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
+import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { LicenseException } from '#cli/types/checks/general/licenses.ts';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];
@@ -20,10 +19,10 @@ function listed(value: unknown, key: string): string[] {
 }
 
 // Tool exclusions list their paths under paths; the URL patterns of tools.lychee.exclude_urls are no paths.
-function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPattern[] {
+function settingPatterns(tools: Record<string, Record<string, unknown>>, prefix: string): PathPattern[] {
     return Object.entries(tools).flatMap(([tool, table]) =>
         Object.entries(table).flatMap(([setting, value]) =>
-            listed(value, 'paths').map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` })),
+            listed(value, 'paths').map((pattern) => ({ pattern, where: `${prefix}${tool}.${setting}` })),
         ),
     );
 }
@@ -48,8 +47,9 @@ function policyPatterns(input: EngineInput): PathPattern[] {
             pattern,
             where: 'structure.folder_names_allowed',
         })),
-        ...listed(naming.rules, 'paths').map((pattern) => ({ pattern, where: '[[naming.rules]]' })),
-        ...toolPatterns(policy.tools),
+        ...listed(naming.paths, 'paths').map((pattern) => ({ pattern, where: '[[naming.paths]]' })),
+        ...settingPatterns(policy.tools, 'tools.'),
+        ...settingPatterns(policy.configurationSettings ?? {}, ''),
     ];
 }
 
@@ -80,7 +80,7 @@ function licenseFindings(input: EngineInput): Finding[] {
     const locks = new Map<string, Set<string>>();
     const tables = [['', policy], ...Object.entries(policy.scopeTables)] as const;
     return tables.flatMap(([scope, table]) => {
-        const exceptions = (table.tools?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
+        const exceptions = (table.configurationSettings?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
             if (path.split('/').includes(DOT_GSPOT)) return false;
@@ -109,7 +109,7 @@ function licenseFindings(input: EngineInput): Finding[] {
             }
             return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
         });
-        const where = scope === '' ? 'tools.licenses.exceptions' : `scope ${scope}`;
+        const where = scope === '' ? 'licenses.exceptions' : `scope ${scope}`;
         return exceptions.flatMap((exception): Finding[] => {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];
@@ -137,7 +137,7 @@ export function staleAllowlists(input: EngineInput): Finding[] {
         .filter((entry) => {
             const matches = pathMatcher([entry.pattern]);
             if (candidates.some((path) => matches(path))) return false;
-            return entry.where !== 'tools.docs.exclude' || ![...references].some((path) => matches(path));
+            return entry.where !== 'docs.exclude' || ![...references].some((path) => matches(path));
         })
         .map((entry) =>
             findingAt(

@@ -1,54 +1,61 @@
-import type { Manifest } from '#cli/types/kits.ts';
-import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import type { Repository } from '#cli/types/repository/repository.ts';
-import type { Level, RuleFile, RuleSettings } from '#cli/types/rules.ts';
-import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/rules.ts';
+import type { RuleFile, RuleSettings, InstructionInputs } from '#cli/types/rules.ts';
 
-function guideGroups(files: RuleFile[]): [string, string[]][] {
+import {
+    FIRST_READ,
+    RULE_AREAS,
+    RULES_ALONE,
+    LEVEL_SUMMARY,
+    CHECKS_INSTALLED,
+    ALL_LEVEL_SUMMARY,
+    INSTRUCTION_HEADING,
+} from '#cli/config/rules.ts';
+
+function rulesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
-        const list = rows.get(AREA_BY_LAYER[file.layer] ?? file.layer) ?? [];
+        const category = file.path.split('/', 1)[0] ?? '';
+        const area = RULE_AREAS[category] ?? category;
+        const list = rows.get(area) ?? [];
         list.push(`\`${file.target}\``);
-        rows.set(AREA_BY_LAYER[file.layer] ?? file.layer, list);
+        rows.set(area, list);
     }
     return [...rows];
 }
 
 function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
-    const { path, local } = rules;
+    const { folder, project_folder: local } = rules;
     const projectRow: [string, string[]][] =
         local === undefined || local === '' ? [] : [['Project rules', [`\`${local}/\``]]];
     return [
-        `Read \`${path}/agent/WORKING.md\` and \`${path}/prose/WRITING.md\` first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
+        `Read ${FIRST_READ.map((path) => '`' + folder + '/' + path + '`').join(' and ')} first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
         '',
-        ...[...guideGroups(files), ...projectRow].flatMap(([area, guides]) => [
+        ...[...rulesByArea(files), ...projectRow].flatMap(([area, paths]) => [
             `${area}:`,
             '',
-            ...guides.map((guide) => `- ${guide}`),
+            ...paths.map((path) => `- ${path}`),
             '',
         ]),
     ];
 }
 
 /**
- * The managed block text for a session.
- * @param rules the rule policy
- * @param manifests the selected kits.
- * @param level the selected enforcement level.
- * @param repository the source inventory for the conditional rules.
- * @returns the block: a heading, the rule index when rules are installed, and the standing instructions
+ * The managed instruction block for the already selected rules and enforcement level.
+ * @param inputs the effective policy, selected rules, and presence of executable checks.
+ * @param inputs.rules the authored rule-installation settings.
+ * @param inputs.files the selected files with final content.
+ * @param inputs.level the enforcement level.
+ * @param inputs.hasChecks whether the selected configurations provide executable checks.
+ * @returns the heading, rule index, and instructions for changing policy.
  */
-export function managedBlock(rules: RuleSettings, manifests: Manifest[], level: Level, repository: Repository): string {
-    const files = selectRuleFiles(rules, manifests, repository, level);
+export function managedBlock({ rules, files, level, hasChecks }: InstructionInputs): string {
     const index = files.length > 0 ? indexLines(rules, files) : [];
-    const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
     return [
-        '# Engineering Guidelines',
+        INSTRUCTION_HEADING,
         '',
-        `Selected level: \`${level}\`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.`,
+        `Selected level: \`${level}\`. ${LEVEL_SUMMARY}`,
         '',
-        'Rules about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.',
+        ALL_LEVEL_SUMMARY,
         '',
         ...index,
         closing,

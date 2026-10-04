@@ -1,24 +1,27 @@
 // A bracketed list or table uses JSON or TOML syntax.
-
+import { resolve } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { compact } from '#cli/platform/text.ts';
-import * as messages from '#cli/policy/messages.ts';
+import { compact } from '#cli/platform/objects.ts';
+import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import type { SettingSpec } from '#cli/types/kits.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
+import { printResult } from '#cli/output/messages.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/types/tools/tools.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
-import { specFor, settingValue } from '#cli/policy/settings.ts';
-import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
-import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Program, SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
-import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/mutations.ts';
-import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, KEY_SUGGESTION_LIMIT } from '#cli/config/commands/commands.ts';
+import type { CommandResult } from '#cli/types/output.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import type { SetOptions } from '#cli/types/commands/set.ts';
+import type { Program } from '#cli/types/commands/program.ts';
+import { isLoosening } from '#cli/policy/problems/reasons.ts';
+import type { Session } from '#cli/types/execution/session.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
+import { unknownSettingDiagnostic } from '#cli/policy/problems/keys.ts';
+import { commitPolicy, requireReason } from '#cli/commands/policy-edit.ts';
+import type { RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/options.ts';
+import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/edit.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -30,7 +33,9 @@ function parseStructured(text: string): unknown {
     try {
         return parseToml(`value = ${text}`)['value'];
     } catch {
-        throw new GspotError('policy', [messages.unreadableValue(text)]);
+        throw new GspotError('policy', [
+            `The value ${text} reads as neither JSON nor TOML. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.`,
+        ]);
     }
 }
 
@@ -45,14 +50,11 @@ function parseItem(text: string): unknown {
 function buildSettingError(session: Session, selection: ScopeSelection, key: string): GspotError {
     // A setting of a configuration that lives in a scope is set in that scope; say which one.
     const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
-    if (holder !== undefined) return new GspotError('policy', [messages.settingInScope(key, holder.scope.path)]);
-    const depth = key.startsWith('tools.') ? TOOL_KEY_DEPTH : 1;
-    const prefix = key.split('.').slice(0, depth).join('.');
-    const all = selection.surface.specs.keys().toArray();
-    const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
-    return new GspotError('policy', [
-        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, KEY_SUGGESTION_LIMIT)),
-    ]);
+    if (holder !== undefined)
+        return new GspotError('policy', [
+            `A configuration has the setting \`${key}\` in ${holder.scope.path === '' ? 'the root; leave --scope out' : 'the scope `' + holder.scope.path + '`; add --scope ' + quoteArgument(holder.scope.path)}.`,
+        ]);
+    return new GspotError('policy', [unknownSettingDiagnostic(selection.surface, key)]);
 }
 
 function unwrap(parsed: unknown[], isList: boolean): unknown {
@@ -78,9 +80,9 @@ function fillReasons(value: unknown, reason: string | undefined): unknown {
     );
 }
 
-function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
+function isReasonOwed(spec: SettingSpec, options: SetOptions, value: unknown, shipped: unknown): boolean {
     if (spec.type !== 'list') return isLoosening(spec, value, shipped);
-    if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
+    if (options.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items: unknown[] = Array.isArray(value) ? value : [];
     if (
@@ -90,55 +92,36 @@ function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped:
         )
     )
         return false;
-    return o.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
-}
-
-function buildMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
-    const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
-    return (raw) => {
-        const holder = getScopeTable(raw, o.scope);
-        if (o.remove && isPathList(o.key, value)) {
-            const entries = (holder[o.key] ?? []) as NonNullable<RawPolicy['generated']>;
-            holder[o.key] = entries
-                .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
-                .filter((entry) => entry.paths.length > 0);
-        } else if (isList && o.remove) removeFromList(o.key, value as unknown[])(holder);
-        else if (isList && !o.replace) addToList(o.key, value as unknown[])(holder);
-        else setKey(o.key, written)(holder);
-    };
+    return options.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
 }
 
 // What set did: the new value, or the items it added to or removed from a list.
-function changeText(o: SetOptions, isList: boolean, label: string, value: unknown): string {
+function changeText(options: SetOptions, isList: boolean, label: string, value: unknown): string {
     const items = JSON.stringify(value);
-    if (!isList || o.replace) return `${label} = ${items}`;
-    return `${o.remove ? 'removed from' : 'added to'} ${label}: ${items}`;
+    if (!isList || options.replace) return `${label} = ${items}`;
+    return `${options.remove ? 'removed from' : 'added to'} ${label}: ${items}`;
 }
 
 function describeSet(
     session: Session,
     selection: ScopeSelection,
-    o: SetOptions,
+    options: SetOptions,
     label: string,
     value: unknown,
     isList: boolean,
 ): string {
-    const previous = settingValue(selection.surface, session.policyFiles.policy, o.key, o.scope);
-    const reason = o.reason === undefined ? '' : `  # ${o.reason}`;
+    const previous = settingValue(selection.surface, session.policyFiles.policy, options.key, options.scope);
+    const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    return `${changeText(o, isList, label, value)}${reason}${was}`;
-}
-
-function assertRuleNotOff(spec: SettingSpec, o: SetOptions): void {
-    if (spec.direction !== 'per-rule' || !o.items.includes('off')) return;
-    const tool = o.key.split('.', TOOL_KEY_DEPTH)[1] ?? '';
-    const rule = o.key.split('.').slice(RULE_KEY_DEPTH).join('.');
-    throw new GspotError('policy', [messages.ruleOffRefused(`<the check that runs ${tool}>`, rule)]);
+    return `${changeText(options, isList, label, value)}${reason}${was}`;
 }
 
 function getSelection(session: Session, scope: string | undefined): ScopeSelection {
-    const selection = session.scopes.find((entry) => entry.scope.path === (scope ?? '')) ?? session.scopes[0];
-    if (!selection) throw new GspotError('policy', [messages.scopeMissing(scope ?? '')]);
+    const selection = session.scopes.find((entry) => entry.scope.path === (scope ?? ''));
+    if (!selection)
+        throw new GspotError('policy', [
+            `No policy scope matches ${scope ?? 'root'}. Available scopes: ${session.scopes.map((entry) => entry.scope.path || 'root').join(', ')}.`,
+        ]);
     return selection;
 }
 
@@ -155,67 +138,79 @@ function buildReasonHint(options: SetOptions): string {
 function assertReason(
     session: Session,
     selection: ScopeSelection,
-    o: SetOptions,
+    options: SetOptions,
     spec: SettingSpec,
     value: unknown,
 ): void {
-    if (!session.policyFiles.policy.requireReasons) return;
+    if (!session.policyFiles.policy.require_reasons) return;
     const shipped = selection.surface.defaults.get(spec.name)?.value;
-    const where = `gspot set ${o.key}`;
-    if (isReasonOwed(spec, o, value, shipped)) requireReason(o.reason, where, buildReasonHint(o));
-    else if (o.reason !== undefined && !isReasonAccepted(o.reason))
-        throw new GspotError('policy', [messages.refusedReason(where, o.reason)]);
+    const where = `gspot set ${options.key}`;
+    if (isReasonOwed(spec, options, value, shipped) || options.reason !== undefined)
+        requireReason(options.reason, where, buildReasonHint(options));
 }
 
 function commitSetting(
-    root: string,
+    log: Log,
     session: Session,
     selection: ScopeSelection,
-    o: SetOptions,
+    options: SetOptions,
     spec: SettingSpec,
 ): Promise<CommandResult> {
-    if (o.items.length === 0)
-        throw new GspotError('policy', [`The setting ${o.key} needs a value; pass one, or --default to remove yours.`]);
+    if (options.items.length === 0)
+        throw new GspotError('policy', [
+            `The setting ${options.key} needs a value; pass one, or --default to remove yours.`,
+        ]);
     const isList = spec.type === 'list';
     const parsed = unwrap(
-        o.items.map((item) => parseItem(item)),
+        options.items.map((item) => parseItem(item)),
         isList,
     );
     const value = fillReasons(
-        isPathList(o.key, parsed) && !o.remove ? [{ paths: parsed }] : parsed,
-        isList ? o.reason : undefined,
+        isPathList(options.key, parsed) && !options.remove ? [{ paths: parsed }] : parsed,
+        isList ? options.reason : undefined,
     );
-    assertReason(session, selection, o, spec, value);
-    const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
+    assertReason(session, selection, options, spec, value);
+    const written = !isList && options.reason !== undefined ? { value, reason: options.reason } : value;
+    const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
     return commitPolicy(
-        root,
-        buildMutation(o, isList, value),
-        false,
-        describeSet(session, selection, o, shown, value, isList),
+        session.root,
+        log,
+        (raw) => {
+            const holder = getScopeTable(raw, options.scope);
+            if (options.remove && isPathList(options.key, value)) {
+                const entries = (holder[options.key] ?? []) as NonNullable<RawPolicy['generated']>;
+                holder[options.key] = entries
+                    .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
+                    .filter((entry) => entry.paths.length > 0);
+            } else if (isList && options.remove) removeFromList(holder, options.key, value as unknown[]);
+            else if (isList && !options.replace) addToList(holder, options.key, value as unknown[]);
+            else setKey(holder, options.key, written);
+        },
+        describeSet(session, selection, options, shown, value, isList),
     );
 }
 
 /**
  * gspot set: writes one setting, appends to or edits a list, or deletes the key with --default.
- * @param o the parsed flags
+ * @param options the parsed flags
  * @returns the command result
  */
-async function setCommand(o: SetOptions): Promise<CommandResult> {
-    const root = findRoot(o.cwd);
-    assertPinMatches(root);
+async function setCommand(options: SetOptions): Promise<CommandResult> {
+    const root = findRoot(options.cwd);
+    assertVersionPin(root);
     const session = await openSession(root);
-    const selection = getSelection(session, o.scope);
-    const match = specFor(selection.surface, o.key);
-    if (!match) throw buildSettingError(session, selection, o.key);
-    assertRuleNotOff(match.spec, o);
-    if (!o.reset) return commitSetting(root, session, selection, o, match.spec);
-    const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    return commitPolicy(
+    const selection = getSelection(session, options.scope);
+    const match = specFor(selection.surface, options.key);
+    if (!match) throw buildSettingError(session, selection, options.key);
+    using log = openOwnership(root);
+    if (!options.reset) return await commitSetting(log, session, selection, options, match.spec);
+    const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
+    return await commitPolicy(
         root,
+        log,
         (raw) => {
-            deleteKey(o.key)(getScopeTable(raw, o.scope));
+            deleteKey(getScopeTable(raw, options.scope), options.key);
         },
-        false,
         `${shown} back to the shipped default`,
     );
 }
@@ -226,7 +221,9 @@ async function setCommand(o: SetOptions): Promise<CommandResult> {
  */
 export function registerSet(program: Program): void {
     program
-        .command('set <key> [value...]')
+        .command('set')
+        .argument('<key>', 'Dotted setting name from gspot list settings')
+        .argument('[value...]', 'Setting value or list items; omit with --default')
         .summary('Change a setting')
         .description(
             'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.',
@@ -242,18 +239,17 @@ export function registerSet(program: Program): void {
         .option('--default', 'Delete the setting so the inherited or default value applies')
         .action(async (key, items, flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand(
-                (cwd) =>
-                    setCommand({
-                        cwd,
-                        key,
-                        items,
-                        replace: flags.replace === true,
-                        remove: flags.remove === true,
-                        reset: flags.default === true,
-                        ...compact({ reason: flags.reason, scope: flags.scope }),
-                    }),
-                global,
+            const cwd = resolve(global.C ?? process.cwd());
+            printResult(
+                await setCommand({
+                    cwd,
+                    key,
+                    items,
+                    replace: flags.replace === true,
+                    remove: flags.remove === true,
+                    reset: flags.default === true,
+                    ...compact({ reason: flags.reason, scope: flags.scope }),
+                }),
             );
         });
 }

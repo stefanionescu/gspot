@@ -1,53 +1,82 @@
 ---
-title: Install
-description: Install gspot from npm and set it up in a repository.
-sidebar:
-    order: 1
+title: Install gspot
+description: Choose an installation method for your repository and prepare its checks.
 ---
 
-gspot is an npm package. It runs on Node.js 22 or newer, or on Bun, under macOS, Linux, and
-Windows. You also need Git. The `bash` kit needs Bash 4.4 or newer; macOS ships Bash 3.2, so
-install a newer one with `brew install bash`.
+gspot is not published on npm yet. To run the current source, follow [Contributing](https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md). The installation procedures below apply after release.
 
-## Install gspot
+Read the [requirements](/guides/requirements/) first. Choose one installation method:
 
-In a JavaScript or TypeScript repository, add gspot as an exact development dependency, so the
-version stays the one the repository pins:
+| Repository                                         | Install method                                               | Prefix for later commands                                     |
+| -------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| Has `package.json`                                 | Exact development dependency in its declared package manager | `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot` |
+| Python, Swift, or another repository using mise    | Download the standalone CLI through mise                     | `mise exec -- gspot`                                          |
+| Uses neither a JavaScript package manager nor mise | Exact global npm installation                                | `gspot` on `PATH`                                             |
 
-```bash
+Commands in the guides start with `gspot`. Add the prefix from this table for your installation.
+
+## Repository with package.json
+
+For npm:
+
+```shell
 npm install --save-dev --save-exact @gspothq/cli
-```
-
-With another package manager: `pnpm add -D -E @gspothq/cli`, `yarn add -D -E @gspothq/cli`, or
-`bun add -d --exact @gspothq/cli`. In a repository without `package.json`, install it once for
-your user with `npm install --global @gspothq/cli`.
-
-Check that it runs with `npx gspot --version`. After a global install, leave out `npx`.
-
-## Set up a repository
-
-From the root of your repository, run:
-
-```bash
+git add package.json package-lock.json
+git commit -m "build: Add gspot"
 npx gspot init
 ```
 
-`init` shows a plan and writes it after you accept. The Git hooks it installs run gspot through
-your package manager, or through the `gspot` on your `PATH`. The
-[quickstart](/guides/quick-start/) goes through a full example.
+Commit the dependency and lockfile first. `init` requires a clean working tree so Git history keeps the files it replaces.
 
-## Join a configured repository
+Use the matching install and run commands for another package manager:
 
-When a teammate already set up gspot, install the dependencies of the repository and run:
+| Manager               | Install                                         | Initialize             |
+| --------------------- | ----------------------------------------------- | ---------------------- |
+| pnpm                  | `pnpm add --save-dev --save-exact @gspothq/cli` | `pnpm exec gspot init` |
+| Yarn Classic or Berry | `yarn add --dev --exact @gspothq/cli`           | `yarn gspot init`      |
+| Bun                   | `bun add --dev --exact @gspothq/cli`            | `bunx gspot init`      |
 
-```bash
-npx gspot install
-npx gspot check
+Commit that manager's manifest and lockfile before initialization.
+
+## Repository using mise
+
+In a clean Git repository, run:
+
+```shell
+mise exec github:stefanionescu/gspot@0.1.0 -- gspot init
 ```
 
-`install` installs the tools at the versions in the committed locks and sets up the Git hooks.
-It changes no tracked file. If the policy and the locks disagree, `install` stops: the person
-who changed the policy runs `gspot apply` and commits the result.
+Choose mise at the runner question. The generated mise file pins the standalone CLI archive and required native tools. This delivery needs no Node.js or Bun for gspot; applicable checks can still require those runtimes. Trust the file before installing its tools:
 
-`.gspot/version` pins the gspot version of the repository, and another version refuses to
-check. [Upgrade gspot](/guides/customize/#upgrade-gspot) says how to move the pin.
+```shell
+mise trust .mise/conf.d/gspot-tools.toml
+mise install
+mise exec -- gspot install
+mise exec -- gspot doctor
+```
+
+## Global npm installation
+
+Install the exact version you intend to use:
+
+```shell
+npm install --global @gspothq/cli@0.1.0
+gspot init
+```
+
+A global install supplies one version per machine. Repositories pin their own version in `.gspot/version`; use mise or local dependencies when repositories need different versions.
+
+## Accept and verify the setup
+
+Read the plan, including files to replace, configuration choices, tool requirements, hooks, and CI. After acceptance, initialization resolves required locks before writing the configuration. It then installs the applicable tools. With `--no-install`, it writes the setup without resolving locks; run `gspot install` later.
+
+`gspot install` prepares new locks and tool environments before replacing the installed tool files. If it fails, repair the reported error and run `gspot install` again. Use `--refresh-locks` when you intend to resolve declared tool pins again.
+
+Then run:
+
+```shell
+gspot doctor
+gspot check
+```
+
+Resolve the findings, review the generated files, and commit the setup. Initialization itself runs no check. After cloning an existing setup, follow [Join a repository](/guides/join/).
