@@ -5,8 +5,8 @@ import type { CheckResult } from '#cli/types/execution/runtime.ts';
 test('terminal progress includes passed and skipped checks while log output keeps failures', () => {
     const terminal: string[] = [];
     const log: string[] = [];
-    const interactive = progress({ isTTY: true, write: (text) => terminal.push(text) }, false);
-    const redirected = progress({ isTTY: false, write: (text) => log.push(text) }, false);
+    const interactive = progress({ isTTY: true, write: (text) => terminal.push(text) }, 'normal');
+    const redirected = progress({ isTTY: false, write: (text) => log.push(text) }, 'normal');
     const result: CheckResult = {
         check: 'example/check',
         scope: 'app',
@@ -35,7 +35,7 @@ test('terminal progress includes passed and skipped checks while log output keep
 
 test('quiet terminal progress hides successful checks but retains execution errors', () => {
     const lines: string[] = [];
-    const report = progress({ isTTY: true, write: (text) => lines.push(text) }, true);
+    const report = progress({ isTTY: true, write: (text) => lines.push(text) }, 'quiet');
     const result: CheckResult = {
         check: 'example/check',
         scope: '',

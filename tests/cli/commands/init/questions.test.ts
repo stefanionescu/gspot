@@ -98,7 +98,7 @@ test('configuration selection reports its accepted defaults without a terminal',
     using prompt = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
     const lines: string[] = [];
     resources.use(spyOn(process.stderr, 'write').mockImplementation((chunk) => lines.push(String(chunk)) > 0));
-    configureOutput({ quiet: false, json: false, color: false });
+    configureOutput({ verbosity: 'normal', json: false, color: false });
     expect(await askConfigurations(options, selection, manifests)).toBeUndefined();
     expect(prompt).not.toHaveBeenCalled();
     expect(lines.join('')).toContain('bash');
@@ -117,7 +117,7 @@ test.each([
     resources.use(spyOn(clack, 'multiselect').mockResolvedValue([...answer]));
     const lines: string[] = [];
     resources.use(spyOn(process.stderr, 'write').mockImplementation((chunk) => lines.push(String(chunk)) > 0));
-    configureOutput({ quiet: false, json: false, color: false });
+    configureOutput({ verbosity: 'normal', json: false, color: false });
     expect(await askConfigurations(options, selection, manifests)).toStrictEqual([...answer]);
     expect(lines.join('')).toContain(text);
     expect(lines.join('')).toContain('--configurations <ids>');

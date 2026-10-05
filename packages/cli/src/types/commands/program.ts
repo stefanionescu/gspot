@@ -1,7 +1,8 @@
 import type { Command } from '@commander-js/extra-typings';
+import type { VerbosityFlags } from '#cli/types/output.ts';
 
 /** The flags every command takes, as commander parses them. */
-export type GlobalFlags = { json?: true; quiet?: true; verbose?: true; color: boolean; C?: string };
+export type GlobalFlags = VerbosityFlags & { json?: true; color: boolean; C?: string };
 
 /** The program the commands register on, typed by its global flags. */
 export type Program = Command<[], GlobalFlags>;

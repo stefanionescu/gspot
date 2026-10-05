@@ -1,4 +1,4 @@
-import type { CommandResult } from '#cli/types/output.ts';
+import type { CommandResult, OutputOptions } from '#cli/types/output.ts';
 import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/runtime.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
@@ -51,6 +51,5 @@ export type CheckOptions = {
     stage?: StageFilter;
     skips: string[];
     messageFile?: string;
-    quiet: boolean;
-    verbose: boolean;
+    verbosity: OutputOptions['verbosity'];
 };

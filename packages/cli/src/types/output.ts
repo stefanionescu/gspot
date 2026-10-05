@@ -1,6 +1,8 @@
-export type OutputOptions = { quiet: boolean; json: boolean; color: boolean };
+/** The selected output detail, JSON format, and terminal color. */
+export type OutputOptions = { verbosity: 'quiet' | 'normal' | 'verbose'; json: boolean; color: boolean };
 
-export type ReporterOptions = { quiet: boolean; verbose: boolean; hook?: 'pre-commit' | 'pre-push' | 'commit-msg' };
+/** Raw verbosity flags before quiet takes precedence. */
+export type VerbosityFlags = { quiet?: true; verbose?: true };
 
 export type Columns = { scope: number; check: number };
 

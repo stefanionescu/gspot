@@ -14,7 +14,7 @@ import { registerExplain } from '#cli/commands/explain/command.ts';
 import { EXIT_ERROR, RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { Option, Command, CommanderError } from '@commander-js/extra-typings';
 import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
-import { printError, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
+import { printError, isColorAllowed, configureOutput, selectVerbosity } from '#cli/output/messages.ts';
 
 // The program reads its options anywhere on the line. It hands the command every argument after the command name,
 // its own options included. An option such as --json then also ends a list option of the command where it stands.
@@ -75,7 +75,7 @@ export function buildProgram(): Program {
     program.hook('preAction', () => {
         const options = program.opts();
         configureOutput({
-            quiet: options.quiet === true,
+            verbosity: selectVerbosity(options),
             json: options.json === true,
             color: isColorAllowed(options.color),
         });
@@ -112,7 +112,7 @@ export async function main(argv: string[]): Promise<number> {
     } catch (error) {
         const options = program.opts();
         configureOutput({
-            quiet: options.quiet === true,
+            verbosity: selectVerbosity(options),
             json: options.json === true,
             color: isColorAllowed(options.color),
         });

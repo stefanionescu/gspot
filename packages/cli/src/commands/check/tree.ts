@@ -80,11 +80,7 @@ function rewriteReproductions(checks: RunReport['checks'], options: CheckOptions
 }
 
 function buildResult(options: CheckOptions, outcome: Awaited<ReturnType<typeof executeRun>>): CheckCommandResult {
-    const reportText = runText(outcome.report, {
-        quiet: options.quiet,
-        verbose: options.verbose,
-        ...(options.hook === undefined ? {} : { hook: options.hook }),
-    });
+    const reportText = runText(outcome.report, options.verbosity, options.hook);
     const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
 }

@@ -3,9 +3,9 @@ import pc from 'picocolors';
 import { isCI } from 'std-env';
 import { RESULT_JSON_INDENT } from '#cli/config/output.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/output.ts';
+import type { CommandResult, OutputOptions, VerbosityFlags, CommandFailureJson } from '#cli/types/output.ts';
 
-const state = { options: { quiet: false, json: false, color: false } };
+let options: OutputOptions = { verbosity: 'normal', json: false, color: false };
 
 // Both result and failure records use the same JSON serialization and stream.
 function printJson(record: unknown): void {
@@ -26,11 +26,21 @@ export function isColorAllowed(color: boolean): boolean {
 }
 
 /**
+ * Select output detail from raw flags, with quiet taking precedence.
+ * @param flags the authored quiet and verbose flags
+ * @returns the output detail for messages, reports, and progress
+ */
+export function selectVerbosity(flags: VerbosityFlags): OutputOptions['verbosity'] {
+    if (flags.quiet === true) return 'quiet';
+    return flags.verbose === true ? 'verbose' : 'normal';
+}
+
+/**
  * Sets the output mode for the process.
- * @param next quiet output, JSON, and color
+ * @param next output detail, JSON format, and terminal color
  */
 export function configureOutput(next: OutputOptions): void {
-    state.options = next;
+    options = next;
     Object.assign(colors, pc.createColors(next.color));
 }
 
@@ -39,7 +49,7 @@ export function configureOutput(next: OutputOptions): void {
  * @param text the line
  */
 export function note(text: string): void {
-    if (state.options.json || state.options.quiet) return;
+    if (options.json || options.verbosity === 'quiet') return;
     process.stderr.write(`${colors.cyan('[info]')} ${text}\n`);
 }
 
@@ -48,7 +58,7 @@ export function note(text: string): void {
  * @param text the line
  */
 export function warn(text: string): void {
-    if (state.options.json) return;
+    if (options.json) return;
     process.stderr.write(`${colors.yellow('[warn]')} ${text}\n`);
 }
 
@@ -57,7 +67,7 @@ export function warn(text: string): void {
  * @param failure the diagnostic text or structured failure
  */
 export function printError(failure: string | CommandFailureJson): void {
-    if (typeof failure !== 'string' && state.options.json) {
+    if (typeof failure !== 'string' && options.json) {
         printJson(failure);
         return;
     }
@@ -70,7 +80,7 @@ export function printError(failure: string | CommandFailureJson): void {
  * @param result the command output
  */
 export function printResult(result: CommandResult): void {
-    if (state.options.json) printJson(result.json);
+    if (options.json) printJson(result.json);
     else if (result.text !== '') print(result.text);
     process.exitCode = result.exitCode;
 }
@@ -80,6 +90,6 @@ export function printResult(result: CommandResult): void {
  * @param text the text
  */
 export function print(text: string): void {
-    if (state.options.json) return;
+    if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }

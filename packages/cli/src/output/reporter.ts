@@ -3,7 +3,7 @@ import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
-import type { Columns, ProgressStream, ReporterOptions } from '#cli/types/output.ts';
+import type { Columns, OutputOptions, ProgressStream } from '#cli/types/output.ts';
 import type { Finding, RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
 
 import {
@@ -44,8 +44,8 @@ function checkTail(check: CheckResult): string {
     return `${counted(check.fileCount, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
 }
 
-function failureLines(check: CheckResult, options: ReporterOptions): string[] {
-    const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
+function failureLines(check: CheckResult, verbosity: OutputOptions['verbosity']): string[] {
+    const shown = verbosity === 'verbose' ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
     const lines = shown.flatMap((finding, index) => findingLines(finding, shown[index + 1]));
     const hidden = check.findings.length - shown.length;
     if (hidden > 0) {
@@ -55,23 +55,23 @@ function failureLines(check: CheckResult, options: ReporterOptions): string[] {
     return lines;
 }
 
-function checkLines(check: CheckResult, columns: Columns, options: ReporterOptions): string[] {
+function checkLines(check: CheckResult, columns: Columns, verbosity: OutputOptions['verbosity']): string[] {
     const scope = (check.scope === '' ? 'root' : check.scope).padEnd(columns.scope);
     const word = colors[CHECK_STATUS_COLORS[check.status]](check.status);
     const status = word.padEnd(STATUS_WIDTH + word.length - stripVTControlCharacters(word).length);
     const lines = [`${scope}  ${check.check.padEnd(columns.check)}  ${status}  ${checkTail(check)}`.trimEnd()];
-    if (options.verbose && check.command) {
+    if (verbosity === 'verbose' && check.command) {
         const command = `$ ${check.command.join(' ')}`;
         lines.push(`  ${colors.dim(command)}`);
     }
-    if (check.status === 'failed') lines.push(...failureLines(check, options));
+    if (check.status === 'failed') lines.push(...failureLines(check, verbosity));
     if (check.reproduce !== undefined) lines.push(`  ${colors.dim('reproduce:')} ${check.reproduce}`);
     return lines;
 }
 
-function ignoreLines(report: RunReport, options: ReporterOptions): string[] {
+function ignoreLines(report: RunReport, verbosity: OutputOptions['verbosity']): string[] {
     if (report.ignores.length === 0) return [];
-    if (!options.verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
+    if (verbosity !== 'verbose') return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
@@ -80,10 +80,10 @@ function ignoreLines(report: RunReport, options: ReporterOptions): string[] {
     });
 }
 
-function tailLines(report: RunReport, options: ReporterOptions): string[] {
+function tailLines(report: RunReport, verbosity: OutputOptions['verbosity']): string[] {
     const lines = [
-        ...ignoreLines(report, options),
-        ...(options.quiet ? [] : report.skips).map((skip) => {
+        ...ignoreLines(report, verbosity),
+        ...(verbosity === 'quiet' ? [] : report.skips).map((skip) => {
             const cause = colors.dim(`(${skip.cause})`);
             return `skipped    ${skip.check}  ${cause}`;
         }),
@@ -111,13 +111,8 @@ function summaryLine(report: RunReport): string {
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
-function hookFailureLines(report: RunReport, hook: ReporterOptions['hook']): string[] {
-    if (hook === undefined || report.exitCode === 0) return [];
-    return [`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`];
-}
-
-function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): string {
-    if (comparison === undefined || quiet) return '';
+function comparisonLine(comparison: RunReport['comparison'], verbosity: OutputOptions['verbosity']): string {
+    if (comparison === undefined || verbosity === 'quiet') return '';
     if (comparison.content === 'working-tree')
         return `Working tree compared with the merge base of ${comparison.reference}.\n`;
     if (comparison.content === 'index') return 'Checked the staged files.\n';
@@ -127,11 +122,17 @@ function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): st
 /**
  * The run as text: one line per check, its findings, the ignores and skips, and the summary.
  * @param report the run report
- * @param options quiet and verbose output flags
+ * @param verbosity the selected output detail
+ * @param hook the hook whose failure needs a bypass instruction
  * @returns the text for stdout
  */
-export function runText(report: RunReport, options: ReporterOptions): string {
-    const shown = options.quiet ? report.checks.filter((check) => FAILED_STATUSES.has(check.status)) : report.checks;
+export function runText(
+    report: RunReport,
+    verbosity: OutputOptions['verbosity'],
+    hook?: 'pre-commit' | 'pre-push' | 'commit-msg',
+): string {
+    const shown =
+        verbosity === 'quiet' ? report.checks.filter((check) => FAILED_STATUSES.has(check.status)) : report.checks;
     const columns: Columns = {
         scope: Math.max(
             SCOPE_WIDTH_MIN,
@@ -139,13 +140,15 @@ export function runText(report: RunReport, options: ReporterOptions): string {
         ),
         check: Math.max(ID_WIDTH_MIN, ...report.checks.map((check) => check.check.length)),
     };
-    const body = shown.flatMap((check) => checkLines(check, columns, options));
-    const tail = tailLines(report, options);
+    const body = shown.flatMap((check) => checkLines(check, columns, verbosity));
+    const tail = tailLines(report, verbosity);
     const isSeparated = tail.length > 0 && body.length > 0;
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(report), ...hookFailureLines(report, options.hook));
-    return `${comparisonLine(report.comparison, options.quiet)}${lines.join('\n')}\n`;
+    lines.push(summaryLine(report));
+    if (hook !== undefined && report.exitCode !== 0)
+        lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
+    return `${comparisonLine(report.comparison, verbosity)}${lines.join('\n')}\n`;
 }
 
 /**
@@ -153,13 +156,13 @@ export function runText(report: RunReport, options: ReporterOptions): string {
  * @param stream the stream progress goes to
  * @param stream.isTTY whether a person is watching it
  * @param stream.write writes one line
- * @param quiet whether progress stays off
+ * @param verbosity the selected output detail
  * @returns the function each completed check is handed to
  */
-export function progress(stream: ProgressStream, quiet: boolean): (result: CheckResult) => void {
+export function progress(stream: ProgressStream, verbosity: OutputOptions['verbosity']): (result: CheckResult) => void {
     return (result) => {
         const failed = FAILED_STATUSES.has(result.status);
-        if (!failed && (quiet || stream.isTTY !== true)) return;
+        if (!failed && (verbosity === 'quiet' || stream.isTTY !== true)) return;
         stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${result.status}\n`);
     };
 }

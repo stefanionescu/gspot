@@ -24,18 +24,16 @@ describe('the reporter', () => {
                 },
             ],
         };
-        expect(runText(skipped, { quiet: true, verbose: false })).toEndWith(
+        expect(runText(skipped, 'quiet')).toEndWith(
             '0 checks passed, 0 checks failed, 1 check skipped, 0 findings, 0.0s\n',
         );
-        expect(runText({ ...skipped, checks: [], exitCode: 2 }, { quiet: true, verbose: false })).toEndWith(
-            '(incomplete)\n',
-        );
+        expect(runText({ ...skipped, checks: [], exitCode: 2 }, 'quiet')).toEndWith('(incomplete)\n');
         const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'passed' }] };
-        const text = runText(corrected, { quiet: false, verbose: false });
+        const text = runText(corrected, 'normal');
         expect(text).toEndWith('1 check passed, 0 checks failed, 0 checks skipped, 0 findings, 0.0s\n');
     });
     test('prints one line per check, findings file first with a help line, reproduce lines and the summary', () => {
-        const text = runText(REPORT, { quiet: false, verbose: false });
+        const text = runText(REPORT, 'normal');
         expect(text).toContain('root  bash/shellcheck  failed     3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
@@ -46,11 +44,9 @@ describe('the reporter', () => {
     });
 
     test('--quiet hides passing checks and --verbose prints ignores with reasons', () => {
-        expect(runText(REPORT, { quiet: true, verbose: false })).not.toContain('bash/shfmt');
-        expect(runText(REPORT, { quiet: false, verbose: false })).toContain('bash/shfmt');
-        expect(runText(REPORT, { quiet: false, verbose: true })).toContain(
-            'ignore     bash/shellcheck SC2312  why  (1 matched)',
-        );
+        expect(runText(REPORT, 'quiet')).not.toContain('bash/shfmt');
+        expect(runText(REPORT, 'normal')).toContain('bash/shfmt');
+        expect(runText(REPORT, 'verbose')).toContain('ignore     bash/shellcheck SC2312  why  (1 matched)');
     });
 });
 
@@ -66,7 +62,7 @@ test('findings that share a help print it once, after the last of them', () => {
             },
         ],
     };
-    const lines = stripVTControlCharacters(runText(shared, { quiet: false, verbose: false })).split('\n');
+    const lines = stripVTControlCharacters(runText(shared, 'normal')).split('\n');
     expect(lines.filter((line) => line === '    help: Quote it.')).toHaveLength(1);
     expect(lines.indexOf('    help: Quote it.')).toBe(
         lines.indexOf('  a.sh:9:3  SC2086  Double quote to prevent globbing.') + 1,
@@ -75,17 +71,17 @@ test('findings that share a help print it once, after the last of them', () => {
 });
 
 test('report colors follow the configured output mode without changing its text', () => {
-    configureOutput({ quiet: false, json: false, color: false });
-    const plain = runText(REPORT, { quiet: false, verbose: false });
+    configureOutput({ verbosity: 'normal', json: false, color: false });
+    const plain = runText(REPORT, 'normal');
     try {
-        configureOutput({ quiet: false, json: false, color: true });
-        const colored = runText(REPORT, { quiet: false, verbose: false });
+        configureOutput({ verbosity: 'normal', json: false, color: true });
+        const colored = runText(REPORT, 'normal');
         expect(colored).not.toBe(plain);
         expect(stripVTControlCharacters(colored)).toBe(plain);
     } finally {
-        configureOutput({ quiet: false, json: false, color: false });
+        configureOutput({ verbosity: 'normal', json: false, color: false });
     }
-    expect(runText(REPORT, { quiet: false, verbose: false })).toBe(plain);
+    expect(runText(REPORT, 'normal')).toBe(plain);
 });
 
 test.each([
@@ -96,18 +92,14 @@ test.each([
     'the reporter identifies $content comparisons and hides the header in quiet mode',
     ({ content, header }) => {
         const compared: RunReport = { ...REPORT, comparison: { content, reference: 'main' } };
-        expect(runText(compared, { quiet: false, verbose: false })).toBe(
-            header + runText(REPORT, { quiet: false, verbose: false }),
-        );
-        expect(runText(compared, { quiet: true, verbose: false })).toBe(
-            runText(REPORT, { quiet: true, verbose: false }),
-        );
+        expect(runText(compared, 'normal')).toBe(header + runText(REPORT, 'normal'));
+        expect(runText(compared, 'quiet')).toBe(runText(REPORT, 'quiet'));
     },
 );
 
 test('the reporter names the cause of a skipped check', () => {
     const skipped: RunReport = { ...REPORT, skips: [{ check: 'bash/shellcheck', cause: 'condition' }] };
-    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (condition)\n');
+    expect(runText(skipped, 'normal')).toContain('skipped    bash/shellcheck  (condition)\n');
 });
 
 test.each([
@@ -115,13 +107,11 @@ test.each([
     { hook: 'commit-msg', command: 'commit' },
     { hook: 'pre-push', command: 'push' },
 ] as const)('a failed $hook report prints each reproduction once and the hook bypass', ({ hook, command }) => {
-    const text = runText(REPORT, { quiet: false, verbose: false, hook });
+    const text = runText(REPORT, 'normal', hook);
     expect(text).toEndWith(`Bypass this hook once: git ${command} --no-verify\n`);
     expect(text.split('reproduce: gspot check --only bash/shellcheck')).toHaveLength(2);
-    expect(runText({ ...REPORT, checks: [] }, { quiet: false, verbose: false, hook })).toEndWith(
+    expect(runText({ ...REPORT, checks: [] }, 'normal', hook)).toEndWith(
         `Bypass this hook once: git ${command} --no-verify\n`,
     );
-    expect(runText({ ...REPORT, exitCode: 0 }, { quiet: false, verbose: false, hook })).not.toContain(
-        'Bypass this hook',
-    );
+    expect(runText({ ...REPORT, exitCode: 0 }, 'normal', hook)).not.toContain('Bypass this hook');
 });

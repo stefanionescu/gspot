@@ -5,7 +5,6 @@ import { resolve, relative } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { progress } from '#cli/output/reporter.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { printResult } from '#cli/output/messages.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
@@ -15,6 +14,7 @@ import { getStaged } from '#cli/repository/revisions/changes.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { findRoot, isGitRepository } from '#cli/repository/root.ts';
 import { checkOutRevision } from '#cli/execution/snapshot/revision.ts';
+import { printResult, selectVerbosity } from '#cli/output/messages.ts';
 import type { Program, GlobalFlags } from '#cli/types/commands/program.ts';
 import { HOOKS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
@@ -128,6 +128,7 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
     process.on('SIGTERM', cancel);
     try {
         const cwd = resolve(global.C ?? process.cwd());
+        const verbosity = selectVerbosity(global);
 
         // Git passes a message file to commit-msg; an explicit file selects the same stage.
         const options: CheckOptions = {
@@ -136,15 +137,14 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
             fix: flags.fix === true,
             isDryRun: flags.dryRun === true,
             skips: flags.skip,
-            quiet: global.quiet === true,
-            verbose: global.verbose === true,
+            verbosity,
             paths,
             ...compact({
                 hook,
                 only: flags.only,
                 changed: flags.changed === true ? flags.base : undefined,
                 messageFile: flags.messageFile,
-                onResult: global.json === true ? undefined : progress(process.stdout, global.quiet === true),
+                onResult: global.json === true ? undefined : progress(process.stdout, verbosity),
             }),
         };
         if (hook === 'pre-commit') {

@@ -735,10 +735,26 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/output.ts:3` `ReporterOptions`, `types/commands/check.ts:51-52`, `commands/check/command.ts:93-94`, `commands/program.ts:59-62` | Verbosity has two models. `program.ts` turns the flags into one `verbosity` value, and quiet wins. The check command reads the raw flags again as two booleans. As a result, `--quiet --verbose` hides the comparison line and prints every finding in the same run. | Pass `OutputOptions['verbosity']` to the reporter. Delete `ReporterOptions` and `CheckOptions.quiet` and `CheckOptions.verbose`. |",
         "owner": "`types/output.ts:3` `ReporterOptions`, `types/commands/check.ts:51-52`, `commands/check/command.ts:93-94`, `commands/program.ts:59-62`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/output.ts",
+            "packages/cli/src/types/commands/check.ts",
+            "packages/cli/src/types/commands/program.ts",
+            "packages/cli/src/output/messages.ts",
+            "packages/cli/src/output/reporter.ts",
+            "packages/cli/src/commands/program.ts",
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/tree.ts",
+            "tests/cli/commands/check/verbosity.test.ts",
+            "tests/config/cli/commands/verbosity.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "OutputOptions owns the quiet/normal/verbose value. selectVerbosity resolves the raw Commander flags with quiet precedence and serves program configuration, failure configuration and the check command. CheckOptions, reporter helpers and progress consume OutputOptions[verbosity]; ReporterOptions and the independent quiet/verbose check booleans are deleted. The single-caller hook-message layer is folded into its existing report owner, retaining bypass text and explicit hook input.",
+            "A real CLI boundary probe reproduced the defect before the change: quiet plus verbose suppressed the comparison header but printed the tool command and finding 201. Five new command scenarios cover normal, quiet, verbose and both flag orders. They verify passing-check visibility, comparison headers, command lines and finding truncation together, while JSON retains every finding and the successful check.",
+            "AST comparison preserves all 48 existing assertion sites across reporter, progress and initialization-question tests after converting reporter arguments to the new model. Existing color, help, reproduction, ignore, skipped-check and hook-bypass assertions remain intact.",
+            "All four TypeScript targets and affected lint/format checks passed. The affected command/output suite passed 88 tests with 429 assertions across eleven files. The complete CLI/plugin suite passed 2432 tests, with two platform skips, zero failures and 7635 assertions across 332 files. Canonical apply reports all 142 files unchanged."
+        ]
     },
     {
         "id": "slices/types-kits-rules/037",
