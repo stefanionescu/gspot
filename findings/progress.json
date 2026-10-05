@@ -56,6 +56,15 @@
             "decision": "Recommended and all are the only developer-facing coverage levels. Remove opt-in selection fields, prompts, and extra_checks without replacing them. Security, duplication, and licenses follow repository applicability and the chosen level. Remove Vulture entirely. Native-tool configuration syntax remains generated from these two levels. Retain legitimate prerequisites.",
             "evidence": ["User implementation plan: Finish all findings with only recommended and all, Decisions."],
             "id": "recommended-and-all"
+        },
+        {
+            "id": "manual-configuration-overrides",
+            "date": "2026-10-06",
+            "scope": "Automatic applicable configuration selection and manual language/framework overrides",
+            "decision": "Retain gspot add/remove, init --configurations, and authored configuration lists for manual language and framework overrides. Remove opt-in check controls such as security, duplication, and licenses flags. This clarifies recommended-and-all: these remain the only check-coverage levels; language/framework overrides remain project configuration.",
+            "evidence": [
+                "User reply to the pending scope clarification: Keep manual language/framework overrides; remove opt-in check controls only."
+            ]
         }
     ],
     "relocations": [
@@ -18455,6 +18464,37 @@
             ],
             "remaining": [
                 "Actual staged gate and normal hook-enabled commit and push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Bash temporary cleanup delivery",
+            "outcome": "Commit 1f4d624f is pushed normally to origin/main with hooks enabled and a clean tree. Two records closed; 967 records remain open.",
+            "evidence": [
+                "/tmp/gspot-bash-safety-ready-staged.json (132 passes, seven skipped, no findings/errors).",
+                "/tmp/gspot-bash-safety-commit.log (87 pre-commit passes, two skips; commit-message validation passes).",
+                "/tmp/gspot-bash-safety-push.log (132 pre-push passes, seven skips; main -> main)."
+            ],
+            "remaining": [
+                "The full CLI/plugin verification exposed a stale registry test classification; correct and verify that expectation in the next batch.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Registry ownership and manual override clarification",
+            "outcome": "The registry contract verifies that every shipped check has a command or engine and that each engine has a manifest owner. Native ShellCheck retains its declared command and custom dialect-routing engine. The user explicitly retains manual language/framework overrides while removing opt-in check controls. No review ID is closed solely by this clarification.",
+            "evidence": [
+                "Source: tests/cli/checks/registry.test.ts; packages/cli/src/checks/language/bash/shellcheck.ts; packages/cli/configurations/language/bash/manifest.toml.",
+                "/tmp/gspot-registry-contract-final-cli.log (31 passes, 153 assertions, four files; registry, manual init choices, remove, and explain).",
+                "/tmp/gspot-registry-contract-types.log (all four TypeScript targets).",
+                "/tmp/gspot-registry-contract-lint.log (source lint passes).",
+                "Native routing proof: /tmp/gspot-bash-safety-native-final.log (15 passes, 127 assertions, four files).",
+                "Full CLI/plugin verification: /tmp/gspot-bash-safety-full-cli-plugin.log; the stale registry classification is corrected and passes its focused replay.",
+                "/tmp/gspot-registry-contract-full-cli-plugin.log (exact ./cli and ./plugin directories, declared 60-second test limit: 2818 passes, three platform skips, no failures/errors, 9977 assertions, 341 files).",
+                "/tmp/gspot-registry-contract-staged.json (53 passes, seven skips, no findings/errors)."
+            ],
+            "remaining": [
+                "Normal hook-enabled commit and push.",
                 "Continue remaining implementation batches and separately authorized publication/deployment."
             ]
         }

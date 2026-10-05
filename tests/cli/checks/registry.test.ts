@@ -2,16 +2,14 @@ import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
-test('the registry names exactly the shipped checks that run no command', () => {
+test('every shipped check can run and every registered engine has a declared owner', () => {
     // A configuration that references another configuration's check lists it too, so each name counts once.
-    const builtIn = new Set(
-        [...configurationManifests().values()]
-            .flatMap((manifest) => manifest.checks)
-            .filter((check) => check.command === undefined)
+    const declared = [...configurationManifests().values()].flatMap((manifest) => manifest.checks);
+    const builtIn = new Set(declared.map((check) => check.name));
+    expect(
+        declared
+            .filter((check) => check.command === undefined && !Object.hasOwn(CHECKS, check.name))
             .map((check) => check.name),
-    );
-    const registered = Object.keys(CHECKS);
-    expect(registered.toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
-        [...builtIn].toSorted((a, b) => a.localeCompare(b)),
-    );
+    ).toStrictEqual([]);
+    expect(Object.keys(CHECKS).filter((name) => !builtIn.has(name))).toStrictEqual([]);
 });
