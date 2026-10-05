@@ -62,6 +62,7 @@ function writeNpmrc(work: string, env: Record<string, string>): void {
     writeFileSync(join(work, '.npmrc'), `${references.join('\n')}\n`, { mode: PRIVATE_FILE });
 }
 
+// Declared and recorded versions are metadata; verify the executable in this scratch project before native work.
 async function assertPackageInstallerVersion(execution: PackageExecution): Promise<void> {
     const { installer, work, env } = execution;
     const version = await runTool([installer.name, '--version'], { cwd: work, env });

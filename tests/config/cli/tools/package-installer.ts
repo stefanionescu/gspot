@@ -1,3 +1,12 @@
+const AUTHORED_VERSION_INPUTS: Record<string, string> = {
+    'package.json': '{"packageManager":"bun@0.0.0"}\n',
+};
+
+const RECORDED_VERSION_INPUTS: Record<string, string> = {
+    'bun.lock': 'recorded root lock\n',
+    '.gspot/package.json': '{"packageManager":"bun@0.0.0"}\n',
+};
+
 export const PACKAGE_SELECTIONS = [
     [
         'a packageManager with a hash suffix',
@@ -37,4 +46,11 @@ export const NON_EXACT_MANAGERS = [
     '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
     '{"packageManager":"pnpm@^9.1.0"}',
     '{"packageManager":"pnpm"}',
+];
+
+export const PACKAGE_VERSION_CASES = [
+    { source: 'authored', operation: 'lock', files: AUTHORED_VERSION_INPUTS } as const,
+    { source: 'authored', operation: 'install', files: AUTHORED_VERSION_INPUTS } as const,
+    { source: 'recorded', operation: 'lock', files: RECORDED_VERSION_INPUTS } as const,
+    { source: 'recorded', operation: 'install', files: RECORDED_VERSION_INPUTS } as const,
 ];

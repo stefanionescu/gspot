@@ -749,10 +749,23 @@
         "section": "Findings",
         "finding": "| `tools/inspect.ts:44`, `tools/packages/commands.ts:79,121`, `tools/packages/identity.ts:85` | A tool's `--version` is run four ways: sync with `VERSION_TIMEOUT_MS` and only `NO_COLOR`, async with the tool deadline, and twice as `<manager> --version` for the same manager in one install. | One `readToolVersion` in `inspect.ts`. `runPackageManager` reuses the version `packageManager()` already read. |",
         "owner": "`tools/inspect.ts:44`, `tools/packages/commands.ts:79,121`, `tools/packages/identity.ts:85`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/tools/inspect.ts",
+            "packages/cli/src/parsers/tool/version.ts",
+            "packages/cli/src/tools/npm/installer.ts",
+            "packages/cli/src/tools/npm/install.ts",
+            "packages/cli/src/execution/session.ts",
+            "tests/cli/tools/package-installer.test.ts",
+            "tests/config/cli/tools/package-installer.ts"
+        ],
+        "status": "closed",
+        "outcome": "Version parsing has one canonical owner, and command sessions retain inspection and package-identity caches. Declared or recorded manager versions resolve offline as metadata. Native package operations verify the current executable in their scratch context; independently versioned wrappers retain their native floor check. These execution contracts keep their own synchronous or asynchronous I/O and deadlines.",
+        "verification": [
+            "The second-pass correction in findings/slices/tools-scripts.md rejects the first-pass claim of two manager probes during clone installation: recorded manager metadata skips the discovery probe. Source inspection confirms that lazy identity resolution is distinct from validation before native work. Reusing a metadata-only result as executable proof would remove a required guard; no universal mode-switched reader or cross-phase executable cache was added.",
+            "Four new real-Bun cases cover authored and recorded wrong-version metadata during both lock resolution and immutable installation. They require the exact tool refusal, preserve all supplied input/source/lock bytes and require no node_modules. The subprocess boundary runs real version commands within the remaining test budget and rejects unexpected native work before the refusal. Removing both native guards in temporary source copies fails all four cases without contacting a registry.",
+            "Current parser, metadata, installer-failure and inspection regressions passed 67 cases and 204 assertions across seven files. The native npm suite passed 24 cases and 277 assertions across five files, with npm/Bun/pnpm/Yarn installation and clone controls, immutable locks, credential refusals and preserved working tools. Root TypeScript, affected ESLint and formatting passed.",
+            "The production executable AST is unchanged apart from a reason comment. All four original package-installer test declarations and seven assertion sites remain unchanged; one appended declaration supplies the four matrix cases. No reduced native-probe count or equivalence between root and scratch execution environments is claimed."
+        ]
     },
     {
         "id": "areas/execution/035",
