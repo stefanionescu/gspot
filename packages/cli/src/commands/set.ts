@@ -8,7 +8,6 @@ import { printResult } from '#cli/output/messages.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { CommandResult } from '#cli/types/output.ts';
-import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { SetOptions } from '#cli/types/commands/set.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { isLoosening } from '#cli/policy/problems/reasons.ts';
@@ -18,9 +17,9 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
 import { unknownSettingDiagnostic } from '#cli/policy/problems/keys.ts';
-import { commitPolicy, requireReason } from '#cli/commands/policy-edit.ts';
-import type { RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/options.ts';
+import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { commitPolicy, previewPolicy, requireReason } from '#cli/commands/policy-edit.ts';
 import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/edit.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
@@ -149,12 +148,12 @@ function assertReason(
         requireReason(options.reason, where, buildReasonHint(options));
 }
 
-function commitSetting(
-    log: Log,
+async function changeSetting(
     session: Session,
     selection: ScopeSelection,
     options: SetOptions,
     spec: SettingSpec,
+    shown: string,
 ): Promise<CommandResult> {
     if (options.items.length === 0)
         throw new GspotError('policy', [
@@ -171,27 +170,25 @@ function commitSetting(
     );
     assertReason(session, selection, options, spec, value);
     const written = !isList && options.reason !== undefined ? { value, reason: options.reason } : value;
-    const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    return commitPolicy(
-        session.root,
-        log,
-        (raw) => {
-            const holder = getScopeTable(raw, options.scope);
-            if (options.remove && isPathList(options.key, value)) {
-                const entries = (holder[options.key] ?? []) as NonNullable<RawPolicy['generated']>;
-                holder[options.key] = entries
-                    .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
-                    .filter((entry) => entry.paths.length > 0);
-            } else if (isList && options.remove) removeFromList(holder, options.key, value as unknown[]);
-            else if (isList && !options.replace) addToList(holder, options.key, value as unknown[]);
-            else setKey(holder, options.key, written);
-        },
-        describeSet(session, selection, options, shown, value, isList),
-    );
+    const mutation: Mutation = (raw) => {
+        const holder = getScopeTable(raw, options.scope);
+        if (options.remove && isPathList(options.key, value)) {
+            const entries = (holder[options.key] ?? []) as NonNullable<RawPolicy['generated']>;
+            holder[options.key] = entries
+                .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
+                .filter((entry) => entry.paths.length > 0);
+        } else if (isList && options.remove) removeFromList(holder, options.key, value as unknown[]);
+        else if (isList && !options.replace) addToList(holder, options.key, value as unknown[]);
+        else setKey(holder, options.key, written);
+    };
+    const summary = describeSet(session, selection, options, shown, value, isList);
+    if (options.isDryRun) return previewPolicy(session.root, mutation, summary);
+    using log = openOwnership(session.root);
+    return await commitPolicy(session.root, log, mutation, summary);
 }
 
 /**
- * gspot set: writes one setting, appends to or edits a list, or deletes the key with --default.
+ * Previews or writes a setting, edits a list, or returns a key to its default.
  * @param options the parsed flags
  * @returns the command result
  */
@@ -202,17 +199,15 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     const selection = getSelection(session, options.scope);
     const match = specFor(selection.surface, options.key);
     if (!match) throw buildSettingError(session, selection, options.key);
-    using log = openOwnership(root);
-    if (!options.reset) return await commitSetting(log, session, selection, options, match.spec);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    return await commitPolicy(
-        root,
-        log,
-        (raw) => {
-            deleteKey(getScopeTable(raw, options.scope), options.key);
-        },
-        `${shown} back to the shipped default`,
-    );
+    if (!options.reset) return await changeSetting(session, selection, options, match.spec, shown);
+    const mutation: Mutation = (raw) => {
+        deleteKey(getScopeTable(raw, options.scope), options.key);
+    };
+    const summary = `${shown} back to the shipped default`;
+    if (options.isDryRun) return previewPolicy(root, mutation, summary);
+    using log = openOwnership(root);
+    return await commitPolicy(root, log, mutation, summary);
 }
 
 /**
@@ -226,17 +221,18 @@ export function registerSet(program: Program): void {
         .argument('[value...]', 'Setting value or list items; omit with --default')
         .summary('Change a setting')
         .description(
-            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.',
+            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
         )
         .addHelpText(
             'after',
-            '\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
+            '\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied, or the preview finished.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
         )
         .option('--reason <text>', 'Say why; required to loosen a setting when require_reasons is true')
         .option('--scope <path>', 'Write the setting in this scope instead of the root')
         .option('--replace', 'Replace the whole list instead of adding to it')
         .option('--remove', 'Remove these items from the list')
         .option('--default', 'Delete the setting so the inherited or default value applies')
+        .option('--dry-run', 'Print the change and write nothing')
         .action(async (key, items, flags, command) => {
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());
@@ -248,6 +244,7 @@ export function registerSet(program: Program): void {
                     replace: flags.replace === true,
                     remove: flags.remove === true,
                     reset: flags.default === true,
+                    isDryRun: flags.dryRun === true,
                     ...compact({ reason: flags.reason, scope: flags.scope }),
                 }),
             );

@@ -6,4 +6,5 @@ export type IgnoreOptions = {
     reason?: string;
     until?: string;
     remove: boolean;
+    isDryRun: boolean;
 };

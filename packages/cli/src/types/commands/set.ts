@@ -7,4 +7,5 @@ export type SetOptions = {
     replace: boolean;
     remove: boolean;
     reset: boolean;
+    isDryRun: boolean;
 };

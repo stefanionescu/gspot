@@ -14,20 +14,13 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { commitPolicy, preparePolicy } from '#cli/commands/policy-edit.ts';
+import { commitPolicy, previewPolicy } from '#cli/commands/policy-edit.ts';
 import type { AddOptions, RemoveOptions, ConfigurationChange } from '#cli/types/commands/configurations.ts';
 
 // Preview or publish a validated selection change, then install using that same applied session.
 async function applyConfigurationChange(root: string, change: ConfigurationChange): Promise<CommandResult> {
     const { mutation, summary, isDryRun } = change;
-    if (isDryRun) {
-        const proposal = preparePolicy(root, mutation);
-        return {
-            text: `${summary}\n(dry run: gspot.toml not written)\n`,
-            json: { policy: proposal.text, dryRun: true },
-            exitCode: 0,
-        };
-    }
+    if (isDryRun) return previewPolicy(root, mutation, summary);
     using log = openOwnership(root);
     const { applied, session, ...result } = await commitPolicy(root, log, mutation, summary);
     if (applied === undefined) return result;

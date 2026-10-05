@@ -8,6 +8,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { CommandResult } from '#cli/types/output.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
@@ -15,7 +16,7 @@ import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 import { reasonDiagnostic } from '#cli/policy/problems/reasons.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { Mutation, Proposal } from '#cli/types/policy/settings.ts';
-import type { PreparedPolicy, PolicyCommitResult } from '#cli/types/commands/policy-edit.ts';
+import type { PreparedPolicy, PolicyPreviewJson, PolicyCommitResult } from '#cli/types/commands/policy-edit.ts';
 
 /**
  * Capture the input bytes and mode before evaluating and validating a policy mutation.
@@ -32,6 +33,22 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     if (text === undefined)
         throw new GspotError('policy', ['The policy file gspot.toml must contain valid UTF-8 text.']);
     return { ...proposePolicy(root, text, mutate), original };
+}
+
+/**
+ * Previews a validated policy edit without opening ownership state or applying outputs.
+ * @param root the repository root
+ * @param mutation the change to the raw policy
+ * @param summary the proposed change
+ * @returns the preview text and proposed policy
+ */
+export function previewPolicy(root: string, mutation: Mutation, summary: string): CommandResult<PolicyPreviewJson> {
+    const proposal = preparePolicy(root, mutation);
+    return {
+        text: `${summary}\n(dry run: gspot.toml not written)\n`,
+        json: { policy: proposal.text, dryRun: true },
+        exitCode: 0,
+    };
 }
 
 /**

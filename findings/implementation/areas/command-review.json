@@ -224,9 +224,14 @@
         "finding": "| `set.ts:190-195, 213-220`, `ignore.ts:61, 88` | `commitPolicy` takes `isDryRun`. `add`, `remove`, `apply`, `init`, and `install` offer `--dry-run`, but `set` and `ignore` hard-code `false`. | Add `--dry-run` to `set` and `ignore`. Each needs one line. |",
         "owner": "`set.ts:190-195, 213-220`, `ignore.ts:61, 88`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "set and ignore now register --dry-run and preview their existing mutation through a shared validated policy preview owner. Ownership opens only on publication. Scalar, list append/replace/removal, default, scoped setting, ignore addition/path merge/path removal/global removal cases verify independent proposed values, readable text, parseable JSON, exact tree preservation and byte-identical policy on later publication. Nine invalid-input cases match publication refusals in both output formats and preserve all files; a preview succeeds beside an active writer lock without changing its bytes or any state. Existing add/remove preview text and JSON contracts are retained by their authoritative shared preview owner.",
+            "/tmp/gspot-policy-preview-before-tests.log: all 19 original preview cases fail before implementation because --dry-run is unrecognized. /tmp/gspot-policy-preview-final-tests.log: 79 passed, 0 failed, 538 assertions across 10 affected files. Final tuple-only test data typing: /tmp/gspot-policy-preview-tuple-tests.log, 24 passed, 0 failed, 236 assertions.",
+            "/tmp/gspot-policy-preview-tuple-types.log: root TypeScript passed. /tmp/gspot-policy-preview-verified-final-lint.log and /tmp/gspot-policy-preview-tuple-lint.log: source and final test/config lint passed. /tmp/gspot-policy-preview-verified-final-format.log and /tmp/gspot-policy-preview-tuple-format.log: formatting passed.",
+            "/tmp/gspot-policy-preview-source-proof.log: the four original shared policy functions and nine original affected test files remain byte-for-byte unchanged. /tmp/gspot-policy-preview-reference.log: generated set and ignore references include --dry-run and its exit status from the existing command definitions."
+        ]
     },
     {
         "id": "areas/commands/014",

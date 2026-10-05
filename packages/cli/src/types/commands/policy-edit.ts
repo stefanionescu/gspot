@@ -6,6 +6,9 @@ import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 
 export type PreparedPolicy = Proposal & { original: Snapshot };
 
+/** The validated authored policy a command previews without publishing. */
+export type PolicyPreviewJson = { policy: string; dryRun: true };
+
 /** A saved policy edit together with the managed apply result when apply completed. */
 export type PolicyCommitResult = CommandResult & {
     json: {

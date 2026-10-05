@@ -211,9 +211,14 @@
         "finding": "| `commands/edit.ts:65-106` `commitPolicy` | When the mutation changes nothing (`result.changed` is false), the command still runs a full apply. `add` and `remove` then also run the tool install. The output claims a change: `gspot add bash` prints \"added bash\" when bash is already selected. | When `result.changed` is false, return \"gspot.toml already says this; nothing to apply.\" and skip `writeOutputs` and the install. |",
         "owner": "`commands/edit.ts:65-106` `commitPolicy`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "commitPolicy returns changed false before opening an apply session or emitting/writing outputs. applyConfigurationChange returns before installation when no apply result exists. Four actual unchanged scalar, ignore-path, absent-ignore and selected-configuration cases preserve an authored edit to managed ShellCheck output and the full tree, report unchanged JSON and avoid the apply failure that a changed command would encounter. Removing the unchanged-policy guard makes all four controls fail; production source was restored exactly (/tmp/gspot-policy-preview-noop-mutation.log).",
+            "/tmp/gspot-policy-preview-before-tests.log: all 19 original preview cases fail before implementation because --dry-run is unrecognized. /tmp/gspot-policy-preview-final-tests.log: 79 passed, 0 failed, 538 assertions across 10 affected files. Final tuple-only test data typing: /tmp/gspot-policy-preview-tuple-tests.log, 24 passed, 0 failed, 236 assertions.",
+            "/tmp/gspot-policy-preview-tuple-types.log: root TypeScript passed. /tmp/gspot-policy-preview-verified-final-lint.log and /tmp/gspot-policy-preview-tuple-lint.log: source and final test/config lint passed. /tmp/gspot-policy-preview-verified-final-format.log and /tmp/gspot-policy-preview-tuple-format.log: formatting passed.",
+            "/tmp/gspot-policy-preview-source-proof.log: the four original shared policy functions and nine original affected test files remain byte-for-byte unchanged. /tmp/gspot-policy-preview-reference.log: generated set and ignore references include --dry-run and its exit status from the existing command definitions."
+        ]
     },
     {
         "id": "slices/commands/014",
