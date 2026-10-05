@@ -890,10 +890,22 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/tools/tools.ts:61-62` `Package` | `tools/locate.ts:72,79` casts raw `JSON.parse` output to `Package` without checking it. `packageManifestSchema` (`repository/packages.ts:207`) already parses `package.json` but lacks `name` and `version`. The name also collides with `@manypkg/tools`' `Package` (`repository/scopes.ts:6`). | Add `name` and `version` to the schema, parse with it, and delete `Package`. |",
         "owner": "`types/tools/tools.ts:61-62` `Package`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/tools/locate.ts",
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/parsers/schema/packages.ts",
+            "packages/cli/src/types/parsers/packages.ts",
+            "tests/cli/tools/inspect/versions.test.ts",
+            "tests/config/cli/tools/versions.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "installedPackage parses both private and host package metadata through parsePackageManifest and returns the schema-derived PackageManifest. packageManifestSchema validates optional name and version as strings. The old local Package declaration and raw JSON cast are absent; the external @manypkg/tools Package keeps its separate contract.",
+            "Two installed-library regressions reject non-string name/version values with the package-manifest diagnostic, preserve the invalid file and accept corrected metadata within the same inspection context. Literal failure data belongs to the existing test configuration owner for tool versions.",
+            "A direct boundary probe rejects both invalid fields through both the host and private readers, accepts corrected metadata through both and returns undefined for an absent file through both. Existing executable/library version, private-link confinement, installed-file placement and session-cache scenarios also passed.",
+            "Root TypeScript, affected ESLint and formatting passed. Inspection, manifest, list, policy-settings and recovery tests passed: 104 tests, 282 assertions across seven files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/045",
@@ -957,10 +969,14 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/commands.ts:69-70` `ToolTables`, `types/policy/policy.ts:191-193` `ToolTable` | `ToolTables` writes the `extra` shape of `ToolTable` again. | `ToolTables = Record<string, ToolTable>`, or use `Policy['tools']`. |",
         "owner": "`types/commands/commands.ts:69-70` `ToolTables`, `types/policy/policy.ts:191-193` `ToolTable`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/policy/settings.ts", "packages/cli/src/commands/list.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "ToolTable is declared once beside Policy; Policy.tools is Record<string, ToolTable>. The actual getExtras consumer accepts Policy[tools] directly. The duplicate ToolTables declaration is absent. The authored field is verbatim under the current product contract; no extra compatibility shape was added.",
+            "A public list settings --json probe verifies exact root and scoped verbatim rows, their tool names, option keys, reasons and scope paths. The reason field is excluded from option keys, and listing leaves gspot.toml unchanged.",
+            "Root TypeScript and the unchanged shared source contracts pass. The affected list, policy-settings and recovery scenarios are included in the passing 104-test, 282-assertion run. This closure concerns the shared declaration; unrelated policy validation findings remain independently tracked."
+        ]
     },
     {
         "id": "slices/types-kits-rules/049",

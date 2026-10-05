@@ -9,9 +9,9 @@ import { openSession } from '#cli/execution/session.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
-import { GITLEAKS_VERSIONS } from '#tests/config/cli/tools/versions.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { GITLEAKS_VERSIONS, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
@@ -170,5 +170,21 @@ test.each(GITLEAKS_VERSIONS)(
         } finally {
             which.mockRestore();
         }
+    },
+);
+
+test.each([...PACKAGE_METADATA_FAILURES])(
+    'a private library rejects non-string $field metadata and accepts corrected bytes',
+    async ({ manifest }) => {
+        await using sandbox = await testdir();
+        const path = join(sandbox.path, '.gspot/node_modules/teller/package.json');
+        const original = JSON.stringify(manifest);
+        await createFileTree(sandbox.path, { '.gspot/node_modules/teller/package.json': original });
+        const context = { root: sandbox.path, inspections: new Map() };
+        const tool = buildLibraryPin('teller', '5.0.1');
+        expect(() => inspectTool(context, tool)).toThrow(`Cannot read package manifest ${path}:`);
+        expect(await Bun.file(path).text()).toBe(original);
+        await Bun.write(path, '{"name":"teller","version":"5.0.1"}');
+        expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );
