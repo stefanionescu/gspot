@@ -251,10 +251,25 @@
         "section": "Commands and the Entry Point",
         "finding": "| `edit.ts:30, 45, 52`, `export.ts:30, 33`, `init/prepare.ts:25`, `init/write.ts:36` | These user-facing refusals throw a plain `Error`. Without `--json`, the user sees \"gspot did not run: ...\", although the command did run, and in `export` it may have checked files under the lock. | Throw `GspotError('policy', ...)`, or `'selection'` for the Git status failure. |",
         "owner": "`edit.ts:30, 45, 52`, `export.ts:30, 33`, `init/prepare.ts:25`, `init/write.ts:36`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/commands/export.ts",
+            "packages/cli/src/commands/init/prepare.ts",
+            "packages/cli/src/commands/init/write.ts",
+            "tests/cli/commands/init/refusals.test.ts",
+            "tests/cli/policy/template.test.ts",
+            "tests/cli/policy/write.test.ts",
+            "tests/cli/commands/init/replace.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The reviewed policy, export, and initialization refusals use GspotError(policy); failed Git status uses GspotError(selection). Human output retains their actionable diagnostics and JSON retains the domain failure code.",
+        "verification": [
+            "Source inspection covered every branch named by this finding. Command sources have no remaining plain Error refusal, KNOWN_ERRORS, obsolete unexpected-error prefix, or JSON preview text property.",
+            "Real CLI cases assert exact human and JSON diagnostics for tool-version lookup, dirty-tree and failed-Git-status refusals, managed-policy export, and unexpected installer errors. Every case checks streams and unchanged complete repository trees.",
+            "Reintroducing the tool-code exclusion, obsolete unexpected-error prefix, and plain Error refusals made all five selected cases fail. All three source owners were restored byte for byte.",
+            "Empty exact and detect templates run against actual JavaScript detection: exact keeps an empty root selection and detect includes JavaScript. Both previews preserve the complete repository tree.",
+            "The 13 affected command and lifecycle owners passed 167 cases and 1196 assertions. The reason owner separately passed all 15 cases and 93 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/016",
@@ -263,10 +278,21 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/program.ts:67` `exitCodeFor`, `print-result.ts:28-30` `printCommand` | The doc says \"Errors gspot raises print their message and exit 2\". A `GspotError` whose code is `tool`, `installation`, `output`, or `skip` is not in `KNOWN_ERRORS`, so it is rethrown, and it gets the prefix \"gspot did not run:\". That prefix is wrong for an error raised after files were written, for example from `writeOutputs` during `apply`. | Print every `GspotError` the same way, and delete `KNOWN_ERRORS`. Change the prefix for unexpected errors to \"gspot stopped:\". Fix the doc. |",
         "owner": "`commands/program.ts:67` `exitCodeFor`, `print-result.ts:28-30` `printCommand`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/program.ts",
+            "packages/cli/src/platform/errors.ts",
+            "tests/cli/commands/program.test.ts",
+            "tests/cli/commands/remove.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The program prints every GspotError through one unconditional class branch and exits 2. No error-code whitelist remains. Unexpected errors use gspot stopped in human output and failure in JSON. The program documentation identifies its real execution and command-reference callers.",
+        "verification": [
+            "Source inspection covered every branch named by this finding. Command sources have no remaining plain Error refusal, KNOWN_ERRORS, obsolete unexpected-error prefix, or JSON preview text property.",
+            "Real CLI cases assert exact human and JSON diagnostics for tool-version lookup, dirty-tree and failed-Git-status refusals, managed-policy export, and unexpected installer errors. Every case checks streams and unchanged complete repository trees.",
+            "Reintroducing the tool-code exclusion, obsolete unexpected-error prefix, and plain Error refusals made all five selected cases fail. All three source owners were restored byte for byte.",
+            "Empty exact and detect templates run against actual JavaScript detection: exact keeps an empty root selection and detect includes JavaScript. Both previews preserve the complete repository tree.",
+            "The 13 affected command and lifecycle owners passed 167 cases and 1196 assertions. The reason owner separately passed all 15 cases and 93 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/017",
@@ -275,10 +301,26 @@
         "section": "Commands and the Entry Point",
         "finding": "| `check/command.ts:70`, `check/selection.ts:50, 56, 93`, `explain/command.ts:12`, `init/command.ts:50, 63`, `install/command.ts:115`, `edit.ts:75, 94` | Under `--json`, failures come in about nine shapes. Some have `{ error, message }`. Some have only `{ error }` (`'canceled'`, `'message-file'`, `'unknown-check'`, `'already-initialized'`). One puts the message in `error` (explain). Others use `{ failed, files }`, `{ installed: false, error, message }`, or `{ applied: false, message }`. The dry runs name the new gspot.toml `text` (`edit.ts:75`) in one place and `policy` (`init/command.ts:45`) in another. A script cannot parse failures in one way. | Give every failure `{ error: <code>, message: <text> }`, plus extra fields where needed. The simplest way is to throw `GspotError` and let `printCommand` print it. Use `policy` in both dry runs. |",
         "owner": "`check/command.ts:70`, `check/selection.ts:50, 56, 93`, `explain/command.ts:12`, `init/command.ts:50, 63`, `install/command.ts:115`, `edit.ts:75, 94`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/program.ts",
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/selection.ts",
+            "packages/cli/src/commands/explain/command.ts",
+            "packages/cli/src/commands/init/command.ts",
+            "packages/cli/src/commands/install.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "tests/cli/commands/program.test.ts",
+            "tests/cli/commands/policy-preview.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Every reviewed operational refusal includes error and message, either through the common GspotError boundary or its completed command result. Policy-edit and initialization previews use policy for the proposed text. Installation and post-write failures retain their additional state fields.",
+        "verification": [
+            "Source inspection covered every branch named by this finding. Command sources have no remaining plain Error refusal, KNOWN_ERRORS, obsolete unexpected-error prefix, or JSON preview text property.",
+            "Real CLI cases assert exact human and JSON diagnostics for tool-version lookup, dirty-tree and failed-Git-status refusals, managed-policy export, and unexpected installer errors. Every case checks streams and unchanged complete repository trees.",
+            "Reintroducing the tool-code exclusion, obsolete unexpected-error prefix, and plain Error refusals made all five selected cases fail. All three source owners were restored byte for byte.",
+            "Empty exact and detect templates run against actual JavaScript detection: exact keeps an empty root selection and detect includes JavaScript. Both previews preserve the complete repository tree.",
+            "The 13 affected command and lifecycle owners passed 167 cases and 1196 assertions. The reason owner separately passed all 15 cases and 93 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/018",
@@ -475,10 +517,22 @@
         "section": "Commands and the Entry Point",
         "finding": "| `init/command.ts:29, 32`, `init/prepare.ts:39`, `init/selection.ts:43, 111, 158`, `init/questions.ts:61`, `init/detection.ts:73`, `check/selection.ts:92`, `list.ts:120`, `set.ts:46` | \"Configuration\" still means \"kit\" in variables (`configurations`, the `getCandidate` parameter `configuration`), in docs, and in user text: \"to see which configuration ships it\", \"the configurations that read git stay out\". `init/command.ts:32` and `prepare.ts:39` write the literal `'none'` although `NO_KITS` exists and `selection.ts` uses it. | Say \"kit\" everywhere, and use `NO_KITS`. |",
         "owner": "`init/command.ts:29, 32`, `init/prepare.ts:39`, `init/selection.ts:43, 111, 158`, `init/questions.ts:61`, `init/detection.ts:73`, `check/selection.ts:92`, `list.ts:120`, `set.ts:46`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/init/command.ts",
+            "packages/cli/src/commands/init/prepare.ts",
+            "packages/cli/src/lifecycle/selection.ts",
+            "packages/cli/src/config/lifecycle/selection.ts",
+            "tests/cli/commands/init/templates.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Configuration terminology follows the user’s explicit decision to preserve existing product vocabulary. Empty template answers, empty interactive choices, and selection filters use NO_CONFIGURATIONS from the lifecycle selection owner. Other none values are separate runner, workflow, or display values.",
+        "verification": [
+            "Source inspection covered every branch named by this finding. Command sources have no remaining plain Error refusal, KNOWN_ERRORS, obsolete unexpected-error prefix, or JSON preview text property.",
+            "Real CLI cases assert exact human and JSON diagnostics for tool-version lookup, dirty-tree and failed-Git-status refusals, managed-policy export, and unexpected installer errors. Every case checks streams and unchanged complete repository trees.",
+            "Reintroducing the tool-code exclusion, obsolete unexpected-error prefix, and plain Error refusals made all five selected cases fail. All three source owners were restored byte for byte.",
+            "Empty exact and detect templates run against actual JavaScript detection: exact keeps an empty root selection and detect includes JavaScript. Both previews preserve the complete repository tree.",
+            "The 13 affected command and lifecycle owners passed 167 cases and 1196 assertions. The reason owner separately passed all 15 cases and 93 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/028",

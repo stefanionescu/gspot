@@ -5,6 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -42,13 +43,55 @@ test('uncommitted changes stop init until they are committed', async () => {
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
     const argv = ['init', '--yes', '--configurations', 'none', '--no-hooks', ...QUIET];
+    const before = readTree(sandbox.path);
+    const diagnostic =
+        'The working tree has 1 uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.';
     const refused = await runGspot(sandbox.path, argv);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout).toBe('');
+    expect(refused.stderr).toBe(`${diagnostic}\n`);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...argv, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'policy', message: diagnostic });
+    expect(readTree(sandbox.path)).toStrictEqual(before);
     commitAll(sandbox.path);
     const allowed = await runGspot(sandbox.path, argv);
     expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
+});
+
+test('failed Git status stops initialization with a selection error before writing', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
+    commitAll(sandbox.path);
+    const before = readTree(sandbox.path);
+    const run = processes.runBlocking;
+    using boundary = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+        if (command[0] !== 'git' || command[1] !== 'status' || command[2] !== '--porcelain')
+            return run(command, options);
+        return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'status unavailable\n' };
+    });
+    const argv = ['init', '--yes', '--configurations', 'none', ...QUIET];
+    const human = await runGspot(sandbox.path, argv);
+    expect(human.code, human.stdout + human.stderr).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe('Git status failed (exit 7): status unavailable\n');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...argv, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        error: 'selection',
+        message: 'Git status failed (exit 7): status unavailable',
+    });
+    expect(boundary).toHaveBeenCalledWith(
+        ['git', 'status', '--porcelain'],
+        expect.objectContaining({ cwd: sandbox.path }),
+    );
+    expect(readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('a named configuration brings its recommended configurations, and one --scope-configurations flag proposes both scopes', async () => {

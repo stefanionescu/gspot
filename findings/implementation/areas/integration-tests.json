@@ -225,10 +225,20 @@
         "section": "Findings",
         "finding": "| `cli/commands/remove.test.ts:48`, \"%s keeps the written policy and says to run gspot install when the install fails\" | The test mocks `installTools`, a step inside the command under test, and asserts `toHaveBeenCalled()`. `lifecycle/installer-failures.test.ts:19` tests the same outcome with a fake at the process boundary. | Fake the installer process through `processes.run`, as installer-failures does, and drop the call assertion. Or delete this test. |",
         "owner": "`cli/commands/remove.test.ts:48`, \"%s keeps the written policy and says to run gspot install when the install fails\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/remove.test.ts",
+            "tests/config/cli/commands/remove.ts",
+            "packages/cli/src/commands/configurations.ts",
+            "packages/cli/src/lifecycle/install.ts"
+        ],
+        "status": "closed",
+        "outcome": "The add and remove installation-failure cases execute the real command and installation lifecycle, faking only npm subprocess results through processes.run. They verify saved policy selections, incomplete-installation diagnostics and repair commands, and absent failed installation outputs. No installation-function mock or called-only assertion remains.",
+        "verification": [
+            "The real command, template, writer, initialization, cancellation, and installation regression owners passed 167 cases and 1196 assertions. The real reason owner passed all 15 cases and 93 assertions.",
+            "Exact removal diagnostics and unchanged repository trees were verified in human and JSON output. The earlier removal-wording mutation made all three refusal cases fail; the unknown-scope fallback mutation also failed its cause assertion.",
+            "A mutation retained the native-extension key but removed its missing-reason clause. The required-reason control failed while the optional-reason control passed; the source was restored byte for byte.",
+            "Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "areas/integration-tests/019",

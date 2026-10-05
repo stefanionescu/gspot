@@ -140,7 +140,10 @@ test.each([false, true])(
         const findings = (JSON.parse(checked.stdout) as RunReport).checks
             .filter((check) => check.check === 'gspot/policy')
             .flatMap((check) => check.findings);
-        const aboutExtra = { file: 'gspot.toml', message: textContaining('verbatim') };
+        const aboutExtra = {
+            file: 'gspot.toml',
+            message: textContaining('[tools.shellcheck.verbatim] needs a `reason`'),
+        };
         expect(findings).toMatchObject(required ? [aboutExtra] : []);
         expect(readFileSync(policyPath, 'utf8')).toBe(
             written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n',

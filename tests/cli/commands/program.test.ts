@@ -1,6 +1,8 @@
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import { ARGUMENT_REFUSALS } from '#tests/config/cli/commands/program.ts';
@@ -66,5 +68,33 @@ test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal o
     );
     expect(help.stdout).toContain('Delete the matching ignore entries');
     expect(help.stdout).not.toContain('--scope');
+    expect(readTree(directory.path)).toStrictEqual(before);
+});
+
+test('a package manager version failure retains its tool code and diagnostic in human and JSON output', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'entry.sh': 'echo example\n',
+    });
+    const before = readTree(directory.path);
+    const run = processes.runBlocking;
+    using boundary = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+        if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
+        return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'version lookup failed' };
+    });
+    const human = await runGspot(directory.path, ['apply', '--dry-run']);
+    expect(human.code, human.stdout + human.stderr).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe('Cannot determine the npm version for the tool project.\n');
+    expect(readTree(directory.path)).toStrictEqual(before);
+    const structured = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        error: 'tool',
+        message: 'Cannot determine the npm version for the tool project.',
+    });
+    expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: directory.path }));
     expect(readTree(directory.path)).toStrictEqual(before);
 });

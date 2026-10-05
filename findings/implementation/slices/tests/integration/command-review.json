@@ -158,10 +158,19 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Expected text that echoes the input: `cli/commands/remove.test.ts:35-36` (`bash`, `typescript`), `set.test.ts:14` (`web`), `reasons.test.ts:146` (`extra`) | The expected text is the name the test passed in, or one short word. Any error that repeats the argument passes. | Assert the clause that states the cause next to the name, or the full key path `tools.shellcheck.extra`. |",
         "owner": "Expected text that echoes the input: `cli/commands/remove.test.ts:35-36` (`bash`, `typescript`), `set.test.ts:14` (`web`), `reasons.test.ts:146` (`extra`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/remove.test.ts",
+            "tests/cli/commands/set.test.ts",
+            "tests/cli/commands/reasons.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Removal tests assert complete dependency and absent-selection clauses. The undeclared-scope test names the available policy scopes even when the requested directory exists. The native-extension reason test asserts the full tools.shellcheck.verbatim owner and missing-reason clause, rather than a repeated input token.",
+        "verification": [
+            "The real command, template, writer, initialization, cancellation, and installation regression owners passed 167 cases and 1196 assertions. The real reason owner passed all 15 cases and 93 assertions.",
+            "Exact removal diagnostics and unchanged repository trees were verified in human and JSON output. The earlier removal-wording mutation made all three refusal cases fail; the unknown-scope fallback mutation also failed its cause assertion.",
+            "A mutation retained the native-extension key but removed its missing-reason clause. The required-reason control failed while the optional-reason control passed; the source was restored byte for byte.",
+            "Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/012",
@@ -180,8 +189,8 @@
         "source": "findings/slices/tests-integration-commands.md",
         "line": 24,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction\u2026\") | These runs parse the JSON report without asserting the exit code. A run that fails for another reason but still prints a report passes. | Assert the exit code of each run, as the other runs in these files do. |",
-        "owner": "Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction\u2026\")",
+        "finding": "| Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\") | These runs parse the JSON report without asserting the exit code. A run that fails for another reason but still prints a report passes. | Assert the exit code of each run, as the other runs in these files do. |",
+        "owner": "Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\")",
         "location": [
             "tests/cli/commands/check/selection.test.ts",
             "tests/cli/commands/explain/selection.test.ts",
@@ -383,8 +392,8 @@
         "source": "findings/slices/tests-integration-commands.md",
         "line": 37,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/assets.test.ts:22`, \"development assets \u203a resolve a checkout containing spaces, percent signs, and Unicode\" | The test also checks the missing Swift grammar error, the refusal of an undeclared grammar, and the WebAssembly validity of every grammar. The name covers one of four behaviors. The child script throws on lines 13-16, so those failures show only as exit 1. | Rename the test to cover the grammar checks, or split the missing-grammar run into its own test. Let the child print one JSON field per check, and assert each field. |",
-        "owner": "`cli/platform/assets.test.ts:22`, \"development assets \u203a resolve a checkout containing spaces, percent signs, and Unicode\"",
+        "finding": "| `cli/platform/assets.test.ts:22`, \"development assets › resolve a checkout containing spaces, percent signs, and Unicode\" | The test also checks the missing Swift grammar error, the refusal of an undeclared grammar, and the WebAssembly validity of every grammar. The name covers one of four behaviors. The child script throws on lines 13-16, so those failures show only as exit 1. | Rename the test to cover the grammar checks, or split the missing-grammar run into its own test. Let the child print one JSON field per check, and assert each field. |",
+        "owner": "`cli/platform/assets.test.ts:22`, \"development assets › resolve a checkout containing spaces, percent signs, and Unicode\"",
         "location": null,
         "status": "open",
         "outcome": null,

@@ -98,6 +98,7 @@ test('an unexpected installer process error reaches the program failure handler'
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const policy = readFileSync(join(sandbox.path, 'gspot.toml'));
+    const before = readTree(sandbox.path);
     const run = processes.run;
     using resources = new DisposableStack();
     resources.use(
@@ -106,10 +107,17 @@ test('an unexpected installer process error reaches the program failure handler'
             return Promise.reject(new Error('Unexpected process failure.'));
         }),
     );
+    const human = await runGspot(sandbox.path, ['install']);
+    expect(human.code, human.stdout + human.stderr).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe('gspot stopped: Unexpected process failure.\n');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
+    expect(failed.stderr).toBe('');
     expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'failure', message: 'Unexpected process failure.' });
     expect(readFileSync(join(sandbox.path, 'gspot.toml'))).toStrictEqual(policy);
     expect(existsSync(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
 });

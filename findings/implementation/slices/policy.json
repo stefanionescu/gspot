@@ -240,10 +240,15 @@
         "section": "Policy",
         "finding": "| `policy/messages.ts:73` `kitNotListed` | \"Run gspot list settings to see the selection.\" is wrong. `gspot list settings` prints settings. The kit selection is `gspot list` with no argument (`commands/list.ts:134-139`). | Rewrite it as \"... Run `gspot list` to see the selected kits.\" |",
         "owner": "`policy/messages.ts:73` `kitNotListed`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/configurations.ts", "tests/cli/commands/remove.test.ts"],
+        "status": "closed",
+        "outcome": "The root and scoped absent-configuration refusals tell the user to run gspot list to see selected configurations. Configuration vocabulary follows the user’s product decision.",
+        "verification": [
+            "The real command, template, writer, initialization, cancellation, and installation regression owners passed 167 cases and 1196 assertions. The real reason owner passed all 15 cases and 93 assertions.",
+            "Exact removal diagnostics and unchanged repository trees were verified in human and JSON output. The earlier removal-wording mutation made all three refusal cases fail; the unknown-scope fallback mutation also failed its cause assertion.",
+            "A mutation retained the native-extension key but removed its missing-reason clause. The required-reason control failed while the optional-reason control passed; the source was restored byte for byte.",
+            "Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/policy/020",

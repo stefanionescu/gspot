@@ -4,8 +4,10 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import { readTree } from '#tests/harness/preservation.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
@@ -31,6 +33,32 @@ test('templates > init validates a template in a dry run without changing the re
         dryRun: true,
         plan: { template: { name: 'team', selection: 'exact' } },
     });
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test.each(['exact', 'detect'])('an empty %s template controls root detection without writing', async (selection) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.js': 'export const port = 8080;\n',
+        'team.template.toml': `template = "team"\nselection = "${selection}"\nconfigurations = []\n`,
+    });
+    const before = readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, [
+        'init',
+        '--yes',
+        '--from',
+        'team.template.toml',
+        '--dry-run',
+        '--json',
+        ...QUIET_INIT,
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stderr).toBe('');
+    const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
+    const policy = parseStrictPolicy(report.policy);
+    expect(policy.configurations.includes('javascript')).toBe(selection === 'detect');
+    if (selection === 'exact') expect(policy.configurations).toStrictEqual([]);
+    expect(report.plan.template).toMatchObject({ name: 'team', selection });
     expect(readTree(sandbox.path)).toStrictEqual(before);
 });
 

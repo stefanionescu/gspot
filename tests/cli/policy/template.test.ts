@@ -3,11 +3,13 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { setKey } from '#cli/policy/edit.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
+import { readTree } from '#tests/harness/preservation.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { getTemplate, exportTemplate } from '#cli/policy/templates.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
@@ -132,6 +134,30 @@ test('template export preserves an unowned destination and refuses the managed r
         'Template export cannot replace managed gspot.toml. Choose another destination.',
     );
     expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
+});
+
+test('export refuses the managed policy with the same policy diagnostic in human and JSON output', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'control.txt': 'preserve this source\n',
+    });
+    const edited = await runGspot(directory.path, ['set', 'require_reasons', 'true']);
+    expect(edited.code, edited.stdout + edited.stderr).toBe(0);
+    const before = readTree(directory.path);
+    const human = await runGspot(directory.path, ['export', 'gspot.toml']);
+    expect(human.code, human.stdout + human.stderr).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe('Template export cannot replace managed gspot.toml. Choose another destination.\n');
+    expect(readTree(directory.path)).toStrictEqual(before);
+    const structured = await runGspot(directory.path, ['export', 'gspot.toml', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        error: 'policy',
+        message: 'Template export cannot replace managed gspot.toml. Choose another destination.',
+    });
+    expect(readTree(directory.path)).toStrictEqual(before);
 });
 
 test('template publication recovers an interrupted write through the lifecycle log', async () => {
