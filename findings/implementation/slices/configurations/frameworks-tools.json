@@ -36,10 +36,17 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:352`, `eslint-levels.json:578` (outside this slice; found through zustand) | The block for `tools.eslint.restricted_imports` sits inside `defaults`. The table marks `no-restricted-imports` as `all`. At level recommended, the setting a user writes to forbid imports silently does nothing. The same applies to zustand's rule. | Leave rules that only a setting turns on out of the level switch, or emit them after `selectedDefaults`. |",
         "owner": "`packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:352`, `eslint-levels.json:578` (outside this slice; found through zustand)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/eslint.config.mjs.tmpl",
+            "packages/cli/configurations/language/javascript/eslint-all-rules.json",
+            "packages/cli/configurations/library/zustand/eslint.fragment.js.tmpl",
+            "tests/cli/generation/restricted-imports.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Authored import restrictions are emitted outside the default level selection, and no-restricted-imports is absent from the all-only rule set. The native ESLint regression reports authored restrictions at both levels, preserves them in store files, and combines the explicit all-level Zustand convention outside store files: /tmp/gspot-library-cli-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/004",
@@ -366,10 +373,18 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `library/tanstack-query/eslint.fragment.js.tmpl:4-10` | The fragment lists five rules by hand. The preset of the pinned 5.91.2 has seven; `no-void-query-fn` and `mutation-property-order` are missing. | Spread `configs['flat/recommended']` through `errorLevels`, as the other kits do. |",
         "owner": "`library/tanstack-query/eslint.fragment.js.tmpl:4-10`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/eslint.ts",
+            "packages/cli/configurations/library/tanstack-query/eslint-presets.json",
+            "packages/cli/configurations/library/tanstack-query/eslint.fragment.js.tmpl",
+            "tests/cli/generation/tanstack-query.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The existing preset producer captures all seven rules from the installed exact 5.91.2 flat/recommended export under its configuration owner; other preset outputs are unchanged: /tmp/gspot-library-presets.log.",
+            "Native ESLint reads the generated configuration at both levels, verifies every actual pinned preset rule is an error, reports void query functions and mutation callback order, and accepts corrected sources beside an unchanged valid query: /tmp/gspot-library-cli-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/027",
@@ -378,10 +393,12 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `library/trpc/manifest.toml:19-35` `boundaries` | The HTTP adapter must import the router as a value, and it sits outside `**/server/**`. In create-t3-app, `src/app/api/trpc/[trpc]/route.ts` imports `appRouter` from `~/server/api/root`. A recommended check reports the standard layout, and `import type` cannot fix it. | Exempt adapter files such as `**/api/trpc/**` by default. Or report only client files, such as `'use client'` modules. |",
         "owner": "`library/trpc/manifest.toml:19-35` `boundaries`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/library/trpc/manifest.toml", "tests/cli/checks/library/trpc.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The default server boundary includes **/api/trpc/**. Public checks accept adapter value imports in root and nested scopes, still report the adjacent client import exactly once, and accept its type-only correction with adapter, public source and policy preserved. Existing authored server paths and architecture ownership cases also pass: /tmp/gspot-library-cli-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/028",
@@ -390,10 +407,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `library/zod/manifest.toml:4` | The description says a schema \"rejects the rest\". None of the selected rules makes objects strict. `prefer-strict-object` only prefers `z.strictObject()` over `z.object().strict()`. | Describe what the rules do: they ban deprecated and unsafe Zod APIs. |",
         "owner": "`library/zod/manifest.toml:4`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/library/zod/manifest.toml",
+            "packages/cli/configurations/library/zod/eslint.fragment.js.tmpl"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The description now names unsafe schema APIs and deprecated API replacements, matching the existing selected plugin rules without claiming arbitrary object schemas become strict. The native Zod finding and correction pass, and generated documentation builds with valid local links: /tmp/gspot-library-native.log and /tmp/gspot-library-docs.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/029",
@@ -414,10 +436,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `library/zustand/manifest.toml:19-24`, `library/zustand/eslint.fragment.js.tmpl:3` | The store-file globs list only `.ts`. A JavaScript store (`store.js`) or a `.tsx` store is not exempt, so the rule reports the store file's own `create` import. | Use `**/store.{ts,tsx,js,jsx,mts,mjs}` and the same set for the other three globs. |",
         "owner": "`library/zustand/manifest.toml:19-24`, `library/zustand/eslint.fragment.js.tmpl:3`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/library/zustand/manifest.toml",
+            "tests/cli/generation/restricted-imports.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All four default store patterns cover ts, tsx, mts, cts, js, jsx, mjs and cjs. Native ESLint verifies exemptions for all four patterns and all eight extensions while retaining adjacent import restrictions; module defects report and pass after correction, and CommonJS fixtures retain their valid require syntax: /tmp/gspot-library-cli-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/031",

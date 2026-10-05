@@ -14,3 +14,6 @@ restricted_imports = [{ name = "node:fs", message = "Use the storage service." }
 [zustand]
 store_files = ["**/store.js"]
 `;
+
+/** JavaScript and TypeScript module forms supported by the default store convention. */
+export const STORE_EXTENSIONS = ['ts', 'tsx', 'mts', 'cts', 'js', 'jsx', 'mjs', 'cjs'];

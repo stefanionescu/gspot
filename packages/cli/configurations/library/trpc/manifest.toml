@@ -32,5 +32,5 @@ help = "Import the router type with import type, and call the server through the
 name = "trpc.server_files"
 type = "list"
 direction = "neutral"
-default = ["**/server/**"]
+default = ["**/server/**", "**/api/trpc/**"]
 summary = "Server file globs used when architecture.modules has no server element. An explicit server element owns the boundary."

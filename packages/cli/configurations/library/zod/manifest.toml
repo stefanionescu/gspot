@@ -1,7 +1,7 @@
 [configuration]
 title = "Zod"
 requires = ["javascript"]
-description = "Zod schemas: the schema rules of ESLint, so a schema says what it accepts and rejects the rest."
+description = "Zod schemas: ESLint rules reject unsafe schema APIs and recommend replacements for deprecated APIs."
 
 [detect]
 dependencies = ["zod"]

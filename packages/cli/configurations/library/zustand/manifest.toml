@@ -21,5 +21,5 @@ message = "Pass a selector to the store hook, so the component renders when its 
 name = "zustand.store_files"
 type = "list"
 direction = "neutral"
-default = ["**/store.ts", "**/stores/*.ts", "**/store/*.ts", "**/*.store.ts"]
+default = ["**/store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/stores/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/store/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
 summary = "The files that may create a store."

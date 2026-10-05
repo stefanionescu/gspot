@@ -1019,10 +1019,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/library/zustand/eslint.fragment.js.tmpl:5`, `packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:352` | Zustand sets `no-restricted-imports` for all code. The later `tools.eslint.restricted_imports` block replaces it, so setting that list silently drops the Zustand rule. | Merge both into one `no-restricted-imports` entry, as the template already does for `no-restricted-syntax`. |",
         "owner": "`packages/cli/kits/library/zustand/eslint.fragment.js.tmpl:5`, `packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:352`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/library/zustand/eslint.fragment.js.tmpl",
+            "packages/cli/configurations/language/javascript/eslint.config.mjs.tmpl",
+            "tests/cli/generation/restricted-imports.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The Zustand fragment combines authored restrictedImports with its create/createStore restriction in the same rule entry. Native ESLint regressions at recommended and all report the authored node:fs restriction in both store and component files and retain the all-level Zustand finding only outside store files: /tmp/gspot-library-cli-repaired.log."
+        ]
     },
     {
         "id": "areas/kits/085",

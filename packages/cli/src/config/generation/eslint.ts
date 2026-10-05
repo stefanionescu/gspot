@@ -47,5 +47,6 @@ export const ESLINT_PRESET_SOURCES: EslintPresetSources = {
         recommended: ['@darraghor/eslint-plugin-nestjs-typed', 'configs.flatRecommended'],
         noSwagger: ['@darraghor/eslint-plugin-nestjs-typed', 'configs.flatNoSwagger'],
     },
+    'tanstack-query': { recommended: ['@tanstack/eslint-plugin-query', 'configs.flat/recommended'] },
     vitest: { recommended: ['@vitest/eslint-plugin', 'configs.recommended'] },
 };

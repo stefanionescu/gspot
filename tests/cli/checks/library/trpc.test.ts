@@ -80,3 +80,34 @@ test('tRPC architecture boundaries retain source locations, scope isolation, and
     expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
     expect(await Bun.file(`${sandbox.path}/server/public.ts`).text()).toBe('export const value = 1;\n');
 });
+
+test.each(['', 'apps/web'])(
+    'tRPC permits HTTP adapter value imports in scope %s and rejects clients',
+    async (scope) => {
+        await using sandbox = await testdir();
+        const prefix = scope === '' ? '' : `${scope}/`;
+        const policy = buildPolicy(['trpc'], { tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n` });
+        const adapter = 'import { router } from "../../../server/router.js";\nexport const handler = router;\n';
+        const files = {
+            [`${prefix}server/router.ts`]: 'export const router = {};\n',
+            [`${prefix}app/api/trpc/route.ts`]: adapter,
+            [`${prefix}client.ts`]: 'import { router } from "./server/router.js";\n',
+            [`${prefix}public.ts`]: 'export const title = "Public";\n',
+        };
+        await createFileTree(sandbox.path, { 'gspot.toml': policy, ...files });
+        const command = ['check', '--only', 'trpc/boundaries', '--json'];
+        const failed = await runGspot(sandbox.path, command);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(
+            (JSON.parse(failed.stdout) as RunReport).checks
+                .flatMap((check) => check.findings)
+                .map(({ file, line, rule }) => ({ file, line, rule })),
+        ).toStrictEqual([{ file: `${prefix}client.ts`, line: 1, rule: 'server-import' }]);
+        await Bun.write(`${sandbox.path}/${prefix}client.ts`, 'import type { router } from "./server/router.js";\n');
+        const corrected = await runGspot(sandbox.path, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(await Bun.file(`${sandbox.path}/${prefix}app/api/trpc/route.ts`).text()).toBe(adapter);
+        expect(await Bun.file(`${sandbox.path}/${prefix}public.ts`).text()).toBe('export const title = "Public";\n');
+        expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
+    },
+);
