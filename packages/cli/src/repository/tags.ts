@@ -110,3 +110,14 @@ export async function swiftSourceTags(text: string): Promise<string[]> {
         tree.delete();
     }
 }
+
+/**
+ * Extensions whose authoritative inventory tags include any requested language or content tag.
+ * @param tags the language or content tags to select
+ * @returns extensions in inventory order
+ */
+export function extensionsTagged(...tags: string[]): string[] {
+    return Object.entries(EXTENSION_TAGS)
+        .filter(([, owned]) => tags.some((tag) => owned.includes(tag)))
+        .map(([extension]) => extension);
+}

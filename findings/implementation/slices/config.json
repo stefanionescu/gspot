@@ -464,10 +464,27 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/files.ts:15` `ENV_READ_EXTENSIONS`, `config/checks/general/structure.ts:130` `SCRIPT_ENDING`, `config/checks/language/css.ts:4` `CODE_SUFFIX`, `config/checks/language/javascript.ts:3` `SOURCE`, `config/generation/eslint.ts:4` `ESLINT_CODE_FILES`, `config/checks/general/prose.ts:6-7` `MARKDOWN`, `SQL` | The extensions of one language are written again and again, with different gaps. `CODE_SUFFIX` misses `.cjs`, `.mts`, and `.cts`. `MARKDOWN` equals `DOCUMENT_EXTENSIONS` (`config/checks/general/structure.ts:106`). `SQL` repeats the `sql` tag. `checks/general/structure/comments.ts:186` adds one more inline regex. `EXTENSION_TAGS` already tags every extension, and `LANGUAGE_BY_EXTENSION` shows how to derive from it. | Add `extensionsTagged(...tags)` to `repository/tags.ts`. Derive every list from it. |",
         "owner": "`config/checks/general/files.ts:15` `ENV_READ_EXTENSIONS`, `config/checks/general/structure.ts:130` `SCRIPT_ENDING`, `config/checks/language/css.ts:4` `CODE_SUFFIX`, `config/checks/language/javascript.ts:3` `SOURCE`, `config/generation/eslint.ts:4` `ESLINT_CODE_FILES`, `config/checks/general/prose.ts:6-7` `MARKDOWN`, `SQL`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/tags.ts",
+            "packages/cli/src/checks/general/files.ts",
+            "packages/cli/src/checks/language/css.ts",
+            "packages/cli/src/checks/language/javascript/imports.ts",
+            "packages/cli/src/checks/general/prose/hidden.ts",
+            "packages/cli/src/checks/general/structure/source-files.ts",
+            "packages/cli/src/checks/general/structure/prefix-collisions.ts",
+            "packages/cli/src/generation/eslint/output.ts",
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "packages/cli/src/generation/fragments.ts",
+            "packages/cli/src/parsers/comments.ts"
+        ],
+        "status": "closed",
+        "outcome": "extensionsTagged selects extensions from the authoritative inventory tag table. Environment reads, CSS module importers, JavaScript/TypeScript import indexing, prose forms, and folder checks derive their extension sets from it. eslintSourcePattern derives the base, TypeScript, and JavaScript globs used by configuration generation and fragments; the three independent ESLint glob constants are deleted. NestJS declaration recognition derives script extensions while preserving its existing JSX exclusion. The former inline comment-language regex is gone; parser extensions now select actual readers in the sole comment registry rather than duplicating a classifier.",
+        "verification": [
+            "366 affected CLI cases pass with 1601 assertions across 56 files, including modern environment reads, all six client formats, CSS .mts/.cts defect/correction, generated ESLint selectors, real comment syntax, and suppression behavior: /tmp/gspot-classification-tests.log.",
+            "Installed plugin and syntax consumers pass two cases with 19 assertions: /tmp/gspot-classification-package.log. Both packages were built and published only to a throwaway local registry.",
+            "All four TypeScript targets pass: /tmp/gspot-classification-types-0.log, /tmp/gspot-classification-types-1.log, /tmp/gspot-classification-types-2.log, /tmp/gspot-classification-types-3.log. Affected ESLint passes: /tmp/gspot-classification-lint-frozen.log.",
+            "Canonical apply writes the single ESLint configuration with the same extensions in authoritative inventory order; the second apply changes none of 142 outputs: /tmp/gspot-classification-apply.json and /tmp/gspot-classification-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/025",
@@ -476,10 +493,19 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/platform/supabase.ts:11` `CODE_EXTENSIONS` | `supabase/admin-key` does not scan `.vue`, `.svelte`, `.astro`, `.mts`, `.cts`, or `.cjs` files. Client components are where a leaked service-role key does the most harm. | Derive the list from the javascript, typescript, vue, svelte, and astro tags. Keep `.swift`, `.py`, `.kt`, and `.dart`. |",
         "owner": "`config/checks/platform/supabase.ts:11` `CODE_EXTENSIONS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/supabase.ts",
+            "packages/cli/src/config/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Supabase service-role key scanning derives JavaScript, TypeScript, Vue, Svelte, Astro, Swift, and Python extensions from inventory tags. Kotlin and Dart remain explicit supported client formats because this inventory has no language tags for them. The obsolete CODE_EXTENSIONS list is deleted. A public command regression reports all six previously missed component/module formats, accepts replacing their service-role references with anonymous-key references, and preserves authored policy, allowed server input, and unrelated text.",
+        "verification": [
+            "366 affected CLI cases pass with 1601 assertions across 56 files, including modern environment reads, all six client formats, CSS .mts/.cts defect/correction, generated ESLint selectors, real comment syntax, and suppression behavior: /tmp/gspot-classification-tests.log.",
+            "Installed plugin and syntax consumers pass two cases with 19 assertions: /tmp/gspot-classification-package.log. Both packages were built and published only to a throwaway local registry.",
+            "All four TypeScript targets pass: /tmp/gspot-classification-types-0.log, /tmp/gspot-classification-types-1.log, /tmp/gspot-classification-types-2.log, /tmp/gspot-classification-types-3.log. Affected ESLint passes: /tmp/gspot-classification-lint-frozen.log.",
+            "Canonical apply writes the single ESLint configuration with the same extensions in authoritative inventory order; the second apply changes none of 142 outputs: /tmp/gspot-classification-apply.json and /tmp/gspot-classification-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/026",
@@ -488,10 +514,19 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/general/files.ts",
+            "packages/cli/src/checks/general/files.ts",
+            "tests/cli/checks/general/files/env-example.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Environment reads recognize dotted and bracketed import.meta.env keys and Deno.env.get calls. Every read pattern, escaped authored accessor, and environment key declaration uses a named key capture; ENV_KEY_GROUP and all positional key reads are deleted. Real inventory regressions report each missing component/module key once, ignore an unrelated text file, accept matching template declarations, and preserve source and policy bytes. The existing custom-accessor regression still passes.",
+        "verification": [
+            "366 affected CLI cases pass with 1601 assertions across 56 files, including modern environment reads, all six client formats, CSS .mts/.cts defect/correction, generated ESLint selectors, real comment syntax, and suppression behavior: /tmp/gspot-classification-tests.log.",
+            "Installed plugin and syntax consumers pass two cases with 19 assertions: /tmp/gspot-classification-package.log. Both packages were built and published only to a throwaway local registry.",
+            "All four TypeScript targets pass: /tmp/gspot-classification-types-0.log, /tmp/gspot-classification-types-1.log, /tmp/gspot-classification-types-2.log, /tmp/gspot-classification-types-3.log. Affected ESLint passes: /tmp/gspot-classification-lint-frozen.log.",
+            "Canonical apply writes the single ESLint configuration with the same extensions in authoritative inventory order; the second apply changes none of 142 outputs: /tmp/gspot-classification-apply.json and /tmp/gspot-classification-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/027",
@@ -500,10 +535,22 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/structure.ts:147` `COMMENT_STYLE_BY_EXTENSION`, `:173` `COMMENT_OPENERS`, `:180` `COMMENT_GRAMMARS` | `lineComments` is the only reader of a style value, and it runs only for `.scss`. Every other extension goes to a reader (`comments.ts:154-161`), a grammar, or the TypeScript scanner. As a result, the `hash`, `dash`, and `html` openers never run, and elsewhere only the key's presence matters. `suppressions.ts:76-77` repeats the presence test that `sourceComments` makes (`comments.ts:182-183`). | Replace the three tables with one map from extension to reader in `comments.ts`, with a slash-line reader for `.scss`. Delete the test in `suppressions.ts`. |",
         "owner": "`config/checks/general/structure.ts:147` `COMMENT_STYLE_BY_EXTENSION`, `:173` `COMMENT_OPENERS`, `:180` `COMMENT_GRAMMARS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/comments.ts",
+            "packages/cli/src/config/parsers/comments.ts",
+            "packages/cli/src/types/parsers/comments.ts",
+            "packages/cli/src/checks/general/structure/suppressions.ts",
+            "tests/cli/execution/comment-syntax.test.ts",
+            "tests/cli/checks/general/structure/suppressions.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "COMMENT_READERS is one extension-to-reader registry in the comment parser. COMMENT_STYLE_BY_EXTENSION, COMMENT_OPENERS, and COMMENT_GRAMMARS are deleted. SCSS retains its actual quoted-value scanner and slash openers; parsed grammars share substantial tree acquisition, source-position mapping, and required disposal. Adapter callbacks supply each syntax and preserve Markdown masking against the original bytes. The suppression reader no longer repeats extension-presence classification; unsupported formats return no comments from the parser itself.",
+        "verification": [
+            "366 affected CLI cases pass with 1601 assertions across 56 files, including modern environment reads, all six client formats, CSS .mts/.cts defect/correction, generated ESLint selectors, real comment syntax, and suppression behavior: /tmp/gspot-classification-tests.log.",
+            "Installed plugin and syntax consumers pass two cases with 19 assertions: /tmp/gspot-classification-package.log. Both packages were built and published only to a throwaway local registry.",
+            "All four TypeScript targets pass: /tmp/gspot-classification-types-0.log, /tmp/gspot-classification-types-1.log, /tmp/gspot-classification-types-2.log, /tmp/gspot-classification-types-3.log. Affected ESLint passes: /tmp/gspot-classification-lint-frozen.log.",
+            "Canonical apply writes the single ESLint configuration with the same extensions in authoritative inventory order; the second apply changes none of 142 outputs: /tmp/gspot-classification-apply.json and /tmp/gspot-classification-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/028",

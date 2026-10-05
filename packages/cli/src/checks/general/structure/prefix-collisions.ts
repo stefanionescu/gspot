@@ -1,17 +1,20 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
-import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
-import { INDEX_STEMS, NESTJS_KINDS, SCRIPT_ENDING, TOOL_PREFIXES } from '#cli/config/checks/general/structure.ts';
+import { INDEX_STEMS, NESTJS_KINDS, TOOL_PREFIXES } from '#cli/config/checks/general/structure.ts';
+import { stemOf, prefixOf, directoryOf, extensionOf, directoryTree } from '#cli/platform/paths.ts';
 
 // NestJS files share the feature name the folder already carries, so they do not form a set to regroup.
 function isNestjsName(name: string): boolean {
-    if (!SCRIPT_ENDING.test(name)) return false;
-    const parts = name.replace(SCRIPT_ENDING, '').split('.');
+    const extension = extensionOf(name);
+    // NestJS declaration names apply to script files without JSX.
+    if (extension.endsWith('x') || !extensionsTagged('javascript', 'typescript').includes(extension)) return false;
+    const parts = name.slice(0, -extension.length).split('.');
     const named = parts.at(-1) === 'spec' ? parts.slice(0, -1) : parts;
     const kind = named.at(-1);
     return named.length > 1 && kind !== undefined && NESTJS_KINDS.has(kind);

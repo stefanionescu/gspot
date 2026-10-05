@@ -8,7 +8,3 @@ export const VALE_STDIN = 'stdin';
 export const VALE_DIRECTIVE = new RegExp(String.raw`<!--\s*vale\b`, 'u');
 
 export const CODE_SPAN = /`[^`]*`/gu;
-
-export const MARKDOWN = new Set(['.md', '.mdx']);
-
-export const SQL = new Set(['.sql', '.pgsql', '.psql']);

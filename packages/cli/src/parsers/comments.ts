@@ -5,14 +5,9 @@ import { extensionOf } from '#cli/platform/paths.ts';
 import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { SourceComment } from '#cli/types/parsers/comments.ts';
-
-import {
-    TOML_TOKENS,
-    COMMENT_OPENERS,
-    COMMENT_GRAMMARS,
-    COMMENT_STYLE_BY_EXTENSION,
-} from '#cli/config/parsers/comments.ts';
+import type { GrammarName } from '#cli/types/parsers/source.ts';
+import type { CommentReader, SourceComment } from '#cli/types/parsers/comments.ts';
+import { TOML_TOKENS, SCSS_COMMENT_OPENERS } from '#cli/config/parsers/comments.ts';
 
 function commentAt(text: string, start: number, end: number, line: number): SourceComment {
     const lineStart = text.lastIndexOf('\n', start - 1) + 1;
@@ -26,7 +21,7 @@ function commentAt(text: string, start: number, end: number, line: number): Sour
 }
 
 // Only token-leading trivia is eligible: string, template, regular-expression, and JSX text stay source values.
-function javascriptComments(path: string, text: string): SourceComment[] {
+function javascriptComments(text: string, path: string): SourceComment[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest);
     const comments = new Map<number, ts.CommentRange>();
     const visitNode = (node: ts.Node): void => {
@@ -72,11 +67,10 @@ function commentStart(line: string, openers: string[]): number | undefined {
     return undefined;
 }
 
-// These formats use line comments with their configured openers.
-function lineComments(text: string, style: string): SourceComment[] {
-    const openers = COMMENT_OPENERS[style] ?? [];
+// Read SCSS comments outside quoted values without adding the format to unrelated syntax tables.
+function scssComments(text: string): SourceComment[] {
     return text.split('\n').flatMap((line, index) => {
-        const start = commentStart(line, openers);
+        const start = commentStart(line, SCSS_COMMENT_OPENERS);
         if (start === undefined) return [];
         return [commentAt(line, start, line.length, index + 1)];
     });
@@ -141,13 +135,44 @@ function tomlComments(text: string): SourceComment[] {
     return comments;
 }
 
-const READERS = new Map<string, (text: string) => SourceComment[]>([
+async function treeComments(grammar: GrammarName, text: string, source: string): Promise<SourceComment[]> {
+    // Preserve offsets when the HTML grammar reads the native alternate comment terminator.
+    const parsed = grammar === 'html' ? source.replaceAll('--!>', ' -->') : source;
+    const tree = await parseSource(grammar, parsed);
+    try {
+        return tree.rootNode
+            .descendantsOfType(['comment', 'multiline_comment'])
+            .map((node) => commentAt(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
+    } finally {
+        tree.delete();
+    }
+}
+
+const COMMENT_READERS = new Map<string, CommentReader>([
+    ['.ts', javascriptComments],
+    ['.mts', javascriptComments],
+    ['.cts', javascriptComments],
+    ['.tsx', javascriptComments],
+    ['.js', javascriptComments],
+    ['.mjs', javascriptComments],
+    ['.cjs', javascriptComments],
+    ['.jsx', javascriptComments],
     ['.toml', tomlComments],
     ['.yaml', yamlComments],
     ['.yml', yamlComments],
     ['.sql', sqlComments],
     ['.pgsql', sqlComments],
     ['.psql', sqlComments],
+    ['.scss', scssComments],
+    ['.py', (text) => treeComments('python', text, text)],
+    ['.sh', (text) => treeComments('bash', text, text)],
+    ['.bash', (text) => treeComments('bash', text, text)],
+    ['.zsh', (text) => treeComments('bash', text, text)],
+    ['.swift', (text) => treeComments('swift', text, text)],
+    ['.html', (text) => treeComments('html', text, text)],
+    ['.htm', (text) => treeComments('html', text, text)],
+    ['.md', (text) => treeComments('html', text, markdownHtml(text))],
+    ['.css', (text) => treeComments('css', text, text)],
 ]);
 
 /**
@@ -168,23 +193,6 @@ export function commentText(text: string): string {
  * @returns comments in source order, with whether each occupies its line alone
  */
 export async function parseComments(path: string, text: string): Promise<SourceComment[]> {
-    const extension = extensionOf(path);
-    const style = COMMENT_STYLE_BY_EXTENSION[extension];
-    if (style === undefined) return [];
-    const reader = READERS.get(extension);
-    if (reader !== undefined) return reader(text);
-    if (/^\.[cm]?[jt]sx?$/u.test(extension)) return javascriptComments(path, text);
-    const grammar = COMMENT_GRAMMARS.get(extension);
-    if (grammar === undefined) return lineComments(text, style);
-    // The HTML grammar omits the native alternate comment terminator. Preserve offsets while recognizing it.
-    const source = extension === '.md' ? markdownHtml(text) : text;
-    const parsed = grammar === 'html' ? source.replaceAll('--!>', ' -->') : source;
-    const tree = await parseSource(grammar, parsed);
-    try {
-        return tree.rootNode
-            .descendantsOfType(['comment', 'multiline_comment'])
-            .map((node) => commentAt(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
-    } finally {
-        tree.delete();
-    }
+    const reader = COMMENT_READERS.get(extensionOf(path));
+    return reader === undefined ? [] : reader(text, path);
 }

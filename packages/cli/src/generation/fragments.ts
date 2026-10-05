@@ -1,14 +1,13 @@
 // What the selected fragments add to a generated target: rendered text, imports, file globs, and selectors.
 import { eta } from '#cli/generation/templates.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { ESLINT_CODE_FILES } from '#cli/config/eslint.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { fragmentSelectorGroups } from '#cli/generation/eslint/blocks.ts';
 import type { Manifest, ConfigurationFile } from '#cli/types/configurations.ts';
-import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/output.ts';
+import { eslintModule, eslintFilePatterns, eslintSourcePattern } from '#cli/generation/eslint/output.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
@@ -40,7 +39,7 @@ function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes
             const template = eslintModule(
                 inputs.eslintAllRules,
                 inputs.isAll,
-                [ESLINT_CODE_FILES, ...inputs.fragmentFiles],
+                [eslintSourcePattern('javascript', 'typescript'), ...inputs.fragmentFiles],
                 {
                     path: scope,
                     excluded: children.map((path) => `${path}/**`),
@@ -109,7 +108,10 @@ export function fragmentInputs(
         fragmentFiles,
         eslintFiles,
         eslintFragmentBlocks,
-        eslintModule: eslintModule(inputs.eslintAllRules, inputs.isAll, [ESLINT_CODE_FILES, ...fragmentFiles]),
+        eslintModule: eslintModule(inputs.eslintAllRules, inputs.isAll, [
+            eslintSourcePattern('javascript', 'typescript'),
+            ...fragmentFiles,
+        ]),
         fragmentSelectors: fragmentSelectorGroups(scopes, fragments, inputs.isAll),
     };
 }

@@ -1,10 +1,12 @@
 import { posix } from 'node:path';
+import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
+import { MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 import type { CssClass, Importer } from '#cli/types/parsers/css.ts';
 import { definedClasses, moduleImporters } from '#cli/parsers/css.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 
 function sheetFindings(input: EngineInput, sheet: string, defined: CssClass[], importers: Importer[]): Finding[] {
     const name = posix.basename(sheet);
@@ -58,8 +60,9 @@ function sheetFindings(input: EngineInput, sheet: string, defined: CssClass[], i
  */
 export function moduleClasses(input: EngineInput): Finding[] {
     const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    const extensions = new Set(extensionsTagged('javascript', 'typescript'));
     const code = paths
-        .filter((path) => CODE_SUFFIX.test(path))
+        .filter((path) => extensions.has(extensionOf(path)))
         .map((path) => ({ path, text: readSource(input.root, path, input.reads).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));

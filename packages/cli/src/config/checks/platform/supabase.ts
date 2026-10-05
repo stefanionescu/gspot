@@ -8,4 +8,5 @@ export const DENO_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
 
 export const ADMIN_KEY_NAMES = ['SERVICE_ROLE_KEY', 'service_role_key', 'serviceRoleKey'];
 
-export const CODE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.swift', '.py', '.kt', '.dart'];
+/** Client languages not represented by the inventory's language tags. */
+export const ADMIN_KEY_EXTENSIONS = ['.kt', '.dart'];

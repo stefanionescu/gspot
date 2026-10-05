@@ -16,7 +16,6 @@ import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint
 import {
     ESLINT_LIMITS,
     DIRECTION_ROLES,
-    ESLINT_CODE_FILES,
     ESLINT_BOUNDARY_FOLDERS,
     ESLINT_JAVASCRIPT_LIMITS,
 } from '#cli/config/eslint.ts';
@@ -25,6 +24,7 @@ import {
     eslintErrorRules,
     eslintFilePatterns,
     eslintRuleSettings,
+    eslintSourcePattern,
     serializeEslintBlock,
 } from '#cli/generation/eslint/output.ts';
 
@@ -59,7 +59,7 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
             const aliases = aliasesFor(root, path);
             const roles = directionRoles(policy.architecture, harnessFolders(policy, path));
             return {
-                files: [`${path}/${ESLINT_CODE_FILES}`],
+                files: [`${path}/${eslintSourcePattern('javascript', 'typescript')}`],
                 rules: {
                     'gspot/import-boundaries': ['error', { folders, aliases }],
                     'gspot/import-direction': ['error', { roles, aliases, scope: path }],
@@ -87,7 +87,7 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
         }));
         return [
             {
-                files: [`${prefix}${ESLINT_CODE_FILES}`],
+                files: [`${prefix}${eslintSourcePattern('javascript', 'typescript')}`],
                 settings: {
                     'boundaries/files': categories,
                     'boundaries/ignore': (view.settings['tests'] as string[]).map((pattern) => `${prefix}${pattern}`),
@@ -188,7 +188,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                 : {},
         commentLevel: policy.require_reasons ? 'error' : 'off',
         importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
-            files: [[glob, ESLINT_CODE_FILES]],
+            files: [[glob, eslintSourcePattern('javascript', 'typescript')]],
             rules: { 'gspot/import-extensions': ['error', { style, internalPrefixes }] },
         })),
         runtimes: runtimeBlocks(scopes),
@@ -240,7 +240,7 @@ export function eslintInputs(
             ...eslintRuleBlocks(policy),
         ],
         eslintAllRules: allRules,
-        eslintModule: eslintModule(allRules, policy.level === 'all', [ESLINT_CODE_FILES]),
+        eslintModule: eslintModule(allRules, policy.level === 'all', [eslintSourcePattern('javascript', 'typescript')]),
         eslintFiles: eslintFilePatterns(
             [],
             (selection.view.settings['tests'] ?? []) as string[],

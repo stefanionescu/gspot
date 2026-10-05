@@ -1,10 +1,11 @@
 import { memo } from '#cli/platform/memo.ts';
 import type { Node, Tree } from 'web-tree-sitter';
+import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
-import { SOURCE } from '#cli/config/checks/language/javascript.ts';
 import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
 import type { Edge, Importer, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 
@@ -118,8 +119,9 @@ export async function getScopeImports(input: EngineInput): Promise<ImportIndex> 
     const children = input.scopeEntries
         .map((entry) => entry.path)
         .filter((path) => path !== input.scope && isInScope(path, input.scope));
+    const extensions = new Set(extensionsTagged('javascript', 'typescript'));
     const paths = input.files
-        .filter((file) => file.kind === 'source' && SOURCE.test(file.path))
+        .filter((file) => file.kind === 'source' && extensions.has(extensionOf(file.path)))
         .map((file) => file.path)
         .filter((path) => isInScope(path, input.scope) && children.every((child) => !isInScope(path, child)));
     const key = JSON.stringify([input.scope, paths]);

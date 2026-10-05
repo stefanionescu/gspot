@@ -1,7 +1,6 @@
 // Validate suppression comments against the repository reason policy.
 import { toolName } from '#cli/tools/pins.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
@@ -11,7 +10,6 @@ import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { commentText, parseComments } from '#cli/parsers/comments.ts';
-import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/parsers/comments.ts';
 import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';
 import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/runtime.ts';
 
@@ -75,8 +73,6 @@ export async function suppressionComments(
     const scopes = selections.map((selection) => selection.scope);
     const found: SuppressionComment[] = [];
     for (const file of files) {
-        const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(file.path)];
-        if (style === undefined) continue;
         const scope = scopeOf(file.path, scopes);
         const selection = selections.find((candidate) => candidate.scope.path === scope.path);
         if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);

@@ -230,3 +230,29 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
+
+test.each(['mts', 'cts'])(
+    'CSS modules report undefined classes in %s importers and read corrections',
+    async (extension) => {
+        await using sandbox = await testdir();
+        const path = `view.${extension}`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['css'], { level: 'all' }),
+            'styles.module.css': '.card { color: red; }\n',
+            [path]: 'import styles from "./styles.module.css";\nexport const card = styles.missing;\n',
+        });
+        const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        expect(failed.report.exitCode).toBe(1);
+        expect(failed.report.checks[0]?.findings.find((finding) => finding.file === path)).toMatchObject({
+            file: path,
+            rule: 'undefined-class',
+        });
+        await Bun.write(
+            join(sandbox.path, path),
+            'import styles from "./styles.module.css";\nexport const card = styles.card;\n',
+        );
+        const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        expect(corrected.report.exitCode).toBe(0);
+        expect(corrected.report.checks[0]?.findings).toStrictEqual([]);
+    },
+);

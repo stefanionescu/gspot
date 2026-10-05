@@ -5,6 +5,7 @@ import { join, posix, relative } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
@@ -19,8 +20,8 @@ import {
     SHARED_PREFIX,
     MIGRATION_NAME,
     ADMIN_KEY_NAMES,
-    CODE_EXTENSIONS,
     SUPABASE_CONFIG,
+    ADMIN_KEY_EXTENSIONS,
 } from '#cli/config/checks/platform/supabase.ts';
 
 function configurationArguments(root: string, folder: string): string[] {
@@ -252,11 +253,15 @@ export function adminKey(input: EngineInput): Finding[] {
     const allowed = input.view.options('supabase')['admin_key_files'] as string[];
     const tests = input.view.settings['tests'] as string[];
     const isAllowed = pathMatcher([...allowed, ...tests]);
+    const extensions = [
+        ...extensionsTagged('javascript', 'typescript', 'vue', 'svelte', 'astro', 'swift', 'python'),
+        ...ADMIN_KEY_EXTENSIONS,
+    ];
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&
             !isAllowed(input.scope === '' ? file.path : file.path.slice(input.scope.length + 1)) &&
-            CODE_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+            extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
         readSource(input.root, file.path, input.reads)

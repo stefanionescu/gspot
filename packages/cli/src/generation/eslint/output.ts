@@ -1,5 +1,5 @@
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
-import { ESLINT_CODE_FILES, ESLINT_JAVASCRIPT_FILES, ESLINT_TYPESCRIPT_FILES } from '#cli/config/eslint.ts';
 
 import type {
     EslintFiles,
@@ -22,12 +22,14 @@ function selectorSource(selector: EslintFileSelector): string {
  * @returns code patterns and intersections that exclude non-code files
  */
 export function eslintFilePatterns(components: string[], tests: string[], scripts: string[]): EslintFiles {
-    const code = [ESLINT_CODE_FILES, ...components];
+    const code = [eslintSourcePattern('javascript', 'typescript'), ...components];
+    const typescript = eslintSourcePattern('typescript');
+    const javascript = eslintSourcePattern('javascript');
     return {
         code,
-        typescriptSource: [ESLINT_TYPESCRIPT_FILES],
-        typescript: [ESLINT_TYPESCRIPT_FILES, ...components],
-        javascript: [ESLINT_JAVASCRIPT_FILES],
+        typescriptSource: [typescript],
+        typescript: [typescript, ...components],
+        javascript: [javascript],
         tests: tests.flatMap((test) => code.map((pattern) => [test, pattern])),
         scripts: scripts.flatMap((script) => code.map((pattern) => [script, pattern])),
     };
@@ -134,4 +136,15 @@ export function eslintRuleSettings(blocks: EslintSettingsBlock[]): { rules: Reco
         }
     }
     return { rules };
+}
+
+/**
+ * One ESLint brace glob for the source extensions the inventory assigns to the requested languages.
+ * @param languages the inventory language tags
+ * @returns the repository-relative file pattern
+ */
+export function eslintSourcePattern(...languages: string[]): string {
+    return `**/*.{${extensionsTagged(...languages)
+        .map((extension) => extension.slice(1))
+        .join(',')}}`;
 }

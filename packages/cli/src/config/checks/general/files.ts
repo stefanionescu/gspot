@@ -1,16 +1,14 @@
-export const ENV_KEY_GROUP = 1;
-
-/** How code reads an environment variable, by language; the first group is the key. */
+/** Environment reads expose the key through the same named capture in each supported form. */
 export const ENV_READ_PATTERNS = [
-    /process\.env\.([A-Z][A-Z0-9_]*)/gu,
-    /process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
-    /os\.environ\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
-    /os\.environ\.get\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
-    /os\.getenv\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
+    /import\.meta\.env\.(?<key>[A-Z][A-Z0-9_]*)/gu,
+    /import\.meta\.env\[['"](?<key>[A-Z][A-Z0-9_]*)['"]\]/gu,
+    /Deno\.env\.get\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]/gu,
+    /process\.env\.(?<key>[A-Z][A-Z0-9_]*)/gu,
+    /process\.env\[['"](?<key>[A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\[['"](?<key>[A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\.get\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]/gu,
+    /os\.getenv\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]/gu,
 ];
 
-/** The extensions of the files searched for environment reads. */
-export const ENV_READ_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx', '.py'];
-
 /** A key line in an environment file, trimmed: the key before the equals sign. */
-export const ENV_KEY_LINE = /^(?:export )?([A-Z][A-Z0-9_]*)=/u;
+export const ENV_KEY_LINE = /^(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;

@@ -3,20 +3,15 @@ import { escapeRegExp } from '#cli/platform/text.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-
-import {
-    ENV_KEY_LINE,
-    ENV_KEY_GROUP,
-    ENV_READ_PATTERNS,
-    ENV_READ_EXTENSIONS,
-} from '#cli/config/checks/general/files.ts';
+import { ENV_KEY_LINE, ENV_READ_PATTERNS } from '#cli/config/checks/general/files.ts';
 
 function envReadPatterns(input: EngineInput): RegExp[] {
     const accessor = input.view.options('dotenv')['accessor'];
     if (typeof accessor !== 'string' || accessor === '') return ENV_READ_PATTERNS;
     const escaped = escapeRegExp(accessor);
-    return [...ENV_READ_PATTERNS, new RegExp(String.raw`\b${escaped}\(\s*['"]([A-Z][A-Z0-9_]*)['"]`, 'gu')];
+    return [...ENV_READ_PATTERNS, new RegExp(String.raw`\b${escaped}\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]`, 'gu')];
 }
 
 /**
@@ -34,14 +29,15 @@ export function envExample(input: EngineInput): Finding[] {
         templates.flatMap((file) => {
             const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
             return lines.flatMap((line) => {
-                const key = ENV_KEY_LINE.exec(line.trim())?.[ENV_KEY_GROUP];
+                const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];
             });
         }),
     );
     const patterns = envReadPatterns(input);
+    const extensions = extensionsTagged('javascript', 'typescript', 'python', 'vue', 'svelte', 'astro');
     const candidates = inScope.filter(
-        (file) => file.kind === 'source' && ENV_READ_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+        (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
     return candidates.flatMap((file) => {
         const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
@@ -50,7 +46,7 @@ export function envExample(input: EngineInput): Finding[] {
             const findings: Finding[] = [];
             for (const pattern of patterns) {
                 for (const match of line.matchAll(pattern)) {
-                    const key = match[ENV_KEY_GROUP];
+                    const key = match.groups?.['key'];
                     if (key === undefined || known.has(key) || seen.has(key)) continue;
                     seen.add(key);
                     findings.push(

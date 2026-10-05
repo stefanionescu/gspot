@@ -1,7 +1,6 @@
 /** Dependency installations and Git metadata do not contain authored project structure. */
 
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */
-export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
 
 export const CONFIG_STATEMENTS = new Set([
     'import_statement',
@@ -72,8 +71,6 @@ export const NESTJS_KINDS = new Set([
     'strategy',
     'provider',
 ]);
-
-export const SCRIPT_ENDING = /\.[cm]?[jt]s$/u;
 
 export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
 
