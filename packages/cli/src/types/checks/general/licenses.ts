@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 
 export type LicensedPackage = { name: string; license: string };
@@ -9,4 +10,10 @@ export type LicenseException = z.infer<typeof allowlistSchema>['exceptions'][num
 export type LicenseAllowlist = z.infer<typeof allowlistSchema>;
 
 /** Installed dependency licenses associated with the project that owns them. */
-export type ProjectLicenses = { manifest: string; packages: LicensedPackage[] };
+export type ProjectLicenses = { manifest: string; packages: LicensedPackage[]; packageKey: (name: string) => string };
+
+/** The installed scanner and package identity convention of one project format. */
+export type LicenseScanner = {
+    scan: (input: EngineInput, start: string) => Promise<LicensedPackage[]>;
+    packageKey: (name: string) => string;
+};

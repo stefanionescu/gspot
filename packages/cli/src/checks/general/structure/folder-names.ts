@@ -2,9 +2,9 @@ import { directoryOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
+import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 import { repositoryHarnessFolders } from '#cli/policy/settings/entries.ts';
-import { structureSources } from '#cli/checks/general/structure/source-files.ts';
-import { BANNED_FOLDERS, IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
+import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.
@@ -24,14 +24,8 @@ export const getDirectories: Engine = (input) => {
             .filter((segment) => segment !== '');
         return segments.flatMap((segment, index) => {
             const folder = segments.slice(0, index + 1).join('/');
-            if (
-                seen.has(folder) ||
-                harnesses.has(folder) ||
-                IGNORED_FOLDERS.includes(segment) ||
-                !BANNED_FOLDERS.includes(segment.toLowerCase())
-            )
-                return [];
-            if (allowed(folder) || allowed(`${folder}/`)) return [];
+            if (seen.has(folder) || harnesses.has(folder) || !BANNED_FOLDERS.includes(segment.toLowerCase())) return [];
+            if (isAllowedFolder(folder, allowed)) return [];
             seen.add(folder);
             return [
                 findingAt(

@@ -6,6 +6,7 @@ import { parseJsonRecord } from '#cli/parsers/json.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { cloneReportSchema } from '#cli/parsers/schema/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
@@ -65,10 +66,12 @@ export async function jscpd(input: EngineInput): Promise<Finding[]> {
     const argv = [JSCPD, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
     const result = await runEngineTool(input, argv, { cwd: input.root });
     if (result.code !== 0)
-        throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(`The jscpd command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`);
     const path = join(work, 'jscpd-report.json');
     if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(
+            `The jscpd command wrote no report: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     const ceiling = input.view.settings['limits.duplication.percent'] as number;
     return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
         check: input.spec.name,

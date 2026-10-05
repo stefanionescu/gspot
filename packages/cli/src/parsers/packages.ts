@@ -227,6 +227,15 @@ export function normalizedPythonPackage(name: string): string {
 }
 
 /**
+ * Normalize the distribution name in a versioned Python package identity.
+ * @param identity the distribution name and its exact version
+ * @returns the normalized name with the version unchanged
+ */
+export function normalizedPythonIdentity(identity: string): string {
+    return identity.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
+}
+
+/**
  * Read authored Bun installation settings without reading the repository.
  * @param text the bunfig.toml contents
  * @returns its installation table, empty when the document has none

@@ -14,16 +14,27 @@ import {
     COMMENT_STYLE_BY_EXTENSION,
 } from '#cli/config/parsers/comments.ts';
 
+function commentAt(text: string, start: number, end: number, line: number): SourceComment {
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const newline = text.indexOf('\n', end);
+    const lineEnd = newline === -1 ? text.length : newline;
+    return {
+        line,
+        text: text.slice(start, end),
+        standalone: text.slice(lineStart, start).trim() === '' && text.slice(end, lineEnd).trim() === '',
+    };
+}
+
 // Only token-leading trivia is eligible: string, template, regular-expression, and JSX text stay source values.
 function javascriptComments(path: string, text: string): SourceComment[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest);
     const comments = new Map<number, ts.CommentRange>();
-    const visit = (node: ts.Node): void => {
+    const visitNode = (node: ts.Node): void => {
         if ([ts.SyntaxKind.JsxText, ts.SyntaxKind.JsxTextAllWhiteSpaces, ts.SyntaxKind.JSDoc].includes(node.kind))
             return;
         const children = node.getChildren(source);
         if (children.length > 0) {
-            for (const child of children) visit(child);
+            for (const child of children) visitNode(child);
             return;
         }
         const start = node.getFullStart();
@@ -34,20 +45,12 @@ function javascriptComments(path: string, text: string): SourceComment[] {
         ])
             if (range.end <= end) comments.set(range.pos, range);
     };
-    visit(source);
+    visitNode(source);
     return [...comments.values()]
         .toSorted((left, right) => left.pos - right.pos)
-        .map((range) => {
-            const lineStart = text.lastIndexOf('\n', range.pos - 1) + 1;
-            const newline = text.indexOf('\n', range.end);
-            const lineEnd = newline === -1 ? text.length : newline;
-            return {
-                line: source.getLineAndCharacterOfPosition(range.pos).line + 1,
-                text: text.slice(range.pos, range.end),
-                standalone:
-                    text.slice(lineStart, range.pos).trim() === '' && text.slice(range.end, lineEnd).trim() === '',
-            };
-        });
+        .map((range) =>
+            commentAt(text, range.pos, range.end, source.getLineAndCharacterOfPosition(range.pos).line + 1),
+        );
 }
 
 // Skip a quoted span before looking for comment openers outside it.
@@ -75,7 +78,7 @@ function lineComments(text: string, style: string): SourceComment[] {
     return text.split('\n').flatMap((line, index) => {
         const start = commentStart(line, openers);
         if (start === undefined) return [];
-        return [{ line: index + 1, text: line.slice(start), standalone: line.slice(0, start).trim() === '' }];
+        return [commentAt(line, start, line.length, index + 1)];
     });
 }
 
@@ -92,8 +95,7 @@ function yamlComments(text: string): SourceComment[] {
             continue;
         }
         if (!isScalar && kind === 'comment') {
-            const lineStart = text.lastIndexOf('\n', offset - 1) + 1;
-            comments.push({ line, text: token, standalone: text.slice(lineStart, offset).trim() === '' });
+            comments.push(commentAt(text, offset, offset + token.length, line));
         }
         isScalar = false;
         offset += token.length;
@@ -106,14 +108,7 @@ function sqlComments(text: string): SourceComment[] {
     const comments: SourceComment[] = [];
     for (const { start, end, kind } of sqlTokens(text)) {
         if (kind !== 'line-comment' && kind !== 'block-comment') continue;
-        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-        const newline = text.indexOf('\n', end);
-        const lineEnd = newline === -1 ? text.length : newline;
-        comments.push({
-            line: text.slice(0, start).split('\n').length,
-            text: text.slice(start, end),
-            standalone: text.slice(lineStart, start).trim() === '' && text.slice(end, lineEnd).trim() === '',
-        });
+        comments.push(commentAt(text, start, end, text.slice(0, start).split('\n').length));
     }
     return comments;
 }
@@ -141,12 +136,7 @@ function tomlComments(text: string): SourceComment[] {
     for (const match of text.matchAll(TOML_TOKENS)) {
         if (!match[0].startsWith('#')) continue;
         const at = match.index;
-        const lineStart = text.lastIndexOf('\n', at - 1) + 1;
-        comments.push({
-            line: text.slice(0, at).split('\n').length,
-            text: match[0],
-            standalone: text.slice(lineStart, at).trim() === '',
-        });
+        comments.push(commentAt(text, at, at + match[0].length, text.slice(0, at).split('\n').length));
     }
     return comments;
 }
@@ -177,7 +167,7 @@ export function commentText(text: string): string {
  * @param text the source text
  * @returns comments in source order, with whether each occupies its line alone
  */
-export async function sourceComments(path: string, text: string): Promise<SourceComment[]> {
+export async function parseComments(path: string, text: string): Promise<SourceComment[]> {
     const extension = extensionOf(path);
     const style = COMMENT_STYLE_BY_EXTENSION[extension];
     if (style === undefined) return [];
@@ -191,18 +181,9 @@ export async function sourceComments(path: string, text: string): Promise<Source
     const parsed = grammar === 'html' ? source.replaceAll('--!>', ' -->') : source;
     const tree = await parseSource(grammar, parsed);
     try {
-        return tree.rootNode.descendantsOfType(['comment', 'multiline_comment']).map((node) => {
-            const lineStart = text.lastIndexOf('\n', node.startIndex - 1) + 1;
-            const newline = text.indexOf('\n', node.endIndex);
-            const lineEnd = newline === -1 ? text.length : newline;
-            return {
-                line: node.startPosition.row + 1,
-                text: text.slice(node.startIndex, node.endIndex),
-                standalone:
-                    text.slice(lineStart, node.startIndex).trim() === '' &&
-                    text.slice(node.endIndex, lineEnd).trim() === '',
-            };
-        });
+        return tree.rootNode
+            .descendantsOfType(['comment', 'multiline_comment'])
+            .map((node) => commentAt(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
     } finally {
         tree.delete();
     }

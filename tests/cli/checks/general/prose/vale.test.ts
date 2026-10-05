@@ -3,14 +3,16 @@ import { toolPin } from '#cli/tools/pins.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { readSource } from '#cli/platform/source.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { routeFor, routeGroups } from '#cli/checks/general/prose/vale.ts';
+import { vale, routeFor, routeGroups } from '#cli/checks/general/prose/vale.ts';
 import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/prose.ts';
 
 test('an outdated Vale executable reports its missing acquisition without scanning', async () => {
@@ -94,6 +96,44 @@ test('Vale receives its configured deadline and returns located native alerts', 
     expect(result.report.checks[0]!.findings).toStrictEqual([
         containing({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
     ]);
+});
+
+test('each stdin route scans the bytes held by the run and maps its own alerts', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['prose', 'typescript']),
+        '.gspot/config/vale.ini': 'Packages =\n',
+        'first.mts': '// First explanation.\n',
+        'second.cts': '// Second explanation.\n',
+    });
+    const session = await openSession(directory.path);
+    const paths = ['first.mts', 'second.cts'];
+    const original = paths.map((path) => readSource(session.root, path, session.reads).toString('utf8'));
+    for (const path of paths) await Bun.write(join(session.root, path), '// Changed after the run read it.\n');
+    const input = buildEngineInput(session, 'prose/vale', { paths });
+    using resources = new DisposableStack();
+    resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'vale')]));
+    const scanned: string[] = [];
+    resources.use(
+        spyOn(processes, 'run').mockImplementation((command, options) => {
+            expect(command).toContain('--ext=.ts');
+            scanned.push(options.stdin!);
+            return Promise.resolve({
+                code: 0,
+                missing: false,
+                duration: 1,
+                stderr: '',
+                stdout: JSON.stringify({ stdin: [DIAGNOSTIC] }),
+            });
+        }),
+    );
+    const findings = await vale(input);
+    expect(scanned).toStrictEqual(original);
+    expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
+        paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),
+    );
+    for (const path of paths)
+        expect(await Bun.file(join(session.root, path)).text()).toBe('// Changed after the run read it.\n');
 });
 
 describe('prose routes', () => {

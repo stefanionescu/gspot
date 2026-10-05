@@ -30,3 +30,6 @@ export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDe
 export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
 
 export const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
+
+/** Diagnostic lines retained from a package manager's frozen installation. */
+export const LOCKFILE_DIAGNOSTIC_LINES = 3;

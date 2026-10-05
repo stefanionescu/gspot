@@ -41,10 +41,22 @@
         "section": "Findings",
         "finding": "| `config/checks/checks.ts:13` and `config/checks/general/site.ts:16` `SHOWN_LINES`; `checks.ts:32` `HEADER_LINES`; `checks.ts:16` `LINE_ABOVE` | Two constants share the name `SHOWN_LINES` but hold 3 and 10. `site/build.ts` uses `SHOWN_LINES` for an output tail (line 38) and for the number of differences it reports (line 114). The Bash header check and the Postgres migration header check share `HEADER_LINES`. `LINE_ABOVE = 2` hides `line - 2`. | Give each check a local, specific constant. Inline `LINE_ABOVE`. |",
         "owner": "`config/checks/checks.ts:13` and `config/checks/general/site.ts:16` `SHOWN_LINES`; `checks.ts:32` `HEADER_LINES`; `checks.ts:16` `LINE_ABOVE`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/framework/nextjs.ts",
+            "packages/cli/src/config/checks/general/dependencies.ts",
+            "packages/cli/src/config/checks/general/site.ts",
+            "packages/cli/src/config/checks/language/bash.ts",
+            "packages/cli/src/config/checks/database/postgres.ts",
+            "packages/cli/src/checks/database/postgres/migration-docs.ts"
+        ],
+        "status": "closed",
+        "outcome": "Diagnostic constants now belong to their behavioral configuration owners: Next.js SHOWN_LINES, lockfile LOCKFILE_DIAGNOSTIC_LINES, and separate site OUTPUT_TAIL_LINES/SHOWN_DIFFERENCES. Bash has its own header window; Postgres HEADER_LINES and the documented one-based-line to previous-index offset live under Postgres. The generic config/checks/checks.ts file is deleted. Static constants remain under config pursuant the accepted repository decision, overriding the original inline-constant suggestion.",
+        "verification": [
+            "Affected CLI checkpoint: 363 cases passed in /tmp/gspot-general-tests.log; only two new duplication diagnostic expectations failed on the engine prefix. After correcting those expectations, all 8 duplication cases passed with 47 assertions in /tmp/gspot-general-duplication-tests.log. Together these verify all 365 affected cases across 46 files.",
+            "Native checkpoint: 6 cases, 67 assertions, 3 files passed in /tmp/gspot-general-native.log. Covers isolated Python licenses, Bun/npm/Yarn lockfile source preservation and commit hooks/history.",
+            "Root TypeScript target passed: /tmp/gspot-general-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-general-apply.json and /tmp/gspot-general-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/004",
@@ -551,10 +563,18 @@
         "section": "Findings",
         "finding": "| `general/docs/readme.ts:93-97` one-h1 | markdownlint MD025 already reports a second H1 in the markdown kit. | Drop the rule. |",
         "owner": "`general/docs/readme.ts:93-97` one-h1",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/docs.ts",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl"
+        ],
+        "status": "closed",
+        "outcome": "README findings state the missing opening, excess section count and missing start-section actions. The duplicate H1 check is absent; Markdownlint MD025 remains the authoritative duplicate-title rule in its shipped template.",
+        "verification": [
+            "Affected CLI checkpoint: 363 cases passed in /tmp/gspot-general-tests.log; only two new duplication diagnostic expectations failed on the engine prefix. After correcting those expectations, all 8 duplication cases passed with 47 assertions in /tmp/gspot-general-duplication-tests.log. Together these verify all 365 affected cases across 46 files.",
+            "Native checkpoint: 6 cases, 67 assertions, 3 files passed in /tmp/gspot-general-native.log. Covers isolated Python licenses, Bun/npm/Yarn lockfile source preservation and commit hooks/history.",
+            "Root TypeScript target passed: /tmp/gspot-general-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-general-apply.json and /tmp/gspot-general-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/039",
@@ -918,10 +938,19 @@
         "section": "Findings",
         "finding": "| `general/dependencies/install.ts` | Checks only the Bun `bunfig.toml` settings `minimumReleaseAge` and the scanner, yet it is named `dependencies/install`. pnpm and npm have equivalent settings. | Rename it `dependencies/bun-release-age`, or cover every client. |",
         "owner": "`general/dependencies/install.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/dependencies/bun-release-age.ts",
+            "packages/cli/src/checks/registry.ts",
+            "packages/cli/configurations/general/dependencies/manifest.toml"
+        ],
+        "status": "closed",
+        "outcome": "The Bun-specific check is dependencies/bun-release-age in source, registry and manifest; it no longer claims to cover general dependency installation.",
+        "verification": [
+            "Affected CLI checkpoint: 363 cases passed in /tmp/gspot-general-tests.log; only two new duplication diagnostic expectations failed on the engine prefix. After correcting those expectations, all 8 duplication cases passed with 47 assertions in /tmp/gspot-general-duplication-tests.log. Together these verify all 365 affected cases across 46 files.",
+            "Native checkpoint: 6 cases, 67 assertions, 3 files passed in /tmp/gspot-general-native.log. Covers isolated Python licenses, Bun/npm/Yarn lockfile source preservation and commit hooks/history.",
+            "Root TypeScript target passed: /tmp/gspot-general-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-general-apply.json and /tmp/gspot-general-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/069",

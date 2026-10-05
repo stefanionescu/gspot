@@ -2,12 +2,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { commentText, sourceComments } from '#cli/parsers/comments.ts';
+import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 // The lines of the comments in a source that open with the marker; a marker inside a string or a block value is no comment.
 async function markedLines(path: string, source: string): Promise<number[]> {
-    const comments = await sourceComments(path, source);
+    const comments = await parseComments(path, source);
     return comments
         .filter((comment) => /^(?:\/\/|#|--|<!--) ?marker:/u.test(commentText(comment.text)))
         .map((comment) => comment.line);

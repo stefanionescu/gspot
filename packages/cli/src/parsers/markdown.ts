@@ -193,3 +193,12 @@ export async function findFenceSyntaxProblems(
     }
     return problems;
 }
+
+/**
+ * Remove an optional current-directory prefix and a trailing directory slash from a prose path token.
+ * @param token the authored token
+ * @returns the path used for repository comparisons
+ */
+export function cleanPathToken(token: string): string {
+    return token.replace(/^\.\//u, '').replace(/\/$/u, '');
+}

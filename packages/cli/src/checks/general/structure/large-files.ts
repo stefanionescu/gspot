@@ -12,7 +12,10 @@ export function largeFiles(input: EngineInput): Finding[] {
     const limitKb = input.view.limit('file_kb');
     if (limitKb === undefined) return [];
     const isDeclared = pathMatcher(input.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
-    if (input.repositoryFiles === undefined) throw new Error('Large-file validation requires once-only execution.');
+    if (input.repositoryFiles === undefined)
+        throw new Error(
+            'The large-files check needs the full list of tracked files. Its manifest must say runs = "once".',
+        );
     return input.repositoryFiles
         .filter(
             (file) =>

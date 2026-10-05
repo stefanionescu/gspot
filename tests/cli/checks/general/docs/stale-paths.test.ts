@@ -61,6 +61,24 @@ test('mise task aliases resolve while undefined aliases remain findings', async 
     ]);
 });
 
+test('tasks in shared mise configuration paths resolve without reading legacy tool versions as TOML', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'a.md': 'Run `mise run config-task`, `mise run local-task`, `mise run included-task`, and `mise run absent`.\n',
+        '.mise/config.toml': '[tasks.config-task]\nrun = "true"\n',
+        'mise.local.toml': '[tasks.local-task]\nrun = "true"\n',
+        '.mise/conf.d/project.toml': '[tasks.included-task]\nrun = "true"\n',
+        '.tool-versions': 'node 22\n',
+    });
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
+    const found = stalePaths(
+        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
+    );
+    expect(found.map(({ message: description }) => description)).toStrictEqual([
+        'mise run absent names no task or script.',
+    ]);
+});
+
 test('document-relative references resolve without accepting nearby missing paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

@@ -1,7 +1,3 @@
-import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
-
-export const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
-
 export const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
 
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;

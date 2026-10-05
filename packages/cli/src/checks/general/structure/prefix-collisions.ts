@@ -1,11 +1,10 @@
-// NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
+import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
 
 import {
     INDEX_STEMS,
@@ -15,7 +14,7 @@ import {
     IGNORED_FOLDERS,
 } from '#cli/config/checks/general/structure.ts';
 
-// The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
+// NestJS files share the feature name the folder already carries, so they do not form a set to regroup.
 function isNestjsName(name: string): boolean {
     if (!SCRIPT_ENDING.test(name)) return false;
     const parts = name.replace(SCRIPT_ENDING, '').split('.');
@@ -26,11 +25,7 @@ function isNestjsName(name: string): boolean {
 
 function isSkipped(directory: string, scope: string, isAllowed: (path: string) => boolean): boolean {
     if (HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(scope, hook)))) return true;
-    return (
-        directory.split('/').some((segment) => IGNORED_FOLDERS.includes(segment)) ||
-        isAllowed(directory) ||
-        isAllowed(`${directory}/`)
-    );
+    return isAllowedFolder(directory, isAllowed);
 }
 
 /**

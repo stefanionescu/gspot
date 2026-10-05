@@ -43,7 +43,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
         '.reports/unused.json under docs.exclude matches no tracked file or folder.',
     ]);
 });
-test('suppression validation ignores source text and valid reasons but reports missing required reasons', async () => {
+test('suppression validation ignores source values and valid reasons but refuses forbidden markers', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'require_reasons = true\nconfigurations = ["typescript", "bash", "security"]\n',
@@ -59,7 +59,7 @@ test('suppression validation ignores source text and valid reasons but reports m
     const found = await suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
         'a.ts:2 eslint-no-reason',
-        'b.sh:2 semgrep-no-reason',
+        'b.sh:2 semgrep',
     ]);
 });
 

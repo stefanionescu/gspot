@@ -39,24 +39,22 @@ function rootFindings(input: EngineInput, root: PackageManifest | undefined): Fi
     return findings;
 }
 
-function packageInstallerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
+function packageClientFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
     if (wanted === undefined) return [];
-    const differing = manifests
-        .entries()
-        .filter(([, manifest]) => (manifest.packageManager ?? wanted) !== wanted)
-        .toArray();
-    return [
-        ...differing.map(([path, manifest]) =>
+    return [...manifests].flatMap(([path, manifest]) => {
+        const declared = manifest.packageManager;
+        if (declared === undefined || declared === wanted) return [];
+        return [
             findingAt(
                 input,
                 { file: path, line: 1 },
                 'package-manager',
-                `This package names ${manifest.packageManager ?? ''}; the root names ${wanted}.`,
+                `This package names ${declared}; the root names ${wanted}.`,
             ),
-        ),
-    ];
+        ];
+    });
 }
 
 function lockfileFindings(input: EngineInput): Finding[] {
@@ -115,7 +113,7 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     return [
         ...ranges,
         ...rootFindings(input, manifests.get(NPM_MANIFEST)),
-        ...packageInstallerFindings(input, manifests),
+        ...packageClientFindings(input, manifests),
         ...lockfileFindings(input),
     ];
 }

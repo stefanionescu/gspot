@@ -270,3 +270,17 @@ export function directoryTree(files: readonly PathEntry[]): Map<string, Director
         ]),
     );
 }
+
+/**
+ * Include each path and every directory above it.
+ * @param paths the repository-relative paths
+ * @returns paths and parent directories, without duplicates
+ */
+export function expandPaths(paths: readonly string[]): Set<string> {
+    const expanded = new Set(paths);
+    for (const path of paths) {
+        const segments = path.split('/');
+        for (let depth = 1; depth < segments.length; depth += 1) expanded.add(segments.slice(0, depth).join('/'));
+    }
+    return expanded;
+}

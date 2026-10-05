@@ -46,3 +46,9 @@ export const MIGRATION_VERSION = /^(?<version>\d+)/u;
 
 /** The down section begins on its own SQL comment line. */
 export const MIGRATION_DOWN = /^[\t ]*--[\t ]*migrate:down\b/mu;
+
+/** How many header lines the contract asks for. */
+export const HEADER_LINES = 4;
+
+/** From a one-based line to the zero-based index of the line above it. */
+export const LINE_ABOVE = 2;

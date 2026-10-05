@@ -5,7 +5,7 @@ import { LOCKFILE_CLIENTS } from '#cli/config/repository/inventory.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
-function problem(url: URL, hosts: Set<string>): string | undefined {
+function urlProblem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
@@ -20,7 +20,7 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
             : text.matchAll(LOCKFILE_URL).map((match) => match[0])
         )
             .flatMap((url) => {
-                const diagnostic = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
+                const diagnostic = URL.canParse(url) ? urlProblem(new URL(url), hosts) : undefined;
                 if (diagnostic === undefined) return [];
                 return [findingAt(input, { file: path, line: index + 1 }, 'host', diagnostic)];
             })
@@ -29,7 +29,7 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
 }
 
 /**
- * The findings of the lockfile host check over every tracked text lockfile.
+ * The findings of the lockfile host check over tracked npm, pnpm, Yarn, and text Bun lockfiles.
  * @param input the engine input
  * @returns the findings
  */

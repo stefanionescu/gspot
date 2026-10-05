@@ -36,18 +36,35 @@ async function preparePythonProject(root: string, settings: string = LICENSE_SET
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
 
-test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['licenses'], { tables: LICENSE_SETTINGS }),
-        'package.json': '{"name":"example","private":true}',
-    });
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(
-        await rejection(licensesPackages(buildEngineInput(await openSession(sandbox.path), 'licenses/packages'))),
-    ).toContain('installing the project dependencies');
-});
+test.each(['', 'apps/example'])(
+    'license scans identify missing dependency folders in %s before starting scanners',
+    async (scope) => {
+        for (const [manifest, source, installed] of [
+            ['package.json', '{"name":"example","private":true}', 'node_modules'],
+            ['pyproject.toml', '[project]\nname = "example"\nversion = "0.0.0"\n', '.venv'],
+        ] as const) {
+            await using sandbox = await testdir();
+            const path = scope === '' ? manifest : `${scope}/${manifest}`;
+            const tables =
+                scope === ''
+                    ? LICENSE_SETTINGS
+                    : `${LICENSE_SETTINGS}[[scope]]\npath = "${scope}"\nconfigurations = ["licenses"]\n`;
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildPolicy(['licenses'], { tables }),
+                [path]: source,
+            });
+            const applied = await runGspot(sandbox.path, ['apply', '--json']);
+            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+            const input = buildEngineInput(await openSession(sandbox.path), 'licenses/packages', { scope });
+            using spawn = spyOn(processes, 'run');
+            expect(await rejection(licensesPackages(input))).toBe(
+                `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
+            );
+            expect(spawn).not.toHaveBeenCalled();
+            expect(existsSync(join(sandbox.path, scope, installed))).toBe(false);
+        }
+    },
+);
 
 test.each(SCANNER_FAILURES)(
     'Python license scanning rejects $name and removes its temporary configuration directory',

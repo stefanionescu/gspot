@@ -3,22 +3,22 @@ import { join, posix } from 'node:path';
 import type { RootContent } from 'mdast';
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
-import { globPaths } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
+import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import { pathTokens, proseLines } from '#cli/parsers/markdown.ts';
+import { MISE_FILES } from '#cli/config/repository/inventory.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
+import type { PathIndex } from '#cli/types/checks/general/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import type { PathIndex, ShapeProblem } from '#cli/types/checks/general/docs.ts';
+import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 
 import {
     RUN_TOKEN,
-    MISE_FILES,
     START_WORDS,
     LICENSE_NAMES,
     SECTION_DEPTH,
@@ -28,14 +28,11 @@ import {
 } from '#cli/config/checks/general/docs.ts';
 
 function knownPaths(input: EngineInput): Set<string> {
-    const known = new Set<string>();
     if (input.repositoryFiles === undefined)
-        throw new Error('The stale-paths check requires a once-only repository inventory.');
-    for (const file of input.repositoryFiles) {
-        known.add(file.path);
-        const segments = file.path.split('/');
-        for (let depth = 1; depth < segments.length; depth += 1) known.add(segments.slice(0, depth).join('/'));
-    }
+        throw new Error(
+            'The docs/stale-paths check needs the full list of tracked files. Its manifest must say runs = "once".',
+        );
+    const known = expandPaths(input.repositoryFiles.map((file) => file.path));
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
     for (const check of input.policyFiles.policy.checks) known.add(check.name);
@@ -61,19 +58,13 @@ function packageScripts(input: EngineInput): string[] {
     }
 }
 
-// A token counts as a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
-function isPathClaim(token: string, index: PathIndex): boolean {
-    const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
-    const first = clean.split('/', 1)[0] ?? '';
-    return token.startsWith('./') || token.startsWith('../') || index.known.has(first) || FILE_EXTENSION.test(clean);
-}
-
 function isMissing(token: string, file: string, index: PathIndex): boolean {
-    const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
+    const clean = cleanPathToken(token);
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
     if (index.isException(clean) || index.known.has(relative)) return false;
     if (token.startsWith('./') || token.startsWith('../')) return true;
-    return isPathClaim(token, index) && !index.known.has(clean);
+    const first = clean.split('/', 1)[0] ?? '';
+    return (index.known.has(first) || FILE_EXTENSION.test(clean)) && !index.known.has(clean);
 }
 
 function lineFindings(input: EngineInput, file: string, prose: ProseLine, index: PathIndex): Finding[] {
@@ -93,7 +84,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
     return [...paths, ...runs];
 }
 
-function openingProblem(nodes: RootContent[]): ShapeProblem[] {
+function openingFindings(input: EngineInput, file: string, nodes: RootContent[]): Finding[] {
     const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
     const start = title === -1 ? 0 : title;
     const section = nodes.findIndex(
@@ -103,26 +94,38 @@ function openingProblem(nodes: RootContent[]): ShapeProblem[] {
     return opening.some((node) => node.type === 'paragraph')
         ? []
         : [
-              [
-                  nodes[start]?.position?.start.line ?? 1,
+              findingAt(
+                  input,
+                  { file, line: nodes[start]?.position?.start.line ?? 1 },
                   'opening-paragraph',
                   'Add a paragraph between the title and the first H2.',
-              ],
+              ),
           ];
 }
 
-function sectionProblems(nodes: RootContent[], threshold: number): ShapeProblem[] {
+function sectionFindings(input: EngineInput, file: string, nodes: RootContent[], threshold: number): Finding[] {
     const sections = nodes
         .filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH)
         .map((node) => toString(node).trim().toLowerCase());
-    const problems: ShapeProblem[] = [];
-    if (sections.length > threshold && !sections.includes(CONTENTS_TITLE))
-        problems.push([
-            1,
+    if (sections.length <= threshold || sections.includes(CONTENTS_TITLE)) return [];
+    return [
+        findingAt(
+            input,
+            { file, line: 1 },
             'contents',
             `This README has ${String(sections.length)} H2 headings, over the limit of ${String(threshold)}. Add a Contents section.`,
-        ]);
-    return problems;
+        ),
+    ];
+}
+
+function taskNames(input: EngineInput): string[] {
+    const files = [
+        ...new Set([
+            ...MISE_FILES.filter((file) => file !== '.tool-versions'),
+            ...globPaths(input.root, '.mise/conf.d/*.toml', { dot: true }),
+        ]),
+    ];
+    return [...files.flatMap((file) => miseTasks(input, file)), ...packageScripts(input)];
 }
 
 /**
@@ -135,12 +138,7 @@ export function stalePaths(input: EngineInput): Finding[] {
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.paths));
     const index: PathIndex = {
         known: knownPaths(input),
-        tasks: new Set([
-            ...[...new Set([...MISE_FILES, ...globPaths(input.root, '.mise/conf.d/*.toml', { dot: true })])].flatMap(
-                (file) => miseTasks(input, file),
-            ),
-            ...packageScripts(input),
-        ]),
+        tasks: new Set(taskNames(input)),
         isException,
     };
     return input.files
@@ -195,13 +193,23 @@ export function readmeShape(input: EngineInput): Finding[] {
         )
         .flatMap((file) => {
             const nodes = fromMarkdown(readSource(input.root, file.path, input.reads).toString('utf8')).children;
-            const problems = [...openingProblem(nodes), ...sectionProblems(nodes, threshold)];
+            const findings = [
+                ...openingFindings(input, file.path, nodes),
+                ...sectionFindings(input, file.path, nodes, threshold),
+            ];
             if (roots.has(file.path)) {
                 const sections = nodes.filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH);
                 if (sections.every((node) => START_WORDS.every((word) => !toString(node).toLowerCase().includes(word))))
-                    problems.push([1, 'start-section', `Add a section whose heading names ${START_WORDS.join(', ')}.`]);
+                    findings.push(
+                        findingAt(
+                            input,
+                            { file: file.path, line: 1 },
+                            'start-section',
+                            `Add a section whose heading names ${START_WORDS.join(', ')}.`,
+                        ),
+                    );
             }
-            return problems.map(([line, rule, text]) => findingAt(input, { file: file.path, line }, rule, text));
+            return findings;
         });
 }
 

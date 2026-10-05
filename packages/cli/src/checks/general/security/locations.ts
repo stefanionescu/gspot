@@ -4,11 +4,9 @@ import { codePoints } from '#cli/platform/text.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
-import type { SourceLocationFile } from '#cli/types/checks/general/security.ts';
 import type { SarifRun, SarifPlace, SarifArtifactLocation, SarifPhysicalLocation } from '#cli/types/parsers/sarif.ts';
 
 function indexedArtifact(artifact: SarifArtifactLocation, run: SarifRun): SarifArtifactLocation {
-    if (artifact === undefined) return undefined;
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;
     const resolved = run.artifacts?.[artifact.index]?.location;
     if (resolved?.uri === undefined) throw new Error('CodeQL reported a missing artifact location.');
@@ -17,7 +15,7 @@ function indexedArtifact(artifact: SarifArtifactLocation, run: SarifRun): SarifA
 
 // Source URIs must resolve inside the selected copy before path-specific exceptions can apply.
 function sourceFile(artifact: SarifArtifactLocation, run: SarifRun, source: string): string {
-    if (artifact?.uri === undefined) return '';
+    if (artifact.uri === undefined) return '';
     const root = pathToFileURL(`${source}${sep}`);
     const baseOf = (id: string, seen = new Set<string>()): URL => {
         if (seen.has(id)) throw new Error('CodeQL reported a cyclic source location.');
@@ -36,11 +34,11 @@ function sourceFile(artifact: SarifArtifactLocation, run: SarifRun, source: stri
     return toPosix(file);
 }
 
-function sourceText(run: SarifRun, index: number | undefined, source: SourceLocationFile): string {
-    if (source.file === '') throw new Error('CodeQL reported a character offset without a source file.');
+function sourceText(run: SarifRun, index: number | undefined, root: string, file: string): string {
+    if (file === '') throw new Error('CodeQL reported a character offset without a source file.');
     const encoding =
         (index === undefined ? undefined : run.artifacts?.[index]?.encoding) ?? run.defaultEncoding ?? 'utf8';
-    return new TextDecoder(encoding, { fatal: true }).decode(readSource(source.root, source.file));
+    return new TextDecoder(encoding, { fatal: true }).decode(readSource(root, file));
 }
 
 // Decode offsets as code points, then report columns in the unit declared by the producer.
@@ -80,7 +78,7 @@ export function placeOf(location: SarifPhysicalLocation, run: SarifRun, source: 
     const artifact = indexedArtifact(reference, run);
     const file = sourceFile(artifact, run, source);
     if (region.charOffset >= 0 && region.startLine === undefined) {
-        const text = sourceText(run, reference.index, { root: source, file });
+        const text = sourceText(run, reference.index, source, file);
         return { file, ...offsetPosition(text, region.charOffset, run) };
     }
     return {

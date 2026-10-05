@@ -8,13 +8,14 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
+import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
 import type {
+    LicenseScanner,
     LicensedPackage,
     ProjectLicenses,
     LicenseAllowlist,
@@ -31,7 +32,7 @@ function isAllowed(license: string, allow: Set<string>): boolean {
     return satisfies(license, [...allow]);
 }
 
-function verdict(name: string, license: string, exception: LicenseException | undefined): string | undefined {
+function licenseProblem(name: string, license: string, exception: LicenseException | undefined): string | undefined {
     if (exception === undefined) return `${name} reports ${license}, which is not an allowed license.`;
     if (exception.license === license) return undefined;
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
@@ -59,11 +60,11 @@ function readAllowlist(input: EngineInput): LicenseAllowlist {
     return configuration;
 }
 
-function installedDirectory(start: string, name: string): string {
-    const installed = join(start, name);
-    if (statSync(installed, { throwIfNoEntry: false })?.isDirectory() !== true)
-        throw new Error('Dependency licenses cannot be checked before installing the project dependencies.');
-    return installed;
+function assertInstalled(input: EngineInput, name: string): void {
+    if (statSync(join(input.scopeRoot, name), { throwIfNoEntry: false })?.isDirectory() !== true)
+        throw new Error(
+            `Install the project dependencies first: ${name} is missing in ${input.scope === '' ? 'the root' : input.scope}.`,
+        );
 }
 
 async function licenseReport(input: EngineInput, command: string[], cwd: string): Promise<unknown> {
@@ -74,7 +75,7 @@ async function licenseReport(input: EngineInput, command: string[], cwd: string)
 }
 
 async function javascriptLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
-    installedDirectory(start, 'node_modules');
+    assertInstalled(input, 'node_modules');
     const report = await licenseReport(
         input,
         [LICENSE_CHECKER, '--json', '--excludePrivatePackages', '--start', start],
@@ -88,7 +89,8 @@ async function javascriptLicenses(input: EngineInput, start: string): Promise<Li
 
 // Run outside the project so project-owned scanner settings cannot hide installed dependencies.
 async function pythonLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
-    const installed = installedDirectory(start, '.venv');
+    assertInstalled(input, '.venv');
+    const installed = join(start, '.venv');
     using isolatedFolder = scratchFolder('gspot-licenses-');
     const isolated = isolatedFolder.path;
     const report = await licenseReport(
@@ -108,9 +110,9 @@ async function pythonLicenses(input: EngineInput, start: string): Promise<Licens
         .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
 }
 
-const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<LicensedPackage[]>>([
-    ['package.json', javascriptLicenses],
-    ['pyproject.toml', pythonLicenses],
+const SCANNERS = new Map<string, LicenseScanner>([
+    ['package.json', { scan: javascriptLicenses, packageKey: (name) => name }],
+    ['pyproject.toml', { scan: pythonLicenses, packageKey: normalizedPythonIdentity }],
 ]);
 
 /**
@@ -121,33 +123,25 @@ const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
     if ((input.view.settings['licenses.allowed'] as string[]).length === 0) return [];
     const configuration = readAllowlist(input);
-    const start = join(input.root, input.scope);
+    const start = input.scopeRoot;
     const scans: ProjectLicenses[] = [];
-    for (const [manifest, scan] of SCANNERS) {
+    for (const [manifest, { scan, packageKey }] of SCANNERS) {
         if (statSync(join(start, manifest), { throwIfNoEntry: false }) === undefined) continue;
         const packages = await scan(input, start);
-        scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages });
+        scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages, packageKey });
     }
     if (scans.length === 0) throw new Error('No supported dependency manifest is available for license scanning.');
     const allow = new Set(configuration.allowed);
-    const exceptions = new Map(configuration.exceptions.map((entry) => [entry.package, entry]));
-    const pythonExceptions = new Map(
-        configuration.exceptions.map((entry) => [
-            entry.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage),
-            entry,
-        ]),
-    );
-    return scans.flatMap(({ manifest, packages }) => {
+    return scans.flatMap(({ manifest, packages, packageKey }) => {
+        const exceptions = new Map(configuration.exceptions.map((entry) => [packageKey(entry.package), entry]));
         if (packages.length === 0)
             throw new Error(
                 'The license scan found no packages. Install the selected project dependencies before scanning.',
             );
         return packages.flatMap(({ name, license }) => {
-            const exception = manifest.endsWith('pyproject.toml')
-                ? pythonExceptions.get(name.replace(/^[^@]+(?=@)/u, normalizedPythonPackage))
-                : exceptions.get(name);
+            const exception = exceptions.get(packageKey(name));
             if (exception === undefined && isAllowed(license, allow)) return [];
-            const text = verdict(name, license, exception);
+            const text = licenseProblem(name, license, exception);
             if (text === undefined) return [];
             return [findingAt(input, { file: manifest, line: 1 }, 'disallowed-license', text)];
         });

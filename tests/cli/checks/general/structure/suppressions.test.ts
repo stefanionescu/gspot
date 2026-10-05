@@ -1,4 +1,5 @@
 import { ESLint } from 'eslint';
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -116,5 +117,36 @@ test.each(['-->', '--!>'])(
         expect(
             result.report.checks.flatMap((check) => check.findings).map(({ file, line }) => ({ file, line })),
         ).toStrictEqual([{ file: 'page.html', line: 2 }]);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    'forbidden security suppressions fail at level %s and removing the marker clears the finding',
+    async (level) => {
+        await using sandbox = await testdir();
+        const path = 'source.ts';
+        const source = '// nosemgrep: example.rule -- The external interface requires this call.\nconst value = 1;\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['typescript', 'security'], { level }),
+            [path]: source,
+        });
+        const failed = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['structure/suppressions'] }),
+        );
+        expect(failed.report.exitCode).toBe(1);
+        expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+            { file: path, line: 1, rule: 'semgrep' },
+        ]);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(source);
+        const corrected = 'const value = 1;\n';
+        await Bun.write(join(sandbox.path, path), corrected);
+        const passed = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['structure/suppressions'] }),
+        );
+        expect(passed.report.exitCode).toBe(0);
+        expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(corrected);
     },
 );

@@ -62,6 +62,32 @@ test.each(EXECUTION_FAILURES)(
     },
 );
 
+test.each([1, 0])('duplication preserves stdout diagnostics when exit %i produces no report', async (code) => {
+    await using directory = await testdir();
+    await prepareDuplicationProject(directory.path);
+    const session = await openSession(directory.path);
+    const directories: string[] = [];
+    using spawn = spyOn(processes, 'run').mockImplementation((command) => {
+        directories.push(command[command.indexOf('--output') + 1]!);
+        return Promise.resolve({
+            code,
+            stdout: 'The scanner could not write its report.\n',
+            stderr: '',
+            missing: false,
+            duration: 1,
+        });
+    });
+    const failed = await executeRun(session, buildRunOptions({ only: ['duplication/jscpd'] }));
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(failed.report.exitCode).toBe(2);
+    expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
+    expect(failed.report.checks[0]!.note).toBe(
+        `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
+    );
+    for (const path of directories) expect(existsSync(path)).toBe(false);
+    expect(await Bun.file(join(session.root, 'sample.sh')).text()).toBe('echo example\n');
+});
+
 test('duplication accepts a clean report and removes the temporary report directory', async () => {
     await using directory = await testdir();
     await prepareDuplicationProject(directory.path);

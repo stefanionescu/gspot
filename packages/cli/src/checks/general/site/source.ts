@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { directoryOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { WebManifest } from '#cli/types/parsers/site.ts';
@@ -112,7 +113,7 @@ export function webManifest(input: EngineInput): Finding[] {
                 ),
             ];
         }
-        const folder = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';
+        const folder = directoryOf(file.path);
         const unnamed =
             typeof parsed.name === 'string' && parsed.name !== ''
                 ? []

@@ -10,7 +10,7 @@ import { isReasonAccepted } from '#cli/policy/problems/reasons.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { commentText, sourceComments } from '#cli/parsers/comments.ts';
+import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/parsers/comments.ts';
 import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';
 import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/runtime.ts';
@@ -59,7 +59,7 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
 }
 
 /**
- * Read comments once through the selected tool definitions for each file scope.
+ * Finds suppression comments using the syntax of the tools that check each file.
  * @param root the repository root
  * @param selections the resolved scopes
  * @param reads the source reads shared across checks
@@ -82,7 +82,7 @@ export async function suppressionComments(
         if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
         const forms = suppressionForms(selection, file);
         const source = readSource(root, file.path, reads).toString('utf8');
-        const comments = await sourceComments(file.path, source);
+        const comments = await parseComments(file.path, source);
         found.push(
             ...comments.flatMap((comment, index) => {
                 const preceding = reasonAbove(comments[index - 1], comment);
@@ -113,7 +113,8 @@ export async function suppressionComments(
  * @returns the findings
  */
 export async function suppressions(input: EngineInput): Promise<Finding[]> {
-    if (input.selections === undefined) throw new Error('Suppression validation requires once-only execution.');
+    if (input.selections === undefined)
+        throw new Error('The suppressions check needs every scope selection. Its manifest must say runs = "once".');
     const comments = await suppressionComments(
         input.root,
         input.selections,
@@ -122,7 +123,7 @@ export async function suppressions(input: EngineInput): Promise<Finding[]> {
     );
     return comments.flatMap((entry): Finding[] => {
         const at = { file: entry.file, line: entry.line };
-        if (entry.forbidden && input.policyFiles.policy.level === 'all')
+        if (entry.forbidden)
             return [
                 findingAt(
                     input,
