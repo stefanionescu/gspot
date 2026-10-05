@@ -1,6 +1,6 @@
 // Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
-import { headerFor } from '#cli/generation/headers.ts';
+import { hashHeader } from '#cli/generation/headers.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
@@ -139,8 +139,9 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
             }),
         ),
     });
-    const content = `${headerFor('gspot.yml', pipeline.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;
-    return { path: GITHUB_WORKFLOW, content, readOnly: true, kind: 'workflow' };
+    const path = GITHUB_WORKFLOW;
+    const content = `${hashHeader(pipeline.version)}${workflow.toString({ lineWidth: 0 })}`;
+    return { path, content, readOnly: true, kind: 'workflow' };
 }
 
 /**
@@ -170,5 +171,5 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, `${command} doctor`, check],
         },
     });
-    return { path, content: `${headerFor(path, pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
+    return { path, content: `${hashHeader(pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
 }

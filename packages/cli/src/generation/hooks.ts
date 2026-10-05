@@ -1,6 +1,6 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { runGitBlocking } from '#cli/platform/git.ts';
-import { headerLines } from '#cli/generation/headers.ts';
+import { hashHeader } from '#cli/generation/headers.ts';
 import { isGitRepository } from '#cli/repository/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
@@ -22,15 +22,14 @@ function hookScript(name: HookName, runner: Policy['run_with'], prefix: string, 
                   'set -- "$message"',
               ]
             : [];
-    return [
-        '#!/bin/sh',
-        ...headerLines(version).map((line) => `# ${line}`),
+    const body = [
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${acquisition}' >&2; exit 2; }`,
         `GSPOT_HOOK=${name} exec ${hookLine(name, runner)}`,
         '',
     ].join('\n');
+    return `#!/bin/sh\n${hashHeader(version)}${body}`;
 }
 
 /**

@@ -231,10 +231,21 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/templates.ts:207` `header`, `generation/ci.ts:138`, `generation/hooks.ts:26` | There are three ways to get the `#` header. `templates.ts` calls `headerFor('x.toml', ...)`, using a fake path to pick the comment mark. `ci.ts` passes `'gspot.yml'` instead of its real path, then calls `.trimEnd()` and adds `\\n`, which changes nothing because the header already ends in one newline. `hooks.ts` builds the `#` prefix and its space by hand. | Export one `hashHeader(version)` from `headers.ts`, built on its `commented(lines, '#')`, and use it in all three places. In `ci.ts`, use a `path` constant as `gitlabFile` does. |",
         "owner": "`generation/templates.ts:207` `header`, `generation/ci.ts:138`, `generation/hooks.ts:26`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/headers.ts",
+            "packages/cli/src/generation/hooks.ts",
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/generation/templates.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the complete second-pass row and all header producers and consumers. hashHeader owns the hash-comment prefix and terminal newline through commented(headerLines(version), hash mark). Hooks, both CI providers, and headerFor for native hash-comment formats share it. headerLines is now private because it has no external consumer.",
+            "The GitHub file uses its actual GITHUB_WORKFLOW path and concatenates the already terminated header directly, removing the fake filename and redundant trim/newline pair. Hooks compose their shebang, shared header and existing body without formatting header lines again. The old template header member and fake x.toml lookup are absent; emitTarget supplies the header for the actual target through headerFor, so no duplicate template API is reintroduced.",
+            "Before/after proof retains identical bytes across 75 header, JSON and hook outputs covering three versions, native comment formats, JSON indentation and all six hook runner choices (/tmp/gspot-headers-render.ts, /tmp/gspot-headers-proof.log). All 128 provider files remain byte-for-byte identical across 64 CI combinations (/tmp/gspot-headers-ci-render.ts, /tmp/gspot-headers-ci-proof.log).",
+            "Existing generation, lifecycle hooks, CI, repository classification and header parser owners pass 35 cases with 232 assertions, including actual shell parsing, quoted Git prefixes, commit-message/pre-push arguments, missing-runner refusals and generated-versus-authored classification (/tmp/gspot-headers-tests.log). No test case or assertion is removed.",
+            "Root TypeScript, affected formatting and repository ESLint pass (/tmp/gspot-headers-types.log, /tmp/gspot-headers-format.log, /tmp/gspot-headers-lint.json). No new module, forwarding layer, type bucket or suppression is introduced."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/012",

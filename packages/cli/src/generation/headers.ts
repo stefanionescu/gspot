@@ -21,8 +21,17 @@ function commented(lines: string[], mark: string): string {
  * @param version the gspot version
  * @returns the header lines
  */
-export function headerLines(version: string): string[] {
+function headerLines(version: string): string[] {
     return GENERATED_HEADER_LINES.map((line) => line.replaceAll('{{version}}', () => version));
+}
+
+/**
+ * The generated header as hash comments.
+ * @param version the gspot version
+ * @returns the comment block ending in a newline
+ */
+export function hashHeader(version: string): string {
+    return commented(headerLines(version), '#');
 }
 
 /**
@@ -34,14 +43,15 @@ export function headerLines(version: string): string[] {
 export function headerFor(path: string, version: string): string {
     const extension = extensionOf(path);
     if (JSON_EXTENSIONS.has(extension)) return '';
-    const lines = headerLines(version);
-    if (SLASH_COMMENT_EXTENSIONS.has(extension)) return commented(lines, '//');
+    if (SLASH_COMMENT_EXTENSIONS.has(extension)) return commented(headerLines(version), '//');
     if (HTML_EXTENSIONS.has(extension)) {
-        const indented = lines.map((line) => `  ${line}`).join('\n');
+        const indented = headerLines(version)
+            .map((line) => `  ${line}`)
+            .join('\n');
         return `<!--\n${indented}\n-->\n`;
     }
-    if (extension === '.sql') return commented(lines, '--');
-    return commented(lines, '#');
+    if (extension === '.sql') return commented(headerLines(version), '--');
+    return hashHeader(version);
 }
 
 /**
