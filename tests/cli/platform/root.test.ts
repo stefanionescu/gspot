@@ -3,8 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 import { fileMode, portableSegments } from '#cli/platform/root/rules.ts';
+import { UNSAFE_DESTINATIONS, LINK_TARGET_REFUSALS } from '#tests/config/cli/platform/root.ts';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
@@ -67,19 +69,17 @@ test.skipIf(!isPosix).each(['portable', 'native'] as const)(
         linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
         const root = openRoot(project, format);
         try {
-            for (const path of ['escape/sentinel', 'linked', 'hardlinked']) {
+            for (const { path, refusal } of UNSAFE_DESTINATIONS) {
                 expect(() => {
                     root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
-                }).toThrow();
+                }).toThrow(refusal);
                 expect(() => {
                     root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
-                }).toThrow();
+                }).toThrow(refusal);
                 expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
             }
             root.mkdir('.gspot/state/private', 0o700);
-            expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(
-                process.platform === 'win32' ? 0o777 : 0o700,
-            );
+            expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(0o700);
         } finally {
             root.close();
         }
@@ -124,20 +124,10 @@ test.skipIf(!isPosix)(
         symlinkSync('../outside/sentinel', join(project, 'escaped-file'));
         const root = openRoot(project);
         try {
-            for (const target of [
-                '../outside/sentinel',
-                '/etc/passwd',
-                'escape/sentinel',
-                'escaped-file',
-                'escape/../target',
-                '.gspot/state/ownership.json',
-                'missing',
-                'target\u0000outside',
-                String.raw`C:\outside`,
-            ]) {
+            for (const { target, refusal } of LINK_TARGET_REFUSALS) {
                 expect(() => {
                     root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
-                }).toThrow();
+                }).toThrow(refusal);
                 expect(root.read('tool')).toBeUndefined();
                 expect(readFileSync(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
             }
@@ -158,17 +148,27 @@ test.skipIf(!isPosix)(
     'root lifecycle mutations: a second writer is refused until the first releases its lock',
     async () => {
         await using directory = await testdir();
+        await createFileTree(directory.path, { source: 'kept' });
+        const path = `${STATE_DIRECTORY}/writer.lock`;
         const first = openRoot(directory.path);
         const second = openRoot(directory.path);
         try {
-            first.lock('.gspot/mutation.lock');
+            first.lock(path);
+            const firstToken = first.read(path)?.bytes.toString('utf8');
+            expect(firstToken).toStartWith(`${String(process.pid)}:`);
             expect(() => {
-                second.lock('.gspot/mutation.lock');
+                second.lock(path);
             }).toThrow('Another lifecycle writer');
+            expect(second.read(path)?.bytes.toString('utf8')).toBe(firstToken);
             first.close();
+            expect(second.read(path)).toBeUndefined();
             expect(() => {
-                second.lock('.gspot/mutation.lock');
+                second.lock(path);
             }).not.toThrow();
+            expect(second.read(path)?.bytes.toString('utf8')).toStartWith(`${String(process.pid)}:`);
+            second.close();
+            expect(second.read(path)).toBeUndefined();
+            expect(readFileSync(join(directory.path, 'source'), 'utf8')).toBe('kept');
         } finally {
             first.close();
             second.close();
@@ -234,7 +234,7 @@ test('empty-directory removal bounds parents and preserves nonempty directories'
         files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 }, undefined);
         expect(() => {
             files.rmdir('cache/kept');
-        }).toThrow();
+        }).toThrow('ENOTEMPTY');
         expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
         expect(readFileSync(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
     } finally {

@@ -323,10 +323,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/filesystem.test.ts:78-80`, \"files lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file\" | The `process.platform === 'win32' ? 0o777 : 0o700` branch never runs: the test sits inside the `if (onPosix)` block. | Delete the Windows branch, or move the `mkdir` assertion to a test that runs on every platform. |",
         "owner": "`cli/platform/filesystem.test.ts:78-80`, \"files lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
+        "status": "closed",
+        "outcome": "The POSIX-only private-directory assertion requires mode 0700 directly. The unreachable Windows expected-mode branch is gone; Windows file identities retain their separate existing test.",
+        "verification": [
+            "The two portable/native linked-destination rows and the POSIX permission assertion pass through real filesystem operations. Inspected the visible skipIf(!isPosix) registration; no native Windows filesystem run is claimed.",
+            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/023",
@@ -335,10 +338,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/filesystem.test.ts:154-160`, \"files lifecycle mutations: a second writer is refused until the first releases its lock\" | The test locks `.gspot/mutation.lock`. gspot's writer lock is `.gspot/state/writer.lock` (`lifecycle/ownership/owner.ts:89`). The test names a path the product no longer uses. | Lock `${STATE_DIRECTORY}/writer.lock` from the configuration constant. |",
         "owner": "`cli/platform/filesystem.test.ts:154-160`, \"files lifecycle mutations: a second writer is refused until the first releases its lock\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
+        "status": "closed",
+        "outcome": "The contention case locks the product path built from STATE_DIRECTORY and writer.lock. It observes the live token, verifies refusal preserves it, requires release and reacquisition, and checks final removal and unrelated bytes.",
+        "verification": [
+            "Traced the exact writer path in lifecycle/ownership/log.ts. Both root instances use that same path. Six additional assertions verify real lock state and preservation without elapsed-time claims or process mocks.",
+            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/024",
@@ -347,10 +353,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/filesystem.test.ts:71,74,133,227` | `.toThrow()` with no message passes for any error, including a `TypeError` from a bug. FINDINGS lists this pattern only for unit files. | Assert the refusal text, such as `Unsafe lifecycle` or `changed`. |",
         "owner": "`cli/platform/filesystem.test.ts:71,74,133,227`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
+        "status": "closed",
+        "outcome": "Root refusal cases require their specific lifecycle diagnostics or ENOTEMPTY. All original unsafe destinations and link targets remain in static data under the root test owner; generic refusal matchers are gone.",
+        "verification": [
+            "A direct source/filesystem probe confirmed all nine link-target reasons and three unsafe-destination reasons before editing the cases. Specific write/removal refusals preserve external bytes; link refusals retain absent-output and safe-publication controls.",
+            "In temporary source copies, replacing the private-file refusal with an unrelated TypeError passes both original linked-destination cases (20 assertions) and fails both strengthened cases on the expected diagnostic. Repository production source was not modified.",
+            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/025",
