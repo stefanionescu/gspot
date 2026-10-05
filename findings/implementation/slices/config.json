@@ -138,10 +138,22 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/structure.ts:102-103` `HOOK_DIRECTORIES`, `HOOK_PREFIX`; `config/repository/repository.ts:174` `FOREIGN_HOOK_DIRECTORIES` | Bug. Inside hook folders, only the prefix `pre` is exempt (`prefix-collisions.ts:29`). `.husky/post-merge` next to `.husky/post-checkout` shares `post` and gets a finding, but Git fixes those names. Also, there are two lists of hook folders, and they differ. One has `.git-hooks`, and the other has `.mise/tasks/hook` and `.gspot/hooks`. | Skip every file in a hook folder. Keep one hook-folder list in `repository/survey.ts`. Delete `HOOK_PREFIX`. |",
         "owner": "`config/checks/general/structure.ts:102-103` `HOOK_DIRECTORIES`, `HOOK_PREFIX`; `config/repository/repository.ts:174` `FOREIGN_HOOK_DIRECTORIES`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/hooks.ts",
+            "packages/cli/src/checks/general/structure/prefix-collisions.ts",
+            "packages/cli/src/repository/survey.ts",
+            "tests/cli/checks/general/structure/layout.test.ts",
+            "tests/cli/repository/existing-tooling.test.ts",
+            "tests/cli/lifecycle/hooks.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One hook-folder list is owned by config/repository/hooks.ts, preserving the repository rule for static constants. Prefix checks exempt every script beneath those directories relative to the selected scope. HOOK_PREFIXES and FOREIGN_HOOK_DIRECTORIES are deleted.",
+            "Hook discovery uses the same list and excludes gspot-managed hooks and mise task scripts from foreign-hook classification. Existing install tests still set core.hooksPath after writing the managed scripts.",
+            "All four new collision cases fail before the repair (/tmp/gspot-hook-folders-before.log). Their passing outcomes cover root and nested scopes, nested script directories, Git post hooks, arbitrary hook support scripts, similarly named neighboring directories, and unrelated source collisions (/tmp/gspot-hook-folders-final-regressions.log).",
+            "The affected structure, repository, and hook lifecycle suites pass 240 cases and 716 assertions (/tmp/gspot-hook-folders-tests.log). Root and CLI TypeScript targets pass (/tmp/gspot-hook-folders-root-types.log and /tmp/gspot-hook-folders-cli-types.log)."
+        ]
     },
     {
         "id": "slices/config/013",

@@ -193,3 +193,20 @@ test('tool discovery reads linked authored sections inside the repository withou
     });
     expect(readFileSync(join(sandbox.path, 'settings/python.toml'), 'utf8')).toBe(source);
 });
+
+test('hook discovery reports foreign folders and leaves managed and task scripts available for installation', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.husky/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.git-hooks/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.gspot/hooks/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.mise/tasks/hook/pre-commit': '#!/bin/sh\nexit 0\n',
+    });
+    const hooks = getTooling(sandbox.path, [], []).hooks;
+    expect(hooks.toSorted((left, right) => left.path.localeCompare(right.path))).toStrictEqual([
+        { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
+        { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
+        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
+    ]);
+});

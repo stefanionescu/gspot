@@ -263,3 +263,50 @@ test('file allowances exclude named prefix peers without hiding unrelated collis
     ]);
     expect(result.report.checks.flatMap((check) => check.findings)).toHaveLength(1);
 });
+
+test.each(['.githooks', '.husky', '.git-hooks', '.mise/tasks/hook'])(
+    'prefix checks exempt scripts throughout %s and retain neighboring collisions',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const hooks = Object.fromEntries(
+            [directory, `${directory}/nested`, `app/${directory}`, `app/${directory}/nested`].flatMap((path) =>
+                ['post-merge', 'post-checkout', 'hook-first.ts', 'hook-second.ts'].map((name) => [
+                    `${path}/${name}`,
+                    name.endsWith('.ts') ? '' : '#!/bin/sh\nexit 0\n',
+                ]),
+            ),
+        );
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['typescript'], {
+                level: 'all',
+                tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n',
+            }),
+            ...hooks,
+            [`${directory}-other/hook-first.ts`]: '',
+            [`${directory}-other/hook-second.ts`]: '',
+            [`app/${directory}-other/hook-first.ts`]: '',
+            [`app/${directory}-other/hook-second.ts`]: '',
+            'app/src/action-one.ts': '',
+            'app/src/action-two.ts': '',
+            'src/action-one.ts': '',
+            'src/action-two.ts': '',
+        });
+        const result = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['structure/prefix-collisions'] }),
+        );
+        expect(result.report.exitCode).toBe(1);
+        expect(
+            result.report.checks
+                .flatMap((check) => check.findings.map(({ file }) => file))
+                .toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(
+            [
+                `${directory}-other/hook-first.ts`,
+                `app/${directory}-other/hook-first.ts`,
+                'app/src/action-one.ts',
+                'src/action-one.ts',
+            ].toSorted((left, right) => left.localeCompare(right)),
+        );
+    },
+);

@@ -1,19 +1,18 @@
 // NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
+import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 
 import {
     INDEX_STEMS,
     NESTJS_KINDS,
-    HOOK_PREFIXES,
     SCRIPT_ENDING,
     TOOL_PREFIXES,
     IGNORED_FOLDERS,
-    HOOK_DIRECTORIES,
 } from '#cli/config/checks/general/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
@@ -25,8 +24,8 @@ function isNestjsName(name: string): boolean {
     return named.length > 1 && kind !== undefined && NESTJS_KINDS.has(kind);
 }
 
-function isSkipped(directory: string, prefix: string, isAllowed: (path: string) => boolean): boolean {
-    if (HOOK_PREFIXES.has(prefix) && HOOK_DIRECTORIES.includes(directory)) return true;
+function isSkipped(directory: string, scope: string, isAllowed: (path: string) => boolean): boolean {
+    if (HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(scope, hook)))) return true;
     return (
         directory.split('/').some((segment) => IGNORED_FOLDERS.includes(segment)) ||
         isAllowed(directory) ||
@@ -58,7 +57,7 @@ export const prefixCollisions: Engine = (input) => {
             TOOL_PREFIXES.has(prefix) ||
             INDEX_STEMS.has(stem) ||
             seen.has(key) ||
-            isSkipped(directory, prefix, isAllowed)
+            isSkipped(directory, input.scope, isAllowed)
         )
             return [];
         const peers = (tree.get(directory) ?? [])

@@ -5,9 +5,11 @@ import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
+import { HOOK_DIRECTORIES, MISE_HOOK_DIRECTORY } from '#cli/config/repository/hooks.ts';
 import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
 import {
@@ -21,7 +23,6 @@ import {
     FOREIGN_CI_FILES,
     LINT_DIRECTORIES,
     RULES_DIRECTORIES,
-    FOREIGN_HOOK_DIRECTORIES,
 } from '#cli/config/repository/inventory.ts';
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
@@ -119,9 +120,9 @@ export function getHooks(root: string): Tooling['hooks'] {
                       files: getFiles(dirname(location), basename(location)),
                   },
               ]),
-        ...FOREIGN_HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter(
-            (hook) => hook !== undefined,
-        ),
+        ...HOOK_DIRECTORIES.filter((dir) => dir !== HOOKS_DIRECTORY && dir !== MISE_HOOK_DIRECTORY)
+            .map((dir) => hookDirectory(root, dir, hooksPath))
+            .filter((hook) => hook !== undefined),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes('.pre-commit-config.yaml')
             ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]

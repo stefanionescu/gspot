@@ -1,5 +1,3 @@
-import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-
 /** Dependency installations and Git metadata do not contain authored project structure. */
 export const IGNORED_FOLDERS = ['node_modules', '.git'];
 
@@ -56,11 +54,6 @@ export const BANNED_FOLDERS = [
     'py',
     'sh',
 ];
-
-/** Git names its hooks, so the hook directories may hold pre-commit beside pre-push. */
-export const HOOK_DIRECTORIES = [HOOKS_DIRECTORY, '.githooks', '.husky', '.mise/tasks/hook'];
-
-export const HOOK_PREFIXES = new Set(['pre', 'post']);
 
 export const NESTJS_KINDS = new Set([
     'controller',

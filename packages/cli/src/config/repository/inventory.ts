@@ -222,8 +222,6 @@ export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules
 
 export const RULES_DIRECTORIES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
 
-export const FOREIGN_HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
-
 // The words in a CI job name that say it lints.
 export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 
