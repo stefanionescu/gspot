@@ -11,7 +11,6 @@ import type {
     ImportEdge,
     ImportVerdict,
     ImportLocation,
-    ImportDirectionRoles,
     ImportDirectionOptions,
     ImportDirectionMessages,
 } from '#plugin/types/import-direction.ts';
@@ -128,15 +127,13 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                 'Configuration imports runtime code through "{{source}}". Configuration holds values; the runtime reads them.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<ImportDirectionOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined) return {};
         const { root } = file;
         const scope = options.scope.replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
-        const roles = options.roles as Required<ImportDirectionRoles>;
+        const roles = options.roles;
         // A file's path relative to the scope, and the role the first matching glob gives it.
         const placed = (absolute: string): ImportLocation => {
             const rel = absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : absolute;

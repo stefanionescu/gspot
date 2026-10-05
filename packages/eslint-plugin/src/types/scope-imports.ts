@@ -1,1 +1,1 @@
-export type CrossScopeImportsOptions = [{ scopes?: string[] }];
+export type CrossScopeImportsOptions = [{ scopes: string[] }];

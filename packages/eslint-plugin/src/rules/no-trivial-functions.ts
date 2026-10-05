@@ -192,9 +192,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
                 'This function has {{statements}}. Functions with {{max}} or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<TrivialFunctionsOptions[0]>;
+    create(context, [options]) {
         const max = options.maxStatements;
         return {
             ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression):exit'(

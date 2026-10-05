@@ -41,9 +41,7 @@ export const importExtensions = createRule<ImportExtensionsOptions, 'js' | 'ts' 
             extensionless: 'Internal imports keep no suffix here: "{{source}}".',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<ImportExtensionsOptions[0]>;
+    create(context, [options]) {
         const prefixes = options.internalPrefixes;
         const check = (node: TSESTree.Node | null | undefined, attributes: TSESTree.ImportAttribute[] = []): void => {
             if (!node) return;

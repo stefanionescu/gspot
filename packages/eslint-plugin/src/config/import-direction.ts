@@ -1,7 +1,7 @@
 import type { ImportDirectionRole, ImportDirectionRoles } from '#plugin/types/import-direction.ts';
 
 // No role has a default: the folders of a project are its own, so a role the options leave out matches no file.
-export const NO_ROLES: Required<ImportDirectionRoles> = {
+export const NO_ROLES: ImportDirectionRoles = {
     types: [],
     tests: [],
     harness: [],

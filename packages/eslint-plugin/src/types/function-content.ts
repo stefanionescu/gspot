@@ -1,1 +1,1 @@
-export type TrivialFunctionsOptions = [{ maxStatements?: number }];
+export type TrivialFunctionsOptions = [{ maxStatements: number }];

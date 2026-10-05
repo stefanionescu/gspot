@@ -24,9 +24,7 @@ export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local
             local: 'Export values at their declaration instead of listing them again.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<ReexportsOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
         return {

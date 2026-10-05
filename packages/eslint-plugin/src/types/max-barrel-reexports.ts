@@ -1,1 +1,1 @@
-export type MaxBarrelReexportsOptions = [{ max?: number }];
+export type MaxBarrelReexportsOptions = [{ max: number }];

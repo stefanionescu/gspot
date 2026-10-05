@@ -46,9 +46,7 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'alias
             escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder. Import through an alias, or move the shared code into this folder.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<CrossFolderImportsOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined) return {};
         const { relative } = file;

@@ -517,10 +517,21 @@
         "section": "The ESLint Plugin",
         "finding": "| `defaultOptions` and `??` fallbacks in 13 rules | ESLint 9.15 and `RuleCreator` both merge `defaultOptions` into the options before `create` runs. As a result, these fallbacks never run: `env-owner.ts:42`, `import-direction.ts:96,98,108,113`, `import-style.ts:46`, `max-barrel-reexports.ts:30`, `no-client-env.ts:42-43`, `no-cross-folder-imports.ts:54,63`, `no-cross-scope-imports.ts:36,39`, `no-index-imports.ts:32`, `no-trivial-files.ts:123`, `no-trivial-functions.ts:73`, `registry-instances.ts:33`, `test-folders.ts:42,46-47`, `types-placement.ts:164`. `no-client-env.ts:40,42-43` writes `NEXT_PUBLIC_` and `NODE_ENV` twice. Both trivial rules write `maxStatements: 2` although `TRIVIAL_STATEMENTS = 2` exists (`src/config/rules.ts:73`). `no-trivial-files.ts:101` repeats `TrivialFunctionsOptions` inline. | Type each options tuple as the shape after defaults, with required fields. Delete the fallbacks. Keep each default in one place. |",
         "owner": "`defaultOptions` and `??` fallbacks in 13 rules",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/types/environment.ts",
+            "packages/eslint-plugin/src/types/import-direction.ts",
+            "packages/eslint-plugin/src/rules/import-direction.ts",
+            "tests/plugin/rules/import-direction.test.ts",
+            "tests/types/plugin/rules/import-direction.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All eleven rules with populated defaults use required option fields directly. The nested role lists are required too. No Required casts or option fallbacks remain. Both trivial limits use TRIVIAL_STATEMENTS, and environment allowlists share ENVIRONMENT_ALLOWED. The harness option remains optional because its declared default deliberately omits it.",
+            "RuleTester receives partial user inputs without casts. Its nested import-direction input contract has two consumers under the test-owned types folder. The new defect case supplies only the types role and receives the exact typesToRuntime finding after other roles, aliases, and scope defaults merge.",
+            "All 408 plugin cases pass, preserving every previous case (/tmp/gspot-defaulted-options-plugin-tests.log and /tmp/gspot-defaulted-options-case-proof.json). The installed ESM/CommonJS consumer passes both presets (/tmp/gspot-defaulted-options-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-defaulted-options-{root,cli,plugin,docs}-types.log). Both canonical apply runs report all 142 files up to date (/tmp/gspot-defaulted-options-apply.log and /tmp/gspot-defaulted-options-second-apply.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/031",

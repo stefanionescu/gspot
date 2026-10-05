@@ -24,9 +24,7 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
                 'This index has {{count}} re-exports; the limit is {{max}}. Import from the owning modules or split the index.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<MaxBarrelReexportsOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined || !isIndexFile(file.absolute)) return {};
         const max = options.max;

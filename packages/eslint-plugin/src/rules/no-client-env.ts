@@ -31,9 +31,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<ClientEnvOptions[0]>;
+    create(context, [options]) {
         const prefixes = options.publicPrefixes;
         const allowed = new Set(options.allowed);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');

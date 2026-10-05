@@ -1,1 +1,1 @@
-export type InstancesInRegistryOptions = [{ files?: string[] }];
+export type InstancesInRegistryOptions = [{ files: string[] }];

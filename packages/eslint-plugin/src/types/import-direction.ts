@@ -1,10 +1,10 @@
 export type ImportDirectionRoles = {
-    types?: string[];
-    tests?: string[];
-    harness?: string[];
-    config?: string[];
-    env?: string[];
-    runtime?: string[];
+    types: string[];
+    tests: string[];
+    harness: string[];
+    config: string[];
+    env: string[];
+    runtime: string[];
 };
 
 export type ImportDirectionRole = 'types' | 'tests' | 'harness' | 'config' | 'env' | 'runtime' | 'other';
@@ -24,6 +24,4 @@ export type ImportEdge = {
 
 export type ImportVerdict = { messageId: ImportDirectionMessages; data: Record<string, string> };
 
-export type ImportDirectionOptions = [
-    { roles?: ImportDirectionRoles; aliases?: Record<string, string>; scope?: string },
-];
+export type ImportDirectionOptions = [{ roles: ImportDirectionRoles; aliases: Record<string, string>; scope: string }];

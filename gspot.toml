@@ -835,6 +835,7 @@ paths = [
     "tests/types/cli/execution",
     "tests/types/cli/generation",
     "tests/types/cli/tools",
+    "tests/types/plugin/rules",
     "tests/types/tools/checks/supabase",
     "tests/types/tools/configurations/general",
     "tests/types/tools/generation",

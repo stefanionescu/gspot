@@ -128,9 +128,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                 'This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<TrivialFilesOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
         const max = options.maxStatements;

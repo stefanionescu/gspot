@@ -1,4 +1,4 @@
-import type { ImportDirectionOptions } from '#plugin/types/import-direction.ts';
+import type { ImportDirectionInput } from '#tests/types/plugin/rules/import-direction.ts';
 
 export const ALIASES = { '@/': 'src/', '@tests/': 'tests/', '@config/': 'config/', '@app-types/': 'types/' };
 
@@ -11,4 +11,4 @@ export const ROLES = {
     runtime: ['src/**'],
 };
 
-export const OPTIONS: ImportDirectionOptions = [{ roles: ROLES, aliases: ALIASES }];
+export const OPTIONS: ImportDirectionInput = [{ roles: ROLES, aliases: ALIASES }];

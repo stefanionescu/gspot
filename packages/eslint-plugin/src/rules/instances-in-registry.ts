@@ -33,9 +33,7 @@ export const instancesInRegistry = createRule<InstancesInRegistryOptions, 'regis
         schema: [optionsSchema({ files: { type: 'array', items: { type: 'string' } } })],
         messages: { registry: 'Exported instances created with new live in a registry file, not here.' },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<InstancesInRegistryOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined || isAnyGlobMatch(file.relative, options.files)) return {};
         return {

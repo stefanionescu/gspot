@@ -27,9 +27,7 @@ export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
         ],
         messages: { owner: 'Environment variables are read in {{owners}} only. Read it there and pass the value in.' },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<EnvOwnerOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined) return {};
         const owners = options.owners;

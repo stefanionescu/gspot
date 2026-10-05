@@ -1,1 +1,1 @@
-export type CrossFolderImportsOptions = [{ aliases?: Record<string, string> }];
+export type CrossFolderImportsOptions = [{ aliases: Record<string, string> }];

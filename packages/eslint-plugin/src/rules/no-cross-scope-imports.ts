@@ -28,9 +28,7 @@ export const noCrossScopeImports = createRule<CrossScopeImportsOptions, 'escape'
             escape: 'This import leaves the scope "{{scope}}" for "{{target}}". Each scope imports only from within itself.',
         },
     },
-    create(context, [configured]) {
-        // RuleCreator merges the declared defaults before this listener is created.
-        const options = configured as Required<CrossScopeImportsOptions[0]>;
+    create(context, [options]) {
         const file = lintedPath(context);
         if (file === undefined) return {};
         const { relative } = file;

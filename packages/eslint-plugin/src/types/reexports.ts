@@ -1,1 +1,1 @@
-export type ReexportsOptions = [{ allowIndex?: boolean }];
+export type ReexportsOptions = [{ allowIndex: boolean }];
