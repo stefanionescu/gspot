@@ -7,7 +7,6 @@ import { UNREPRESENTABLE_SELECTOR } from '#cli/config/formatting.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { byScopeDepth, expandedPaths } from '#cli/repository/selectors.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
-import { literalGlob, rebaseOverrides } from '#cli/generation/editorconfig.ts';
 
 import type {
     ScopeFormat,
@@ -18,6 +17,48 @@ import type {
     EditorconfigOverride,
     PrettierPluginOptions,
 } from '#cli/types/generation/formatting.ts';
+
+// A selector list as written: one string or several.
+function asList(value: string | string[] | undefined): string[] {
+    if (value === undefined) return [];
+    return typeof value === 'string' ? [value] : value;
+}
+
+// A negation keeps its mark in front of the moved selector.
+function rebasePattern(pattern: string, fromConfig: (selector: string) => string): string {
+    return pattern.startsWith('!') ? `!${fromConfig(pattern.slice(1))}` : fromConfig(pattern);
+}
+
+// Basename selectors stay relative to every folder; path selectors move from the root to the generated file.
+function rebaseOverrides(
+    entries: NativeOverride<Record<string, unknown>>[],
+    fromConfig: (pattern: string) => string,
+): FormatOverride[] {
+    return entries.flatMap((entry) => {
+        const files = asList(entry.files);
+        const excluded = asList(entry.excludeFiles);
+        return [false, true].flatMap((hasSlash) => {
+            const patterns = files.filter((pattern) => pattern.includes('/') === hasSlash);
+            if (patterns.length === 0) return [];
+            return [
+                {
+                    files: hasSlash ? patterns.map((pattern) => rebasePattern(pattern, fromConfig)) : patterns,
+                    excludeFiles: hasSlash ? excluded.map((pattern) => rebasePattern(pattern, fromConfig)) : excluded,
+                    options: entry.options,
+                },
+            ];
+        });
+    });
+}
+
+/**
+ * A path as a glob that matches only itself.
+ * @param path the literal path
+ * @returns the path with every glob character escaped
+ */
+function literalGlob(path: string): string {
+    return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
+}
 
 function formatEntries(policy: Policy): ScopeFormat[] {
     const tables = everyTable(policy)
@@ -94,13 +135,12 @@ function prettierOptions(format: Partial<FormatSettings>): Record<string, unknow
 export function prettierConfiguration(input: PrettierInput): Record<string, unknown> {
     const { policy, format, targetPath, verbatim, plugins } = input;
     const prefix = toPosix(relative(dirname(targetPath), '.'));
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every override path gets the scope folder prefix the same way.
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
     const { overrides: nativeOverrides = [], ...extras } = verbatim ?? {};
     const overrides = [
         ...plugins.flatMap((plugin) => plugin.overrides),
         ...policyOverrides(policy, fromConfig),
-        ...rebaseOverrides(nativeOverrides as NativeOverride<Record<string, unknown>>[], '', prefix),
+        ...rebaseOverrides(nativeOverrides as NativeOverride<Record<string, unknown>>[], fromConfig),
     ];
     return {
         ...prettierOptions(format),
@@ -113,9 +153,10 @@ export function prettierConfiguration(input: PrettierInput): Record<string, unkn
 }
 
 /**
- * Emit representable EditorConfig selectors without expanding the current file inventory.
+ * The EditorConfig sections that the policy's format settings become.
  * @param policy the repository policy
  * @returns one override per selector with the settings EditorConfig can express
+ * @throws when EditorConfig cannot express a selector
  */
 export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
     return formatEntries(policy).flatMap(({ scope, paths, format }) => {

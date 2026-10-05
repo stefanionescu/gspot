@@ -822,10 +822,20 @@
         "section": "Findings",
         "finding": "| `generation/formatting/selectors.ts:24-86` | Dead code. The only caller of `rebaseOverrides` passes `sourceDirectory` as `''` (`settings.ts:112`). So `folderOverrides`, the basename branch of `exclusionsOf`, and the `!hasSlash` checks in `rebaseGroup` never run (about 60 lines). | Delete them and the parameter. Merge the rest into `settings.ts` as `generation/formatting.ts` and delete the folder. |",
         "owner": "`generation/formatting/selectors.ts:24-86`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/formatting.ts",
+            "packages/cli/src/types/generation/formatting.ts",
+            "packages/cli/src/config/formatting.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the original area row and second-pass corrections against the complete formatting implementation and all production callers. The only native override caller rebased from the repository root. Its unreachable sourceDirectory, folderOverrides and basename-exclusion branches are removed; used calculations now live privately in generation/formatting.ts. The obsolete editorconfig.ts module, ExcludedBasename, FormatSelectorGroup, GLOB_GROUPING and LEADING_GLOBSTARS are deleted, with no surviving runtime references or compatibility exports.",
+            "The existing fromConfig calculation serves policy and native overrides. EditorConfig documentation now states its selector conversion and throwing contract. Types and static constants retain their existing behavioral owners under types/ and config/ as required by the user.",
+            "Before/after generation proof: 1056 Prettier configurations and two EditorConfig override sets are identical across output locations, native selector/exclusion forms, plugins and override ordering (/tmp/gspot-formatting-proof.log; /tmp/gspot-formatting-render.ts).",
+            "Existing formatter and every-template owners pass 18 tests with 57 assertions, including actual Prettier resolution and formatting through generated and root configuration files (/tmp/gspot-formatting-tests.log). The native public CLI formatter test passes with 11 assertions: findings, corrected file bytes, and EditorConfig checks agree (/tmp/gspot-formatting-native.log).",
+            "Root TypeScript, affected Prettier formatting and repository ESLint pass (/tmp/gspot-formatting-types.log, /tmp/gspot-formatting-format.log, /tmp/gspot-formatting-lint.json). The now-unused callback suppression is removed."
+        ]
     },
     {
         "id": "areas/commands/043",

@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": null,
         "status": "open",
@@ -349,7 +349,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": null,
         "status": "open",
@@ -495,10 +495,20 @@
         "section": "The Config Constants",
         "finding": "| `config/generation/formatting.ts:5-6` `LEADING_GLOBSTARS`, `GLOB_GROUPING` | These are dead together with the selector code the first audit marks dead, because `sourceDirectory` is always `''`. `GLOB_GROUPING` runs only in the `!hasSlash` branch, after the early return at `generation/formatting/selectors.ts:64`. `LEADING_GLOBSTARS` builds `basenames`, which `exclusionsOf` ignores when `hasSlash` is true (`:25`). | Delete both with that code. |",
         "owner": "`config/generation/formatting.ts:5-6` `LEADING_GLOBSTARS`, `GLOB_GROUPING`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/formatting.ts",
+            "packages/cli/src/types/generation/formatting.ts",
+            "packages/cli/src/config/formatting.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the original area row and second-pass corrections against the complete formatting implementation and all production callers. The only native override caller rebased from the repository root. Its unreachable sourceDirectory, folderOverrides and basename-exclusion branches are removed; used calculations now live privately in generation/formatting.ts. The obsolete editorconfig.ts module, ExcludedBasename, FormatSelectorGroup, GLOB_GROUPING and LEADING_GLOBSTARS are deleted, with no surviving runtime references or compatibility exports.",
+            "The existing fromConfig calculation serves policy and native overrides. EditorConfig documentation now states its selector conversion and throwing contract. Types and static constants retain their existing behavioral owners under types/ and config/ as required by the user.",
+            "Before/after generation proof: 1056 Prettier configurations and two EditorConfig override sets are identical across output locations, native selector/exclusion forms, plugins and override ordering (/tmp/gspot-formatting-proof.log; /tmp/gspot-formatting-render.ts).",
+            "Existing formatter and every-template owners pass 18 tests with 57 assertions, including actual Prettier resolution and formatting through generated and root configuration files (/tmp/gspot-formatting-tests.log). The native public CLI formatter test passes with 11 assertions: findings, corrected file bytes, and EditorConfig checks agree (/tmp/gspot-formatting-native.log).",
+            "Root TypeScript, affected Prettier formatting and repository ESLint pass (/tmp/gspot-formatting-types.log, /tmp/gspot-formatting-format.log, /tmp/gspot-formatting-lint.json). The now-unused callback suppression is removed."
+        ]
     },
     {
         "id": "slices/config/039",

@@ -25,17 +25,6 @@ export type NativeOverride<Options> = {
     options: Options;
 };
 
-export type ExcludedBasename = { isNegated: boolean; basename: string };
-
-export type FormatSelectorGroup<Options> = {
-    patterns: string[];
-    excluded: string[];
-    options: Options;
-    hasSlash: boolean;
-    sourceDirectory: string;
-    fromGeneratedFile: (pattern: string) => string;
-};
-
 /** Plugin list emitted only when the formatter has applicable plugins. */
 export type PrettierPluginOptions = { plugins?: string[] };
 
