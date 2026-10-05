@@ -1,8 +1,5 @@
 export const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
 
-// Below the all level, svgo must save a tenth of the file before the saving is reported.
-export const SVGO_SAVING = 10;
-
 export const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
 
 export const ASSET_FOLDER = /(?:^|\/)assets\//u;

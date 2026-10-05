@@ -136,16 +136,18 @@ export function getHooks(root: string): Tooling['hooks'] {
  * @param root the repository root
  * @param files the tracked files
  * @param projectManifests the parsed project manifests
+ * @param npmNames declared npm installer packages
  * @returns everything init lists except the tool configurations, which need the configurations
  */
 export function surveyRepository(
     root: string,
     files: TrackedFile[],
     projectManifests: ProjectManifest[],
+    npmNames: ReadonlySet<string>,
 ): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
     const lintOnlyManifests = projectManifests
-        .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
+        .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact, npmNames))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
     return {

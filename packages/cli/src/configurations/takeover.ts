@@ -2,6 +2,7 @@
 import { readText } from '#cli/platform/source.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
+import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -87,6 +88,6 @@ export function getTooling(root: string, files: TrackedFile[], projectManifests:
                 ]),
             ).values(),
         ],
-        ...surveyRepository(root, files, projectManifests),
+        ...surveyRepository(root, files, projectManifests, npmToolNames(configurationManifests().values())),
     };
 }

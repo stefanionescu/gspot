@@ -242,7 +242,17 @@ export const FOREIGN_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 
-export const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
+export const MISE_FILES = [
+    'mise.toml',
+    '.mise.toml',
+    '.mise/config.toml',
+    '.tool-versions',
+    'mise.local.toml',
+    '.config/mise.toml',
+    '.config/mise/config.toml',
+    'mise/config.toml',
+    '.mise.local.toml',
+];
 
 export const RUNNER_LOCKS: RunnerLock[] = [
     { file: 'bun.lock', runner: 'bun' },
@@ -251,43 +261,6 @@ export const RUNNER_LOCKS: RunnerLock[] = [
     { file: 'yarn.lock', runner: 'yarn' },
     { file: 'package-lock.json', runner: 'npm' },
     { file: 'package.json', runner: 'npm' },
-];
-
-export const LINT_TOOL_PACKAGE_PREFIXES = [
-    'eslint',
-    '@eslint',
-    '@eslint-community',
-    'typescript-eslint',
-    '@typescript-eslint',
-    'prettier',
-    'knip',
-    'markdownlint',
-    '@commitlint',
-    'commitlint',
-    'stylelint',
-    'syncpack',
-    'sort-package-json',
-    'license-checker',
-    'jscpd',
-    'lizard',
-    'madge',
-    'html-validate',
-    'linkinator',
-    'purgecss',
-    'svgo',
-    'squawk-cli',
-    'type-coverage',
-    'lint-staged',
-    'husky',
-    'lefthook',
-    '@vitest/eslint-plugin',
-    'globals',
-    'depcheck',
-    'cspell',
-    'typos',
-    'concurrently',
-    'supabase',
-    'sqlfluff',
 ];
 
 // In "<runner> run <task>", the task sits two words after the runner.

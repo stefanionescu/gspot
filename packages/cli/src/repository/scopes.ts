@@ -9,13 +9,14 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
+import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { isGlob, isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { ROOT_SCOPE, DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { rushProjectsSchema, workspacePatternsSchema } from '#cli/parsers/schema/repository.ts';
-import { ROOT_SCOPE, DEPENDENCY_FOLDERS, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/inventory.ts';
 
 // Validate filesystem access before the workspace resolver reads package manifests.
 function assertWorkspaceInsideRoot(root: string, patterns: string[]): void {
@@ -95,14 +96,18 @@ export function buildScope(scope: Omit<ScopeEntry, 'name'>): ScopeEntry {
  * @param files the repository inventory
  * @param projectManifests the parsed project manifests
  * @param patterns project-file patterns declared by configurations
+ * @param npmNames declared npm installer packages
  * @returns project scopes in path order
  */
 export function proposedScopes(
     files: TrackedFile[],
     projectManifests: ProjectManifest[],
     patterns: string[],
+    npmNames: ReadonlySet<string>,
 ): ScopeEntry[] {
-    const lintOnly = new Set(projectManifests.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
+    const lintOnly = new Set(
+        projectManifests.filter((fact) => isLintOnlyManifest(fact, npmNames)).map((fact) => fact.path),
+    );
     const folders = new Set<string>();
     const sources = files.filter(
         (file) => file.kind === 'source' && !lintOnly.has(file.path) && !isToolingPath(file.path),
@@ -155,18 +160,16 @@ export function projectFolder(path: string, pattern: string): string | undefined
 }
 
 /**
- * True when every dependency of a manifest is a lint tool gspot pins, so the manifest exists only to hold tooling.
+ * True when an npm manifest holds only declared npm tools or recognized Git hook managers.
  * @param projectManifest the parsed project manifest
+ * @param npmNames declared npm installer packages
  * @returns whether it holds tooling only
  */
-export function isLintOnlyManifest(projectManifest: ProjectManifest): boolean {
+export function isLintOnlyManifest(projectManifest: ProjectManifest, npmNames: ReadonlySet<string>): boolean {
+    if (projectManifest.kind !== 'package.json') return false;
     const names = Object.keys(projectManifest.installed);
     if (names.length === 0) return false;
-    return names.every((name) =>
-        LINT_TOOL_PACKAGE_PREFIXES.some(
-            (prefix) => name === prefix || name.startsWith(`${prefix}-`) || name.startsWith(`${prefix}/`),
-        ),
-    );
+    return names.every((name) => npmNames.has(name) || HOOK_PACKAGES.includes(name));
 }
 
 /**

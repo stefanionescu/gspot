@@ -43,3 +43,19 @@ export function configurationName(target: string): string {
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);
 }
+
+/**
+ * Exact npm package names declared by the supplied configurations.
+ * @param manifests the configuration declarations
+ * @returns installer package names for tooling-only package detection
+ */
+export function npmToolNames(manifests: Iterable<Manifest>): Set<string> {
+    return new Set(
+        [...manifests].flatMap((manifest) =>
+            manifest.tools.flatMap((tool) => {
+                const npm = tool.installers['npm'];
+                return npm === undefined ? [] : [npm.name];
+            }),
+        ),
+    );
+}

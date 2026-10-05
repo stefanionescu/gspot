@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { scopeOf, proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
 import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,7 +29,12 @@ test.each([
         'packages/api',
         'packages/lint',
     ]);
-    const scopes = proposedScopes(repository.files, readManifests(sandbox.path, repository.files), ['package.json']);
+    const scopes = proposedScopes(
+        repository.files,
+        readManifests(sandbox.path, repository.files),
+        ['package.json'],
+        npmToolNames(configurationManifests().values()),
+    );
     expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
 });
 
@@ -106,9 +112,12 @@ test('broad workspace patterns ignore private environments containing external i
     const repository = await readRepository(root, [], [], []);
     expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
     expect(
-        proposedScopes(repository.files, readManifests(root, repository.files), ['package.json']).map(
-            (scope) => scope.path,
-        ),
+        proposedScopes(
+            repository.files,
+            readManifests(root, repository.files),
+            ['package.json'],
+            npmToolNames(configurationManifests().values()),
+        ).map((scope) => scope.path),
     ).toStrictEqual(['packages/app']);
     expect(readFileSync(join(directory.path, 'outside/python'), 'utf8')).toBe(
         'The interpreter belongs outside the repository.\n',
@@ -145,6 +154,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         repository.files,
         projectManifests,
         [...configurationManifests().values()].flatMap((manifest) => manifest.detect.project_files),
+        npmToolNames(configurationManifests().values()),
     );
     expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
@@ -180,4 +190,48 @@ test('root selections remain local to each repository read and missing-scope fal
     root.configurations.push('swift');
     expect(scopeOf('source.py', [])).toStrictEqual({ name: 'root', path: '', configurations: [], source: 'root' });
     expect(first.scopes[0]!.configurations).toStrictEqual(['python']);
+});
+
+test('scope discovery excludes declared npm tools and hook managers without hiding unpinned packages', async () => {
+    await using sandbox = await testdir();
+    const manifests = {
+        'packages/process/package.json': '{"devDependencies":{"concurrently":"9.0.0"}}',
+        'packages/custom/package.json': '{"devDependencies":{"eslint-plugin-custom":"1.0.0"}}',
+        'packages/next/package.json': '{"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
+        'packages/hooks/package.json': '{"devDependencies":{"husky":"9.0.0"}}',
+    };
+    await createFileTree(sandbox.path, {
+        'package.json': '{"workspaces":["packages/*"]}',
+        ...manifests,
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    expect(packageWorkspaces(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'packages/custom',
+        'packages/hooks',
+        'packages/next',
+        'packages/process',
+    ]);
+    expect(
+        proposedScopes(
+            repository.files,
+            readManifests(sandbox.path, repository.files),
+            ['package.json'],
+            npmToolNames(configurationManifests().values()),
+        ).map((scope) => scope.path),
+    ).toStrictEqual(['packages/custom', 'packages/process']);
+    for (const [path, bytes] of Object.entries(manifests))
+        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(bytes);
+    writeFileSync(
+        join(sandbox.path, 'packages/next/package.json'),
+        '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
+    );
+    const corrected = await readRepository(sandbox.path, [], [], []);
+    expect(
+        proposedScopes(
+            corrected.files,
+            readManifests(sandbox.path, corrected.files),
+            ['package.json'],
+            npmToolNames(configurationManifests().values()),
+        ).map((scope) => scope.path),
+    ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });

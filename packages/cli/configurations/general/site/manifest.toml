@@ -152,7 +152,7 @@ stage = "commit"
 runs = "files"
 files = {extensions = [".svg"]}
 fix = ["svgo", "--quiet", "{files}"]
-summary = "Reports SVG byte reductions over 10 percent at level `recommended`, and any reduction at level `all`."
+summary = "Reports SVG byte reductions above tools.svgo.min_saving_percent, which defaults to 10 at level `recommended` and 0 at level `all`."
 why = "An SVG straight from an editor carries metadata and precision a browser never needs."
 help = "Run svgo over the file."
 
@@ -177,6 +177,15 @@ runs = "scope"
 summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
 why = "A site of files has no server code, so the headers file is the only place these protections can live."
 help = "Add the header to the block for every path."
+
+[[setting]]
+name = "tools.svgo.min_saving_percent"
+type = "number"
+direction = "ceiling"
+default = 10
+default_all = 0
+summary = "Report an SVG when optimization saves more than this percentage of its UTF-8 bytes."
+validation = {minimum = 0, maximum = 100}
 
 [[setting]]
 name = "site.build"

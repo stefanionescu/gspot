@@ -2,9 +2,13 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/harness/git.ts';
+import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
@@ -117,4 +121,32 @@ test('configuration imports follow project aliases and reject runtime owners', a
     expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([
         ['config/outside.ts', 1, 'config-logic'],
     ]);
+});
+
+test('folder layout exempts installed dependencies while tracked dependency enforcement reports them', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
+        'venv/lib/only.ts': '',
+        '.venv/lib/only.ts': '',
+        'feature/only.ts': '',
+    });
+    commitAll(sandbox.path);
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({
+            only: ['structure/lone-files', 'structure/tracked-dependencies'],
+        }),
+    );
+    expect(result.report.checks.find((check) => check.check === 'structure/lone-files')?.findings).toMatchObject([
+        { file: 'feature/only.ts', rule: 'lone-file' },
+    ]);
+    expect(result.report.checks.find((check) => check.check === 'structure/lone-files')?.findings).toHaveLength(1);
+    expect(
+        result.report.checks
+            .find((check) => check.check === 'structure/tracked-dependencies')
+            ?.findings.map((finding) => finding.file)
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['.venv', 'venv']);
+    expect(result.report.exitCode).toBe(1);
 });

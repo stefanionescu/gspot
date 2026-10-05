@@ -1,5 +1,8 @@
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 
+/** Hook managers can own tooling-only packages without being installed by gspot. */
+export const HOOK_PACKAGES = ['husky', 'lefthook', 'lint-staged'];
+
 export const MISE_HOOK_DIRECTORY = '.mise/tasks/hook';
 
 /** Hook scripts keep their runner's names, including scripts nested beneath these folders. */

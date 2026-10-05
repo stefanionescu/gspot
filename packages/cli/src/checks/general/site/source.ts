@@ -6,8 +6,9 @@ import { findingAt } from '#cli/execution/finding.ts';
 import type { WebManifest } from '#cli/types/parsers/site.ts';
 import { webManifestSchema } from '#cli/parsers/schema/site.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { SVGO_SAVING, TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
+import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
 
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
@@ -19,7 +20,8 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     if (result.code !== 0) throw new Error(`SVGO could not optimize ${path}: ${result.stderr.trim()}`);
     const originalBytes = Buffer.byteLength(original);
     const saved = originalBytes - Buffer.byteLength(result.stdout);
-    const exceeds = input.policyFiles.policy.level === 'all' ? saved > 0 : saved * SVGO_SAVING > originalBytes;
+    const minimum = input.view.options('tools.svgo')['min_saving_percent'] as number;
+    const exceeds = saved * FULL_PERCENTAGE > originalBytes * minimum;
     return exceeds
         ? [
               findingAt(
@@ -76,7 +78,7 @@ export function deadAssets(input: EngineInput): Finding[] {
 }
 
 /**
- * SVG reductions above the selected level threshold, measured in UTF-8 bytes.
+ * SVG reductions above the configured saving percentage, measured in UTF-8 bytes.
  * @param input the engine input
  * @returns the findings
  */

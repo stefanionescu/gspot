@@ -3,16 +3,10 @@ import { findingAt } from '#cli/execution/finding.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
-
-import {
-    INDEX_STEMS,
-    NESTJS_KINDS,
-    SCRIPT_ENDING,
-    TOOL_PREFIXES,
-    IGNORED_FOLDERS,
-} from '#cli/config/checks/general/structure.ts';
+import { INDEX_STEMS, NESTJS_KINDS, SCRIPT_ENDING, TOOL_PREFIXES } from '#cli/config/checks/general/structure.ts';
 
 // NestJS files share the feature name the folder already carries, so they do not form a set to regroup.
 function isNestjsName(name: string): boolean {
@@ -61,7 +55,7 @@ export const prefixCollisions: Engine = (input) => {
                 if (entry.kind === 'dir')
                     return (
                         !entry.name.startsWith('.') &&
-                        !IGNORED_FOLDERS.includes(entry.name) &&
+                        !DEPENDENCY_FOLDERS.includes(entry.name) &&
                         prefixOf(entry.name) === prefix
                     );
                 if (isNest && isNestjsName(entry.name)) return false;

@@ -82,6 +82,22 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     const strict = await spawnGspot(root, COMMAND);
     expect(strict.code, strict.stdout + strict.stderr).toBe(1);
+    const relaxed = await spawnGspot(root, [
+        'set',
+        'tools.svgo.min_saving_percent',
+        '100',
+        '--reason',
+        'Required optimization threshold for generated SVG assets.',
+    ]);
+    expect(relaxed.code, relaxed.stdout + relaxed.stderr).toBe(0);
+    await Bun.write(join(root, 'icon.svg'), svg + ' '.repeat(Buffer.byteLength(svg)));
+    const allowed = await spawnGspot(root, COMMAND);
+    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
+    const tightened = await spawnGspot(root, ['set', 'tools.svgo.min_saving_percent', '0']);
+    expect(tightened.code, tightened.stdout + tightened.stderr).toBe(0);
+    await Bun.write(join(root, 'icon.svg'), `${svg} `);
+    const restored = await spawnGspot(root, COMMAND);
+    expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     await Bun.write(join(root, 'icon.svg'), svg);
     const corrected = await spawnGspot(root, COMMAND);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

@@ -527,10 +527,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/site.ts:7` `SVGO_SAVING` | The value 10 is a divisor (`saved * 10 > size`), not a saving. `site/source.ts:18` reads `policy.level` directly to switch the threshold, although settings support `default_all` (`config/kits.ts:17`). | Make it a setting `tools.svgo.min_saving_percent` with `default = 10` and `default_all = 0`. Compare the percentage. |",
         "owner": "`config/checks/general/site.ts:7` `SVGO_SAVING`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/site/manifest.toml",
+            "packages/cli/src/checks/general/site/source.ts",
+            "tests/cli/checks/general/site/source.test.ts",
+            "tests/tools/configurations/general/site.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "SVG savings use the required effective tools.svgo.min_saving_percent setting, validated from 0 to 100. The manifest owns recommended=10 and all=0 defaults; the check compares UTF-8 byte savings against that percentage without a level branch or fallback. Unit cases cover exact boundaries, multibyte text, tightening and loosening. The public native case verifies an authored ceiling, restoration, corrected bytes, and explicit file selection.",
+        "verification": [
+            "569 affected CLI cases pass across 56 files after correcting the new SVG setting prefix: /tmp/gspot-behavior-tests.log (565 passing cases before repair) and /tmp/gspot-behavior-svg-repaired.log (all ten SVG/web-manifest cases pass, including the four repaired cases).",
+            "Native SVG regression passes with 18 assertions: /tmp/gspot-behavior-svg-native.log. The initial broader native run completed the build defect/correction and default-check cases before it was stopped to repair the SVG lookup: /tmp/gspot-behavior-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-behavior-root-types.log, /tmp/gspot-behavior-cli-types.log, /tmp/gspot-behavior-eslint-plugin-types.log, /tmp/gspot-behavior-docs-types.log.",
+            "Affected ESLint and TOML formatting pass: /tmp/gspot-behavior-lint-repaired.json. Canonical generation applies twice without writes or removals: /tmp/gspot-behavior-apply.json and /tmp/gspot-behavior-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/031",
@@ -629,10 +639,24 @@
         "section": "The Config Constants",
         "finding": "| `config/repository/repository.ts:126` `LINT_TOOL_PACKAGE_PREFIXES` | The doc (`repository/scopes.ts:169`) says \"a lint tool gspot pins.\" Yet no kit pins 10 of these names: madge, lizard, depcheck, cspell, sort-package-json, type-coverage, husky, lefthook, lint-staged, and concurrently. A workspace package that holds only `concurrently` is dropped as a scope. | Derive the list from the npm installer names in the kit manifests. Keep the hook managers as a separate named list, and correct the doc. |",
         "owner": "`config/repository/repository.ts:126` `LINT_TOOL_PACKAGE_PREFIXES`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/configurations/declarations.ts",
+            "packages/cli/src/repository/scopes.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/configurations/takeover.ts",
+            "packages/cli/src/commands/init/prepare.ts",
+            "packages/cli/src/lifecycle/reconcile.ts",
+            "packages/cli/src/config/repository/hooks.ts",
+            "tests/cli/repository/scopes.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The hard-coded prefix table is deleted. npmToolNames derives exact package identities from actual npm installers under the shared configuration declaration owner. Init, reconciliation, and takeover pass those names into repository scope and survey readers, preserving the dependency boundary. HOOK_PACKAGES independently names recognized hook managers. Unpinned concurrently and custom ESLint plugins remain project scopes; the declared Next.js plugin and Husky alone are tooling, and adding an application dependency restores the scope.",
+        "verification": [
+            "569 affected CLI cases pass across 56 files after correcting the new SVG setting prefix: /tmp/gspot-behavior-tests.log (565 passing cases before repair) and /tmp/gspot-behavior-svg-repaired.log (all ten SVG/web-manifest cases pass, including the four repaired cases).",
+            "Native SVG regression passes with 18 assertions: /tmp/gspot-behavior-svg-native.log. The initial broader native run completed the build defect/correction and default-check cases before it was stopped to repair the SVG lookup: /tmp/gspot-behavior-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-behavior-root-types.log, /tmp/gspot-behavior-cli-types.log, /tmp/gspot-behavior-eslint-plugin-types.log, /tmp/gspot-behavior-docs-types.log.",
+            "Affected ESLint and TOML formatting pass: /tmp/gspot-behavior-lint-repaired.json. Canonical generation applies twice without writes or removals: /tmp/gspot-behavior-apply.json and /tmp/gspot-behavior-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/037",
@@ -675,10 +699,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/structure.ts:109` `IGNORED_FOLDERS` | The structure checks walk tracked files (`structure/directories.ts:39`), and Git never tracks `.git`. A `node_modules` folder is there only if someone commits it, and `tracked-dependencies` already reports that. `DEPENDENCY_FOLDERS` (`config/repository/repository.ts:185`) is the fuller list. | Drop `.git`. Use `DEPENDENCY_FOLDERS`, or delete the filter. |",
         "owner": "`config/checks/general/structure.ts:109` `IGNORED_FOLDERS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/inventory.ts",
+            "packages/cli/src/checks/general/structure/source-files.ts",
+            "packages/cli/src/checks/general/structure/prefix-collisions.ts",
+            "tests/cli/checks/general/structure/repository-shape.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "IGNORED_FOLDERS and its impossible tracked .git exclusion are deleted. Shared folder allowances and prefix peer counting read DEPENDENCY_FOLDERS. A real Git regression proves tracked virtual environments are exempt from lone-file layout while the separate tracked-dependency check still reports both folders; an authored lone file continues to report.",
+        "verification": [
+            "569 affected CLI cases pass across 56 files after correcting the new SVG setting prefix: /tmp/gspot-behavior-tests.log (565 passing cases before repair) and /tmp/gspot-behavior-svg-repaired.log (all ten SVG/web-manifest cases pass, including the four repaired cases).",
+            "Native SVG regression passes with 18 assertions: /tmp/gspot-behavior-svg-native.log. The initial broader native run completed the build defect/correction and default-check cases before it was stopped to repair the SVG lookup: /tmp/gspot-behavior-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-behavior-root-types.log, /tmp/gspot-behavior-cli-types.log, /tmp/gspot-behavior-eslint-plugin-types.log, /tmp/gspot-behavior-docs-types.log.",
+            "Affected ESLint and TOML formatting pass: /tmp/gspot-behavior-lint-repaired.json. Canonical generation applies twice without writes or removals: /tmp/gspot-behavior-apply.json and /tmp/gspot-behavior-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/040",
@@ -804,10 +838,21 @@
         "section": "The Config Constants",
         "finding": "| `config/repository/repository.ts:208` `MISE_FILES` | The list misses `.config/mise.toml`, `.config/mise/config.toml`, `mise/config.toml`, and `.mise.local.toml`, which mise reads. Runner detection misses those repositories. | Add them. |",
         "owner": "`config/repository/repository.ts:208` `MISE_FILES`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/inventory.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/checks/general/docs.ts",
+            "tests/config/cli/repository/runners.ts",
+            "tests/cli/repository/runners.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "MISE_FILES now includes .config/mise.toml, .config/mise/config.toml, mise/config.toml, and .mise.local.toml. The existing runner and documentation readers share the expanded list. Four discovery cases prove mise wins over project locks, reports the actual evidence path, preserves inputs, and returns to no runner after those files are removed. Official configuration locations: https://mise.jdx.dev/configuration.html.",
+        "verification": [
+            "569 affected CLI cases pass across 56 files after correcting the new SVG setting prefix: /tmp/gspot-behavior-tests.log (565 passing cases before repair) and /tmp/gspot-behavior-svg-repaired.log (all ten SVG/web-manifest cases pass, including the four repaired cases).",
+            "Native SVG regression passes with 18 assertions: /tmp/gspot-behavior-svg-native.log. The initial broader native run completed the build defect/correction and default-check cases before it was stopped to repair the SVG lookup: /tmp/gspot-behavior-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-behavior-root-types.log, /tmp/gspot-behavior-cli-types.log, /tmp/gspot-behavior-eslint-plugin-types.log, /tmp/gspot-behavior-docs-types.log.",
+            "Affected ESLint and TOML formatting pass: /tmp/gspot-behavior-lint-repaired.json. Canonical generation applies twice without writes or removals: /tmp/gspot-behavior-apply.json and /tmp/gspot-behavior-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/047",

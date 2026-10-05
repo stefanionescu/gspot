@@ -6,6 +6,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { npmToolNames } from '#cli/configurations/declarations.ts';
 import type { ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 
 function mergeConfigurationChoices(manifests: Map<string, Manifest>, saved: string[], found: string[]): string[] {
@@ -34,6 +35,7 @@ export function reconcileConfigurations(session: Session): ConfigurationReconcil
         repo.files,
         projectManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
+        npmToolNames(manifests.values()),
     );
     const workspace = new Map(
         [...discovered, ...repo.scopes.filter((scope) => scope.path !== '')].map((scope) => [scope.path, scope]),

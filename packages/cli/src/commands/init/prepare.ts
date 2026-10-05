@@ -13,6 +13,7 @@ import { readManifests } from '#cli/repository/manifests.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
+import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import { getTooling, isReplaced } from '#cli/configurations/takeover.ts';
 import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
@@ -82,6 +83,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         repo.files,
         projectManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
+        npmToolNames(manifests.values()),
     );
     const inputs = { root, repo, projectManifests, workspace, manifests };
     const detected = selectForInit({ ...inputs, options });

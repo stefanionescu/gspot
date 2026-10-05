@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { parseManifest } from '#cli/parsers/configurations.ts';
+import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readManifests, readPackageManifest } from '#cli/repository/manifests.ts';
@@ -26,7 +27,12 @@ test('Python project detection uses captured dependencies and actual project fil
     });
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        proposedScopes(repository.files, projectManifests, ['pyproject.toml']).map((scope) => scope.path),
+        proposedScopes(
+            repository.files,
+            projectManifests,
+            ['pyproject.toml'],
+            npmToolNames(configurationManifests().values()),
+        ).map((scope) => scope.path),
     ).toStrictEqual(['api']);
     expect(
         detectConfigurations(repository.files, configurationManifests(), projectManifests, 'api').some(

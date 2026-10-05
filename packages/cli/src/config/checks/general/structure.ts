@@ -1,5 +1,4 @@
 /** Dependency installations and Git metadata do not contain authored project structure. */
-export const IGNORED_FOLDERS = ['node_modules', '.git'];
 
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */
 export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
