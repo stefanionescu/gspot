@@ -329,10 +329,16 @@
         "section": "Kits: General",
         "finding": "| `general/duplication/manifest.toml:4,6-7,22-30` `duplication/jscpd` | The kit says it reads \"every language a selected kit claims\". A `runs = \"scope\"` check without its own `files` gets every tracked file of the scope, and the engine keeps every source file. So jscpd also reads JSON, YAML, TOML, and shell files, and workflow steps or fixtures count as copies. The kit's `[files] languages = true` is not used. | Pass only the language files to jscpd: add `files = {languages = true}` to the check, and filter `input.files` by ownership in the engine. |",
         "owner": "`general/duplication/manifest.toml:4,6-7,22-30` `duplication/jscpd`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/duplication/manifest.toml",
+            "packages/cli/src/checks/general/duplication.ts",
+            "tests/tools/configurations/general/duplication.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The scope check declares files.languages and the engine selects source-configuration ownership rather than every source file. Automatically detected Bash scopes ignore duplicated JSON metadata, report copied Bash blocks, and pass after correction. Native regression passes: /tmp/gspot-levels-native-authenticated.log."
+        ]
     },
     {
         "id": "slices/kits-general/026",
@@ -491,10 +497,16 @@
         "section": "Kits: General",
         "finding": "| `general/security/manifest.toml:88-98` `security/codeql` | With the default `tools.codeql.languages = []`, the engine returns no findings, so the check passes without running. | Add `when = {setting = \"tools.codeql.languages\"}`, as `licenses/packages` does, so the report says that it waits for the setting. |",
         "owner": "`general/security/manifest.toml:88-98` `security/codeql`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/manifest.toml",
+            "packages/cli/src/execution/planning/skips.ts",
+            "tests/cli/execution/planning/selection.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CodeQL declares the languages project-setting prerequisite. Both levels report requires project setting tools.codeql.languages and omit the CodeQL installation when no languages are configured. The registry scanner remains selected by its shipped project setting. /tmp/gspot-levels-focused.log."
+        ]
     },
     {
         "id": "slices/kits-general/039",
@@ -588,7 +600,11 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "slices/kits-general/046",
@@ -636,7 +652,11 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "slices/kits-general/050",

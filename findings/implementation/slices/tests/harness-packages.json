@@ -67,6 +67,10 @@
         "outcome": "implemented",
         "verification": [
             "The naming-only positive helper is absent; syntax reports planted structural/syntax defects. Installed syntax passed in the complete package run /tmp/gspot-installed-consumer-owned-package-suite.log; naming defect/correction passed in /tmp/gspot-current-installed-contracts.log."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {

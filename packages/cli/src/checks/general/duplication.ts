@@ -3,9 +3,11 @@ import { statSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
+import { ownedBy } from '#cli/configurations/owners.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
+import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { cloneReportSchema } from '#cli/parsers/schema/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
@@ -55,7 +57,15 @@ export function cloneFindings(report: CloneReport, context: CloneScope): Finding
 export async function jscpd(input: EngineInput): Promise<Finding[]> {
     using workFolder = scratchFolder('gspot-jscpd-');
     const work = workFolder.path;
-    const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    const owned = [
+        ...new Set(
+            sourceConfigurations(input.selection.selected).flatMap((manifest) =>
+                ownedBy(manifest.files, input.selection.selected, input.files, input.scope)
+                    .filter((file) => file.kind === 'source')
+                    .map((file) => file.path),
+            ),
+        ),
+    ];
     using files = openRoot(input.root);
     const generated = files.read(`${CONFIGURATION_DIRECTORY}/jscpd.json`);
     if (generated === undefined) throw new Error(`Missing ${CONFIGURATION_DIRECTORY}/jscpd.json. Run gspot apply.`);

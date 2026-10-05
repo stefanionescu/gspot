@@ -4,7 +4,6 @@ import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.t
 
 // What each check accepts beside the clean module.
 export const CORRECTIONS: Record<string, Record<string, string>> = {
-    'python/vulture': { 'example/unused.py': '"""No unused imports."""\n' },
     'python/pip-installs': {
         'uv.lock': 'version = 1\n',
         'scripts/setup.sh': '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n',
@@ -60,11 +59,6 @@ export const CASES: FindingCase[] = [
                 '"""Arithmetic examples used by these tests."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        amount (int): The number.\n\n    Returns:\n        int: Twice the number.\n\n    """\n    return value * 2\n',
         },
         expected: { file: MODULE_PATH, rule: 'DOC103', line: 4 },
-    },
-    {
-        check: 'python/vulture',
-        files: { 'example/unused.py': '"""A module that imports what it never uses."""\n\nimport colorsys\n' },
-        expected: { file: 'example/unused.py', line: 3 },
     },
     {
         check: 'python/pyproject',

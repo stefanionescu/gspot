@@ -63,7 +63,6 @@ export const POLICY_EXAMPLES: Record<string, string> = {
     require_reasons: 'require_reasons = true',
     configurations: 'configurations = ["typescript", "nextjs", "markdown"]',
     run_with: 'run_with = "mise"',
-    extra_checks: 'extra_checks = ["naming/paths"]',
     tests: 'tests = ["tests/**/*.test.ts"]',
     exclude: 'exclude = ["dist/**"]',
     scope: '[[scope]]\npath = "services/api"\nconfigurations = ["python", "fastapi"]',
@@ -145,7 +144,7 @@ export const COMMAND_EXAMPLES: Record<string, string> = {
     doctor: 'gspot --json doctor',
     explain: 'gspot explain ./src/app.ts',
     ignore: 'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
-    set: 'gspot set extra_checks naming/paths',
+    set: 'gspot set level all',
     list: 'gspot list configurations',
 };
 

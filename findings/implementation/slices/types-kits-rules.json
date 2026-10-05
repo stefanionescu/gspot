@@ -726,6 +726,10 @@
             "Root reviewed the complete original row and current production owners; replaced wrappers and old declarations have no surviving source callers.",
             "All four current TypeScript targets pass (/tmp/gspot-tests-organization-types-verified.log).",
             "Canonical source ownership lint and TOML editor regression proof retained in /tmp/gspot-lifecycle-ownership-outcomes.json. Public ownership, TOML/policy and managed-field tests passed 188 cases (/tmp/gspot-key-contract-tests.log); current unchanged types pass."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {

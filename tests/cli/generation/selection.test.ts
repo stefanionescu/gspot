@@ -28,7 +28,7 @@ test('security output follows the selected security configuration', async () => 
     expect(generated?.content).toContain('rules:');
 });
 
-test.each(['recommended', 'all'])('generated %s ESLint configuration makes layout opt-in', async (level) => {
+test.each(['recommended', 'all'])('generated %s ESLint configuration selects layout by level', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript'], { level: level }),

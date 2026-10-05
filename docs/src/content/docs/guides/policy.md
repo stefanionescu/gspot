@@ -44,11 +44,7 @@ The [levels table](/guides/overview/#levels) defines `recommended` and `all`. Ne
 gspot set level all
 ```
 
-To enable one level-`all` check at `recommended`:
-
-```shell
-gspot set extra_checks naming/paths
-```
+The level controls every applicable check. Security checks are selected automatically for supported source files. Duplication checks run at `all`. License checks are selected when a dependency manifest exists and wait for the project's allowed license list.
 
 ## Record one exception
 

@@ -177,7 +177,6 @@ test.each([
     'generated',
     'vendored',
     'exclude',
-    'extra_checks',
     'tests',
 ])('explain recognizes the top-level setting %s', async (key) => {
     await using sandbox = await testdir();

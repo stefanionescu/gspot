@@ -178,7 +178,7 @@ reason = "A snapshot is the copy of a revision that gspot checks; the tests name
 
 [[naming.fixed_keys]]
 file = "packages/cli/src/types/policy/settings.ts"
-names = ["imports_allowed", "tool_timeout_seconds", "run_with", "require_reasons", "extra_checks"]
+names = ["imports_allowed", "tool_timeout_seconds", "run_with", "require_reasons"]
 reason = "Public gspot.toml keys, and the keys of the naming policy gspot ships."
 
 [[naming.fixed_keys]]

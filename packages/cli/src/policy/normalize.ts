@@ -159,7 +159,6 @@ export function buildPolicy(raw: RawPolicy): Policy {
     return {
         level: raw.level,
         require_reasons: raw.require_reasons,
-        extra_checks: raw.extra_checks,
         exclude: raw.exclude,
         configurations: raw.configurations ?? [],
         configurationSettings: configurationTables(raw),

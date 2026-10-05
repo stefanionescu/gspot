@@ -108,6 +108,10 @@
             "getCandidate depends on manifest availability and Git, never yes. New public human previews with and without --yes select detected licenses and produce identical plan text. The entire repository tree remains unchanged.",
             "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
             "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {

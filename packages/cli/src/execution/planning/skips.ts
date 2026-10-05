@@ -80,17 +80,19 @@ function nativeIgnore(session: Session, check: PlannedCheck): NativeIgnore | und
 /**
  * The reason persistent policy selects or disables a check.
  * @returns the reason the check is inactive, or undefined when selected
- * @param policy the repository level and opted-in checks
+ * @param policy the repository level
  * @param scope the effective policy for the project
- * @param spec the declared check and enabling conditions
+ * @param spec the declared check and project prerequisites
  */
 export function selectionStatus(policy: Policy, scope: ScopeSelection, spec: CheckSpec): SelectionStatus | undefined {
-    if (policy.level !== 'all' && spec.level !== 'recommended' && !policy.extra_checks.includes(spec.name))
+    if (policy.level !== 'all' && spec.level !== 'recommended')
         return { cause: 'level', note: 'disabled at level recommended' };
     const ignored = ignoreSkip(scope, spec);
     if (ignored !== undefined) return ignored;
     const setting = waitingSetting(scope, spec);
-    return setting === undefined ? undefined : { cause: 'setting', note: `set ${setting} to turn this on`, setting };
+    return setting === undefined
+        ? undefined
+        : { cause: 'setting', note: `requires project setting ${setting}`, setting };
 }
 
 /**
@@ -99,7 +101,7 @@ export function selectionStatus(policy: Policy, scope: ScopeSelection, spec: Che
  * @param options the run options
  * @param host the platform and architecture the run is on
  * @param hasGit whether the repository is a Git repository
- * @param policy the repository level and opted-in checks
+ * @param policy the repository level
  * @returns the skip
  */
 export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean, policy: Policy): Skip {

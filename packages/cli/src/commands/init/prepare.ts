@@ -11,17 +11,16 @@ import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getReplaced } from '#cli/commands/init/replaced.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { askQuestions } from '#cli/commands/init/questions.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { npmToolNames } from '#cli/configurations/declarations.ts';
-import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import { getTooling, isReplaced } from '#cli/configurations/takeover.ts';
 import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
-import { askQuestions, askConfigurations } from '#cli/commands/init/questions.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
@@ -34,18 +33,6 @@ function assertCleanTree(root: string, options: InitOptions): void {
         throw new GspotError('policy', [
             `The working tree has ${String(changed.length)} uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.`,
         ]);
-}
-
-// Asks which configurations to keep, and selects again when the person changed the list.
-async function chosenSelection(
-    inputs: Omit<InitInputs, 'options'>,
-    options: InitOptions,
-    detected: InitSelection,
-): Promise<InitSelection> {
-    const kept = await askConfigurations(options, detected, inputs.manifests);
-    if (kept === undefined) return detected;
-    const configurations = kept.length === 0 ? [NO_CONFIGURATIONS] : kept;
-    return selectForInit({ ...inputs, options: { ...options, configurations: configurations, isListExact: true } });
 }
 
 // Prints what init found, unless the caller reads JSON.
@@ -87,10 +74,9 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         npmToolNames(manifests.values()),
     );
     const inputs = { root, repo, projectManifests, workspace, manifests };
-    const detected = selectForInit({ ...inputs, options });
+    const selection = selectForInit({ ...inputs, options });
     const tooling = getTooling(root, repo.files, projectManifests);
-    printDetection(inputs, detected, tooling);
-    const selection = await chosenSelection(inputs, options, detected);
+    printDetection(inputs, selection, tooling);
     const replaced = getReplaced(root, tooling, selection.selectedIds);
     const answers = await askQuestions(root, options, tooling);
     const everySelected = [...selection.selectedIds]

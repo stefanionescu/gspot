@@ -199,10 +199,6 @@ export const rootSettingSchemas = {
         .boolean()
         .default(false)
         .meta({ description: 'Require a reason for ignores and loosened settings.' }),
-    extra_checks: z
-        .array(z.string())
-        .default([])
-        .meta({ description: 'Checks at level all to run individually at level recommended.' }),
     run_with: runnerSchema.optional().meta({ description: 'The runner that installs and runs gspot.' }),
     tests: z
         .array(z.string())

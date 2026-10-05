@@ -2,7 +2,7 @@
 title = "Swift"
 requires = ["format", "structure"]
 recommends = ["naming"]
-description = "Swift sources: SwiftLint with the opt-in and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
+description = "Swift sources: SwiftLint with stable rules selected by level and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
 
 [detect]
 extensions = [".swift"]

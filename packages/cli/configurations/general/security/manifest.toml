@@ -1,7 +1,7 @@
 [configuration]
 title = "Security"
-opt_in = true
-description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL on request."
+always_selected = true
+description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL for configured project languages."
 
 [files]
 languages = true
@@ -60,6 +60,7 @@ stage = "manual"
 runs = "files"
 exit_codes = [1]
 needs = ["network"]
+when = {setting = "tools.semgrep.registry"}
 platforms = ["macos", "linux"]
 command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--vim", "{files}"]
 tool = "semgrep"
@@ -76,6 +77,7 @@ level = "recommended"
 stage = "manual"
 runs = "once"
 tool = "codeql"
+when = {setting = "tools.codeql.languages"}
 summary = "Builds a CodeQL database for every language in tools.codeql.languages and runs the security suite over it."
 why = "Data-flow analysis follows a value from a request to a query across files, which a pattern rule cannot."
 help = "Change the code the result names. Record a false positive under tools.codeql.ignore with its rule, its paths, and a reason."

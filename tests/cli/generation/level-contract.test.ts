@@ -9,15 +9,15 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/config/policy/settings.ts';
 import { emitFile, createEslint } from '#tests/harness/generated.ts';
+import { RUFF_PREVIEW_RULES } from '#tests/config/cli/generation/level-contract.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python', 'pytest'], {
-            tables: '[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.pytest.coverage]\nlines = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
+            tables: '[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.pytest.coverage]\nlines = 91\n[scope.tools.ruff]\ndocstring_convention = "numpy"\n',
             level: 'all',
         }),
         'app/main.py': 'value = 1\n',
@@ -25,7 +25,7 @@ test('a scope resolves its own tool settings over the root defaults', async () =
     const session = await openSession(sandbox.path);
     const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
     expect(nested.view.settings['tools.pytest.coverage.lines']).toBe(91);
-    expect(nested.view.settings['tools.vulture.min_confidence']).toBe(95);
+    expect(nested.view.settings['tools.ruff.docstring_convention']).toBe('numpy');
 });
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
@@ -39,6 +39,9 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
     const config = parseToml(text) as RuffConfiguration;
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
     expect(config.lint.select.includes('N802')).toBe(level === 'all');
+    expect(config.lint.select.includes('PT001')).toBe(level === 'all');
+    expect(config.lint.select).toContain('PT009');
+    expect(config.lint.select).toContain('FAST003');
     for (const code of ['C901', 'PLR2004', 'ERA001', 'T201', 'T203'])
         expect(config.lint.select.includes(code), code).toBe(level === 'all');
     expect(config.lint.select).not.toContain('PLR0915');
@@ -61,13 +64,24 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
 test('experimental activation is refused before generation', () => {
     for (const settings of [
         '[tools.ruff.verbatim]\npreview = true\nreason = "Project preference"',
-        `[tools.ruff]\nselect = ["${String([...RUFF_PREVIEW_RULES][0])}"]`,
+        '[tools.ruff.verbatim.lint]\npreview = true\nreason = "Project preference"',
     ]) {
         const text = buildPolicy(['python'], { tables: settings, level: 'all' });
         expect(() => {
             parseStrictPolicy(text);
         }).toThrow('preview');
     }
+});
+
+test.each(['recommended', 'all'] as const)('%s refuses native rule selection as another coverage choice', (level) => {
+    for (const section of ['tools.ruff.verbatim', 'tools.ruff.verbatim.lint'])
+        for (const key of ['select', 'extend-select']) {
+            const text = buildPolicy(['python'], {
+                level,
+                tables: `[${section}]\n${key} = ["N802"]\nreason = "Project preference"`,
+            });
+            expect(() => parseStrictPolicy(text)).toThrow('Ruff rule selection comes from level recommended or all');
+        }
 });
 
 test.each(['recommended', 'all'] as const)(

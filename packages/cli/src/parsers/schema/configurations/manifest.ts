@@ -213,7 +213,6 @@ export const manifestSchema = z
             borrowed_checks: z.array(z.string().min(1)).default([]),
             recommends: stringList,
             always_selected: z.boolean().default(false),
-            opt_in: z.boolean().default(false),
             // A configuration whose checks all read git is not proposed in a folder with no .git.
             when: conditionSchema.pick({ git: true }).optional(),
             description: sentence,
@@ -242,6 +241,7 @@ export const manifestSchema = z
                     .transform((condition) => detectionSchema.parse(condition)),
             )
             .default({}),
+        ruff_rules: z.strictObject({ recommended: stringList, all: stringList }).prefault({}),
         required_eslint_rules: stringListTable.default({}),
         eslint_rules_off: z
             .array(

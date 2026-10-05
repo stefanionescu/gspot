@@ -28,8 +28,8 @@ async function generatedDocument<Shape>(
 
 // What the configurations declare, read from their manifests so the test pins no copy of shipped lists.
 const manifests = configurationManifests();
-const pytest = manifests.get('pytest')!.set;
-const testIgnores = pytest['tools.ruff.rules_off_in_tests'] as string[];
+const pytest = manifests.get('pytest')!;
+const testIgnores = pytest.set['tools.ruff.rules_off_in_tests'] as string[];
 const entry = manifests.get('javascript')!.entry[0]!;
 const tailwindAtRules = manifests.get('nextjs')!.set['tools.stylelint.ignore_at_rules'];
 const python = buildPolicy(['python']);
@@ -89,7 +89,7 @@ test('Ruff selects the families the test runner and the framework declare, and i
     expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(plain.lint['per-file-ignores']).toBeUndefined();
     const tested = await generatedDocument<TestedRuffConfiguration>(buildPolicy(['python', 'pytest']), RUFF);
-    expect(tested.lint.select).toStrictEqual(containingAll(pytest['tools.ruff.select'] as string[]));
+    expect(tested.lint.select).toStrictEqual(containingAll(pytest.ruff_rules.recommended));
     expect(tested.lint['per-file-ignores']).toStrictEqual(
         Object.fromEntries(DEFAULT_TEST_PATTERNS.map((path) => [path, testIgnores])),
     );

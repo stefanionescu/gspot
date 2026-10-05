@@ -1,40 +1,25 @@
 import { isRecord } from '#cli/platform/objects.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';
+import { everyTable } from '#cli/policy/settings/entries.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/config/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/problems/keys.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { everyTable, policyValue } from '#cli/policy/settings/entries.ts';
 import type { Policy, PolicyProblem } from '#cli/types/policy/settings.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
 
 function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
-    const selected = policyValue(table, 'tools.ruff.select')?.value;
-    const codes = Array.isArray(selected) ? selected : [];
     const verbatim = table.tools?.['ruff']?.verbatim ?? {};
     const lint = isRecord(verbatim['lint']) ? verbatim['lint'] : {};
     return [
-        ...codes
-            .filter((code): code is string => typeof code === 'string' && RUFF_PREVIEW_RULES.has(code))
-            .map(
-                (code): PolicyProblem => ({
-                    path: ['tools', 'ruff', 'select'],
-                    message: `gspot does not support Ruff preview rules. Remove ${code} from tools.ruff.select.`,
-                }),
-            ),
         ...[verbatim['select'], verbatim['extend-select'], lint['select'], lint['extend-select']]
-            .filter(
-                (value) =>
-                    Array.isArray(value) &&
-                    value.some((code) => typeof code === 'string' && RUFF_PREVIEW_RULES.has(code)),
-            )
+            .filter((value) => value !== undefined)
             .map(
                 (): PolicyProblem => ({
                     path: ['tools', 'ruff', 'verbatim'],
                     message:
-                        'gspot does not support Ruff preview rules. Remove preview rule codes from tools.ruff.verbatim.',
+                        'Ruff rule selection comes from level recommended or all. Remove select and extend-select from tools.ruff.verbatim.',
                 }),
             ),
         ...([verbatim, lint, verbatim['format']].some((settings) => isRecord(settings) && settings['preview'] === true)
@@ -93,15 +78,6 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
             knownSettings(selectForScope(policy, scope.path, manifests), policy.level),
         ]),
     );
-    const selectedNames = new Set(
-        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => check.name)),
-    );
-    for (const [index, name] of policy.extra_checks.entries())
-        if (!selectedNames.has(name))
-            problems.push({
-                path: ['extra_checks', index],
-                message: `extra_checks names ${name}, which no configuration ships. Remove it or use a check from gspot list checks.`,
-            });
     problems.push(
         ...excludeProblems(policy.agentRules.exclude).map(({ index, message: diagnostic }) => ({
             path: ['agent_rules', 'exclude', index],

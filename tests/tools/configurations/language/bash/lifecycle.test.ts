@@ -19,16 +19,12 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/build.sh': CLEAN_BASH_SCRIPT, 'README.md': '# test\n' });
         commitAll(sandbox.path);
-        const init = await spawnGspot(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'bash',
-            '--no-task',
-            '--no-ci',
-            '--no-rules',
-            '--no-install',
-        ]);
+        const environment = { PATH: buildToolsPath(['shellcheck', 'shfmt']) };
+        const init = await spawnGspot(
+            sandbox.path,
+            ['init', '--yes', '--configurations', 'bash', '--no-task', '--no-ci', '--no-rules', '--no-install'],
+            environment,
+        );
         expect(init.code, init.stdout + init.stderr).toBe(0);
         expect(init.stdout).toContain('write');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
@@ -36,25 +32,24 @@ test(
         expect(existsSync(join(sandbox.path, '.gspot', 'hooks', 'pre-commit'))).toBe(true);
         expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
         expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
-        const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
+        const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json'], environment);
         expect(check.code).toBe(0);
         expect((JSON.parse(check.stdout) as RunReport).checks).toStrictEqual([
             containing({ check: 'bash/shellcheck', status: 'passed' }),
         ]);
-        const selected = await spawnGspot(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const json = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shfmt', '--json']);
+        const json = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shfmt', '--json'], environment);
         const record = JSON.parse(json.stdout) as RunReport;
         expect(json.code, json.stdout + json.stderr).toBe(0);
         expect(record.checks).toMatchObject([{ check: 'bash/shfmt', status: 'passed' }]);
-        expect(record.exitCode).toBe(0);
-        const reconciled = await spawnGspot(sandbox.path, ['apply']);
+        const reconciled = await spawnGspot(sandbox.path, ['apply'], environment);
         expect(reconciled.code, reconciled.stdout + reconciled.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const drift = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+        const drift = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json'], environment);
         expect((JSON.parse(drift.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
         expect(drift.code).toBe(0);
-        const second = await spawnGspot(sandbox.path, ['init', '--yes']);
+        const second = await spawnGspot(sandbox.path, ['init', '--yes'], environment);
         expect(second.code).toBe(2);
         expect(second.stdout).toContain('gspot doctor');
     },

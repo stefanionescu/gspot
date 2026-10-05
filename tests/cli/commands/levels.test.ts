@@ -48,7 +48,7 @@ async function expectNamingAllowance(root: string, command: string[]): Promise<v
     expect((JSON.parse(restored.stdout) as RunReport).checks[1]?.findings[0]?.rule).toBe('banned-term');
 }
 
-test('levels preserve defect checks and require an explicit opt-in for naming preferences', async () => {
+test('switching levels preserves defect checks and selects stricter naming checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash', 'naming'], { tables: '[agent_rules]\nenabled = false\n' }),
@@ -76,11 +76,11 @@ test('levels preserve defect checks and require an explicit opt-in for naming pr
     await expectNamingAllowance(sandbox.path, command);
     const reset = await runGspot(sandbox.path, ['set', 'level', '--default']);
     expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-    const verbatim = await runGspot(sandbox.path, ['set', 'extra_checks', 'naming/identifiers']);
-    expect(verbatim.code, verbatim.stdout + verbatim.stderr).toBe(0);
-    const optedIn = await runGspot(sandbox.path, command);
-    expect(optedIn.code, optedIn.stdout + optedIn.stderr).toBe(1);
-    expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('failed');
+    const routine = await runGspot(sandbox.path, command);
+    expect(routine.code, routine.stdout + routine.stderr).toBe(0);
+    expect((JSON.parse(routine.stdout) as RunReport).checks.map((check) => check.check)).toStrictEqual(['bash/syntax']);
+    const strictAgain = await runGspot(sandbox.path, ['set', 'level', 'all']);
+    expect(strictAgain.code, strictAgain.stdout + strictAgain.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'entry.sh'), 'command=example\n');
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -90,15 +90,12 @@ test('levels preserve defect checks and require an explicit opt-in for naming pr
     ]);
 });
 
-test.each([
-    ['level', 'strict'],
-    ['extra_checks', 'unknown/check'],
-])('invalid %s value %s preserves the policy', async (key, value) => {
+test('an invalid level preserves the policy', async () => {
     await using sandbox = await testdir();
     const policyPath = join(sandbox.path, 'gspot.toml');
-    const policy = buildPolicy(['bash', 'naming'], { tables: 'extra_checks = ["naming/identifiers"]\n' });
+    const policy = buildPolicy(['bash', 'naming']);
     await Bun.write(policyPath, policy);
-    const refused = await runGspot(sandbox.path, ['set', key, value]);
+    const refused = await runGspot(sandbox.path, ['set', 'level', 'strict']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(await Bun.file(policyPath).text()).toBe(policy);
 });

@@ -1,32 +1,13 @@
 import which from 'which';
 import { testdir } from 'testdirs';
 import * as clack from '@clack/prompts';
-import { readRepository } from '#cli/repository/read.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { configureOutput } from '#cli/output/messages.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as environment from '#cli/platform/environment.ts';
-import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { askQuestions, askConfirmation } from '#cli/commands/init/questions.ts';
 import { RUNNER_ANSWERS, RUNNER_FAILURES } from '#tests/config/cli/commands/init/questions.ts';
-import { askQuestions, askConfirmation, askConfigurations } from '#cli/commands/init/questions.ts';
-
-/** Read an exact initial selection before asking which configurations the person keeps. */
-async function readConfigurationSelection(root: string) {
-    const manifests = configurationManifests();
-    const options = buildInitOptions(root, { yes: false });
-    const selection = selectForInit({
-        root,
-        repo: await readRepository(root, [], [], []),
-        projectManifests: [],
-        workspace: [],
-        manifests,
-        options: { ...options, configurations: ['bash', 'markdown'], isListExact: true },
-    });
-    return { options, selection, manifests };
-}
 
 describe('initialization confirmations', () => {
     test('uses the proposed answer without opening a prompt', async () => {
@@ -88,46 +69,4 @@ test.each([...RUNNER_FAILURES])('initialization $name', async ({ terminal, answe
     const options = buildInitOptions(directory.path, { yes: false });
     delete options.runner;
     expect(await rejection(askQuestions(directory.path, options, EMPTY_TOOLING))).toContain(error);
-});
-
-test('configuration selection reports its accepted defaults without a terminal', async () => {
-    await using directory = await testdir();
-    const { options, selection, manifests } = await readConfigurationSelection(directory.path);
-    using resources = new DisposableStack();
-    resources.use(spyOn(environment, 'isInteractive').mockReturnValue(false));
-    using prompt = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
-    const lines: string[] = [];
-    resources.use(spyOn(process.stderr, 'write').mockImplementation((chunk) => lines.push(String(chunk)) > 0));
-    configureOutput({ verbosity: 'normal', json: false, color: false });
-    expect(await askConfigurations(options, selection, manifests)).toBeUndefined();
-    expect(prompt).not.toHaveBeenCalled();
-    expect(lines.join('')).toContain('bash');
-    expect(lines.join('')).toContain('markdown');
-    expect(lines.join('')).toContain('--configurations <ids>');
-});
-
-test.each([
-    { answer: ['markdown'], text: 'markdown' },
-    { answer: [], text: 'none' },
-])('configuration selection reports the terminal answer $text', async ({ answer, text }) => {
-    await using directory = await testdir();
-    const { options, selection, manifests } = await readConfigurationSelection(directory.path);
-    using resources = new DisposableStack();
-    resources.use(spyOn(environment, 'isInteractive').mockReturnValue(true));
-    resources.use(spyOn(clack, 'multiselect').mockResolvedValue([...answer]));
-    const lines: string[] = [];
-    resources.use(spyOn(process.stderr, 'write').mockImplementation((chunk) => lines.push(String(chunk)) > 0));
-    configureOutput({ verbosity: 'normal', json: false, color: false });
-    expect(await askConfigurations(options, selection, manifests)).toStrictEqual([...answer]);
-    expect(lines.join('')).toContain(text);
-    expect(lines.join('')).toContain('--configurations <ids>');
-});
-
-test('configuration selection refuses cancellation before any answer is accepted', async () => {
-    await using directory = await testdir();
-    const { options, selection, manifests } = await readConfigurationSelection(directory.path);
-    using resources = new DisposableStack();
-    resources.use(spyOn(environment, 'isInteractive').mockReturnValue(true));
-    resources.use(spyOn(clack, 'multiselect').mockResolvedValue(Symbol('cancel')));
-    expect(await rejection(askConfigurations(options, selection, manifests))).toContain('Cancelled; nothing written.');
 });

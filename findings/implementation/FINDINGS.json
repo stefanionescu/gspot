@@ -407,7 +407,11 @@
         "status": "open",
         "outcome": null,
         "verification": [],
-        "kind": "answer aggregate"
+        "kind": "answer aggregate",
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "main/029",
@@ -656,11 +660,17 @@
         "section": "Product",
         "finding": "**3. House-style checks.** Recommended: move them out of the shipped kits into an opt-in kit. This covers shortest-first\nordering, the Bash contract, the migration boxes, the README template, banned folder names, and the naming groups.",
         "owner": "source ownership and commands",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "kind": "decision"
+        "location": ["packages/cli/src/execution/planning/skips.ts", "packages/cli/src/policy/schema/policy.ts"],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The user explicitly supersedes opt-in house-style configurations with recommended and all. The extra_checks policy, native Ruff additional-selection setting, and manifest opt_in field are removed; stricter applicable checks come from level all."
+        ],
+        "kind": "decision",
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "main/045",
@@ -967,7 +977,11 @@
         "status": "open",
         "outcome": null,
         "verification": [],
-        "kind": "phase aggregate"
+        "kind": "phase aggregate",
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "main/066",
@@ -1196,11 +1210,23 @@
         "section": "Phase 1: fix the bugs",
         "finding": "- `init --dry-run` and `init --yes` show different kit lists, because a detected `proposed` kit is added only with\n  `--yes`.",
         "owner": "source ownership and commands",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "kind": "phase finding"
+        "location": [
+            "packages/cli/src/commands/init/prepare.ts",
+            "packages/cli/src/commands/init/questions.ts",
+            "tests/cli/commands/init/selection.test.ts",
+            "tests/cli/execution/planning/selection.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Initialization uses the same detected applicability before integration questions in both modes; there is no configuration multiselect prompt. Public dry-run parity includes JavaScript and nested Python with security, duplication, and licenses.",
+            "Real pseudo-terminal and --yes plans have identical semantic rows: /tmp/gspot-levels-terminal-parity.log. Scoped policy, check, and required-tool parity: /tmp/gspot-levels-focused.log."
+        ],
+        "kind": "phase finding",
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "main/083",
@@ -1772,7 +1798,11 @@
         "status": "open",
         "outcome": null,
         "verification": [],
-        "kind": "phase aggregate"
+        "kind": "phase aggregate",
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "main/126",

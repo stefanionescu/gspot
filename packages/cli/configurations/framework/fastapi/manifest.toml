@@ -5,7 +5,6 @@ recommends = ["security"]
 description = "Checks FastAPI route declarations with Ruff. Adds Semgrep request-handling rules when security is selected and requires the OpenAPI configuration."
 
 [set]
-"tools.ruff.select" = ["FAST001", "FAST002", "FAST003"]
 "structure.python.singletons_allowed" = [{names = ["app", "router"], reason = "FastAPI applications and routers are composed at import time."}]
 
 [detect]
@@ -18,3 +17,6 @@ tool = "semgrep"
 rule_keys = ["rules"]
 scoped = true
 when = {configuration = "security"}
+
+[ruff_rules]
+recommended = ["FAST001", "FAST002", "FAST003"]

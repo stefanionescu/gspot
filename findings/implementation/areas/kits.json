@@ -1194,10 +1194,20 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/policy/schema.ts:264` | `enable` does not say what it enables: checks of level `all` run at `recommended`. | Rename to `extra_checks`. |",
         "owner": "`packages/cli/src/policy/schema.ts:264`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/execution/planning/skips.ts"
+        ],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The user explicitly rejects renaming enable to extra_checks or introducing any equivalent flag. The coverage flag and every implementation consumer are removed."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "areas/kits/090",
@@ -1920,6 +1930,10 @@
         "outcome": "implemented",
         "verification": [
             "The strict manifest schema and every shipped declaration use always_selected, opt_in and borrowed_checks. Detection reads always_selected; check assembly and declaration validation read borrowed_checks; explain reads the opt-in declaration. Old fields are absent. Fresh manifest parsing, initialization selection, configuration listing and conditional-output generation cases pass: /tmp/gspot-setting-names-cli.log and /tmp/gspot-setting-names-generation.log."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {

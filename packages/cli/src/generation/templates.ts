@@ -87,6 +87,10 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                     harness: harnessFolders(policy, entry.scope.path)[0],
                 })),
         configurations: view.configurations,
+        ruffRules: selection.selected.flatMap((manifest) => [
+            ...manifest.ruff_rules.recommended,
+            ...(policy.level === 'all' ? manifest.ruff_rules.all : []),
+        ]),
         policy: policy,
         format: view.format,
         settings: view.settings,

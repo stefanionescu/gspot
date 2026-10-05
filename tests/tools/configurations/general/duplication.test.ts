@@ -11,6 +11,7 @@ import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 import {
     STEPS,
+    METADATA,
     DUPLICATION_INIT,
     DUPLICATION_LEFT_OUT,
 } from '#tests/config/tools/configurations/general/duplication.ts';
@@ -22,6 +23,8 @@ describe('the duplication configuration', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 'scripts/first.sh': `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`,
+                'metadata/first.json': METADATA,
+                'metadata/second.json': METADATA,
             });
             commitAll(sandbox.path);
             const environment = {

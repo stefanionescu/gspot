@@ -31,6 +31,8 @@ export type TemplateInputs = {
     eslintPolicy: () => EslintRuleBlock[];
     eslintAllRules: EslintAllRules;
     isAll: boolean;
+    /** Stable Ruff rules declared by the scope's frameworks and tools at the selected level. */
+    ruffRules: string[];
     typescriptOptions: Record<string, boolean>;
     prose: { blockIgnores: string[]; tokenIgnores: string[]; rules: string[]; formats: [string, string][] };
     version: string;

@@ -75,14 +75,6 @@ min_version = "0.20.0"
 mise = "pipx:deptry"
 pypi = "deptry"
 
-[[tool]]
-name = "vulture"
-crash_pattern = '^(?:Error:|.+: invalid source code |.+:None: |.+:[0-9]+: .+ at ")'
-version = "2.16"
-min_version = "2.11"
-mise = "pipx:vulture"
-pypi = "vulture"
-version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
 [[tool]]
 name = "validate-pyproject"
@@ -195,21 +187,6 @@ summary = "Compares the imports of the project with the dependencies it declares
 why = "An import that works through somebody else's dependency breaks the day they drop it."
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason \"<why>\"."
 
-[[check]]
-name = "vulture"
-title = "Find unused Python code"
-example = "An unused `import colorsys` reports `unused import 'colorsys'`. Remove the unused import and rerun. Dynamically used names need exact entries in the configured allowlist."
-level = "recommended"
-stage = "push"
-runs = "scope"
-cwd = "scope"
-command = ["vulture", ".", "--min-confidence", "{setting:tools.vulture.min_confidence}", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
-exit_codes = [3]
-files = {extensions = [".py"]}
-output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
-summary = "Finds functions, classes, and variables nothing uses."
-why = "Dead code is read and maintained by people who cannot tell it is dead."
-help = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
 
 [[check]]
 name = "pyproject"
@@ -424,13 +401,6 @@ summary = "The Ruff pydocstyle convention carried from project configuration, al
 enum = ["google", "numpy", "pep257"]
 
 [[setting]]
-name = "tools.ruff.select"
-type = "list"
-direction = "tightening"
-default = []
-summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
-
-[[setting]]
 name = "tools.ruff.rules_off_in_tests"
 type = "list"
 direction = "loosening"
@@ -443,18 +413,3 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Paths basedpyright leaves out, such as files that need another dependency set, each with a reason."
-
-[[setting]]
-name = "tools.vulture.ignore_names"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Names vulture treats as used, such as functions a framework calls."
-
-[[setting]]
-name = "tools.vulture.min_confidence"
-type = "number"
-direction = "ceiling"
-default = 100
-default_all = 80
-summary = "The minimum confidence percentage for reporting unused Python code."

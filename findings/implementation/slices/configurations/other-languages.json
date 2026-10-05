@@ -71,10 +71,17 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:186-200`, `:433-445` (`vulture`, `tools.vulture.*`) | vulture rates unused functions, classes, and variables at 60% confidence. The defaults are 100 (`recommended`) and 80 (`all`). At 100, vulture reported only unused arguments and unreachable code. At 80, it added unused imports. So the summary, the example (an unused import at `recommended`), the help text, and `ignore_names` all describe findings that never appear. Everything vulture does report also comes from Ruff (ARG001-ARG005, F401) or from basedpyright `reportUnreachable`. | Delete the check and both settings. Or set the default to 60, keep the check at `all` only, and turn off the Ruff and basedpyright rules it repeats. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:186-200`, `:433-445` (`vulture`, `tools.vulture.*`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/manifest.toml",
+            "tests/config/harness/python-installation.ts",
+            "tests/config/tools/configurations/language/python.ts",
+            "tests/tools/generation/ruff.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The explicit user decision removes Vulture, its settings, pin, installation list, and native fixture rather than adding an opt-in scanner. Ruff owns F401 while basedpyright retains independent type errors at both levels: /tmp/gspot-levels-native-authenticated.log. The complete Python configuration cohort passes without Vulture: /tmp/gspot-levels-native.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/006",
@@ -83,10 +90,12 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:194` (vulture `--exclude`) | vulture wraps a pattern that has no wildcard in `*...*`. So `build` and `dist` skip any path that contains those letters. In a sample, vulture skipped `app/builders.py` and `app/distance.py`. | Use path patterns such as `*/build/*`. Build them from the root path settings, as in the next row. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:194` (vulture `--exclude`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/language/python/manifest.toml"],
+        "status": "closed",
+        "outcome": "superseded by a correction",
+        "verification": [
+            "The user-selected removal in slices/kits-other-languages/005 eliminates the Vulture invocation and its incorrect exclusion semantics. No replacement Vulture flag or scan remains."
+        ]
     },
     {
         "id": "slices/kits-other-languages/007",
@@ -357,6 +366,10 @@
             "Only applicable opt-in wrapEnumCases is explicitly enabled; recommended disables cannot be defeated by redundant enables. User-disabled opt-ins are excluded from enable.",
             "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
             "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {
@@ -395,6 +408,10 @@
             "Uses balanced closing parentheses; SwiftFormat owns multiline bracket layout.",
             "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
             "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {
@@ -452,6 +469,10 @@
             "Disables five concrete overlapping default rules and removes the opt-in whitespace/style rules already covered by SwiftFormat; retains both checks and force_cast correctness.",
             "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
             "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
+        ],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
         ]
     },
     {
@@ -481,7 +502,11 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "decisionEvidence": [
+            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
+            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
+        ]
     },
     {
         "id": "slices/kits-other-languages/027",

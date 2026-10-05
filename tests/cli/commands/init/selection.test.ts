@@ -19,6 +19,8 @@ test('accepting defaults leaves the detected initialization plan unchanged', asy
     await createFileTree(sandbox.path, {
         'package.json': '{"name":"example","private":true,"type":"module"}\n',
         'source.js': 'export const port = 8080;\n',
+        'api/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\n',
+        'api/source.py': 'PORT = 8080\n',
     });
     commitAll(sandbox.path);
     const before = readTree(sandbox.path);
@@ -29,6 +31,8 @@ test('accepting defaults leaves the detected initialization plan unchanged', asy
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).toContain('\nconfigurations\n');
         expect(result.stdout).toMatch(/^ {2}licenses\s+detected\s/mu);
+        expect(result.stdout).toMatch(/^ {2}security\s+detected\s/mu);
+        expect(result.stdout).toMatch(/^ {2}duplication\s+detected\s/mu);
     }
     expect(selected.stdout.slice(selected.stdout.indexOf('\nconfigurations\n'))).toBe(
         accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
@@ -169,7 +173,7 @@ test('init previews only applicable private projects and duplicate pins for the 
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: '6 pinned Python tools; matching uv.lock and private environment',
+        note: '5 pinned Python tools; matching uv.lock and private environment',
     });
     expect(plan.change).toContainEqual({ path: '.gspot/package.json', note: '1 pinned npm tools; matching lockfile' });
     expect(plan.noLongerRuns).toStrictEqual([

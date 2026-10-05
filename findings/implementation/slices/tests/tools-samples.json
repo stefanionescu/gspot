@@ -419,10 +419,12 @@
         "section": "Tests: Native-Tool Tests and Samples",
         "finding": "| `tests/tools/cli/execution/parse-output/partial-output.test.ts:17,80`, \"ShellCheck rejects partial findings…\", \"Vulture rejects incomplete analysis…\" | `checkedFindings`, which is gspot code, rejects the output. ShellCheck and Vulture only produce it. | Rename them: \"partial ShellCheck output beside an unreadable file is an execution error\", and the same pattern for Vulture. |",
         "owner": "`tests/tools/cli/execution/parse-output/partial-output.test.ts:17,80`, \"ShellCheck rejects partial findings…\", \"Vulture rejects incomplete analysis…\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/tools/execution/parse-output/partial-output.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The surviving test names gspot output validation: partial ShellCheck output beside an unreadable file is an execution error. Its native incomplete-output, defect, and correction assertions pass: /tmp/gspot-levels-native.log. The redundant Vulture fixture is removed by explicit user decision."
+        ]
     },
     {
         "id": "slices/tests-tools-samples/033",

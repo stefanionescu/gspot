@@ -25,11 +25,16 @@ import {
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
-    const defect = 'import pytest\n\n@pytest.fixture()\ndef example():\n    return 1\n';
+    const defect =
+        '"""Fixture declarations."""\n\nimport pytest\n\n\n@pytest.fixture()\ndef example() -> int:\n    """Provide a reusable value."""\n    return 1\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python'], {
-            tables: '[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+            level: 'all',
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.limits.python]\nfunction_parameters = 3\n',
         }),
+        'tests/__init__.py': '"""Root test package."""\n',
+        'app/__init__.py': '"""Application package."""\n',
+        'app/tests/__init__.py': '"""Application test package."""\n',
         'tests/test_example.py': defect,
         'app/tests/test_example.py': defect,
     });
@@ -63,7 +68,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const corrected = run('app/tests/test_example.py');
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
-        await Bun.write(join(sandbox.path, path), 'assert True\n');
+        await Bun.write(join(sandbox.path, path), '"""An assertion example."""\n\nassert True\n');
     const rootAssertion = run('tests/test_example.py');
     expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
     expect(JSON.parse(rootAssertion.stdout)).toMatchObject([{ code: 'S101' }]);

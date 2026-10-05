@@ -14,7 +14,7 @@ gspot sets up linters and checks for the languages in your repository. Git hooks
 | `recommended` (default) | Correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts                                | `bash/syntax`, `typescript/tsc`        |
 | `all`                   | Everything at `recommended`, plus conventions for vocabulary, naming, architecture, documentation, declaration order, API style, and complexity | `naming/paths`, `structure/lone-files` |
 
-At level `all`, gspot also reports unnecessary forwarding files and functions. Neither level enables experimental or preview rules. Use `gspot set level all` to select the additional conventions, or enable an individual check with `extra_checks`.
+At level `all`, gspot also reports unnecessary forwarding files and functions. Neither level enables experimental or preview rules. Use `gspot set level all` to select the additional conventions.
 
 ## Concepts
 

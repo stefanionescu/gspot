@@ -15,6 +15,5 @@ export const EXCLUDED_PYTHON_CHECKS = [
     'python/import-linter',
     'python/pydoclint',
     'python/deptry',
-    'python/vulture',
     'python/pyproject',
 ];

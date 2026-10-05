@@ -38,7 +38,6 @@ function explainConfiguration(configurationName: string): Explanation | undefine
         settings: manifest.settings.map((setting) => setting.name),
         guides: configurationFiles(manifest).map((file) => file.path),
         auto: manifest.configuration.always_selected,
-        proposed: manifest.configuration.opt_in,
     };
     const { detect, files } = manifest;
     const lines = [

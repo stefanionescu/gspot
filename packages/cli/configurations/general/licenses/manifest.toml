@@ -1,6 +1,5 @@
 [configuration]
 title = "Licenses"
-opt_in = true
 borrowed_checks = ["structure/stale-allowlists"]
 description = "Every installed dependency reports a license from the allowed list, or carries an exception that names the license it reports."
 

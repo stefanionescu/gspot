@@ -93,7 +93,6 @@ export type PolicyScope = { path: string; configurations: string[] };
 export type Policy = {
     level: RawPolicy['level'];
     require_reasons: RawPolicy['require_reasons'];
-    extra_checks: string[];
     exclude: RawPolicy['exclude'];
     configurations: string[];
     configurationSettings?: Record<string, Record<string, unknown>>;

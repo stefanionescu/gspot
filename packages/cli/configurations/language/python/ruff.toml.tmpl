@@ -731,7 +731,7 @@ const conventions = [
     'TRY400',
     'TRY401',
 ];
-const families = [...baseline, ...(isAll ? conventions : []), ...settings['tools.ruff.select']];
+const families = [...baseline, ...(isAll ? conventions : []), ...ruffRules];
 const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0);
 const testRules = settings['tools.ruff.rules_off_in_tests'];
 const testFiles = testRules.length > 0 ? settings['tests'] : [];

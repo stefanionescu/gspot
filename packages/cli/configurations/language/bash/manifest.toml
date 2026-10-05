@@ -121,7 +121,7 @@ files = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 exit_codes = [1]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
-summary = "Runs ShellCheck over shell scripts and sourced files, adding opt-in rules at level all."
+summary = "Runs ShellCheck over shell scripts and sourced files, adding stable optional ShellCheck rules at level all."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
 help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason \"<why>\"."
 

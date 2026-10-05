@@ -36,7 +36,6 @@ export type ConfigurationExplanation = {
     settings: string[];
     guides: string[];
     auto: boolean;
-    proposed: boolean;
 };
 
 export type Found = OwnedCheck | { check: RepositoryDefinition; configuration: undefined };

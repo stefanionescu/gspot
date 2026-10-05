@@ -32,6 +32,7 @@ test('a fresh clone without private ownership state keeps identical rule files c
     expect(clean.exitCode, clean.text).toBe(0);
     expect((clean.json as ApplyPreviewJson).drift).toStrictEqual([
         { path: '.gspot/package-lock.json', kind: 'missing' },
+        { path: '.gspot/uv.lock', kind: 'missing' },
     ]);
     expect(CLONE_RULE_FILES.map((path) => readFileSync(join(sandbox.path, path), 'utf8'))).toStrictEqual(originals);
     const path = '.gspot/config/eslint.config.mjs';
