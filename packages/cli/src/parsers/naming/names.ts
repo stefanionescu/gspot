@@ -1,11 +1,14 @@
+import { splitByCase } from 'scule';
+
 import {
     TIMESTAMP,
     CAMEL_WORD,
     LOWER_WORD,
+    SEPARATORS,
     UPPER_WORD,
     PASCAL_WORD,
     MIGRATION_DIGITS,
-} from '#cli/config/checks/general/naming.ts';
+} from '#cli/config/parsers/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);
@@ -36,4 +39,33 @@ export const CASE_NAMES = [...CASE_TESTS.keys()];
  */
 export function hasCase(name: string, caseName: string): boolean {
     return CASE_TESTS.get(caseName)?.(name) ?? false;
+}
+
+/**
+ * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`.
+ * @param name the identifier
+ * @returns the parts
+ */
+export function splitParts(name: string): string[] {
+    return name
+        .split(SEPARATORS)
+        .filter((segment) => segment !== '')
+        .flatMap((segment) => splitByCase(segment))
+        .flatMap((part) => part.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/u))
+        .map((part) => part.toLowerCase())
+        .filter((part) => part !== '');
+}
+
+/**
+ * The first part that appears twice, if any.
+ * @param parts the parts
+ * @returns the repeated part
+ */
+export function repeatedPart(parts: string[]): string | undefined {
+    const seen = new Set<string>();
+    for (const part of parts) {
+        if (seen.has(part)) return part;
+        seen.add(part);
+    }
+    return undefined;
 }

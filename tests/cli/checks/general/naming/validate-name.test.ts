@@ -1,9 +1,9 @@
 import { test, expect, describe } from 'bun:test';
+import { hasCase } from '#cli/parsers/naming/names.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { namingTerms } from '#cli/parsers/schema/naming.ts';
-import { hasCase } from '#cli/checks/general/naming/cases.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { compileTerms } from '#cli/checks/general/naming/match.ts';
+import { compileTerms } from '#cli/checks/general/naming/policy.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
@@ -12,7 +12,7 @@ const policy: EffectivePolicy = {
     reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
     external: new Set(['requestAnimationFrame']),
     allowed: new Map([['enhancedThing', 'a reason']]),
-    contractProperties: new Map([['api/route.ts', new Set(['Content-Type'])]]),
+    fixedKeys: new Map([['api/route.ts', new Set(['Content-Type'])]]),
     rules: [
         {
             matches: pathMatcher(['**']),
@@ -21,7 +21,7 @@ const policy: EffectivePolicy = {
             names: new Set(['i', '_']),
             excludes: true,
             isDigitsAllowed: false,
-            allowsRepeats: false,
+            isRepeatAllowed: false,
             structuralPrefix: undefined,
             caseNames: undefined,
             source: 'shipped rule 1',
@@ -33,7 +33,7 @@ const policy: EffectivePolicy = {
             names: undefined,
             excludes: false,
             isDigitsAllowed: true,
-            allowsRepeats: false,
+            isRepeatAllowed: false,
             structuralPrefix: undefined,
             caseNames: undefined,
             source: 'shipped rule 2',
@@ -45,20 +45,19 @@ const policy: EffectivePolicy = {
             names: undefined,
             excludes: false,
             isDigitsAllowed: false,
-            allowsRepeats: false,
+            isRepeatAllowed: false,
             structuralPrefix: /^_+/u,
             caseNames: undefined,
             source: 'shipped rule 3',
         },
     ],
-    languages: {},
     limitsFor: (language, category) => ({
         caseNames: category === 'types' ? ['pascal'] : [language === 'bash' ? 'snake' : 'camel'],
         maxChars: 20,
         maxWords: 3,
     }),
     isDigitsBanned: true,
-    isDuplicatesBanned: true,
+    isRepeatBanned: true,
 };
 
 const plain = { policy, isReactFile: false, isTestFile: false };

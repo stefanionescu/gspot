@@ -390,10 +390,14 @@
         "section": "Checks: General",
         "finding": "| `naming/match.ts:31-36` `bannedTerm`; `:6` `isConsecutive` | The one-word branch gives the same answer as `isConsecutive(parts, [only])`. The length guard in `isConsecutive` repeats the loop bound. | Write `terms.find((term) => isConsecutive(parts, term.parts))` and delete the guard. |",
         "owner": "`naming/match.ts:31-36` `bannedTerm`; `:6` `isConsecutive`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/problems.ts"],
+        "status": "closed",
+        "outcome": "Banned terms use one consecutive-part matcher; both the redundant length guard and the special one-word branch are absent.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/034",
@@ -402,10 +406,14 @@
         "section": "Checks: General",
         "finding": "| `naming/match.ts:42` `isUseAllowed` doc | `@returns whether the use is named` does not describe the return value. | Rewrite as \"@returns whether the policy allows the term for this category\". |",
         "owner": "`naming/match.ts:42` `isUseAllowed` doc",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/problems.ts"],
+        "status": "closed",
+        "outcome": "The reserved-use documentation states that the policy allows the term for a category.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/035",
@@ -414,10 +422,18 @@
         "section": "Checks: General",
         "finding": "| `naming/paths.ts:5` `baseStem` | This copies `structure/directories.ts:22` `stemOf`. `DECLARATION_SUFFIXES` (`config/checks/general/naming.ts:40`) also copies `DECLARATION_EXTENSIONS` (`config/platform/platform.ts:55`). | Delete `baseStem` and `DECLARATION_SUFFIXES`, and call `stemOf`. |",
         "owner": "`naming/paths.ts:5` `baseStem`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/paths.ts",
+            "packages/cli/src/platform/paths.ts",
+            "packages/cli/src/config/checks/general/naming.ts"
+        ],
+        "status": "closed",
+        "outcome": "Path identifiers use shared stemOf; baseStem and the duplicate declaration suffix list are deleted.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/036",
@@ -546,10 +562,18 @@
         "section": "Checks: General",
         "finding": "| `naming/policy.ts:129` `EffectivePolicy.languages` | The field is set but never read. `limitsFor` closes over `shipped.languages` directly. Only a test fixture fills it. | Delete the field from `types/checks/general/naming.ts` and here. |",
         "owner": "`naming/policy.ts:129` `EffectivePolicy.languages`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/checks/general/naming.ts",
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "tests/cli/checks/general/naming/validate-name.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The unused EffectivePolicy.languages field and fixture data are deleted. The limits calculation reads the authoritative shipped language table.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/047",
@@ -558,10 +582,18 @@
         "section": "Checks: General",
         "finding": "| `naming/policy.ts:89` `manifests = []` | Nothing uses the default. `identifiers.ts:158` and both tests pass the argument. | Make `manifests` required. |",
         "owner": "`naming/policy.ts:89` `manifests = []`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "tests/cli/checks/general/naming/manifest-rules.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Selected manifests are a required effectivePolicy input; every real caller passes them.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/048",
@@ -570,10 +602,18 @@
         "section": "Checks: General",
         "finding": "| `naming/policy.ts:32-33,131-132`; `naming/problems.ts:55-58` | One concept goes by four words. `allow_duplicate_words` becomes `allowsRepeats`, `ban_repeats` becomes `isDuplicatesBanned`, the rule ID is `duplicate-words`, and the helper is `repeatedPart`. The two digit flags also differ in shape (`isDigitsAllowed` beside `allowsRepeats`). | Use \"repeated words\" throughout: `isRepeatAllowed`, `isRepeatBanned`, `repeatProblem`. |",
         "owner": "`naming/policy.ts:32-33,131-132`; `naming/problems.ts:55-58`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "packages/cli/src/types/checks/general/naming.ts"
+        ],
+        "status": "closed",
+        "outcome": "Internal repeat flags use isRepeatAllowed/isRepeatBanned and enforcement uses repeatProblem. Existing authored allow_duplicate_words and published duplicate-words rule IDs retain their product contracts.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/049",
@@ -582,10 +622,18 @@
         "section": "Checks: General",
         "finding": "| `naming/policy.ts:127` `contractProperties` | The setting is `protocol_keys`. The field is `contractProperties`. The `isExempt` doc (`naming/match.ts:52`) says \"contract property\". That is three names for one list. | Rename the field `protocolKeys` and use \"protocol key\" in the doc. |",
         "owner": "`naming/policy.ts:127` `contractProperties`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "packages/cli/src/types/checks/general/naming.ts"
+        ],
+        "status": "closed",
+        "outcome": "The effective field is fixedKeys, matching the agreed public fixed_keys vocabulary. Exemption documentation uses fixed key; no contractProperties or protocolKeys compatibility names remain.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/050",
@@ -594,10 +642,14 @@
         "section": "Checks: General",
         "finding": "| `naming/policy.ts:46` `limits` | The function returns the `limitsFor` function. A plain noun does not say that. | Rename it `buildLimitsFor`. |",
         "owner": "`naming/policy.ts:46` `limits`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/policy.ts"],
+        "status": "closed",
+        "outcome": "buildLimitsFor names the function it constructs.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/051",
@@ -913,7 +965,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "repositoryPath names the actual source mapping and preserves portableSegments confinement. It lives in the existing build owner to share the calculation with reproducibility without creating an output↔build import cycle. Node.relative keeps its normal name; old local relative alias/helper is deleted.",
+            "repositoryPath names the actual source mapping and preserves portableSegments confinement. It lives in the existing build owner to share the calculation with reproducibility without creating an output\u2194build import cycle. Node.relative keeps its normal name; old local relative alias/helper is deleted.",
             "Canonical current-plugin ESLint:4ownedfiles0errors/0warnings (/tmp/gspot-site-memo-eslint.json).",
             "FullCLI TypeScript check passed exit0 (session17458).",
             "Actual Bunbuild and native PG contract proof passed: /tmp/gspot-site-memo-proof.ts.",

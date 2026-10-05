@@ -1,4 +1,3 @@
-import type { NamingLanguage } from '#cli/types/parsers/naming.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /** A banned term split into parts, with where it came from. */
@@ -30,7 +29,7 @@ export type PathRule = {
     names: Set<string> | undefined;
     excludes: boolean;
     isDigitsAllowed: boolean;
-    allowsRepeats: boolean;
+    isRepeatAllowed: boolean;
     structuralPrefix: RegExp | undefined;
     caseNames: string[] | undefined;
     source: string;
@@ -45,12 +44,11 @@ export type EffectivePolicy = {
     reserved: Map<string, string[]>;
     external: Set<string>;
     allowed: Map<string, string | undefined>;
-    contractProperties: Map<string, Set<string>>;
+    fixedKeys: Map<string, Set<string>>;
     rules: PathRule[];
-    languages: Record<string, NamingLanguage>;
     limitsFor: (language: string, category: string) => CategoryLimits;
     isDigitsBanned: boolean;
-    isDuplicatesBanned: boolean;
+    isRepeatBanned: boolean;
 };
 
 /** Framework punctuation removed before a path segment's name is checked. */

@@ -1,12 +1,12 @@
 import { compact } from '#cli/platform/objects.ts';
+import { splitParts } from '#cli/parsers/naming/names.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { namingTerms } from '#cli/parsers/schema/naming.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { compileTerms } from '#cli/checks/general/naming/match.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { tablesFor, settingValue } from '#cli/policy/settings/entries.ts';
 import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
-import type { PathRule, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
+import type { Term, PathRule, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 import type { Identifier, NamingTerms, NamingLanguage, NamingTermRule } from '#cli/types/parsers/naming.ts';
 
 function toSet(names: string[] | undefined): Set<string> | undefined {
@@ -21,7 +21,7 @@ function compileRule(rule: NamingTermRule, source: string): PathRule {
         names: toSet(rule.names),
         excludes: rule.skip === true,
         isDigitsAllowed: rule.allow_digits === true,
-        allowsRepeats: rule.allow_duplicate_words === true,
+        isRepeatAllowed: rule.allow_duplicate_words === true,
         structuralPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
         caseNames: rule.case,
         source,
@@ -34,7 +34,7 @@ function reservedTerms(shipped: NamingTerms, naming: NamingSettings): Map<string
     return reserved;
 }
 
-function limits(
+function buildLimitsFor(
     shipped: NamingTerms,
     surface: KnownSettings,
     policy: Policy,
@@ -66,6 +66,18 @@ function shippedCase(table: NamingLanguage | undefined, category: string, parent
 }
 
 /**
+ * Compiles a term list into parts.
+ * @param terms the terms as written
+ * @param source where they came from, for the finding
+ * @returns the compiled terms, empty ones dropped
+ */
+export function compileTerms(terms: string[], source: string): Term[] {
+    return terms
+        .map((term) => ({ term: term.trim().toLowerCase(), parts: splitParts(term), source }))
+        .filter((term) => term.parts.length > 0);
+}
+
+/**
  * The policy in force for a scope: the shipped lists with the repository's additions, exemptions, and ceilings.
  * @param surface the scope's settings surface
  * @param policy the repository policy
@@ -77,7 +89,7 @@ export function effectivePolicy(
     surface: KnownSettings,
     policy: Policy,
     scope: string,
-    manifests: Pick<Manifest, 'configuration' | 'naming'>[] = [],
+    manifests: Pick<Manifest, 'configuration' | 'naming'>[],
 ): EffectivePolicy {
     const shipped = namingTerms();
     const tables = tablesFor(policy, scope).map(({ table }) => table.naming);
@@ -114,12 +126,11 @@ export function effectivePolicy(
         reserved: reservedTerms(shipped, naming),
         external: new Set([...shipped.allowed, ...naming.allowed.map((entry) => entry.name)]),
         allowed: new Map(naming.allowed.map((entry) => [entry.name, entry.reason])),
-        contractProperties: new Map(naming.fixed_keys.map((entry) => [entry.file, new Set(entry.names)])),
+        fixedKeys: new Map(naming.fixed_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
-        languages: shipped.languages,
-        limitsFor: limits(shipped, surface, policy, scope),
+        limitsFor: buildLimitsFor(shipped, surface, policy, scope),
         isDigitsBanned: shipped.ban_digits,
-        isDuplicatesBanned: shipped.ban_repeats,
+        isRepeatBanned: shipped.ban_repeats,
     };
 }
 

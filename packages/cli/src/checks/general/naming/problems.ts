@@ -1,17 +1,34 @@
-import { hasCase } from '#cli/checks/general/naming/cases.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
-import { splitParts, repeatedPart } from '#cli/checks/general/naming/split.ts';
-import { isExempt, bannedTerm, isUseAllowed } from '#cli/checks/general/naming/match.ts';
-import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import { hasCase, splitParts, repeatedPart } from '#cli/parsers/naming/names.ts';
+import { DIGIT, TEST_GROUP, CALLBACK_VERB, RESERVED_USES, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 import type {
+    Term,
     PathRule,
     NameProblem,
     NamingInputs,
     CategoryLimits,
     EffectivePolicy,
 } from '#cli/types/checks/general/naming.ts';
+
+function isConsecutive(parts: string[], termParts: string[]): boolean {
+    for (let start = 0; start + termParts.length <= parts.length; start += 1) {
+        if (termParts.every((part, index) => parts[start + index] === part)) return true;
+    }
+    return false;
+}
+
+/**
+ * True when the whole identifier is exempt: an external name, an allowed name, or a fixed key in its file.
+ * @param policy the effective policy
+ * @param identifier the identifier
+ * @returns whether no naming check applies
+ */
+function isExempt(policy: EffectivePolicy, identifier: Identifier): boolean {
+    if (policy.external.has(identifier.name) || policy.allowed.has(identifier.name)) return true;
+    return policy.fixedKeys.get(identifier.file)?.has(identifier.name) ?? false;
+}
 
 function stripped(name: string, rules: PathRule[]): string {
     let result = name;
@@ -53,7 +70,7 @@ function wordsProblem(words: string[], limits: CategoryLimits): NameProblem | un
 }
 
 function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
-    if (!policy.isDuplicatesBanned || rules.some((rule) => rule.allowsRepeats)) return undefined;
+    if (!policy.isRepeatBanned || rules.some((rule) => rule.isRepeatAllowed)) return undefined;
     const repeated = repeatedPart(words);
     return repeated === undefined ? undefined : { rule: 'duplicate-words', message: `"${repeated}" repeats` };
 }
@@ -81,6 +98,29 @@ function callbackProblem(identifier: Identifier, parts: string[], isReactFile: b
         rule: 'callback-verb',
         message: `"${CALLBACK_VERB}" leads a name only in a framework callback position; name what the function does`,
     };
+}
+
+/**
+ * The first banned term the parts carry: a one-word term equals a part, a longer one matches consecutive parts.
+ * @param parts the identifier's parts
+ * @param terms the compiled terms
+ * @returns the term, or undefined
+ */
+export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
+    return terms.find((term) => isConsecutive(parts, term.parts));
+}
+
+/**
+ * True when a reserved term is allowed for an identifier's category.
+ * @param allowedFor the uses the policy allows the term for
+ * @param category the identifier's category
+ * @returns whether the policy allows the term for this category
+ */
+export function isUseAllowed(allowedFor: string[], category: string): boolean {
+    return allowedFor.some((use) => {
+        const categories = Object.entries(RESERVED_USES).find(([suffix]) => use.endsWith(suffix))?.[1] ?? [];
+        return categories.includes('*') || categories.includes(category);
+    });
 }
 
 /**

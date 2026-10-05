@@ -1,13 +1,7 @@
 import { posix } from 'node:path';
+import { stemOf } from '#cli/platform/paths.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { WRAPPERS, MIGRATION_PREFIX, DECLARATION_SUFFIXES } from '#cli/config/checks/general/naming.ts';
-
-function baseStem(base: string): string {
-    const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));
-    if (declaration !== undefined) return base.slice(0, -declaration.length);
-    const dot = base.lastIndexOf('.');
-    return dot <= 0 ? base : base.slice(0, dot);
-}
+import { WRAPPERS, MIGRATION_PREFIX } from '#cli/config/checks/general/naming.ts';
 
 function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
     const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
@@ -24,7 +18,7 @@ function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
  */
 export function fileIdentifier(path: string, language: string): Identifier {
     const base = posix.basename(path);
-    const name = language === 'sql' && base.endsWith('.sql') ? base : baseStem(base);
+    const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
     const named = name.startsWith('[') ? segmentName(name) : { name, category: 'files' };
     return {
         file: path,

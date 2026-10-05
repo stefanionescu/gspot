@@ -100,3 +100,18 @@ export const PATTERN_FIELDS: Record<string, string> = {
 };
 
 export const PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
+
+export const SEPARATORS = /[^A-Za-z0-9]+/u;
+
+export const LOWER_WORD = /^[a-z]+$/u;
+
+export const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
+
+export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
+
+export const UPPER_WORD = /^[A-Z]+$/u;
+
+export const TIMESTAMP = /^\d+$/u;
+
+/** The digits of a migration timestamp, YYYYMMDDHHMMSS. */
+export const MIGRATION_DIGITS = 14;

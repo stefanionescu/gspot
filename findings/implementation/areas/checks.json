@@ -313,10 +313,19 @@
         "section": "Findings",
         "finding": "| `general/naming/cases.ts`, `split.ts`, `match.ts` | Modules of 40, 31, and 60 lines with one or two callers, all inside naming. | Merge them into `problems.ts`. |",
         "owner": "`general/naming/cases.ts`, `split.ts`, `match.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/naming/names.ts",
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "packages/cli/src/config/parsers/naming.ts"
+        ],
+        "status": "closed",
+        "outcome": "Cases and word splitting share the parser owner names.ts, as required by the accepted plan. Term compilation belongs to naming policy; matching and exemptions are consolidated in problems.ts. The three old modules are deleted, all consumers updated, and no forwarding modules or compatibility exports added.",
+        "verification": [
+            "28 naming regressions pass, including cross-language extraction, framework naming precedence, fixed-key exemptions, migration paths and unknown-case rejection: /tmp/gspot-naming-move-tests.log.",
+            "Root TypeScript check and affected ESLint pass: /tmp/gspot-naming-move-types.log and /tmp/gspot-naming-move-imports.json.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-move-apply.json and /tmp/gspot-naming-move-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/021",
