@@ -8,7 +8,11 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each([
     ['a scope-only key without --scope', ['set', 'bash.boundary_roots', 'scripts'], '--scope api'],
-    ['a tool rule turned off', ['set', 'tools.markdownlint.rules', '{"MD013": false}'], 'gspot ignore'],
+    [
+        'a tool rule turned off',
+        ['set', 'tools.markdownlint.rules', '{"MD013": false}'],
+        'gspot ignore markdown/markdownlint --rule MD013 --reason',
+    ],
     ['a key without a value', ['set', 'limits.file_lines'], 'needs a value'],
     ['an undeclared scope', ['set', 'limits.file_lines', '100', '--scope', 'web'], 'web'],
 ])('set refuses %s', async (_, argv, expected) => {

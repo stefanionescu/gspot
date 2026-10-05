@@ -1,4 +1,4 @@
-// A bracketed list or table uses JSON or TOML syntax.
+// Preview or publish setting changes with the same validation and mutation.
 import { resolve } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/platform/objects.ts';
@@ -200,7 +200,7 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     const match = specFor(selection.surface, options.key);
     if (!match) throw buildSettingError(session, selection, options.key);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    if (!options.reset) return await changeSetting(session, selection, options, match.spec, shown);
+    if (!options.toDefault) return await changeSetting(session, selection, options, match.spec, shown);
     const mutation: Mutation = (raw) => {
         deleteKey(getScopeTable(raw, options.scope), options.key);
     };
@@ -243,7 +243,7 @@ export function registerSet(program: Program): void {
                     items,
                     replace: flags.replace === true,
                     remove: flags.remove === true,
-                    reset: flags.default === true,
+                    toDefault: flags.default === true,
                     isDryRun: flags.dryRun === true,
                     ...compact({ reason: flags.reason, scope: flags.scope }),
                 }),

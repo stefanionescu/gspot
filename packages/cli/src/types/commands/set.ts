@@ -6,6 +6,6 @@ export type SetOptions = {
     scope?: string;
     replace: boolean;
     remove: boolean;
-    reset: boolean;
+    toDefault: boolean;
     isDryRun: boolean;
 };

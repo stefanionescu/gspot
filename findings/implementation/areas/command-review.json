@@ -570,9 +570,14 @@
         "finding": "| `commands/set.ts` | `shown` is computed twice (189, 212). `assertReason` (155-168) repeats the placeholder refusal that `requireReason` already makes. The file header (line 1) describes one helper. `assertRuleNotOff` prints the literal placeholder `<the check that runs X>` instead of the check name (136). The `--default` flag becomes a field called `reset`. | Compute `shown` once. Let `requireReason` do the refusal. Look up the check name. Rename the field `toDefault`. Fix the header. |",
         "owner": "`commands/set.ts`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "SetOptions.toDefault now mirrors the public --default flag through its sole producer and consumer, with no reset field or compatibility alias. The command header names setting previews and publication. shown is calculated once in setCommand and passed to the value-change owner; substantive parsing, validation, list mutation and publication orchestration remain.",
+            "assertReason delegates refusals to requireReason and its shared reasonDiagnostic contract; it has no duplicate placeholder guard. disabledRuleProblems looks up the actual declared check from allChecks. The original public Markdown rule-disable case now requires the exact markdown/markdownlint correction command and MD013 rule, rather than accepting any gspot ignore text.",
+            "/tmp/gspot-set-naming-tests.log: 34 passed, 0 failed, 293 assertions across four set, preview, level and typed-table files. Actual --default previews/publication, default level restoration, list/table edits, missing/placeholder reasons, rule-disable refusal, apply-failure feedback and full tree preservation passed.",
+            "/tmp/gspot-set-naming-types.log, /tmp/gspot-set-naming-lint.log and /tmp/gspot-set-naming-format.log: root TypeScript, affected lint and formatting passed. /tmp/gspot-set-naming-proof.log: complete source/type/test ASTs retain all executable behavior after reversing only the field rename and strengthened expectation."
+        ]
     },
     {
         "id": "areas/commands/031",
