@@ -91,3 +91,14 @@ test.each([false, true])(
         });
     },
 );
+
+test.each(UNSAFE_DIRECTORIES)('authored agent rules refuse an escaping project folder %j', (path) => {
+    const found = policyProblems(stringify({ agent_rules: { project_folder: path } }));
+    expect(found).toContainEqual(textContaining('agent_rules.project_folder'));
+    expect(found).toContainEqual(textContaining('Use a relative path'));
+});
+
+test('authored agent rules accept a repository-relative project folder', () => {
+    const policy = parseStrictPolicy(stringify({ agent_rules: { project_folder: 'rules/café 100%' } }));
+    expect(policy.agentRules.project_folder).toBe('rules/café 100%');
+});

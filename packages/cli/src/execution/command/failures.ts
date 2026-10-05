@@ -1,7 +1,6 @@
 // Shared process failures, declared crash diagnostics, and bounded failure output.
 import { TAIL_LINES } from '#cli/config/execution/command.ts';
 import type { ScopeView } from '#cli/types/policy/settings.ts';
-import { TOOL_DEADLINE } from '#cli/config/policy/settings.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import type { ExecutionFailure } from '#cli/types/execution/runtime.ts';
@@ -61,5 +60,5 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
  * @returns the deadline in seconds
  */
 export function toolDeadline(view: Pick<ScopeView, 'settings'>): number {
-    return Number(view.settings['tool_timeout_seconds'] ?? TOOL_DEADLINE.default);
+    return Number(view.settings['tool_timeout_seconds']);
 }

@@ -19,7 +19,7 @@ function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
     const where = segments.map(String).join('.');
     return issue.keys.map(
         (key) =>
-            `${path}: \`${key}\` is not a setting gspot knows under ${where === '' ? 'the top level' : '[' + where + ']'}. The policy reference (gspot.dev/reference/configuration/) lists every key.`,
+            `${path}: \`${key}\` is not a setting gspot knows under ${where === '' ? 'the top level' : '[' + where + ']'}. The gspot.toml schema reference (gspot.dev/reference/configuration/) lists every key.`,
     );
 }
 

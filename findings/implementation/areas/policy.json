@@ -77,10 +77,21 @@
         "section": "Findings",
         "finding": "| `policy/check-state.ts` (owner asked) | This file holds no policy state. It has three unrelated exports. `checkState()` returns a display string (`'on'`, `'off (level)'`, `'waits for X'`) for `gspot list`, and `execution/planning/plan.ts:123` filters checks by comparing that display string to `'off (level)'`. `waitingSetting()` serves `skips.ts:56`. The whole-check ignore test at `check-state.ts:14-18` copies `ignoreSkip` in `execution/planning/skips.ts:26-29`. `repositoryCheckSpec()` turns a `[[check]]` into a CheckSpec. | Delete the file. Put one status function in `execution/planning/skips.ts` that returns a cause (level, ignore, or setting) and reuses the ignore test. `list.ts` formats the cause, and `plan.ts` tests the cause instead of a string. Move `repositoryCheckSpec` into `normalize.ts` so that `Policy.checks` already holds CheckSpec, and `plan.ts:68` and `explain/checks.ts:180` stop converting. |",
         "owner": "`policy/check-state.ts` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/read.ts",
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/src/execution/planning/skips.ts",
+            "packages/cli/src/commands/list.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old check-state module and repeated completeness entry point are absent. Planning uses typed selection causes, list formats them, and buildPolicy constructs custom CheckSpec values before callers consume them.",
+            "One strict reader and one tolerant reader share problem collection/throwing. Session creation reads the validated result instead of repeating completeness. Planning/list/custom-command and strict/tolerant policy regressions verify the current contracts.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/007",
@@ -89,10 +100,18 @@
         "section": "Findings",
         "finding": "| `policy/json-schema.ts` (owner asked) | It builds the published JSON Schema of `gspot.toml`: the zod schema plus every kit's tool settings, served at `gspot.dev/schema/gspot.schema.json` and named by the `#:schema` line. The schema is needed, but the CLI never imports this file. Its only callers are `docs/src/pages/schema/gspot.schema.json.ts`, `docs/src/content/reference/policy.ts`, and `tests/unit/cli/policy/json-schema.test.ts`. `SchemaNode` (`types/policy/policy.ts:151`) exists only for it. | Move it, with `SchemaNode` and its test, into the docs package beside its callers. If the owner wants it in the CLI, put it at `policy/schema/json.ts`. |",
         "owner": "`policy/json-schema.ts` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "docs/src/content/reference/schema.ts",
+            "docs/src/types/reference.ts",
+            "tests/cli/docs/schema.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The JSON Schema implementation and its SchemaNode type belong to docs; the behavioral test lives in cli/docs as the current test-layout plan requires. No CLI policy/json-schema forwarding module remains. Runtime and published-schema parity tests pass.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/008",
@@ -101,10 +120,22 @@
         "section": "Findings",
         "finding": "| `policy/loosening.ts` (owner asked) | It holds two shared predicates. `isReasonAccepted` refuses placeholders such as \"todo\" and needs at least two words. `isLoosening` tells whether a value is weaker than the shipped default for its direction. Both are needed by five callers: `audit.ts`, `problems.ts`, `commands/set.ts`, `commands/edit.ts`, and `checks/general/structure/suppressions.ts`. The name covers only half the file, and its constants sit in `config/policy/policy.ts:184-200`. | Merge it with the reason checks of `problems.ts` and the reason messages into `policy/problems/reasons.ts`. |",
         "owner": "`policy/loosening.ts` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/problems/keys.ts",
+            "packages/cli/src/policy/problems/reasons.ts",
+            "packages/cli/src/policy/problems/selection.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/commands/set.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation is grouped into problems, settings, and schema owners. Reason predicates and shared diagnostics have real consumers; writtenKeys is private to its caller. The old message, loosening, audit, validate, and written-keys layers are absent.",
+            "Set and saved-policy validation share unknownSettingDiagnostic. Single-use diagnostics live with their actual caller; strict/tolerant reader and command correction tests exercise reason requirements, valid settings, unknown siblings, and file locations.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/009",
@@ -113,10 +144,21 @@
         "section": "Findings",
         "finding": "| `policy/normalize.ts:149-150`, `policy/settings.ts:154-159` (owner asked) | `normalize()` turns validated raw TOML into `Policy`. It fills defaults, splits limits and naming into root and per-language groups, wraps values as `{value, reason}`, and trims scope paths. That job is needed (one caller, `read.ts`). But it also renames `enable` to `extraChecks` and `require_reasons` to `requireReasons`, while other keys stay snake_case (`dropped_groups`, `edges_allowed`). `settings.ts` `ROOT_SETTING_READERS` then maps the renamed keys back to their TOML names to read them: a round trip. | Keep the file. Keep the TOML names in `Policy` and delete the matching `ROOT_SETTING_READERS` entries. Move the `Policy` types here. |",
         "owner": "`policy/normalize.ts:149-150`, `policy/settings.ts:154-159` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/settings/view.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildPolicy retains authored TOML names and removes their alias round trip. everyTable owns authored locations; tablesFor selects ancestor layers in depth order. ScopeView and KnownSettings belong to behavioral settings owners.",
+            "Naming lists/categories and structure defaults derive from authoritative schemas. Types remain under types and static data under config by the explicit repository decision. Scope-view and setting-surface tests verify inheritance, numeric/list/rule merging, and default conflict ownership.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/010",
@@ -125,10 +167,21 @@
         "section": "Findings",
         "finding": "| `policy/setting-surface.ts` (owner asked) | It builds the registry of every setting the selected kits declare. The registry adds gspot's own root, hooks, ci, rules, and timeout settings, takes defaults at the chosen level, and records conflicts between kits. It is needed by `execution/session.ts` (per scope) and `validate.ts`. Commit 03bd6f75 (2026-09-26) split it out of `settings.ts` to cut file length, not along a concept. \"Surface\" is jargon: `exposedSettings()` returns `SettingSurface`. | Rename it to `policy/settings/known.ts`, with `knownSettings()` returning `KnownSettings`. Move `TOOL_DEADLINE` and `OVERRIDING_KINDS` in from `config/policy/policy.ts`. |",
         "owner": "`policy/setting-surface.ts` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/settings/view.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildPolicy retains authored TOML names and removes their alias round trip. everyTable owns authored locations; tablesFor selects ancestor layers in depth order. ScopeView and KnownSettings belong to behavioral settings owners.",
+            "Naming lists/categories and structure defaults derive from authoritative schemas. Types remain under types and static data under config by the explicit repository decision. Scope-view and setting-surface tests verify inheritance, numeric/list/rule merging, and default conflict ownership.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/011",
@@ -137,10 +190,22 @@
         "section": "Findings",
         "finding": "| `policy/written-keys.ts` (owner asked) | It lists the dotted keys that a root or scope table writes: `limits.*`, `naming.<lang>.*`, `tools.<tool>.<slot>` with nested groups, and `format.*`. It has one caller, `audit.ts:204`, so it is a private step of one check. Commit 03bd6f75 split it out with `setting-surface.ts`. | Merge it into `policy/problems/keys.ts`. |",
         "owner": "`policy/written-keys.ts` (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/problems/keys.ts",
+            "packages/cli/src/policy/problems/reasons.ts",
+            "packages/cli/src/policy/problems/selection.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/commands/set.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation is grouped into problems, settings, and schema owners. Reason predicates and shared diagnostics have real consumers; writtenKeys is private to its caller. The old message, loosening, audit, validate, and written-keys layers are absent.",
+            "Set and saved-policy validation share unknownSettingDiagnostic. Single-use diagnostics live with their actual caller; strict/tolerant reader and command correction tests exercise reason requirements, valid settings, unknown siblings, and file locations.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/012",
@@ -149,10 +214,22 @@
         "section": "Findings",
         "finding": "| `policy/` flat (owner asked) | Validation runs as a chain across five files with near-synonym names. `read.ts` calls `problems.ts` and `validate.ts`. `validate.ts` calls `audit.ts`, which calls `written-keys.ts` and `loosening.ts`. From the names alone, a reader cannot tell which file holds which check. | Group the files into `problems/`, `settings/`, and `schema/` (see Target layout). |",
         "owner": "`policy/` flat (owner asked)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/problems/keys.ts",
+            "packages/cli/src/policy/problems/reasons.ts",
+            "packages/cli/src/policy/problems/selection.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/commands/set.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation is grouped into problems, settings, and schema owners. Reason predicates and shared diagnostics have real consumers; writtenKeys is private to its caller. The old message, loosening, audit, validate, and written-keys layers are absent.",
+            "Set and saved-policy validation share unknownSettingDiagnostic. Single-use diagnostics live with their actual caller; strict/tolerant reader and command correction tests exercise reason requirements, valid settings, unknown siblings, and file locations.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/013",
@@ -161,10 +238,18 @@
         "section": "Findings",
         "finding": "| `policy/audit.ts:22,176-179` `shippedPolicy()` | This is the cached reader of `kits/general/naming/policy.json`. It lives in \"audit\" because commit 846394d7 needed a low layer. The naming check imports it from `policy/audit.ts` (`checks/general/naming/identifiers.ts:4`, `policy.ts:3`). `ShippedPolicy` and `POLICY_ASSET` read like `gspot.toml` defaults, but they hold the naming term lists. | Move it to `kits/naming-terms.ts` as `namingTerms()`. Rename `ShippedPolicy`, `ShippedLanguage`, and `ShippedRule` to `NamingTerms`, `NamingLanguage`, and `NamingTermRule`, and `POLICY_ASSET` to `NAMING_TERMS_FILE`. |",
         "owner": "`policy/audit.ts:22,176-179` `shippedPolicy()`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/naming.ts",
+            "packages/cli/src/types/parsers/naming.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "namingTerms caches validated shipped naming data in its parser owner. NamingTerms, NamingLanguage, and NamingTermRule infer from authoritative schemas; policy and manifest path rules share namingRuleSchema, with a required reason only for manifest rules.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/014",
@@ -173,10 +258,22 @@
         "section": "Findings",
         "finding": "| `policy/messages.ts` | It holds 23 one-line message functions, each with a 5-line doc comment, so the reader must open another file to see one sentence. 15 of them have one caller. Five are not about policy: `dirtyTree` (init), `versionMismatch` (`lifecycle/version-pin.ts`), `withoutRequired` and `kitNotListed` (`commands/remove.ts`), and `unknownCheck` (explain, ignore). | Delete the file. Inline single-use messages at the caller. Keep shared ones with their owner: `refusedReason` and `missingReason` in `problems/reasons.ts`, `settingNotExposed` in `problems/keys.ts`, and `fileMissing` and `tomlSyntax` in `read.ts`. |",
         "owner": "`policy/messages.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/problems/keys.ts",
+            "packages/cli/src/policy/problems/reasons.ts",
+            "packages/cli/src/policy/problems/selection.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/commands/set.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation is grouped into problems, settings, and schema owners. Reason predicates and shared diagnostics have real consumers; writtenKeys is private to its caller. The old message, loosening, audit, validate, and written-keys layers are absent.",
+            "Set and saved-policy validation share unknownSettingDiagnostic. Single-use diagnostics live with their actual caller; strict/tolerant reader and command correction tests exercise reason requirements, valid settings, unknown siblings, and file locations.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/015",
@@ -185,10 +282,22 @@
         "section": "Findings",
         "finding": "| `policy/audit.ts:24-41`, `commands/set.ts:44-55` | Two implementations of \"which keys exist under this table\". Both compute the `TOOL_KEY_DEPTH` prefix and the list of known keys. One sorts by similarity, and the other falls back to the first 12 keys. | Export one function from `problems/keys.ts` and call it from `set.ts`. |",
         "owner": "`policy/audit.ts:24-41`, `commands/set.ts:44-55`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/problems/keys.ts",
+            "packages/cli/src/policy/problems/reasons.ts",
+            "packages/cli/src/policy/problems/selection.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/commands/set.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy validation is grouped into problems, settings, and schema owners. Reason predicates and shared diagnostics have real consumers; writtenKeys is private to its caller. The old message, loosening, audit, validate, and written-keys layers are absent.",
+            "Set and saved-policy validation share unknownSettingDiagnostic. Single-use diagnostics live with their actual caller; strict/tolerant reader and command correction tests exercise reason requirements, valid settings, unknown siblings, and file locations.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/016",
@@ -197,10 +306,21 @@
         "section": "Findings",
         "finding": "| `policy/problems.ts:149` `policyLayers`, `policy/settings.ts:181` `policyTables`, `types/policy/policy.ts:139,148` | Two functions list the root table plus the scope tables, each with its own element type. The type named `PolicyLayer` is what `policyTables` returns, not what `policyLayers` returns. `PolicyScopeLayer` is not a layer at all: it bundles three arguments for `merge.ts` `limitOf`. | Rename `policyTables` to `tablesFor(policy, scope)` (root, then ancestor scopes), `policyLayers` to `everyTable(policy)`, and `PolicyLayer` to `PolicyTable`. Delete `PolicyScopeLayer` and pass the three values directly. |",
         "owner": "`policy/problems.ts:149` `policyLayers`, `policy/settings.ts:181` `policyTables`, `types/policy/policy.ts:139,148`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/settings/view.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildPolicy retains authored TOML names and removes their alias round trip. everyTable owns authored locations; tablesFor selects ancestor layers in depth order. ScopeView and KnownSettings belong to behavioral settings owners.",
+            "Naming lists/categories and structure defaults derive from authoritative schemas. Types remain under types and static data under config by the explicit repository decision. Scope-view and setting-surface tests verify inheritance, numeric/list/rule merging, and default conflict ownership.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/017",
@@ -209,10 +329,21 @@
         "section": "Findings",
         "finding": "| `policy/read.ts:24,35,120,157,170,184,190,199` and `:146-150`, `:164-168` | The block \"map problems to text, then throw `GspotError('policy')`\" is written 8 times. One problem list (reasons, paths, completeness) is assembled twice. | Add one local `throwProblems(problems, path)` and one function that collects the three lists. |",
         "owner": "`policy/read.ts:24,35,120,157,170,184,190,199` and `:146-150`, `:164-168`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/read.ts",
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/src/execution/planning/skips.ts",
+            "packages/cli/src/commands/list.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old check-state module and repeated completeness entry point are absent. Planning uses typed selection causes, list formats them, and buildPolicy constructs custom CheckSpec values before callers consume them.",
+            "One strict reader and one tolerant reader share problem collection/throwing. Session creation reads the validated result instead of repeating completeness. Planning/list/custom-command and strict/tolerant policy regressions verify the current contracts.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/018",
@@ -221,10 +352,21 @@
         "section": "Findings",
         "finding": "| `policy/read.ts` `assertPolicyComplete`, `execution/session.ts:23,36` | `openSession` runs the completeness check again, after `readPolicy` already ran it (`read.ts:149,167`). The one caller that passes its own policy, `commands/edit.ts:80`, already ran it through `proposePolicy` (`mutations.ts:62`). Each run rebuilds every scope's settings registry, and `session.ts:23` builds them a third time. Both other callers (`commands/init/prepare.ts:71-72`, `mutations.ts:61-62`) pair `parsePolicyText` with this check. | Delete the call in `openSession`. Fold `assertPolicyComplete` into the strict reader. |",
         "owner": "`policy/read.ts` `assertPolicyComplete`, `execution/session.ts:23,36`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/read.ts",
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/src/execution/planning/skips.ts",
+            "packages/cli/src/commands/list.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old check-state module and repeated completeness entry point are absent. Planning uses typed selection causes, list formats them, and buildPolicy constructs custom CheckSpec values before callers consume them.",
+            "One strict reader and one tolerant reader share problem collection/throwing. Session creation reads the validated result instead of repeating completeness. Planning/list/custom-command and strict/tolerant policy regressions verify the current contracts.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/019",
@@ -233,10 +375,21 @@
         "section": "Findings",
         "finding": "| `policy/read.ts` names, `types/policy/policy.ts:107` | `parsePolicyText` throws on any problem, and `readPolicyText` drops bad entries and returns them. The difference is strictness, not \"parse\" versus \"read\". `PolicyFiles` names a single file. | Rename `parsePolicyText` to `parseStrictPolicy` with completeness folded in, and `PolicyFiles` to `PolicyFile`. |",
         "owner": "`policy/read.ts` names, `types/policy/policy.ts:107`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/read.ts",
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/src/execution/planning/skips.ts",
+            "packages/cli/src/commands/list.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old check-state module and repeated completeness entry point are absent. Planning uses typed selection causes, list formats them, and buildPolicy constructs custom CheckSpec values before callers consume them.",
+            "One strict reader and one tolerant reader share problem collection/throwing. Session creation reads the validated result instead of repeating completeness. Planning/list/custom-command and strict/tolerant policy regressions verify the current contracts.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/020",
@@ -245,10 +398,21 @@
         "section": "Findings",
         "finding": "| `policy/merge.ts` | It builds the per-scope `MergedView` that templates and checks read. \"merge\" collides with `lifecycle/merge/`, which merges config files. Line 1 is a comment about `coversScope`, placed as the file header. | Rename the file to `policy/settings/view.ts`, `mergeForScope` to `scopeView`, and `MergedView` to `ScopeView`. Move the comment onto `coversScope`. |",
         "owner": "`policy/merge.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/settings/view.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildPolicy retains authored TOML names and removes their alias round trip. everyTable owns authored locations; tablesFor selects ancestor layers in depth order. ScopeView and KnownSettings belong to behavioral settings owners.",
+            "Naming lists/categories and structure defaults derive from authoritative schemas. Types remain under types and static data under config by the explicit repository decision. Scope-view and setting-surface tests verify inheritance, numeric/list/rule merging, and default conflict ownership.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/021",
@@ -269,10 +433,19 @@
         "section": "Findings",
         "finding": "| `config/policy/policy.ts:149` | `RUFF_PREVIEW_RULES` contains `null`, carried over in 846394d7. | Remove the entry and check the script that produced the list. |",
         "owner": "`config/policy/policy.ts:149`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/policy/settings.ts",
+            "packages/cli/src/execution/command/failures.ts",
+            "packages/cli/src/tools/run.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "RUFF_PREVIEW_RULES contains no null and identifies its producing rule command. Effective execution settings always contain the deadline; toolDeadline no longer carries a second fallback.",
+            "The default remains at the optional tool-run boundary, where callers may omit timeoutSeconds. Deadline, cancellation, process-failure, strict policy, and native experimental-rule recovery cases exercise the real paths.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/023",
@@ -281,10 +454,19 @@
         "section": "Findings",
         "finding": "| `config/policy/policy.ts:153`, `execution/tool/runner.ts:99,298`, `execution/fixers.ts:55` | `TOOL_DEADLINE` defines the timeout setting outside the schema. Three callers read `settings['timeout'] ?? TOOL_DEADLINE.default`, but the view always holds `timeout` (`setting-surface.ts:86`), so the fallback is dead. | Drop these fallbacks. Keep one in `tools/command.ts:29`, where the view is optional. |",
         "owner": "`config/policy/policy.ts:153`, `execution/tool/runner.ts:99,298`, `execution/fixers.ts:55`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/policy/settings.ts",
+            "packages/cli/src/execution/command/failures.ts",
+            "packages/cli/src/tools/run.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "RUFF_PREVIEW_RULES contains no null and identifies its producing rule command. Effective execution settings always contain the deadline; toolDeadline no longer carries a second fallback.",
+            "The default remains at the optional tool-run boundary, where callers may omit timeoutSeconds. Deadline, cancellation, process-failure, strict policy, and native experimental-rule recovery cases exercise the real paths.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/024",
@@ -293,10 +475,23 @@
         "section": "Findings",
         "finding": "| `policy/mutations.ts` | Each export (`setKey`, `deleteKey`, `addToList`, `removeFromList`, `addIgnore`, `removeMatching`) is a factory that returns a closure for `proposePolicy`. Each has one caller, `commands/set.ts` or `commands/ignore.ts`. `removeMatching` reports its count by mutating a `counter` argument. `getTable` serves `lifecycle/preview/compare.ts`. | Rename the file to `edit.ts`. Make these plain functions on the raw table, called inside the command's own mutate callback, and return the removed count. Move `addIgnore` and `removeMatching` into `commands/ignore.ts`. |",
         "owner": "`policy/mutations.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/025",
@@ -327,10 +522,23 @@
         "section": "Findings",
         "finding": "| `policy/toml/` (3 files), `config/policy/toml.ts`, `types/policy/toml.ts` | Five files serve two exports, `wrapLongArrays` and `getIndent`. | Merge them into `policy/toml-layout.ts`. |",
         "owner": "`policy/toml/` (3 files), `config/policy/toml.ts`, `types/policy/toml.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/027",
@@ -339,10 +547,23 @@
         "section": "Findings",
         "finding": "| `policy/fields.ts` | 20 lines: `reasoned()` and `relativeDirectory`, used by `schema.ts` and `tools.ts`. Folding it into `schema.ts` would create a `schema.ts` <-> `tools.ts` import cycle. | Keep it, inside `policy/schema/`. |",
         "owner": "`policy/fields.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/028",
@@ -351,10 +572,23 @@
         "section": "Findings",
         "finding": "| `policy/tools.ts`, `kits/tools.ts`, `src/tools/`, `types/tools/tools.ts` | The name \"tools\" means four different things: the `[tools.*]` table schema, the `[[tool]]` pin schema, the install layer, and a types file that holds `Session`. | Move `policy/tools.ts` to `policy/schema/tools.ts`, and `kits/tools.ts` to `kits/tool-schema.ts`. |",
         "owner": "`policy/tools.ts`, `kits/tools.ts`, `src/tools/`, `types/tools/tools.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/029",
@@ -363,10 +597,21 @@
         "section": "Findings",
         "finding": "| `config/policy/policy.ts:172,174,183,203`, `policy/schema.ts:38-42,69-77`, `types/policy/policy.ts:11-17,170-174` | The keys `max_chars`, `max_words`, and `case` are written four times: `NAMING_SCALARS`, `CATEGORY_KEYS`, `namingCategoryShape`, and `NamingTable`. `NAMING_LIST_KEYS` repeats the keys of `namingLists`. `STRUCTURE_DEFAULTS` and `StructureSettings` repeat `structureSchema`. | Derive them from the zod shapes: `Object.keys(namingCategoryShape)`, `Object.keys(namingLists.shape)`, and `z.infer`. |",
         "owner": "`config/policy/policy.ts:172,174,183,203`, `policy/schema.ts:38-42,69-77`, `types/policy/policy.ts:11-17,170-174`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/normalize.ts",
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/policy/settings/view.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildPolicy retains authored TOML names and removes their alias round trip. everyTable owns authored locations; tablesFor selects ancestor layers in depth order. ScopeView and KnownSettings belong to behavioral settings owners.",
+            "Naming lists/categories and structure defaults derive from authoritative schemas. Types remain under types and static data under config by the explicit repository decision. Scope-view and setting-surface tests verify inheritance, numeric/list/rule merging, and default conflict ownership.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/030",
@@ -375,10 +620,18 @@
         "section": "Findings",
         "finding": "| `policy/schema.ts:48-59`, `kits/schema.ts:145-156`, `types/policy/policy.ts:43-54,56-67` | The naming-rule shape is kept by hand in four places: `namingRule`, `manifestNamingRule`, `ShippedRule`, and `NamingRule`. | Keep one `namingRule` in `kits/schema.ts`, the lowest layer. The manifest form requires `reason`, and the types come from `z.infer`. |",
         "owner": "`policy/schema.ts:48-59`, `kits/schema.ts:145-156`, `types/policy/policy.ts:43-54,56-67`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/naming.ts",
+            "packages/cli/src/types/parsers/naming.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "namingTerms caches validated shipped naming data in its parser owner. NamingTerms, NamingLanguage, and NamingTermRule infer from authoritative schemas; policy and manifest path rules share namingRuleSchema, with a required reason only for manifest rules.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/031",
@@ -387,10 +640,23 @@
         "section": "Findings",
         "finding": "| `config/policy/policy.ts:210-212` | `LIMITS_PREFIX`, `TOOL_PREFIX`, and `RESERVED_SLOTS` are one-use constants for `'limits.'`, `'tools.'`, and `'extra'`. The same literals are also written inline in `audit.ts:33`, `written-keys.ts:45-46`, and `commands/set.ts:49`. | Inline the literals. |",
         "owner": "`config/policy/policy.ts:210-212`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/032",
@@ -399,10 +665,23 @@
         "section": "Findings",
         "finding": "| `policy/settings.ts:197` `asRecord` | This one-line wrapper around platform's `isRecord` keeps a suppression that claims \"about twenty values\". Five files use it. | Move it beside `isRecord` in `platform/text.ts`, or narrow with `isRecord` at the call sites. |",
         "owner": "`policy/settings.ts:197` `asRecord`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/edit.ts",
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/policy/schema/fields.ts",
+            "packages/cli/src/policy/schema/tools.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/toml/layout.ts",
+            "packages/cli/src/platform/objects.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Policy edits are direct mutations, and ignore merging/removal live in the ignore command with returned removal counts. createTable is private; pure reads use valueAt and isRecord directly.",
+            "TOML table and array layout share their parser owner, while substantial syntax support and repository-specific config/types ownership remain. Schema fields avoid an import cycle. Obsolete generic tools type bags, one-use prefix constants, and asRecord are absent.",
+            "Fresh frozen-source regression checkpoint: 687 CLI policy, command, execution, docs-schema, and TOML cases pass with 3516 assertions across 87 files (/tmp/gspot-policy-batch-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-policy-batch-types-0.log through /tmp/gspot-policy-batch-types-3.log). Affected ESLint check/fix passes (/tmp/gspot-policy-batch-imports.json). Source was reviewed against the complete original finding; original quotations remain unchanged."
+        ]
     },
     {
         "id": "areas/policy/033",

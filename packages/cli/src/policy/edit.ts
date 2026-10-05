@@ -5,6 +5,7 @@ import { stringify as stringifyToml } from 'smol-toml';
 import { policyIndent } from '#cli/policy/settings/known.ts';
 import { valueAt, isRecord } from '#cli/platform/objects.ts';
 import { wrapLongArrays } from '#cli/parsers/toml/layout.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { POLICY_LINE_WIDTH } from '#cli/config/parsers/toml.ts';
 import { parseTomlText, parseStrictPolicy } from '#cli/policy/read.ts';
 import type { Mutation, Proposal, PolicyKey, TomlTable } from '#cli/types/policy/settings.ts';
@@ -44,7 +45,7 @@ function createTable(raw: TomlTable, path: string[]): TomlTable | undefined {
  * @returns the new text, the parsed policy, and whether the text changed
  */
 export function proposePolicy(root: string, text: string, mutate: Mutation): Proposal {
-    const raw = parseTomlText(text, 'gspot.toml', 'policy');
+    const raw = parseTomlText(text, POLICY_FILE, 'policy');
     const before = new Set(Object.keys(raw));
     mutate(raw);
     // toml-patch cannot add an array of tables that was not there; seed the text with it first.

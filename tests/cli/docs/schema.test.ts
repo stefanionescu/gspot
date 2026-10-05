@@ -6,6 +6,7 @@ import { policySchema } from '#cli/policy/schema/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
+import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/docs/schema.ts';
 
 const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
@@ -61,3 +62,12 @@ test('manifest settings preserve typed values and reject unknown siblings', () =
     expect(validate({ configurations: ['bash'], bash: { safety_owners: ['scripts/cleanup.sh'] } })).toBe(true);
     expect(validate({ configurations: ['bash'], bash: { unknown: true } })).toBe(false);
 });
+
+test.each(UNSAFE_DIRECTORIES)(
+    'published and runtime schemas reject an escaping agent-rule project folder %j',
+    (path) => {
+        const input = { agent_rules: { project_folder: path } };
+        expect(policySchema.safeParse(input).success).toBe(false);
+        expect(validate(input)).toBe(false);
+    },
+);

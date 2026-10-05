@@ -84,8 +84,8 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
-        if (!isRecord(value) || 'value' in value) {
-            limits.root[key] = toReasoned(value as number | Required<Reasoned<number>>);
+        if (!isRecord(value) || isReasoned(value)) {
+            limits.root[key] = toReasoned(value);
             continue;
         }
         limits.groups[key] = Object.fromEntries(

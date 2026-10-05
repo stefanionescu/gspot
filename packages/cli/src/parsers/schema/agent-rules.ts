@@ -8,7 +8,7 @@ export const agentRulesSchema = z.strictObject({
         .default(true)
         .meta({ description: 'Install the rules for coding agents and the agent instructions.' }),
     folder: relativePath.default(RULES_DIRECTORY).describe('Repository-relative folder the rules install into.'),
-    project_folder: z.string().optional().meta({
+    project_folder: relativePath.optional().meta({
         description: "Repository-relative folder of the repository's own rules, linked from the instructions.",
     }),
     exclude: z
