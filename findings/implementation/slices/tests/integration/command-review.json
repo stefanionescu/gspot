@@ -102,10 +102,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/check/refusals.test.ts:56-58,73,88` `snapshotFolders` | The helper lists the shared system temporary folder by gspot's internal prefix `gspot-revision-` (`execution/checkout/revision.ts:250`). If the prefix changes, both tests pass with any leftover folder. Another process that makes a snapshot at the same time makes them fail. | Point `os.tmpdir` at a sandbox folder, as `cli/execution/fixers/isolation.test.ts:137` does. Assert that the folder is empty after the refusal. |",
         "owner": "`cli/commands/check/refusals.test.ts:56-58,73,88` `snapshotFolders`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/check/refusals.test.ts", "tests/config/cli/commands/check-refusals.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both staged refusals point os.tmpdir at a disposable test-owned folder and assert the entire folder is empty. Each spy restores in finally. The snapshotFolders helper and dependence on the system temporary directory or gspot-revision prefix are deleted.",
+            "AST comparison preserves all 18 assertion sites and strengthens only the diagnostic and two cleanup assertions. Runtime test-name comparison preserves all nine existing refusal cases and adds one incomplete UTF-8 case.",
+            "Root TypeScript, affected lint and formatting passed. Check, push and cancellation regressions passed: 40 tests, 244 assertions across six files. The native-spawn audit confirms all nine direct Bun subprocess call sites still use the remaining test budget."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/009",
@@ -114,10 +118,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/check/refusals.test.ts:49`, \"a push hook given %s exits 2 and leaves the working tree as it was\" | `not.toBe('')` passes for any stderr, including a crash trace. | Assert the text gspot gives for a ref update it cannot read. |",
         "owner": "`cli/commands/check/refusals.test.ts:49`, \"a push hook given %s exits 2 and leaves the working tree as it was\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/check/refusals.test.ts", "tests/config/cli/commands/check-refusals.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Push refusals assert the specific protocol or UTF-8 diagnostic, exit 2, unchanged source bytes and clean Git status. Invalid raw bytes retain their original FF FE 0A sequence; an added C3 case verifies that an incomplete UTF-8 sequence is refused on decoder flush. Static cases live under the matching check-refusals configuration owner; no production behavior changed.",
+            "AST comparison preserves all 18 assertion sites and strengthens only the diagnostic and two cleanup assertions. Runtime test-name comparison preserves all nine existing refusal cases and adds one incomplete UTF-8 case.",
+            "Root TypeScript, affected lint and formatting passed. Check, push and cancellation regressions passed: 40 tests, 244 assertions across six files. The native-spawn audit confirms all nine direct Bun subprocess call sites still use the remaining test budget."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/010",

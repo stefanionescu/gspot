@@ -1,7 +1,7 @@
 // Flags and input a check run refuses before it reads or changes anything.
+import * as os from 'node:os';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { captureChild } from '#tests/harness/process.ts';
@@ -10,6 +10,7 @@ import { prepareTestCommand } from '#tests/harness/command.ts';
 import { runGspot, startGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { FIX_REFUSALS, SELECTION_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/cli/commands/check-refusals.ts';
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -24,10 +25,7 @@ async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     return sandbox;
 }
 
-test.each([
-    [['--staged', '--fix'], 'Staged checks do not run fixers'],
-    [['--hook', 'pre-push', '--fix'], 'Pre-push object checks cannot be combined'],
-])('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
+test.each(FIX_REFUSALS)('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
     await using sandbox = await fixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -36,24 +34,23 @@ test.each([
     expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
-test.each([
-    ['text that is no ref update', Buffer.from('not a ref update\n')],
-    ['bytes that are not UTF-8', Buffer.from([0xff, 0xfe, 0x0a])],
-])('a push hook given %s exits 2 and leaves the working tree as it was', async (_, stdin) => {
-    await using sandbox = await fixableSandbox();
-    const child = startGspot(sandbox.path, ['check', '--hook', 'pre-push', '--', 'origin', 'unused'], {}, { stdin });
-    await using capture = captureChild(child);
-    expect(await child.exited).toBe(2);
-    expect(await capture.errors).not.toBe('');
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
-    expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
-});
-
-// The snapshot folders a staged run made and left in the system temporary folder.
-
-function snapshotFolders(): string[] {
-    return readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-revision-'));
-}
+test.each([...PUSH_INPUT_REFUSALS])(
+    'a push hook given $name exits 2 and leaves the working tree as it was',
+    async ({ stdin, diagnostic }) => {
+        await using sandbox = await fixableSandbox();
+        const child = startGspot(
+            sandbox.path,
+            ['check', '--hook', 'pre-push', '--', 'origin', 'unused'],
+            {},
+            { stdin: typeof stdin === 'string' ? stdin : Buffer.from(stdin) },
+        );
+        await using capture = captureChild(child);
+        expect(await child.exited).toBe(2);
+        expect(await capture.errors).toContain(diagnostic);
+        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+        expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
+    },
+);
 
 test('a staged check during a merge conflict exits 2 with the conflict named and leaves no snapshot', async () => {
     await using sandbox = await fixableSandbox();
@@ -64,11 +61,16 @@ test('a staged check during a merge conflict exits 2 with the conflict named and
     writeFileSync(join(sandbox.path, 'source.txt'), 'main\n');
     gitOutput(sandbox.path, ['commit', '-qam', 'Main']);
     expect(git(sandbox.path, ['merge', '-q', 'other']).code).not.toBe(0);
-    const before = snapshotFolders();
-    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Resolve index conflicts');
-    expect(snapshotFolders()).toStrictEqual(before);
+    await using temporary = await testdir();
+    const temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
+    try {
+        const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Resolve index conflicts');
+        expect(readdirSync(temporary.path)).toStrictEqual([]);
+    } finally {
+        temporaryDirectory.mockRestore();
+    }
 });
 
 test('a staged check over a file name that is not UTF-8 exits 2 and leaves no snapshot', async () => {
@@ -81,20 +83,21 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sn
     const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'index a raw filename');
     const indexed = Bun.spawnSync(command, { cwd: sandbox.path, stdin: line, timeout: prepared.options.timeoutMs });
     expect(indexed.exitCode, indexed.stderr.toString()).toBe(0);
-    const before = snapshotFolders();
-    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');
-    expect(snapshotFolders()).toStrictEqual(before);
+    await using temporary = await testdir();
+    const temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
+    try {
+        const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');
+        expect(readdirSync(temporary.path)).toStrictEqual([]);
+    } finally {
+        temporaryDirectory.mockRestore();
+    }
 });
 
-test.each([
-    ['a path outside the repository', ['check', '../elsewhere.txt'], 'is outside this repository'],
-    ['a path that matches nothing', ['check', 'missing'], 'matches no repository files'],
-    ['a message file that does not exist', ['check', '--message-file', 'missing-message.txt'], 'cannot be read'],
-])('check with %s exits 2 and names the problem', async (_, argv, expected) => {
+test.each(SELECTION_REFUSALS)('check with %s exits 2 and names the problem', async (_, argv, expected) => {
     await using sandbox = await fixableSandbox();
-    const refused = await runGspot(sandbox.path, argv);
+    const refused = await runGspot(sandbox.path, [...argv]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain(expected);
 });
