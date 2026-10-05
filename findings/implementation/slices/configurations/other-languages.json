@@ -7,9 +7,17 @@
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:1-18` (no `target-version`) | Ruff runs with `--config .gspot/config/ruff.toml`, and that file sets no `target-version`. So Ruff ignores the project's `requires-python`. In a sample with `requires-python = \">=3.8\"`, Ruff offered UP045 (`X \\| None`) and UP006 (`list[int]`) as automatic fixes. `gspot check --fix` applies them, and the code then fails on Python 3.8 and 3.9. When `ruff.toml` sits next to `pyproject.toml`, Ruff reports FA100 instead. | Write `target-version` from the scope's `requires-python`. `packages/cli/src/repository/packages.ts:123` already reads it. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:1-18` (no `target-version`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "Ruff check, fix, and formatting use native configuration discovery through each scope's generated ruff.toml pointer. Ruff now infers requires-python from the scoped pyproject.toml instead of losing it through an explicit --config argument. Native tests cover Python 3.8, 3.9, and 3.10 constraints at both levels and verify safe automatic fixes preserve older runtime syntax. No duplicate Python version parser was added.",
+        "verification": [
+            "Source: packages/cli/configurations/language/python/manifest.toml and basedpyrightconfig.json.tmpl; tests/tools/generation/ruff.test.ts (version, diagnostic ownership, and scoped configuration cases).",
+            "Native proof: /tmp/gspot-python-versions-native.log (15 passing cases; the two version expectations are superseded by /tmp/gspot-python-versions-version-safe.log, 2 passing cases and 36 assertions).",
+            "CLI regression proof: /tmp/gspot-python-versions-cli.log, 501 passing cases, 1,913 assertions, and 66 files.",
+            "Ruff inference contract: https://docs.astral.sh/ruff/configuration/#inferring-the-python-version.",
+            "All four TypeScript targets: /tmp/gspot-python-versions-types-final.log. Documentation: /tmp/gspot-python-versions-docs.log, 317 pages with valid links and fragments.",
+            "Canonical generation: /tmp/gspot-python-versions-apply-first.json and /tmp/gspot-python-versions-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Repository ESLint: /tmp/gspot-python-versions-lint-verified.json, all five scopes passed. Staged check: /tmp/gspot-python-versions-staged-verified.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/002",
@@ -163,9 +171,17 @@
         "finding": "| `packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:19,22,42,80,94` (and `:49,76` at `all`) | basedpyright reports these as errors at both levels: `reportUnusedImport`, `reportUnusedVariable`, `reportRedeclaration`, `reportUndefinedVariable`, and `reportIgnoreCommentWithoutRule`. Ruff's `recommended` list reports the same problems as F401, F841, F811, F821, and PGH003. At `all`, `reportPrivateUsage` repeats SLF001, and `reportSelfClsParameterName` repeats N804 and N805. So each problem appears twice under two IDs, and accepting one needs two `gspot ignore` entries. | Set these basedpyright rules to `\"none\"`, and let Ruff report them. |",
         "owner": "`packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:19,22,42,80,94` (and `:49,76` at `all`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The seven basedpyright severities duplicated by Ruff are disabled in the shipped template. Both generated levels assert that ownership. Native checks produce one Ruff F401 for an unused import while retaining the independent basedpyright reportAssignmentType; correcting the source clears both checks.",
+        "verification": [
+            "Source: packages/cli/configurations/language/python/manifest.toml and basedpyrightconfig.json.tmpl; tests/tools/generation/ruff.test.ts (version, diagnostic ownership, and scoped configuration cases).",
+            "Native proof: /tmp/gspot-python-versions-native.log (15 passing cases; the two version expectations are superseded by /tmp/gspot-python-versions-version-safe.log, 2 passing cases and 36 assertions).",
+            "CLI regression proof: /tmp/gspot-python-versions-cli.log, 501 passing cases, 1,913 assertions, and 66 files.",
+            "Ruff inference contract: https://docs.astral.sh/ruff/configuration/#inferring-the-python-version.",
+            "All four TypeScript targets: /tmp/gspot-python-versions-types-final.log. Documentation: /tmp/gspot-python-versions-docs.log, 317 pages with valid links and fragments.",
+            "Canonical generation: /tmp/gspot-python-versions-apply-first.json and /tmp/gspot-python-versions-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Repository ESLint: /tmp/gspot-python-versions-lint-verified.json, all five scopes passed. Staged check: /tmp/gspot-python-versions-staged-verified.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/012",

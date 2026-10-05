@@ -101,9 +101,9 @@ title = "Lint Python files"
 example = "The expression `eval(user_input)` reports S307 when that rule is selected. Replace dynamic evaluation with parsing and explicit operations appropriate to the input contract."
 level = "recommended"
 stage = "commit"
-command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--output-format", "json", "{files}"]
+command = ["ruff", "check", "--no-cache", "--output-format", "json", "{files}"]
 exit_codes = [1]
-fix = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
+fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
 files = {extensions = [".py", ".pyi"]}
 output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
 summary = "Lints every Python file with the Ruff rules for the level, security rules included."
@@ -116,9 +116,9 @@ title = "Format Python files"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
 level = "recommended"
 stage = "commit"
-command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
+command = ["ruff", "format", "--no-cache", "--check", "--output-format", "concise", "{files}"]
 exit_codes = [1]
-fix = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
+fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
 files = {extensions = [".py", ".pyi"]}
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it."}
 summary = "Checks the layout of every Python file against the Ruff formatter."

@@ -46,6 +46,16 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
         'sample.py': 'value = 1',
     });
     expect(JSON.parse(types)).toHaveProperty('reportImportCycles', level === 'all' ? 'error' : 'none');
+    for (const rule of [
+        'reportUnusedImport',
+        'reportUnusedVariable',
+        'reportRedeclaration',
+        'reportUndefinedVariable',
+        'reportIgnoreCommentWithoutRule',
+        'reportPrivateUsage',
+        'reportSelfClsParameterName',
+    ])
+        expect(JSON.parse(types)).toHaveProperty(rule, 'none');
 });
 
 test('experimental activation is refused before generation', () => {

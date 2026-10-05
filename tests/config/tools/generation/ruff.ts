@@ -55,3 +55,24 @@ export const FORMAT_CASES = [
     { file: 'sample.py', config: '.gspot/config/ruff.toml', formatted: "VALUE = 'example'\r\n" },
     { file: 'app/sample.py', config: '.gspot/config/app/ruff.toml', formatted: 'VALUE = "example"\n' },
 ] as const;
+
+/** Python versions whose annotations require different runtime syntax. */
+export const VERSION_CASES = [
+    { scope: '', requires: '>=3.8,<4', generics: false, unions: false, annotation: 'Optional[List[int]]' },
+    { scope: 'legacy', requires: '==3.9.*', generics: true, unions: false, annotation: 'Optional[List[int]]' },
+    { scope: 'modern', requires: '~=3.10', generics: true, unions: true, annotation: 'list[int] | None' },
+] as const;
+
+/** Annotations must remain valid for the project's minimum Python version. */
+export const VERSION_SOURCE = `"""Annotation examples."""
+
+from typing import List, Optional
+
+
+def retain(values: Optional[List[int]]) -> Optional[List[int]]:
+    """Keep the supplied values."""
+    return values
+`;
+
+/** Ruff owns unused imports; basedpyright retains the independent assignment error. */
+export const DUPLICATE_SOURCE = '"""An example module."""\n\nimport math\n\nTOTAL: int = "one"\n';

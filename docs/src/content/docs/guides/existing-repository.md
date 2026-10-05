@@ -26,6 +26,8 @@ settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 
 For Python, init writes a root `ruff.toml` that extends the generated Ruff configuration.
 Editor formatting follows the same settings as `gspot check --fix`.
+Ruff reads each project's `requires-python` before offering syntax changes.
+See [Python-version inference in Ruff](https://docs.astral.sh/ruff/configuration/#inferring-the-python-version).
 
 Init refuses uncommitted changes, so Git history keeps every file it replaces. To get one
 back, check it out from the commit before init.

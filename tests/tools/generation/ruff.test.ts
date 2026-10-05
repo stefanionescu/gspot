@@ -8,11 +8,20 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
+import { installPrivateTools } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { RuffFinding } from '#tests/types/tools/generation/ruff.ts';
-import { RULE_SOURCE, FORMAT_CASES, FUNCTION_SOURCE } from '#tests/config/tools/generation/ruff.ts';
+
+import {
+    RULE_SOURCE,
+    FORMAT_CASES,
+    VERSION_CASES,
+    VERSION_SOURCE,
+    FUNCTION_SOURCE,
+    DUPLICATE_SOURCE,
+} from '#tests/config/tools/generation/ruff.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
@@ -38,27 +47,27 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
     expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT001']) } });
 
-    const run = (config: string, path: string) =>
-        runTestCommandBlocking(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', path], {
+    const run = (path: string) =>
+        runTestCommandBlocking(['ruff', 'check', '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,
         });
-    const unselected = run('.gspot/config/ruff.toml', 'tests/test_example.py');
+    const unselected = run('tests/test_example.py');
     expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);
-    const failed = run('.gspot/config/app/ruff.toml', 'app/tests/test_example.py');
+    const failed = run('app/tests/test_example.py');
     expect(failed.code, failed.stderr).toBe(1);
     expect(JSON.parse(failed.stdout)).toMatchObject([{ code: 'PT001' }]);
     await Bun.write(
         join(sandbox.path, 'app/tests/test_example.py'),
         defect.replace('@pytest.fixture()', '@pytest.fixture'),
     );
-    const corrected = run('.gspot/config/app/ruff.toml', 'app/tests/test_example.py');
+    const corrected = run('app/tests/test_example.py');
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
         await Bun.write(join(sandbox.path, path), 'assert True\n');
-    const rootAssertion = run('.gspot/config/ruff.toml', 'tests/test_example.py');
+    const rootAssertion = run('tests/test_example.py');
     expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
     expect(JSON.parse(rootAssertion.stdout)).toMatchObject([{ code: 'S101' }]);
-    const testAssertion = run('.gspot/config/app/ruff.toml', 'app/tests/test_example.py');
+    const testAssertion = run('app/tests/test_example.py');
     expect(testAssertion.code, testAssertion.stderr).toBe(0);
 });
 
@@ -163,3 +172,82 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
     }
 });
+
+test.each(['recommended', 'all'] as const)('Ruff fixes respect each project Python version at %s', async (level) => {
+    await using sandbox = await testdir();
+    const tables = VERSION_CASES.filter(({ scope }) => scope !== '')
+        .map(({ scope }) => `[[scope]]\npath = "${scope}"\n`)
+        .join('');
+    const files = Object.fromEntries(
+        VERSION_CASES.flatMap(({ scope, requires }) => [
+            [
+                join(scope, 'pyproject.toml'),
+                `[project]\nname = "version-example"\nversion = "1.0.0"\nrequires-python = "${requires}"\n`,
+            ],
+            [join(scope, 'sample.py'), VERSION_SOURCE],
+        ]),
+    );
+    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['python'], { level, tables }), ...files });
+    const applied = await spawnGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await installPrivateTools(sandbox.path);
+    const command = ['check', '--only', 'python/ruff', '--json'];
+    const checked = await spawnGspot(sandbox.path, command);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = JSON.parse(checked.stdout) as RunReport;
+    for (const { scope, generics, unions } of VERSION_CASES) {
+        const found = report.checks.find((entry) => entry.scope === scope)!.findings;
+        expect(
+            found.some(({ rule }) => rule === 'UP006'),
+            scope || 'root',
+        ).toBe(generics);
+        expect(
+            found.some(({ rule }) => rule === 'UP045'),
+            scope || 'root',
+        ).toBe(unions);
+    }
+    const fixed = await spawnGspot(sandbox.path, [...command, '--fix']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
+    const fixedReport = JSON.parse(fixed.stdout) as RunReport;
+    for (const { scope, annotation } of VERSION_CASES) {
+        const text = await Bun.file(join(sandbox.path, scope, 'sample.py')).text();
+        expect(text, scope).toContain(annotation);
+        const result = fixedReport.checks.find((entry) => entry.scope === scope)!;
+        expect(result.status, scope).toBe(scope === 'modern' ? 'passed' : 'failed');
+        expect(
+            result.findings.every(({ fixable }) => !fixable),
+            scope || 'root',
+        ).toBe(true);
+    }
+});
+
+test.each(['recommended', 'all'] as const)(
+    'Python diagnostics keep one unused-import owner and retain type errors at %s',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['python'], { level }),
+            'sample.py': DUPLICATE_SOURCE,
+        });
+        const applied = await spawnGspot(sandbox.path, ['apply', '--json']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await installPrivateTools(sandbox.path);
+        const command = ['check', '--only', 'python/ruff', 'python/basedpyright', '--json'];
+        const checked = await spawnGspot(sandbox.path, command);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        const report = JSON.parse(checked.stdout) as RunReport;
+        expect(
+            report.checks.flatMap(({ findings }) =>
+                findings.map(({ check, file, line, rule }) => ({ check, file, line, rule })),
+            ),
+        ).toStrictEqual([
+            { check: 'python/ruff', file: 'sample.py', line: 3, rule: 'F401' },
+            { check: 'python/basedpyright', file: 'sample.py', line: 5, rule: 'reportAssignmentType' },
+        ]);
+        await Bun.write(join(sandbox.path, 'sample.py'), '"""An example module."""\n\nTOTAL: int = 1\n');
+        const corrected = await spawnGspot(sandbox.path, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
+            [],
+        );
+    },
+);
