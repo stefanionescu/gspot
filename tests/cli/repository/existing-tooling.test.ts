@@ -9,6 +9,7 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
+    LEFTHOOK_FILES,
     LINKED_HOOK_FILES,
     LINKED_HOOK_FOLDERS,
     LINKED_RULE_FOLDERS,
@@ -273,3 +274,18 @@ test.skipIf(!isPosix).each(LINKED_HOOK_FILES)(
         expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
     },
 );
+
+test.each(LEFTHOOK_FILES)('hook discovery reports %s and preserves authored bytes', async (path) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        [path]: 'authored hook configuration\n',
+        'hook-settings.yaml': 'unrelated hook configuration\n',
+        'source.ts': 'export {};\n',
+    });
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([{ kind: 'lefthook', path, files: [] }]);
+    expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('authored hook configuration\n');
+    unlinkSync(join(sandbox.path, path));
+    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
+    expect(readFileSync(join(sandbox.path, 'hook-settings.yaml'), 'utf8')).toBe('unrelated hook configuration\n');
+    expect(readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
+});

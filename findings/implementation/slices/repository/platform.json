@@ -844,10 +844,19 @@
         "section": "Repository and Platform",
         "finding": "| `repository/survey.ts:104` hook manager files | The list is written inline, while the other hook names live in config. It misses `lefthook.yaml`, `.lefthook.yaml`, and `.config/lefthook.yml`, which lefthook's configuration docs also list. The review did not run lefthook to confirm. | Move the list to config as `HOOK_MANAGER_FILES`, with every name lefthook and pre-commit accept. |",
         "owner": "`repository/survey.ts:104` hook manager files",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/hooks.ts",
+            "packages/cli/src/repository/survey.ts",
+            "tests/cli/repository/existing-tooling.test.ts",
+            "tests/config/cli/repository/existing-tooling.ts"
+        ],
+        "status": "closed",
+        "outcome": "Hook configuration filenames live in their behavioral configuration owner. Survey discovery recognizes all documented main and standalone local Lefthook names plus the default pre-commit filename. HOOK_CONFIGURATION_FILES follows the repository naming policy; the suggested manager name failed its staged check.",
+        "verification": [
+            "Official sources https://lefthook.dev/configuration/ and https://lefthook.dev/usage/features/local/ list the supported formats and permit local configuration without a main file. https://pre-commit.com/ documents .pre-commit-config.yaml; arbitrary --config paths are not inferred by this filename discovery. No native Lefthook run is claimed.",
+            "Thirty independent literal Lefthook paths exercise real filesystem discovery, exact configuration bytes, removal back to no hooks and unrelated byte preservation. Before the fix, 28 new filename cases failed and the two existing names passed. After the fix, repository/init/doctor regressions passed 269 cases and 880 assertions across 27 files. Root TypeScript, affected ESLint and formatting passed.",
+            "The preceding mechanical commit f893b669 retained the original three filenames and ordering with exact source reconstruction. This behavior batch adds names in the same owner, retains the original first-two priority and adds no compatibility exports or alternate implementation."
+        ]
     },
     {
         "id": "slices/repository-platform/044",
