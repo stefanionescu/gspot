@@ -3,8 +3,39 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { POLICY } from '#tests/config/cli/commands/set.ts';
+import { readTree } from '#tests/harness/preservation.ts';
+import type { CommandFailureJson } from '#cli/types/output.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { POLICY, SET_CONFLICT_POLICIES, SET_ARGUMENT_CONFLICTS } from '#tests/config/cli/commands/set.ts';
+
+test.each(
+    SET_ARGUMENT_CONFLICTS.flatMap((entry) =>
+        SET_CONFLICT_POLICIES.map(({ name, policy }) => ({ ...entry, policy, policyName: name })),
+    ),
+)(
+    'set refuses $name with $policyName before reading policy or writing state',
+    async ({ argv, message: diagnostic, policy }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': policy, 'control.txt': 'preserve this source\n' });
+        const before = readTree(sandbox.path);
+        for (const command of [argv, ['--json', ...argv], [...argv, '--json']]) {
+            const result = await runGspot(sandbox.path, command);
+            expect(result.code, result.stdout + result.stderr).toBe(2);
+            if (command.includes('--json')) {
+                expect(result.stderr).toBe('');
+                const failure = JSON.parse(result.stdout) as CommandFailureJson;
+                expect(failure.error).toBe('arguments');
+                expect(failure.message).toContain(diagnostic);
+                expect(failure.message).not.toContain('valid TOML');
+            } else {
+                expect(result.stdout).toBe('');
+                expect(result.stderr).toContain(diagnostic);
+                expect(result.stderr).not.toContain('valid TOML');
+            }
+            expect(readTree(sandbox.path)).toStrictEqual(before);
+        }
+    },
+);
 
 test.each([
     ['a scope-only key without --scope', ['set', 'bash.boundary_roots', 'scripts'], '--scope api'],

@@ -581,9 +581,15 @@
         "finding": "| `commands/set.ts:240-242`, `buildMutation:100-107` | Conflicting flags are accepted without a message. With both `--replace` and `--remove`, `--remove` wins. `--default` ignores any values given with it. | Declare the conflicts with commander's `Option.conflicts()`. |",
         "owner": "`commands/set.ts:240-242`, `buildMutation:100-107`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "registerSet declares --replace versus --remove and --default versus both list controls through Commander Option.conflicts. Values, including an explicitly empty value, with --default are rejected through command.error before global working-directory resolution or repository reads. Text and JSON preserve exit code 2 and the common arguments error code. The existing setting parsing, validation, mutation and publication functions are unchanged.",
+            "All eight conflict scenarios cover both option orders and both valid authored settings and malformed policy input. Each runs text output and JSON with the flag before and after the command, asserts the specific argument diagnostic and stream separation, and preserves every file, byte, mode and state path. The valid policy contains authored list and level values, so silently dropping values or choosing one conflicting mutation is detected.",
+            "/tmp/gspot-set-conflicts-valid-before-tests.log: all 16 valid/invalid policy cases fail against the original source. Current source restored exactly before verification. /tmp/gspot-set-conflicts-final-tests.log: 66 passed, 0 failed, 640 assertions across five affected files. Final help-only change: /tmp/gspot-set-conflicts-final-help-tests.log, 38 passed, 0 failed, 367 assertions across two files.",
+            "/tmp/gspot-set-conflicts-final-types.log, /tmp/gspot-set-conflicts-final-lint.log, /tmp/gspot-set-conflicts-final-format.log and /tmp/gspot-set-conflicts-help-lint.log: root TypeScript, affected lint and formatting passed. /tmp/gspot-set-conflicts-proof.log: all 14 existing setting functions, both original test declarations and every original assertion, and the original policy fixture remain byte-for-byte unchanged.",
+            "/tmp/gspot-set-conflicts-reference.log: the generated set reference contains the mutually exclusive list controls and the default restrictions from the actual option descriptions. No second hand-maintained command reference or new policy exception was introduced."
+        ]
     },
     {
         "id": "slices/commands/037",

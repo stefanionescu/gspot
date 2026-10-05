@@ -4,11 +4,13 @@ import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { Option } from '@commander-js/extra-typings';
 import { printResult } from '#cli/output/messages.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import type { SetOptions } from '#cli/types/commands/set.ts';
+import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { isLoosening } from '#cli/policy/problems/reasons.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -221,7 +223,7 @@ export function registerSet(program: Program): void {
         .argument('[value...]', 'Setting value or list items; omit with --default')
         .summary('Change a setting')
         .description(
-            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
+            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. Use only one of --replace, --remove, and --default. --default takes no value. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
         )
         .addHelpText(
             'after',
@@ -229,11 +231,18 @@ export function registerSet(program: Program): void {
         )
         .option('--reason <text>', 'Say why; required to loosen a setting when require_reasons is true')
         .option('--scope <path>', 'Write the setting in this scope instead of the root')
-        .option('--replace', 'Replace the whole list instead of adding to it')
+        .addOption(new Option('--replace', 'Replace the whole list; use --replace or --remove').conflicts('remove'))
         .option('--remove', 'Remove these items from the list')
-        .option('--default', 'Delete the setting so the inherited or default value applies')
+        .addOption(
+            new Option(
+                '--default',
+                'Restore the inherited or default value. Omit values, --replace, and --remove.',
+            ).conflicts(['replace', 'remove']),
+        )
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (key, items, flags, command) => {
+            if (flags.default === true && items.length > 0)
+                command.error('--default cannot be used with setting values.', { exitCode: EXIT_ERROR });
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());
             printResult(
