@@ -18531,6 +18531,25 @@
                 "Normal hook-enabled commit and push.",
                 "Continue remaining implementation batches and separately authorized publication/deployment."
             ]
+        },
+        {
+            "subsystem": "SQL delivery security gate",
+            "outcome": "The initial normal push of 19f1c491 failed OSV on three newly reported transitive advisories. Patch overrides resolve compression 1.8.2, proxy-addr 2.0.8, and source-map-js 1.2.2 without suppressions or weakened checks. The lock diff contains these patch upgrades only. All 963 open review records remain retained.",
+            "evidence": [
+                "Initial actual push: /tmp/gspot-sql-contract-push.log (70 passes, one OSV failure, seven skips; push rejected).",
+                "Exact advisory replay: /tmp/gspot-sql-contract-osv-replay.json (GHSA-vc2v-76pw-4v95, GHSA-jqcg-44mw-7w3h, GHSA-68fv-2mgg-jv7q).",
+                "Primary patch sources: https://github.com/expressjs/compression/security/advisories/GHSA-vc2v-76pw-4v95; https://github.com/jshttp/proxy-addr/security/advisories/GHSA-jqcg-44mw-7w3h; https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2.",
+                "Installed primary source diffs reviewed: compression releases zlib resources on response close; proxy-addr checks mapped IPv6 trust prefix and canonicalizes mapped candidates; source-map-js bounds indexed section offsets and avoids exhausted-line expansion.",
+                "Actual OSV passes without findings: /tmp/gspot-sql-security-osv.json.",
+                "Installed consumer dependency resolution and native positive/negative contracts: /tmp/gspot-sql-security-native-contracts-final.json (patch versions, spoof rejection, trusted/untrusted clients, valid flat/indexed maps, oversized offset refusal). Earlier ad hoc indexed-map probes used unsupported conversion paths; final mapping-iteration regression passes.",
+                "All four TypeScript targets: /tmp/gspot-sql-security-types.log. Documentation: /tmp/gspot-sql-security-docs.log (316 pages, all links/fragments valid).",
+                "Delivered-package suite: /tmp/gspot-sql-security-package.log (nine passes, 450 assertions across eight files; isolated registry closes normally).",
+                "Actual gspot check --staged: /tmp/gspot-sql-security-staged.json (37 passes, one skip, no findings/errors)."
+            ],
+            "remaining": [
+                "Hook-enabled dependency commit and normal push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
         }
     ],
     "implementationBatches": {
