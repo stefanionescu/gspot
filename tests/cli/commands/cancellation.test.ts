@@ -1,4 +1,4 @@
-// Every case signals a running gspot, and Windows ends a process without delivering a signal to its handlers.
+// Bun cancellation probes require POSIX signals so handlers can finish and dispose their children.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
@@ -11,6 +11,7 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { gspot, spawnGspot, startGspot } from '#tests/harness/gspot.ts';
 import { CHILD_OPTIONS } from '#tests/config/cli/commands/cancellation.ts';
+import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { READY_POLL_MS, READY_TIMEOUT_MS } from '#tests/config/harness/process.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -27,6 +28,28 @@ async function waitForJson(path: string): Promise<unknown> {
         }
         await Bun.sleep(READY_POLL_MS);
     }
+}
+
+// Both cancellation probes pause the selected Git call and delegate every other call to the real executable.
+function fakeGit(directory: string, options: FakeGitOptions): Record<string, string> {
+    const script = `#!${process.execPath}
+const args = process.argv.slice(2);
+if (args[0] === ${JSON.stringify(options.operation)}) {
+    const counter = Bun.file(${JSON.stringify(join(directory, 'calls.txt'))});
+    const count = (await counter.exists() ? Number(await counter.text()) : 0) + 1;
+    await Bun.write(counter, String(count));
+    if (count === ${String(options.pauseOnCall)}) {
+        const checkout = args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined;
+        await Bun.write(${JSON.stringify(options.marker)}, JSON.stringify({pid: process.pid, checkout}));
+        await Bun.sleep(60_000);
+    }
+}
+const child = Bun.spawn([${JSON.stringify(options.executable)}, ...args], {stdin:'inherit', stdout:'inherit', stderr:'inherit'});
+process.exit(await child.exited);
+`;
+    writeFileSync(join(directory, 'git'), script, { mode: 0o755 });
+    const environment = environmentVariables();
+    return { ...environment, PATH: `${directory}${delimiter}${environment['PATH'] ?? ''}` };
 }
 
 test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
@@ -56,7 +79,7 @@ test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
     15_000,
 );
 
-test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
+test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
     'staged cancellation during %s preserves source content and permits retry',
     async (operation) => {
         await using sandbox = await testdir();
@@ -75,18 +98,12 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
         expect(nativeGit).not.toBeNull();
         const marker = join(sandbox.path, 'started.json');
         const binaryDirectory = join(sandbox.path, 'bin');
-        writeFileSync(
-            join(binaryDirectory, 'git'),
-            `#!${process.execPath}\nconst args = process.argv.slice(2);\nif (args[0] === ${JSON.stringify(operation)}) {\nawait Bun.write(${JSON.stringify(marker)}, JSON.stringify({pid:process.pid,checkout:args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined}));\nawait Bun.sleep(60_000);\n} else {\nconst child=Bun.spawn([${JSON.stringify(nativeGit)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n}\n`,
-            { mode: 0o755 },
-        );
         const child = startGspot(
             sandbox.path,
             ['check', '--staged', '--only', 'bash/syntax', '--json'],
             {
-                ...environmentVariables(),
+                ...fakeGit(binaryDirectory, { operation, marker, pauseOnCall: 1, executable: nativeGit! }),
                 TMPDIR: scratch,
-                PATH: `${binaryDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             },
             { timeoutMs: CHILD_OPTIONS.timeout },
         );
@@ -135,24 +152,15 @@ test.skipIf(!isPosix)(
         expect(git(sandbox.path, ['commit', '-qam', 'feat: second']).code).toBe(0);
         const second = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
         const marker = join(sandbox.path, 'started.json');
-        const counter = join(sandbox.path, 'clones.txt');
         const nativeGit = Bun.which('git');
         expect(nativeGit).not.toBeNull();
         const binaryDirectory = join(sandbox.path, 'bin');
         mkdirSync(binaryDirectory);
-        writeFileSync(
-            join(binaryDirectory, 'git'),
-            `#!${process.execPath}\nconst args=process.argv.slice(2);\nif(args[0]==='clone'){\nconst file=Bun.file(${JSON.stringify(counter)});\nconst count=await file.exists()?Number(await file.text()):0;\nawait Bun.write(file,String(count+1));\nif(count===1){await Bun.write(${JSON.stringify(marker)},JSON.stringify({pid:process.pid,checkout:args.at(-1)}));await Bun.sleep(60_000);}\n}\nconst child=Bun.spawn([${JSON.stringify(nativeGit)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n`,
-            { mode: 0o755 },
-        );
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
         const child = startGspot(
             sandbox.path,
             ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json'],
-            {
-                ...environmentVariables(),
-                PATH: `${binaryDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
-            },
+            fakeGit(binaryDirectory, { operation: 'clone', marker, pauseOnCall: 2, executable: nativeGit! }),
             { timeoutMs: CHILD_OPTIONS.timeout, stdin: protocol },
         );
         await using capture = captureChild(child);

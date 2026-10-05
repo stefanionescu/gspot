@@ -82,10 +82,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/cancellation.test.ts:62-77`, `:118-133` | Two tests write a fake `git` as a one-line JavaScript string and build the same `PATH` override inline. The shims are hard to read and differ only in when they pause. | Add one local `fakeGit(directory, { operation, marker, pauseOnCall })` that writes the shim and returns the environment. Use it in both tests. |",
         "owner": "`cli/commands/cancellation.test.ts:62-77`, `:118-133`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/cancellation.test.ts", "tests/types/cli/commands/cancellation.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One local fakeGit builder now owns the executable fixture and PATH override. Staged cases pause the first diff, clone, or cat-file call; the multi-reference push pauses the second clone while delegating the first and unrelated commands to the real Git executable. The generated script uses readable statements and named checkout data.",
+            "Both callers retain their real-executable prerequisite assertions and pass the verified executable explicitly. Required options live in the cancellation type owner; no assertions or executable fixture producers moved into config or shared harness. Existing readiness markers, scratch isolation, cancellation reports, index/source preservation, child disposal, and retries remain intact.",
+            "AST comparison retains all 43 assertion sites and all nine runtime cancellation cases. Root TypeScript, affected ESLint, and formatting passed. Cancellation and push regression coverage passed 18 tests with 158 assertions across three files on macOS. All nine direct native test spawns still use the remaining test budget; POSIX guards remain intact."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/007",
