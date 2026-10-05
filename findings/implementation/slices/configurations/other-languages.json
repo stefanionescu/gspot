@@ -190,10 +190,29 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:156-169` (pydoclint), `packages/cli/src/config/checks/language/python.ts:21` | I ran pydoclint with gspot's arguments. With no docstring convention set, pydoclint reads docstrings as NumPy style. A Google-style docstring that names the wrong argument then passed with exit code 0. With `tools.ruff.docstring_convention = \"google\"`, a correct Google docstring on a typed function got DOC105, DOC109, DOC110, and DOC203. pydoclint expects the types to be repeated in the docstring by default. | Pass `--arg-type-hints-in-docstring false --check-return-types false --check-yield-types false` unless `[tool.pydoclint]` sets them. When no convention is set, detect the style from the docstrings: an `Args:` section means Google style, and an underlined `Parameters` heading means NumPy style. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:156-169` (pydoclint), `packages/cli/src/config/checks/language/python.ts:21`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/language/python/pydoclint.ts",
+            "packages/cli/src/checks/language/python/imports/linter.ts",
+            "tests/tools/configurations/language/python.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Implementation: source docstrings select Google or NumPy style per file; authored native type requirements are preserved; signature types are not repeated by default. Import contracts use setup.cfg, .importlinter, then pyproject.toml and retain their native dependency chains after terminal formatting is removed.",
+            "Affected CLI and generation cohort: /tmp/gspot-python-contracts-cli-final.log, 304 passing cases and 1440 assertions. Final Python cohort includes later-batch failure preservation and styled native diagnostics: /tmp/gspot-python-contracts-cli-ready.log, 33 passing cases and 89 assertions.",
+            "Documentation: /tmp/gspot-python-contracts-docs.log, 317 pages and valid built-site links and fragments. Canonical apply: /tmp/gspot-python-contracts-apply-first.json and /tmp/gspot-python-contracts-apply-second.json, both 137 unchanged outputs and no writes.",
+            "The initial native cohort passed 20 cases but failed the three new dependency-chain assertions. The terminal-format parser was then corrected; direct installed import-linter 2.15 output retains the chain: /tmp/gspot-python-contracts-installed-output.json. This inspection uses a cached tool and does not replace the public installation regression suite.",
+            "Verification remains incomplete. Updated sandbox permissions prevent the local native-suite registry from listening on 127.0.0.1: /tmp/gspot-python-contracts-native-final.log (EPERM). Git staging is also denied because .git is read-only. The staged report has no checks because these files cannot be staged: /tmp/gspot-python-contracts-staged.json. These records remain open until the final native suite, meaningful staged gate, normal commit, and push succeed.",
+            "Final four-target TypeScript verification: /tmp/gspot-python-contracts-types-ready.log. Repository ESLint passes in all five scopes: /tmp/gspot-python-contracts-repository-lint.json. Final source formatting, ESLint, and naming checks all pass after the naming correction: /tmp/gspot-python-contracts-final-source.json.",
+            "Final documentation replay: /tmp/gspot-python-contracts-docs-ready.log, 317 pages and valid links and fragments.",
+            "The full working-tree gate ran 78 checks: 64 passed, 7 skipped, 6 errored, and one naming finding. The naming finding is corrected and independently verified. The remaining errors are Taplo native crashes, unavailable OSV network access, unavailable uv cache writes, and Semgrep trust-anchor failure: /tmp/gspot-python-contracts-working-check.json. No check was disabled and no hook was bypassed.",
+            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
+            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
+            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
+            "Resumed native Python/Ruff verification succeeds with local registry access: /tmp/gspot-resumed-python-native.log (23 passed, 0 failed). Public check regressions verify both source docstring styles at both levels, authored type requirements, and import dependency chains from setup.cfg, .importlinter, and pyproject.toml in root and nested scopes.",
+            "Affected CLI: /tmp/gspot-resumed-python-cli.log (53 passed, 223 assertions). All four TypeScript targets pass: /tmp/gspot-resumed-python-types.log.",
+            "Actual gspot check --staged succeeds: /tmp/gspot-resumed-python-staged.json (71 passed, 7 skipped, 0 findings/errors). Normal Semgrep, Taplo, and OSV complete without bypasses. Documentation builds 317 pages with valid links: /tmp/gspot-resumed-python-docs.log. Both canonical applies write nothing: /tmp/gspot-resumed-python-apply-first.json and /tmp/gspot-resumed-python-apply-second.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/013",
@@ -202,10 +221,29 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:142-154`, `packages/cli/src/checks/language/python/import-linter.ts:22-41` | The engine reads contracts only from `[tool.importlinter]` in `pyproject.toml`. Contracts in `.importlinter` or `setup.cfg`, which import-linter also reads, are skipped as \"no contracts\". A broken contract is reported at `pyproject.toml:1` with its name only. The message says \"lint-imports prints the chain\", but gspot drops that chain. The help text says \"change the contract with a reason in its name\", which is unclear. | Look for contracts in all three files. Put the chain lines in the finding. Change the help text to \"Move the import to the side the contract allows, or change the contract.\" |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:142-154`, `packages/cli/src/checks/language/python/import-linter.ts:22-41`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/language/python/pydoclint.ts",
+            "packages/cli/src/checks/language/python/imports/linter.ts",
+            "tests/tools/configurations/language/python.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Implementation: source docstrings select Google or NumPy style per file; authored native type requirements are preserved; signature types are not repeated by default. Import contracts use setup.cfg, .importlinter, then pyproject.toml and retain their native dependency chains after terminal formatting is removed.",
+            "Affected CLI and generation cohort: /tmp/gspot-python-contracts-cli-final.log, 304 passing cases and 1440 assertions. Final Python cohort includes later-batch failure preservation and styled native diagnostics: /tmp/gspot-python-contracts-cli-ready.log, 33 passing cases and 89 assertions.",
+            "Documentation: /tmp/gspot-python-contracts-docs.log, 317 pages and valid built-site links and fragments. Canonical apply: /tmp/gspot-python-contracts-apply-first.json and /tmp/gspot-python-contracts-apply-second.json, both 137 unchanged outputs and no writes.",
+            "The initial native cohort passed 20 cases but failed the three new dependency-chain assertions. The terminal-format parser was then corrected; direct installed import-linter 2.15 output retains the chain: /tmp/gspot-python-contracts-installed-output.json. This inspection uses a cached tool and does not replace the public installation regression suite.",
+            "Verification remains incomplete. Updated sandbox permissions prevent the local native-suite registry from listening on 127.0.0.1: /tmp/gspot-python-contracts-native-final.log (EPERM). Git staging is also denied because .git is read-only. The staged report has no checks because these files cannot be staged: /tmp/gspot-python-contracts-staged.json. These records remain open until the final native suite, meaningful staged gate, normal commit, and push succeed.",
+            "Final four-target TypeScript verification: /tmp/gspot-python-contracts-types-ready.log. Repository ESLint passes in all five scopes: /tmp/gspot-python-contracts-repository-lint.json. Final source formatting, ESLint, and naming checks all pass after the naming correction: /tmp/gspot-python-contracts-final-source.json.",
+            "Final documentation replay: /tmp/gspot-python-contracts-docs-ready.log, 317 pages and valid links and fragments.",
+            "The full working-tree gate ran 78 checks: 64 passed, 7 skipped, 6 errored, and one naming finding. The naming finding is corrected and independently verified. The remaining errors are Taplo native crashes, unavailable OSV network access, unavailable uv cache writes, and Semgrep trust-anchor failure: /tmp/gspot-python-contracts-working-check.json. No check was disabled and no hook was bypassed.",
+            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
+            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
+            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
+            "Resumed native Python/Ruff verification succeeds with local registry access: /tmp/gspot-resumed-python-native.log (23 passed, 0 failed). Public check regressions verify both source docstring styles at both levels, authored type requirements, and import dependency chains from setup.cfg, .importlinter, and pyproject.toml in root and nested scopes.",
+            "Affected CLI: /tmp/gspot-resumed-python-cli.log (53 passed, 223 assertions). All four TypeScript targets pass: /tmp/gspot-resumed-python-types.log.",
+            "Actual gspot check --staged succeeds: /tmp/gspot-resumed-python-staged.json (71 passed, 7 skipped, 0 findings/errors). Normal Semgrep, Taplo, and OSV complete without bypasses. Documentation builds 317 pages with valid links: /tmp/gspot-resumed-python-docs.log. Both canonical applies write nothing: /tmp/gspot-resumed-python-apply-first.json and /tmp/gspot-resumed-python-apply-second.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/014",
@@ -214,10 +252,22 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:384-389` (`structure.python.singletons_allowed`) | The summary says each entry holds paths, names, and a reason. The engine reads only `names` (`packages/cli/src/checks/language/python/structure.ts:115-117`). So a name allowed for one file is allowed in every file. | Match `paths` as well. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:384-389` (`structure.python.singletons_allowed`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/language/python/singletons.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/types/checks/language/python.ts",
+            "packages/cli/configurations/language/python/manifest.toml",
+            "tests/cli/checks/language/python/singletons.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The singleton check now matches both names and optional repository-relative path selectors. Negative selectors exclude files from an allowance, and scope-specific entries stay scoped. Omitting paths preserves existing scope-wide and FastAPI allowances. Policy reading validates names and paths instead of casting an untyped Python table.",
+        "verification": [
+            "The public source CLI reports exactly the four non-allowed objects across root and nested scopes; the same regression verifies names, positive paths, and excluded paths. Invalid names and paths fail at policy reading and preserve source bytes. Existing no-path and FastAPI cases remain unchanged.",
+            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
+            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
+            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
+            "These source fixes and their regressions are verified locally. The batch remains uncommitted: the session explicitly denies writes to the repository .git directory. No hook was bypassed and no publication was attempted."
+        ]
     },
     {
         "id": "slices/kits-other-languages/015",
@@ -813,9 +863,20 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/sql/manifest.toml:24-38`, `packages/cli/kits/language/python/manifest.toml:46-47` (`[[tool.replace]]`) | sqlfluff also reads `[tool.sqlfluff]` in `pyproject.toml`, and basedpyright reads `[tool.basedpyright]` and `[tool.pyright]`. These tables are not listed, so init neither shows nor takes over them. gspot then ignores them silently: sqlfluff runs with `--ignore-local-config`, and the root `pyrightconfig.json` pointer takes priority over `pyproject.toml`. | Add `pyproject.toml` entries for `tool.sqlfluff`, `tool.basedpyright`, and `tool.pyright`, with `shared = true`. |",
         "owner": "`packages/cli/kits/language/sql/manifest.toml:24-38`, `packages/cli/kits/language/python/manifest.toml:46-47` (`[[tool.replace]]`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/manifest.toml",
+            "packages/cli/configurations/language/sql/manifest.toml",
+            "tests/config/cli/commands/init/replace.ts",
+            "tests/cli/commands/init/replace.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Python declares shared takeover entries for tool.basedpyright and tool.pyright, and SQL declares tool.sqlfluff. Initialization identifies each authored pyproject.toml table in root and nested scopes and explains that generated configuration takes over. Shared project metadata and other tool settings remain byte-for-byte unchanged with their original mode.",
+        "verification": [
+            "Real init dry runs and application runs cover all three native tables in both root and nested scopes. They verify the retained-table notice, exact project bytes, file mode, and the actual generated Pyright pointer or SQLFluff configuration.",
+            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
+            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
+            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
+            "These source fixes and their regressions are verified locally. The batch remains uncommitted: the session explicitly denies writes to the repository .git directory. No hook was bypassed and no publication was attempted."
+        ]
     }
 ]

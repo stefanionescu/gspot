@@ -1,6 +1,6 @@
 // Python source and project files shared by configuration tests.
 export const CLEAN_MODULE =
-    '"""Arithmetic examples used by these tests."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value (int): The number.\n\n    Returns:\n        int: Twice the number.\n\n    """\n    return value * 2\n';
+    '"""Arithmetic examples used by these tests."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value: The number.\n\n    Returns:\n        Twice the number.\n\n    """\n    return value * 2\n';
 
 export const MODULE_PATH = 'example/math.py';
 

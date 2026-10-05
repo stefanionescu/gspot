@@ -63,7 +63,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
         {
             check: 'python/import-linter',
             status: 'skipped',
-            note: 'This scope has no tool.importlinter configuration.',
+            note: 'This scope has no import-linter configuration.',
         },
     ]);
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[broken');
@@ -104,3 +104,38 @@ test.each(['stdout', 'stderr'])(
         expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(manifest);
     },
 );
+
+test('import-linter follows INI precedence and retains separate chains for decorated broken statuses', async () => {
+    await using sandbox = await testdir();
+    const config = '[importlinter]\nroot_package = example\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['python']),
+        'setup.cfg': config,
+        '.importlinter': config,
+        'pyproject.toml': '[tool.importlinter]\nroot_package = "example"\n',
+        'example/__init__.py': '',
+        [join(environmentBin('.gspot/.venv'), 'lint-imports')]: 'fixture',
+    });
+    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'lint-imports')]));
+    const command = resources.use(
+        spyOn(processes, 'run').mockResolvedValue({
+            code: 1,
+            stdout: 'First boundary BROKEN (1 ignored import)\nSecond boundary BROKEN [0.1s]\n\n\u001B[1mBroken contracts\u001B[0m\n----------------\n\u001B[1mFirst boundary\u001B[0m\n--------------\nexample.low -> example.high (l. 1)\n\nSecond boundary\n---------------\nexample.other -> example.high (l. 3)\n',
+            stderr: '',
+            missing: false,
+            duration: 1,
+        }),
+    );
+    const findings = await importLinter(buildEngineInput(session, 'python/import-linter'));
+    expect(findings.map((finding) => [finding.file, finding.rule])).toStrictEqual([
+        ['setup.cfg', 'contract'],
+        ['setup.cfg', 'contract'],
+    ]);
+    expect(findings[0]?.message).toContain('example.low -> example.high (l. 1)');
+    expect(findings[0]?.message).not.toContain('example.other');
+    expect(findings[1]?.message).toContain('example.other -> example.high (l. 3)');
+    expect(command.mock.calls[0]?.[0]).toContain('setup.cfg');
+    expect(await Bun.file(join(sandbox.path, 'setup.cfg')).text()).toBe(config);
+});

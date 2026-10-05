@@ -75,3 +75,27 @@ export const CASES: FindingCase[] = [
         expected: { file: 'pyproject.toml' },
     },
 ];
+
+/** Unconfigured Google and NumPy docstrings must use the style of each source file. */
+export const DOCSTRING_MODULES = {
+    'google.py':
+        'def double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        amount: The number.\n\n    Returns:\n        Twice the number.\n    """\n    return value * 2\n',
+    'numpy.py':
+        'EXAMPLE = """\nArgs:\n"""\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Parameters\n    ----------\n    amount\n        The number.\n\n    Returns\n    -------\n    The doubled number.\n    """\n    return value * 2\n',
+};
+
+/** Native import-linter configuration formats, with the same forbidden dependency. */
+export const IMPORT_CONFIGURATIONS = [
+    {
+        file: 'setup.cfg',
+        text: '[importlinter]\nroot_package = example\n\n[importlinter:contract:layers]\nname = Domain boundary\ntype = forbidden\nsource_modules = example.low\nforbidden_modules = example.high\n',
+    },
+    {
+        file: '.importlinter',
+        text: '[importlinter]\nroot_package = example\n\n[importlinter:contract:layers]\nname = Domain boundary\ntype = forbidden\nsource_modules = example.low\nforbidden_modules = example.high\n',
+    },
+    {
+        file: 'pyproject.toml',
+        text: '[tool.importlinter]\nroot_package = "example"\n\n[[tool.importlinter.contracts]]\nname = "Domain boundary"\ntype = "forbidden"\nsource_modules = ["example.low"]\nforbidden_modules = ["example.high"]\n',
+    },
+];

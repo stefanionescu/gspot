@@ -1,37 +1,106 @@
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
-import { readText } from '#cli/platform/source.ts';
+import { emptyResult } from '#cli/execution/report.ts';
 import type { Session } from '#cli/types/execution/session.ts';
+import { readText, readSource } from '#cli/platform/source.ts';
+import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { pyprojectSchema } from '#cli/parsers/schema/python/style.ts';
+import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
+import { docstringOf, parsePythonModule } from '#cli/parsers/python/source.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
-import { PYTHON_MANIFEST, PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
+import type { DocstringConfiguration } from '#cli/types/checks/language/python.ts';
 
-/**
- * Carries the Ruff docstring convention only when pydoclint has no explicit style.
- * @param text the scoped Python project configuration.
- * @param convention the tools.ruff.docstring_convention setting of the scope.
- * @returns a supported style, or undefined to preserve native configuration and defaults.
- */
-export function docstringStyle(text: string, convention?: unknown): 'google' | 'numpy' | undefined {
-    const { tool } = pyprojectSchema.parse(parse(text));
-    if ('style' in tool.pydoclint) return undefined;
-    const style = tool.ruff.lint.pydocstyle.convention ?? convention;
-    return style === 'google' || style === 'numpy' ? style : undefined;
+import {
+    NUMPY_DOCSTRING,
+    PYTHON_MANIFEST,
+    GOOGLE_DOCSTRING,
+    PYDOCLINT_COMMAND,
+    PYDOCLINT_TYPE_OPTIONS,
+    PYDOCLINT_DEFAULT_STYLE,
+} from '#cli/config/checks/language/python.ts';
+
+async function sourceStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
+    const module = await parsePythonModule(
+        path,
+        readSource(session.root, path, session.reads).toString('utf8'),
+        session,
+    );
+    try {
+        for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
+            const docstring = docstringOf(node);
+            if (docstring === undefined) continue;
+            if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
+            if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';
+        }
+        return undefined;
+    } finally {
+        module.tree.delete();
+    }
+}
+
+async function docstringGroups(session: Session, files: TrackedFile[], declared: PythonDocstringStyle | undefined) {
+    const groups = new Map<PythonDocstringStyle | undefined, TrackedFile[]>();
+    for (const file of files) {
+        const style = declared ?? (await sourceStyle(session, file.path));
+        const group = groups.get(style) ?? [];
+        group.push(file);
+        groups.set(style, group);
+    }
+    return groups;
 }
 
 /**
- * Runs pydoclint, adding --style from the Ruff docstring convention when pydoclint sets none.
- * @param session the repository and installed tools.
- * @param planned the scoped docstring check.
- * @returns the native findings and command status.
+ * Preserve authored pydoclint options, then inherit Ruff style and avoid repeating signature types in prose.
+ * @param text the scoped Python project configuration
+ * @param convention the scope's Ruff docstring convention
+ * @returns native arguments and the declared style, when one exists
+ */
+export function docstringConfiguration(text: string, convention?: unknown): DocstringConfiguration {
+    const { tool } = pyprojectSchema.parse(parse(text));
+    const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
+    const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
+    const authored = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
+    const defaults = PYDOCLINT_TYPE_OPTIONS.filter((name) => !authored.has(name)).flatMap((name) => [
+        `--${name}`,
+        'false',
+    ]);
+    return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
+}
+
+/**
+ * Check docstrings with their declared style, or detect Google and NumPy sections in source docstrings.
+ * @param session the repository and installed tools
+ * @param planned the scoped docstring check
+ * @returns findings across style batches, preserving earlier findings if a later command fails
  */
 export async function pydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const style = docstringStyle(
+    const configured = docstringConfiguration(
         readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '',
         planned.scope.view.settings['tools.ruff.docstring_convention'],
     );
-    return await runCommandCheck(session, planned, {
-        command: [...PYDOCLINT_COMMAND, ...(style === undefined ? [] : ['--style', style])],
-    });
+    const groups = await docstringGroups(session, planned.files, configured.style);
+    const report = emptyResult(planned);
+    for (const [style, files] of groups) {
+        const result = await runCommandCheck(
+            session,
+            { ...planned, files },
+            {
+                command: [...configured.command, '--style', style ?? PYDOCLINT_DEFAULT_STYLE],
+            },
+        );
+        if (groups.size === 1) return result;
+        report.duration += result.duration;
+        report.findings.push(...result.findings);
+        if (!RAN_STATUSES.has(result.status))
+            return {
+                ...result,
+                fileCount: report.fileCount,
+                duration: report.duration,
+                findings: report.findings,
+            };
+        if (result.status === 'failed') report.status = 'failed';
+    }
+    return report;
 }

@@ -11,8 +11,6 @@ import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/pa
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { levelSchema, runnerSchema, numberSettingSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';
 
-const anyTable = z.record(z.string(), z.unknown());
-
 const reasonedNumber = reasoned(z.number());
 
 const groupedLimits = z.record(z.string(), reasonedNumber);
@@ -42,12 +40,18 @@ const architectureSchema = z.strictObject({
 
 const reasonedPaths = z.strictObject({ paths: z.array(z.string().min(1)).min(1), reason: z.string().optional() });
 
+const singletonAllowance = z.strictObject({
+    names: z.array(z.string().min(1)).min(1),
+    paths: z.array(z.string().min(1)).min(1).optional(),
+    reason: z.string().optional(),
+});
+
 const structureSchema = z.strictObject({
     reexports: z.enum(['none', 'index-only']).default('none'),
     lone_files_allowed: z.array(reasonedPaths).default([]),
     prefix_collisions_allowed: z.array(reasonedPaths).default([]),
     folder_names_allowed: z.array(reasonedPaths).default([]),
-    python: anyTable.default({}),
+    python: z.strictObject({ singletons_allowed: z.array(singletonAllowance).optional() }).default({}),
 });
 
 const formatFields = z.strictObject({

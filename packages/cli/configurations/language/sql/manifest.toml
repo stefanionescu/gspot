@@ -28,6 +28,11 @@ file = ".sqlfluff"
 file = ".sqlfluffignore"
 
 [[tool.replace]]
+file = "pyproject.toml"
+table = "tool.sqlfluff"
+shared = true
+
+[[tool.replace]]
 file = "setup.cfg"
 table = "sqlfluff"
 shared = true

@@ -23,7 +23,7 @@ export const DOCSTRING_STYLES = [
         name: 'preserves explicit pydoclint style before either convention',
         project: '[tool.ruff.lint.pydocstyle]\nconvention = "google"\n[tool.pydoclint]\nstyle = "sphinx"\n',
         setting: 'numpy',
-        expected: undefined,
+        expected: 'sphinx',
     },
     {
         name: 'survives an unrelated pydoclint option',

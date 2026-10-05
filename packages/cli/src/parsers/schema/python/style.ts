@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const pyprojectSchema = z.object({
     tool: z
         .object({
-            pydoclint: z.object({ style: z.unknown().optional() }).default({}),
+            pydoclint: z
+                .object({ style: z.enum(['google', 'numpy', 'sphinx']).optional() })
+                .catchall(z.unknown())
+                .default({}),
             ruff: z
                 .object({
                     lint: z

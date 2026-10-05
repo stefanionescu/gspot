@@ -1,9 +1,12 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { singletons } from '#cli/checks/language/python/singletons.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -45,4 +48,73 @@ test('FastAPI owns its application and router allowances without exempting gener
     await Bun.write(`${sandbox.path}/gspot.toml`, buildPolicy(['fastapi'], { level: 'all' }));
     const frameworkFindings = await singletons(buildEngineInput(await openSession(sandbox.path), 'python/singletons'));
     expect(frameworkFindings.map(({ line }) => line)).toStrictEqual([3]);
+});
+
+test('singleton allowances match both names and repository paths, including excluded files and nested scopes', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['python'], {
+            level: 'all',
+            tables: '[structure.python]\nsingletons_allowed = [{ names = ["store"], paths = ["example/**", "!example/restricted.py"], reason = "Only the public example modules share their store." }]\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n[scope.structure.python]\nsingletons_allowed = [{ names = ["store"], paths = ["app/allowed.py"], reason = "Only the application composition module shares its store." }]\n',
+        }),
+        'example/allowed.py': 'store = Store()\nother = Store()\n',
+        'example/restricted.py': 'store = Store()\n',
+        'outside.py': 'store = Store()\n',
+        'app/allowed.py': 'store = Store()\n',
+        'app/restricted.py': 'store = Store()\n',
+    });
+    const session = await openSession(sandbox.path);
+    const findings = [
+        ...(await singletons(
+            buildEngineInput(session, 'python/singletons', {
+                paths: ['example/allowed.py', 'example/restricted.py', 'outside.py'],
+            }),
+        )),
+        ...(await singletons(
+            buildEngineInput(session, 'python/singletons', {
+                scope: 'app',
+                paths: ['app/allowed.py', 'app/restricted.py'],
+            }),
+        )),
+    ];
+    expect(
+        findings
+            .map(({ file, line }) => ({ file, line }))
+            .toSorted((left, right) => left.file.localeCompare(right.file)),
+    ).toStrictEqual([
+        { file: 'app/restricted.py', line: 1 },
+        { file: 'example/allowed.py', line: 2 },
+        { file: 'example/restricted.py', line: 1 },
+        { file: 'outside.py', line: 1 },
+    ]);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const failed = await spawnGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(
+        (JSON.parse(failed.stdout) as RunReport).checks
+            .flatMap((check) => check.findings)
+            .map(({ file, line }) => ({ file, line }))
+            .toSorted((left, right) => left.file.localeCompare(right.file)),
+    ).toStrictEqual(
+        findings
+            .map(({ file, line }) => ({ file, line }))
+            .toSorted((left, right) => left.file.localeCompare(right.file)),
+    );
+});
+
+test.each([
+    '{ names = "store", reason = "The framework requires a shared object." }',
+    '{ names = [], reason = "The framework requires a shared object." }',
+    '{ names = ["store"], paths = "example/**", reason = "The framework requires a shared object." }',
+    '{ names = ["store"], paths = [], reason = "The framework requires a shared object." }',
+])('invalid singleton allowances fail while reading policy: %s', async (entry) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['python'], {
+            level: 'all',
+            tables: `[structure.python]\nsingletons_allowed = [${entry}]\n`,
+        }),
+        'example.py': 'store = Store()\n',
+    });
+    expect(await rejection(openSession(sandbox.path))).toContain('singletons_allowed');
+    expect(await Bun.file(`${sandbox.path}/example.py`).text()).toBe('store = Store()\n');
 });

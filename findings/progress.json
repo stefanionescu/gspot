@@ -18205,6 +18205,65 @@
                 "Remaining individual findings",
                 "Publication and deployment require their separate authorization."
             ]
+        },
+        {
+            "subsystem": "Python docstring defaults and import contracts",
+            "outcome": "Implemented in the working tree. Both review records remain open pending final native verification, staged checks, commit, and push.",
+            "evidence": [
+                "Implementation: source docstrings select Google or NumPy style per file; authored native type requirements are preserved; signature types are not repeated by default. Import contracts use setup.cfg, .importlinter, then pyproject.toml and retain their native dependency chains after terminal formatting is removed.",
+                "Affected CLI and generation cohort: /tmp/gspot-python-contracts-cli-final.log, 304 passing cases and 1440 assertions. Final Python cohort includes later-batch failure preservation and styled native diagnostics: /tmp/gspot-python-contracts-cli-ready.log, 33 passing cases and 89 assertions.",
+                "Documentation: /tmp/gspot-python-contracts-docs.log, 317 pages and valid built-site links and fragments. Canonical apply: /tmp/gspot-python-contracts-apply-first.json and /tmp/gspot-python-contracts-apply-second.json, both 137 unchanged outputs and no writes.",
+                "The initial native cohort passed 20 cases but failed the three new dependency-chain assertions. The terminal-format parser was then corrected; direct installed import-linter 2.15 output retains the chain: /tmp/gspot-python-contracts-installed-output.json. This inspection uses a cached tool and does not replace the public installation regression suite.",
+                "Verification remains incomplete. Updated sandbox permissions prevent the local native-suite registry from listening on 127.0.0.1: /tmp/gspot-python-contracts-native-final.log (EPERM). Git staging is also denied because .git is read-only. The staged report has no checks because these files cannot be staged: /tmp/gspot-python-contracts-staged.json. These records remain open until the final native suite, meaningful staged gate, normal commit, and push succeed.",
+                "Final four-target TypeScript verification: /tmp/gspot-python-contracts-types-ready.log. Repository ESLint passes in all five scopes: /tmp/gspot-python-contracts-repository-lint.json. Final source formatting, ESLint, and naming checks all pass after the naming correction: /tmp/gspot-python-contracts-final-source.json.",
+                "Final documentation replay: /tmp/gspot-python-contracts-docs-ready.log, 317 pages and valid links and fragments.",
+                "The full working-tree gate ran 78 checks: 64 passed, 7 skipped, 6 errored, and one naming finding. The naming finding is corrected and independently verified. The remaining errors are Taplo native crashes, unavailable OSV network access, unavailable uv cache writes, and Semgrep trust-anchor failure: /tmp/gspot-python-contracts-working-check.json. No check was disabled and no hook was bypassed."
+            ],
+            "remaining": [
+                "Run the Python and Ruff native cohort after local registry listeners are permitted.",
+                "Run the staged gate after .git writes are permitted, then commit and push normally before starting the next batch."
+            ]
+        },
+        {
+            "subsystem": "Python singleton path restrictions, authored project configuration, and environment repair",
+            "outcome": "Implemented and verified singleton path restrictions and declared native project-table takeovers. Closed slices/kits-other-languages/014 and /053 with source and public-command evidence. The complete Python batch remains uncommitted because the current session denies repository .git writes and local registry listeners.",
+            "evidence": [
+                "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
+                "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
+                "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
+                "These source fixes and their regressions are verified locally. The batch remains uncommitted: the session explicitly denies writes to the repository .git directory. No hook was bypassed and no publication was attempted.",
+                "Writable mise and uv caches repair dependency lockfile freshness: /tmp/gspot-environment-lockfile-cache.json (passed). The cache directories are /private/tmp/gspot-tool-cache/mise and /private/tmp/gspot-tool-cache/uv; no repository policy was weakened.",
+                "The pinned Semgrep Python launcher reports version 1.178.0 using its supported legacy mode, writable log/settings/version-cache paths, and the existing OS certificate bundle: /tmp/gspot-environment-semgrep-legacy-ready.log. The normal pinned launcher still times out in the real gate: /tmp/gspot-environment-semgrep-gate.json. This diagnostic does not replace the required normal security gate.",
+                "Session probes still deny git add with index.lock Operation not permitted and deny the Node local listener with EPERM. Repository .git ownership and physical write modes are already correct. The remaining full-gate blockers are Taplo macOS dynamic-store crashes, OSV network access, and normal Semgrep startup; native tools/package orchestration additionally requires local registry listeners."
+            ],
+            "remaining": [
+                "Restore session access to repository .git writes and local/external networking.",
+                "Complete the native Python/Ruff replay and full staged gate with the restored system-tool access.",
+                "Commit with hooks enabled and push normally before starting the next batch.",
+                "Resume the remaining 990 open review records."
+            ]
+        },
+        {
+            "subsystem": "Resumed Python docstrings, imports, singleton paths, and native project takeovers",
+            "rows": [
+                "slices/kits-other-languages/012",
+                "slices/kits-other-languages/013",
+                "slices/kits-other-languages/014",
+                "slices/kits-other-languages/053"
+            ],
+            "outcome": "Native, CLI, types, documentation, canonical generation, and staged checks pass with restored session access. Commit and push are the next delivery actions.",
+            "evidence": [
+                "/tmp/gspot-resumed-python-native.log",
+                "/tmp/gspot-resumed-python-cli.log",
+                "/tmp/gspot-resumed-python-types.log",
+                "/tmp/gspot-resumed-python-docs.log",
+                "/tmp/gspot-resumed-python-staged.json",
+                "/tmp/gspot-resumed-python-apply-second.json"
+            ],
+            "remaining": [
+                "Commit with hooks enabled and push normally to origin/main.",
+                "Map and resolve the remaining findings without adding selection mechanisms."
+            ]
         }
     ]
 }

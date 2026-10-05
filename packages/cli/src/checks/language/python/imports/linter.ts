@@ -1,41 +1,66 @@
-// The import contracts of a Python project, run through import-linter when pyproject.toml declares them.
-import { join } from 'node:path';
+// Run scoped Python import contracts and retain the dependency chains behind each broken contract.
 import { parse } from 'smol-toml';
-import { statSync } from 'node:fs';
+import { posix, basename } from 'node:path';
+import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { readSource } from '#cli/platform/source.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { getIniSection } from '#cli/parsers/tool/configuration.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { importLinterSchema } from '#cli/parsers/schema/python/imports.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { BROKEN_CONTRACT, PYTHON_MANIFEST } from '#cli/config/checks/language/python.ts';
+import { BROKEN_CONTRACT, PYTHON_MANIFEST, IMPORT_CONTRACT_FILES } from '#cli/config/checks/language/python.ts';
+
+function contractConfiguration(input: EngineInput): string | undefined {
+    for (const file of IMPORT_CONTRACT_FILES) {
+        const path = posix.join(input.scope, file);
+        const text = readText(input.root, path, input.reads);
+        if (text === undefined) continue;
+        const declared =
+            file === PYTHON_MANIFEST
+                ? importLinterSchema.parse(parse(text)).tool?.importlinter !== undefined
+                : getIniSection(text, 'importlinter') !== undefined;
+        if (declared) {
+            return path;
+        }
+    }
+    return undefined;
+}
 
 /**
- * Runs the import contracts of the scope. A project with no [tool.importlinter] table has none to run.
+ * Run contracts from the first native INI or TOML configuration in the scope.
  * @param input the engine input
- * @returns one finding for each broken contract
+ * @returns each broken contract with its native dependency chain
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
-    const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
-    if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
-        throw new GspotError('skip', 'This scope has no pyproject.toml import contracts.');
-    const project = importLinterSchema.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
-    if (project.tool?.importlinter === undefined)
-        throw new GspotError('skip', 'This scope has no tool.importlinter configuration.');
-    const result = await runEngineTool(input, ['lint-imports', '--no-cache'], {
-        cwd: join(input.root, input.scope),
+    const configuration = contractConfiguration(input);
+    if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
+    const result = await runEngineTool(input, ['lint-imports', '--config', basename(configuration), '--no-cache'], {
+        cwd: input.scopeRoot,
     });
-    const broken = result.stdout.split('\n').flatMap((line) => {
+    const lines = stripVTControlCharacters(result.stdout).split('\n');
+    const broken = lines.flatMap((line) => {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];
-        return name === undefined ? [] : [name];
+        return name === undefined ? [] : [name.trim()];
     });
     if (result.code !== 0 && broken.length === 0)
         throw new Error(
             `The lint-imports command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
         );
-    const at = { file: manifest, line: 1 };
-    return broken.map((name) =>
-        findingAt(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
-    );
+    const heading = lines.findIndex((line) => line.trim() === 'Broken contracts');
+    return broken.map((name) => {
+        const start = lines.findIndex((line, index) => index > heading && line.trim() === name);
+        const next = lines.findIndex((line, index) => index > start && broken.includes(line.trim()));
+        const end = next === -1 ? lines.length : next;
+        const detail =
+            start === -1
+                ? ''
+                : lines
+                      .slice(start + 1, end)
+                      .join('\n')
+                      .trim();
+        const diagnostic = [`The import contract "${name}" is broken.`, detail].filter(Boolean).join('\n');
+        return findingAt(input, { file: configuration, line: 1 }, 'contract', diagnostic);
+    });
 }

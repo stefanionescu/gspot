@@ -11,7 +11,7 @@ shebangs = ["python", "python3"]
 
 [files]
 extensions = [".py", ".pyi"]
-filenames = ["pyproject.toml"]
+filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]
 kinds = ["source"]
 
 [[tool]]
@@ -44,6 +44,16 @@ pypi = "basedpyright"
 
 [[tool.replace]]
 file = "pyrightconfig.json"
+
+[[tool.replace]]
+file = "pyproject.toml"
+table = "tool.basedpyright"
+shared = true
+
+[[tool.replace]]
+file = "pyproject.toml"
+table = "tool.pyright"
+shared = true
 
 [[tool]]
 name = "lint-imports"
@@ -150,10 +160,10 @@ stage = "commit"
 runs = "scope"
 cwd = "scope"
 tool = "lint-imports"
-files = {extensions = [".py"], filenames = ["pyproject.toml"]}
-summary = "Runs the import contracts of the project, when pyproject.toml holds any."
+files = {extensions = [".py"], filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]}
+summary = "Runs project import contracts from setup.cfg, .importlinter, or pyproject.toml."
 why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
-help = "Move the import to the side the contract allows, or change the contract with a reason in its name."
+help = "Move the import to the side the contract allows, or change the contract."
 
 [[check]]
 name = "pydoclint"
@@ -388,7 +398,7 @@ name = "structure.python.singletons_allowed"
 type = "list"
 direction = "loosening"
 default = []
-summary = "Names of module variables that may hold an object built at import time, with a reason."
+summary = "Names of module variables that may hold an object built at import time, with a reason and optional repository-relative path selectors. Omit paths to allow those names throughout the scope."
 
 [[setting]]
 name = "limits.python.package_exports"

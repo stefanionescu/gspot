@@ -1,6 +1,6 @@
 // Replace at init: the plan names hand-written hooks, the files of the selected tools, and the lint folder, and keeps
 // a shared file that holds other tools' sections.
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
@@ -12,9 +12,10 @@ import { getKeptMode } from '#tests/harness/platforms.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { PLAN_INIT } from '#tests/config/cli/commands/init/replace.ts';
+import { PYPROJECT } from '#tests/config/samples/python/source.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
+import { PLAN_INIT, PYPROJECT_TAKEOVERS } from '#tests/config/cli/commands/init/replace.ts';
 
 import {
     rmSync,
@@ -214,3 +215,39 @@ test('initialization preserves a retained shared configuration edited after its 
     expect(readFileSync(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
     expect(existsSync(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
 });
+
+test.each(PYPROJECT_TAKEOVERS)(
+    'initialization identifies retained $table settings in root and nested Python project files',
+    async ({ configuration, table, text, source, generated }) => {
+        for (const scope of ['', 'app']) {
+            await using sandbox = await testdir();
+            const path = posix.join(scope, 'pyproject.toml');
+            const original = PYPROJECT + '[tool.unrelated]\nkeep = true\n\n' + text;
+            await createFileTree(sandbox.path, {
+                [path]: original,
+                [join(scope, source.file)]: source.text,
+            });
+            chmodSync(join(sandbox.path, path), 0o640);
+            const args =
+                scope === ''
+                    ? buildInitArguments([configuration])
+                    : [...buildInitArguments(['none']), '--scope-configurations', `${scope}=${configuration}`];
+            const preview = await runGspot(sandbox.path, [...args, '--dry-run', '--json']);
+            expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+            expect((JSON.parse(preview.stdout) as InitJson).plan!.retained).toContainEqual({
+                path,
+                note: textContaining(table),
+            });
+            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
+            const initialized = await runGspot(sandbox.path, [...args, '--json']);
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+            expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
+                path,
+                note: textContaining('Delete the section when ready'),
+            });
+            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
+            expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(getKeptMode(0o640));
+            expect(existsSync(join(sandbox.path, generated.folder, scope, generated.file))).toBe(true);
+        }
+    },
+);
