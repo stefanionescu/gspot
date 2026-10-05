@@ -42,10 +42,20 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/migrations.ts:64` `migrationsOf`; `history.ts:73` `migrationOrder`; `history.ts:99` `migrationsFrozen` | Files are sorted by `localeCompare` on the whole path, and versions are compared as strings. Both work only when every version has the same number of digits. With `9_a.sql` and `10_b.sql`, `10` sorts before `9`. `'11' < '9'` is true, so a new `11_c.sql` is reported as \"sorts before\" a committed file. `schema()` also replays the migrations in the wrong order. The doc \"in version order\" is false for unpadded versions. | Sort by `BigInt(version)`, then by name. Compare versions as numbers in both history checks. |",
         "owner": "`database/postgres/migrations.ts:64` `migrationsOf`; `history.ts:73` `migrationOrder`; `history.ts:99` `migrationsFrozen`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "packages/cli/src/checks/database/postgres/history.ts",
+            "tests/cli/checks/database/postgres/history.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Migrations are sorted and history boundaries compared as BigInt versions. New regressions replay unpadded 9/10 in the right order, reject a new 8 before committed 10, accept 11, and freeze numeric 9 without freezing 10.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/004",
@@ -54,10 +64,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/migrations.ts:20` `readMigrations`; `config/checks/database.ts:29` `MIGRATION_FOLDERS` | The default folders include `db/migrations` (dbmate's default) and `migrations` (golang-migrate's usual folder). dbmate keeps `-- migrate:up` and `-- migrate:down` in one file. `schema()` reads both parts, so every table is created and then dropped, and rls and foreign-key-indexes report nothing. golang-migrate writes `N_x.up.sql` and `N_x.down.sql`, so every pair gets a `duplicate-version` finding. | Read only the up part: cut at `-- migrate:down`, and skip `*.down.sql`. Or keep only `supabase/migrations` as the default and document the supported layouts. |",
         "owner": "`database/postgres/migrations.ts:20` `readMigrations`; `config/checks/database.ts:29` `MIGRATION_FOLDERS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "tests/cli/checks/database/postgres/history.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The parser reads only the up portion of dbmate SQL and skips golang-migrate down files. A regression combines both layouts and retains the created, secured table with no duplicate-version finding.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/005",
@@ -66,10 +85,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/migrations.ts:26-29` `readMigrations` | The parse error gives a line and a column but no file: \"SQL parse failed at 3:5: \u2026\". Every postgres check and two supabase checks stop with it. | Throw `` `${path}:${line}:${column}: the SQL does not parse: ${text}` ``. |",
         "owner": "`database/postgres/migrations.ts:26-29` `readMigrations`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "tests/cli/checks/database/postgres/history.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Invalid migration SQL names its source path, line and column. The existing malformed-SQL regression rejects the named file and accepts its correction in a fresh run.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/006",
@@ -78,10 +106,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/history.ts:9-27` `readCommittedText`, `:7` `cache` | Reads the HEAD blob of every committed `.sql` file in the repository, but only migration paths are looked up. `cache` says nothing about what it holds. | Pass the migration paths and read only those blobs. Rename the function `readCommittedMigrations` and the map `committedMigrations`. |",
         "owner": "`database/postgres/history.ts:9-27` `readCommittedText`, `:7` `cache`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/history.ts",
+            "tests/cli/checks/database/postgres/history.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "readCommittedMigrations requests only selected migration paths. committedMigrations is memoized by each path set within the run-owned read cache. A real Git regression observes exactly the root and child migration blob requests, excludes unrelated SQL, and proves order/frozen checks reuse reads without mixing scopes.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/007",
@@ -306,10 +343,20 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/cloudflare.ts:62-71`, `:174` `typesFresh`; `config/checks/platform/cloudflare.ts:7` `TYPES_FILE` | Only `cloudflare-env.d.ts` is checked, and it is regenerated with a plain `wrangler types cloudflare-env.d.ts`. Wrangler's default output, `worker-configuration.d.ts`, is never checked. OpenNext writes `cloudflare-env.d.ts` with `--env-interface CloudflareEnv`, so a correct file always differs (`interface Env` against `CloudflareEnv`). | Add settings for the file and the interface name, or read the project's `cf-typegen` script. Default to `worker-configuration.d.ts`. |",
         "owner": "`platform/cloudflare.ts:62-71`, `:174` `typesFresh`; `config/checks/platform/cloudflare.ts:7` `TYPES_FILE`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/cloudflare.ts",
+            "packages/cli/configurations/platform/cloudflare/manifest.toml",
+            "tests/cli/checks/platform/cloudflare/types.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Cloudflare types_file defaults to worker-configuration.d.ts and types_interface defaults to Env. The custom child-scope case passes cloudflare-env.d.ts and CloudflareEnv to the generator, accepts unchanged bytes, removes scratch files and preserves the source.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/020",
@@ -341,10 +388,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/cloudflare.ts:20` `named`, `:29` `lines`, `:37` `headerProblem` | Vague names. `headerProblem` takes a boolean `hasPath` that only picks the message, and it returns an array. | Rename them `scopePathsNamed` and `contentLines`. Inline `headerProblem` into `headerProblems`. |",
         "owner": "`platform/cloudflare.ts:20` `named`, `:29` `lines`, `:37` `headerProblem`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/platform/cloudflare.ts", "packages/cli/src/parsers/cloudflare.ts"],
+        "status": "closed",
+        "outcome": "scopePathsNamed identifies the source calculation, and the parser shares contentLines between headers and redirects. headerProblems owns its indented-header cases directly; the one-caller boolean-dispatch helper is deleted.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/022",
@@ -353,10 +406,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/project.ts:83-87` `storagePolicies` | Throws when config.toml does not parse, while `projectValid` reports the same error as a finding. So one broken file produces a finding in supabase/config and a crash in supabase/storage-policies. | Return `[]` when the configuration does not parse. supabase/config already reports it. |",
         "owner": "`platform/supabase/project.ts:83-87` `storagePolicies`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/configuration.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "storagePolicies returns no findings for invalid project configuration because supabase/config reports the syntax finding. The child-scope malformed TOML regression verifies both results without crashing the storage check.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/023",
@@ -365,10 +427,20 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/project.ts:109-120` `migrationNames` | Calls `migrationsOf`, which runs every migration through the SQL parser and throws on a parse error, just to read file names. | Filter `input.files` by the migrations folder, and test only the names. |",
         "owner": "`platform/supabase/project.ts:109-120` `migrationNames`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/configuration.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "migrationPaths shares only scope and folder selection. Supabase migrationNames checks these filenames synchronously without parsing SQL. Regressions accept a valid name with invalid SQL, report a bad child name only in its scope, and accept its rename while SQL remains invalid.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/024",
@@ -377,10 +449,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/project.ts:27` `readConfiguration` | Exported with no caller outside the file. It returns `config \\| string \\| undefined`, where a string means an error. | Unexport it. Return `{ config }`, `{ error }`, or `undefined`. |",
         "owner": "`platform/supabase/project.ts:27` `readConfiguration`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/platform/supabase.ts", "packages/cli/src/types/parsers/supabase.ts"],
+        "status": "closed",
+        "outcome": "readConfiguration is private with two real callers and returns a named union of config/error objects or absence. Both callers branch on the explicit error property; the type stays under the retained Supabase parser type owner.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/025",
@@ -389,10 +467,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/types-fresh.ts:19`, `:27` | A missing file gets the rule `stale`. \"Write it again\" does not say how. | Use the rule `missing`. Rewrite as \"Run supabase gen types typescript --local and write its output to `<file>`.\" |",
         "owner": "`platform/supabase/types-fresh.ts:19`, `:27`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/types.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Absent Supabase types use rule missing and name the exact generation command and target. Stale types give the same actionable command. Root and child cases verify missing, stale, matching, native failure and source preservation.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/026",
@@ -401,10 +488,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/deno.ts:39-41` `linted` | Parses stdout as JSON before it checks the exit code. When deno lint fails before it prints JSON (for example, a bad deno.json), the user sees \"Unexpected end of JSON input\", and the stderr guard never runs. | Throw with stderr when the exit code is non-zero and stdout is empty, before parsing. |",
         "owner": "`platform/supabase/deno.ts:39-41` `linted`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/configuration.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Deno startup failures with no JSON are rejected with tool diagnostics before parsing output. Regressions cover exits 1 and 2 with empty stdout, preserve the malformed configuration bytes and retain the native diagnostic instead of a JSON exception.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/027",
@@ -413,10 +509,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/supabase/deno.ts:25` `fileArguments`, `:30` `relative`, `:36` `linted`, `:65` `typed` | `fileArguments` returns the `--config` flag. `relative` shadows Node's `relative`, which is imported as `relativePath` to avoid it. `linted` and `typed` are adjectives. | Rename them `configArguments`, `repositoryPath`, `lintFunction`, and `checkFunctionTypes`. |",
         "owner": "`platform/supabase/deno.ts:25` `fileArguments`, `:30` `relative`, `:36` `linted`, `:65` `typed`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/platform/supabase.ts"],
+        "status": "closed",
+        "outcome": "configurationArguments describes the Deno flag calculation without the reserved config function name. repositoryPath, lintFunction and checkFunctionTypes describe their jobs; Node relative is imported directly and is no longer shadowed.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/028",
@@ -479,10 +581,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/openapi.ts:22-23` `spectral` | `files.source(document)` is called only for its side effect. When the document is missing, it throws a raw \"ENOENT \u2026 realpath\" error. | Check that the file exists, and throw \"tools.openapi.document names `<path>`, which does not exist.\" |",
         "owner": "`tool/openapi.ts:22-23` `spectral`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/tool/openapi.ts", "tests/cli/checks/tool/openapi-fresh.test.ts"],
+        "status": "closed",
+        "outcome": "Both OpenAPI engines validate the configured scope-relative source and report the setting and missing path before launching a tool. Root and child regressions verify the exact diagnostic, no launch and no created document.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/033",
@@ -491,10 +599,20 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/openapi.ts:19`, `:53`, `:64` | `tools.openapi.document` and `generate` are read from the repository root (`cwd: input.root`, `cwd: scratch`). The other kits' path settings are scope-relative: `tools.supabase.types_file`, `tools.i18n.locales`, `tools.postgres.migrations_directory`. In a child scope, `document = \"openapi.yaml\"` points at the root. | Join the setting with `input.scope`, and run the command in the scope folder. State the base folder in both setting summaries. |",
         "owner": "`tool/openapi.ts:19`, `:53`, `:64`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/tool/openapi.ts",
+            "packages/cli/configurations/tool/openapi/manifest.toml",
+            "tests/cli/checks/tool/openapi-fresh.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "OpenAPI checks run per scope. Source paths include the selected scope; Spectral runs in scopeRoot and generation runs in the isolated scope directory. Both setting summaries state their base folder. The Spectral ruleset path comes from its authoritative configuration declaration; the existing global asset path is preserved. Root/child regressions exercise generation, findings, command arguments, declared ruleset, planning and source preservation.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/034",
@@ -721,10 +839,27 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `said`: `nextjs/build.ts:28`, `:73`, `:96`; `react-native.ts:68`; `svelte.ts:70`; `supabase/deno.ts:58`; `nginx/test.ts:76`; `supabase/admin-key.ts:27`; `xctest/sources.ts:103`, `:120`. `named`: `postgres/history.ts:93`; `postgres/migrations.ts:12`; `i18n.ts:40`; `supabase/project.ts:45`; `supabase/types-fresh.ts:14`; `supabase/admin-key.ts:13`; `openapi.ts:19`, `:53` | Two vague local names stand for different things. `said` is tool output in some places and a finding message in others. `named` is a raw setting value. In `openapi.ts:53-55`, two values pass through four names (`named`, `producer`, `document`, `command`). | Rename them by role: `output`, `message`, and `setting`. This goes away once FINDINGS row 102 gives checks typed settings. |",
         "owner": "`said`: `nextjs/build.ts:28`, `:73`, `:96`; `react-native.ts:68`; `svelte.ts:70`; `supabase/deno.ts:58`; `nginx/test.ts:76`; `supabase/admin-key.ts:27`; `xctest/sources.ts:103`, `:120`. `named`: `postgres/history.ts:93`; `postgres/migrations.ts:12`; `i18n.ts:40`; `supabase/project.ts:45`; `supabase/types-fresh.ts:14`; `supabase/admin-key.ts:13`; `openapi.ts:19`, `:53`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "packages/cli/src/checks/database/postgres/history.ts",
+            "packages/cli/src/checks/library/i18n.ts",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "packages/cli/src/checks/platform/cloudflare.ts",
+            "packages/cli/src/checks/tool/openapi.ts",
+            "packages/cli/src/checks/tool/xctest.ts",
+            "packages/cli/src/checks/framework/nextjs.ts",
+            "packages/cli/src/checks/framework/expo.ts",
+            "packages/cli/src/checks/framework/svelte.ts"
+        ],
+        "status": "closed",
+        "outcome": "Setting readers use setting, document or command directly; output and diagnostic replace said. Cloudflare uses scopePathsNamed. The audited owners contain no named or said local declarations; original externally defined fields and prose are retained.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/048",
@@ -733,10 +868,24 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `postgres/migration-docs.ts:113`; `supabase/admin-key.ts:14`; `nginx/test.ts:88`; `supabase/project.ts:46`; `postgres/access.ts:51`; `postgres/history.ts:94`; `nextjs/build.ts:92` | The code repeats manifest defaults as fallbacks: `DOC_SECTIONS`, `ADMIN_KEY_PATHS`, `NGINX_IMAGE`, `FUNCTIONS_DIRECTORY`, `[PUBLIC_SCHEMA]`, `FROZEN_NONE`, and `?? []`. `view.tool()` always carries the shipped default (`policy/settings.ts:250`), so these never run. Two of them disagree with the manifest: 6 doc sections against 8 (the manifest adds \"Row Level Security\" and \"Grants\"), and 11 admin-key globs against 6. | Delete the fallbacks and the constants. Keep the manifest as the only source of defaults. |",
         "owner": "`postgres/migration-docs.ts:113`; `supabase/admin-key.ts:14`; `nginx/test.ts:88`; `supabase/project.ts:46`; `postgres/access.ts:51`; `postgres/history.ts:94`; `nextjs/build.ts:92`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migration-docs.ts",
+            "packages/cli/src/checks/database/postgres/history.ts",
+            "packages/cli/src/checks/database/postgres/access.ts",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "packages/cli/src/checks/tool/nginx.ts",
+            "packages/cli/src/checks/framework/nextjs.ts",
+            "packages/cli/src/config/checks/database/postgres.ts"
+        ],
+        "status": "closed",
+        "outcome": "Checks read effective manifest values for documentation sections, admin-key paths, nginx image, Supabase function folder, client schemas, freeze boundary and Next.js build flags. Duplicated fallback constants are deleted. DOC_SECTIONS remains the SQL-kind-to-heading classification, and FROZEN_NONE remains an operational sentinel; neither supplies a default. These behavioral constants stay under config according to the agreed repository decision.",
+        "verification": [
+            "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
+            "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",
+            "Native Postgres SQL and both Supabase Deno cases passed in /tmp/gspot-scope-native.log. Its failed Spectral case was fixed and the real Spectral defect/correction case passed (5 assertions): /tmp/gspot-scope-openapi-native-final.log.",
+            "All four TypeScript targets passed: /tmp/gspot-scope-root-types.log, /tmp/gspot-scope-cli-types.log, /tmp/gspot-scope-plugin-types.log, /tmp/gspot-scope-docs-types.log. The final test imports and unchanged Node relative-path calculation also pass /tmp/gspot-scope-root-types-final.log.",
+            "Canonical generation and the second apply changed nothing: /tmp/gspot-scope-apply.json and /tmp/gspot-scope-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/049",

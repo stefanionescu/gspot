@@ -1,14 +1,29 @@
-import { join } from 'node:path';
+import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
+import { nativeSegments } from '#cli/platform/root/rules.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import { targetInScope } from '#cli/configurations/declarations.ts';
+import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
+
+function documentPath(input: EngineInput): string | undefined {
+    const document = input.view.options('tools.openapi')['document'] as string;
+    if (document === '') return undefined;
+    nativeSegments(document);
+    const path = posix.join(input.scope, document);
+    if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
+        throw new Error(`The tools.openapi.document setting names ${path}, which does not exist.`);
+    using files = openRoot(input.root, 'native');
+    files.assertInside(path);
+    return path;
+}
 
 /**
  * Spectral over tools.openapi.document. With no document named the check passes.
@@ -16,19 +31,20 @@ import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
  * @returns the findings
  */
 export async function spectral(input: EngineInput): Promise<Finding[]> {
-    const named = input.view.options('tools.openapi')['document'];
-    const document = typeof named === 'string' ? named : '';
-    if (document === '') return [];
-    using files = openRoot(input.root, 'native');
-    files.assertInside(document);
-    if (files.read(`${CONFIGURATION_DIRECTORY}/spectral.yaml`) === undefined)
-        throw new Error('The Spectral configuration is missing. Run: gspot apply');
-    const ruleset = join(input.root, CONFIGURATION_DIRECTORY, 'spectral.yaml');
+    const document = documentPath(input);
+    if (document === undefined) return [];
+    const configuration = input.selection.selected
+        .flatMap((manifest) => manifest.configs)
+        .find((entry) => entry.tool.includes('spectral')) as ConfigurationFile;
+    const target = targetInScope(input.scope, configuration);
+    using files = openRoot(input.root);
+    if (files.read(target) === undefined) throw new Error('The Spectral configuration is missing. Run: gspot apply');
+    const ruleset = join(input.root, target);
     const result = await runEngineTool(
         input,
-        ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', document],
+        ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', posix.relative(input.scope || '.', document)],
         {
-            cwd: input.root,
+            cwd: input.scopeRoot,
         },
     );
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
@@ -50,10 +66,10 @@ export async function spectral(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
-    const { document: named, generate: producer } = input.view.options('tools.openapi');
-    const document = typeof named === 'string' ? named : '';
-    const command = typeof producer === 'string' ? producer : '';
-    if (document === '' || command === '') return [];
+    const command = input.view.options('tools.openapi')['generate'] as string;
+    if (command === '') return [];
+    const document = documentPath(input);
+    if (document === undefined) return [];
     const before = readSource(input.root, document, input.reads);
     using scratchFolder = await scratchCopy(
         input.root,
@@ -61,7 +77,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
         input.scopeEntries.map((scope) => scope.path),
     );
     const scratch = scratchFolder.path;
-    const result = await runEngineTool(input, parseCommand(command), { cwd: scratch });
+    const result = await runEngineTool(input, parseCommand(command), { cwd: join(scratch, input.scope) });
     if (result.code !== 0)
         throw new Error(
             `The command that writes the OpenAPI document failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,

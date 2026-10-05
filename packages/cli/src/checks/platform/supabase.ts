@@ -1,18 +1,18 @@
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { join, posix, relative } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import { join, posix, relative as relativePath } from 'node:path';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/parsers/supabase.ts';
+import { migrationsOf, migrationPaths } from '#cli/checks/database/postgres/migrations.ts';
 import { denoLintReportSchema, supabaseProjectSchema } from '#cli/parsers/schema/supabase.ts';
+import type { DenoLintReport, SupabaseConfigurationRead } from '#cli/types/parsers/supabase.ts';
 
 import {
     DENO_LOCATION,
@@ -21,10 +21,9 @@ import {
     ADMIN_KEY_NAMES,
     CODE_EXTENSIONS,
     SUPABASE_CONFIG,
-    FUNCTIONS_DIRECTORY,
 } from '#cli/config/checks/platform/supabase.ts';
 
-function denoArguments(root: string, folder: string): string[] {
+function configurationArguments(root: string, folder: string): string[] {
     const path = ['deno.json', 'deno.jsonc']
         .map((name) => join(root, folder, name))
         .find((entry) => statSync(entry, { throwIfNoEntry: false }) !== undefined);
@@ -33,12 +32,12 @@ function denoArguments(root: string, folder: string): string[] {
 
 function repositoryPath(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
-    const local = toPosix(relativePath(root, path));
+    const local = toPosix(relative(root, path));
     return local === '' || !isInside(local) ? path : local;
 }
 
 async function lintFunction(input: EngineInput, folder: string): Promise<Finding[]> {
-    const argv = ['deno', 'lint', '--json', ...denoArguments(input.root, folder), join(input.root, folder)];
+    const argv = ['deno', 'lint', '--json', ...configurationArguments(input.root, folder), join(input.root, folder)];
     const result = await runEngineTool(input, argv, { cwd: input.scopeRoot });
     if (![0, 1].includes(result.code) || (result.code !== 0 && result.stdout.trim() === ''))
         throw new Error(toolOutputDetail(result, 'Deno lint failed'));
@@ -78,25 +77,25 @@ async function checkFunctionTypes(input: EngineInput, folder: string): Promise<F
         .map((name) => join(input.root, folder, name))
         .find((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     if (entry === undefined) return [];
-    const argv = ['deno', 'check', '--quiet', ...denoArguments(input.root, folder), entry];
+    const argv = ['deno', 'check', '--quiet', ...configurationArguments(input.root, folder), entry];
     const result = await runEngineTool(input, argv, { cwd: input.scopeRoot });
     return result.code === 0 ? [] : [firstError(input, folder, result.stderr)];
 }
 
 /**
- * The parsed project file, or the text of the error when it does not parse, or undefined when the repository has none.
- * @param input the scoped repository read
- * @returns the config or the error
+ * The parsed project file or its syntax diagnostic; undefined when the scope has no project file.
+ * @param input the selected project scope
+ * @returns the parsed configuration or its diagnostic
  */
-export function readConfiguration(input: EngineInput): SupabaseConfiguration | string | undefined {
+function readConfiguration(input: EngineInput): SupabaseConfigurationRead | undefined {
     const local = posix.join(input.scope, SUPABASE_CONFIG);
     const path = join(input.root, local);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
     const text = readSource(input.root, local, input.reads).toString('utf8');
     try {
-        return supabaseProjectSchema.parse(parse(text));
+        return { config: supabaseProjectSchema.parse(parse(text)) };
     } catch (error) {
-        return error instanceof Error ? error.message : 'The file does not parse.';
+        return { error: error instanceof Error ? error.message : 'The file does not parse.' };
     }
 }
 
@@ -106,8 +105,8 @@ export function readConfiguration(input: EngineInput): SupabaseConfiguration | s
  * @returns the folder paths, repository-relative
  */
 export function functionFolders(input: EngineInput): string[] {
-    const named = input.view.options('supabase')['functions_folder'];
-    const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : FUNCTIONS_DIRECTORY);
+    const setting = input.view.options('supabase')['functions_folder'] as string;
+    const base = posix.join(input.scope, setting);
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
@@ -123,10 +122,11 @@ export function functionFolders(input: EngineInput): string[] {
  * @returns the findings
  */
 export function supabaseConfiguration(input: EngineInput): Finding[] {
-    const config = readConfiguration(input);
+    const read = readConfiguration(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
-    if (config === undefined) return [];
-    if (typeof config === 'string') return [findingAt(input, at, 'syntax', config)];
+    if (read === undefined) return [];
+    if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
+    const { config } = read;
     const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return missing.map((name) =>
@@ -145,10 +145,10 @@ export function supabaseConfiguration(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
-    const config = readConfiguration(input);
+    const read = readConfiguration(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
-    if (config === undefined) return [];
-    if (typeof config === 'string') return []; // The project configuration check reports syntax errors.
+    if (read === undefined || 'error' in read) return []; // supabase/config reports project syntax errors.
+    const { config } = read;
     const migrations = await migrationsOf(input);
     const policed = migrations
         .map((migration) => migration.text)
@@ -170,16 +170,15 @@ export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function migrationNames(input: EngineInput): Promise<Finding[]> {
-    const migrations = await migrationsOf(input);
-    return migrations
-        .filter((migration) => !MIGRATION_NAME.test(migration.name))
-        .map((migration) =>
+export function migrationNames(input: EngineInput): Finding[] {
+    return migrationPaths(input)
+        .filter((path) => !MIGRATION_NAME.test(posix.basename(path)))
+        .map((path) =>
             findingAt(
                 input,
-                { file: migration.path, line: 1 },
+                { file: path, line: 1 },
                 'migration-name',
-                'The name is fourteen digits, an underscore, and snake case words, ending in .sql.',
+                'Name the migration <14-digit timestamp>_<snake_case>.sql.',
             ),
         );
 }
@@ -212,14 +211,21 @@ export async function denoCheck(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function typesFresh(input: EngineInput): Promise<Finding[]> {
-    const named = input.view.options('supabase')['types_file'];
-    if (typeof named !== 'string' || named === '') return [];
-    const path = posix.join(input.scope, named);
+    const setting = input.view.options('supabase')['types_file'] as string;
+    if (setting === '') return [];
+    const path = posix.join(input.scope, setting);
     const at = { file: path, line: 1 };
     if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
-        return [findingAt(input, at, 'stale', 'The types file does not exist.')];
+        return [
+            findingAt(
+                input,
+                at,
+                'missing',
+                `Run supabase gen types typescript --local and write its output to ${setting}.`,
+            ),
+        ];
     const result = await runEngineTool(input, ['supabase', 'gen', 'types', 'typescript', '--local'], {
-        cwd: join(input.root, input.scope),
+        cwd: input.scopeRoot,
     });
     if (result.code !== 0)
         throw new Error(
@@ -227,7 +233,14 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
         );
     const committed = readSource(input.root, path, input.reads).toString('utf8');
     if (committed.trim() === result.stdout.trim()) return [];
-    return [findingAt(input, at, 'stale', 'The file differs from the types the local database gives. Write it again.')];
+    return [
+        findingAt(
+            input,
+            at,
+            'stale',
+            `The file differs from the local database types. Run supabase gen types typescript --local and write its output to ${setting}.`,
+        ),
+    ];
 }
 
 /**

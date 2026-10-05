@@ -1,14 +1,16 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { gitOutput } from '#tests/harness/git.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { PATH, ORIGINAL } from '#tests/config/cli/checks/database/postgres/history.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
@@ -44,7 +46,8 @@ test('migration history reports changed committed SQL and an earlier new version
             line: 1,
             rule: 'frozen',
             fixable: false,
-            message: 'This migration has run, and its text changed. Write a new migration.',
+            message:
+                'This migration is at or before postgres.frozen_through and differs from its committed text. Restore it and write a new migration.',
         },
     ]);
     expect(
@@ -111,4 +114,81 @@ test('migration analysis rejects unreadable SQL and accepts its correction in a 
         buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen'),
     );
     expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
+});
+
+test('unpadded migration versions replay and freeze in numeric order', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "9"\n' }),
+        'migrations/9_create.sql': 'CREATE TABLE teams (id int);',
+        'migrations/10_secure.sql': 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
+    });
+    commitAll(sandbox.path);
+    await createFileTree(sandbox.path, {
+        'migrations/8_earlier.sql': 'SELECT 8;',
+        'migrations/11_later.sql': 'SELECT 11;',
+    });
+    const session = await openSession(sandbox.path);
+    const input = buildEngineInput(session, 'postgres/migration-order');
+    const migrations = await migrationsOf(input);
+    expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
+    expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
+    expect(await migrationOrder(input)).toMatchObject([{ file: 'migrations/8_earlier.sql', rule: 'order' }]);
+    await Bun.write(join(sandbox.path, 'migrations/10_secure.sql'), 'SELECT 10;');
+    expect(
+        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+    ).toStrictEqual([]);
+    await Bun.write(join(sandbox.path, 'migrations/9_create.sql'), 'CREATE TABLE teams (id bigint);');
+    expect(
+        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+    ).toMatchObject([{ file: 'migrations/9_create.sql', rule: 'frozen' }]);
+});
+
+test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['postgres']),
+        'db/migrations/1_teams.sql': '-- migrate:up\nCREATE TABLE teams (id int);\n-- migrate:down\nDROP TABLE teams;',
+        'db/migrations/2_secure.up.sql': 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
+        'db/migrations/2_secure.down.sql': 'ALTER TABLE teams DISABLE ROW LEVEL SECURITY;',
+    });
+    const input = buildEngineInput(await openSession(sandbox.path), 'postgres/migration-order');
+    const migrations = await migrationsOf(input);
+    expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
+    expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
+    expect(await migrationOrder(input)).toStrictEqual([]);
+});
+
+test('history reads only selected migration blobs and shares reads without mixing scopes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['postgres'], {
+            tables: '[postgres]\nfrozen_through = "all"\n[[scope]]\npath = "apps/api"\nconfigurations = ["postgres"]\n',
+        }),
+        'migrations/1_root.sql': 'SELECT 1;',
+        'apps/api/migrations/2_api.sql': 'SELECT 2;',
+        'schema/unrelated.sql': 'SELECT 3;',
+    });
+    commitAll(sandbox.path);
+    const rootHash = gitOutput(sandbox.path, ['rev-parse', 'HEAD:migrations/1_root.sql']);
+    const childHash = gitOutput(sandbox.path, ['rev-parse', 'HEAD:apps/api/migrations/2_api.sql']);
+    const session = await openSession(sandbox.path);
+    const requests: string[] = [];
+    const runBinary = processes.runBinary;
+    using resources = new DisposableStack();
+    resources.use(
+        spyOn(processes, 'runBinary').mockImplementation((argv, options) => {
+            if (argv[0] === 'git' && argv[1] === 'cat-file') requests.push(options.stdin!);
+            return runBinary(argv, options);
+        }),
+    );
+    expect(await migrationOrder(buildEngineInput(session, 'postgres/migration-order'))).toStrictEqual([]);
+    expect(await migrationsFrozen(buildEngineInput(session, 'postgres/migrations-frozen'))).toStrictEqual([]);
+    expect(
+        await migrationOrder(buildEngineInput(session, 'postgres/migration-order', { scope: 'apps/api' })),
+    ).toStrictEqual([]);
+    expect(
+        await migrationsFrozen(buildEngineInput(session, 'postgres/migrations-frozen', { scope: 'apps/api' })),
+    ).toStrictEqual([]);
+    expect(requests).toStrictEqual([rootHash + '\n', childHash + '\n']);
 });

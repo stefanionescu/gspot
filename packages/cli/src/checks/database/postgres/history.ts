@@ -1,16 +1,18 @@
+import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
 import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 
-const cache = new WeakMap<object, Promise<Map<string, string>>>();
+const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
-async function readCommittedText(input: EngineInput): Promise<Map<string, string>> {
+async function readCommittedMigrations(input: EngineInput, paths: string[]): Promise<Map<string, string>> {
     if (!input.hasGit) return new Map();
     const committed = await getHeadEntries(input.root, input.cancelSignal);
+    const selected = new Set(paths);
     const entries = committed.filter(
-        (entry) => entry.path.endsWith('.sql') && (entry.mode === '100644' || entry.mode === '100755'),
+        (entry) => selected.has(entry.path) && (entry.mode === '100644' || entry.mode === '100755'),
     );
     const blobs = await getBlobs(
         input.root,
@@ -26,11 +28,13 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
     );
 }
 
-function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let read = cache.get(input.reads);
+function committedMigrationTexts(input: EngineInput, paths: string[]): Promise<Map<string, string>> {
+    const committedMigrations = memo(input.reads, COMMITTED_MIGRATIONS_MEMO);
+    const key = JSON.stringify(paths);
+    let read = committedMigrations.get(key);
     if (read === undefined) {
-        read = readCommittedText(input);
-        cache.set(input.reads, read);
+        read = readCommittedMigrations(input, paths);
+        committedMigrations.set(key, read);
     }
     return read;
 }
@@ -66,7 +70,10 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
             );
         seen.set(migration.version, migration.name);
     }
-    const texts = await committedText(input);
+    const texts = await committedMigrationTexts(
+        input,
+        migrations.map((migration) => migration.path),
+    );
     const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);
     if (newest === undefined) return findings;
@@ -99,7 +106,10 @@ export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
     const through = input.view.options('postgres')['frozen_through'] as string;
     if (through === FROZEN_NONE) return [];
     const migrations = await migrationsOf(input);
-    const texts = await committedText(input);
+    const texts = await committedMigrationTexts(
+        input,
+        migrations.map((migration) => migration.path),
+    );
     return migrations
         .filter(
             (migration) =>
@@ -114,7 +124,7 @@ export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
                     input,
                     { file: migration.path, line: 1 },
                     'frozen',
-                    'This migration has run, and its text changed. Write a new migration.',
+                    'This migration is at or before postgres.frozen_through and differs from its committed text. Restore it and write a new migration.',
                 ),
             ];
         });

@@ -5,18 +5,11 @@ import type { NumberedLine } from '#cli/types/parsers/source.ts';
 import type { WranglerParse } from '#cli/types/parsers/cloudflare.ts';
 import { STATUS_CODES, REDIRECT_PARTS, HTTP_HEADER_LINE } from '#cli/config/parsers/cloudflare.ts';
 
-function lines(text: string): NumberedLine[] {
+function contentLines(text: string): NumberedLine[] {
     return text
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
-}
-
-function headerProblem(line: NumberedLine, hasPath: boolean): NumberedLine[] {
-    if (!hasPath) return [{ number: line.number, text: 'This header sits under no path.' }];
-    const header = line.text.trim();
-    const isHeader = HTTP_HEADER_LINE.test(header) || header.startsWith('! ');
-    return isHeader ? [] : [{ number: line.number, text: 'This line is no header: a name, a colon, and a value.' }];
 }
 
 /**
@@ -43,10 +36,15 @@ export function parseWrangler(text: string, path: string): WranglerParse {
  * @returns the problems, each with its line
  */
 export function headerProblems(text: string): NumberedLine[] {
-    const entries = lines(text);
+    const entries = contentLines(text);
     let hasPath = false;
     return entries.flatMap((line) => {
-        if (/^\s/u.test(line.text)) return headerProblem(line, hasPath);
+        if (/^\s/u.test(line.text)) {
+            if (!hasPath) return [{ number: line.number, text: 'Add a path line before this header.' }];
+            const header = line.text.trim();
+            const isHeader = HTTP_HEADER_LINE.test(header) || header.startsWith('! ');
+            return isHeader ? [] : [{ number: line.number, text: 'Write this header as Name: value.' }];
+        }
         hasPath = true;
         const isPath = line.text.startsWith('/') || line.text.startsWith('https://');
         return isPath
@@ -54,7 +52,7 @@ export function headerProblems(text: string): NumberedLine[] {
             : [
                   {
                       number: line.number,
-                      text: 'A block starts with a path that begins with a slash, or a full address.',
+                      text: 'Start this block with a path beginning with / or an https:// address.',
                   },
               ];
     });
@@ -66,16 +64,18 @@ export function headerProblems(text: string): NumberedLine[] {
  * @returns the problems, each with its line
  */
 export function redirectProblems(text: string): NumberedLine[] {
-    const entries = lines(text);
+    const entries = contentLines(text);
     return entries.flatMap((line) => {
         const parts = line.text.trim().split(/\s+/u);
         const [source = '', , status] = parts;
         if (parts.length < REDIRECT_PARTS.least || parts.length > REDIRECT_PARTS.most)
             return [{ number: line.number, text: 'A redirect is a source, a destination, and an optional status.' }];
         if (!source.startsWith('/') && !source.startsWith('https://'))
-            return [{ number: line.number, text: 'The source begins with a slash, or is a full address.' }];
+            return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
         const isKnown = STATUS_CODES.has(status.replace(/!$/u, ''));
-        return isKnown ? [] : [{ number: line.number, text: `Cloudflare knows no redirect status ${status}.` }];
+        return isKnown
+            ? []
+            : [{ number: line.number, text: `Use a supported Cloudflare redirect status instead of ${status}.` }];
     });
 }

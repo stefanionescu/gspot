@@ -111,7 +111,7 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
  */
 export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.options('postgres');
-    const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(DOC_SECTIONS);
+    const sections = tool['doc_sections'] as string[];
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
         docProblems(migration, sections).map((problem) =>

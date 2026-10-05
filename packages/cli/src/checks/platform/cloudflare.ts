@@ -10,7 +10,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
 import { parseWrangler, headerProblems, redirectProblems } from '#cli/parsers/cloudflare.ts';
 
-function named(input: EngineInput, name: string): string[] {
+function scopePathsNamed(input: EngineInput, name: string): string[] {
     return input.files
         .map((file) => file.path)
         .filter(
@@ -43,7 +43,7 @@ async function isStale(input: EngineInput, path: string): Promise<boolean> {
  * @returns the findings
  */
 export function redirects(input: EngineInput): Finding[] {
-    return named(input, '_redirects').flatMap((path) =>
+    return scopePathsNamed(input, '_redirects').flatMap((path) =>
         redirectProblems(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
@@ -56,7 +56,7 @@ export function redirects(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function wrangler(input: EngineInput): Finding[] {
-    const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
+    const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => scopePathsNamed(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = parseWrangler(readSource(input.root, path, input.reads).toString('utf8'), path);
         if (problem !== undefined) return [findingAt(input, { file: path, line: 1 }, 'syntax', problem)];
@@ -85,7 +85,7 @@ export function wrangler(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function headers(input: EngineInput): Finding[] {
-    return named(input, '_headers').flatMap((path) =>
+    return scopePathsNamed(input, '_headers').flatMap((path) =>
         headerProblems(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
@@ -100,7 +100,7 @@ export function headers(input: EngineInput): Finding[] {
 export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     const file = String(input.view.settings['cloudflare.types_file']);
     portableSegments(file);
-    const paths = named(input, file);
+    const paths = scopePathsNamed(input, file);
     if (paths.length === 0) return [];
     using scratchFolder = await scratchCopy(
         input.root,

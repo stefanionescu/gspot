@@ -80,7 +80,12 @@ test.each(['', 'apps/api'])(
             check: 'supabase/types-fresh',
             status: 'failed',
             findings: [
-                { file: `${prefix}database.ts`, line: 1, rule: 'stale', message: 'The types file does not exist.' },
+                {
+                    file: `${prefix}database.ts`,
+                    line: 1,
+                    rule: 'missing',
+                    message: 'Run supabase gen types typescript --local and write its output to database.ts.',
+                },
             ],
         });
         await Bun.write(join(sandbox.path, prefix, 'database.ts'), 'export type Database = {};\n');

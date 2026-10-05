@@ -6,6 +6,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { importLinterSchema } from '#cli/parsers/schema/python/imports.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { BROKEN_CONTRACT, PYTHON_MANIFEST } from '#cli/config/checks/language/python.ts';
@@ -29,8 +30,10 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];
         return name === undefined ? [] : [name];
     });
-    const detail = [result.stderr, result.stdout].join('').trim().split('\n').at(-1) ?? '';
-    if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${detail}`);
+    if (result.code !== 0 && broken.length === 0)
+        throw new Error(
+            `The lint-imports command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     const at = { file: manifest, line: 1 };
     return broken.map((name) =>
         findingAt(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),

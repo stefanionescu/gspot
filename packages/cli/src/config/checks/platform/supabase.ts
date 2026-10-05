@@ -1,5 +1,3 @@
-export const FUNCTIONS_DIRECTORY = 'supabase/functions';
-
 export const SHARED_PREFIX = '_';
 
 export const SUPABASE_CONFIG = 'supabase/config.toml';

@@ -1,13 +1,16 @@
 import { join } from 'node:path';
+import { toolPin } from '#cli/tools/pins.ts';
 import * as tools from '#cli/tools/inspect.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { headers, typesFresh } from '#cli/checks/platform/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
@@ -121,7 +124,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
             file: '_headers',
             line: 1,
             rule: 'syntax',
-            message: 'This header sits under no path.',
+            message: 'Add a path line before this header.',
             fixable: false,
         },
     ]);
@@ -129,4 +132,34 @@ test('Cloudflare header checks report only files in their owning scope', async (
     writeFileSync(join(directory.path, '_headers'), '/*\n  X-Frame-Options: DENY\n');
     const corrected = await openSession(directory.path);
     expect(headers(buildEngineInput(corrected, spec.name))).toStrictEqual([]);
+});
+
+test('custom Worker type files retain the configured interface and child scope', async () => {
+    await using sandbox = await testdir();
+    const source = 'interface CloudflareEnv {}\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], {
+            tables: '[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n[scope.cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
+        }),
+        'workers/api/cloudflare-env.d.ts': source,
+    });
+    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'wrangler')]));
+    const directories: string[] = [];
+    resources.use(
+        spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+            expect(argv.slice(1)).toStrictEqual(['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv']);
+            directories.push(options.cwd);
+            await Bun.write(join(options.cwd, 'cloudflare-env.d.ts'), source);
+            return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
+        }),
+    );
+    expect(
+        await typesFresh(buildEngineInput(session, 'cloudflare/types-fresh', { scope: 'workers/api' })),
+    ).toStrictEqual([]);
+    expect(directories).toHaveLength(1);
+    expect(directories[0]).not.toBe(join(sandbox.path, 'workers/api'));
+    expect(existsSync(directories[0]!)).toBe(false);
+    expect(readFileSync(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
 });

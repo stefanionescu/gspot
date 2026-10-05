@@ -1,11 +1,19 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { toolPin } from '#cli/tools/pins.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { environmentBin } from '#cli/platform/paths.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { buildEngineInput } from '#tests/harness/input.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { importLinter } from '#cli/checks/language/python/imports/linter.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
 
@@ -65,3 +73,34 @@ test('absent Python import contracts are explicit skips and malformed project fi
         { check: 'python/import-linter', status: 'error' },
     ]);
 });
+
+test.each(['stdout', 'stderr'])(
+    'import-linter execution failure retains %s diagnostics and source bytes',
+    async (stream) => {
+        await using sandbox = await testdir();
+        const manifest = '[tool.importlinter]\nroot_package = "example"\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['python']),
+            'pyproject.toml': manifest,
+            'example/__init__.py': '',
+            [join(environmentBin('.gspot/.venv'), 'lint-imports')]: 'fixture',
+        });
+        const session = await openSession(sandbox.path);
+        using resources = new DisposableStack();
+        resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'lint-imports')]));
+        const diagnostic = 'Could not load the import graph.';
+        resources.use(
+            spyOn(processes, 'run').mockResolvedValue({
+                code: 2,
+                stdout: stream === 'stdout' ? diagnostic : '',
+                stderr: stream === 'stderr' ? diagnostic : '',
+                missing: false,
+                duration: 1,
+            }),
+        );
+        expect(await rejection(importLinter(buildEngineInput(session, 'python/import-linter')))).toBe(
+            `The lint-imports command failed: ${diagnostic}`,
+        );
+        expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(manifest);
+    },
+);

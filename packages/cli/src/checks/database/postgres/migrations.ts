@@ -10,9 +10,9 @@ import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/confi
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
 function folderOf(input: EngineInput, paths: string[]): string | undefined {
-    const named = input.view.options('postgres')['migrations_folder'];
+    const setting = input.view.options('postgres')['migrations_folder'] as string;
     const prefix = input.scope === '' ? '' : `${input.scope}/`;
-    if (typeof named === 'string' && named !== '') return `${prefix}${named.replace(/\/$/u, '')}`;
+    if (setting !== '') return `${prefix}${setting.replace(/\/$/u, '')}`;
     return MIGRATION_FOLDERS.map((folder) => `${prefix}${folder}`).find((folder) =>
         paths.some((path) => path.startsWith(`${folder}/`)),
     );
@@ -41,24 +41,35 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
 }
 
 /**
+ * Select tracked migration files without parsing their SQL.
+ * @param input the selected scope and repository inventory
+ * @returns the repository-relative migration paths
+ */
+export function migrationPaths(input: EngineInput): string[] {
+    const paths = input.files
+        .filter((file) => scopeOf(file.path, input.scopeEntries).path === input.scope)
+        .map((file) => file.path);
+    const folder = folderOf(input, paths);
+    return folder === undefined
+        ? []
+        : paths.filter((path) => path.startsWith(`${folder}/`) && path.endsWith('.sql') && !path.endsWith('.down.sql'));
+}
+
+/**
  * Reads and parses every tracked migration in version order.
  * @param input the engine input
  * @returns the migrations, empty when the repository has no migrations folder
  */
 export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
-    const paths = input.files
-        .filter((file) => scopeOf(file.path, input.scopeEntries).path === input.scope)
-        .map((file) => file.path);
-    const folder = folderOf(input, paths);
-    if (folder === undefined) return [];
+    const paths = migrationPaths(input);
+    if (paths.length === 0) return [];
     const folders = memo(input.reads, MIGRATION_MEMO);
-    const key = JSON.stringify([folder, paths]);
+    const key = JSON.stringify(paths);
     let migrations = folders.get(key);
     if (migrations === undefined) {
         migrations = readMigrations(
             input,
             paths
-                .filter((path) => path.startsWith(`${folder}/`) && path.endsWith('.sql') && !path.endsWith('.down.sql'))
                 .map((path) => ({
                     path,
                     version: BigInt(MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '0'),
