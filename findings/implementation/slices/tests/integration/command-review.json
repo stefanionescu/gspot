@@ -298,10 +298,20 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `if (onPosix) test(...)`: `cli/commands/agents.test.ts:102`, `cli/platform/globs.test.ts:18`, `cli/platform/filesystem.test.ts:31-167` (five tests), `cli/platform/spawn/backends.test.ts:60,85,145`, `cli/tools/inspect/installations.test.ts:17` | On Windows these tests are not registered, so the run reports nothing as skipped. FINDINGS names this pattern only for the Swift and XCTest files. | Use `test.skipIf(!onPosix)`. |",
         "owner": "`if (onPosix) test(...)`: `cli/commands/agents.test.ts:102`, `cli/platform/globs.test.ts:18`, `cli/platform/filesystem.test.ts:31-167` (five tests), `cli/platform/spawn/backends.test.ts:60,85,145`, `cli/tools/inspect/installations.test.ts:17`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/agents.test.ts",
+            "tests/cli/platform/globs.test.ts",
+            "tests/cli/platform/root.test.ts",
+            "tests/cli/platform/spawn/backends.test.ts",
+            "tests/cli/tools/inspect/installations.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Replaced all nine platform registration guards across the five current owners with test.skipIf. All thirteen guarded scenario declarations remain registered; the formerly grouped root declarations and backend loops retain their actual platform requirements.",
+            "AST comparison preserves 39 existing callback bodies after the intentional backend-loop expansion and cancellation budget binding. Every prior scenario remains present; the loop outcome and elapsed assertions are reviewed separately. Windows skip reporting is verified without pretending to run Windows subprocesses.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/022",
@@ -346,10 +356,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/globs.test.ts:25`, \"a walk that follows links ends at a link back to its own folder\" | `toBeLessThan(10)` accepts up to nine paths. A walk that follows the loop several times before it stops still passes. | Assert the exact list the walk returns. |",
         "owner": "`cli/platform/globs.test.ts:25`, \"a walk that follows links ends at a link back to its own folder\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/globs.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The link-loop case now requires exactly src/a.ts, so repeated traversal cannot pass through a loose upper bound. Its platform restriction is registered as a skip instead of omitting the case.",
+            "Added three fixed-base link cases covering a linked first segment, linked nested segment, and literal descendant. Each verifies no traversal when following is disabled, the exact selected path when enabled, a successful regular-directory correction, and preservation of the outside configuration and unrelated source bytes.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/026",
@@ -633,10 +647,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/spawn/backends.test.ts:112-158` | Two tests loop over both backends inside one test, with no backend name in any assertion message. A failure does not say which backend broke. The tests above register one test per backend. | Move both into the `for (const backend of backends)` loop, or use `test.each(backends)`. |",
         "owner": "`cli/platform/spawn/backends.test.ts:112-158`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/spawn/backends.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Stdin and inherited-environment coverage use test.each(backends), with each runner name in the scenario title and an independent directory for each row. The asynchronous and synchronous children retain the same command arguments, input bytes, environment, and outcomes.",
+            "The required backend execution callbacks and the separate cancellation case pass prepareTestCommand options to their real process boundaries. All three direct execution boundaries use the remaining test budget. Two elapsed-speed assertion sites are removed while timeout, cancellation, termination status, and stream outcomes remain exact.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/047",

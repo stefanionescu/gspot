@@ -17,8 +17,9 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
-if (isPosix)
-    test('the tool inspection > version inspections and tool execution prefer helpers from the selected installation', async () => {
+test.skipIf(!isPosix)(
+    'the tool inspection > version inspections and tool execution prefer helpers from the selected installation',
+    async () => {
         await using sandbox = await testdir();
         const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
         await createFileTree(sandbox.path, {
@@ -36,7 +37,8 @@ if (isPosix)
         expect(executed.code).toBe(0);
         expect(executed.stdout.trim()).toBe('3.8.1');
         expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
-    });
+    },
+);
 
 test('the tool inspection > an active PATH executable wins over an unrelated mise shim', async () => {
     await using sandbox = await testdir();
@@ -225,8 +227,9 @@ test.each(['mise', 'npm'])(
     },
 );
 
-if (isPosix)
-    test.each([0, 1])('mise resolves native executables in the original repository with status %s', async (status) => {
+test.skipIf(!isPosix).each([0, 1])(
+    'mise resolves native executables in the original repository with status %s',
+    async (status) => {
         await using sandbox = await testdir();
         const executable = join(sandbox.path, 'mise/installs/teller/3.8.1/teller');
         await createFileTree(sandbox.path, {
@@ -257,33 +260,33 @@ if (isPosix)
             which.mockRestore();
             home.mockRestore();
         }
-    });
+    },
+);
 
-if (isPosix)
-    test.each(['99.0.0', '1.0.0'])(
-        'sandbox tool discovery accepts a newer native version and diagnoses an old one: %s',
-        async (version) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                typos: `#!${process.execPath}\nconsole.log('typos ${version}');\n`,
-            });
-            const executable = join(sandbox.path, 'typos');
-            chmodSync(executable, EXECUTABLE_FILE);
-            const which = spyOn(executables, 'sync').mockReturnValue(executable);
-            try {
-                if (version === '99.0.0') {
-                    expect(buildToolsPath(['typos'])).toStartWith(sandbox.path);
-                } else {
-                    expect(() => buildToolsPath(['typos'])).toThrow('Required tool typos is outdated.');
-                    expect(() => buildToolsPath(['typos'])).toThrow(`path: ${executable}`);
-                    expect(() => buildToolsPath(['typos'])).toThrow('found: 1.0.0');
-                    expect(() => buildToolsPath(['typos'])).toThrow('expected:');
-                }
-            } finally {
-                which.mockRestore();
+test.skipIf(!isPosix).each(['99.0.0', '1.0.0'])(
+    'sandbox tool discovery accepts a newer native version and diagnoses an old one: %s',
+    async (version) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            typos: `#!${process.execPath}\nconsole.log('typos ${version}');\n`,
+        });
+        const executable = join(sandbox.path, 'typos');
+        chmodSync(executable, EXECUTABLE_FILE);
+        const which = spyOn(executables, 'sync').mockReturnValue(executable);
+        try {
+            if (version === '99.0.0') {
+                expect(buildToolsPath(['typos'])).toStartWith(sandbox.path);
+            } else {
+                expect(() => buildToolsPath(['typos'])).toThrow('Required tool typos is outdated.');
+                expect(() => buildToolsPath(['typos'])).toThrow(`path: ${executable}`);
+                expect(() => buildToolsPath(['typos'])).toThrow('found: 1.0.0');
+                expect(() => buildToolsPath(['typos'])).toThrow('expected:');
             }
-        },
-    );
+        } finally {
+            which.mockRestore();
+        }
+    },
+);
 
 test('library inspection accepts an internal package-directory link and refuses an external target', async () => {
     await using sandbox = await testdir();

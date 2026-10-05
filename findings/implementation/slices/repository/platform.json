@@ -257,10 +257,13 @@
         "section": "Repository and Platform",
         "finding": "| `platform/paths.ts:1` header | The header covers only slash conversion. Most of the file (lines 11-88 and 155-182) is a glob walker. | Move `globPaths` and its helpers to `platform/glob.ts`, or name the walker in the header. |",
         "owner": "`platform/paths.ts:1` header",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/paths.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The current paths header describes both path spelling and glob walks, including hidden-file and symbolic-link selection. It no longer claims slash conversion is the whole owner.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
+        ]
     },
     {
         "id": "slices/repository-platform/012",
@@ -269,10 +272,14 @@
         "section": "Repository and Platform",
         "finding": "| `platform/paths.ts:53,78` `walkFolder`, `walkPattern` | With `followSymlinks: false`, a link inside the fixed folder part of a pattern is still followed, because `statSync` and `readdirSync` resolve it. `globPaths(root, '.mise/conf.d/*.toml')` lists files outside `cwd` when `.mise` is a link. The doc says links are followed only on request. | When `followSymlinks` is false, `lstat` each segment of `base` and stop at a link. |",
         "owner": "`platform/paths.ts:53,78` `walkFolder`, `walkPattern`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/paths.ts", "tests/cli/platform/globs.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "walkPattern checks each fixed-base segment with lstat before any directory walk when followSymlinks is false. An intermediate link, or a final linked base with a remaining glob, blocks traversal. A directly selected link retains its separate literal-entry behavior.",
+            "The three new real-filesystem cases prove rejection for both wildcard and literal descendants, explicit link-following success, regular-directory correction, and preservation of external and unrelated bytes. The exact loop-path assertion also verifies cycle termination.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
+        ]
     },
     {
         "id": "slices/repository-platform/013",
@@ -281,10 +288,17 @@
         "section": "Repository and Platform",
         "finding": "| `platform/spawn.ts:21-22` `commandOptions` | For an executable given as an absolute path, the code puts its folder first on PATH. This changes which `node`, `python`, or `git` every child process finds. No comment says why, and the commit that added it is titled \"Cleanup\". | Write the reason in a comment (for example, so a `#!/usr/bin/env node` launcher finds the `node` beside it), or delete the two lines. |",
         "owner": "`platform/spawn.ts:21-22` `commandOptions`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/spawn.ts",
+            "tests/cli/platform/spawn/backends.test.ts",
+            "tests/cli/platform/spawn/termination.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "commandOptions explains why the folder of an absolute selected executable precedes other PATH tools: its launcher must find sibling runtimes and commands first. Both real process backends verify the selected sibling wins over an unrelated PATH executable.",
+            "The 72 affected platform, inspection, agent, backend, and termination cases passed with 371 assertions on macOS. The real asynchronous and synchronous sibling-command cases both execute the selected installation before an unrelated PATH directory. Root TypeScript, affected ESLint, and formatting passed; AST inspection preserves the process outcomes while bounding every direct backend test execution by the remaining budget."
+        ]
     },
     {
         "id": "slices/repository-platform/014",
@@ -293,10 +307,17 @@
         "section": "Repository and Platform",
         "finding": "| `platform/spawn.ts:64` `failedToRun` | This is a predicate without `is`. Its caller stores the result as `unfinished`. | Rename it to `isUnfinished`. |",
         "owner": "`platform/spawn.ts:64` `failedToRun`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/spawn.ts",
+            "tests/cli/platform/spawn/backends.test.ts",
+            "tests/cli/platform/spawn/termination.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The process-completion predicate is named isUnfinished, and completed calls it directly. The old failedToRun declaration and callers are absent. The predicate still identifies missing exit status, native error codes, and causes.",
+            "The 72 affected platform, inspection, agent, backend, and termination cases passed with 371 assertions on macOS. The real asynchronous and synchronous sibling-command cases both execute the selected installation before an unrelated PATH directory. Root TypeScript, affected ESLint, and formatting passed; AST inspection preserves the process outcomes while bounding every direct backend test execution by the remaining budget."
+        ]
     },
     {
         "id": "slices/repository-platform/015",
@@ -305,10 +326,17 @@
         "section": "Repository and Platform",
         "finding": "| `platform/spawn.ts:76` comment | \"Successful Execa results always contain exit code zero.\" sits above the line that adds `shortMessage`, and it does not explain that line. It seems to explain line 79, which turns an errored run with exit 0 into `FAILED_CODE`. | Move the comment to line 79 and rewrite it as \"A run that errored can still report exit 0; report it as failed.\" |",
         "owner": "`platform/spawn.ts:76` comment",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/spawn.ts",
+            "tests/cli/platform/spawn/backends.test.ts",
+            "tests/cli/platform/spawn/termination.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The comment now sits on the errored-zero-exit normalization and says that an errored run can report exit zero and must be reported as failed. It does not claim that all successful Execa results have code zero.",
+            "The 72 affected platform, inspection, agent, backend, and termination cases passed with 371 assertions on macOS. The real asynchronous and synchronous sibling-command cases both execute the selected installation before an unrelated PATH directory. Root TypeScript, affected ESLint, and formatting passed; AST inspection preserves the process outcomes while bounding every direct backend test execution by the remaining budget."
+        ]
     },
     {
         "id": "slices/repository-platform/016",
@@ -317,10 +345,17 @@
         "section": "Repository and Platform",
         "finding": "| `platform/spawn.ts:116` message | The text hard-codes \"5 seconds\", but the wait is `DRAIN_MS`. | Build the text from `DRAIN_MS`. |",
         "owner": "`platform/spawn.ts:116` message",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/spawn.ts",
+            "tests/cli/platform/spawn/backends.test.ts",
+            "tests/cli/platform/spawn/termination.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The output-drain diagnostic derives seconds from DRAIN_MS divided by MS_PER_SECOND. The same configured drain value controls the stream-destruction timer, so its message cannot drift from the operation.",
+            "The 72 affected platform, inspection, agent, backend, and termination cases passed with 371 assertions on macOS. The real asynchronous and synchronous sibling-command cases both execute the selected installation before an unrelated PATH directory. Root TypeScript, affected ESLint, and formatting passed; AST inspection preserves the process outcomes while bounding every direct backend test execution by the remaining budget."
+        ]
     },
     {
         "id": "slices/repository-platform/017",

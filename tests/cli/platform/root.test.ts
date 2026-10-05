@@ -28,8 +28,9 @@ test('native replacement and removal preserve read-only identities', async () =>
     }
 });
 
-if (isPosix) {
-    test('root lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits', async () => {
+test.skipIf(!isPosix)(
+    'root lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits',
+    async () => {
         await using directory = await testdir();
         const root = openRoot(directory.path);
         try {
@@ -51,40 +52,43 @@ if (isPosix) {
         } finally {
             root.close();
         }
-    });
+    },
+);
 
-    test.each(['portable', 'native'] as const)(
-        'root lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file',
-        async (format) => {
-            await using directory = await testdir();
-            await createFileTree(directory.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
-            const outside = join(directory.path, 'outside');
-            const project = join(directory.path, 'project');
-            symlinkSync(outside, join(project, 'escape'));
-            symlinkSync(join(outside, 'sentinel'), join(project, 'linked'));
-            linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
-            const root = openRoot(project, format);
-            try {
-                for (const path of ['escape/sentinel', 'linked', 'hardlinked']) {
-                    expect(() => {
-                        root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
-                    }).toThrow();
-                    expect(() => {
-                        root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
-                    }).toThrow();
-                    expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-                }
-                root.mkdir('.gspot/state/private', 0o700);
-                expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(
-                    process.platform === 'win32' ? 0o777 : 0o700,
-                );
-            } finally {
-                root.close();
+test.skipIf(!isPosix).each(['portable', 'native'] as const)(
+    'root lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file',
+    async (format) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
+        const outside = join(directory.path, 'outside');
+        const project = join(directory.path, 'project');
+        symlinkSync(outside, join(project, 'escape'));
+        symlinkSync(join(outside, 'sentinel'), join(project, 'linked'));
+        linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
+        const root = openRoot(project, format);
+        try {
+            for (const path of ['escape/sentinel', 'linked', 'hardlinked']) {
+                expect(() => {
+                    root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
+                }).toThrow();
+                expect(() => {
+                    root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
+                }).toThrow();
+                expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
             }
-        },
-    );
+            root.mkdir('.gspot/state/private', 0o700);
+            expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(
+                process.platform === 'win32' ? 0o777 : 0o700,
+            );
+        } finally {
+            root.close();
+        }
+    },
+);
 
-    test('root lifecycle mutations: native snapshot names retain POSIX bytes while refusing traversal and private links', async () => {
+test.skipIf(!isPosix)(
+    'root lifecycle mutations: native snapshot names retain POSIX bytes while refusing traversal and private links',
+    async () => {
         await using directory = await testdir();
         const root = openRoot(directory.path, 'native');
         const path = 'folder/a\n"é:?.txt';
@@ -107,9 +111,12 @@ if (isPosix) {
         } finally {
             root.close();
         }
-    });
+    },
+);
 
-    test('root lifecycle mutations: link publication refuses escaped, private, missing, and symlinked targets', async () => {
+test.skipIf(!isPosix)(
+    'root lifecycle mutations: link publication refuses escaped, private, missing, and symlinked targets',
+    async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/target': 'inside', 'outside/sentinel': 'outside' });
         const project = join(directory.path, 'project');
@@ -144,9 +151,12 @@ if (isPosix) {
         } finally {
             root.close();
         }
-    });
+    },
+);
 
-    test('root lifecycle mutations: a second writer is refused until the first releases its lock', async () => {
+test.skipIf(!isPosix)(
+    'root lifecycle mutations: a second writer is refused until the first releases its lock',
+    async () => {
         await using directory = await testdir();
         const first = openRoot(directory.path);
         const second = openRoot(directory.path);
@@ -163,8 +173,8 @@ if (isPosix) {
             first.close();
             second.close();
         }
-    });
-}
+    },
+);
 
 test('mutation paths reject portable escapes and preserve ordinary Unicode names', () => {
     for (const path of [

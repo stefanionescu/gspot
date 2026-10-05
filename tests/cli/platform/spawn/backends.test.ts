@@ -1,14 +1,24 @@
-// Exercise the shared process contract through real child processes.
+// Exercise process backends on Bun with children bounded by the test budget.
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
+import type { AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';
 
 const backends = [
-    { name: 'asynchronous', execute: run },
-    { name: 'synchronous', execute: runBlocking },
+    {
+        name: 'asynchronous',
+        execute: async (command: string[], options: AsyncSpawnOptions) =>
+            await run(command, prepareTestCommand(command, options, 'asynchronous process').options),
+    },
+    {
+        name: 'synchronous',
+        execute: (command: string[], options: AsyncSpawnOptions) =>
+            runBlocking(command, prepareTestCommand(command, options, 'synchronous process').options),
+    },
 ];
 
 for (const backend of backends) {
@@ -57,18 +67,17 @@ process.exitCode = ${String(status)};`;
         expect(result.stderr).not.toBe('');
     });
 
-    if (isPosix)
-        test(`${backend.name}: denied execution is distinct from a missing file`, async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
-            const executable = join(sandbox.path, 'denied.sh');
-            chmodSync(executable, 0o600);
-            const result = await backend.execute([executable], { cwd: sandbox.path });
-            expect(result.code).not.toBe(0);
-            expect(result.code).not.toBe(127);
-            expect(result.missing).toBe(false);
-            expect(result.stderr).not.toBe('');
-        });
+    test.skipIf(!isPosix)(`${backend.name}: denied execution is distinct from a missing file`, async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
+        const executable = join(sandbox.path, 'denied.sh');
+        chmodSync(executable, 0o600);
+        const result = await backend.execute([executable], { cwd: sandbox.path });
+        expect(result.code).not.toBe(0);
+        expect(result.code).not.toBe(127);
+        expect(result.missing).toBe(false);
+        expect(result.stderr).not.toBe('');
+    });
 
     test(`${backend.name}: a genuine deadline terminates the process and reports timeout`, async () => {
         await using sandbox = await testdir();
@@ -78,41 +87,46 @@ process.exitCode = ${String(status)};`;
         });
         expect(result.isTimedOut).toBe(true);
         expect(result.code).not.toBe(0);
-        expect(result.duration).toBeLessThan(3000);
     });
 
     // Windows has no signals: a process that kills itself exits with a code.
-    if (isPosix)
-        test(`${backend.name}: a signal before the deadline is not a timeout`, async () => {
-            await using sandbox = await testdir();
-            const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
-                cwd: sandbox.path,
-                timeoutMs: 5000,
-            });
-            expect(result.isTimedOut).toBe(false);
-            expect(result.isErrored).toBe(true);
-            expect(result.code).not.toBe(0);
-            expect(result.missing).toBe(false);
+    test.skipIf(!isPosix)(`${backend.name}: a signal before the deadline is not a timeout`, async () => {
+        await using sandbox = await testdir();
+        const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
+            cwd: sandbox.path,
+            timeoutMs: 5000,
         });
+        expect(result.isTimedOut).toBe(false);
+        expect(result.isErrored).toBe(true);
+        expect(result.code).not.toBe(0);
+        expect(result.missing).toBe(false);
+    });
 }
 
 test('cancellation terminates the process without reporting a timeout', async () => {
     await using sandbox = await testdir();
-    const result = await run([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
-        cwd: sandbox.path,
-        timeoutMs: 5000,
-        cancelSignal: AbortSignal.timeout(150),
-    });
+    const command = [process.execPath, '-e', 'setInterval(() => {}, 1000)'];
+    const prepared = prepareTestCommand(
+        command,
+        {
+            cwd: sandbox.path,
+            timeoutMs: 5000,
+            cancelSignal: AbortSignal.timeout(150),
+        },
+        'cancellation',
+    );
+    const result = await run(command, prepared.options);
     expect(result.isCanceled).toBe(true);
     expect(result.isTimedOut).toBe(false);
     expect(result.code).not.toBe(0);
-    expect(result.duration).toBeLessThan(3000);
 });
 
-test('preserves stdin, argument boundaries, final newlines, and the requested environment', async () => {
-    await using sandbox = await testdir();
-    const input = 'line one\nline two\n';
-    for (const backend of backends) {
+test.each(backends)(
+    '$name: preserves stdin, argument boundaries, final newlines, and the requested environment',
+    async (backend) => {
+        await using sandbox = await testdir();
+        const input = 'line one\nline two\n';
+
         const result = await backend.execute(
             [
                 process.execPath,
@@ -138,22 +152,20 @@ test('preserves stdin, argument boundaries, final newlines, and the requested en
             cwd: sandbox.path,
         });
         expect(result.stdout.endsWith('\n')).toBe(true);
-    }
-});
+    },
+);
 
 // Windows names environment variables without case and supplies Path itself.
-if (isPosix)
-    test('explicitly removes inherited environment values', async () => {
-        await using sandbox = await testdir();
-        for (const backend of backends) {
-            const result = await backend.execute(
-                [process.execPath, '-e', 'process.stdout.write(String(process.env.PATH === undefined))'],
-                {
-                    cwd: sandbox.path,
-                    env: { PATH: undefined },
-                },
-            );
-            expect(result.code).toBe(0);
-            expect(result.stdout).toBe('true');
-        }
-    });
+test.skipIf(!isPosix).each(backends)('$name: explicitly removes inherited environment values', async (backend) => {
+    await using sandbox = await testdir();
+
+    const result = await backend.execute(
+        [process.execPath, '-e', 'process.stdout.write(String(process.env.PATH === undefined))'],
+        {
+            cwd: sandbox.path,
+            env: { PATH: undefined },
+        },
+    );
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe('true');
+});

@@ -110,15 +110,14 @@ test('apply moves an installed CLAUDE.md once and drops the copy of the block', 
     expect(moved.match(/## Other instructions/gu)).toHaveLength(1);
 });
 
-if (isPosix)
-    test('init deletes a CLAUDE.md link and moves nothing', async () => {
-        await using sandbox = await testdir();
-        symlinkSync('AGENTS.md', join(sandbox.path, 'CLAUDE.md'));
-        const installed = await runGspot(sandbox.path, INIT);
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
-        expect(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('## Other instructions');
-    });
+test.skipIf(!isPosix)('init deletes a CLAUDE.md link and moves nothing', async () => {
+    await using sandbox = await testdir();
+    symlinkSync('AGENTS.md', join(sandbox.path, 'CLAUDE.md'));
+    const installed = await runGspot(sandbox.path, INIT);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
+    expect(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('## Other instructions');
+});
 
 test('generated attributes preserve LF through autocrlf checkout', async () => {
     await using sandbox = await testdir();
