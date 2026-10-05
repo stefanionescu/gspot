@@ -14,7 +14,7 @@ export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
 
 /** The JSON response of list configurations with detected setups and their acquisition commands. */
 export type ConfigurationsListJson = {
-    selectedConfigurations: { name: string; checks: { name: string; scope: string; state: string }[] }[];
+    selected: { name: string; checks: { name: string; scope: string; state: string }[] }[];
     detected: { name: string; evidence: string; command: string }[];
     available: { name: string; description: string }[];
 };

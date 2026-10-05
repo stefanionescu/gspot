@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { readTree } from '#tests/harness/preservation.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
@@ -16,10 +17,12 @@ test('list shows selected policy states, detected configurations, and setting va
         'entry.sh': 'echo example\n',
         'query.sql': 'SELECT 1;\n',
     });
+    const before = readTree(directory.path);
     const listed = await runGspot(directory.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
-    const checks = result.selectedConfigurations.flatMap((configuration) => configuration.checks);
+    expect(Object.keys(result)).toStrictEqual(['selected', 'detected', 'available']);
+    const checks = result.selected.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'bash/syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });
@@ -40,4 +43,24 @@ test('list shows selected policy states, detected configurations, and setting va
     expect(obsolete.code).toBe(2);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);
+    expect(readTree(directory.path)).toStrictEqual(before);
+});
+
+test('human configuration listings retain the selected names from JSON without writing', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['bash']),
+        'entry.sh': 'echo example\n',
+    });
+    const before = readTree(directory.path);
+    const structured = await runGspot(directory.path, ['list', 'configurations', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect(structured.stderr).toBe('');
+    const result = JSON.parse(structured.stdout) as ConfigurationsListJson;
+    const human = await runGspot(directory.path, ['list', 'configurations']);
+    expect(human.code, human.stdout + human.stderr).toBe(0);
+    expect(human.stderr).toBe('');
+    expect(human.stdout).toStartWith('selected\n');
+    for (const configuration of result.selected) expect(human.stdout).toContain(`  ${configuration.name}\n`);
+    expect(readTree(directory.path)).toStrictEqual(before);
 });

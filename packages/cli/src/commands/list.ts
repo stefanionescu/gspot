@@ -50,9 +50,9 @@ function buildSettingsResult(session: Session): CommandResult {
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
-    const selected = everyManifest(session.scopes);
-    const names = new Set(selected.map((manifest) => manifest.configuration.name));
-    const selectedConfigurations = selected.map((manifest) => ({
+    const manifests = everyManifest(session.scopes);
+    const names = new Set(manifests.map((manifest) => manifest.configuration.name));
+    const selected = manifests.map((manifest) => ({
         name: manifest.configuration.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
@@ -64,7 +64,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
                 : [],
         ),
     }));
-    const detected = detectUnselected(session.root, session.repository.files, session.manifests, selected).map(
+    const detected = detectUnselected(session.root, session.repository.files, session.manifests, manifests).map(
         ({ configuration, evidence, command }) => ({
             name: configuration,
             evidence,
@@ -80,7 +80,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
         .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
         .toArray();
     const lines = ['selected'];
-    for (const configuration of selectedConfigurations) {
+    for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
         for (const check of configuration.checks)
             lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
@@ -92,7 +92,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
     return {
         text: `${lines.join('\n')}\n`,
-        json: { selectedConfigurations, detected, available } satisfies ConfigurationsListJson,
+        json: { selected, detected, available } satisfies ConfigurationsListJson,
         exitCode: 0,
     };
 }

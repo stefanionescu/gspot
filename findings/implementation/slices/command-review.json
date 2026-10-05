@@ -803,10 +803,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/list.ts:91` `buildKitsResult` | The JSON keys are `selectedKits`, `detected`, and `available`. One key carries a suffix that its siblings lack. | Rename it to `selected`. |",
         "owner": "`commands/list.ts:91` `buildKitsResult`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/list.ts",
+            "packages/cli/src/types/commands/list.ts",
+            "tests/cli/commands/list.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Configuration listing JSON now uses selected, detected and available. Updated the declared contract and every consumer without compatibility fields.",
+        "verification": [
+            "The existing public listing regression failed against the old selectedConfigurations field. It now requires exactly the three canonical keys while retaining all original selected-check states, acquisition commands, available configurations, default-command equivalence, setting values and refusal assertions.",
+            "A human listing control confirms selected configuration names remain visible and both streams follow their contract. Full repository snapshots confirm configuration and setting listings and refusals write nothing.",
+            "Listing, inherited nested scopes and explanation owners passed 26 cases and 99 assertions across four files. Root TypeScript, affected ESLint and formatting passed. Repository search found no obsolete selectedConfigurations consumers outside historical findings."
+        ]
     },
     {
         "id": "slices/commands/048",
