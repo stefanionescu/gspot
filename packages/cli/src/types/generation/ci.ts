@@ -1,5 +1,8 @@
 import type { Policy } from '#cli/types/policy/settings.ts';
 
+/** An action commit and the release comment verified by pinact. */
+export type ActionPin = { name: string; sha: string; version: string };
+
 export type Pipeline = {
     version: string;
     run?: NonNullable<Policy['ci']>['files'];

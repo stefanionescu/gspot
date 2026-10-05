@@ -942,10 +942,18 @@
         "section": "Findings",
         "finding": "| `generation/ci.ts:27, 31, 97, 99`, `config/generation/generation.ts:36-39` | Each action pin is split across two files: the SHA in config, and the version comment that pinact verifies as a string literal in `ci.ts`. | Keep `{ sha, version }` together in one constant. |",
         "owner": "`generation/ci.ts:27, 31, 97, 99`, `config/generation/generation.ts:36-39`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/ci.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "packages/cli/src/generation/ci.ts"
+        ],
+        "status": "closed",
+        "outcome": "Each generated action pin keeps its action name, commit SHA and verified release comment in one configuration constant. The generator consumes the complete typed pin.",
+        "verification": [
+            "All four action identifiers, SHA values and release comments are unchanged. The shared YAML scalar renderer builds the uses reference and comment from the same ActionPin; no version literals remain at rendering call sites.",
+            "Compared actual generated GitHub and GitLab outputs before and after across 64 input combinations covering both runners, four platform selections, Swift scopes, manual checks, and full or changed selections. Every file path, byte, kind and mode declaration remained identical.",
+            "The existing CI generation, lifecycle guidance and explicit-provider initialization owners passed ten cases and 51 assertions across three files without modifying tests or fixtures. Root TypeScript, affected ESLint and formatting passed."
+        ]
     },
     {
         "id": "areas/commands/054",

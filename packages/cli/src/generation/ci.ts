@@ -1,10 +1,10 @@
 // Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { Pipeline } from '#cli/types/generation/ci.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
+import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
 
 import {
     MISE,
@@ -19,8 +19,8 @@ import {
 } from '#cli/config/generation/ci.ts';
 
 // An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
-function pinned(action: string, version: string): Scalar {
-    const node = new Scalar(action);
+function pinned({ name, sha, version }: ActionPin): Scalar {
+    const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
     return node;
 }
@@ -28,11 +28,11 @@ function pinned(action: string, version: string): Scalar {
 function setupSteps(shape: Pipeline): Record<string, unknown>[] {
     if (shape.isMise)
         return [
-            { uses: pinned(MISE, 'v3.2.0'), with: { version: MISE_MIN_VERSION, cache: false } },
+            { uses: pinned(MISE), with: { version: MISE_MIN_VERSION, cache: false } },
             { run: 'mise exec -- gspot install' },
         ];
     return [
-        { uses: pinned(NODE, 'v7.0.0'), with: { 'node-version': NODE_VERSION } },
+        { uses: pinned(NODE), with: { 'node-version': NODE_VERSION } },
         { run: `npm install --global @gspothq/cli@${shape.version}` },
         { run: 'gspot install' },
         { run: 'gspot doctor' },
@@ -87,9 +87,9 @@ function buildJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'):
             : {}),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { uses: pinned(CHECKOUT, 'v4.3.1'), with: { 'fetch-depth': 0, 'persist-credentials': false } },
+            { uses: pinned(CHECKOUT), with: { 'fetch-depth': 0, 'persist-credentials': false } },
             {
-                uses: pinned(CACHE, 'v4.2.3'),
+                uses: pinned(CACHE),
                 with: {
                     key: "gspot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.mise/conf.d/gspot-tools.toml', '.gspot/version') }}",
                     path: `${CACHED_PATHS.join('\n')}\n`,
