@@ -49,6 +49,19 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
     expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
     const added = await runTestCommand([...command, 'add', 'sql'], onlineOptions);
     expect(added.code, added.stdout + added.stderr).toBe(0);
+    const configured = await runTestCommand([...command, 'set', 'tools.sqlfluff.dialect', 'postgres'], onlineOptions);
+    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+    writeFileSync(join(root, 'query.sql'), 'SELECT FROM;\n');
+    const defect = await runTestCommand(
+        [...command, 'check', 'query.sql', '--only', 'sql/syntax', '--json'],
+        offlineOptions,
+    );
+    expect(defect.code, defect.stdout + defect.stderr).toBe(1);
+    expect((JSON.parse(defect.stdout) as RunReport).checks).toMatchObject([
+        { check: 'sql/syntax', status: 'failed', findings: [{ file: 'query.sql', line: 1 }] },
+    ]);
+    expect(readFileSync(join(root, 'query.sql'), 'utf8')).toBe('SELECT FROM;\n');
+    writeFileSync(join(root, 'query.sql'), 'SELECT 1;\n');
     const sql = await runTestCommand(
         [...command, 'check', 'query.sql', '--only', 'sql/syntax', '--json'],
         offlineOptions,

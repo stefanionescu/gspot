@@ -1,3 +1,3 @@
-import type { HOOK_FILES } from '#cli/config/generation/hooks.ts';
+import type { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 
-export type HookName = (typeof HOOK_FILES)[number];
+export type HookName = keyof typeof HOOK_ARGS;

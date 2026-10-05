@@ -4,9 +4,9 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
-import { PAIR } from '#cli/config/platform/runtime.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { ACTIVE_SEVERITIES } from '#cli/config/tools/eslint.ts';
+import { PROGRAM_ARGUMENT_OFFSET } from '#cli/config/platform/runtime.ts';
 import { ESLINT_FILE, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import type { EslintCoverageRequest, EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
 
@@ -46,7 +46,7 @@ async function readActiveRules(request: EslintCoverageRequest): Promise<EslintCo
 }
 
 try {
-    const [requestPath, output] = workerArgumentsSchema.parse(process.argv.slice(PAIR));
+    const [requestPath, output] = workerArgumentsSchema.parse(process.argv.slice(PROGRAM_ARGUMENT_OFFSET));
     const request = eslintCoverageRequestSchema.parse(JSON.parse(readFileSync(requestPath, 'utf8')));
     const result = eslintCoverageResponseSchema.parse(await readActiveRules(request));
     using files = openRoot(dirname(output));

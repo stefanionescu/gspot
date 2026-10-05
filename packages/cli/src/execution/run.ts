@@ -1,6 +1,7 @@
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
+import { toolPin } from '#cli/tools/pins.ts';
 import { problemText } from '#cli/policy/read.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -14,7 +15,7 @@ import type { IgnoreEntry } from '#cli/types/policy/settings.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { planRun, isActive } from '#cli/execution/planning/plan.ts';
 import { emptyResult, buildRunReport } from '#cli/execution/report.ts';
-import { DOCKER, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
+import { POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 
 import type {
     Pass,
@@ -61,7 +62,10 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    if (planned.spec.needs?.includes('docker') === true && inspectTool(session, DOCKER).state === 'missing')
+    if (
+        planned.spec.needs?.includes('docker') === true &&
+        inspectTool(session, toolPin(session.manifests.values(), 'docker')).state === 'missing'
+    )
         return { ...base, status: 'missing', note: 'Docker is not installed. Install Docker to run this check.' };
     return undefined;
 }

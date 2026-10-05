@@ -20,12 +20,20 @@ import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { emitConfigurations } from '#cli/generation/configurations.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outputs.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
-import { PRIVATE_PATHS, GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outputs.ts';
 import { requiredToolNames, applicableManifests } from '#cli/execution/planning/requirements.ts';
-import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
+
+import {
+    UV_LOCK,
+    DOT_GSPOT,
+    STATE_DIRECTORY,
+    TOOL_PYTHON_PROJECT,
+    TOOL_PACKAGE_PROJECT,
+    INSTALLATION_DIRECTORIES,
+} from '#cli/config/platform/locations.ts';
 
 // CI includes the selected manual checks and adds macOS when a scope selects Swift.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
@@ -127,7 +135,8 @@ function assertDistinctPaths(generated: Generated): void {
 export function gitignoreBlock(
     manifests: Iterable<Pick<Manifest, 'ignored'>> = configurationManifests().values(),
 ): string {
-    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
+    const privatePaths = [...Object.values(INSTALLATION_DIRECTORIES), STATE_DIRECTORY].map((path) => `${path}/`);
+    return [...new Set([...privatePaths, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
 }
 
 /**

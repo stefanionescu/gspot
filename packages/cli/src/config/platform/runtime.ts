@@ -3,10 +3,10 @@ import packageManifest from '#cli-package' with { type: 'json' };
 /** Version of the CLI package used by commands and generated output. */
 export const { version: RUNNING_VERSION } = packageManifest;
 
-export const MAX_EXIT_CODE = 255;
+/** Node and Bun place the executable and entry file before program arguments. */
+export const PROGRAM_ARGUMENT_OFFSET = 2;
 
-/** Two items read together: a key and its value, an opening and closing quote, or two characters. */
-export const PAIR = 2;
+export const MAX_EXIT_CODE = 255;
 
 /** Milliseconds in a second, for durations shown in seconds. */
 export const MS_PER_SECOND = 1000;

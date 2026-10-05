@@ -6,7 +6,7 @@ import type { HookName } from '#cli/types/generation/hooks.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
-import { HOOK_ARGS, HOOK_FILES, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
+import { HOOK_ARGS, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
@@ -64,7 +64,7 @@ export function hookLine(name: HookName, runner: Policy['run_with']): string {
 export function hookFiles(root: string, policy: Policy, version: string): GeneratedFile[] {
     if (policy.hooks === undefined) return [];
     const prefix = hookPrefix(root);
-    return HOOK_FILES.map((name) => ({
+    return (Object.keys(HOOK_ARGS) as HookName[]).map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
         content: hookScript(name, policy.run_with, prefix, version),
         readOnly: true,

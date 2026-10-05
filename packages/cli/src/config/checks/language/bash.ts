@@ -1,4 +1,4 @@
-import type { BashRuleAsset } from '#cli/types/checks/language/bash.ts';
+import type { BashCountRule } from '#cli/types/checks/language/bash.ts';
 /** Features and their minimum Bash versions. */
 export const BASH_FEATURES: [RegExp, string, string][] = [
     [/\b(?:mapfile|readarray)\b/u, 'mapfile and readarray need Bash 4.0', '4.0.0'],
@@ -130,10 +130,10 @@ export const VAGUE_WORDS = [
 /** The doc sections a function comment may carry, in the order they go. */
 export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'];
 
-export const BASH_SIZE_RULES: BashRuleAsset[] = [
-    { asset: 'branches.yml', limit: 'branches', noun: 'branches', isDepth: false },
-    { asset: 'nesting.yml', limit: 'nesting', noun: 'levels of nesting', isDepth: true },
-    { asset: 'assignments.yml', limit: 'assignments', noun: 'assignments', isDepth: false },
+export const COUNT_RULES: BashCountRule[] = [
+    { limit: 'branches', noun: 'branches', isDepth: false },
+    { limit: 'nesting', noun: 'levels of nesting', isDepth: true },
+    { limit: 'assignments', noun: 'assignments', isDepth: false },
 ];
 
 /** Count the matched block and the outermost block, which the nesting query cannot match. */

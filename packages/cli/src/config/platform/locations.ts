@@ -42,3 +42,6 @@ export const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
 export const RULES_DIRECTORY = '.gspot/rules';
 
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';
+
+/** The private folder written and replaced for each installation kind. */
+export const INSTALLATION_DIRECTORIES = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;

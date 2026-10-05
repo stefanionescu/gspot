@@ -1,10 +1,8 @@
-export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'] as const;
-
-export const HOOK_ARGS: Record<(typeof HOOK_FILES)[number], string> = {
+export const HOOK_ARGS = {
     'pre-commit': 'check --hook pre-commit',
     'pre-push': 'check --hook pre-push -- "$@"',
     'commit-msg': 'check --hook commit-msg --message-file "$1"',
-};
+} as const;
 
 /** Hook commands and the installation needed when their executable is absent. */
 export const HOOK_RUNNERS = {

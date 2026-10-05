@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
-import { PAIR } from '#cli/config/platform/runtime.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
@@ -18,7 +17,14 @@ import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
 import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
 import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
-import { DIFF_TREE, CHANGE_LINE, COMMIT_METADATA, GITLEAKS_LOG_OPTIONS } from '#cli/config/checks/general/secrets.ts';
+
+import {
+    DIFF_TREE,
+    CHANGE_LINE,
+    COMMIT_METADATA,
+    RAW_CHANGE_FIELDS,
+    GITLEAKS_LOG_OPTIONS,
+} from '#cli/config/checks/general/secrets.ts';
 
 // The commits under review: the ones the run supplies, or every commit after the push base.
 async function scannedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
@@ -44,7 +50,7 @@ async function changeFields(session: Session, commit: string): Promise<string[]>
 // The blob each changed file holds after the commit, by path.
 function changedObjects(fields: string[]): Map<string, string> {
     const entries = new Map<string, string>();
-    for (let position = 0; position < fields.length; position += PAIR) {
+    for (let position = 0; position < fields.length; position += RAW_CHANGE_FIELDS) {
         const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
         const file = fields[position + 1];
         if (blobId === undefined || file === undefined) throw new Error('Git returned an unsupported history object.');

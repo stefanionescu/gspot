@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { dirname } from 'node:path';
-import { NO_INPUTS, EMPTY_FILES } from '#cli/config/parsers/tsconfig.ts';
 import { typeScriptConfigSchema } from '#cli/parsers/schema/tsconfig.ts';
+import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 
 /**
  * Parses compiler options and inherited configuration with the TypeScript compiler.
@@ -22,7 +22,9 @@ export function parseTsconfig(path: string, text: string, host: ts.ParseConfigHo
         path,
     );
     // Option and alias consumers also read configurations with no input files.
-    const errors = parsed.errors.filter((error) => error.code !== EMPTY_FILES && error.code !== NO_INPUTS);
+    const errors = parsed.errors.filter(
+        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_INPUTS_CODE,
+    );
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
     return parsed;

@@ -13,15 +13,15 @@ import {
     TOOL_PACKAGE_PROJECT,
 } from '#cli/config/platform/locations.ts';
 import {
-    MISE,
-    NODE,
-    CACHE,
     RUNNERS,
-    CHECKOUT,
+    MISE_ACTION,
     CACHED_PATHS,
+    CACHE_ACTION,
     NODE_VERSION,
+    CHECKOUT_ACTION,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
+    SETUP_NODE_ACTION,
 } from '#cli/config/generation/ci.ts';
 
 // An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
@@ -34,12 +34,12 @@ function pinned({ name, sha, version }: ActionPin): Scalar {
 function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
     if (pipeline.isMise)
         return [
-            { uses: pinned(MISE), with: { version: MISE_MIN_VERSION, cache: false } },
+            { uses: pinned(MISE_ACTION), with: { version: MISE_MIN_VERSION, cache: false } },
             { run: 'mise exec -- gspot install' },
             { run: 'mise exec -- gspot doctor' },
         ];
     return [
-        { uses: pinned(NODE), with: { 'node-version': NODE_VERSION } },
+        { uses: pinned(SETUP_NODE_ACTION), with: { 'node-version': NODE_VERSION } },
         { run: `npm install --global @gspothq/cli@${pipeline.version}` },
         { run: 'gspot install' },
         { run: 'gspot doctor' },
@@ -82,9 +82,9 @@ function buildJob(pipeline: Pipeline, platform: string, check: GithubCheck): Rec
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { uses: pinned(CHECKOUT), with: { 'fetch-depth': 0, 'persist-credentials': false } },
+            { uses: pinned(CHECKOUT_ACTION), with: { 'fetch-depth': 0, 'persist-credentials': false } },
             {
-                uses: pinned(CACHE),
+                uses: pinned(CACHE_ACTION),
                 with: {
                     key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,

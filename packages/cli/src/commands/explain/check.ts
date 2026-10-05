@@ -11,14 +11,14 @@ import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { TOOL_TIMEOUT_MS, ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT } from '#cli/config/commands/explain.ts';
 import type { Found, CheckFacts, Explanation, DeclaredCheck, RuleSummarizer } from '#cli/types/commands/explain.ts';
+import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 
 const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {
     ruff: (rule, path) => {
         const result = runBlocking([path, 'rule', rule, '--output-format', 'json'], {
             cwd: process.cwd(),
-            timeoutMs: TOOL_TIMEOUT_MS,
+            timeoutMs: RULE_LOOKUP_TIMEOUT_MS,
         });
         if (result.code !== 0) return undefined;
         try {
@@ -28,7 +28,7 @@ const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {
         }
     },
     swiftlint: (rule, path) => {
-        const result = runBlocking([path, 'rules', rule], { cwd: process.cwd(), timeoutMs: TOOL_TIMEOUT_MS });
+        const result = runBlocking([path, 'rules', rule], { cwd: process.cwd(), timeoutMs: RULE_LOOKUP_TIMEOUT_MS });
         return result.code === 0
             ? result.stdout.split('\n').slice(0, SWIFTLINT_LINE_LIMIT).join('\n').trim()
             : undefined;

@@ -1,4 +1,3 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { CheckStatus } from '#cli/types/execution/runtime.ts';
 
 export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'missing', 'error']);
@@ -16,8 +15,6 @@ export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
 ]);
 
 export const RAN_STATUSES = new Set<CheckStatus>(['passed', 'failed']);
-
-export const DOCKER: ToolPin = { name: 'docker', kind: 'binary', system: true, installers: {} };
 
 /** The checks that read the history of the pushed commits. */
 export const HISTORY_CHECKS = new Set(['commits/commitlint-range', 'secrets/gitleaks-history', 'secrets/trufflehog']);

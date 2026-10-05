@@ -23,7 +23,7 @@ export const TOOL_PLATFORMS = [
     'windows-arm64',
 ] as const;
 
-export const SENTENCE_MIN = 12;
+export const SENTENCE_MIN_CHARS = 12;
 
 export const CONFIG_PREFIX = `${CONFIGURATION_DIRECTORY}/`;
 

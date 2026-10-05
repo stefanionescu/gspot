@@ -78,10 +78,19 @@
         "section": "The Config Constants",
         "finding": "| `config/tools/tools.ts:6` `HOST_ONLY`, `config/execution/execution.ts:10` `DOCKER` | `HOST_ONLY` is dead. The manifests already mark bash, docker, xcodebuild, plutil, and xmllint with `host = true`, and `misePin` (`tools/mise.ts:30`) tests `tool.host` first. git, xcstringstool, and swift have no `[[tool]]` pin in any manifest. `DOCKER` builds a pin by hand that `kits/tool/docker/manifest.toml:42` already declares. | Delete `HOST_ONLY`. Look up the docker pin from the session's manifests, and delete `DOCKER`. |",
         "owner": "`config/tools/tools.ts:6` `HOST_ONLY`, `config/execution/execution.ts:10` `DOCKER`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/execution/run.ts",
+            "packages/cli/src/config/execution/runtime.ts",
+            "packages/cli/src/execution/session.ts",
+            "packages/cli/configurations/tool/docker/manifest.toml"
+        ],
+        "status": "closed",
+        "outcome": "HOST_ONLY is absent. Docker availability reads the canonical declared pin with toolPin(session.manifests.values(), docker); the hand-built DOCKER pin and its type-only import are deleted. openSession retains the full built-in registry, so Docker is available to every supported check that declares needs = docker without duplicating selection or defaults.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/006",
@@ -350,10 +359,22 @@
         "section": "The Config Constants",
         "finding": "| `config/platform/platform.ts:80` `PAIR` | One name covers four unrelated uses of the number 2: in `trufflehog.ts`, `bash/ssh.ts`, `nginx/directives.ts`, and `parsers/sql/source.ts`. The doc lists \"a key and its value, an opening and closing quote, or two characters.\" | Delete it. Write `2`, or give each use a local name. |",
         "owner": "`config/platform/platform.ts:80` `PAIR`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/platform/runtime.ts",
+            "packages/cli/src/config/checks/general/secrets.ts",
+            "packages/cli/src/config/parsers/nginx.ts",
+            "packages/cli/src/main.ts",
+            "packages/cli/src/tools/eslint/worker.ts",
+            "packages/cli/src/checks/general/secrets.ts",
+            "packages/cli/src/parsers/nginx.ts"
+        ],
+        "status": "closed",
+        "outcome": "PAIR and every source import are deleted. Program entry points share the actual executable/entry-file argument offset. The Git raw-change reader and nginx escape reader name their own field count and escape length under their existing config owners. Obsolete SSH and SQL pair consumers have no current references.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/020",
@@ -458,10 +479,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`; `config/checks/language/bash.ts:172` and `config/lifecycle/preview.ts:11` `SHELLCHECK_DIRECTIVE`; `config/generation/generation.ts:50` `PACKAGE_JSON_INDENT` | Name collisions. The two `DUPLICATE_LINES` hold 3 and 4. The two `SHELLCHECK_DIRECTIVE` mean different things: a `# shellcheck` comment, and a `key=` line of `.shellcheckrc`. `PACKAGE_JSON_INDENT` indents every generated JSON file and the docs schema, not only `package.json`. Beside it, `OUTPUT_JSON_INDENT` is 2. | Delete both `DUPLICATE_LINES` (they are dead fallbacks). Rename the preview regex to `SHELLCHECKRC_ENTRY`, and `PACKAGE_JSON_INDENT` to `GENERATED_JSON_INDENT`. |",
         "owner": "`config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`; `config/checks/language/bash.ts:172` and `config/lifecycle/preview.ts:11` `SHELLCHECK_DIRECTIVE`; `config/generation/generation.ts:50` `PACKAGE_JSON_INDENT`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/templates.ts",
+            "packages/cli/src/config/checks/language/bash.ts",
+            "packages/cli/src/config/lifecycle/ownership.ts",
+            "packages/cli/src/config/output.ts",
+            "docs/src/config/reference.ts"
+        ],
+        "status": "closed",
+        "outcome": "Both duplicate-line fallback constants and the obsolete lifecycle preview regex are absent. The remaining SHELLCHECK_DIRECTIVE describes ShellCheck source comments only. Generated JSON indentation is JSON_INDENT under the generation template owner, while reporting, ownership state, and the docs schema have independent indentation owners; no package-specific name remains.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/029",
@@ -470,10 +501,24 @@
         "section": "The Config Constants",
         "finding": "| `config/repository/repository.ts:222-223` `EMPTY_FILES`, `NO_INPUTS`; `config/execution/tool.ts:22` `TRUFFLEHOG_FINDINGS`; `config/checks/language/bash.ts:3,8` `RULES`, `OUTER_LEVELS`; `config/kits.ts:12` `SENTENCE_MIN`; `config/checks/general/docs.ts:16-17` `CONTENTS_HEADINGS`, `CONTENTS_HEADING`; `config/commands/explain.ts:12` `TOOL_TIMEOUT_MS`; `config/generation/generation.ts:36-39` `CHECKOUT`, `MISE`, `CACHE`, `NODE` | These names hide what the values are. `EMPTY_FILES` and `NO_INPUTS` are TypeScript diagnostic codes TS18002 and TS18003. `TRUFFLEHOG_FINDINGS` is an exit code. `RULES` holds the ast-grep count rules, and their `asset` is always `${limit}.yml`. `OUTER_LEVELS` has no doc. `SENTENCE_MIN` is a character count. The two `CONTENTS_*` names differ by one letter. `TOOL_TIMEOUT_MS` is the rule-lookup timeout, next to the 600-second `TOOL_DEADLINE`. `NODE` is an action ref, next to `NODE_VERSION` and `DEFAULT_NODE_VERSION`. | Rename them to `TS_EMPTY_FILES_CODE`, `TS_NO_INPUTS_CODE`, `TRUFFLEHOG_FINDINGS_EXIT`, `COUNT_RULES` (derive `asset`), `SENTENCE_MIN_CHARS`, `CONTENTS_AFTER_H2S`, `RULE_LOOKUP_TIMEOUT_MS`, and `SETUP_NODE_ACTION` and its siblings. Document `OUTER_LEVELS` or inline it. |",
         "owner": "`config/repository/repository.ts:222-223` `EMPTY_FILES`, `NO_INPUTS`; `config/execution/tool.ts:22` `TRUFFLEHOG_FINDINGS`; `config/checks/language/bash.ts:3,8` `RULES`, `OUTER_LEVELS`; `config/kits.ts:12` `SENTENCE_MIN`; `config/checks/general/docs.ts:16-17` `CONTENTS_HEADINGS`, `CONTENTS_HEADING`; `config/commands/explain.ts:12` `TOOL_TIMEOUT_MS`; `config/generation/generation.ts:36-39` `CHECKOUT`, `MISE`, `CACHE`, `NODE`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/parsers/tsconfig.ts",
+            "packages/cli/src/config/execution/output.ts",
+            "packages/cli/src/config/configurations.ts",
+            "packages/cli/src/config/commands/explain.ts",
+            "packages/cli/src/config/generation/ci.ts",
+            "packages/cli/src/config/checks/language/bash.ts",
+            "packages/cli/src/checks/language/bash/limits.ts",
+            "packages/cli/src/types/checks/language/bash.ts",
+            "packages/cli/src/config/checks/general/docs.ts"
+        ],
+        "status": "closed",
+        "outcome": "TypeScript diagnostic codes, TruffleHog finding exit, minimum sentence length, rule lookup deadline, and CI action refs have precise names. COUNT_RULES stores each actual Bash limit and derives its asset filename, eliminating redundant asset fields. OUTER_LEVELS already documents matched and outermost blocks. The obsolete contents fallback constants are absent; contents heading text has its own current owner.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/030",
@@ -551,10 +596,19 @@
         "section": "The Config Constants",
         "finding": "| `config/generation/generation.ts:132` `HOOK_FILES`, `:70` `HOOK_ARGS` | `HOOK_FILES` lists exactly the keys of `HOOK_ARGS`. | Derive `HOOK_FILES` from `HOOK_ARGS`, and declare `HookName` beside it. |",
         "owner": "`config/generation/generation.ts:132` `HOOK_FILES`, `:70` `HOOK_ARGS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/types/generation/hooks.ts",
+            "packages/cli/src/generation/hooks.ts",
+            "packages/cli/src/lifecycle/hooks-path.ts"
+        ],
+        "status": "closed",
+        "outcome": "HOOK_ARGS is the single hook-name and command table. Both script generation and foreign-hook instructions derive their names from its keys; the independent HOOK_FILES list is deleted. HookName derives from keyof typeof HOOK_ARGS in the required types owner, honoring the user decision to keep module-level types under types/.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/035",
@@ -667,10 +721,23 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/tool/xcode.ts:14` `IMAGE_SET`, `config/kits.ts:53` `PRIVATE_PATHS`, `config/platform/platform.ts:46` `GRAMMAR_FILES` | These are other small duplicates. `IMAGE_SET` equals `NAMED_SETS[0]`. `PRIVATE_PATHS` is `INSTALLATION_DIRECTORIES` plus `STATE_DIRECTORY`. `GRAMMAR_FILES` adds the literal `'swift.wasm'`, while the Swift pin sits in `parsers.ts` and the other grammars in `GRAMMAR_PACKAGES`. | Derive each from the other table. Keep one grammar table that both `scripts/grammars.ts` and `platform/assets.ts` read. |",
         "owner": "`config/checks/tool/xcode.ts:14` `IMAGE_SET`, `config/kits.ts:53` `PRIVATE_PATHS`, `config/platform/platform.ts:46` `GRAMMAR_FILES`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/tool/xcode.ts",
+            "packages/cli/src/config/platform/locations.ts",
+            "packages/cli/src/config/generation/outputs.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/lifecycle/ownership/installations.ts",
+            "packages/cli/src/config/platform/assets.ts",
+            "packages/cli/src/platform/assets.ts",
+            "packages/cli/scripts/grammars.ts"
+        ],
+        "status": "closed",
+        "outcome": "NAMED_SETS reuses IMAGE_SET instead of duplicating its literal. gitignoreBlock derives private paths from INSTALLATION_DIRECTORIES and STATE_DIRECTORY, and the independent PRIVATE_PATHS table is deleted. Installation locations now have their shared platform owner used by lifecycle and generation. GRAMMAR_FILES is absent; the setup producer and runtime WASM reader use the same platform asset registry and Swift pin, including its declared filename.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "slices/config/043",

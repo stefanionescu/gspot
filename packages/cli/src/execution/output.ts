@@ -12,7 +12,7 @@ import type { CommandInvocation } from '#cli/types/execution/command.ts';
 import type { OutputSpec, OutputPaths } from '#cli/types/parsers/output.ts';
 import type { Finding, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
-import { FILELESS_FORMATS, TRUFFLEHOG_FINDINGS } from '#cli/config/execution/output.ts';
+import { FILELESS_FORMATS, TRUFFLEHOG_FINDINGS_EXIT } from '#cli/config/execution/output.ts';
 import type { OutputCheck, CommandRunState, InvocationOutput } from '#cli/types/execution/output.ts';
 
 function prefixScope(findings: Finding[], scopePath: string): void {
@@ -81,10 +81,10 @@ function isOnDisk(file: string, roots: string[]): boolean {
 }
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
-    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
+    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS_EXIT) || broken)
         throw new GspotError('output', `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
     const findings = parseOutput(spec, result.stdout, result.stderr, paths);
-    if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
+    if (result.code === TRUFFLEHOG_FINDINGS_EXIT && findings.length === 0)
         throw new GspotError(
             'output',
             'TruffleHog reported findings without valid structured data; raw output was withheld.',

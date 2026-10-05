@@ -17,4 +17,6 @@ path = "api/worker"
 configurations = ["sql"]
 [scope.limits]
 function_lines = 30
+[scope.tools.sqlfluff]
+dialect = "postgres"
 `;

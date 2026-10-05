@@ -12,6 +12,8 @@ import { TEXT_FIX, TEXT_CHECK } from '#tests/config/cli/execution/fixers-passes.
 test('fix verification replaces read source bytes and preserves unrelated authored files', async () => {
     await using sandbox = await testdir();
     const policy = `configurations = ["sql"]
+[tools.sqlfluff]
+dialect = "postgres"
 [[check]]
 name = "project/correct-sql"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]

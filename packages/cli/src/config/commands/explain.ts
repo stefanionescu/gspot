@@ -9,7 +9,7 @@ export const DIRECTION_TEXTS: Record<string, string> = {
     'rule-options': 'per rule: options and rules turned on; off is an ignore',
 };
 
-export const TOOL_TIMEOUT_MS = 10_000;
+export const RULE_LOOKUP_TIMEOUT_MS = 10_000;
 
 export const SWIFTLINT_LINE_LIMIT = 6;
 

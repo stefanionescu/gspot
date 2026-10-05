@@ -6,7 +6,7 @@ export const NOT_WORD = /[^A-Za-z\d]/u;
 
 export const IMAGE_SET = '.imageset/Contents.json';
 
-export const NAMED_SETS = ['.imageset/Contents.json', '.colorset/Contents.json'];
+export const NAMED_SETS = [IMAGE_SET, '.colorset/Contents.json'];
 
 export const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
 

@@ -101,7 +101,10 @@ test.skipIf(!isPosix)('engines read edited SQL source when a session is reused',
     await using sandbox = await testdir();
     const path = 'app/café\nquery.sql';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['sql'], { tables: '[[scope]]\npath = "app"\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['sql'], {
+            tables: '[tools.sqlfluff]\ndialect = "postgres"\n[[scope]]\npath = "app"\n',
+            level: 'all',
+        }),
         [path]: 'select 1;\n',
     });
     const session = await openSession(sandbox.path);

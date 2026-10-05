@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { SENTENCE_MIN } from '#cli/config/configurations.ts';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { namingRuleSchema } from '#cli/parsers/schema/naming.ts';
 import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
+import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { toolSchema } from '#cli/parsers/schema/configurations/tool.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
@@ -99,7 +99,7 @@ const configSchema = z
               },
     );
 
-const sentence = z.string().min(SENTENCE_MIN);
+const sentence = z.string().min(SENTENCE_MIN_CHARS);
 
 const stringListTable = z.record(z.string(), z.array(z.string()));
 

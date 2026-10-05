@@ -135,6 +135,8 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
     expect(policy).not.toContain('templates');
     expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+    const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
+    expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
     const syntax = await runGspot(sandbox.path, ['check', '--only', 'sql/syntax']);
     expect(syntax.code).toBe(0);
 });

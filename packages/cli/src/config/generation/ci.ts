@@ -11,25 +11,25 @@ export const CACHED_PATHS = [
     '~/.yarn/berry/cache',
 ];
 
-export const CHECKOUT: ActionPin = {
+export const CHECKOUT_ACTION: ActionPin = {
     name: 'actions/checkout',
     sha: '34e114876b0b11c390a56381ad16ebd13914f8d5',
     version: 'v4.3.1',
 };
 
-export const MISE: ActionPin = {
+export const MISE_ACTION: ActionPin = {
     name: 'jdx/mise-action',
     sha: '5ac50f778e26fac95da98d50503682459e86d566',
     version: 'v3.2.0',
 };
 
-export const CACHE: ActionPin = {
+export const CACHE_ACTION: ActionPin = {
     name: 'actions/cache',
     sha: '5a3ec84eff668545956fd18022155c47e93e2684',
     version: 'v4.2.3',
 };
 
-export const NODE: ActionPin = {
+export const SETUP_NODE_ACTION: ActionPin = {
     name: 'actions/setup-node',
     sha: '820762786026740c76f36085b0efc47a31fe5020',
     version: 'v7.0.0',

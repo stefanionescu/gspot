@@ -174,10 +174,14 @@
         "section": "Findings",
         "finding": "| `tests/unit/cli/policy/read-policy/settings.test.ts:40-47`, \"parsePolicyText > an ignore without a reason that says something is refused\" | Loops over five values copied from `REFUSED_REASONS` (`packages/cli/src/config/policy/policy.ts:184`), and all take one branch. It overlaps `recovery.test.ts:10` and `:30`. | Keep one value, `N/A`, which also proves case folding. |",
         "owner": "`tests/unit/cli/policy/read-policy/settings.test.ts:40-47`, \"parsePolicyText > an ignore without a reason that says something is refused\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/policy/read-policy/settings.test.ts", "tests/cli/policy/read-policy/recovery.test.ts"],
+        "status": "closed",
+        "outcome": "The former loop over REFUSED_REASONS is gone. One policy case rejects N/A and accepts a substantive correction. It tests the real policy result without importing or reproducing a refusal list; recovery separately verifies removal of an invalid limit and preservation of a tightened limit.",
+        "verification": [
+            "363 affected CLI cases pass across the initial run and repaired SQL and scope fixtures in 59 files: /tmp/gspot-constants-tests.log, /tmp/gspot-constants-repaired-tests.log, /tmp/gspot-constants-init-verified.log. Consolidated named outcomes: /tmp/gspot-constants-test-outcomes.json.",
+            "Eight native Bash checks pass with 40 assertions, including all derived ast-grep count assets: /tmp/gspot-constants-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-constants-root-types-final.log, /tmp/gspot-constants-cli-types.log, /tmp/gspot-constants-plugin-types.log, /tmp/gspot-constants-docs-types.log."
+        ]
     },
     {
         "id": "areas/unit-tests/016",

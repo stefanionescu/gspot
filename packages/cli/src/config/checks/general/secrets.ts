@@ -18,3 +18,6 @@ export const COMMIT_METADATA = ['show', '--no-patch', '--no-show-signature', '--
 
 /** Scan each selected commit, including both sides of a merge, without walking its ancestors. */
 export const GITLEAKS_LOG_OPTIONS = '--no-walk --diff-merges=separate';
+
+/** Each raw Git change contains metadata followed by its path. */
+export const RAW_CHANGE_FIELDS = 2;

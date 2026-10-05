@@ -5,7 +5,8 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readdirSync } from 'node:fs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { getHooks } from '#cli/repository/survey.ts';
-import { HOOK_FILES } from '#cli/config/generation/hooks.ts';
+import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
+import type { HookName } from '#cli/types/generation/hooks.ts';
 import { hookLine, hookPrefix } from '#cli/generation/hooks.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { hooksDirectory, readGitSetting, runGitBlocking } from '#cli/platform/git.ts';
@@ -43,7 +44,9 @@ export function getHookPlan({ policy, repository }: HookContext): HookPlan {
     if (policy.hooks === undefined || !repository.hasGit) return { note: '' };
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0) {
-        const lines = HOOK_FILES.map((name) => `  ${name}: ${hookLine(name, policy.run_with)}`);
+        const lines = (Object.keys(HOOK_ARGS) as HookName[]).map(
+            (name) => `  ${name}: ${hookLine(name, policy.run_with)}`,
+        );
         return {
             note: `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`,
         };

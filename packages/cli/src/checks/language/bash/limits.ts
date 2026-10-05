@@ -7,10 +7,10 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { astGrepReportSchema } from '#cli/parsers/schema/ast-grep.ts';
+import { COUNT_RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { OUTER_LEVELS, BASH_SIZE_RULES } from '#cli/config/checks/language/bash.ts';
-import type { ScriptIndex, AstGrepMatch, BashRuleAsset } from '#cli/types/checks/language/bash.ts';
+import type { ScriptIndex, AstGrepMatch, BashCountRule } from '#cli/types/checks/language/bash.ts';
 
 /**
  * Runs one ast-grep rule over the files.
@@ -60,12 +60,12 @@ function nestingDepth(matches: AstGrepMatch[]): number {
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-async function countFindings(rule: BashRuleAsset, input: EngineInput, index: ScriptIndex): Promise<Finding[]> {
+async function countFindings(rule: BashCountRule, input: EngineInput, index: ScriptIndex): Promise<Finding[]> {
     const ceiling = input.view.limit(rule.limit, 'bash');
     if (ceiling === undefined) return [];
     const matches = await runAstGrep(
         input,
-        `configurations/language/bash/ast-grep/${rule.asset}`,
+        `configurations/language/bash/ast-grep/${rule.limit}.yml`,
         index.files.map((file) => file.path),
     );
     return index.files.flatMap((file) => {
@@ -143,6 +143,6 @@ function functionLines(input: EngineInput, index: ScriptIndex): Finding[] {
  */
 export const bashLimits: Engine = async (input) => {
     const index = await getScriptIndex(input);
-    const counted = await Promise.all(BASH_SIZE_RULES.map((rule) => countFindings(rule, input, index)));
+    const counted = await Promise.all(COUNT_RULES.map((rule) => countFindings(rule, input, index)));
     return [...fileLines(input, index), ...functionLines(input, index), ...counted.flat()];
 };

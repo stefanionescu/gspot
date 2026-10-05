@@ -21,8 +21,8 @@ export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
 /** A validated native structural match with zero-based line positions. */
 export type AstGrepMatch = z.infer<typeof matchSchema>;
 
-/** One structural shell rule asset and the limit it measures. */
-export type BashRuleAsset = { asset: string; limit: string; noun: string; isDepth: boolean };
+/** One structural shell count and the limit it measures. */
+export type BashCountRule = { limit: string; noun: string; isDepth: boolean };
 
 /** A shell script's declared source dependencies and annotation findings. */
 export type SourceAnnotations = { sources: Set<string>; findings: Finding[] };
