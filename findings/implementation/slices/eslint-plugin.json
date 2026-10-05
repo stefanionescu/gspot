@@ -505,10 +505,20 @@
         "section": "The ESLint Plugin",
         "finding": "| `meta.docs` of 11 rules | The plugin reference serves standalone ESLint users, but the docs name gspot settings and commands. `architecture.roles.env` (`env-owner.ts:33`). `tools.eslint.import_style` and \"file class\" (`import-style.ts:27`). `limits.barrel_reexports` (`max-barrel-reexports.ts:18`). `structure.reexports` (`no-reexports.ts:16`). `gspot ignore` (`types-placement.ts:139`). \"Element contract\" (`import-direction.ts:64,86`). `gspot check --fix` (`export-layout.ts:26`, `import-layout.ts:21`, `header-first.ts:104`, `no-import-comments.ts:50`, `no-cross-folder-imports.ts:35`). | Name the rule option (`owners`, `style`, `max`, `allowIndex`, `allowed`, `contracts`) and `eslint --fix`. Map gspot settings to rule options in the kit docs. |",
         "owner": "`meta.docs` of 11 rules",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/env-owner.ts",
+            "packages/eslint-plugin/src/rules/import-extensions.ts",
+            "packages/eslint-plugin/src/rules/max-barrel-reexports.ts",
+            "packages/eslint-plugin/src/rules/no-reexports.ts",
+            "docs/src/config/reference.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Standalone rule instructions name owners, style, max, and allowIndex, and use eslint --fix. CLI policy mappings belong to the JavaScript and TypeScript configuration reference. Eight rendered pages verify the mappings and absence of stale CLI setting instructions (/tmp/gspot-plugin-docs-rendered-proof.json).",
+            "All 489 plugin, policy-reading, and docs-schema cases pass (/tmp/gspot-plugin-docs-tests.log). The installed plugin consumer passes with both module exports and both presets (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-plugin-docs-{root,cli,plugin,docs}-types.log). Changed-owner ESLint passes (/tmp/gspot-plugin-docs-lint.log). The site builds 318 pages and local links and fragments pass (/tmp/gspot-plugin-docs-site-build.log and /tmp/gspot-plugin-docs-links.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/030",
@@ -540,10 +550,18 @@
         "section": "The ESLint Plugin",
         "finding": "| Options in 7 rules | No gspot configuration sets these options, and the README does not name them. Only unit tests use them: `isClient` and `allowed` (`no-client-env`), `roots` (`no-cross-folder-imports`), `allowedEscapes` (`no-cross-scope-imports`), `contracts` (`import-direction`), `pattern`, `directories`, and `allowed` (`test-folders`), `allowed` (`types-placement`), and `allowed` and `patterns` (`no-index-imports`). ESLint users already narrow a rule with `files`, `ignores`, or a disable comment. | Delete these options with their schema entries, types, and test cases. Keep `contracts` only if `architecture.contracts` gets wired to it (FINDINGS.md). |",
         "owner": "Options in 7 rules",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/no-client-env.ts",
+            "packages/eslint-plugin/README.md",
+            "tests/config/packages/plugin.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Unused roots, allowedEscapes, contracts, pattern, directories, and allowed import/placement options are absent. The later client-environment correction in row 036 retains cross-runtime reads and project-selected client files. isClient, publicPrefixes, and allowed have a documented standalone contract: selected browser files without a directive admit explicitly public names, reject a private name, and leave server files alone. The delivered ESM/CommonJS consumer verifies all three outcomes (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All 489 plugin, policy-reading, and docs-schema cases pass (/tmp/gspot-plugin-docs-tests.log). The installed plugin consumer passes with both module exports and both presets (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-plugin-docs-{root,cli,plugin,docs}-types.log). Changed-owner ESLint passes (/tmp/gspot-plugin-docs-lint.log). The site builds 318 pages and local links and fragments pass (/tmp/gspot-plugin-docs-site-build.log and /tmp/gspot-plugin-docs-links.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/032",
@@ -684,10 +702,18 @@
         "section": "The ESLint Plugin",
         "finding": "| `src/rules/import-direction.ts:19-29` `isTypeOnly`, `src/rules/types-placement.ts:68-76` `isTypeOnly` | Two functions with one name. The `types-placement` copy is the import half of the other. | Keep one and call it from both rules. |",
         "owner": "`src/rules/import-direction.ts:19-29` `isTypeOnly`, `src/rules/types-placement.ts:68-76` `isTypeOnly`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/import-direction.ts",
+            "tests/plugin/rules/import-direction.test.ts",
+            "tests/cli/policy/read-policy/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The agreed decision in main/048 keeps repository-owned types folders without consumer placement enforcement. The retired placement rule has no compatibility export or consumer setting. Import direction has the sole isTypeOnly implementation; its type-only and value-import cases pass. Both retired directory settings are refused while explicit role declarations remain valid (/tmp/gspot-plugin-docs-tests.log).",
+            "All 489 plugin, policy-reading, and docs-schema cases pass (/tmp/gspot-plugin-docs-tests.log). The installed plugin consumer passes with both module exports and both presets (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-plugin-docs-{root,cli,plugin,docs}-types.log). Changed-owner ESLint passes (/tmp/gspot-plugin-docs-lint.log). The site builds 318 pages and local links and fragments pass (/tmp/gspot-plugin-docs-site-build.log and /tmp/gspot-plugin-docs-links.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/040",
@@ -907,10 +933,18 @@
         "section": "The ESLint Plugin",
         "finding": "| `src/rules/no-trivial-files.ts:106-118`, `src/rules/types-placement.ts:137-138`, `src/rules/require-server-only.ts:15` | Text that restates the rule or uses undefined words. The `no-trivial-files` why, \"A file needs substantial behavior or a meaningful owned schema,\" gives no reason. \"Owned structures,\" \"substantive,\" and \"their owner\" are not defined. The `types-placement` summary, \"Enforces an explicitly configured type-only directory,\" does not say what it reports, and its why describes an option. `require-server-only` says \"Remove an incorrect server file classification when appropriate.\" | `no-trivial-files` why: \"A file that only forwards to another module adds a step to every import and hides where the code lives.\" Message: \"This file only forwards to other modules. Import from them and delete this file.\" `types-placement` summary: \"Reports type aliases and enum objects outside the types folder, and runtime values, value imports, and default exports inside it.\" `require-server-only`: \"If the file is not server code, remove it from the files this rule selects.\" |",
         "owner": "`src/rules/no-trivial-files.ts:106-118`, `src/rules/types-placement.ts:137-138`, `src/rules/require-server-only.ts:15`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/no-trivial-files.ts",
+            "packages/eslint-plugin/src/rules/require-server-only.ts",
+            "tests/cli/policy/read-policy/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Forwarding-file text names aliases, small functions, declaring modules, and exempt declarations. Its reason explains the added import step. The server marker instruction states exactly how to remove a non-server file from selection. The consumer placement rule is retired under main/048; both former directory settings are rejected. Rendered content contains no substantive/substantial wording or vague classification instruction (/tmp/gspot-plugin-docs-rendered-proof.json).",
+            "All 489 plugin, policy-reading, and docs-schema cases pass (/tmp/gspot-plugin-docs-tests.log). The installed plugin consumer passes with both module exports and both presets (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-plugin-docs-{root,cli,plugin,docs}-types.log). Changed-owner ESLint passes (/tmp/gspot-plugin-docs-lint.log). The site builds 318 pages and local links and fragments pass (/tmp/gspot-plugin-docs-site-build.log and /tmp/gspot-plugin-docs-links.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/052",
@@ -958,10 +992,18 @@
         "section": "The ESLint Plugin",
         "finding": "| `src/rules/types-placement.ts:168-177,78-81,105-109` | The same `report` closure is written twice, once per branch. Both listener builders return `Record<string, (node: never) => void>`, which turns off listener type checks. | Define `report` once before the branch. Return `TSESLint.RuleListener` from both builders. |",
         "owner": "`src/rules/types-placement.ts:168-177,78-81,105-109`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/import-direction.ts",
+            "packages/eslint-plugin/src/definition.ts",
+            "tests/cli/policy/read-policy/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Consumer placement enforcement was retired under the agreed main/048 decision. The duplicate report closures and never-typed listener builders have no remaining implementation or forwarding export. Current rules use RuleCreator listeners, all four TypeScript targets pass, and consumer directory settings are rejected while declared roles remain valid (/tmp/gspot-plugin-docs-tests.log).",
+            "All 489 plugin, policy-reading, and docs-schema cases pass (/tmp/gspot-plugin-docs-tests.log). The installed plugin consumer passes with both module exports and both presets (/tmp/gspot-plugin-docs-package-tests.log).",
+            "All four TypeScript targets pass (/tmp/gspot-plugin-docs-{root,cli,plugin,docs}-types.log). Changed-owner ESLint passes (/tmp/gspot-plugin-docs-lint.log). The site builds 318 pages and local links and fragments pass (/tmp/gspot-plugin-docs-site-build.log and /tmp/gspot-plugin-docs-links.log)."
+        ]
     },
     {
         "id": "slices/eslint-plugin/055",

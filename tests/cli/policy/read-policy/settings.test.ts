@@ -34,6 +34,21 @@ describe('policy value normalization', () => {
 });
 
 describe('policy setting refusals', () => {
+    test.each(['types_directory', 'config_directory'])('%s refuses consumer folder enforcement', (setting) => {
+        const source = stringify({ configurations: ['typescript'], architecture: { [setting]: 'types' } });
+        expect(() => readPolicyText(source)).toThrow(
+            `\`${setting}\` is not a setting gspot knows under [architecture]`,
+        );
+        const corrected = readPolicyText(
+            stringify({
+                configurations: ['typescript'],
+                architecture: { roles: { types: ['types/**'], config: ['config/**'] } },
+            }),
+        );
+        expect(corrected.problems).toStrictEqual([]);
+        expect(corrected.policy.architecture.roles).toMatchObject({ types: ['types/**'], config: ['config/**'] });
+    });
+
     test('an unknown key names its table', () => {
         const found = policyProblems(`${buildPolicy(['bash'])}[hooks]\npush_files = "all"\npsh = "all"\n`);
         expect(found).toHaveLength(1);

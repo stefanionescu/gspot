@@ -15,7 +15,7 @@ export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local
             description:
                 'Requires exports at their declarations and rejects forwarding exports and later export lists.',
             why: 'A re-export exists to shorten an import path; it hides the owner and lets the same value arrive by two routes.',
-            fix: 'Import values from their declaring modules. Set the allowIndex rule option to true if a library exposes its API through index files. In gspot, set structure.reexports to index-only.',
+            fix: 'Import values from their declaring modules. Set `allowIndex: true` if a library exposes its API through index files.',
         },
         schema: [optionsSchema({ allowIndex: { type: 'boolean' } })],
         messages: {

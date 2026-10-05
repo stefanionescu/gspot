@@ -17,7 +17,7 @@ export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
             description:
                 'Finds an environment variable read outside the owners the options name. With no owners, it reports nothing.',
             why: 'When any file reads the environment, nobody can list what the program needs to run; one owner can.',
-            fix: 'Set the owners rule option to the files that read environment variables, and pass their values to consumers. In gspot, set architecture.roles.env.',
+            fix: 'Name the files that may read environment variables in `owners`, and pass their values into other modules.',
         },
         schema: [
             optionsSchema({

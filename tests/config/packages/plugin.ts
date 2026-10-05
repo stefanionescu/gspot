@@ -29,6 +29,24 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
         assert.equal(declaration[0].fatalErrorCount, 0);
         assert.deepEqual(declaration[0].messages, []);
     }
+    const browser = new ESLint({ overrideConfigFile: true, overrideConfig: [{
+        files: ['browser/**/*.js'],
+        plugins: { gspot: published },
+        languageOptions: { globals: { process: 'readonly' } },
+        rules: { 'gspot/no-client-env': ['error', {
+            isClient: true,
+            publicPrefixes: ['PUBLIC_'],
+            allowed: ['APP_MODE'],
+        }] },
+    }] });
+    const publicReads = 'const mode = process.env.APP_MODE;\nconst url = process.env.PUBLIC_URL;\n';
+    const privateRead = 'const secret = process.env.PRIVATE_KEY;\n';
+    const defect = await browser.lintText(publicReads + privateRead, { filePath: 'browser/settings.js' });
+    assert.deepEqual(defect[0].messages.map(({ ruleId, line, messageId }) => ({ ruleId, line, messageId })), [{ ruleId: 'gspot/no-client-env', line: 3, messageId: 'private' }]);
+    const corrected = await browser.lintText(publicReads, { filePath: 'browser/settings.js' });
+    assert.deepEqual(corrected[0].messages, []);
+    const server = await browser.lintText(privateRead, { filePath: 'server/settings.js' });
+    assert.deepEqual(server[0].messages, []);
 }
 `;
 

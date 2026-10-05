@@ -16,7 +16,7 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
                 'With `max: 3`, four re-export statements in `src/index.ts` report `tooMany`. Remove an unnecessary re-export and update its consumers to import from the declaring module. Three remaining re-export statements meet that limit.',
             description: 'Finds an index file with more re-exports than the limit.',
             why: 'A barrel that grows without bound becomes the import everyone reaches for, and every change to any file behind it touches every importer.',
-            fix: 'Import from the declaring modules or split the index by area. Set the max rule option if the public API needs a different limit. In gspot, set limits.barrel_reexports.',
+            fix: 'Import from the declaring modules or split the index by area. Set `max` if the public API needs a different limit.',
         },
         schema: [optionsSchema({ max: { type: 'integer', minimum: 1 } })],
         messages: {

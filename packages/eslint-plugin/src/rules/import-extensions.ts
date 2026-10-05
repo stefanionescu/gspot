@@ -27,7 +27,7 @@ export const importExtensions = createRule<ImportExtensionsOptions, 'js' | 'ts' 
             description:
                 'Checks that internal imports use the suffix the runtime resolves: .js for compiled ESM, .ts for Deno and Bun, none for bundled code.',
             why: 'The wrong suffix works in the editor and fails at run time, or the other way round.',
-            fix: 'Set the style rule option to js, ts, or extensionless, and use that style for internal imports. In gspot, set tools.eslint.import_extensions.',
+            fix: 'Set `style` to `js`, `ts`, or `extensionless`, and use that style for internal code imports.',
         },
         schema: [
             optionsSchema({

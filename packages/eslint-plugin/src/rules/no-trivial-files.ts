@@ -113,14 +113,14 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         defaultOptions: [{ maxStatements: TRIVIAL_STATEMENTS, allowIndex: false }],
         type: 'suggestion',
         docs: {
-            title: 'Keep files substantive',
+            title: 'Remove forwarding files',
             example:
-                'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set allowIndex to true to permit an index barrel. In gspot, structure.reexports = index-only selects this option.',
+                'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set `allowIndex: true` to permit an index barrel.',
             level: 'all',
             description:
-                'Reports files containing only forwarding, aliases, re-exports, or trivial functions. Files with structured values, implementations, schemas, or type predicates keep their behavior.',
+                'Reports files containing only forwarding, aliases, re-exports, or trivial functions. Records, arrays, schema declarations, type predicates, and functions above the statement limit are exempt.',
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
-            fix: 'Move unnecessary wrappers and aliases to their owner. Keep substantial implementations and schemas together.',
+            fix: 'Import re-exported values from the modules that define them. Move aliases and small functions into the modules that use them, then delete the forwarding file.',
         },
         schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 }, allowIndex: { type: 'boolean' } })],
         messages: {

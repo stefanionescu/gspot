@@ -1,3 +1,15 @@
+const ESLINT_POLICY_OPTIONS = `gspot translates policy settings into plugin rule options:
+
+| Policy setting | Plugin rule | Rule option |
+| --- | --- | --- |
+| \`architecture.roles.env\` | \`env-owner\` | \`owners\` |
+| \`tools.eslint.import_extensions\` | \`import-extensions\` | \`style\` |
+| \`limits.barrel_reexports\` | \`max-barrel-reexports\` | \`max\` |
+| \`structure.reexports = "index-only"\` | \`no-reexports\` and \`no-trivial-files\` | \`allowIndex: true\` |
+
+Environment ownership and barrel limits apply at level \`all\`. Barrel limits apply when index re-exports are allowed. See the [standalone plugin reference](/reference/plugin/) for the rule options.
+`;
+
 /** Introduce setting inheritance and the reason requirements of each direction. */
 export const SETTINGS_INTRO = `Settings exposed by \`gspot set\` and \`gspot list settings\`, with defaults from their owners. Any limit can be set for one language as \`limits.<language>.<name>\`. A scope inherits the root and every scope that contains it: scalar values replace inherited values, and lists add to them. See [monorepos](/guides/monorepos/).
 
@@ -123,6 +135,8 @@ export const PLUGIN_REQUIRES_OPTIONS = [
 
 /** Configuration details that explain interactions between tools. */
 export const CONFIGURATION_NOTES: Record<string, string> = {
+    javascript: ESLINT_POLICY_OPTIONS,
+    typescript: ESLINT_POLICY_OPTIONS,
     python: 'An explicit [tool.pydoclint] style in pyproject.toml takes precedence. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then tools.ruff.docstring_convention when it is google or numpy. Other conventions leave the native pydoclint default unchanged.',
 };
 

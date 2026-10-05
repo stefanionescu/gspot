@@ -93,6 +93,30 @@ export default [{
 The rule reports a selected module without `import 'server-only'`. Add that import at the top
 of the module.
 
+For client files without a `use client` directive, set `isClient: true` in a block that selects
+those files. `publicPrefixes` and `allowed` name values intended for the browser. Keep private
+values out of both options:
+
+```javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [{
+    files: ['browser/**/*.js'],
+    plugins: { gspot },
+    languageOptions: { globals: { process: 'readonly' } },
+    rules: {
+        'gspot/no-client-env': ['error', {
+            isClient: true,
+            publicPrefixes: ['PUBLIC_'],
+            allowed: ['APP_MODE'],
+        }],
+    },
+}];
+```
+
+This block permits `process.env.PUBLIC_URL` and `process.env.APP_MODE`. A read of
+`process.env.PRIVATE_KEY` in a selected file reports a private environment finding.
+
 The rules about where code lives have no default folders, because the folders of a project are
 its own. Without options they report nothing:
 
