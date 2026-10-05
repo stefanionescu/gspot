@@ -182,10 +182,18 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\") | These runs parse the JSON report without asserting the exit code. A run that fails for another reason but still prints a report passes. | Assert the exit code of each run, as the other runs in these files do. |",
         "owner": "Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\")",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/check/selection.test.ts",
+            "tests/cli/commands/explain/selection.test.ts",
+            "tests/cli/commands/push/revisions.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Added exact exit assertions to the second -C selection run, both manual-check selections, corrected and tracked-path explanations, and the failed pre-push run used to produce a reproduction command. The adjacent updated-setting explanation also lacked a status assertion and now requires success. Report parsing and all existing outcome checks remain intact.",
+            "AST comparison preserves all 104 existing assertion sites and every scenario name across the three owners, adding only seven status assertions. Each status matches the fixture: selected failing commands and the broken push exit one, while empty/manual-success selections and valid explanations exit zero.",
+            "Root TypeScript, affected ESLint, and formatting passed. All 31 affected cases passed with 151 assertions across three files."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/014",
@@ -558,10 +566,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/explain.test.ts:115` comment | \"which once made the path read as one of its rules\" describes a past bug. `WRITING.md` asks for the present state. | Write what the line checks: \"The folder shares its name with bash/shellcheck, and the path still reads as a file.\" |",
         "owner": "`cli/commands/explain.test.ts:115` comment",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/explain/selection.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The tracked-path collision comment now describes the current rule: the shellcheck folder shares a check tool name, but the tracked path still selects the file. The historical bug narrative is removed; the existing JSON assertion verifies kind path and the exact tracked subject.",
+            "The same case now explicitly requires CLI exit zero. No prior assertion or scenario name changed, as verified by the AST comparison across all three touched owners.",
+            "Root TypeScript, affected ESLint, and formatting passed. Selection, explanation, and push coverage passed 31 cases with 151 assertions across three files."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/044",

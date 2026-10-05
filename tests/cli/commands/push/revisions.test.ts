@@ -216,6 +216,7 @@ test('pre-push text supplies an executable reproduction of the same committed fi
         {},
         { stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n` },
     );
+    expect(failing.code, failing.stdout + failing.stderr).toBe(1);
     const failedReport = (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report;
     const reproduction = failedReport.checks[0]?.reproduce;
     expect(reproduction).toBeDefined();

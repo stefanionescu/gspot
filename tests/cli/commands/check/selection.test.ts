@@ -104,6 +104,7 @@ test('-C resolves file arguments from the folder it names', async () => {
         'sandbox/one',
         '--json',
     ]);
+    expect(after.code, after.stdout + after.stderr).toBe(1);
     const afterReport = JSON.parse(after.stdout) as RunReport;
     expect(afterReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'src/selected.ts',
@@ -155,8 +156,10 @@ stage = "manual"
         'source.txt': 'input',
     });
     const plain = await runGspot(sandbox.path, ['check', '--json']);
+    expect(plain.code, plain.stdout + plain.stderr).toBe(0);
     expect((JSON.parse(plain.stdout) as RunReport).checks).toStrictEqual([]);
     const named = await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']);
+    expect(named.code, named.stdout + named.stderr).toBe(0);
     const report = JSON.parse(named.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/manual', 'passed']]);
 });

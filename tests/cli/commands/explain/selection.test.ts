@@ -1,3 +1,4 @@
+// Bun command fixtures distinguish named explanations from tracked or explicit file paths.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
@@ -38,6 +39,7 @@ lines = 95
     const original = await Bun.file(policy).text();
     await Bun.write(policy, original.replace('lines = 95', 'lines = 96'));
     const updated = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage.lines', '--json']);
+    expect(updated.code, updated.stdout + updated.stderr).toBe(0);
     expect(JSON.parse(updated.stdout)).toMatchObject({
         scopes: [
             { scope: 'api', current: 90 },
@@ -70,6 +72,7 @@ stage = "manual"
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toMatchObject({
         checks: [{ check: 'project/syntax', stage: 'manual' }],
         ignores: [],
@@ -100,8 +103,9 @@ test('explain > a recognized name keeps its meaning, and a tracked or explicit p
     const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
-    // The folder shares its name with bash/shellcheck, which once made the path read as one of its rules.
+    // The shellcheck folder shares a check's tool name; the tracked path still selects the file.
     const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
+    expect(tracked.code, tracked.stdout + tracked.stderr).toBe(0);
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
 });
 
