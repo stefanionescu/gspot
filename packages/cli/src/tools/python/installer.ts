@@ -16,7 +16,7 @@ export async function acquirePythonInstaller(root: string, runner: string | unde
     if (acquired.code !== 0)
         throw new GspotError(
             'installation',
-            `Cannot acquire ${UV_MISE_PIN}. Run: gspot install.
+            `mise did not install ${UV_MISE_PIN}. Run mise install ${UV_MISE_PIN} and read its error.
 ${installationDiagnostics(acquired, [])}`,
         );
     const located = await runTool(['mise', 'which', 'uv', '--tool', UV_MISE_PIN], { cwd: root });

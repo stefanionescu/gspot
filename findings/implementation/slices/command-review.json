@@ -524,10 +524,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/install/command.ts:101-118` `installCommand` | Line 105 throws an `Error` only so that the same function's `catch` block (line 111) can turn it into a result. | Return the failure result directly at line 105. Keep the `catch` block only for errors that steps throw, as the existing install finding proposes. |",
         "owner": "`commands/install/command.ts:101-118` `installCommand`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/install.ts", "packages/cli/src/lifecycle/install.ts"],
+        "status": "closed",
+        "outcome": "Install constructs acquisition failure results directly and preserves unexpected errors for the common program boundary.",
+        "verification": [
+            "The command has no local throw-to-catch path. It returns the result from installTools with the shared installation code and message; the installer catches only typed acquisition failures or aggregates of them. Existing missing/outdated/download-failed controls verify actionable failures, then successful repair; the unexpected process-error control verifies the common handler.",
+            "The affected Python acquisition and project planning, package installer, installation failures, real Git hooks and command mutation owners passed 49 cases and 285 assertions across six files. Root TypeScript, affected ESLint and formatting passed.",
+            "Syntax comparison confirms the acquisition function changes only its repair diagnostic. All three original Python installer test declarations and assertions remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/031",
@@ -536,10 +540,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/install/steps.ts:61` | During `gspot install`, the uv step says \"The pinned uv installer is unavailable. Run: gspot install.\" The fix it names is the command that just failed. | Rewrite as \"mise did not install uv {version}. Run mise install and read its error.\" |",
         "owner": "`commands/install/steps.ts:61`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/tools/python/installer.ts", "tests/cli/tools/python/installer.test.ts"],
+        "status": "closed",
+        "outcome": "Failed uv acquisition names the exact mise command and retains the redacted package-manager diagnostics.",
+        "verification": [
+            "The new case fails against the old self-referential gspot install hint. It requires a GspotError with installation code and the complete pinned mise repair message plus both captured streams, the one correct outbound command and cwd, no subsequent lookup, and an unchanged repository tree. Successful acquisition still uses the located pinned executable once per command and resolves locks through it.",
+            "The affected Python acquisition and project planning, package installer, installation failures, real Git hooks and command mutation owners passed 49 cases and 285 assertions across six files. Root TypeScript, affected ESLint and formatting passed.",
+            "Syntax comparison confirms the acquisition function changes only its repair diagnostic. All three original Python installer test declarations and assertions remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/032",
@@ -548,10 +556,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/install/steps.ts:17-23, 108` `InstallationStep.failure` | The four `failure` strings are used only when a step throws something that is not an `Error`. Every step throws `Error` or `GspotError`. | Delete the field, and use `String(error)` as the fallback. |",
         "owner": "`commands/install/steps.ts:17-23, 108` `InstallationStep.failure`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/lifecycle/install.ts", "packages/cli/src/lifecycle/install.ts"],
+        "status": "closed",
+        "outcome": "Removed unused per-phase fallback strings; phase contracts contain only real preview and run callbacks.",
+        "verification": [
+            "Read InstallationStep and every registry entry: there is no failure field or corresponding fallback table. Typed tool/installation failures carry their actual diagnostics, aggregates preserve their messages and unknown failures propagate. The common program boundary formats unexpected Error or non-Error values without maintaining phase-specific duplicate messages.",
+            "The affected Python acquisition and project planning, package installer, installation failures, real Git hooks and command mutation owners passed 49 cases and 285 assertions across six files. Root TypeScript, affected ESLint and formatting passed.",
+            "Syntax comparison confirms the acquisition function changes only its repair diagnostic. All three original Python installer test declarations and assertions remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/033",

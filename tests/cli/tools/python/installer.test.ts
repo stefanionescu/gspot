@@ -2,13 +2,16 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
+import { readTree } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import { acquirePythonInstaller } from '#cli/tools/python/installer.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
 import { AUTHORED_UV_INDEX, PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
 
@@ -58,6 +61,38 @@ test('one command acquires its pinned uv once and resolves locks through that ex
     } finally {
         boundary.mockRestore();
     }
+});
+
+test('failed mise acquisition names the pinned uv repair and preserves repository files', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'gspot.toml': buildPolicy(['python'], { tables: 'run_with = "mise"\n[agent_rules]\nenabled = false\n' }),
+        'main.py': 'print("authored")\n',
+    });
+    const before = readTree(repository.path);
+    const run = processes.run;
+    using boundary = spyOn(processes, 'run').mockImplementation((command, options) => {
+        if (command[0] !== 'mise') return run(command, options);
+        return Promise.resolve({
+            code: 7,
+            missing: false,
+            duration: 0,
+            stdout: 'download failed',
+            stderr: 'registry unreachable',
+        });
+    });
+    const failure: unknown = await acquirePythonInstaller(repository.path, 'mise').catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(GspotError);
+    expect(failure).toMatchObject({
+        code: 'installation',
+        message: `mise did not install ${UV_MISE_PIN}. Run mise install ${UV_MISE_PIN} and read its error.\ndownload failed\nregistry unreachable`,
+    });
+    expect(boundary).toHaveBeenCalledTimes(1);
+    expect(boundary).toHaveBeenCalledWith(
+        ['mise', 'install', UV_MISE_PIN],
+        expect.objectContaining({ cwd: repository.path }),
+    );
+    expect(readTree(repository.path)).toStrictEqual(before);
 });
 
 test.each(['venv', 'sync'])(

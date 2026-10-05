@@ -60,10 +60,21 @@
         "section": "Findings",
         "finding": "| `commands/install/command.ts:18-56` vs `install/steps.ts:17-67` | Two hand-kept lists of the install steps: one for `--dry-run` (`preparation`, `previewInstallation`) and one for the real run (`installations`). They use different tests for \"Python needed\": `toolEnvironment(...).length > 0` builds the whole pyproject just to test it, while the real run uses `pythonPins(...).length === 0`. The hook line in the dry run is not what `installHooks` does. | Give each `InstallationStep` a `preview(session)` next to `run`. Build the dry run from the same array. Delete `preparation` and `previewInstallation`. |",
         "owner": "`commands/install/command.ts:18-56` vs `install/steps.ts:17-67`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/lifecycle/install.ts",
+            "packages/cli/src/types/lifecycle/install.ts",
+            "packages/cli/src/commands/install.ts",
+            "tests/cli/lifecycle/hooks.test.ts",
+            "tests/cli/tools/python/project.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Installation previews and execution use one ordered phase registry with adjacent preview and run contracts.",
+        "verification": [
+            "Traced installationPlan and runInstallationPhases to the same installations registry. Python preview and execution depend on applicable Python pins and generated project inputs; they no longer generate a pyproject merely to test its length. Each phase owns both callbacks, and execution uses the preview-selected applicable phases.",
+            "Real root and nested Git-hook controls require the exact preview command and verify the actual configured hook path. Existing foreign-hook controls preserve their settings and instructions. Python missing, current, changed and refreshed lock controls retain acquisition/environment plans without writing inputs; projects without Python tools plan no acquisition.",
+            "The affected Python acquisition and project planning, package installer, installation failures, real Git hooks and command mutation owners passed 49 cases and 285 assertions across six files. Root TypeScript, affected ESLint and formatting passed.",
+            "Syntax comparison confirms the acquisition function changes only its repair diagnostic. All three original Python installer test declarations and assertions remain unchanged."
+        ]
     },
     {
         "id": "areas/commands/005",
@@ -72,10 +83,20 @@
         "section": "Findings",
         "finding": "| `install/command.ts:59-68, 97-118`, `install/steps.ts:99-131` | Wrapper chain: `installCommand` → `installEverything` → `installTools(session, true)`, and `finishInstall(session, isInstalling)` → `installTools`. The `isInstalling` flag is false only for `init --no-install`. `installCommand` turns every error into exit 2 with a hard-coded `2`, so programming errors skip the shared error path in `printCommand`. | Keep one `installTools(session)` that returns `{ note, exitCode }`. Let `init` check `options.install` itself. Delete `installEverything` and the boolean. Let unknown errors reach `printCommand`. |",
         "owner": "`install/command.ts:59-68, 97-118`, `install/steps.ts:99-131`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/install.ts",
+            "packages/cli/src/lifecycle/install.ts",
+            "packages/cli/src/commands/init/write.ts",
+            "tests/cli/commands/remove.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Install delegates directly to the substantial shared installer with explicit ownership; initialization selects installation itself and unexpected failures reach the program boundary.",
+        "verification": [
+            "No installEverything, finishInstall, previewInstallation or isInstalling wrapper remains. installCommand acquires ownership once and calls installTools directly; writeSetup checks options.install before preparation and installation and supplies the same ownership context.",
+            "Expected acquisition failures return their summary and EXIT_ERROR; unexpected process errors are rethrown immediately through installation phases. The real command-boundary regression emits failure with the original unexpected diagnostic and preserves policy, locks and installed trees. Existing repaired-run controls return success while keeping authored policy.",
+            "The affected Python acquisition and project planning, package installer, installation failures, real Git hooks and command mutation owners passed 49 cases and 285 assertions across six files. Root TypeScript, affected ESLint and formatting passed.",
+            "Syntax comparison confirms the acquisition function changes only its repair diagnostic. All three original Python installer test declarations and assertions remain unchanged."
+        ]
     },
     {
         "id": "areas/commands/006",
