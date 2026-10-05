@@ -49,7 +49,7 @@ export async function spectral(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function fresh(input: EngineInput): Promise<Finding[]> {
+export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const { document: named, generate: producer } = input.view.options('tools.openapi');
     const document = typeof named === 'string' ? named : '';
     const command = typeof producer === 'string' ? producer : '';
@@ -64,7 +64,7 @@ export async function fresh(input: EngineInput): Promise<Finding[]> {
     const result = await runEngineTool(input, parseCommand(command), { cwd: scratch });
     if (result.code !== 0)
         throw new Error(
-            `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+            `The command that writes the OpenAPI document failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
         );
     const after = readSource(scratch, document);
     if (before.equals(after)) return [];

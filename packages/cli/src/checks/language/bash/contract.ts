@@ -115,30 +115,29 @@ function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport)
     if (last?.code !== MAIN_CALL) report(last?.number ?? 1, 'main-call', `An executable ends with ${MAIN_CALL}.`);
 }
 
-function topLevelProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
-    if (functionAt(file.functions, line.number) !== undefined) return undefined;
-    if (EXIT_CALL.test(line.code)) return ['library-exit', 'A sourced library does not exit.'];
-    if (
-        isConfigOwner ||
-        SOURCE_STATEMENT.test(line.code) ||
-        line.code.startsWith(READONLY_WORD) ||
-        isDirectoryConstant(line.code)
-    )
-        return undefined;
-    return ['library-flow', 'A sourced library is declarative at the top level; this line runs when it is loaded.'];
-}
-
-function libraryProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
-    if (line.code.startsWith('set ')) return ['library-options', 'A sourced library does not change shell options.'];
-    if (line.code === MAIN_CALL) return ['library-main', 'A sourced library does not call main.'];
-    return topLevelProblem(line, file, isConfigOwner);
-}
-
-function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
-    if (file.isExecutable) {
-        entryProblems(file, code, report);
+function libraryLineProblems(line: CodeLine, file: ScriptFile, isDeclarative: boolean, report: ScriptReport): void {
+    if (line.code.startsWith('set ')) {
+        report(line.number, 'library-options', 'A sourced library does not change shell options.');
         return;
     }
+    if (line.code === MAIN_CALL) {
+        report(line.number, 'library-main', 'A sourced library does not call main.');
+        return;
+    }
+    if (functionAt(file.functions, line.number) !== undefined) return;
+    if (EXIT_CALL.test(line.code)) {
+        report(line.number, 'library-exit', 'A sourced library does not exit.');
+        return;
+    }
+    if (isDeclarative) return;
+    report(
+        line.number,
+        'library-flow',
+        'A sourced library is declarative at the top level; this line runs when it is loaded.',
+    );
+}
+
+function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
     const last = code.at(-1);
     if (last?.code === MAIN_CALL) {
         report(
@@ -151,8 +150,12 @@ function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean
     if (file.functions.some((entry) => entry.name === 'main'))
         report(1, 'library-main', 'A sourced library defines no main.');
     for (const line of code) {
-        const problem = libraryProblem(line, file, isConfigOwner);
-        if (problem !== undefined) report(line.number, problem[0], problem[1]);
+        const isDeclarative =
+            isConfigOwner ||
+            SOURCE_STATEMENT.test(line.code) ||
+            line.code.startsWith(READONLY_WORD) ||
+            isDirectoryConstant(line.code);
+        libraryLineProblems(line, file, isDeclarative, report);
     }
 }
 
@@ -181,7 +184,8 @@ function fileProblems(
     directoryProblems(code, report);
     readonlyProblems(file, code, report);
     if (file.isExecutable) strictModeProblems(code, version, report);
-    roleProblems(file, code, isConfigOwner, report);
+    if (file.isExecutable) entryProblems(file, code, report);
+    else libraryProblems(file, code, isConfigOwner, report);
     cleanupProblems(code, report);
     return findings;
 }

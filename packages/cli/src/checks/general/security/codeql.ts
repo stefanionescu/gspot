@@ -10,6 +10,7 @@ import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { placeOf } from '#cli/checks/general/security/locations.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { AcceptedResult, CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
@@ -17,7 +18,7 @@ async function runCodeql(input: EngineInput, argv: string[], cwd: string): Promi
     const result = await runEngineTool(input, [CODEQL, ...argv], { cwd });
     if (result.code !== 0)
         throw new Error(
-            `${CODEQL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+            `${CODEQL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
         );
     return result.stdout;
 }

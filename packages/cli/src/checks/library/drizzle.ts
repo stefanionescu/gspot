@@ -6,6 +6,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
@@ -99,7 +100,9 @@ export async function migrations(input: EngineInput): Promise<Finding[]> {
     const before = generatedContents(isolated);
     const result = await runEngineTool(input, ['drizzle-kit', 'generate'], { cwd: isolated });
     if (result.code !== 0)
-        throw new Error(`The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(
+            `The drizzle-kit generate command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     const after = generatedContents(isolated);
     const changed = [...new Set([...before.keys(), ...after.keys()])]
         .filter((path) => {

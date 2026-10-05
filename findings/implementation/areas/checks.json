@@ -225,10 +225,16 @@
         "section": "Findings",
         "finding": "| `tool/nginx/arguments.ts` | One caller (`nginx/test.ts:60`). | Merge into `test.ts`. |",
         "owner": "`tool/nginx/arguments.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/tool/nginx.ts", "packages/cli/src/parsers/nginx.ts"],
+        "status": "closed",
+        "outcome": "The nginx argument calculation and its orchestration share checks/tool/nginx.ts. Tokenization stays under parsers/nginx.ts. Existing argument, syntax and include tests retain their unique coverage.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/015",
@@ -346,10 +352,16 @@
         "section": "Findings",
         "finding": "| `general/naming/extractors/{bash,python,swift,typescript}.ts` | Four near-identical `add()` functions build the same `Identifier`. | Use one builder in `identifiers.ts`. |",
         "owner": "`general/naming/extractors/{bash,python,swift,typescript}.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/naming/identifiers.ts", "packages/cli/src/types/parsers/naming.ts"],
+        "status": "closed",
+        "outcome": "All language extractors and path declarations share createIdentifier under their parsing owner. The builder receives source language and file, while readers retain syntax-specific filtering and coordinates.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/022",
@@ -1019,10 +1031,16 @@
         "section": "Findings",
         "finding": "| `registry.ts` imports: `lint` (`ansible.ts:35`), `test` (`nginx/test.ts:87`), `check` (`supabase/deno.ts:91`), `build` and `types` (`nextjs/build.ts`), `fresh` (`openapi.ts:52`), `install`, `banned`, `defaults`, `coverage`, `references`, `assets`, `sizes`, `ANALYSES` (`cloudflare.ts:199`) | Generic names: the registry reads `'supabase/deno-check': check`. | Name each function after its check ID, for example `ansibleLint`, `nginxTest`, `denoCheck`, `nextBuild`, `nextTypes`, and `openapiFresh`. |",
         "owner": "`registry.ts` imports: `lint` (`ansible.ts:35`), `test` (`nginx/test.ts:87`), `check` (`supabase/deno.ts:91`), `build` and `types` (`nextjs/build.ts`), `fresh` (`openapi.ts:52`), `install`, `banned`, `defaults`, `coverage`, `references`, `assets`, `sizes`, `ANALYSES` (`cloudflare.ts:199`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/registry.ts"],
+        "status": "closed",
+        "outcome": "Registry check callbacks now use descriptive check names, including ansibleLint, nginxTest, denoCheck, nextBuild, nextTypes, openapiFresh, hiddenProse, guardDefaults, xctestCoverage, xctestReferences, xcodeAssets and siteSize. Every real consumer changed with the exports; no compatibility export remains. Public check IDs are preserved.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "areas/checks/075",

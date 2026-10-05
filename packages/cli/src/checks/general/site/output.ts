@@ -101,7 +101,7 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each unused selector
  */
-export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
+export async function purgecss(input: EngineInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
@@ -146,7 +146,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each ceiling passed
  */
-export async function sizes(input: EngineInput): Promise<Finding[]> {
+export async function siteSize(input: EngineInput): Promise<Finding[]> {
     const limits = input.view.options('site')['sizes'] as SizeLimit[];
     const build = await requireBuild(input);
     const files = filesUnder(build.output);

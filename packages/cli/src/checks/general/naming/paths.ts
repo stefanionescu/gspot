@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { stemOf } from '#cli/platform/paths.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
+import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import { WRAPPERS, MIGRATION_PREFIX } from '#cli/config/checks/general/naming.ts';
 
 function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
@@ -20,15 +21,16 @@ export function fileIdentifier(path: string, language: string): Identifier {
     const base = posix.basename(path);
     const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
     const named = name.startsWith('[') ? segmentName(name) : { name, category: 'files' };
-    return {
-        file: path,
-        line: 1,
-        column: 1,
-        language,
-        category: named.category,
-        kind: `${language} file`,
-        name: named.name,
-    };
+    return createIdentifier(
+        { file: path, language },
+        {
+            line: 1,
+            column: 1,
+            category: named.category,
+            label: 'file',
+            name: named.name,
+        },
+    );
 }
 
 /**
@@ -44,16 +46,17 @@ export function directoryIdentifiers(path: string, language: string): Identifier
         if (named === undefined || named.name === '') return [];
         const directory = segments.slice(0, index + 1).join('/');
         return [
-            {
-                file: path,
-                line: 1,
-                column: 1,
-                language,
-                category: named.category,
-                kind: `${language} directory`,
-                name: named.name,
-                directory,
-            },
+            createIdentifier(
+                { file: path, language },
+                {
+                    line: 1,
+                    column: 1,
+                    category: named.category,
+                    label: 'directory',
+                    name: named.name,
+                    directory,
+                },
+            ),
         ];
     });
 }

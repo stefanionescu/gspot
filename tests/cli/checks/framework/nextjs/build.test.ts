@@ -9,8 +9,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { build, types } from '#cli/checks/framework/nextjs.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import { nextBuild, nextTypes } from '#cli/checks/framework/nextjs.ts';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
 import { statSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -73,7 +73,7 @@ for (const scope of ['', 'apps/web'])
             const mode = statSync(config).mode;
             using read = mockNextjsCommands(check);
             const { directories, routesSeen } = read;
-            const execute = check === 'nextjs/tsc' ? types : build;
+            const execute = check === 'nextjs/tsc' ? nextTypes : nextBuild;
             const found = await execute(input);
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
@@ -129,7 +129,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
         });
     });
     try {
-        expect(await rejection(types(input))).toContain(diagnostic);
+        expect(await rejection(nextTypes(input))).toContain(diagnostic);
         expect(scratch).not.toBe('');
         expect(existsSync(scratch)).toBe(false);
         expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

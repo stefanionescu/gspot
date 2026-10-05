@@ -14,7 +14,7 @@ import { cachedBuild } from '#cli/checks/general/site/build.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { OUTPUT_CASES } from '#tests/config/cli/checks/general/site/output.ts';
-import { brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT, STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 
 test.each([
@@ -40,7 +40,7 @@ test.each([
     },
     {
         name: 'selectors',
-        analyze: deadSelectors,
+        analyze: purgecss,
         check: 'site/purgecss',
         body: '<p>Example</p>',
         finding: {

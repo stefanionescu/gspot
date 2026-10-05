@@ -10,6 +10,7 @@ import { environmentExecutable } from '#cli/platform/paths.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
@@ -70,7 +71,9 @@ function assertInstalled(input: EngineInput, name: string): void {
 async function licenseReport(input: EngineInput, command: string[], cwd: string): Promise<unknown> {
     const result = await runEngineTool(input, command, { cwd });
     if (result.code !== 0)
-        throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
+        throw new Error(
+            `${command.join(' ')} did not run: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     return JSON.parse(result.stdout);
 }
 

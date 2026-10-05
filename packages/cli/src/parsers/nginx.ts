@@ -21,19 +21,18 @@ function protectedUnitEnd(text: string, at: number): number {
 }
 
 // The index past one unit of a bare word: an escape pair, a braced variable, or one plain character.
-function unitEnd(text: string, at: number, isFirst: boolean): number {
+function unitEnd(text: string, at: number, stops: RegExp): number {
     const special = protectedUnitEnd(text, at);
     if (special !== -1) return special;
-    const stops = isFirst ? WORD_START_STOPS : WORD_STOPS;
     return stops.test(text[at] ?? '') ? at : at + 1;
 }
 
 // The index past the bare word that starts at at, or at itself when no word starts there.
 function wordEnd(text: string, at: number): number {
-    let end = unitEnd(text, at, true);
+    let end = unitEnd(text, at, WORD_START_STOPS);
     if (end === at) return at;
     while (end < text.length) {
-        const next = unitEnd(text, end, false);
+        const next = unitEnd(text, end, WORD_STOPS);
         if (next === end) break;
         end = next;
     }
@@ -58,7 +57,7 @@ function scanAt(text: string, at: number): DirectiveScan {
 }
 
 // The tokens of an nginx configuration: comments, punctuation, quoted arguments, and bare words.
-function tokens(text: string): string[] {
+function tokenize(text: string): string[] {
     const found: string[] = [];
     let at = 0;
     while (at < text.length) {
@@ -74,10 +73,10 @@ function tokens(text: string): string[] {
  * @param text the nginx configuration text
  * @returns each directive as its name followed by its arguments
  */
-export function directives(text: string): [string, ...string[]][] {
+export function parseDirectives(text: string): [string, ...string[]][] {
     const found: [string, ...string[]][] = [];
     let directive: string[] = [];
-    for (const token of tokens(text)) {
+    for (const token of tokenize(text)) {
         if (token.startsWith('#')) continue;
         switch (token) {
             case '}': {

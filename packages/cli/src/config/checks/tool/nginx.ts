@@ -1,7 +1,5 @@
 export const NGINX_MAIN = 'nginx.conf';
 
-export const NGINX_IMAGE = 'nginx:stable-alpine';
-
 export const CERTIFICATE_ARGUMENTS = [
     'req',
     '-x509',

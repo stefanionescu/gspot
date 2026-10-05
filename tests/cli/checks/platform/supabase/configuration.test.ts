@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
-import { projectValid, functionFolders, storagePolicies } from '#cli/checks/platform/supabase.ts';
+import { functionFolders, storagePolicies, supabaseConfiguration } from '#cli/checks/platform/supabase.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
@@ -31,12 +31,14 @@ test('Supabase configurations and function discovery stay within nested project 
     const nested = input(session, 'apps/api', 'supabase/config');
     expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
     expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
-    expect(projectValid(root)).toMatchObject([{ file: 'supabase/config.toml', line: 1, rule: 'function' }]);
-    expect(projectValid(nested)).toStrictEqual([]);
+    expect(supabaseConfiguration(root)).toMatchObject([{ file: 'supabase/config.toml', line: 1, rule: 'function' }]);
+    expect(supabaseConfiguration(nested)).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
-    expect(projectValid(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
+    expect(supabaseConfiguration(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
     const broken = input(await openSession(sandbox.path), 'apps/api', 'supabase/config');
-    expect(projectValid(broken)).toMatchObject([{ file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' }]);
+    expect(supabaseConfiguration(broken)).toMatchObject([
+        { file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' },
+    ]);
     expect(await storagePolicies(broken)).toStrictEqual([]);
 });

@@ -1,10 +1,10 @@
 import { test, expect, describe } from 'bun:test';
 import { parseMigration } from '#tests/harness/migrations.ts';
-import { schema } from '#cli/checks/database/postgres/schema.ts';
+import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 
 describe('schema', () => {
     test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
-        const fields = schema([
+        const fields = buildSchema([
             await parseMigration(
                 '1_create.sql',
                 'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));',
@@ -24,7 +24,7 @@ describe('schema', () => {
 });
 
 test('table recreation discards security, policies, keys, and indexes from the old table', async () => {
-    const fields = schema([
+    const fields = buildSchema([
         await parseMigration(
             '1_reset.sql',
             `
@@ -58,10 +58,10 @@ test('removing one policy or equivalent index preserves the other until it is re
         DROP INDEX first;
     `,
     );
-    const retained = schema([initial]);
+    const retained = buildSchema([initial]);
     expect(retained.policed.has('public.posts')).toBe(true);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
-    const removed = schema([
+    const removed = buildSchema([
         initial,
         await parseMigration(
             '2_drop.sql',
@@ -89,9 +89,9 @@ test('dropped foreign and unique constraints remove only the fields they own', a
         ALTER TABLE posts DROP CONSTRAINT author_fk, DROP CONSTRAINT author_unique;
     `,
     );
-    const retained = schema([initial]);
+    const retained = buildSchema([initial]);
     expect(retained.foreignKeys.map((key) => key.column)).toStrictEqual(['team_id']);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
-    const removed = schema([initial, await parseMigration('2_drop.sql', 'DROP INDEX author_index;')]);
+    const removed = buildSchema([initial, await parseMigration('2_drop.sql', 'DROP INDEX author_index;')]);
     expect([...removed.indexed]).toStrictEqual([]);
 });

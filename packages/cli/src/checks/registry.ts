@@ -1,21 +1,19 @@
-import { test } from '#cli/checks/tool/nginx.ts';
-import { lint } from '#cli/checks/tool/ansible.ts';
 import { locales } from '#cli/checks/library/i18n.ts';
+import { nginxTest } from '#cli/checks/tool/nginx.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { actionlint } from '#cli/checks/tool/actions.ts';
-import { boundaries } from '#cli/checks/library/trpc.ts';
 import { vale } from '#cli/checks/general/prose/vale.ts';
+import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { gspotDrift } from '#cli/checks/general/gspot.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { jscpd } from '#cli/checks/general/duplication.ts';
 import { moduleClasses } from '#cli/checks/language/css.ts';
-import { banned } from '#cli/checks/general/prose/hidden.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
-import { fresh, spectral } from '#cli/checks/tool/openapi.ts';
+import { trpcBoundaries } from '#cli/checks/library/trpc.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { tsconfig } from '#cli/checks/language/typescript.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
@@ -24,23 +22,24 @@ import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
+import { hiddenProse } from '#cli/checks/general/prose/hidden.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 import type { CheckRegistry } from '#cli/types/execution/runtime.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
+import { spectral, openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { tsc, checkjs } from '#cli/checks/language/javascript/tsc.ts';
-import { docComment } from '#cli/checks/language/bash/doc-comments.ts';
-import { guards, defaults } from '#cli/checks/language/bash/guards.ts';
-import { assets, xcstrings } from '#cli/checks/tool/xcode/resources.ts';
+import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
+import { bashBoundaries } from '#cli/checks/language/bash/boundaries.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
-import { scriptBoundaries } from '#cli/checks/language/bash/boundaries.ts';
-import { moduleLogic } from '#cli/checks/general/structure/config-logic.ts';
+import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
+import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
+import { guards, guardDefaults } from '#cli/checks/language/bash/guards.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
-import { getDirectories } from '#cli/checks/general/structure/folder-names.ts';
-import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
+import { xcstrings, xcodeAssets } from '#cli/checks/tool/xcode/resources.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
@@ -49,6 +48,7 @@ import { siteBuild, buildReproducible } from '#cli/checks/general/site/build.ts'
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
 import { stemCollisions } from '#cli/checks/general/structure/stem-collisions.ts';
 import { trivialFunctions } from '#cli/checks/language/bash/trivial-functions.ts';
+import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
 import { sourceOrder, sourceComments } from '#cli/checks/language/bash/sources.ts';
@@ -65,7 +65,6 @@ import { trackedDependencies } from '#cli/checks/general/structure/tracked-depen
 import { privatePrefix, privateBeforePublic } from '#cli/checks/language/bash/visibility.ts';
 import { headings, stalePaths, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
 import { lazyExports as pythonLazyExports } from '#cli/checks/language/python/lazy-exports.ts';
-import { sleeps, coverage, disabled, recording, references } from '#cli/checks/tool/xctest.ts';
 import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/language/html.ts';
 import { deptry, pipInstalls as pythonPipInstalls } from '#cli/checks/language/python/deptry.ts';
 import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports/linter.ts';
@@ -73,13 +72,14 @@ import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/langua
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { importComments as swiftImportComments } from '#cli/checks/language/swift/import-comments.ts';
 import { staleExclusions as pythonStaleExclusions } from '#cli/checks/language/python/basedpyright.ts';
-import { build, types, nextOptions, versionPairs, routeSegments } from '#cli/checks/framework/nextjs.ts';
 import { envFiles, trufflehog, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { importComments as pythonImportComments } from '#cli/checks/language/python/imports/comments.ts';
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
-import { sizes, sitemap, brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { sleeps, disabled, recording, xctestCoverage, xctestReferences } from '#cli/checks/tool/xctest.ts';
+import { sitemap, purgecss, siteSize, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
 import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
+import { nextBuild, nextTypes, versionPairs, routeSegments, nextConfiguration } from '#cli/checks/framework/nextjs.ts';
 
 import {
     fileLines as pythonFileLines,
@@ -113,27 +113,27 @@ import {
     privateBeforePublic as pythonPrivateBeforePublic,
 } from '#cli/checks/language/python/exports.ts';
 import {
-    check,
     adminKey,
     denoLint,
+    denoCheck,
     typesFresh,
-    projectValid,
     migrationNames,
     storagePolicies,
+    supabaseConfiguration,
 } from '#cli/checks/platform/supabase.ts';
 
 /** Every built-in implementation, keyed by its public check name. */
 export const CHECKS: CheckRegistry = {
-    'trpc/boundaries': { engine: boundaries },
+    'trpc/boundaries': { engine: trpcBoundaries },
     'expo/doctor': { engine: expoDoctor },
     'svelte/check': { engine: svelteCheck },
     'i18n/locales': { engine: locales },
     'css/module-classes': { engine: moduleClasses },
-    'ansible/lint': { engine: lint },
-    'nginx/test': { engine: test },
+    'ansible/lint': { engine: ansibleLint },
+    'nginx/test': { engine: nginxTest },
     'jest/coverage': { engine: jestCoverage },
     'gspot/drift': { engine: gspotDrift },
-    'structure/config-logic': { engine: moduleLogic },
+    'structure/config-logic': { engine: configurationLogic },
     'structure/suppressions': { engine: suppressions },
     'structure/stale-allowlists': { engine: staleAllowlists },
     'structure/large-files': { engine: largeFiles },
@@ -150,7 +150,7 @@ export const CHECKS: CheckRegistry = {
     'secrets/env-files': { engine: envFiles },
     'security/codeql': { engine: codeql },
     'secrets/gitleaks-baseline': { engine: gitleaksBaseline },
-    'dependencies/manifests': { engine: manifestPolicy },
+    'dependencies/manifests': { engine: manifests },
     'dependencies/lockfile-fresh': { engine: lockfileFresh },
     'licenses/packages': { engine: licensesPackages },
     'dependencies/bun-release-age': { engine: bunReleaseAge },
@@ -158,9 +158,9 @@ export const CHECKS: CheckRegistry = {
     'drizzle/relations': { engine: drizzleRelations },
     'drizzle/migrations-fresh': { engine: drizzleMigrationsFresh },
     'nextjs/route-segments': { engine: routeSegments },
-    'nextjs/config': { engine: nextOptions },
-    'nextjs/tsc': { engine: types },
-    'nextjs/build': { engine: build },
+    'nextjs/config': { engine: nextConfiguration },
+    'nextjs/tsc': { engine: nextTypes },
+    'nextjs/build': { engine: nextBuild },
     'nextjs/version-pairs': { engine: versionPairs },
     'cloudflare/headers': { engine: cloudflareHeaders },
     'cloudflare/redirects': { engine: cloudflareRedirects },
@@ -169,10 +169,10 @@ export const CHECKS: CheckRegistry = {
     'site/build': { engine: siteBuild },
     'site/build-reproducible': { engine: buildReproducible },
     'site/html-validate': { engine: htmlValidate },
-    'site/purgecss': { engine: deadSelectors },
+    'site/purgecss': { engine: purgecss },
     'site/linkinator': { engine: (input) => brokenLinks(input, false) },
     'site/linkinator-external': { engine: (input) => brokenLinks(input, true) },
-    'site/size': { engine: sizes },
+    'site/size': { engine: siteSize },
     'site/sitemap': { engine: sitemap },
     'site/dead-assets': { engine: deadAssets },
     'site/svgo': { engine: svgo },
@@ -198,13 +198,13 @@ export const CHECKS: CheckRegistry = {
     'xctest/disabled': { engine: disabled },
     'xctest/sleep': { engine: sleeps },
     'xctest/recording': { engine: recording },
-    'xctest/references': { engine: references },
-    'xctest/coverage': { engine: coverage },
+    'xctest/references': { engine: xctestReferences },
+    'xctest/coverage': { engine: xctestCoverage },
     'xcode/xcconfig': { engine: xcconfig },
     'xcode/entitlements': { engine: entitlements },
     'xcode/ats': { engine: ats },
     'xcode/xcstrings': { engine: xcstrings },
-    'xcode/assets': { engine: assets },
+    'xcode/assets': { engine: xcodeAssets },
     'xcode/test-plans': { engine: testPlans },
     'xcode/orphan-sources': { engine: orphanSources },
     'xcode/symlinks': { engine: symlinks },
@@ -217,12 +217,12 @@ export const CHECKS: CheckRegistry = {
     'swift/swiftlint-analyze': { engine: swiftlintAnalyze },
     'swift/periphery': { engine: swiftPeriphery },
     'openapi/spectral': { engine: spectral },
-    'openapi/fresh': { engine: fresh },
-    'supabase/config': { engine: projectValid },
+    'openapi/fresh': { engine: openapiFresh },
+    'supabase/config': { engine: supabaseConfiguration },
     'supabase/storage-policies': { engine: storagePolicies },
     'supabase/migration-names': { engine: migrationNames },
     'supabase/deno-lint': { engine: denoLint },
-    'supabase/deno-check': { engine: check },
+    'supabase/deno-check': { engine: denoCheck },
     'supabase/admin-key': { engine: adminKey },
     'supabase/types-fresh': { engine: typesFresh },
     'postgres/rls': { engine: rls },
@@ -241,9 +241,9 @@ export const CHECKS: CheckRegistry = {
     'structure/lone-files': { engine: loneFiles },
     'structure/prefix-collisions': { engine: prefixCollisions },
     'structure/stem-collisions': { engine: stemCollisions },
-    'structure/folder-names': { engine: getDirectories },
+    'structure/folder-names': { engine: folderNames },
     'bash/limits': { engine: bashLimits },
-    'bash/doc-comments': { engine: docComment },
+    'bash/doc-comments': { engine: docComments },
     'bash/duplicate-functions': { engine: duplicateFunctions },
     'bash/unused-functions': { engine: unusedFunctions },
     'bash/unread-arguments': { engine: unreadArguments },
@@ -255,14 +255,14 @@ export const CHECKS: CheckRegistry = {
     'bash/wrappers': { engine: wrappers },
     'bash/embeds': { engine: embeds },
     'bash/ssh-blocks': { engine: sshBlocks },
-    'bash/defaults': { engine: defaults },
+    'bash/defaults': { engine: guardDefaults },
     'bash/guards': { engine: guards },
-    'bash/boundaries': { engine: scriptBoundaries },
+    'bash/boundaries': { engine: bashBoundaries },
     'bash/safety': { engine: safety },
     'bash/source-comments': { engine: sourceComments },
     'bash/source-order': { engine: sourceOrder },
     'prose/vale': { engine: vale },
-    'prose/hidden': { engine: banned },
+    'prose/hidden': { engine: hiddenProse },
     'naming/identifiers': { engine: namingIdentifiers },
     'naming/paths': { engine: namingPaths },
     'naming/policy': { engine: namingPolicy },

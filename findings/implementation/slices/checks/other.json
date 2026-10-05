@@ -6,10 +6,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `checks/registry.ts:95` `ENGINES`, `:211` `RUNNERS` (and `types/execution/execution.ts:75` `CheckRegistry`) | The docs say runners are \"the checks that run their own tool and read its output\". Many engines do that too: ansible/lint, nginx/test, svelte/check, expo-doctor, jest/coverage, docker/trivy-image, supabase/deno-lint. The real split is the signature. An engine takes `EngineInput` and returns findings. A runner takes the session and the planned check and builds the whole `CheckResult`. | Rewrite: ENGINES \"Checks that take an EngineInput and return findings, by check ID.\" RUNNERS \"Checks that build their own CheckResult from the session and the planned check, by check ID: history scans, and manifest commands that need extra steps.\" |",
         "owner": "`checks/registry.ts:95` `ENGINES`, `:211` `RUNNERS` (and `types/execution/execution.ts:75` `CheckRegistry`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/registry.ts", "packages/cli/src/types/execution/runtime.ts"],
+        "status": "closed",
+        "outcome": "One flat CHECKS registry uses the actual CheckRegistry callback signatures. Its documentation states which entries return findings and which build full results; the old ENGINES/RUNNERS split is absent.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/002",
@@ -18,10 +24,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `checks/drift.ts:5` `drift` | The doc leaves out the `conflict` kind, which `DRIFT_MESSAGES` reports. It also uses \"render\", a term the naming policy bans. | Rewrite as \"One finding per generated file that differs from what gspot apply writes, is missing, holds merge conflict markers, or carries the gspot header with nothing writing it.\" |",
         "owner": "`checks/drift.ts:5` `drift`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/gspot.ts"],
+        "status": "closed",
+        "outcome": "gspotDrift documentation explicitly covers differences, missing files, conflict markers and headers without a current generator.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/003",
@@ -52,7 +64,7 @@
         "source": "findings/slices/checks-other.md",
         "line": 15,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `database/postgres/migrations.ts:26-29` `readMigrations` | The parse error gives a line and a column but no file: \"SQL parse failed at 3:5: …\". Every postgres check and two supabase checks stop with it. | Throw `` `${path}:${line}:${column}: the SQL does not parse: ${text}` ``. |",
+        "finding": "| `database/postgres/migrations.ts:26-29` `readMigrations` | The parse error gives a line and a column but no file: \"SQL parse failed at 3:5: \u2026\". Every postgres check and two supabase checks stop with it. | Throw `` `${path}:${line}:${column}: the SQL does not parse: ${text}` ``. |",
         "owner": "`database/postgres/migrations.ts:26-29` `readMigrations`",
         "location": null,
         "status": "open",
@@ -78,10 +90,21 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/schema.ts:12-153` (`fields`), `:158` `@returns`; `types/checks/database.ts:38` `Reader`; `access.ts:50`, `foreign-keys.ts:14` | The mutable state is named `fields`, and so is the parse tree (`statement.fields`). So `fields.tables.has(table) && statement.fields['if_not_exists']` uses one word for two things. `schema()` documents \"@returns the fields\" but returns the `Schema` summary, and the callers name that result `fields` too. | Rename the state `state`. Rename `schema()` to `buildSchema()`. Name each result `schema`. Fix the `@returns`. |",
         "owner": "`database/postgres/schema.ts:12-153` (`fields`), `:158` `@returns`; `types/checks/database.ts:38` `Reader`; `access.ts:50`, `foreign-keys.ts:14`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/schema.ts",
+            "packages/cli/src/checks/database/postgres/access.ts",
+            "packages/cli/src/checks/database/postgres/foreign-keys.ts",
+            "packages/cli/src/types/checks/database/postgres.ts"
+        ],
+        "status": "closed",
+        "outcome": "The schema reader uses state for mutable replay state, retains statement.fields for parse trees, exports buildSchema and returns the schema summary. Consumers call the result schema.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/008",
@@ -90,10 +113,19 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/schema.ts:20-24` `named`, `:7` `qualified` | `parts.slice(0, -1).at(-1)` is `parts.at(-2)`, and the length check repeats the `??` fallback. `named` and `qualified` do the same job for two input shapes, and neither name says so. | Write `` qualifiedParts = (parts) => `${parts.at(-2) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}` `` and rename `qualified` to `qualifiedRelation`. |",
         "owner": "`database/postgres/schema.ts:20-24` `named`, `:7` `qualified`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/schema.ts",
+            "packages/cli/src/config/checks/database/postgres.ts"
+        ],
+        "status": "closed",
+        "outcome": "qualifyRelation and qualifyParts name their actual inputs. qualifyParts uses the previous component directly through the documented SCHEMA_PART_INDEX constant under the retained Postgres config owner.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/009",
@@ -102,10 +134,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/schema.ts:51` `constraint`, `:63` `created`, `:93` `altered`, `:100` `dropped`, `:143` `summarized` | Nouns and past participles name functions that act. | Rename them `recordConstraint`, `readCreateTable`, `readAlterTable`, `readDrop`, and `summarize`. |",
         "owner": "`database/postgres/schema.ts:51` `constraint`, `:63` `created`, `:93` `altered`, `:100` `dropped`, `:143` `summarized`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/database/postgres/schema.ts"],
+        "status": "closed",
+        "outcome": "Schema replay functions are recordConstraint, readCreateTable, readAlterTable, readDrop and summarize. Required statement callbacks remain in the reader map.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/010",
@@ -114,10 +152,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `database/postgres/access.ts:70`, `:91` suppression reasons; `:31` `text` | The reasons name check IDs that do not exist (\"postgres-grants check\", \"postgres-definer check\") and an \"analysis table\". The `text` parameter of `statementFindings` holds the finding message. | Rewrite as \"The registry maps postgres/grants to this function.\" Do the same for postgres/definer-search-path. Rename `text` to `message`. |",
         "owner": "`database/postgres/access.ts:70`, `:91` suppression reasons; `:31` `text`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/database/postgres/access.ts"],
+        "status": "closed",
+        "outcome": "Postgres access checks have no stale check-name suppression comments. statementFindings names its finding text diagnostic, and the SECURITY DEFINER diagnostic explains the required explicit search_path.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/011",
@@ -126,22 +170,34 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `framework/nextjs/source.ts:33` `routeSegments` message | The message says \"the framework serves one address from one of them\". Next.js does not serve either: it refuses the build, as the manifest's `why` says. | Rewrite as \"`${folder}` holds both a page and a route handler, and next build refuses that. Move the route handler into its own segment.\" |",
         "owner": "`framework/nextjs/source.ts:33` `routeSegments` message",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/framework/nextjs.ts"],
+        "status": "closed",
+        "outcome": "The route-segment finding states that next build refuses a page and route handler in one segment and tells the author to move the handler.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/012",
         "source": "findings/slices/checks-other.md",
         "line": 22,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `framework/nextjs/source.ts:40` `nextOptions` doc; `kits/framework/nextjs/manifest.toml:73` summary; `source.ts:56` message | \"The framework kit turns no build check off\" is wrong: the check reads the project's next.config, not the kit. \"…lets a build pass with findings the gate stops\" is jargon. | Doc: \"One finding for each next.config option that turns a build check off, and each secret-looking key under env.\" Message: \"`${name}: true` lets next build pass with errors. Remove it.\" |",
+        "finding": "| `framework/nextjs/source.ts:40` `nextOptions` doc; `kits/framework/nextjs/manifest.toml:73` summary; `source.ts:56` message | \"The framework kit turns no build check off\" is wrong: the check reads the project's next.config, not the kit. \"\u2026lets a build pass with findings the gate stops\" is jargon. | Doc: \"One finding for each next.config option that turns a build check off, and each secret-looking key under env.\" Message: \"`${name}: true` lets next build pass with errors. Remove it.\" |",
         "owner": "`framework/nextjs/source.ts:40` `nextOptions` doc; `kits/framework/nextjs/manifest.toml:73` summary; `source.ts:56` message",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/framework/nextjs.ts"],
+        "status": "closed",
+        "outcome": "nextConfiguration describes the actual next.config checks and secret-looking env keys. The checks-off message names the true option and says to remove it.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/013",
@@ -150,22 +206,34 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `framework/nextjs/source.ts:83-86` `versionPairs`; `:7` `paths` | Parses each package.json by hand, with an unchecked cast. `readPackageManifest` (`repository/packages.ts:227`) validates the file and names it in the error. `paths` is a noun for a function. | Use `readPackageManifest`. Rename `paths` to `sourcePaths`. |",
         "owner": "`framework/nextjs/source.ts:83-86` `versionPairs`; `:7` `paths`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/framework/nextjs.ts", "packages/cli/src/parsers/packages.ts"],
+        "status": "closed",
+        "outcome": "versionPairs calls the authoritative package-manifest parser with the source path, preserving validation and file-aware errors. sourcePaths names its source-file calculation.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/014",
         "source": "findings/slices/checks-other.md",
         "line": 24,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `framework/nextjs/build.ts:13` `lastLines`; `:23`, `:69`, `:91` `cwd` | `lastLines` returns the first line with a cause mark plus the next line. It returns the last lines only when no mark is found. `cwd` is computed again as `join(…, input.scope)`, which is `isolated.scopeRoot` (and `input.scopeRoot` in `typegen`). | Rename `lastLines` to `failureSummary`. Use `scopeRoot`. |",
+        "finding": "| `framework/nextjs/build.ts:13` `lastLines`; `:23`, `:69`, `:91` `cwd` | `lastLines` returns the first line with a cause mark plus the next line. It returns the last lines only when no mark is found. `cwd` is computed again as `join(\u2026, input.scope)`, which is `isolated.scopeRoot` (and `input.scopeRoot` in `typegen`). | Rename `lastLines` to `failureSummary`. Use `scopeRoot`. |",
         "owner": "`framework/nextjs/build.ts:13` `lastLines`; `:23`, `:69`, `:91` `cwd`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/framework/nextjs.ts"],
+        "status": "closed",
+        "outcome": "failureSummary names the cause-line and tail selection honestly. type generation, TypeScript and builds run from the supplied scopeRoot, including the isolated copy.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/015",
@@ -198,10 +266,20 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `library/i18n.ts:51-52` `locales` | When no `<base>.json` exists, `wanted` is an empty map and the missing-key rule passes silently. That happens with a typo in `base`, or with the folder-per-locale layout (`locales/en/common.json`). | Report a finding when the base file is missing. State the `<directory>/<locale>.json` layout in the `tools.i18n.locales` summary. |",
         "owner": "`library/i18n.ts:51-52` `locales`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/library/i18n.ts",
+            "packages/cli/configurations/library/i18n/manifest.toml",
+            "tests/cli/checks/library/schema.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "A missing base locale reports base-locale on the expected file. The shipped setting summary explicitly describes scope-relative <locale>.json message files.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/018",
@@ -210,10 +288,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `library/i18n.ts:9` `flat`, `:24` `textProblem`, `:50` `held`, `:51` `wanted`; `types/checks/library.ts:3` `Translations` | Vague names. `Translations` holds the setting `{ directory, base }`, not any translations. | Rename them `flattenMessages`, `messageProblem`, `messagesByPath`, `baseMessages`, and `LocaleSettings`. Move the type into i18n.ts. |",
         "owner": "`library/i18n.ts:9` `flat`, `:24` `textProblem`, `:50` `held`, `:51` `wanted`; `types/checks/library.ts:3` `Translations`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/library/i18n.ts", "packages/cli/src/types/checks/library/i18n.ts"],
+        "status": "closed",
+        "outcome": "Locale parsing uses flattenMessages, translationProblem, messagesByPath and baseMessages. LocaleSettings lives in the dedicated i18n type owner, following the user decision to retain types/.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/019",
@@ -234,10 +318,21 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `platform/cloudflare.ts:25` `named`; `database/postgres/migrations.ts:47-49` `migrationsOf` | All four cloudflare checks and the seven postgres checks other than squawk run once. Each is planned in the first scope that selects the kit (`execution/planning/plan.ts:127-129`), and then keeps only that scope's files. When two scopes select the kit, the other scope's wrangler files and migrations are never read. `input.selections` exists for this case, and no check uses it. | Loop over the `input.selections` that select the kit, or switch these checks to `runs = \"scope\"`. |",
         "owner": "`platform/cloudflare.ts:25` `named`; `database/postgres/migrations.ts:47-49` `migrationsOf`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/cloudflare/manifest.toml",
+            "packages/cli/configurations/database/postgres/manifest.toml",
+            "tests/cli/checks/database/postgres/history.test.ts",
+            "tests/cli/checks/platform/cloudflare/types.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The four Cloudflare checks and seven Postgres engine checks run per scope. Each filters its own scope, and scope regression cases retain distinct migration roots and worker files.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/021",
@@ -342,10 +437,16 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/actions.ts:67-68` `actionlint` doc | \"Validate current GitHub reference syntax through the supervised native parser without editing authored files\" is jargon, and it does not mention the temporary copy. | Rewrite as \"Runs actionlint. When a workflow or action uses a `$/` self-repository reference, runs it on a temporary copy where each `$/` becomes `./`.\" |",
         "owner": "`tool/actions.ts:67-68` `actionlint` doc",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/tool/actions.ts", "tests/cli/checks/tool/actions.test.ts"],
+        "status": "closed",
+        "outcome": "actionlint documentation names the real temporary-copy behavior and the $/ to ./ conversion. Its source preserves reference offsets and authored files.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/030",
@@ -376,7 +477,7 @@
         "source": "findings/slices/checks-other.md",
         "line": 42,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `tool/openapi.ts:22-23` `spectral` | `files.source(document)` is called only for its side effect. When the document is missing, it throws a raw \"ENOENT … realpath\" error. | Check that the file exists, and throw \"tools.openapi.document names `<path>`, which does not exist.\" |",
+        "finding": "| `tool/openapi.ts:22-23` `spectral` | `files.source(document)` is called only for its side effect. When the document is missing, it throws a raw \"ENOENT \u2026 realpath\" error. | Check that the file exists, and throw \"tools.openapi.document names `<path>`, which does not exist.\" |",
         "owner": "`tool/openapi.ts:22-23` `spectral`",
         "location": null,
         "status": "open",
@@ -400,12 +501,18 @@
         "source": "findings/slices/checks-other.md",
         "line": 44,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `tool/nginx/test.ts:99-104` | When openssl fails, the error \"could not write the throwaway certificate\" drops stderr. `made` does not say what it holds. | Add `toolOutputDetail(result, …)` to the error. Rename `made` to `certificate`. |",
+        "finding": "| `tool/nginx/test.ts:99-104` | When openssl fails, the error \"could not write the throwaway certificate\" drops stderr. `made` does not say what it holds. | Add `toolOutputDetail(result, \u2026)` to the error. Rename `made` to `certificate`. |",
         "owner": "`tool/nginx/test.ts:99-104`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/tool/nginx.ts", "tests/cli/checks/tool/nginx/arguments.test.ts"],
+        "status": "closed",
+        "outcome": "nginx certificate generation names its result certificate and retains both output streams through toolOutputDetail. Regressions verify both streams, disposal, unchanged source and no Docker launch after failure.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/035",
@@ -414,17 +521,23 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/nginx/test.ts:15` `includes`, `:27` `copies`, `:44` `failure`, `:53` `tested`; `tool/nginx/directives.ts:61` `tokens`, `:77` `directives`, `:24` `unitEnd` | Nouns and adjectives name functions that act. `unitEnd(text, at, isFirst)` takes a boolean whose only job is to pick a regex. | Rename them `includedFiles`, `copyConfigurations`, `syntaxOutcome`, `testConfiguration`, `tokenize`, and `parseDirectives`. Pass the stop pattern to `unitEnd` instead of `isFirst`. |",
         "owner": "`tool/nginx/test.ts:15` `includes`, `:27` `copies`, `:44` `failure`, `:53` `tested`; `tool/nginx/directives.ts:61` `tokens`, `:77` `directives`, `:24` `unitEnd`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/tool/nginx.ts", "packages/cli/src/parsers/nginx.ts"],
+        "status": "closed",
+        "outcome": "nginx orchestration uses includedFiles, copyConfigurations, syntaxOutcome and testConfiguration. Its parser owns tokenize and parseDirectives, and unitEnd receives the actual stop pattern instead of a boolean mode.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/036",
         "source": "findings/slices/checks-other.md",
         "line": 46,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `tool/xcode/pbxproj.ts:227` `readPbxproj` `@param directory`; `tool/xcode/project.ts:26-29`, `:35`, `:42-43` | The doc says `directory` is \"relative to the repository root\". `orphanSources` passes `posix.join(input.root, …)`, an absolute path, and then strips `input.root` again with two `posix.relative` calls. | Pass the repository-relative folder and delete the round trip. |",
+        "finding": "| `tool/xcode/pbxproj.ts:227` `readPbxproj` `@param directory`; `tool/xcode/project.ts:26-29`, `:35`, `:42-43` | The doc says `directory` is \"relative to the repository root\". `orphanSources` passes `posix.join(input.root, \u2026)`, an absolute path, and then strips `input.root` again with two `posix.relative` calls. | Pass the repository-relative folder and delete the round trip. |",
         "owner": "`tool/xcode/pbxproj.ts:227` `readPbxproj` `@param directory`; `tool/xcode/project.ts:26-29`, `:35`, `:42-43`",
         "location": null,
         "status": "open",
@@ -573,17 +686,28 @@
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/xctest/references.ts:4-6` `escapePattern`; `language/bash/ssh.ts:18`; `general/files.ts:18` | The same regex-escape code exists three times. The suppression reason in references.ts (\"the planted name\") is garbled. Node 22, the engine floor, has no `RegExp.escape`. | Add one `escapeRegExp` to `platform/text.ts` and use it in all three places. |",
         "owner": "`tool/xctest/references.ts:4-6` `escapePattern`; `language/bash/ssh.ts:18`; `general/files.ts:18`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/text.ts",
+            "packages/cli/src/checks/tool/xctest.ts",
+            "packages/cli/src/checks/language/bash/ssh.ts",
+            "packages/cli/src/checks/general/files.ts"
+        ],
+        "status": "closed",
+        "outcome": "XCTest references and dotenv naming share platform escapeRegExp. Bash SSH no longer constructs the escaped regex, and the old garbled suppression comment is absent.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-other/046",
         "source": "findings/slices/checks-other.md",
         "line": 56,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| Messages: `postgres/migration-docs.ts:24`, `:26`, `:28`, `:37`; `postgres/history.ts:108`; `cloudflare.ts:41`, `:89`, `:105`, `:107`; `supabase/project.ts:118`; `xcode/settings.ts:30`; `xcode/project.ts:125`; `xctest/sources.ts:49`; `nextjs/source.ts:96` | These messages state the rule as if it were a fact, or say \"is no\". For example: \"The migration header sits between separator lines.\", \"The second line is …\", \"This line is no header\", \"The source begins with a slash\", \"The name is fourteen digits …\", \"This line is no KEY = value setting\". Some claim what gspot cannot know: \"This migration has run\". Some give no action: \"Xcode and the checks each follow it their own way.\" | Say what is wrong and what to do. For example: \"Put the header between two separator lines.\" \"This indented line is not a header. Write it as `Name: value`.\" \"The source must start with / or https://.\" \"Name the migration `<14-digit timestamp>_<snake_case>.sql`.\" \"This migration is at or before tools.squawk.frozen_through and differs from the committed text. Restore it and write a new migration.\" \"Replace the symlink with the file it points to.\" |",
+        "finding": "| Messages: `postgres/migration-docs.ts:24`, `:26`, `:28`, `:37`; `postgres/history.ts:108`; `cloudflare.ts:41`, `:89`, `:105`, `:107`; `supabase/project.ts:118`; `xcode/settings.ts:30`; `xcode/project.ts:125`; `xctest/sources.ts:49`; `nextjs/source.ts:96` | These messages state the rule as if it were a fact, or say \"is no\". For example: \"The migration header sits between separator lines.\", \"The second line is \u2026\", \"This line is no header\", \"The source begins with a slash\", \"The name is fourteen digits \u2026\", \"This line is no KEY = value setting\". Some claim what gspot cannot know: \"This migration has run\". Some give no action: \"Xcode and the checks each follow it their own way.\" | Say what is wrong and what to do. For example: \"Put the header between two separator lines.\" \"This indented line is not a header. Write it as `Name: value`.\" \"The source must start with / or https://.\" \"Name the migration `<14-digit timestamp>_<snake_case>.sql`.\" \"This migration is at or before tools.squawk.frozen_through and differs from the committed text. Restore it and write a new migration.\" \"Replace the symlink with the file it points to.\" |",
         "owner": "Messages: `postgres/migration-docs.ts:24`, `:26`, `:28`, `:37`; `postgres/history.ts:108`; `cloudflare.ts:41`, `:89`, `:105`, `:107`; `supabase/project.ts:118`; `xcode/settings.ts:30`; `xcode/project.ts:125`; `xctest/sources.ts:49`; `nextjs/source.ts:96`",
         "location": null,
         "status": "open",

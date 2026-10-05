@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { fresh } from '#cli/checks/tool/openapi.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { OpenapiProject } from '#tests/types/cli/checks/tool/openapi.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -48,7 +48,7 @@ function expectPreserved({ directory, document, edited, mode }: OpenapiProject):
 test('OpenAPI freshness reports a failed generation and preserves dirty and untracked input', async () => {
     const testRepository = await applyChanges('{"fail":true}\n');
     await using directory = testRepository.directory;
-    expect(await rejection(fresh(testRepository.input))).toContain('Generation failed');
+    expect(await rejection(openapiFresh(testRepository.input))).toContain('Generation failed');
     expectPreserved(testRepository);
     expect(directory.path).toBe(testRepository.directory.path);
 });
@@ -56,7 +56,7 @@ test('OpenAPI freshness reports a failed generation and preserves dirty and untr
 test('OpenAPI freshness reports a stale document, accepts the regenerated one, and preserves input', async () => {
     const testRepository = await applyChanges('{"version":3}\n');
     await using directory = testRepository.directory;
-    expect(await fresh(testRepository.input)).toStrictEqual([
+    expect(await openapiFresh(testRepository.input)).toStrictEqual([
         {
             check: testRepository.spec.name,
             file: 'openapi.json',
@@ -67,6 +67,6 @@ test('OpenAPI freshness reports a stale document, accepts the regenerated one, a
         },
     ]);
     writeFileSync(join(directory.path, 'schema.json'), testRepository.edited);
-    expect(await fresh(testRepository.input)).toStrictEqual([]);
+    expect(await openapiFresh(testRepository.input)).toStrictEqual([]);
     expectPreserved(testRepository);
 });

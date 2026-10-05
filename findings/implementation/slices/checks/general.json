@@ -652,10 +652,24 @@
         "section": "Checks: General",
         "finding": "| `naming/paths.ts:29-37,52-62`; `naming/extractors/bash.ts:12`, `python.ts:21`, `swift.ts:18` | `paths.ts` also builds `Identifier` objects by hand, twice. The builder that FINDINGS.md proposes covers only the extractors. Three extractors hard-code `language` and ignore `ExtractSink.language`. | Put `paths.ts` on the same builder. Have the builder read `sink.language`. |",
         "owner": "`naming/paths.ts:29-37,52-62`; `naming/extractors/bash.ts:12`, `python.ts:21`, `swift.ts:18`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/naming/identifiers.ts",
+            "packages/cli/src/parsers/naming/bash.ts",
+            "packages/cli/src/parsers/naming/python.ts",
+            "packages/cli/src/parsers/naming/swift.ts",
+            "packages/cli/src/parsers/naming/typescript.ts",
+            "packages/cli/src/parsers/naming/sql.ts",
+            "packages/cli/src/checks/general/naming/paths.ts"
+        ],
+        "status": "closed",
+        "outcome": "createIdentifier is shared by path declarations and all five language extractors. It reads the supplied source language; language readers retain their own syntax classification.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/037",

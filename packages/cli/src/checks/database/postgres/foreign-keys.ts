@@ -1,7 +1,7 @@
 // Foreign key columns that no index leads with, read from the schema the migrations build.
 import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import { schema } from '#cli/checks/database/postgres/schema.ts';
+import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
@@ -11,9 +11,9 @@ import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
  * @returns the findings
  */
 export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> {
-    const fields = schema(await migrationsOf(input));
-    return fields.foreignKeys
-        .filter((key) => fields.indexed.get(key.table)?.has(key.column) !== true)
+    const schema = buildSchema(await migrationsOf(input));
+    return schema.foreignKeys
+        .filter((key) => schema.indexed.get(key.table)?.has(key.column) !== true)
         .map((key) =>
             findingAt(
                 input,

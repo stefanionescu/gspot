@@ -122,7 +122,7 @@ export function functionFolders(input: EngineInput): string[] {
  * @param input the engine input
  * @returns the findings
  */
-export function projectValid(input: EngineInput): Finding[] {
+export function supabaseConfiguration(input: EngineInput): Finding[] {
     const config = readConfiguration(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
@@ -200,7 +200,7 @@ export async function denoLint(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function check(input: EngineInput): Promise<Finding[]> {
+export async function denoCheck(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const folder of functionFolders(input)) findings.push(...(await checkFunctionTypes(input, folder)));
     return findings;
@@ -222,7 +222,9 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
         cwd: join(input.root, input.scope),
     });
     if (result.code !== 0)
-        throw new Error(`The supabase CLI wrote no types: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(
+            `The supabase CLI wrote no types: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     const committed = readSource(input.root, path, input.reads).toString('utf8');
     if (committed.trim() === result.stdout.trim()) return [];
     return [findingAt(input, at, 'stale', 'The file differs from the types the local database gives. Write it again.')];
@@ -249,9 +251,9 @@ export function adminKey(input: EngineInput): Finding[] {
             .split('\n')
             .flatMap((text, index): Finding[] => {
                 if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
-                const said =
+                const diagnostic =
                     'This file names the service role key, which bypasses row level security, outside the paths allowed to hold it.';
-                return [findingAt(input, { file: file.path, line: index + 1 }, 'admin-key', said)];
+                return [findingAt(input, { file: file.path, line: index + 1 }, 'admin-key', diagnostic)];
             }),
     );
 }

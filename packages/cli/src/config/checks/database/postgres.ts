@@ -52,3 +52,6 @@ export const HEADER_LINES = 4;
 
 /** From a one-based line to the zero-based index of the line above it. */
 export const LINE_ABOVE = 2;
+
+/** The schema precedes the final relation name in a qualified name. */
+export const SCHEMA_PART_INDEX = -2;

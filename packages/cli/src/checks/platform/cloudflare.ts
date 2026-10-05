@@ -5,6 +5,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
 import { parseWrangler, headerProblems, redirectProblems } from '#cli/parsers/cloudflare.ts';
@@ -30,7 +31,9 @@ async function isStale(input: EngineInput, path: string): Promise<boolean> {
         },
     );
     if (result.code !== 0)
-        throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(
+            `The wrangler types command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     return !before.equals(readSource(input.root, path, input.reads));
 }
 

@@ -88,7 +88,7 @@ function configurationFindings(
  * @param input the engine input
  * @returns the findings
  */
-export async function moduleLogic(input: EngineInput): Promise<Finding[]> {
+export async function configurationLogic(input: EngineInput): Promise<Finding[]> {
     const paths = rolePaths(input.policyFiles.policy.architecture.roles, 'config').map((path) =>
         path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`,
     );

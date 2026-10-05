@@ -37,10 +37,10 @@ function translationProblem(text: string): string | undefined {
  * @returns the findings
  */
 export function locales(input: EngineInput): Finding[] {
-    const named = input.view.options('i18n')['locales'] as LocaleSettings | undefined;
-    if (named?.directory === undefined) return [];
-    const directory = posix.join(input.scope, named.directory);
-    const base = named.base ?? 'en';
+    const setting = input.view.options('i18n')['locales'] as LocaleSettings | undefined;
+    if (setting?.directory === undefined) return [];
+    const directory = posix.join(input.scope, setting.directory);
+    const base = setting.base ?? 'en';
     const files = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));

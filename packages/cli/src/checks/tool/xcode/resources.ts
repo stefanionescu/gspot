@@ -80,7 +80,7 @@ export function xcstrings(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function assets(input: EngineInput): Finding[] {
+export function xcodeAssets(input: EngineInput): Finding[] {
     const contents = trackedByExtension(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
     return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

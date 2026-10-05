@@ -11,7 +11,7 @@ import * as toolRunner from '#cli/execution/command/runner.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import type { SiteReportCase } from '#tests/types/cli/checks/general/site.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
-import { brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
 import { filesUnder, cachedBuild, buildReproducible } from '#cli/checks/general/site/build.ts';
 
 import {
@@ -53,7 +53,7 @@ const SITE_REPORTS: SiteReportCase[] = [
     },
     {
         name: 'selectors',
-        analyze: deadSelectors,
+        analyze: purgecss,
         defect: () => [{ file: 'style.css', rejected: ['.unused'] }],
         corrected: [{ file: 'style.css', rejected: [] }],
         status: 0,

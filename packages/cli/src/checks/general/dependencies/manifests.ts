@@ -84,7 +84,7 @@ function lockfileFindings(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function manifestPolicy(input: EngineInput): Finding[] {
+export function manifests(input: EngineInput): Finding[] {
     const allowed = (input.view.options('dependencies')['ranges_allowed'] as PathAllowance[] | undefined) ?? [];
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();

@@ -9,7 +9,7 @@ import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bas
  * @param input the check context
  * @returns the findings
  */
-export const defaults: Engine = async (input) => {
+export const guardDefaults: Engine = async (input) => {
     const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
     const fragments = input.view.settings['bash.defaults_allowed'] as string[];
     const index = await getScriptIndex(input);

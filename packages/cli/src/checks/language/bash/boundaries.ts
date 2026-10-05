@@ -62,7 +62,7 @@ function dependencyFindings(file: ScriptFile, sources: Set<string>, index: Scrip
  * @param input the check context
  * @returns the findings
  */
-export const scriptBoundaries: Engine = async (input) => {
+export const bashBoundaries: Engine = async (input) => {
     const roots = input.view.settings['bash.boundary_roots'] as string[];
     if (roots.length === 0) return [];
     const isGoverned = pathMatcher(roots.map((root) => (root.includes('*') ? root : `${root.replace(/\/$/u, '')}/**`)));

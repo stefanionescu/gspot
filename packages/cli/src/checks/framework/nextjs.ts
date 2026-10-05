@@ -18,12 +18,12 @@ import {
     SEGMENT_NAME,
 } from '#cli/config/checks/framework/nextjs.ts';
 
-function paths(input: EngineInput): string[] {
+function sourcePaths(input: EngineInput): string[] {
     return input.files.filter((file) => file.kind === 'source').map((file) => file.path);
 }
 
 // Next.js puts the cause and its detail above the longer stack trace.
-function lastLines(text: string): string {
+function failureSummary(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');
     const marked = lines.findIndex((line) => CAUSE_MARKS.some((mark) => line.includes(mark)));
     const shown = marked === -1 ? lines.slice(-SHOWN_LINES) : lines.slice(marked, marked + MARKED_LINES);
@@ -33,13 +33,13 @@ function lastLines(text: string): string {
 // next typegen writes next-env.d.ts and the route types, which a fresh clone lacks and tsc needs.
 // CI=1 stops Next.js installing missing packages; generated files stay in the scratch copy.
 async function typegen(input: EngineInput): Promise<void> {
-    const cwd = join(input.root, input.scope);
+    const cwd = input.scopeRoot;
     const result = await runEngineTool(input, ['next', 'typegen'], {
         cwd,
         env: { CI: '1' },
     });
-    const said = `${result.stdout}${result.stderr}`;
-    if (result.code !== 0) throw new Error(`The next typegen command failed: ${lastLines(said)}`);
+    const output = `${result.stdout}${result.stderr}`;
+    if (result.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
 }
 
 function typeFinding(input: EngineInput, line: string): Finding[] {
@@ -72,7 +72,7 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  */
 export function routeSegments(input: EngineInput): Finding[] {
     const kinds = new Map<string, Map<string, string>>();
-    for (const path of paths(input)) {
+    for (const path of sourcePaths(input)) {
         const groups = SEGMENT_NAME.exec(posix.basename(path))?.groups;
         if (groups === undefined || !`/${path}`.includes('/app/')) continue;
         const folder = path.slice(0, path.lastIndexOf('/'));
@@ -88,19 +88,19 @@ export function routeSegments(input: EngineInput): Finding[] {
                 input,
                 { file: held.get('route') ?? folder, line: 1 },
                 'route-segment',
-                `${folder} holds a page and a route handler, and the framework serves one address from one of them.`,
+                `${folder} holds both a page and a route handler, and next build refuses that. Move the route handler into its own segment.`,
             ),
         )
         .toArray();
 }
 
 /**
- * The framework configuration turns no build check off, and puts no secret into the client environment.
+ * Reports each next.config option that disables a build check, and each secret-looking key under env.
  * @param input the engine input
  * @returns the findings
  */
-export function nextOptions(input: EngineInput): Finding[] {
-    return paths(input)
+export function nextConfiguration(input: EngineInput): Finding[] {
+    return sourcePaths(input)
         .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
@@ -110,7 +110,7 @@ export function nextOptions(input: EngineInput): Finding[] {
                     { file: path, line },
                     kind,
                     kind === 'checks-off'
-                        ? `${name} lets a build pass with findings the gate stops.`
+                        ? `${name}: true lets next build pass with errors. Remove it.`
                         : `${name} under env is written into the client bundle. Read it on the server.`,
                 ),
             );
@@ -123,9 +123,9 @@ export function nextOptions(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function versionPairs(input: EngineInput): Finding[] {
-    const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
+    const manifests = sourcePaths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
     return manifests.flatMap((path) => {
-        const parsed = parsePackageManifest(readSource(input.root, path, input.reads).toString('utf8'));
+        const parsed = parsePackageManifest(readSource(input.root, path, input.reads).toString('utf8'), path);
         const versions = { ...parsed.devDependencies, ...parsed.dependencies };
         return PAIRS.filter(
             ([left, right]) =>
@@ -146,7 +146,7 @@ export function versionPairs(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns one finding for each type error
  */
-export async function types(input: EngineInput): Promise<Finding[]> {
+export async function nextTypes(input: EngineInput): Promise<Finding[]> {
     using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
@@ -155,12 +155,12 @@ export async function types(input: EngineInput): Promise<Finding[]> {
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     await typegen(isolated);
-    const cwd = join(scratch, input.scope);
+    const cwd = isolated.scopeRoot;
     const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
     const result = await runEngineTool(isolated, command, { cwd });
     const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
-    const said = `${result.stdout}\n${result.stderr}`;
-    if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(said)}`);
+    const output = `${result.stdout}\n${result.stderr}`;
+    if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${failureSummary(output)}`);
     return found;
 }
 
@@ -169,7 +169,7 @@ export async function types(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for a build that fails
  */
-export async function build(input: EngineInput): Promise<Finding[]> {
+export async function nextBuild(input: EngineInput): Promise<Finding[]> {
     using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
@@ -177,18 +177,18 @@ export async function build(input: EngineInput): Promise<Finding[]> {
     );
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    const cwd = join(scratch, input.scope);
-    const flags = (input.view.options('tools.next')['build_flags'] as string[] | undefined) ?? [];
+    const cwd = isolated.scopeRoot;
+    const flags = input.view.options('tools.next')['build_flags'] as string[];
     const command = ['next', 'build', ...flags];
     const result = await runEngineTool(isolated, command, { cwd, env: { CI: '1' } });
     if (result.code === 0) return [];
-    const said = lastLines(`${result.stdout}${result.stderr}`);
+    const output = failureSummary(`${result.stdout}${result.stderr}`);
     return [
         findingAt(
             input,
             { file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`, line: 1 },
             'build',
-            `next build failed: ${said}`,
+            `next build failed: ${output}`,
         ),
     ];
 }

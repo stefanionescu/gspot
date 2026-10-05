@@ -1,6 +1,7 @@
 import { SQL_LABELS } from '#cli/config/parsers/naming.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
+import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { SqlNamed, Identifier } from '#cli/types/parsers/naming.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -49,14 +50,15 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
             if (found !== -1) offset = found + entry.name.length;
             if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
             return [
-                {
-                    file,
-                    ...positionAt(source, found === -1 ? statement.start : found),
-                    language: 'sql',
-                    category: entry.category,
-                    kind: `sql ${SQL_LABELS[entry.category] ?? entry.category}`,
-                    name: entry.name,
-                },
+                createIdentifier(
+                    { file, language: 'sql' },
+                    {
+                        ...positionAt(source, found === -1 ? statement.start : found),
+                        category: entry.category,
+                        label: SQL_LABELS[entry.category] ?? entry.category,
+                        name: entry.name,
+                    },
+                ),
             ];
         });
 }

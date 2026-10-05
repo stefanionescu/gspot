@@ -2,8 +2,7 @@
 import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import { schema } from '#cli/checks/database/postgres/schema.ts';
-import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres.ts';
+import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
@@ -28,7 +27,7 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
 async function statementFindings(
     input: EngineInput,
     rule: string,
-    text: string,
+    diagnostic: string,
     isWrong: (statement: SqlStatementView) => boolean,
 ): Promise<Finding[]> {
     const migrations = await migrationsOf(input);
@@ -36,7 +35,12 @@ async function statementFindings(
         migration.statements
             .filter((statement) => isWrong(statement))
             .map((statement) =>
-                findingAt(input, { file: migration.path, ...positionAt(migration.text, statement.start) }, rule, text),
+                findingAt(
+                    input,
+                    { file: migration.path, ...positionAt(migration.text, statement.start) },
+                    rule,
+                    diagnostic,
+                ),
             ),
     );
 }
@@ -47,18 +51,16 @@ async function statementFindings(
  * @returns the findings
  */
 export async function rls(input: EngineInput): Promise<Finding[]> {
-    const fields = schema(await migrationsOf(input));
-    const schemas = new Set(
-        (input.view.options('postgres')['client_schemas'] as string[] | undefined) ?? [PUBLIC_SCHEMA],
-    );
-    return fields.tables
+    const schema = buildSchema(await migrationsOf(input));
+    const schemas = new Set(input.view.options('postgres')['client_schemas'] as string[]);
+    return schema.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
         .flatMap(([table, at]): Finding[] => {
             const place = { file: at.path, ...positionAt(at.text, at.offset) };
-            if (!fields.secured.has(table))
+            if (!schema.secured.has(table))
                 return [findingAt(input, place, 'row-security', `${table} does not have row level security enabled.`)];
-            if (fields.policed.has(table)) return [];
+            if (schema.policed.has(table)) return [];
             return [findingAt(input, place, 'policy', `${table} enables row level security and has no policy.`)];
         })
         .toArray();
@@ -90,7 +92,7 @@ export function grants(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function definerSearchPath(input: EngineInput): Promise<Finding[]> {
-    const text =
-        'A SECURITY DEFINER function sets no search_path, so a caller chooses which objects its names resolve to.';
-    return statementFindings(input, 'definer-search-path', text, isLooseDefiner);
+    const diagnostic =
+        'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
+    return statementFindings(input, 'definer-search-path', diagnostic, isLooseDefiner);
 }

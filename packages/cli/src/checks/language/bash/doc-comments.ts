@@ -59,7 +59,7 @@ function docProblem(
  * @param input the check context
  * @returns the findings
  */
-export const docComment: Engine = async (input) => {
+export const docComments: Engine = async (input) => {
     const style = input.view.settings['bash.doc_style'];
     const separator = style === 'dash' ? ' - ' : ': ';
     const entries = entryFunctions(input);

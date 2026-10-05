@@ -9,7 +9,7 @@ import { getScopeImports } from '#cli/checks/language/javascript/imports.ts';
  * @param input the engine input
  * @returns the findings
  */
-export async function boundaries(input: EngineInput): Promise<Finding[]> {
+export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
     const elements = (input.view.settings['architecture.modules'] ?? []) as ArchitectureElement[];
     const server = elements.find((element) => element.name === 'server');
     const isServer = pathMatcher(server?.paths ?? (input.view.options('trpc')['server_files'] as string[]));

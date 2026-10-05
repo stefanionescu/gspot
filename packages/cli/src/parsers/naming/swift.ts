@@ -1,19 +1,20 @@
 import type { Node } from 'web-tree-sitter';
+import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 import { SWIFT_LABELS, MEMBER_PARENTS, SWIFT_TYPE_NODES, SWIFT_FUNCTION_NODES } from '#cli/config/parsers/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text.replaceAll('`', '');
     if (name === '' || name === '_') return;
-    sink.out.push({
-        file: sink.file,
-        line: node.startPosition.row + 1,
-        column: node.startPosition.column + 1,
-        language: 'swift',
-        category,
-        kind: `swift ${SWIFT_LABELS[category] ?? category}`,
-        name,
-    });
+    sink.out.push(
+        createIdentifier(sink, {
+            line: node.startPosition.row + 1,
+            column: node.startPosition.column + 1,
+            category,
+            label: SWIFT_LABELS[category] ?? category,
+            name,
+        }),
+    );
 }
 
 function addTypes(sink: ExtractSink, root: Node): void {

@@ -11,7 +11,7 @@ import { isAllowedFolder, structureSources } from '#cli/checks/general/structure
  * @param input the check context
  * @returns the findings
  */
-export const getDirectories: Engine = (input) => {
+export const folderNames: Engine = (input) => {
     const files = structureSources(input);
     const allowed = pathMatcher(
         input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),

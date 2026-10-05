@@ -24,6 +24,9 @@ export type Identifier = {
     directory?: string;
 };
 
+/** A declaration before its shared file, language, and display label are attached. */
+export type IdentifierDeclaration = Omit<Identifier, 'file' | 'language' | 'kind'> & { label: string };
+
 /** One name a statement declares, with its naming category. */
 export type SqlNamed = { category: string; name: string };
 

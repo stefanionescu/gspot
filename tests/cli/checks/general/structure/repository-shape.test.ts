@@ -7,8 +7,8 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
-import { moduleLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
+import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { REPOSITORY_SHAPE_POLICY } from '#tests/config/cli/checks/general/structure/repository-shape.ts';
 
@@ -88,7 +88,7 @@ test('a configuration module with a function or a call is reported; literals pas
     });
     const paths = ['config/pure.ts', 'config/logic.ts'];
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
-    const found = await moduleLogic(
+    const found = await configurationLogic(
         buildEngineInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
@@ -111,7 +111,7 @@ test('configuration imports follow project aliases and reject runtime owners', a
     });
     const paths = ['config/data.ts', 'config/linked.ts', 'config/outside.ts', 'feature/data.ts'];
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
-    const findings = await moduleLogic(
+    const findings = await configurationLogic(
         buildEngineInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([

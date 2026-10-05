@@ -1,19 +1,20 @@
 import type { Node } from 'web-tree-sitter';
+import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;
     if (name === '' || name === '_') return;
-    const kind = category === 'functions' ? 'bash function' : 'bash variable';
-    sink.out.push({
-        file: sink.file,
-        line: node.startPosition.row + 1,
-        column: node.startPosition.column + 1,
-        language: 'bash',
-        category,
-        kind,
-        name,
-    });
+    const label = category === 'functions' ? 'function' : 'variable';
+    sink.out.push(
+        createIdentifier(sink, {
+            line: node.startPosition.row + 1,
+            column: node.startPosition.column + 1,
+            category,
+            label: label,
+            name,
+        }),
+    );
 }
 
 function addFunctions(sink: ExtractSink, root: Node): void {

@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
-import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
+import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { MANIFEST } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 
 const DEPENDENCIES_POLICY = buildPolicy(['dependencies']);
@@ -28,17 +28,17 @@ describe('manifest policy reads', () => {
             await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'package.json': MANIFEST });
             const inspected = await input(sandbox.path);
             fs.writeFileSync(join(sandbox.path, 'package.json'), content);
-            expect(() => manifestPolicy(inspected)).toThrow('Cannot read package manifest package.json');
+            expect(() => manifests(inspected)).toThrow('Cannot read package manifest package.json');
             fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
-            expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
+            expect(manifests(await input(sandbox.path))).toStrictEqual([]);
         },
     );
 
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });
-        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
+        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
         fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
-        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
+        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
     });
 });

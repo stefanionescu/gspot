@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 
-async function linted(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
+async function lintProject(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];
     const result = await runEngineTool(input, ['ansible-lint', '--offline', '--nocolor', '-f', 'pep8', ...skips], {
         cwd: join(input.root, folder),
@@ -23,7 +24,9 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
         ];
     });
     if (result.code !== 0 && found.length === 0)
-        throw new Error(`The ansible-lint command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+        throw new Error(
+            `The ansible-lint command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
     return found;
 }
 
@@ -32,7 +35,7 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
  * @param input the engine input
  * @returns the findings
  */
-export async function lint(input: EngineInput): Promise<Finding[]> {
+export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))
@@ -45,6 +48,6 @@ export async function lint(input: EngineInput): Promise<Finding[]> {
             : ['name', 'var-naming', 'loop-var-prefix', 'key-order', 'fqcn', 'no-handler', 'no-relative-paths']),
     ];
     const findings: Finding[] = [];
-    for (const folder of folders) findings.push(...(await linted(input, folder, skipped)));
+    for (const folder of folders) findings.push(...(await lintProject(input, folder, skipped)));
     return findings;
 }

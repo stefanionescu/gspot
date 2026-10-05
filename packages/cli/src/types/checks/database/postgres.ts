@@ -1,6 +1,6 @@
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-export type StatementReader = (fields: SchemaState, migration: Migration, statement: SqlStatementView) => void;
+export type StatementReader = (state: SchemaState, migration: Migration, statement: SqlStatementView) => void;
 
 /** Where a fact was declared, so a finding points at it. */
 export type Declared = { path: string; offset: number; text: string };

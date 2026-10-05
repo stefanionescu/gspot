@@ -1,5 +1,15 @@
-import { test, expect, describe } from 'bun:test';
-import { testArguments } from '#cli/checks/tool/nginx.ts';
+import { join } from 'node:path';
+import { toolPin } from '#cli/tools/pins.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { test, spyOn, expect, describe } from 'bun:test';
+import { buildEngineInput } from '#tests/harness/input.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { nginxTest, testArguments } from '#cli/checks/tool/nginx.ts';
 import { NGINX_CONFIGURATION } from '#tests/config/cli/checks/tool/nginx-arguments.ts';
 
 describe('testArguments', () => {
@@ -56,3 +66,45 @@ test('empty directive input adds no mount or host', () => {
         ),
     ).toStrictEqual(['run', '--rm', 'nginx:fixture', 'nginx', '-T']);
 });
+
+test.each(['stdout', 'stderr'])(
+    'certificate failure retains the diagnostic from %s and removes scratch files without starting Docker',
+    async (stream) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['nginx']),
+            'nginx.conf': NGINX_CONFIGURATION,
+        });
+        const session = await openSession(sandbox.path);
+        const input = buildEngineInput(session, 'nginx/test');
+        using resources = new DisposableStack();
+        resources.use(
+            mockPinnedExecutables([
+                toolPin(session.manifests.values(), 'openssl'),
+                toolPin(session.manifests.values(), 'docker'),
+            ]),
+        );
+        const directories: string[] = [];
+        const diagnostic = 'The temporary key could not be written.';
+        using spawn = spyOn(processes, 'run').mockImplementation((_command, options) => {
+            directories.push(options.cwd);
+            return Promise.resolve({
+                code: 1,
+                stdout: stream === 'stdout' ? diagnostic : '',
+                stderr: stream === 'stderr' ? diagnostic : '',
+                missing: false,
+                duration: 1,
+            });
+        });
+
+        expect(await rejection(nginxTest(input))).toBe(
+            `The openssl command could not write the temporary certificate: ${diagnostic}`,
+        );
+        expect(spawn).toHaveBeenCalledTimes(1);
+        for (const directory of directories) {
+            expect(directory).not.toBe(sandbox.path);
+            expect(existsSync(directory)).toBe(false);
+        }
+        expect(readFileSync(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_CONFIGURATION);
+    },
+);

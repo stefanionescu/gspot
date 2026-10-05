@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { directives } from '#cli/parsers/nginx.ts';
+import { parseDirectives } from '#cli/parsers/nginx.ts';
 import type { DirectiveCase } from '#tests/types/cli/checks/tool/nginx.ts';
 
 test.each([
@@ -26,6 +26,6 @@ test.each([
 ] satisfies DirectiveCase[])(
     'nginx directive parsing preserves argument boundaries in $source',
     ({ source, expected }) => {
-        expect(directives(source)).toStrictEqual(expected);
+        expect(parseDirectives(source)).toStrictEqual(expected);
     },
 );

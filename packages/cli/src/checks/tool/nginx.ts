@@ -1,26 +1,20 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
-import { directives } from '#cli/parsers/nginx.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
+import { parseDirectives } from '#cli/parsers/nginx.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/tool/nginx.ts';
 import type { Finding, EngineInput, EngineOutcome } from '#cli/types/execution/runtime.ts';
+import { NGINX_MAIN, LOCAL_NAMES, HOST_PATTERNS, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
-import {
-    NGINX_MAIN,
-    LOCAL_NAMES,
-    NGINX_IMAGE,
-    HOST_PATTERNS,
-    CERTIFICATE_ARGUMENTS,
-} from '#cli/config/checks/tool/nginx.ts';
-
-// Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
-function includes(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+// Include paths use the main configuration directory, matching nginx prefix semantics.
+function includedFiles(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
-    for (const [name, value] of directives(text)) {
+    for (const [name, value] of parseDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
         const target = posix.resolve('/etc/nginx', value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
@@ -30,7 +24,7 @@ function includes(input: EngineInput, text: string, base: string): Pick<Mount, '
     return included;
 }
 
-function copies(input: EngineInput, path: string, work: string): Map<string, Mount> {
+function copyConfigurations(input: EngineInput, path: string, work: string): Map<string, Mount> {
     const directory = mkdtempSync(join(work, 'configuration-'));
     const configurations = new Map<string, Mount>();
     const pending = [{ path, target: '/etc/nginx/nginx.conf' }];
@@ -42,22 +36,32 @@ function copies(input: EngineInput, path: string, work: string): Map<string, Mou
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });
-        pending.push(...includes(input, text, base));
+        pending.push(...includedFiles(input, text, base));
     }
     return configurations;
 }
 
-function failure(check: string, path: string, configurations: Map<string, Mount>, said: string): EngineOutcome {
-    const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups ?? {};
+function syntaxOutcome(
+    check: string,
+    path: string,
+    configurations: Map<string, Mount>,
+    diagnostic: string,
+): EngineOutcome {
+    const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(diagnostic)?.groups ?? {};
     const file = configurations.get(target)?.path ?? path;
     return {
-        findings: [{ check, file, line: Number(line), rule: 'syntax', message: said, fixable: false }],
+        findings: [{ check, file, line: Number(line), rule: 'syntax', message: diagnostic, fixable: false }],
         files: configurations.has(target) ? [file] : [],
     };
 }
 
-async function tested(input: EngineInput, path: string, work: string, image: string): Promise<EngineOutcome> {
-    const configurations = copies(input, path, work);
+async function testConfiguration(
+    input: EngineInput,
+    path: string,
+    work: string,
+    image: string,
+): Promise<EngineOutcome> {
+    const configurations = copyConfigurations(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
         certificate: join(work, 'certificate.pem'),
@@ -79,10 +83,10 @@ async function tested(input: EngineInput, path: string, work: string, image: str
             }),
         };
     }
-    const said = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
-    if (result.code !== 1 || said === undefined)
+    const diagnostic = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
+    if (result.code !== 1 || diagnostic === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return failure(input.spec.name, path, configurations, said);
+    return syntaxOutcome(input.spec.name, path, configurations, diagnostic);
 }
 
 /**
@@ -90,8 +94,8 @@ async function tested(input: EngineInput, path: string, work: string, image: str
  * @param input the engine input
  * @returns one finding for each file nginx refuses
  */
-export async function test(input: EngineInput): Promise<EngineOutcome> {
-    const image = (input.view.options('tools.nginx')['image'] as string | undefined) ?? NGINX_IMAGE;
+export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
+    const image = input.view.options('tools.nginx')['image'] as string;
     const scopes = input.scopeEntries;
     const paths = input.files
         .map((file) => file.path)
@@ -102,16 +106,19 @@ export async function test(input: EngineInput): Promise<EngineOutcome> {
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = scratchFolder('gspot-nginx-');
     const work = workFolder.path;
-    const made = await runEngineTool(
+    const certificate = await runEngineTool(
         input,
         ['openssl', ...CERTIFICATE_ARGUMENTS, '-keyout', join(work, 'key.pem'), '-out', join(work, 'certificate.pem')],
         { cwd: work },
     );
-    if (made.code !== 0) throw new Error('The openssl command could not write the throwaway certificate.');
+    if (certificate.code !== 0)
+        throw new Error(
+            `The openssl command could not write the temporary certificate: ${toolOutputDetail(certificate, 'The tool printed no diagnostic.')}`,
+        );
     const findings: Finding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
-        const outcome = await tested(input, path, work, image);
+        const outcome = await testConfiguration(input, path, work, image);
         findings.push(...outcome.findings);
         for (const file of outcome.files) checked.add(file);
     }
@@ -129,7 +136,7 @@ export async function test(input: EngineInput): Promise<EngineOutcome> {
  * @returns the argv after docker.
  */
 export function testArguments(text: string, mounts: NginxMounts, image: string): string[] {
-    const parsed = directives(text);
+    const parsed = parseDirectives(text);
     const hosts = new Set(
         parsed.flatMap(([name, value]) => {
             if (value === undefined || value.includes('$')) return [];

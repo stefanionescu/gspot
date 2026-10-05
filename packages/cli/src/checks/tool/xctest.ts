@@ -220,7 +220,7 @@ export function coverageShortfalls(report: CoverageReport, floors: CoverageFloor
  * @param input the engine input
  * @returns the findings
  */
-export async function coverage(input: EngineInput): Promise<Finding[]> {
+export async function xctestCoverage(input: EngineInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const project = input.view.options('tools.xcode')['project'];
     if (typeof project !== 'string' || project === '')
@@ -245,7 +245,7 @@ export async function coverage(input: EngineInput): Promise<Finding[]> {
  * @param input the scoped files and snapshot layout
  * @returns the orphan reference findings
  */
-export function references(input: EngineInput): Finding[] {
+export function xctestReferences(input: EngineInput): Finding[] {
     const layout = input.view.options('tools.xctest')['reference_layout'] as string;
     const pattern = layout
         .split(/(\{file\}|\{test\}|\*|\?)/u)

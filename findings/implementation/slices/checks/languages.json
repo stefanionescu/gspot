@@ -79,8 +79,8 @@
         "source": "findings/slices/checks-languages.md",
         "line": 15,
         "section": "Checks: Languages",
-        "finding": "| `bash/limits.ts:33-36,54,120` `countFindings(analysis, …)` | Takes a `RULES` key named `analysis`, looks it up again, and then guards `rule === undefined`, which cannot happen. Nothing else uses the keys (`bash-branches` …). `rule.limit.replaceAll('_', '-')` changes nothing for `branches`, `nesting`, or `assignments`. | Make `RULES` an array and pass each rule: `RULES.map((rule) => countFindings(rule, context, index))`. Use `rule.limit` as the rule ID. |",
-        "owner": "`bash/limits.ts:33-36,54,120` `countFindings(analysis, …)`",
+        "finding": "| `bash/limits.ts:33-36,54,120` `countFindings(analysis, \u2026)` | Takes a `RULES` key named `analysis`, looks it up again, and then guards `rule === undefined`, which cannot happen. Nothing else uses the keys (`bash-branches` \u2026). `rule.limit.replaceAll('_', '-')` changes nothing for `branches`, `nesting`, or `assignments`. | Make `RULES` an array and pass each rule: `RULES.map((rule) => countFindings(rule, context, index))`. Use `rule.limit` as the rule ID. |",
+        "owner": "`bash/limits.ts:33-36,54,120` `countFindings(analysis, \u2026)`",
         "location": [
             "packages/cli/src/checks/language/bash/limits.ts",
             "packages/cli/src/config/checks/language/bash.ts"
@@ -118,7 +118,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 17,
         "section": "Checks: Languages",
-        "finding": "| `bash/code-lines.ts:72-73` `isDirectoryConstant` | The suppression reason says \"Three interpreter checks\", but all three calls are in `contract.ts` (lines 68, 88, 124), and that is one check. | Move the function into `contract.ts` and write the reason as \"Three contract rules recognize …\". |",
+        "finding": "| `bash/code-lines.ts:72-73` `isDirectoryConstant` | The suppression reason says \"Three interpreter checks\", but all three calls are in `contract.ts` (lines 68, 88, 124), and that is one check. | Move the function into `contract.ts` and write the reason as \"Three contract rules recognize \u2026\". |",
         "owner": "`bash/code-lines.ts:72-73` `isDirectoryConstant`",
         "location": ["packages/cli/src/checks/language/bash/contract.ts"],
         "status": "closed",
@@ -250,10 +250,16 @@
         "section": "Checks: Languages",
         "finding": "| `bash/contract.ts:117-156` `topLevelProblem`, `libraryProblem`, `roleProblems` | Every other rule in the file reports through `report`. These two functions return `[rule, message]` tuples, and `roleProblems` unpacks them. `libraryProblem` has one caller and adds two `if` statements. `roleProblems` means \"entry or library.\" | Merge the two into `libraryLineProblems(line, file, isConfigOwner, report)`. In `fileProblems`, call `entryProblems` or a new `libraryProblems` based on `file.isExecutable`, and delete `roleProblems`. |",
         "owner": "`bash/contract.ts:117-156` `topLevelProblem`, `libraryProblem`, `roleProblems`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/language/bash/contract.ts"],
+        "status": "closed",
+        "outcome": "Bash library rules report directly through the existing callback. The tuple-returning layers and role dispatcher are deleted; fileProblems chooses entryProblems or libraryProblems. Pure declarative classification is computed in the existing library loop, preserving error precedence.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-languages/015",
@@ -302,10 +308,21 @@
         "section": "Checks: Languages",
         "finding": "| `bash/ssh.ts:18`, `checks/tool/xctest/references.ts:6`, `checks/general/files.ts:18` | Three hand-written regex escapes. | Write one `escapeRegExp` in `platform/text.ts`. `RegExp.escape` needs Node 24, and the package declares `>=22`. |",
         "owner": "`bash/ssh.ts:18`, `checks/tool/xctest/references.ts:6`, `checks/general/files.ts:18`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/text.ts",
+            "packages/cli/src/checks/tool/xctest.ts",
+            "packages/cli/src/checks/language/bash/ssh.ts",
+            "packages/cli/src/checks/general/files.ts"
+        ],
+        "status": "closed",
+        "outcome": "The shared platform escapeRegExp serves dotenv naming and XCTest references. Bash SSH now reads quoted arguments through its parser and needs no regex escape implementation. The shared calculation is retained with real callers.",
+        "verification": [
+            "555 affected CLI cases passed with 1871 assertions across 91 files: /tmp/gspot-owner-tests.log.",
+            "All four TypeScript targets passed: /tmp/gspot-owner-root-types.log, /tmp/gspot-owner-cli-types.log, /tmp/gspot-owner-plugin-types.log and /tmp/gspot-owner-docs-types.log.",
+            "Native Ansible lint and nginx gixy cases passed (2 cases, 15 assertions); the nginx container case skipped because Linux Docker was unavailable: /tmp/gspot-owner-native.log.",
+            "nginx parser, argument and certificate-failure cases passed: /tmp/gspot-owner-nginx-tests.log. Failed certificate generation preserves stdout/stderr diagnostics, source bytes and scratch cleanup, and starts no container.",
+            "Canonical generation and a second apply both changed nothing: /tmp/gspot-owner-apply.json and /tmp/gspot-owner-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-languages/018",
@@ -348,7 +365,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 30,
         "section": "Checks: Languages",
-        "finding": "| `bash/ast-grep.ts:18-23` `astGrepMatches` doc | \"@returns the matches … by file\" is wrong, because the function returns one flat array. \"through shared execution boundaries\" tells the reader nothing. | Rewrite it as \"Runs one ast-grep rule over the files. @returns every match, with zero-based lines and a root-relative path.\" |",
+        "finding": "| `bash/ast-grep.ts:18-23` `astGrepMatches` doc | \"@returns the matches \u2026 by file\" is wrong, because the function returns one flat array. \"through shared execution boundaries\" tells the reader nothing. | Rewrite it as \"Runs one ast-grep rule over the files. @returns every match, with zero-based lines and a root-relative path.\" |",
         "owner": "`bash/ast-grep.ts:18-23` `astGrepMatches` doc",
         "location": ["packages/cli/src/checks/language/bash/limits.ts"],
         "status": "closed",
@@ -519,7 +536,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 37,
         "section": "Checks: Languages",
-        "finding": "| `python/functions.ts:14`, `python/modules.ts:79`, `swift/sources.ts:56`, `swift/bodies.ts:12` | Every Python lambda counts as one statement. With the default limit of 2, every `key=lambda item: item.name` is reported as `<anonymous> has 1 statement … Inline it into its callers`. The kit's own rule recommends exactly that lambda (`kits/language/python/rules/DESIGN.md:62-63`). Swift closures are reported the same way, under the name `lambda_literal`. `swift/bodies.ts:12` tests for `'lambda'`, a Python node type that Swift never produces, so that branch is dead. | Leave lambdas and closures out of trivial-functions, and update the two unit-test expectations in `tests/unit/cli/checks/statements.test.ts`. Delete the dead branch. |",
+        "finding": "| `python/functions.ts:14`, `python/modules.ts:79`, `swift/sources.ts:56`, `swift/bodies.ts:12` | Every Python lambda counts as one statement. With the default limit of 2, every `key=lambda item: item.name` is reported as `<anonymous> has 1 statement \u2026 Inline it into its callers`. The kit's own rule recommends exactly that lambda (`kits/language/python/rules/DESIGN.md:62-63`). Swift closures are reported the same way, under the name `lambda_literal`. `swift/bodies.ts:12` tests for `'lambda'`, a Python node type that Swift never produces, so that branch is dead. | Leave lambdas and closures out of trivial-functions, and update the two unit-test expectations in `tests/unit/cli/checks/statements.test.ts`. Delete the dead branch. |",
         "owner": "`python/functions.ts:14`, `python/modules.ts:79`, `swift/sources.ts:56`, `swift/bodies.ts:12`",
         "location": [
             "packages/cli/src/checks/language/python/functions.ts",
@@ -543,7 +560,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 38,
         "section": "Checks: Languages",
-        "finding": "| `swift/sources.ts:45-49,76` `functionsOf` | `name?.text ?? node.type` puts tree-sitter node names into finding messages: `computed_getter has 1 statement`, `init_declaration …`, and `lambda_literal …`. The doc says \"Every function declared at the top level or inside a type,\" but the function also returns closures, accessors, property observers, and nested functions. | Map each node type to a word (`init`, `getter of count`, `closure`). Correct the doc. |",
+        "finding": "| `swift/sources.ts:45-49,76` `functionsOf` | `name?.text ?? node.type` puts tree-sitter node names into finding messages: `computed_getter has 1 statement`, `init_declaration \u2026`, and `lambda_literal \u2026`. The doc says \"Every function declared at the top level or inside a type,\" but the function also returns closures, accessors, property observers, and nested functions. | Map each node type to a word (`init`, `getter of count`, `closure`). Correct the doc. |",
         "owner": "`swift/sources.ts:45-49,76` `functionsOf`",
         "location": ["packages/cli/src/parsers/swift.ts", "packages/cli/src/config/parsers/swift.ts"],
         "status": "closed",
@@ -1279,7 +1296,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 74,
         "section": "Checks: Languages",
-        "finding": "| `bash/limits.ts:80`, `python/structure.ts:51`, `sql.ts:190`, `sql.ts:103`, `bash/contract.ts:107`, `bash/unread-arguments.ts:77` (finding messages) | The grammar is wrong in `N code lines is over the ceiling`, `9 declared input parameters exceeds 7`, `set -euo pipefail come before the first command`, `argument(s)`, and `position 2, 3 is never read`. | Rewrite them as `This file has N code lines, over the ceiling of M.`, `This function declares 9 input parameters, over the limit of 7.`, `Put set -euo pipefail before the first command.`, and `… is called with up to 3 arguments but reads only $1: positions 2 and 3 are never read.` |",
+        "finding": "| `bash/limits.ts:80`, `python/structure.ts:51`, `sql.ts:190`, `sql.ts:103`, `bash/contract.ts:107`, `bash/unread-arguments.ts:77` (finding messages) | The grammar is wrong in `N code lines is over the ceiling`, `9 declared input parameters exceeds 7`, `set -euo pipefail come before the first command`, `argument(s)`, and `position 2, 3 is never read`. | Rewrite them as `This file has N code lines, over the ceiling of M.`, `This function declares 9 input parameters, over the limit of 7.`, `Put set -euo pipefail before the first command.`, and `\u2026 is called with up to 3 arguments but reads only $1: positions 2 and 3 are never read.` |",
         "owner": "`bash/limits.ts:80`, `python/structure.ts:51`, `sql.ts:190`, `sql.ts:103`, `bash/contract.ts:107`, `bash/unread-arguments.ts:77` (finding messages)",
         "location": [
             "packages/cli/src/checks/language/bash/limits.ts",
@@ -1303,7 +1320,7 @@
         "source": "findings/slices/checks-languages.md",
         "line": 75,
         "section": "Checks: Languages",
-        "finding": "| `bash/boundaries.ts:100`, `bash/wrappers.ts:52`, `sql.ts:172`, `python/exports.ts:84`, `python/deptry.ts:88`, `html.ts:91` (finding messages) | These state a rule or a fact instead of the fix: `A sourced library owns behavior; this one only sources other files.`, `A deprecated alias … is deleted, not kept.`, `A block comment; write line comments, …`, `__all__ is the last statement of the module, …`, `A pip install outside the lockfile installs versions nobody reviewed.`, and `belongs in the content file` (which file?). | Lead with the action: `This library only sources other files. Source them where they are used, and delete this file.`, `Delete this deprecated alias, and call the canonical script.`, `Replace this block comment with -- line comments.`, `Move __all__ to the end of the module.`, `Add the package to pyproject.toml and install it from the lockfile.`, and name the content file the template reads. |",
+        "finding": "| `bash/boundaries.ts:100`, `bash/wrappers.ts:52`, `sql.ts:172`, `python/exports.ts:84`, `python/deptry.ts:88`, `html.ts:91` (finding messages) | These state a rule or a fact instead of the fix: `A sourced library owns behavior; this one only sources other files.`, `A deprecated alias \u2026 is deleted, not kept.`, `A block comment; write line comments, \u2026`, `__all__ is the last statement of the module, \u2026`, `A pip install outside the lockfile installs versions nobody reviewed.`, and `belongs in the content file` (which file?). | Lead with the action: `This library only sources other files. Source them where they are used, and delete this file.`, `Delete this deprecated alias, and call the canonical script.`, `Replace this block comment with -- line comments.`, `Move __all__ to the end of the module.`, `Add the package to pyproject.toml and install it from the lockfile.`, and name the content file the template reads. |",
         "owner": "`bash/boundaries.ts:100`, `bash/wrappers.ts:52`, `sql.ts:172`, `python/exports.ts:84`, `python/deptry.ts:88`, `html.ts:91` (finding messages)",
         "location": [
             "packages/cli/src/checks/language/bash/boundaries.ts",
