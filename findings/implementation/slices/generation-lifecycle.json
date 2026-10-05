@@ -74,10 +74,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/ci.ts:24, 67` param `shape`; `ci.ts:111-116, 142-147` docs of `githubFile`, `gitlabFile` | The parameter is a `Pipeline`, but it is named `shape`. Both docs say it covers \"platforms, the Swift scope, and the runner\". No field is called the runner (`isMise` comes closest). `gitlabFile` reads neither platforms nor the Swift scope, so GitLab silently ignores `ci.platforms`. | Rename `shape` to `pipeline`. GitLab doc: \"the gspot version, the run mode, and whether mise runs gspot\". State there that platforms do not apply. |",
         "owner": "`generation/ci.ts:24, 67` param `shape`; `ci.ts:111-116, 142-147` docs of `githubFile`, `gitlabFile`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the full original rows, second-pass corrections, CI generators, generation caller and existing workflow tests. Parameters and the fixture now use pipeline rather than shape. GitLab documentation states the fields it reads and that platform and Swift selections do not apply.",
+            "The shared job builder takes the actual check step and optional job condition, with no stage mode. The normal and manual step values are built once directly in githubFile; this follows the requested separation without introducing single-caller forwarding functions. Each job owns a clone of its step, preventing YAML aliases from changing emitted workflow bytes. Dedicated GithubCheck and Pipeline contracts remain in the existing types/generation/ci.ts owner.",
+            "Swift selection is represented by hasSwift and produced with scopes.some; no scope path is retained only to test its presence. Cache hash inputs use the authoritative private-project, version, mise and private-directory constants.",
+            "Before/after proof covers 64 combinations of npm/mise, all supported platform sets, Swift presence, manual checks and changed/full selection: all 128 provider files retain identical paths, bytes and metadata (/tmp/gspot-ci-layout-render.ts, /tmp/gspot-ci-layout-proof.log).",
+            "The existing generation, public CI commands, init CI and lifecycle CI owners pass 25 cases with 156 assertions. Real generated shell scripts preserve changed/full selection, install failures, invalid comparison refusal, no shell injection and authored provider jobs (/tmp/gspot-ci-layout-tests.log). The five original generation test cases and their unique assertions remain, with only renamed input fields and fixture references.",
+            "Root TypeScript and repository ESLint pass (/tmp/gspot-ci-layout-types.log, /tmp/gspot-ci-layout-lint.json); no new suppressions or compatibility exports are added."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/006",
@@ -86,10 +98,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/ci.ts:67-109` `buildJob(shape, platform, stage)` | `stage` switches modes. Three ternaries on `stage === 'manual'` pick the command, the `env`, and the `if`. \"stage\" also clashes with the GitLab `stage: 'test'` key. | Build the shared job once, and pass the check step from `checkStep(pipeline)` or `manualStep(pipeline)`. Delete `stage`. |",
         "owner": "`generation/ci.ts:67-109` `buildJob(shape, platform, stage)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the full original rows, second-pass corrections, CI generators, generation caller and existing workflow tests. Parameters and the fixture now use pipeline rather than shape. GitLab documentation states the fields it reads and that platform and Swift selections do not apply.",
+            "The shared job builder takes the actual check step and optional job condition, with no stage mode. The normal and manual step values are built once directly in githubFile; this follows the requested separation without introducing single-caller forwarding functions. Each job owns a clone of its step, preventing YAML aliases from changing emitted workflow bytes. Dedicated GithubCheck and Pipeline contracts remain in the existing types/generation/ci.ts owner.",
+            "Swift selection is represented by hasSwift and produced with scopes.some; no scope path is retained only to test its presence. Cache hash inputs use the authoritative private-project, version, mise and private-directory constants.",
+            "Before/after proof covers 64 combinations of npm/mise, all supported platform sets, Swift presence, manual checks and changed/full selection: all 128 provider files retain identical paths, bytes and metadata (/tmp/gspot-ci-layout-render.ts, /tmp/gspot-ci-layout-proof.log).",
+            "The existing generation, public CI commands, init CI and lifecycle CI owners pass 25 cases with 156 assertions. Real generated shell scripts preserve changed/full selection, install failures, invalid comparison refusal, no shell injection and authored provider jobs (/tmp/gspot-ci-layout-tests.log). The five original generation test cases and their unique assertions remain, with only renamed input fields and fixture references.",
+            "Root TypeScript and repository ESLint pass (/tmp/gspot-ci-layout-types.log, /tmp/gspot-ci-layout-lint.json); no new suppressions or compatibility exports are added."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/007",
@@ -122,10 +146,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/ci.ts:101` cache `key` | The key spells out `.gspot/package.json`, `.gspot/pyproject.toml`, `.mise/conf.d/gspot-tools.toml`, and `.gspot/version`. These are `TOOL_PACKAGE_PROJECT`, `TOOL_PYTHON_PROJECT`, `MISE_CONFIG_PATH`, and `VERSION_FILE`. If one of them moves, the cache key goes stale with no error. | Build the `hashFiles(...)` list from the constants. |",
         "owner": "`generation/ci.ts:101` cache `key`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the full original rows, second-pass corrections, CI generators, generation caller and existing workflow tests. Parameters and the fixture now use pipeline rather than shape. GitLab documentation states the fields it reads and that platform and Swift selections do not apply.",
+            "The shared job builder takes the actual check step and optional job condition, with no stage mode. The normal and manual step values are built once directly in githubFile; this follows the requested separation without introducing single-caller forwarding functions. Each job owns a clone of its step, preventing YAML aliases from changing emitted workflow bytes. Dedicated GithubCheck and Pipeline contracts remain in the existing types/generation/ci.ts owner.",
+            "Swift selection is represented by hasSwift and produced with scopes.some; no scope path is retained only to test its presence. Cache hash inputs use the authoritative private-project, version, mise and private-directory constants.",
+            "Before/after proof covers 64 combinations of npm/mise, all supported platform sets, Swift presence, manual checks and changed/full selection: all 128 provider files retain identical paths, bytes and metadata (/tmp/gspot-ci-layout-render.ts, /tmp/gspot-ci-layout-proof.log).",
+            "The existing generation, public CI commands, init CI and lifecycle CI owners pass 25 cases with 156 assertions. Real generated shell scripts preserve changed/full selection, install failures, invalid comparison refusal, no shell injection and authored provider jobs (/tmp/gspot-ci-layout-tests.log). The five original generation test cases and their unique assertions remain, with only renamed input fields and fixture references.",
+            "Root TypeScript and repository ESLint pass (/tmp/gspot-ci-layout-types.log, /tmp/gspot-ci-layout-lint.json); no new suppressions or compatibility exports are added."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/010",
@@ -134,10 +170,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `types/generation/generation.ts:16-17` `Pipeline.swiftScope`, `generation/outputs.ts:26, 32` | The field holds a scope path, but `githubFile` only tests it for `undefined` to add macOS. | Replace it with `hasSwift: boolean`. |",
         "owner": "`types/generation/generation.ts:16-17` `Pipeline.swiftScope`, `generation/outputs.ts:26, 32`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the full original rows, second-pass corrections, CI generators, generation caller and existing workflow tests. Parameters and the fixture now use pipeline rather than shape. GitLab documentation states the fields it reads and that platform and Swift selections do not apply.",
+            "The shared job builder takes the actual check step and optional job condition, with no stage mode. The normal and manual step values are built once directly in githubFile; this follows the requested separation without introducing single-caller forwarding functions. Each job owns a clone of its step, preventing YAML aliases from changing emitted workflow bytes. Dedicated GithubCheck and Pipeline contracts remain in the existing types/generation/ci.ts owner.",
+            "Swift selection is represented by hasSwift and produced with scopes.some; no scope path is retained only to test its presence. Cache hash inputs use the authoritative private-project, version, mise and private-directory constants.",
+            "Before/after proof covers 64 combinations of npm/mise, all supported platform sets, Swift presence, manual checks and changed/full selection: all 128 provider files retain identical paths, bytes and metadata (/tmp/gspot-ci-layout-render.ts, /tmp/gspot-ci-layout-proof.log).",
+            "The existing generation, public CI commands, init CI and lifecycle CI owners pass 25 cases with 156 assertions. Real generated shell scripts preserve changed/full selection, install failures, invalid comparison refusal, no shell injection and authored provider jobs (/tmp/gspot-ci-layout-tests.log). The five original generation test cases and their unique assertions remain, with only renamed input fields and fixture references.",
+            "Root TypeScript and repository ESLint pass (/tmp/gspot-ci-layout-types.log, /tmp/gspot-ci-layout-lint.json); no new suppressions or compatibility exports are added."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/011",

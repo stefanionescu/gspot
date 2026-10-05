@@ -3,9 +3,15 @@ import { Scalar, Document, stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
-import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
+import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 
+import {
+    DOT_GSPOT,
+    VERSION_FILE,
+    MISE_CONFIG_PATH,
+    TOOL_PYTHON_PROJECT,
+    TOOL_PACKAGE_PROJECT,
+} from '#cli/config/platform/locations.ts';
 import {
     MISE,
     NODE,
@@ -25,15 +31,15 @@ function pinned({ name, sha, version }: ActionPin): Scalar {
     return node;
 }
 
-function setupSteps(shape: Pipeline): Record<string, unknown>[] {
-    if (shape.isMise)
+function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
+    if (pipeline.isMise)
         return [
             { uses: pinned(MISE), with: { version: MISE_MIN_VERSION, cache: false } },
             { run: 'mise exec -- gspot install' },
         ];
     return [
         { uses: pinned(NODE), with: { 'node-version': NODE_VERSION } },
-        { run: `npm install --global @gspothq/cli@${shape.version}` },
+        { run: `npm install --global @gspothq/cli@${pipeline.version}` },
         { run: 'gspot install' },
         { run: 'gspot doctor' },
     ];
@@ -57,46 +63,34 @@ function buildCheckScript(command: string, isFull: boolean): string {
     ].join('\n');
 }
 
-function buildJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'): Record<string, unknown> {
+function buildJob(pipeline: Pipeline, platform: string, check: GithubCheck): Record<string, unknown> {
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
-    const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
-    const selected =
-        stage === 'manual'
-            ? `${command} --only ${shape.manualChecks.join(' ')}`
-            : buildCheckScript(command, shape.run === 'all');
-    const check = {
-        name: 'Check',
-        ...(stage === 'manual'
-            ? {}
-            : {
-                  env: {
-                      GSPOT_CI_BASE:
-                          "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}",
-                  },
-              }),
-        run: `${selected}\n`,
-    };
+    const cacheFiles = [
+        TOOL_PACKAGE_PROJECT,
+        `${DOT_GSPOT}/*lock*`,
+        TOOL_PYTHON_PROJECT,
+        MISE_CONFIG_PATH,
+        VERSION_FILE,
+    ]
+        .map((path) => `'${path}'`)
+        .join(', ');
     return {
         'runs-on': runner,
         'timeout-minutes': 30,
-        ...(stage === 'manual'
-            ? {
-                  if: "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
-              }
-            : {}),
+        ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
             { uses: pinned(CHECKOUT), with: { 'fetch-depth': 0, 'persist-credentials': false } },
             {
                 uses: pinned(CACHE),
                 with: {
-                    key: "gspot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.mise/conf.d/gspot-tools.toml', '.gspot/version') }}",
+                    key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,
                 },
             },
-            ...setupSteps(shape),
-            check,
+            ...setupSteps(pipeline),
+            structuredClone(check.step),
         ],
     };
 }
@@ -104,11 +98,27 @@ function buildJob(shape: Pipeline, platform: string, stage: 'check' | 'manual'):
 /**
  * Generate independent check and manual jobs with read-only permissions; the manual job runs only when a manual check
  * is selected.
- * @param shape what the workflow covers: platforms, the Swift scope, and the runner
+ * @param pipeline the gspot version, file selection, platforms, Swift selection, manual checks, and whether mise runs gspot
  * @returns the GitHub workflow file
  */
-export function githubFile(shape: Pipeline): GeneratedFile {
-    const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
+export function githubFile(pipeline: Pipeline): GeneratedFile {
+    const command = pipeline.isMise ? 'mise exec -- gspot check' : 'gspot check';
+    const check: GithubCheck = {
+        step: {
+            name: 'Check',
+            env: {
+                GSPOT_CI_BASE:
+                    "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}",
+            },
+            run: `${buildCheckScript(command, pipeline.run === 'all')}\n`,
+        },
+    };
+    const manual: GithubCheck = {
+        condition:
+            "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
+        step: { name: 'Check', run: `${command} --only ${pipeline.manualChecks.join(' ')}\n` },
+    };
+    const platforms = [...new Set([...pipeline.platforms, ...(pipeline.hasSwift ? ['macos'] : [])])];
     const workflow = new Document({
         name: 'gspot',
         on: ['push', 'pull_request', 'merge_group'],
@@ -120,31 +130,31 @@ export function githubFile(shape: Pipeline): GeneratedFile {
         jobs: Object.fromEntries(
             platforms.flatMap((platform) => {
                 const jobs: [string, Record<string, unknown>][] = [
-                    [`check-${platform}`, buildJob(shape, platform, 'check')],
+                    [`check-${platform}`, buildJob(pipeline, platform, check)],
                 ];
-                if (shape.manualChecks.length > 0)
-                    jobs.push([`manual-${platform}`, buildJob(shape, platform, 'manual')]);
+                if (pipeline.manualChecks.length > 0)
+                    jobs.push([`manual-${platform}`, buildJob(pipeline, platform, manual)]);
                 return jobs;
             }),
         ),
     });
-    const content = `${headerFor('gspot.yml', shape.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;
+    const content = `${headerFor('gspot.yml', pipeline.version).trimEnd()}\n${workflow.toString({ lineWidth: 0 })}`;
     return { path: GITHUB_WORKFLOW, content, readOnly: true, kind: 'workflow' };
 }
 
 /**
- * Generate a GitLab include without changing the authored pipeline.
- * @param shape what the pipeline covers: platforms, the Swift scope, and the runner
+ * Generate a GitLab include without changing the authored pipeline. Platform and Swift selections do not apply.
+ * @param pipeline the gspot version, file selection, and whether mise runs gspot
  * @returns the GitLab include file
  */
-export function gitlabFile(shape: Pipeline): GeneratedFile {
-    const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';
-    const setup = shape.isMise
+export function gitlabFile(pipeline: Pipeline): GeneratedFile {
+    const command = pipeline.isMise ? 'mise exec -- gspot' : 'gspot';
+    const setup = pipeline.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
-        : [`npm install --global @gspothq/cli@${shape.version}`];
+        : [`npm install --global @gspothq/cli@${pipeline.version}`];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
-        buildCheckScript(`${command} check`, shape.run === 'all'),
+        buildCheckScript(`${command} check`, pipeline.run === 'all'),
     ].join('\n');
     const path = GITLAB_WORKFLOW;
     const content = stringify({
@@ -159,5 +169,5 @@ export function gitlabFile(shape: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, `${command} doctor`, check],
         },
     });
-    return { path, content: `${headerFor(path, shape.version)}${content}`, readOnly: true, kind: 'workflow' };
+    return { path, content: `${headerFor(path, pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
 }

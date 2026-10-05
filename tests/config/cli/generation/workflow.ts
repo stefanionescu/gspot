@@ -1,9 +1,9 @@
 import type { Pipeline } from '#cli/types/generation/ci.ts';
 
-export const SHAPE: Pipeline = {
+export const PIPELINE: Pipeline = {
     version: '1.2.3',
     platforms: ['linux'],
-    swiftScope: undefined,
+    hasSwift: false,
     isMise: true,
     manualChecks: ['security/codeql'],
 };

@@ -30,7 +30,7 @@ import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#
 // CI includes the selected manual checks and adds macOS when a scope selects Swift.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
     if (policy.ci === undefined) return;
-    const swiftScope = scopes.find((selection) =>
+    const hasSwift = scopes.some((selection) =>
         selection.selected.some((manifest) => manifest.configuration.name === 'swift'),
     );
     generated.files.push(
@@ -38,7 +38,7 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
             version,
             run: policy.ci.files,
             platforms: policy.ci.platforms,
-            swiftScope: swiftScope?.scope.path,
+            hasSwift,
             isMise: policy.run_with === 'mise',
             manualChecks: [
                 ...new Set(
