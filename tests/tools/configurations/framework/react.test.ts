@@ -3,8 +3,9 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
-import { expectCheckCase } from '#tests/harness/expectations.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
@@ -39,7 +40,16 @@ describe('the react configuration', () => {
         test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
             `${entry.check} reports ${where} and accepts the correction`,
             async () => {
-                await expectCheckCase(testRepository, entry, REPOSITORY);
+                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, REPOSITORY);
+                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(outcome.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+                expect(correction.report.checks).toMatchObject([
+                    { check: entry.check, status: 'passed', findings: [] },
+                ]);
             },
             suiteTimeout(),
         );
@@ -66,7 +76,20 @@ describe('the expo configuration', () => {
         test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
             `${entry.check} reports ${where} and accepts the correction`,
             async () => {
-                await expectCheckCase(testRepository, entry, EXPO_REPOSITORY);
+                const { failed: outcome, passed: correction } = await runFindingCase(
+                    testRepository,
+                    entry,
+                    EXPO_REPOSITORY,
+                );
+                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(outcome.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+                expect(correction.report.checks).toMatchObject([
+                    { check: entry.check, status: 'passed', findings: [] },
+                ]);
             },
             suiteTimeout(),
         );
@@ -93,7 +116,20 @@ describe('the bare react-native configuration', () => {
         test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
             `${entry.check} reports ${where} and accepts the correction`,
             async () => {
-                await expectCheckCase(testRepository, entry, NATIVE_REPOSITORY);
+                const { failed: outcome, passed: correction } = await runFindingCase(
+                    testRepository,
+                    entry,
+                    NATIVE_REPOSITORY,
+                );
+                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(outcome.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+                expect(correction.report.checks).toMatchObject([
+                    { check: entry.check, status: 'passed', findings: [] },
+                ]);
             },
             suiteTimeout(),
         );

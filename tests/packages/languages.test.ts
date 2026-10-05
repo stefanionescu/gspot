@@ -6,15 +6,38 @@ import { createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
+import { runPackageCheck } from '#tests/harness/check-case.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { expectPackageCheck } from '#tests/harness/expectations.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
 import { BASH_CHECK, PROSE_CHECK, SWIFT_CHECK, PYTHON_CHECK } from '#tests/config/packages/languages.ts';
 
 const release = getPublishedRelease();
+
+// Prepare the installed consumer and its project vocabulary before observing native checks.
+async function prepareLanguages(installation: Consumer): Promise<void> {
+    const { command, onlineOptions } = installation;
+    writeFileSync(join(installation.root, 'entry.py'), 'answer = "example"\n');
+    await createFileTree(installation.root, {
+        'broken.sh': '#!/usr/bin/env bash\necho example\n',
+        'guide.md': '# Guide\n\nRead the guide.\n',
+    });
+    await initializeConsumer(release, installation);
+    const vocabulary = await runTestCommand(
+        [
+            ...command,
+            'set',
+            'prose.vocabulary',
+            'NebulaConfiguration',
+            '--reason',
+            'NebulaConfiguration is the project name.',
+        ],
+        onlineOptions,
+    );
+    expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
+}
 
 // SQL discovery and its embedded parser work after installation without checkout dependencies.
 async function expectInstalledSql(installation: Consumer): Promise<void> {
@@ -47,39 +70,40 @@ test(
     async () => {
         await using installation = await createConsumer(release.registry, release.version);
 
-        const { command, onlineOptions } = installation;
-        writeFileSync(join(installation.root, 'entry.py'), 'answer = "example"\n');
-        await createFileTree(installation.root, {
-            'broken.sh': '#!/usr/bin/env bash\necho example\n',
-            'guide.md': '# Guide\n\nRead the guide.\n',
-        });
-        await initializeConsumer(release, installation);
-        const vocabulary = await runTestCommand(
-            [
-                ...command,
-                'set',
-                'prose.vocabulary',
-                'NebulaConfiguration',
-                '--reason',
-                'NebulaConfiguration is the project name.',
-            ],
-            onlineOptions,
-        );
-        expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
-        await expectPackageCheck(installation, installation.offlineOptions, PROSE_CHECK);
-        const acceptedWords = readFileSync(
-            join(installation.root, '.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt'),
-            'utf8',
-        )
-            .trim()
-            .split('\n');
-        expect(acceptedWords).toContain('NebulaConfiguration');
-        expect(acceptedWords).toContain('TypeScript');
-        await expectPackageCheck(installation, installation.offlineOptions, PYTHON_CHECK);
-        await expectPackageCheck(installation, installation.offlineOptions, BASH_CHECK);
-        const level = await runTestCommand([...command, 'set', 'level', 'all'], onlineOptions);
-        expect(level.code, level.stdout + level.stderr).toBe(0);
-        await expectPackageCheck(installation, installation.offlineOptions, SWIFT_CHECK);
+        await prepareLanguages(installation);
+        for (const check of [PROSE_CHECK, PYTHON_CHECK, BASH_CHECK, SWIFT_CHECK]) {
+            if (check === SWIFT_CHECK) {
+                const level = await runTestCommand(
+                    [...installation.command, 'set', 'level', 'all'],
+                    installation.onlineOptions,
+                );
+                expect(level.code, level.stdout + level.stderr).toBe(0);
+            }
+            const { failed, fixed, passed } = await runPackageCheck(installation, installation.offlineOptions, check);
+            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+            expect(failed.report.skips).toStrictEqual([]);
+            expect(failed.report.checks).toMatchObject([
+                {
+                    check: check.only,
+                    status: 'failed',
+                    findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
+                },
+            ]);
+            expect(fixed).toBeUndefined();
+            expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+            expect(passed.report.skips).toStrictEqual([]);
+            expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
+            if (check === PROSE_CHECK) {
+                const acceptedWords = readFileSync(
+                    join(installation.root, '.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt'),
+                    'utf8',
+                )
+                    .trim()
+                    .split('\n');
+                expect(acceptedWords).toContain('NebulaConfiguration');
+                expect(acceptedWords).toContain('TypeScript');
+            }
+        }
         await expectInstalledSql(installation);
     },
     NATIVE_TEST_TIMEOUT_MS,

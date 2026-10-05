@@ -6,10 +6,11 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { testModules } from '#tests/harness/environment.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
 import * as toolRunner from '#cli/execution/command/runner.ts';
 import { cachedBuild } from '#cli/checks/general/site/build.ts';
-import { expectCheckCase } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { OUTPUT_CASES } from '#tests/config/cli/checks/general/site/output.ts';
@@ -92,5 +93,10 @@ test.each([
 test.each(OUTPUT_CASES)('$check reports its built-output defect and accepts the correction', async (entry) => {
     const repository = { configurations: ['site'], files: STATIC_SITE_FILES, modules: false, installs: false };
     await using testRepository = await createTestRepository(repository, runGspot);
-    await expectCheckCase(testRepository, entry, repository);
+    const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, repository);
+    expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+    expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+    expect(outcome.report.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
+    expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+    expect(correction.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 });

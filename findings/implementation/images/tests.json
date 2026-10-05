@@ -3,10 +3,25 @@
         "id": "diagram/tests",
         "source": "findings/images/tests.png",
         "owner": "tests",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests",
+            "scripts/plugin.ts",
+            "scripts/package.ts",
+            "mise.toml",
+            ".github/workflows/ci.yml",
+            "CONTRIBUTING.md"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The repository has four behavior-owned test suites: cli, plugin, tools, and flat packages. CLI contains the merged unit/integration and docs-schema cases; tools contains the merged native and acceptance cases. Test configuration and type data follows those owners, as the user requires. The obsolete tiers and task are absent; deliberate consumer-fixture paths remain.",
+            "The flat harness has 28 modules with real shared callers and its required preload. It has no assertion calls or scenario registrations. Required lifecycle callbacks and Bun matcher builders remain. Script owners contain native/source-command and packaged-suite orchestration; registry lifecycle remains under scripts/registry.",
+            "All nine filename merges retain their original 127 assertions: /tmp/gspot-organization-test-merges.json. All 105 named registrations in this batch are preserved: /tmp/gspot-observed-cases-proof.json.",
+            "CLI/plugin defaults remain 60000 ms and tools/packages defaults remain 900000 ms. Existing budget regressions passed in the complete CLI/plugin run: 2423 passed, 2 platform skips, 0 failed, 7572 assertions: /tmp/gspot-observed-cases-default.log.",
+            "Complete delivered-package replay: 8 passed, 0 failed, 439 assertions: /tmp/gspot-owned-assertions-all-package-tests.log.",
+            "Complete native tools replay: 292 passed, 5 skipped, 0 failed, 1818 assertions across four shards: /tmp/gspot-observed-cases-native-proof.json and /tmp/gspot-observed-cases-tools-{1,2,3,4}.log.",
+            "All four compiler targets passed: /tmp/gspot-observed-cases-verified-{root,cli,plugin,docs}-types.log. Both canonical applies reported all 142 files up to date: /tmp/gspot-observed-cases-apply.log and /tmp/gspot-observed-cases-second-apply.log. Staged source checks passed 52 checks with 7 skips and no failures: /tmp/gspot-observed-cases-staged-final.json."
+        ]
     },
     {
         "id": "diagram/tests/001",
@@ -56,10 +71,12 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "One flat harness contains 28 modules. Every ordinary module has at least two actual importers; preload is the required Bun entrypoint. scripts/plugin.ts and scripts/package.ts own orchestration. Shared assertions remain in the existing expectations owner as permitted by the second-pass correction.",
+            "One flat harness contains 28 modules. Every ordinary module has at least two actual importers; preload is the required Bun entrypoint. scripts/plugin.ts and scripts/package.ts own orchestration. Matcher builders remain in expectations.ts; all assertion calls now belong to owning test files. check-case.ts retains shared bounded defect/correction execution and source-file restoration, and returns parsed reports without asserting.",
             "Source caller inventory: /tmp/gspot-organization-harness-callers.json. All four compiler targets pass: /tmp/gspot-organization-final-types.log.",
             "Complete CLI/plugin replay: 2428 passed, 2 platform skips, 0 failed, 7531 assertions: /tmp/gspot-organization-isolated-owner-tests.log.",
-            "Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log."
+            "Complete delivered-package replay: 8 passed, 0 failed, 433 assertions: /tmp/gspot-organization-authenticated-package-tests.log.",
+            "Current assertion-ownership proof: /tmp/gspot-observed-cases-harness-proof.json and /tmp/gspot-observed-cases-proof.json. Current CLI/plugin replay passed 2423 tests with 2 platform skips and 7572 assertions; delivered packages passed all 8 tests with 439 assertions.",
+            "Complete native tools replay: 292 passed, 5 skipped, 0 failed, 1818 assertions across four shards: /tmp/gspot-observed-cases-native-proof.json and /tmp/gspot-observed-cases-tools-{1,2,3,4}.log."
         ]
     },
     {

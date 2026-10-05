@@ -4,7 +4,8 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { expectCheckCase } from '#tests/harness/expectations.ts';
+import { containing } from '#tests/harness/expectations.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
@@ -33,7 +34,16 @@ describe('the actions configuration', () => {
         test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
             `${entry.check} reports ${where} and accepts the correction`,
             async () => {
-                await expectCheckCase(testRepository, entry, REPOSITORY);
+                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, REPOSITORY);
+                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(outcome.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+                expect(correction.report.checks).toMatchObject([
+                    { check: entry.check, status: 'passed', findings: [] },
+                ]);
             },
             suiteTimeout(),
         );

@@ -90,17 +90,12 @@
         "section": "Tests: Harness, Config, Types, and Package Tests",
         "finding": "| `tests/packages/install/languages.test.ts:62-77` `expectCorrection`; `tests/packages/install/tools.test.ts:132-163` `expectInstalledCheck` | Two copies of one helper: write a defect, expect `failed` with the finding, correct or `--fix`, expect a pass. `expectInstalledCheck` takes four parameters, and `consumer` repeats `options.cwd`. | Keep one helper in `harness/package` that takes the consumer, the options, and the case (with an optional `fix`). Read the folder from `options.cwd`. |",
         "owner": "`tests/packages/install/languages.test.ts:62-77` `expectCorrection`; `tests/packages/install/tools.test.ts:132-163` `expectInstalledCheck`",
-        "location": [
-            "tests/harness/expectations.ts",
-            "scripts/types/package.ts",
-            "tests/types/harness/consumer.ts",
-            "tests/packages/languages.test.ts",
-            "tests/packages/tools.test.ts"
-        ],
+        "location": ["tests/harness/check-case.ts", "tests/packages/languages.test.ts", "tests/packages/tools.test.ts"],
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "One assertion owner runs defect/correction cases from the command environment working directory. Exact expected finding arrays retain both EditorConfig diagnostics. Proof: 3 installed tests passed with 71 assertions in /tmp/gspot-current-installed-contracts.log."
+            "One assertion owner runs defect/correction cases from the command environment working directory. Exact expected finding arrays retain both EditorConfig diagnostics. Proof: 3 installed tests passed with 71 assertions in /tmp/gspot-current-installed-contracts.log.",
+            "runPackageCheck owns shared bounded defect/correction execution and reads the working directory from the command environment. The two package-test owners assert exact reports, including both EditorConfig findings and the formatter output. Complete delivered-package replay: 8 passed, 0 failed, 439 assertions: /tmp/gspot-owned-assertions-all-package-tests.log."
         ]
     },
     {

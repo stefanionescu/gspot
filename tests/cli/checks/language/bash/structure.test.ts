@@ -7,7 +7,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
@@ -15,7 +17,6 @@ import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
-import { containing, expectCheckCase } from '#tests/harness/expectations.ts';
 import { CLEAN, REPOSITORY } from '#tests/config/cli/checks/language/bash/structure.ts';
 import { BASH_CASES, TOOL_CHECKS, BASH_CASES_MAIN as MAIN } from '#tests/config/samples/bash.ts';
 import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
@@ -67,7 +68,16 @@ describe('the built-in bash checks', () => {
         test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
             `${entry.check} reports ${where} and accepts the correction`,
             async () => {
-                await expectCheckCase(testRepository, entry, repository);
+                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, repository);
+                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(outcome.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
+                expect(correction.report.checks).toMatchObject([
+                    { check: entry.check, status: 'passed', findings: [] },
+                ]);
             },
             suiteTimeout(),
         );

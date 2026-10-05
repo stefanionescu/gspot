@@ -78,10 +78,23 @@
         "section": "Findings",
         "finding": "| `harness/planted/cases.ts:10,127-157`, `harness/planted/push.ts:57-61` | Harness files register `describe`, `test`, and `beforeAll`, and call `expect`. `TESTING.md` says support code has no assertions and no test blocks. | Move `push.ts` into `integration/cli/commands/push.test.ts`, its only user. For `cases.ts`, see the second question below. |",
         "owner": "`harness/planted/cases.ts:10,127-157`, `harness/planted/push.ts:57-61`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/harness/expectations.ts",
+            "tests/harness/check-case.ts",
+            "tests/cli/commands/push/revisions.test.ts",
+            "tests/packages/languages.test.ts",
+            "tests/packages/tools.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Harness modules construct matchers and observe bounded commands without registering scenarios or asserting outcomes. Owning CLI, native, and delivered-package tests assert every defect and correction. The former single-caller push support lives in its command test.",
+            "AST review found no assertion calls or scenario registrations in all 28 harness modules: /tmp/gspot-observed-cases-harness-proof.json. Required preload hooks and RuleTester callback assignments remain.",
+            "All 105 named test/group registrations in the 34 changed test files retain their multiplicity and order: /tmp/gspot-observed-cases-proof.json.",
+            "Complete CLI/plugin replay: 2423 passed, 2 platform skips, 0 failed, 7572 assertions: /tmp/gspot-observed-cases-default.log.",
+            "Complete delivered-package replay: 8 passed, 0 failed, 439 assertions: /tmp/gspot-owned-assertions-all-package-tests.log. All four compiler targets pass: /tmp/gspot-observed-cases-verified-{root,cli,plugin,docs}-types.log.",
+            "Complete native tools replay: 292 passed, 5 skipped, 0 failed, 1818 assertions across four shards: /tmp/gspot-observed-cases-native-proof.json and /tmp/gspot-observed-cases-tools-{1,2,3,4}.log."
+        ]
     },
     {
         "id": "areas/test-structure/007",
@@ -321,7 +334,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "Repository/check runners are explicit real callables; installation choice no longer secretly selects the command runner. Shared expectation functions perform assertions only and register no tests.",
+            "Repository/check runners are explicit real callables; installation choice no longer secretly selects the command runner. Harness workflows return process evidence and parsed reports. Owning tests register scenarios and assert their outcomes.",
             "/tmp/gspot-tests-organization-focused-green.log: 109 pass, 0 fail, 295 assertions across 14 files",
             "/tmp/gspot-tests-organization-types-verified.log: all four TypeScript targets pass",
             "/tmp/gspot-tests-whole-lint-clean.json: 742 files; last five site declaration-order findings corrected and /tmp/gspot-tests-site-data-lint.json passes with zero errors/warnings",

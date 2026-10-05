@@ -1,6 +1,6 @@
-import type { Finding } from '#cli/types/execution/runtime.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
+import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
 
 /** What the clean rerun of a test case writes: corrected files, and the case's policy unless it names another. */
 export type Correction = {
@@ -25,3 +25,9 @@ export type FindingCase = CaseChanges & {
 
 /** A CLI invocation selected by the test that owns the scenario. */
 export type CheckCommand = (cwd: string, argv: string[], environment: Record<string, string>) => Promise<SpawnOutcome>;
+
+/** Process outcomes and reports for the defect and its clean rerun. */
+export type CheckCaseOutcome = {
+    failed: SpawnOutcome & { report: RunReport };
+    passed: SpawnOutcome & { report: RunReport };
+};

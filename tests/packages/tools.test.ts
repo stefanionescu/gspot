@@ -1,17 +1,19 @@
 // Installed tools preserve authored metadata and report defects before accepting their corrections.
 import { test, expect } from 'bun:test';
-import { join, delimiter } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
+import { join, relative, delimiter } from 'node:path';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
+import { runPackageCheck } from '#tests/harness/check-case.ts';
 import { getPublishedRelease } from '#tests/harness/release.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
-import { expectPackageCheck } from '#tests/harness/expectations.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
+import type { PackageCheckCase } from '#tests/types/packages/check-case.ts';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import type { NativeConsumer, FormatterConsumer } from '#tests/types/packages/tools.ts';
 import { OUTDATED_MISE, FORMATTER_INIT, SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
 
@@ -148,32 +150,56 @@ test(
         await using fixture = await createConsumer(release.registry, release.version);
 
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
-        await expectPackageCheck(fixture, nativeOptions, {
-            only: 'files/taplo-format',
-            fix: true,
-            path: 'settings.toml',
-            isNpm: false,
-            findings: [{ fixable: true }],
-        });
-        expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
-        await expectPackageCheck(fixture, nativeOptions, {
-            only: 'files/taplo',
-            path: 'settings.toml',
-            isNpm: false,
-            defect: 'a = [\n',
-            corrected: 'a = 1\n',
-            findings: [{ line: 2, column: 1, fixable: false }],
-        });
-        await expectPackageCheck(fixture, nativeOptions, {
-            only: 'format/editorconfig-checker',
-            path: 'notes.json',
-            isNpm: true,
-            corrected: '"text"\n',
-            findings: [
-                { fixable: false, message: 'Wrong line endings or no final newline' },
-                { line: 1, fixable: false, message: 'Trailing whitespace' },
-            ],
-        });
+        const checks = [
+            {
+                only: 'files/taplo-format',
+                fix: true,
+                path: 'settings.toml',
+                isNpm: false,
+                findings: [{ fixable: true }],
+            },
+            {
+                only: 'files/taplo',
+                path: 'settings.toml',
+                isNpm: false,
+                defect: 'a = [\n',
+                corrected: 'a = 1\n',
+                findings: [{ line: 2, column: 1, fixable: false }],
+            },
+            {
+                only: 'format/editorconfig-checker',
+                path: 'notes.json',
+                isNpm: true,
+                corrected: '"text"\n',
+                findings: [
+                    { fixable: false, message: 'Wrong line endings or no final newline' },
+                    { line: 1, fixable: false, message: 'Trailing whitespace' },
+                ],
+            },
+        ] satisfies PackageCheckCase[];
+        for (const check of checks) {
+            const { failed, fixed, passed } = await runPackageCheck(fixture, nativeOptions, check);
+            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+            expect(failed.report.skips).toStrictEqual([]);
+            expect(failed.report.checks).toMatchObject([
+                {
+                    check: check.only,
+                    status: 'failed',
+                    findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
+                },
+            ]);
+            const executable = toPosix(
+                relative(realpathSync(nativeOptions.cwd), failed.report.checks[0]!.command![0]!),
+            );
+            expect(executable.startsWith('.gspot/node_modules/')).toBe(check.isNpm);
+            if (check.only === 'files/taplo-format') {
+                expect(fixed?.code, String(fixed?.stdout) + String(fixed?.stderr)).toBe(0);
+                expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
+            } else expect(fixed).toBeUndefined();
+            expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+            expect(passed.report.skips).toStrictEqual([]);
+            expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
+        }
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
     },
     NATIVE_TEST_TIMEOUT_MS,
