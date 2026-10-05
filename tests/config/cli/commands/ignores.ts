@@ -28,3 +28,14 @@ check = "bash/shellcheck"
 rule = "SC2034"
 reason = "The variables are read by sourcing scripts."
 `;
+
+/** Authored ignore commands preserve the policy on a typo or an absent entry. */
+export const IGNORE_CASES = [
+    ['an unknown check', ['ignore', 'bash/shelcheck', '--reason', 'A typo of the check.'], 2, 'bash/shellcheck'],
+    [
+        'the removal of an entry that does not exist',
+        ['ignore', 'bash/shellcheck', '--rule', 'SC1000', '--remove'],
+        0,
+        'no matching ignore entry',
+    ],
+] as const;

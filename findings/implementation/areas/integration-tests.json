@@ -250,10 +250,18 @@
         "section": "Findings",
         "finding": "| `cli/commands/selectors.test.ts` (whole file) | The name says \"selectors\". The tests cover ignore paths, staged index bytes, the index version pin, binary modes and dependency copies. | Move line 31 into `ignores.test.ts` and rename the rest, for example to `staged-snapshot.test.ts`. |",
         "owner": "`cli/commands/selectors.test.ts` (whole file)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/check/snapshot.test.ts",
+            "tests/cli/commands/ignores.test.ts",
+            "tests/config/cli/commands/ignores.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The ignore-folder and negated-file case now lives with ignore commands. The remaining staged-byte, index-policy/version, binary/mode, and dependency-copy cases live under the check snapshot owner. The old selectors.test.ts module is removed, with no compatibility export or forwarding module. No operative imports, policy entries, tasks, or documentation referenced the old path.",
+            "The ignore command case table moved unchanged into its existing config owner. Consumers copy its readonly command tuple into the existing runner input. Test AST comparison after substituting the identical literal table and command copy preserves all non-import test syntax and all 103 assertion sites across both owners.",
+            "Root TypeScript, affected ESLint, and formatting passed. Snapshot and ignore command tests passed all 14 cases with 112 assertions across two files. This batch changes ownership only; individual assertion-quality findings remain separate."
+        ]
     },
     {
         "id": "areas/integration-tests/022",

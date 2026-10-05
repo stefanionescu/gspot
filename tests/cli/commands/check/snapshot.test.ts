@@ -1,3 +1,4 @@
+// Bun check fixtures read indexed snapshots and preserve working-tree bytes and outputs.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/git.ts';
@@ -27,51 +28,6 @@ async function expectIndexReport(root: string, args: string[], report: RunReport
         'script with spaces.sh',
     ]);
 }
-
-test('an ignored folder includes descendants while a negated file remains enforced', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
-        'legacy scripts/nested/example.sh': 'if then\n',
-        'legacy scripts/required.sh': 'if then\n',
-        'entry.sh': 'echo example\n',
-    });
-    const ignored = await runGspot(directory.path, [
-        'ignore',
-        'bash/syntax',
-        '--paths',
-        'legacy scripts',
-        '!legacy scripts/required.sh',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/syntax', '--json'];
-    const checked = await runGspot(directory.path, command);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
-        'legacy scripts/required.sh',
-        'legacy scripts/required.sh',
-    ]);
-    expect(report.ignores[0]?.matched).toBe(0);
-    writeFileSync(join(directory.path, 'legacy scripts/required.sh'), 'echo corrected\n');
-    const corrected = await runGspot(directory.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const removed = await runGspot(directory.path, [
-        'ignore',
-        'bash/syntax',
-        '--paths',
-        'legacy scripts',
-        '!legacy scripts/required.sh',
-        '--remove',
-    ]);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await runGspot(directory.path, command);
-    expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
-        'legacy scripts/nested/example.sh',
-        'legacy scripts/nested/example.sh',
-    ]);
-});
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
