@@ -16,6 +16,10 @@ kinds = ["source"]
 
 [[tool]]
 name = "ruff"
+refused_options = [
+    {paths = ["select", "extend-select", "lint.select", "lint.extend-select"], message = "Ruff rule selection comes from level recommended or all. Remove select and extend-select from tools.ruff.verbatim."},
+    {paths = ["preview", "lint.preview", "format.preview"], values = [true], message = "gspot does not support Ruff preview rules. Remove preview = true from tools.ruff.verbatim."},
+]
 suppression = {inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 version = "0.16.8"
 min_version = "0.9.0"
@@ -36,6 +40,9 @@ shared = true
 
 [[tool]]
 name = "basedpyright"
+refused_options = [
+    {paths = ["enableExperimentalFeatures"], values = [true], message = "gspot does not support experimental Basedpyright features. Remove enableExperimentalFeatures from tools.basedpyright.verbatim."},
+]
 suppression = {marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 version = "1.40.1"
 min_version = "1.20.0"

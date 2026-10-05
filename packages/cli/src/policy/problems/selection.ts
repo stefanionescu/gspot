@@ -1,4 +1,4 @@
-import { isRecord } from '#cli/platform/objects.ts';
+import { valueAt } from '#cli/platform/objects.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';
 import { everyTable } from '#cli/policy/settings/entries.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
@@ -7,31 +7,26 @@ import { validateAgainstSurface } from '#cli/policy/problems/keys.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, PolicyProblem } from '#cli/types/policy/settings.ts';
-import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
+import type { ToolPin, ConfigurationDeclaration } from '#cli/types/configurations.ts';
 
-function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
-    const verbatim = table.tools?.['ruff']?.verbatim ?? {};
-    const lint = isRecord(verbatim['lint']) ? verbatim['lint'] : {};
-    return [
-        ...[verbatim['select'], verbatim['extend-select'], lint['select'], lint['extend-select']]
-            .filter((value) => value !== undefined)
-            .map(
-                (): PolicyProblem => ({
-                    path: ['tools', 'ruff', 'verbatim'],
-                    message:
-                        'Ruff rule selection comes from level recommended or all. Remove select and extend-select from tools.ruff.verbatim.',
-                }),
-            ),
-        ...([verbatim, lint, verbatim['format']].some((settings) => isRecord(settings) && settings['preview'] === true)
-            ? [
-                  {
-                      path: ['tools', 'ruff', 'verbatim'],
-                      message:
-                          'gspot does not support Ruff preview rules. Remove preview = true from tools.ruff.verbatim.',
-                  },
-              ]
-            : []),
-    ];
+// Native option constraints stay with the tool declarations, including those retained in an inactive scope.
+function toolOptionProblems(table: Partial<Policy>, tools: ToolPin[]): PolicyProblem[] {
+    const problems: PolicyProblem[] = [];
+    for (const tool of tools) {
+        const options = table.tools?.[tool.name]?.verbatim;
+        if (options === undefined) continue;
+        for (const restriction of tool.refused_options ?? []) {
+            const refused = restriction.paths.some((path) => {
+                const value = valueAt(options, path.split('.'));
+                return (
+                    value !== undefined &&
+                    (restriction.values?.some((candidate) => Object.is(candidate, value)) ?? true)
+                );
+            });
+            if (refused) problems.push({ path: ['tools', tool.name, 'verbatim'], message: restriction.message });
+        }
+    }
+    return problems;
 }
 
 /**
@@ -61,15 +56,11 @@ export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
 export function completenessProblems(policy: Policy): PolicyProblem[] {
     const manifests = configurationManifests();
     const problems: PolicyProblem[] = [];
-    for (const { table, path } of everyTable(policy)) {
-        problems.push(...ruffProblems(table).map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
-        if (table.tools?.['basedpyright']?.verbatim?.['enableExperimentalFeatures'] === true)
-            problems.push({
-                path: [...path, 'tools', 'basedpyright', 'verbatim'],
-                message:
-                    'gspot does not support experimental Basedpyright features. Remove enableExperimentalFeatures from tools.basedpyright.verbatim.',
-            });
-    }
+    const tools = [...manifests.values()].flatMap((manifest) => manifest.tools);
+    for (const { table, path } of everyTable(policy))
+        problems.push(
+            ...toolOptionProblems(table, tools).map((problem) => ({ ...problem, path: [...path, ...problem.path] })),
+        );
     const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
     const scopeSurfaces = new Map(

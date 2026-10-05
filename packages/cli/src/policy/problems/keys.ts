@@ -55,7 +55,12 @@ function listProblems(
     const reasons = items
         .flatMap((item, index) => (isRecord(item) ? [{ item, index }] : []))
         .filter(({ item }) => item['reason'] !== undefined || match.spec.direction === 'loosening')
-        .filter(({ item }) => key !== 'tools.typos.words' || item['reason'] !== item['word'])
+        .filter(
+            ({ item }) =>
+                match.spec.reason_identity === undefined ||
+                item['reason'] === undefined ||
+                item['reason'] !== item[match.spec.reason_identity],
+        )
         .flatMap(({ item, index }): PolicyProblem[] => {
             const path = [...key.split('.'), index, 'reason'];
             const authored = item['reason'];

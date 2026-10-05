@@ -89,6 +89,27 @@ export const toolSchema = z
             })
             .optional(),
         env: z.record(z.string(), z.string()).optional(),
+        refused_options: z
+            .array(
+                z.strictObject({
+                    paths: z
+                        .array(
+                            z
+                                .string()
+                                .refine(
+                                    (path) => path.split('.').every((part) => /^[a-z][\w-]*$/iu.test(part)),
+                                    'Use a dotted native option path.',
+                                ),
+                        )
+                        .min(1),
+                    values: z
+                        .array(z.union([z.string(), z.number(), z.boolean()]))
+                        .min(1)
+                        .optional(),
+                    message: z.string().min(1),
+                }),
+            )
+            .optional(),
         query_packs: z.record(z.string().regex(/^[a-z][a-z0-9-]*$/u), z.string().regex(/^\d+\.\d+\.\d+$/u)).optional(),
         prettier: z
             .strictObject({

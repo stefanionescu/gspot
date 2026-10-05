@@ -48,10 +48,11 @@ help = "Fix the spelling, or use gspot set tools.typos.words with a word entry w
 
 [[setting]]
 name = "tools.typos.words"
+reason_identity = "word"
 type = "list"
 direction = "loosening"
 default = []
-summary = "Words typos flags that this repository uses on purpose, each with a reason (the word itself counts)."
+summary = "Words typos flags that the repository uses on purpose: a bare word, or an entry with word and reason. The word itself is an accepted reason."
 
 [[setting]]
 name = "tools.typos.exclude"

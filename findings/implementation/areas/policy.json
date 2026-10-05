@@ -459,9 +459,15 @@
         "finding": "| `policy/settings.ts:252-253`, `audit.ts:47`, `problems.ts:115-116`, `validate.ts:12-48,84-88`, `config/policy/policy.ts:8-150` | Special cases for single tools are hidden in generic policy code. `tools.licenses.allowed` drops the shipped default. A `tools.typos.words` reason may equal the word. Stylelint skips the rule-off check. Ruff and basedpyright preview options are refused against a 140-code list. These are hard to find and to keep in step with the kits. | Declare each as data on the setting in its kit manifest, for example a \"replace\" merge mode or a list of refused values. At least collect them in one file. See the questions. |",
         "owner": "`policy/settings.ts:252-253`, `audit.ts:47`, `problems.ts:115-116`, `validate.ts:12-48,84-88`, `config/policy/policy.ts:8-150`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "Tool-native refused options are declared with their tool in the Python manifest and validated uniformly in root and scoped policy. Spelling identity reasons are declared on the setting. Removed the redundant license-default reset; the shipped allowed list is empty. Stylelint rule values already use the owning native schema instead of a generic tool-name exception. Production no longer owns a Ruff preview-code list.",
+        "verification": [
+            "Policy, lifecycle, tracked-inventory, and lock parsing cohort: /tmp/gspot-policy-ownership-cli.log (309 passing cases, 1576 assertions, 37 files).",
+            "Final policy, level contract, and npm parsing cases: /tmp/gspot-policy-ownership-corrections.log (48 passing cases, 506 assertions, three files).",
+            "Native npm, Bun, pnpm, Yarn conflict repair and scoped Ruff regressions: /tmp/gspot-policy-ownership-native.log (17 passing cases, 184 assertions, two files).",
+            "All four TypeScript targets pass: /tmp/gspot-policy-ownership-types.log. Changed-source ESLint passes: /tmp/gspot-policy-ownership-lint.log. Documentation validates 316 pages: /tmp/gspot-policy-ownership-docs.log.",
+            "Canonical apply succeeds twice without writes: /tmp/gspot-policy-ownership-apply-first.json and /tmp/gspot-policy-ownership-apply-second.json."
+        ]
     },
     {
         "id": "areas/policy/022",
@@ -1191,9 +1197,15 @@
         "finding": "| `config/tools/packages.ts:36` vs `config/lifecycle/lifecycle.ts:7`, `config/platform/platform.ts:55` vs `config/checks/general/naming.ts:40` vs `config/parsers/parsers.ts:11`, `config/execution/checkout.ts:7` vs `config/execution/tool.ts:39`, `config/kits.ts:10` vs `config/execution/tool.ts:10`, `config/kits.ts:13` vs `repository/tags.ts:31`, `config/platform/platform.ts:21` vs `config/platform/locations.ts:7` | Parallel copies: `CONFLICT_MARKER` and `CONFLICT_MARKERS`. Three spellings of the `.d.ts` extensions. `NEWLINE` and `LINE_FEED`, both 10. Two `{config:name}` regexes. `SHEBANG_TAG` beside a literal `shebang:` in its producer. `LIFECYCLE_PRIVATE_PATH` hard-codes `.gspot/state` next to `STATE_DIRECTORY`. | Keep one of each, in the module that owns the concept. |",
         "owner": "`config/tools/packages.ts:36` vs `config/lifecycle/lifecycle.ts:7`, `config/platform/platform.ts:55` vs `config/checks/general/naming.ts:40` vs `config/parsers/parsers.ts:11`, `config/execution/checkout.ts:7` vs `config/execution/tool.ts:39`, `config/kits.ts:10` vs `config/execution/tool.ts:10`, `config/kits.ts:13` vs `repository/tags.ts:31`, `config/platform/platform.ts:21` vs `config/platform/locations.ts:7`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "Shared parser configuration owns the merge-marker grammar while retaining the intentionally distinct prefix and token contracts. The lifecycle-private pattern derives from STATE_DIRECTORY. Source audit confirms one owner each for declaration extensions, line-feed bytes, config placeholders, and shebang tags, with operational consumers importing those owners.",
+        "verification": [
+            "Policy, lifecycle, tracked-inventory, and lock parsing cohort: /tmp/gspot-policy-ownership-cli.log (309 passing cases, 1576 assertions, 37 files).",
+            "Final policy, level contract, and npm parsing cases: /tmp/gspot-policy-ownership-corrections.log (48 passing cases, 506 assertions, three files).",
+            "Native npm, Bun, pnpm, Yarn conflict repair and scoped Ruff regressions: /tmp/gspot-policy-ownership-native.log (17 passing cases, 184 assertions, two files).",
+            "All four TypeScript targets pass: /tmp/gspot-policy-ownership-types.log. Changed-source ESLint passes: /tmp/gspot-policy-ownership-lint.log. Documentation validates 316 pages: /tmp/gspot-policy-ownership-docs.log.",
+            "Canonical apply succeeds twice without writes: /tmp/gspot-policy-ownership-apply-first.json and /tmp/gspot-policy-ownership-apply-second.json."
+        ]
     },
     {
         "id": "areas/policy/055",

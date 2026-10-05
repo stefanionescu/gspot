@@ -21,6 +21,25 @@ test.each(['recommended', 'all'] as const)('new license policy requires an expli
     });
 });
 
+test('spelling entries accept an identity reason while other missing or invalid reasons are refused', () => {
+    for (const words of ['["Codex"]', '[{word = "Codex", reason = "Codex"}]'])
+        expect(() =>
+            parseStrictPolicy(
+                buildPolicy(['spelling'], {
+                    tables: `require_reasons = true\n[tools.typos]\nwords = ${words}\n`,
+                }),
+            ),
+        ).not.toThrow();
+    for (const words of ['[{}]', '[{word = "Codex"}]', '[{word = "Codex", reason = "because"}]'])
+        expect(() =>
+            parseStrictPolicy(
+                buildPolicy(['spelling'], {
+                    tables: `require_reasons = true\n[tools.typos]\nwords = ${words}\n`,
+                }),
+            ),
+        ).toThrow('reason');
+});
+
 describe('conflicting configuration defaults', () => {
     const sql = configurationManifests().get('sql')!;
     const settings = knownSettings([

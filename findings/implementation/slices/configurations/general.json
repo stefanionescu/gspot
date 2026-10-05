@@ -774,9 +774,15 @@
         "finding": "| `general/spelling/manifest.toml:52` `tools.typos.words` | \"(the word itself counts)\" is unclear. | Say \"each entry is a word and a reason, or a bare word.\" |",
         "owner": "`general/spelling/manifest.toml:52` `tools.typos.words`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The shipped spelling setting describes both bare words and word/reason entries, and states when the word itself is an accepted reason. Public policy regressions cover accepted forms and missing or invalid reasons.",
+        "verification": [
+            "Policy, lifecycle, tracked-inventory, and lock parsing cohort: /tmp/gspot-policy-ownership-cli.log (309 passing cases, 1576 assertions, 37 files).",
+            "Final policy, level contract, and npm parsing cases: /tmp/gspot-policy-ownership-corrections.log (48 passing cases, 506 assertions, three files).",
+            "Native npm, Bun, pnpm, Yarn conflict repair and scoped Ruff regressions: /tmp/gspot-policy-ownership-native.log (17 passing cases, 184 assertions, two files).",
+            "All four TypeScript targets pass: /tmp/gspot-policy-ownership-types.log. Changed-source ESLint passes: /tmp/gspot-policy-ownership-lint.log. Documentation validates 316 pages: /tmp/gspot-policy-ownership-docs.log.",
+            "Canonical apply succeeds twice without writes: /tmp/gspot-policy-ownership-apply-first.json and /tmp/gspot-policy-ownership-apply-second.json."
+        ]
     },
     {
         "id": "slices/kits-general/060",

@@ -8,14 +8,15 @@ import type { Drift } from '#cli/types/lifecycle/output.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import { hasFields } from '#cli/lifecycle/merge/document.ts';
 import { packageLockDrift } from '#cli/tools/npm/project.ts';
+import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { currentBlock } from '#cli/platform/managed-blocks.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonLockDrift } from '#cli/tools/python/project.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/output.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
-import { CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/output.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith(`${policy.agentRules.folder}/`) && !policy.agentRules.enabled) return false;

@@ -65,6 +65,7 @@ test('experimental activation is refused before generation', () => {
     for (const settings of [
         '[tools.ruff.verbatim]\npreview = true\nreason = "Project preference"',
         '[tools.ruff.verbatim.lint]\npreview = true\nreason = "Project preference"',
+        '[tools.ruff.verbatim.format]\npreview = true\nreason = "Project preference"',
     ]) {
         const text = buildPolicy(['python'], { tables: settings, level: 'all' });
         expect(() => {
@@ -72,6 +73,20 @@ test('experimental activation is refused before generation', () => {
         }).toThrow('preview');
     }
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s preserves stable native options and refuses experiments in every scope',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            const settings = `${scope}[${table}.basedpyright.verbatim]\nenableExperimentalFeatures = false\nreason = "Project preference"`;
+            expect(() => parseStrictPolicy(buildPolicy(['python'], { level, tables: settings }))).not.toThrow();
+            expect(() =>
+                parseStrictPolicy(buildPolicy(['python'], { level, tables: settings.replace('false', 'true') })),
+            ).toThrow('experimental Basedpyright');
+        }
+    },
+);
 
 test.each(['recommended', 'all'] as const)('%s refuses native rule selection as another coverage choice', (level) => {
     for (const section of ['tools.ruff.verbatim', 'tools.ruff.verbatim.lint'])

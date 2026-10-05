@@ -3,9 +3,10 @@ import semver from 'semver';
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
+import { HTTP_URL, INTEGRITY } from '#cli/config/tools/npm.ts';
 import type { DependencyMap } from '#cli/types/parsers/packages.ts';
+import { CONFLICT_MARKER_PREFIX } from '#cli/config/parsers/git.ts';
 import type { LockName, BunPackage } from '#cli/types/parsers/lockfiles.ts';
-import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/config/tools/npm.ts';
 import { parseLockfile, rootLockDependencies } from '#cli/parsers/lockfiles.ts';
 import { yarnLockSchema, bunPackageSchema, bunPackagesSchema } from '#cli/parsers/schema/lockfiles.ts';
 
@@ -59,7 +60,7 @@ function relativeReference(resolved: string, base: URL): string | undefined {
  * @returns true when the lock matches
  */
 export function lockMatches(name: LockName, content: string, dependencies: DependencyMap): boolean {
-    if (CONFLICT_MARKER.test(content)) return false;
+    if (CONFLICT_MARKER_PREFIX.test(content)) return false;
     try {
         if (name === 'yarn') return yarnMatches(content, dependencies);
         return isDeepStrictEqual(rootLockDependencies(name, content), dependencies);

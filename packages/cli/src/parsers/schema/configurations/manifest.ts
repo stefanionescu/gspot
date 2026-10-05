@@ -172,6 +172,8 @@ const settingSchema = z.strictObject({
         .optional(),
     default: z.unknown().optional(),
     default_all: z.unknown().optional(),
+    // An entry whose reason equals this identity field already explains the intended spelling.
+    reason_identity: z.string().min(1).optional(),
     summary: sentence,
     languages: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),

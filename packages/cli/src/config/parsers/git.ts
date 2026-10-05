@@ -1,3 +1,6 @@
+// Lock parsers reject any merge-marker prefix; generated output requires the token separator.
+const CONFLICT_MARKER_SOURCE = '^(?:<{7}|={7}|>{7})';
+
 /** Git separates a batch object's header and body with one newline each. */
 export const FRAME_NEWLINES = 2;
 
@@ -20,3 +23,7 @@ export const TREE_ENTRY = new RegExp(
     String.raw`^(?<mode>\d{6}) (?:blob|commit) (?<hash>${HASH_SOURCE})\t(?<path>[\s\S]+)$`,
     'u',
 );
+
+export const CONFLICT_MARKER_PREFIX = new RegExp(CONFLICT_MARKER_SOURCE, 'mu');
+
+export const CONFLICT_MARKERS = new RegExp(`${CONFLICT_MARKER_SOURCE}(?: |$)`, 'mu');
