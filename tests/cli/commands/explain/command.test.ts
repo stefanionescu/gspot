@@ -51,6 +51,15 @@ test('check explanations add no absent metadata', () => {
     expect(format).not.toHaveProperty('data.path_prefix');
 });
 
+test('native version prerequisites belong to their consuming check', () => {
+    const bats = explain(undefined, 'bash/bats');
+    expect(bats).toMatchObject({ data: { min_versions: { bash: '4.4.0' } } });
+    expect(bats.text).toContain('Required native version: bash >= 4.4.0');
+    const syntax = explain(undefined, 'bash/syntax');
+    expect(syntax).not.toHaveProperty('data.min_versions');
+    expect(syntax.text).not.toContain('Required native version:');
+});
+
 test('an unknown raw rule namespace is refused with the requested subject', () => {
     expect(() => explain(undefined, 'unknown/no-such-rule')).toThrow('There is no check called `unknown/no-such-rule`');
     expect(explain(undefined, 'eslint/unknown/no-such-rule')).toMatchObject({

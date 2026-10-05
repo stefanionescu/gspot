@@ -87,6 +87,10 @@ function getFacts(check: CheckSpec, configuration: Found['configuration']): Chec
         settings,
         guides,
         crashPattern,
+        minVersions: check.min_versions,
+        versionRequirements: Object.entries(check.min_versions ?? {}).map(
+            ([name, floor]) => `Required native version: ${name} >= ${floor}`,
+        ),
     };
 }
 
@@ -118,7 +122,7 @@ function describeCheck(
     facts: CheckFacts,
 ): string {
     const { check, configuration } = found;
-    const { source, settings, guides, crashPattern } = facts;
+    const { source, settings, guides, crashPattern, versionRequirements } = facts;
     const lines = [
         `${check.name}  (${source}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -126,6 +130,7 @@ function describeCheck(
         `Why it matters: ${check.why}`,
         `What to do: ${check.help}`,
         ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
+        ...versionRequirements,
         '',
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --paths "<glob>" --reason "..."`,
         ...(check.command
@@ -180,6 +185,7 @@ export function explainCheck(session: Session | undefined, checkName: string): E
             help: check.help,
             when: check.when,
             ...compact({
+                min_versions: facts.minVersions,
                 crash_pattern: facts.crashPattern,
                 run_in_copy: check.run_in_copy,
                 path_prefix: check.path_prefix,

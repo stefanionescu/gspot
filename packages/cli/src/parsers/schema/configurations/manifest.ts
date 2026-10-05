@@ -6,7 +6,7 @@ import { namingRuleSchema } from '#cli/parsers/schema/naming.ts';
 import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
 import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
-import { toolSchema } from '#cli/parsers/schema/configurations/tool.ts';
+import { toolSchema, versionFloorSchema } from '#cli/parsers/schema/configurations/tool.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 import { levelSchema, operatingSystemSchema, settingValidationSchema } from '#cli/parsers/schema/settings.ts';
 
@@ -127,6 +127,7 @@ const checkFields = z.strictObject({
         .optional(),
     platforms: z.array(operatingSystemSchema).optional(),
     tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
+    min_versions: z.record(z.string().min(1), versionFloorSchema).optional(),
     files: filesSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),

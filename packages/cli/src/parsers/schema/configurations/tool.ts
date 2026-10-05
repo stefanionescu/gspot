@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import semver from 'semver';
 import { compact } from '#cli/platform/objects.ts';
 import { commandSchema } from '#cli/parsers/schema/command.ts';
 import { MAX_EXIT_CODE } from '#cli/config/platform/runtime.ts';
 import type { InstallerPin } from '#cli/types/configurations.ts';
+import { VERSION_FLOOR } from '#cli/config/parsers/tool/version.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
@@ -53,12 +55,25 @@ export const installerPinSchema = installerDefinition.partial({ version: true })
     options: installerOptionsSchema.optional(),
     constraints: installerConstraintsSchema.optional(),
 });
+
+/** Native floors normalize at the manifest boundary before version comparisons. */
+export const versionFloorSchema = z
+    .string()
+    .regex(VERSION_FLOOR)
+    .transform((floor, context) => {
+        const version = semver.coerce(floor);
+        if (version === null) {
+            context.addIssue({ code: 'custom', message: 'Use a numeric native version floor.' });
+            return z.NEVER;
+        }
+        return version.version;
+    });
 export const toolSchema = z
     .strictObject({
         name: z.string(),
         kind: z.enum(['binary', 'library']).default('binary'),
         version: z.string().optional(),
-        min_version: z.string().optional(),
+        min_version: versionFloorSchema.optional(),
         system: z.boolean().optional(),
         // The platforms the tool has a build for; unset means every platform.
         platforms: z

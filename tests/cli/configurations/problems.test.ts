@@ -2,7 +2,13 @@ import { test, expect, describe } from 'bun:test';
 import { CHECK_FIELDS } from '#tests/config/harness/tooling.ts';
 import { assertManifests } from '#cli/configurations/problems.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { SHARED_SETTING, WAITING_SETTING } from '#tests/config/cli/configurations/problems.ts';
+
+import {
+    SHARED_SETTING,
+    WAITING_SETTING,
+    MINIMUM_VERSION_CASES,
+    INVALID_VERSION_FLOORS,
+} from '#tests/config/cli/configurations/problems.ts';
 
 describe('assertManifests setting meanings', () => {
     test('two configurations must agree on a setting meaning and may differ only in its default', () => {
@@ -92,6 +98,43 @@ describe('assertManifests borrowed checks', () => {
             assertManifests(manifests);
         }).toThrow('standalone built-in');
     });
+});
+
+describe('assertManifests native version prerequisites', () => {
+    test('a native floor requires a declared tool even when its command names that tool', () => {
+        const manifest = parseConfigurationManifest('minimum', {
+            tables: `[[check]]\nname = "run"\ncommand = ["probe"]\nmin_versions = {probe = "4.4"}\n${CHECK_FIELDS}`,
+        });
+        expect(() => {
+            assertManifests(new Map([['minimum', manifest]]));
+        }).toThrow('version floor for undeclared tool probe');
+    });
+    test.each(MINIMUM_VERSION_CASES)(
+        'native version floors validate their consumer and version command: $target $diagnostic',
+        ({ target, versionCommand, diagnostic }) => {
+            const manifest = parseConfigurationManifest('minimum', {
+                tables: `[[tool]]\nname = "probe"\nsystem = true\n${versionCommand}[[check]]\nname = "run"\ncommand = ["probe"]\nmin_versions = {${target} = "4.4"}\n${CHECK_FIELDS}`,
+            });
+            const validate = () => {
+                assertManifests(new Map([['minimum', manifest]]));
+            };
+            if (diagnostic === undefined) {
+                expect(validate).not.toThrow();
+                expect(manifest.checks[0]?.min_versions).toStrictEqual({ probe: '4.4.0' });
+            } else expect(validate).toThrow(diagnostic);
+        },
+    );
+
+    test.each(INVALID_VERSION_FLOORS)(
+        'a malformed native version floor %s is refused at the manifest boundary',
+        (floor) => {
+            expect(() =>
+                parseConfigurationManifest('minimum', {
+                    tables: `[[check]]\nname = "run"\ncommand = ["probe"]\nmin_versions = {probe = "${floor}"}\n${CHECK_FIELDS}`,
+                }),
+            ).toThrow('min_versions');
+        },
+    );
 });
 
 describe('assertManifests acquisition and guide declarations', () => {

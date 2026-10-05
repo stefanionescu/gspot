@@ -42,8 +42,6 @@ github = {name = "mvdan/sh", version = "v3.12.0"}
 [[tool]]
 name = "bash"
 system = true
-# The bash configuration writes scripts for Bash 4.4 or newer, and Bats under Bash 3.2 passes files that do not parse.
-min_version = "4.4"
 version_command = ["--version"]
 version_pattern = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
 
@@ -107,6 +105,7 @@ runs = "files"
 command = ["bats", "--count", "{file}"]
 # Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
 tool = ["bats", "bash"]
+min_versions = {bash = "4.4"}
 files = {tags = ["bats"]}
 output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Parses Bats test files while counting their test cases."

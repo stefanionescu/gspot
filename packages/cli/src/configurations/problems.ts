@@ -198,8 +198,12 @@ function assertSettingWait(manifest: Manifest, check: CheckSpec, settings: Map<s
         );
 }
 
-// References for deciding whether generated files have applicable consumers must resolve in the registry.
-function assertConfigurationConsumers(manifest: Manifest, tools: Set<string>, checks: Map<string, CheckSpec>): void {
+// Generated consumers and native version prerequisites must resolve to declared registry tools and checks.
+function assertConfigurationConsumers(
+    manifest: Manifest,
+    tools: Map<string, ToolPin>,
+    checks: Map<string, CheckSpec>,
+): void {
     const unknownTools = manifest.configs.flatMap((config) =>
         config.tool
             .filter((name) => !tools.has(name))
@@ -210,7 +214,19 @@ function assertConfigurationConsumers(manifest: Manifest, tools: Set<string>, ch
             .filter((name) => !checks.has(name))
             .map((name) => `config ${config.target} requires undeclared check ${name}.`),
     );
-    const problems = [...unknownTools, ...unknownChecks];
+    const versionProblems = manifest.checks.flatMap((check) => {
+        const required = new Set([check.tool ?? check.command?.[0], ...(check.other_tools ?? [])]);
+        return Object.keys(check.min_versions ?? {}).flatMap((name) => {
+            if (!required.has(name))
+                return [`check ${check.name} sets a version floor for ${name}, which it does not use.`];
+            const pin = manifest.tools.find((tool) => tool.name === name) ?? tools.get(name);
+            if (pin === undefined) return [`check ${check.name} sets a version floor for undeclared tool ${name}.`];
+            if (pin.system === true && pin.version_command === undefined)
+                return [`check ${check.name} requires a version command for host tool ${name}.`];
+            return [];
+        });
+    });
+    const problems = [...unknownTools, ...unknownChecks, ...versionProblems];
     if (problems.length > 0) throw manifestError(manifest.configuration.name, problems);
 }
 
@@ -288,7 +304,9 @@ export function manifestProblems(raw: RawManifest): string[] {
  * @param manifests every manifest by name
  */
 export function assertManifests(manifests: Map<string, Manifest>): void {
-    const tools = new Set([...manifests.values()].flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    const tools = new Map(
+        [...manifests.values()].flatMap((manifest) => manifest.tools.map((tool) => [tool.name, tool] as const)),
+    );
     const ownedChecks = allChecks(manifests.values());
     const checks: Map<string, CheckSpec> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
     const settings: Map<string, SettingSpec> = new Map(

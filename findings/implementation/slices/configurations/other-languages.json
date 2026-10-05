@@ -686,9 +686,14 @@
         "finding": "| `packages/cli/kits/language/bash/manifest.toml:39-45` (`bash` floor) | The 4.4 floor sits on the host `bash` tool, so `bash/syntax`, a `recommended` check, fails as an outdated tool on stock macOS, which has Bash 3.2.57. The comment says the floor exists for Bats. It also says the kit \"writes scripts\", which it does not. | Put the floor on the Bats check only, and let `bash -n` run with any Bash. Change the comment to \"checks scripts\". |",
         "owner": "`packages/cli/kits/language/bash/manifest.toml:39-45` (`bash` floor)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The Bash 4.4 requirement belongs to the Bats check. Ordinary syntax checks accept stock macOS Bash. Manifest validation owns numeric floors and declared consumers; execution preserves stricter tool-wide requirements. Applicable check requirements also reach doctor and explain. No new developer-facing selection mechanism is introduced.",
+        "verification": [
+            "Native stock macOS Bash 3.2.57 and supported Bash regressions pass at recommended and all; syntax succeeds on stock Bash, Bats reports its 4.4.0 prerequisite, doctor reports the same unmet prerequisite, and supported Bats attributes malformed syntax to script.bats: /tmp/gspot-bats-floor-ready-native.log (7 passing cases, 83 assertions, three files).",
+            "Manifest consumer, numeric floor validation, stricter tool-wide floor preservation, explanations, doctor, planning, execution, and inspection regressions: /tmp/gspot-bats-floor-ready-cli.log (181 passing cases, 614 assertions, 19 files).",
+            "All four TypeScript targets pass: /tmp/gspot-bats-floor-ready-types.log. Changed source lint passes: /tmp/gspot-bats-floor-ready-lint.log.",
+            "Documentation builds and validates 316 pages: /tmp/gspot-bats-floor-docs.log. Canonical apply succeeds twice without writes, removals, or notes: /tmp/gspot-bats-floor-apply-first.json and /tmp/gspot-bats-floor-apply-second.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/039",

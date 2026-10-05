@@ -26,7 +26,7 @@ import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } fr
 function versionText(tool: ToolInspection): string {
     const found = tool.found ?? '';
     const want = tool.want ?? '';
-    if (tool.state === 'outdated') return `${tool.name} ${found} (want ${want})`;
+    if (tool.state === 'outdated') return `${tool.name} ${found} (below ${tool.floor ?? want})`;
     if (tool.state === 'newer') return `${tool.name} ${found} (pinned ${want})`;
     return `${tool.name} ${want === '' ? found : want}`.trim();
 }

@@ -1,5 +1,5 @@
 // Tool requirements derived from the same applicable check plan used by execution.
-import { toolPin } from '#cli/tools/pins.ts';
+import { toolPin, checkToolPin } from '#cli/tools/pins.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -56,12 +56,18 @@ export function applicableManifests(session: Session): Manifest[] {
         const ownsPrettier = needed.has('prettier') && manifest.tools.some((tool) => tool.prettier !== undefined);
         return {
             ...manifest,
-            tools: manifest.tools.filter(
-                (tool) =>
-                    needed.has(tool.name) ||
-                    (ownsEslint && (tool.kind === 'library' || tool.name === 'eslint-config-prettier')) ||
-                    (ownsPrettier && tool.prettier !== undefined),
-            ),
+            tools: manifest.tools
+                .filter(
+                    (tool) =>
+                        needed.has(tool.name) ||
+                        (ownsEslint && (tool.kind === 'library' || tool.name === 'eslint-config-prettier')) ||
+                        (ownsPrettier && tool.prettier !== undefined),
+                )
+                .map((tool) => {
+                    let pin = tool;
+                    for (const check of checks) pin = checkToolPin(pin, check.spec);
+                    return pin;
+                }),
         };
     });
 }

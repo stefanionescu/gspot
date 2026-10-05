@@ -18365,6 +18365,31 @@
                 "Run the actual staged gate, commit with hooks, and push normally.",
                 "Continue the remaining review findings and separately authorized release actions."
             ]
+        },
+        {
+            "subsystem": "Native shell dialect delivery",
+            "outcome": "Commit a842d390 is pushed normally to origin/main with hooks enabled. This delivery closed three records and retained all IDs; 974 findings remained open.",
+            "evidence": [
+                "/tmp/gspot-shell-dialects-verified-staged.json (71 passed, 7 skipped, no findings or errors).",
+                "/tmp/gspot-shell-dialects-commit.log (45 pre-commit checks passed and commit message validation passed).",
+                "/tmp/gspot-shell-dialects-push.log (71 pre-push checks passed, 7 skipped, main -> main)."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Check-owned native version prerequisites",
+            "rows": ["slices/kits-other-languages/038"],
+            "outcome": "Bats owns its Bash minimum. Syntax, Bats, doctor, and explain preserve check applicability and report unmet prerequisites explicitly.",
+            "evidence": [
+                "Native stock macOS Bash 3.2.57 and supported Bash regressions pass at recommended and all; syntax succeeds on stock Bash, Bats reports its 4.4.0 prerequisite, doctor reports the same unmet prerequisite, and supported Bats attributes malformed syntax to script.bats: /tmp/gspot-bats-floor-ready-native.log (7 passing cases, 83 assertions, three files).",
+                "Manifest consumer, numeric floor validation, stricter tool-wide floor preservation, explanations, doctor, planning, execution, and inspection regressions: /tmp/gspot-bats-floor-ready-cli.log (181 passing cases, 614 assertions, 19 files).",
+                "All four TypeScript targets pass: /tmp/gspot-bats-floor-ready-types.log. Changed source lint passes: /tmp/gspot-bats-floor-ready-lint.log.",
+                "Documentation builds and validates 316 pages: /tmp/gspot-bats-floor-docs.log. Canonical apply succeeds twice without writes, removals, or notes: /tmp/gspot-bats-floor-apply-first.json and /tmp/gspot-bats-floor-apply-second.json."
+            ],
+            "remaining": [
+                "Actual staged gate and normal hook-enabled commit and push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
         }
     ],
     "implementationBatches": {
@@ -21549,6 +21574,15 @@
                     "packages/cli/configurations/language/bash/manifest.toml",
                     "packages/cli/src/checks/language/bash/shellcheck.ts",
                     "packages/cli/src/repository/tags.ts"
+                ]
+            },
+            {
+                "id": "check-owned-native-minimums",
+                "records": ["slices/kits-other-languages/038"],
+                "owners": [
+                    "packages/cli/configurations/language/bash/manifest.toml",
+                    "packages/cli/src/execution/planning/requirements.ts",
+                    "packages/cli/src/tools/pins.ts"
                 ]
             }
         ]

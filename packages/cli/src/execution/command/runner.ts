@@ -1,11 +1,11 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { runTool } from '#cli/tools/run.ts';
-import { toolPin } from '#cli/tools/pins.ts';
 import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { emptyResult } from '#cli/execution/report.ts';
+import { toolPin, checkToolPin } from '#cli/tools/pins.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
@@ -129,7 +129,7 @@ function engineTool(
     name: string,
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
 ): EngineTool {
-    const tool = toolPin(input.manifests.values(), name);
+    const tool = checkToolPin(toolPin(input.manifests.values(), name), input.spec);
     const env = { ...tool.env, ...input.spec.env, ...options.env };
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
     const availability = toolAvailability(tool, inspection);
@@ -204,7 +204,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
 // A declared companion tool must be usable before this command runs.
 function unavailableCompanion(session: Session, planned: PlannedCheck): ExecutionFailure | undefined {
     for (const name of planned.spec.other_tools ?? []) {
-        const required = toolPin(session.manifests.values(), name);
+        const required = checkToolPin(toolPin(session.manifests.values(), name), planned.spec);
         const availability = toolAvailability(required, inspectTool(session, required));
         if ('status' in availability) return availability;
     }

@@ -22,6 +22,22 @@ import {
     NODE_REQUIREMENTS,
 } from '#tests/config/cli/execution/planning/selection.ts';
 
+test('a check version prerequisite cannot lower its tool-wide requirement', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['python']),
+        'source.py': 'print("example")\n',
+    });
+    const session = await openSession(sandbox.path);
+    const python = session.manifests.get('python')!;
+    const ruff = python.checks.find((check) => check.name === 'python/ruff')!;
+    ruff.min_versions = { ruff: '0.8.0' };
+    const lower = planRun(session, { stage: 'all', skips: [], only: ['python/ruff'] });
+    expect(lower[0]?.tool?.min_version).toBe('0.9.0');
+    ruff.min_versions = { ruff: '0.10.0' };
+    const higher = planRun(session, { stage: 'all', skips: [], only: ['python/ruff'] });
+    expect(higher[0]?.tool?.min_version).toBe('0.10.0');
+});
+
 test('automatic configurations use only the level to select checks and their required tools', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

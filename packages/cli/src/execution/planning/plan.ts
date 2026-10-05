@@ -1,6 +1,5 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import { GspotError } from '#cli/platform/errors.ts';
-import { toolPin, toolName } from '#cli/tools/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
@@ -9,6 +8,7 @@ import { isOutsideChildren } from '#cli/repository/selectors.ts';
 import { HISTORY_CHECKS } from '#cli/config/execution/runtime.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
+import { toolPin, toolName, checkToolPin } from '#cli/tools/pins.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/execution/planning/files.ts';
 import type { Stage, PlanEntry, PlanInputs, PlanOptions } from '#cli/types/execution/planning.ts';
@@ -64,7 +64,8 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
     // Repository inventory always places the root scope first.
     const rootScope = session.scopes[0] as ScopeSelection;
     const name = toolName(spec);
-    const tool = name === undefined ? undefined : toolPin(session.manifests.values(), name, manifest);
+    const tool =
+        name === undefined ? undefined : checkToolPin(toolPin(session.manifests.values(), name, manifest), spec);
     const check: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
         spec,

@@ -9,3 +9,12 @@ direction = "neutral"
 default = "initial"
 summary = "Where the example tool writes its output."
 `;
+
+/** A native floor must name a declared consumer with an inspectable version. */
+export const MINIMUM_VERSION_CASES = [
+    { target: 'other', versionCommand: 'version_command = ["--version"]\n', diagnostic: 'which it does not use' },
+    { target: 'probe', versionCommand: '', diagnostic: 'requires a version command' },
+    { target: 'probe', versionCommand: 'version_command = ["--version"]\n', diagnostic: undefined },
+];
+
+export const INVALID_VERSION_FLOORS = ['future', '4.4-beta', '4.4.0.1234'];

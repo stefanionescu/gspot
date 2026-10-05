@@ -1,3 +1,4 @@
+import semver from 'semver';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { PinRequirement } from '#cli/types/tools/install.ts';
 import { privateToolInstallation } from '#cli/tools/installation.ts';
@@ -96,6 +97,18 @@ export function toolPin(manifests: Iterable<Manifest>, name: string, owner?: Man
         if (pin !== undefined) return pin;
     }
     return { name, kind: 'binary', system: true, installers: {} };
+}
+
+/**
+ * Add a check's native version requirement while preserving a stricter tool-wide floor.
+ * @param tool the declared native tool
+ * @param check the consumer's prerequisites
+ * @returns the pin with its effective minimum version
+ */
+export function checkToolPin(tool: ToolPin, check: CheckSpec): ToolPin {
+    const floor = check.min_versions?.[tool.name];
+    if (floor === undefined || (tool.min_version !== undefined && semver.gte(tool.min_version, floor))) return tool;
+    return { ...tool, min_version: floor };
 }
 
 /**

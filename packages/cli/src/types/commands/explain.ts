@@ -40,7 +40,14 @@ export type ConfigurationExplanation = {
 
 export type Found = OwnedCheck | { check: RepositoryDefinition; configuration: undefined };
 
-export type CheckFacts = { source: string; settings: string[]; guides: string[]; crashPattern: string | undefined };
+export type CheckFacts = {
+    source: string;
+    settings: string[];
+    guides: string[];
+    crashPattern: string | undefined;
+    minVersions: Record<string, string> | undefined;
+    versionRequirements: string[];
+};
 
 /** A native tool's rule-description command. */
 export type RuleSummarizer = (rule: string, executable: string) => string | undefined;
