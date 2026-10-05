@@ -733,10 +733,13 @@
         "finding": "| `tools/python.ts:103-117,256-263,274-280` | The same relative-URL resolution is written twice, for `find-links` and `index`. `pythonInstallSteps` and `installPythonProject` repeat the read, validate, match-or-throw-SETUP block. | Use one local helper for each. |",
         "owner": "`tools/python.ts:103-117,256-263,274-280`",
         "location": ["packages/cli/src/parsers/python/tools.ts", "packages/cli/src/tools/python/project.ts"],
-        "status": "open",
-        "outcome": null,
+        "status": "closed",
+        "outcome": "Relative find-links and index paths share indexLocation in the Python parser. Planning and installation retain distinct contracts: previews plan missing or stale lock resolution, while direct installation requires matching recorded inputs. The former duplicate match-or-throw block no longer exists in both callers. Shared pythonLockMatches, scratch settings, and post-operation lock validation remain with their actual consumers.",
         "verification": [
-            "Relative find-links and index locations now use indexLocation; URL patterns belong to config/parsers/python-tools. Existing UV precedence/local-path cases and native Python installation cases pass. The separate read/validate/match planning and installation portion remains open."
+            "Inspected parsers/python/tools.ts and tools/python/project.ts: both relative path forms use indexLocation; pythonInstallationPlan validates the proposed or recorded project and calculates lock phases without throwing SETUP for missing or stale locks; installPythonProject rejects those recorded inputs before writing an environment. No mode-driven forwarding reader was added.",
+            "The CLI Python parser, project, and installer cases passed: 21 cases, 93 assertions, 4 files. Seven added preview cases cover missing, invalid, stale, current and refreshed locks, proposed-project precedence, absent projects, exact phase commands and preservation of recorded and unrelated bytes. Existing parser cases cover distribution normalization, constraints, Python floors, UV precedence, and local, absolute and URL index locations.",
+            "The real tools/lifecycle/python-project.test.ts suite passed on macOS: 7 cases, 65 assertions. It installs through native uv and a local registry, checks immutable inputs and copied environments, rejects conflicted inputs before direct installation, repairs them through apply/install, and preserves working files when an installer copies credentials into a lock.",
+            "Root TypeScript passed. Affected ESLint and Prettier checks passed. The staged config-logic check found a fixture transformation in config; the configuration now contains only literals and imported sample data, and the test constructs the changed Python floor. The repaired CLI run again passed 21 cases and 93 assertions."
         ]
     },
     {
@@ -798,7 +801,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "Vale sync uses runTool with the root view’s effective deadline and command cancellation, including reasoned timeout values. It receives the shared output environment. Canceled/timed-out/error runs preserve installed styles, redact credentials, and dispose temporary projects; corrected runs replace styles successfully.",
+            "Vale sync uses runTool with the root view\u2019s effective deadline and command cancellation, including reasoned timeout values. It receives the shared output environment. Canceled/timed-out/error runs preserve installed styles, redact credentials, and dispose temporary projects; corrected runs replace styles successfully.",
             "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
             "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
             "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
@@ -816,7 +819,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "listStyleFiles uses walkRoot. Every consumer is updated, including snapshot dependency copying. Link-safety and pruning assertions remain intact. Generation’s styleFiles keeps its distinct generated-output meaning.",
+            "listStyleFiles uses walkRoot. Every consumer is updated, including snapshot dependency copying. Link-safety and pruning assertions remain intact. Generation\u2019s styleFiles keeps its distinct generated-output meaning.",
             "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
             "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
             "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
@@ -838,7 +841,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "Names now distinguish configuredPackages, folderOfFile, installedPackageFolders, hasValePackages, installValePackages, and removeValePackages. Vale assignment parsing uses the existing parser’s ordered-section reader, with patterns/auxiliary package folders in config/parsers. No old-name aliases remain.",
+            "Names now distinguish configuredPackages, folderOfFile, installedPackageFolders, hasValePackages, installValePackages, and removeValePackages. Vale assignment parsing uses the existing parser\u2019s ordered-section reader, with patterns/auxiliary package folders in config/parsers. No old-name aliases remain.",
             "505 focused cases passed, zero failures, 2,251 assertions across 84 files for planning, execution, tool inspection, generation, rule previews, and explanations (/tmp/gspot-vale-owners-tests.log).",
             "The final root-view, reasoned-deadline, generation, policy, and moved integration cases passed 251 cases, zero failures, across 46 files (/tmp/gspot-vale-root-views-tests.log).",
             "37 native Vale/npm/Bun/pnpm/Yarn/Python cases passed with 369 assertions; all three native Vale cases passed again after root-view consolidation (/tmp/gspot-vale-owners-native.log, /tmp/gspot-vale-root-views-native.log).",
