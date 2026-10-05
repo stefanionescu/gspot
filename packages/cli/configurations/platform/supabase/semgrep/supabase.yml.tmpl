@@ -24,71 +24,6 @@ const document = {
             },
         },
         {
-            id: 'supabase-no-rpc-user-input',
-            patterns: [
-                {
-                    'pattern-either': [
-                        {
-                            pattern: '$CLIENT.rpc($NAME, req.body)',
-                        },
-                        {
-                            pattern: '$CLIENT.rpc($NAME, req.body.$FIELD)',
-                        },
-                    ],
-                },
-            ],
-            message: 'Passing raw request body to an RPC function. Validate and extract only the fields you need.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-20'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'supabase-no-service-role-in-client',
-            patterns: [
-                {
-                    pattern: 'createClient($URL, $KEY)',
-                },
-                {
-                    'metavariable-regex': {
-                        metavariable: '$KEY',
-                        regex: '.*(service_role|SERVICE_ROLE).*',
-                    },
-                },
-            ],
-            message:
-                'Service role key used outside admin client factory. Use the centralized admin client to audit RLS bypass usage.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-269'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'supabase-no-hardcoded-service-key',
-            patterns: [
-                {
-                    pattern: 'createClient($URL, $KEY)',
-                },
-                {
-                    'metavariable-regex': {
-                        metavariable: '$KEY',
-                        regex: '^"eyJhbGciOi.*',
-                    },
-                },
-            ],
-            message: 'Hardcoded JWT in createClient(). Use environment variables.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-798'],
-                category: 'security',
-            },
-        },
-        {
             id: 'supabase-edge-cors-wildcard-with-credentials',
             pattern: '{..., "Access-Control-Allow-Origin": "*", ..., "Access-Control-Allow-Credentials": "true", ...}',
             message: 'Wildcard origins cannot be used with credentialed requests. List the permitted origins.\n',
@@ -145,18 +80,6 @@ const document = {
             severity: 'ERROR',
             metadata: {
                 cwe: ['CWE-532'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'supabase-rls-bypass-service-role',
-            pattern: 'createAdminClient(...)',
-            message:
-                'createAdminClient() bypasses RLS. Add a comment explaining why RLS bypass is needed for this operation.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-269'],
                 category: 'security',
             },
         },

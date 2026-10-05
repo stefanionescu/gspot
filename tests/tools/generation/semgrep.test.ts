@@ -230,30 +230,37 @@ test.skipIf(!hasToolBuild('semgrep'))(
     },
 );
 
-test.skipIf(!hasToolBuild('semgrep'))(
-    'platform security packs report raw inputs once and accept documented forms and corrections',
-    async () => {
+test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
+    '%s security packs report raw inputs once and accept documented forms and corrections',
+    async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'package.json': SEMGREP_PROJECT_FILES['package.json'],
             'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
             'wrangler.toml': SEMGREP_PROJECT_FILES['wrangler.toml'],
             'supabase/config.toml': SEMGREP_PROJECT_FILES['supabase/config.toml'],
-            'gspot.toml': buildPolicy(['javascript', 'supabase', 'cloudflare', 'security']),
+            'Value.swift': SEMGREP_PROJECT_FILES['Value.swift'],
+            'gspot.toml': buildPolicy(['javascript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'], {
+                level: level,
+            }),
             ...PLATFORM_SOURCE_CASES,
         });
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const environment = await installGeneratedPythonTools(sandbox.path);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-        const command = ['check', '--only', 'security/semgrep', '--json'];
+        const command = ['check', '--only', 'security/semgrep', 'xcode/ats', '--json'];
         const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const findings = (JSON.parse(failed.stdout) as RunReport).checks
             .flatMap((check) => check.findings)
             .map(({ file, rule, line }) => ({ file, rule, line }));
         expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-            PLATFORM_SOURCE_FINDINGS,
+            PLATFORM_SOURCE_FINDINGS.map((finding) =>
+                level === 'all' && finding.rule === 'node-no-interpolated-exec'
+                    ? { ...finding, rule: 'node-no-child-process-exec' }
+                    : finding,
+            ),
         );
         for (const [path, source] of Object.entries(PLATFORM_SOURCE_CORRECTIONS))
             await Bun.write(join(sandbox.path, path), source);

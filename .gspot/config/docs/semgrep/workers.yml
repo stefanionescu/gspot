@@ -44,22 +44,3 @@ rules:
     paths:
       include:
         - /functions/**
-  - id: workers-no-unvalidated-request-json
-    patterns:
-      - pattern: await $REQUEST.json()
-      - pattern-not-inside: |
-          const $BODY = await $REQUEST.json()
-          ...
-          validateRequestJson($BODY)
-      - pattern-not-inside: |
-          const $BODY = await $REQUEST.json()
-          ...
-          assertValidRequestJson($BODY)
-    message: Request JSON must pass through the landing request validator before use.
-    languages:
-      - javascript
-      - typescript
-    severity: ERROR
-    paths:
-      include:
-        - /functions/**

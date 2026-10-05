@@ -64,8 +64,16 @@ export const SEMGREP_PROJECT_FILES = {
     'supabase/config.toml': 'project_id = "example"\n',
 };
 
-/** Native platform defects beside documented origin fetches, CORS, and query forms. */
+/** Native defects beside documented forms and project-owned validators and server factories. */
 export const PLATFORM_SOURCE_CASES = {
+    'scripts/inject.js': 'execSync(`printf ${input}`);\n',
+    'functions/validated.js': 'const body = await request.json(); schema.parse(body);\n',
+    'supabase/functions/admin/index.ts': 'createClient("https://example.com", process.env.SERVICE_ROLE_KEY);\n',
+    'supabase/functions/factory/index.ts': 'const admin = createAdminClient();\n',
+    'src/rpc-input.js': 'const req = { body: validatedData }; client.rpc("write", req.body);\n',
+    'Info.plist': '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>\n',
+    'Allowed.plist':
+        '<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSExceptionDomains</key><dict><key>example.com</key><dict/></dict></dict></dict></plist>\n',
     'functions/input.js': 'fetch(new URL(request.url).searchParams.get("target"));\n',
     'functions/proxy.js': 'fetch(context.request.url, { cf: { cacheTtl: 5 } });\n',
     'supabase/functions/_shared/cors.ts': 'export const headers = { "Access-Control-Allow-Origin": "*" };\n',
@@ -87,6 +95,8 @@ export const PLATFORM_SOURCE_CASES = {
 
 export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'functions/input.js', rule: 'workers-no-user-controlled-fetch', line: 1 },
+    { file: 'Info.plist', rule: 'arbitrary-loads', line: 1 },
+    { file: 'scripts/inject.js', rule: 'node-no-interpolated-exec', line: 1 },
     { file: 'src/filter.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
     { file: 'src/list.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
     { file: 'src/search.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
@@ -96,6 +106,8 @@ export const PLATFORM_SOURCE_FINDINGS = [
 ];
 
 export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {
+    'Info.plist': '<plist><dict/></plist>\n',
+    'scripts/inject.js': 'execFileSync("printf", [input]);\n',
     'functions/input.js': 'fetch("https://example.com/api");\n',
     'src/filter.js': 'client.from("users").eq("id", input);\n',
     'src/list.js': 'client.from("users").in("id", input);\n',

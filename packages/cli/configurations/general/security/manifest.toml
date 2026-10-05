@@ -44,13 +44,6 @@ rule_keys = ["rules"]
 scoped = true
 
 [[config]]
-template = "semgrep/secrets.yml.tmpl"
-target = ".gspot/config/semgrep/secrets.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-scoped = true
-
-[[config]]
 template = "semgrepignore.tmpl"
 target = ".semgrepignore"
 tool = "semgrep"
@@ -132,7 +125,7 @@ summary = "Rule files or folders of the repository that Semgrep runs beside the 
 name = "tools.semgrep.registry"
 type = "list"
 direction = "tightening"
-default = ["p/owasp-top-ten", "p/secrets"]
+default = ["p/owasp-top-ten"]
 summary = "The registry packs the manual registry check runs."
 
 [[setting]]

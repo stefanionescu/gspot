@@ -65,26 +65,6 @@ const document = {
                   },
               ]
             : []),
-        {
-            id: 'workers-no-unvalidated-request-json',
-            patterns: [
-                {
-                    pattern: 'await $REQUEST.json()',
-                },
-                {
-                    'pattern-not-inside': 'const $BODY = await $REQUEST.json()\n...\nvalidateRequestJson($BODY)\n',
-                },
-                {
-                    'pattern-not-inside': 'const $BODY = await $REQUEST.json()\n...\nassertValidRequestJson($BODY)\n',
-                },
-            ],
-            message: 'Request JSON must pass through the landing request validator before use.',
-            languages: ['javascript', 'typescript'],
-            severity: 'ERROR',
-            paths: {
-                include: ['/functions/**'],
-            },
-        },
     ],
 };
 recordRules(document);

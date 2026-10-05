@@ -28,9 +28,6 @@ rules:
       - typescript
       - javascript
     severity: ERROR
-    paths:
-      include:
-        - "**/api/src/"
     metadata:
       cwe:
         - CWE-78
@@ -147,17 +144,4 @@ rules:
     metadata:
       cwe:
         - CWE-209
-      category: security
-  - id: node-no-interpolated-exec
-    pattern: execSync(`...${$VAR}...`)
-    message: >
-      Template literal interpolation in execSync() is a command injection
-      vector. Use execFileSync() with an argument array instead.
-    languages:
-      - typescript
-      - javascript
-    severity: ERROR
-    metadata:
-      cwe:
-        - CWE-78
       category: security

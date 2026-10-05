@@ -43,9 +43,6 @@ const document = {
                           'Command injection risk - exec()/execSync() runs input through a shell. Use execFile() or spawn() with argument arrays instead.\n',
                       languages: ['typescript', 'javascript'],
                       severity: 'ERROR',
-                      paths: {
-                          include: ['**/api/src/'],
-                      },
                       metadata: {
                           cwe: ['CWE-78'],
                           category: 'security',
@@ -222,18 +219,22 @@ const document = {
                 category: 'security',
             },
         },
-        {
-            id: 'node-no-interpolated-exec',
-            pattern: 'execSync(`...${$VAR}...`)',
-            message:
-                'Template literal interpolation in execSync() is a command injection vector. Use execFileSync() with an argument array instead.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-78'],
-                category: 'security',
-            },
-        },
+        ...(isAll
+            ? []
+            : [
+                  {
+                      id: 'node-no-interpolated-exec',
+                      pattern: 'execSync(`...${$VAR}...`)',
+                      message:
+                          'Template literal interpolation in execSync() is a command injection vector. Use execFileSync() with an argument array instead.\n',
+                      languages: ['typescript', 'javascript'],
+                      severity: 'ERROR',
+                      metadata: {
+                          cwe: ['CWE-78'],
+                          category: 'security',
+                      },
+                  },
+              ]),
     ],
 };
 recordRules(document);

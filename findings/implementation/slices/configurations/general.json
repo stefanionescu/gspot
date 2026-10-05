@@ -521,10 +521,15 @@
         "section": "Kits: General",
         "finding": "| `general/security/semgrep/node.yml.tmpl:17-33,136-145` | At level `all`, `node-no-child-process-exec` and `node-no-interpolated-exec` both match an interpolated `execSync`. Once the `**/api/src/` filter goes (row 32 of the first audit), every such call reports twice. | Keep one rule. |",
         "owner": "`general/security/semgrep/node.yml.tmpl:17-33,136-145`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/semgrep/node.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The interpolation rule runs only at recommended; the broader child-process execution rule owns all. After removing the application-specific path limit, native scans report the same shell interpolation once at each level under the appropriate owner, and accept the argument-array correction: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "slices/kits-general/042",

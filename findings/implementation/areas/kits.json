@@ -282,10 +282,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/semgrep/node.yml.tmpl:27-29` | `node-no-child-process-exec` runs only under `**/api/src/`, which is one project's folder. | Delete the `paths.include` block. |",
         "owner": "`packages/cli/kits/general/security/semgrep/node.yml.tmpl:27-29`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/semgrep/node.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the application-specific **/api/src/ include filter. At all, an interpolated execSync in scripts/inject.js reports once under node-no-child-process-exec; recommended retains its narrower interpolation check. Both accept execFileSync with an argument array: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/025",
@@ -354,10 +359,17 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/semgrep/secrets.yml.tmpl:1-13`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:49-59`, `packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:49-61`, `packages/cli/kits/general/security/manifest.toml:132` | Hard-coded token detection appears four more times next to the secrets kit (gitleaks and TruffleHog), including the registry pack `p/secrets`. | Delete these rules and `p/secrets`. The secrets kit owns secret detection. |",
         "owner": "`packages/cli/kits/general/security/semgrep/secrets.yml.tmpl:1-13`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:49-59`, `packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:49-61`, `packages/cli/kits/general/security/manifest.toml:132`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/manifest.toml",
+            "packages/cli/configurations/language/swift/semgrep/ios.yml.tmpl",
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the hardcoded-token Semgrep pack, Swift API-token rule, Supabase hardcoded service-key rule and p/secrets registry default. Canonical apply removes all five managed secrets.yml outputs, and its second run changes none of 137 outputs: /tmp/gspot-security-owner-apply.json and /tmp/gspot-security-owner-second-apply.json.",
+            "The secrets configuration retains the actual scanners; its native staged-secret failure/correction and no-network hook case pass: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/031",
@@ -390,10 +402,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/framework/express/semgrep/express.yml.tmpl:53-72` | `express-auth-routes-must-be-rate-limited` names `supabaseAuthMiddleware` and `createAuthRateLimiter`, which are functions from one application. | Delete the rule. |",
         "owner": "`packages/cli/kits/framework/express/semgrep/express.yml.tmpl:53-72`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/framework/express/semgrep/express.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The application-specific auth rule and its supabaseAuthMiddleware/createAuthRateLimiter names are absent from shipped sources. The current Express pack passes native defects, valid response/query forms, and corrections: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/034",
@@ -414,10 +431,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/platform/cloudflare/semgrep/workers.yml.tmpl:47-63` | `workers-no-unvalidated-request-json` accepts only `validateRequestJson` or `assertValidRequestJson`. Its message names \"the landing request validator\". These are one site's helper names. | Delete the rule, or accept any `$X.parse($BODY)` call, as the supabase rule does. |",
         "owner": "`packages/cli/kits/platform/cloudflare/semgrep/workers.yml.tmpl:47-63`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/cloudflare/semgrep/workers.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the Workers JSON rule that recognized only two named application helpers. A real request.json followed by schema.parse remains unchanged and passes native scans at both levels, beside unsafe fetch input that still reports and accepts correction: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/036",
@@ -450,10 +472,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:150-159` | `supabase-rls-bypass-service-role` reports every call of `createAdminClient`, which is one project's helper. It asks for a comment that it never checks. | Delete. |",
         "owner": "`packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:150-159`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the createAdminClient rule. The native public check accepts a project-owned factory call and preserves it after correcting actual defects at both levels: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/039",
@@ -462,10 +489,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:34-47` | The message points to \"the centralized admin client\", a project-specific factory. `supabase/admin-key` already guards the key. | Delete. |",
         "owner": "`packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:34-47`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/cli/checks/platform/supabase/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the Semgrep factory-name rule; the built-in administrative-key boundary remains the actual owner. Native scans accept a service-role read under the allowed Edge Function path at both levels, while all affected CLI administrative-key and allowance cases pass: /tmp/gspot-security-owner-native.log and /tmp/gspot-security-owner-cli.log."
+        ]
     },
     {
         "id": "areas/kits/040",
@@ -474,10 +507,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:19-31` | A Supabase rule matches Express `req.body`. | Move it to the express kit, or delete it. |",
         "owner": "`packages/cli/kits/platform/supabase/semgrep/supabase.yml.tmpl:19-31`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the Supabase rule that assumed Express req.body. The native case accepts an RPC call over already validated body data and preserves that source beside actual raw-filter defects and corrections at both levels: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/041",
@@ -726,10 +764,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:176-202` | Two JavaScript rules for \"CI scripts\" sit in the Swift kit. They repeat `node-no-eval` and `node-no-interpolated-exec`. | Delete. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:176-202`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/ios.yml.tmpl",
+            "packages/cli/configurations/general/security/semgrep/node.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted both JavaScript CI-script rules from the Swift pack. A native project selecting Swift and JavaScript reports eval and shell interpolation once under their generic owners, and passes after safe corrections at both levels: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/062",
@@ -750,10 +794,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:161-175`, `packages/cli/kits/tool/xcode/manifest.toml:103-113` | App Transport Security exceptions are checked twice. | Keep `xcode/ats`. Delete the Semgrep rule. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:161-175`, `packages/cli/kits/tool/xcode/manifest.toml:103-113`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/ios.yml.tmpl",
+            "packages/cli/src/checks/tool/xcode/settings.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the Swift Semgrep ATS rule; xcode/ats remains the owning check. The native public check reports arbitrary loads once, accepts their removal, and preserves an allowed host-specific ATS exception at both levels: /tmp/gspot-security-owner-native.log."
+        ]
     },
     {
         "id": "areas/kits/064",
