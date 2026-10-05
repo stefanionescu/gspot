@@ -69,10 +69,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/set.ts:139-143` `getSelection` | Bug. An unknown `--scope` falls back to the root scope (`?? session.scopes[0]`), so the key is checked against the root kits. Then `getScopeTable` throws `scopeMissing`, which says the directory \"does not exist\", even when the directory exists but has no `[[scope]]` entry. Line 141 is dead, because `session.scopes` always holds the root. | Throw when no scope matches. Name the scopes that do exist. Delete the fallback. |",
         "owner": "`commands/set.ts:139-143` `getSelection`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/set.ts", "tests/cli/commands/set.test.ts"],
+        "status": "closed",
+        "outcome": "Unknown setting scopes are refused before root setting lookup. The message lists declared policy scopes, including root.",
+        "verification": [
+            "The public CLI fixture contains an actual web directory but declares only root and api. Human and JSON refusals assert the complete scope diagnostic, exit 2, the policy error code, correct streams, and an unchanged repository tree. All four original refusal cases and assertions remain.",
+            "The affected set and policy-preview owners passed 46 cases and 556 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "Temporarily restoring the reviewed root-scope fallback made the strengthened unknown-scope case fail. The production source was restored exactly before checks."
+        ]
     },
     {
         "id": "slices/commands/005",

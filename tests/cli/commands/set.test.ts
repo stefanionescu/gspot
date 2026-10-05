@@ -45,7 +45,11 @@ test.each([
         'gspot ignore markdown/markdownlint --rule MD013 --reason',
     ],
     ['a key without a value', ['set', 'limits.file_lines'], 'needs a value'],
-    ['an undeclared scope', ['set', 'limits.file_lines', '100', '--scope', 'web'], 'web'],
+    [
+        'an undeclared scope',
+        ['set', 'limits.file_lines', '100', '--scope', 'web'],
+        'No policy scope matches web. Available scopes: root, api.',
+    ],
 ])('set refuses %s', async (_, argv, expected) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -53,10 +57,20 @@ test.each([
         'api/entry.sh': 'echo api\n',
         'web/index.md': '# Web\n',
     });
+    const before = readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, argv);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout).toBe('');
     expect(refused.stderr).toContain(expected);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(POLICY);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...argv, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    const failure = JSON.parse(structured.stdout) as CommandFailureJson;
+    expect(failure.error).toBe('policy');
+    expect(failure.message).toContain(expected);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test.each([
