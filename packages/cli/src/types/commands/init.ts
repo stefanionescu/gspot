@@ -1,7 +1,7 @@
 import type { Snapshot } from '#cli/types/platform/root.ts';
-import type { Policy, RawPolicy, TomlTable } from '#cli/types/policy/settings.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Tooling, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Policy, RawPolicy, TomlTable, PolicyScope } from '#cli/types/policy/settings.ts';
 import type { InitOptions, InitSelection, ConfigurationReason } from '#cli/types/lifecycle/selection.ts';
 
 export type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
@@ -39,7 +39,7 @@ export type Replaced = {
 export type PolicyDraft = {
     templateTables?: TomlTable;
     configurations: string[];
-    scopes: { path: string; configurations: string[] }[];
+    scopes: PolicyScope[];
     hooks: boolean;
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;

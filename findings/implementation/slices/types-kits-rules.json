@@ -651,10 +651,20 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/kits.ts:30` `PolicyScope`, `types/commands/init.ts:115` `InitPlan.scopes`, `types/generation/generation.ts:38` `TemplateInputs.scopes` | `{ path: string; kits: string[] }` is written three times. The named copy describes a `gspot.toml` scope, yet it lives in the kit types. | Declare it once beside `Policy`, and use it in all three places. |",
         "owner": "`types/kits.ts:30` `PolicyScope`, `types/commands/init.ts:115` `InitPlan.scopes`, `types/generation/generation.ts:38` `TemplateInputs.scopes`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/commands/init.ts",
+            "packages/cli/src/types/generation/templates.ts",
+            "packages/cli/src/types/configurations.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "PolicyScope is declared beside Policy in types/policy/settings.ts. PolicyDraft.scopes and TemplateInputs.scopes use that declaration; the old configurations declaration is deleted without a compatibility export.",
+            "ConfigurationSelection consumes Pick<ScopeEntry, path | configurations>, matching scopeAncestors and retaining the declared configurations-to-repository dependency. No configurations-to-policy dependency or boundary suppression was added.",
+            "AST comparison of all four changed modules resolves the shared scope fields and confirms identical type shapes. TypeScript transpilation confirms identical emitted JavaScript in every module.",
+            "All four TypeScript targets passed. Affected ESLint and Prettier checks passed. Scope, nested-scope, execution-scope and policy-template regressions passed: 32 tests, 112 assertions across six files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/034",

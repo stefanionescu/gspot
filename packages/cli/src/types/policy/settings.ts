@@ -5,8 +5,8 @@ import type { KeyPath } from '#cli/types/platform/document.ts';
 import type { namingLists } from '#cli/parsers/schema/naming.ts';
 import type { namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
+import type { Manifest, CheckSpec, SettingSpec } from '#cli/types/configurations.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
-import type { Manifest, CheckSpec, PolicyScope, SettingSpec } from '#cli/types/configurations.ts';
 
 export type RawArchitecture = NonNullable<RawPolicy['architecture']>;
 
@@ -86,6 +86,9 @@ export type RawScope = z.infer<typeof scopeSchema>;
 export type StructureSettings = NonNullable<RawPolicy['structure']>;
 
 export type LimitTable = Record<string, Reasoned<number>>;
+
+/** Root-relative path and selected configurations of an authored policy scope. */
+export type PolicyScope = { path: string; configurations: string[] };
 
 export type Policy = {
     level: RawPolicy['level'];

@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/platform/document.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
 import type { toolSchema, installerPinSchema } from '#cli/parsers/schema/configurations/tool.ts';
 
@@ -63,8 +63,6 @@ export type Manifest = Omit<RawManifest, 'checks' | 'settings'> & {
     dir: string;
 };
 
-export type PolicyScope = { path: string; configurations: string[] };
-
 /** The process-owned cache of shipped configuration declarations. */
 export type ManifestRegistryState = { cache: Map<string, Manifest> | undefined };
 
@@ -74,7 +72,10 @@ export type OwnedCheck = { check: CheckSpec; configuration: Manifest };
 export type SettingMeaning = { configuration: string; meaning: Record<string, unknown> };
 
 /** Configuration choices declared at the root and in project scopes. */
-export type ConfigurationSelection = { configurations: string[]; scopes: PolicyScope[] };
+export type ConfigurationSelection = {
+    configurations: string[];
+    scopes: Pick<ScopeEntry, 'path' | 'configurations'>[];
+};
 /** Resolved configuration choices consumed without their scope's policy values. */
 export type SelectedConfigurations = { selected: Manifest[] };
 /** A detected configuration absent from the saved selection, with its acquisition command. */

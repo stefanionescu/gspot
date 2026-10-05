@@ -1,6 +1,6 @@
-import type { Policy, ScopeView } from '#cli/types/policy/settings.ts';
 import type { EditorconfigOverride } from '#cli/types/generation/formatting.ts';
 import type { EslintPresets, EslintAllRules } from '#cli/types/parsers/eslint.ts';
+import type { Policy, ScopeView, PolicyScope } from '#cli/types/policy/settings.ts';
 
 import type {
     EslintFiles,
@@ -35,7 +35,7 @@ export type TemplateInputs = {
     prose: { blockIgnores: string[]; tokenIgnores: string[]; rules: string[]; formats: [string, string][] };
     version: string;
     scope: string;
-    scopes: { path: string; configurations: string[] }[];
+    scopes: PolicyScope[];
     configurationScopes: (configuration: string) => {
         path: string;
         settings: Record<string, unknown>;
