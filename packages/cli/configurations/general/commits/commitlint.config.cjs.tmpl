@@ -1,16 +1,6 @@
 <%
-const types = settings['tools.commitlint.types'] ?? [
-    'feat',
-    'fix',
-    'refactor',
-    'perf',
-    'docs',
-    'test',
-    'build',
-    'ci',
-    'chore',
-];
-const named = settings['tools.commitlint.scopes'] ?? [];
+const types = settings['tools.commitlint.types'];
+const named = settings['tools.commitlint.scopes'];
 const derived = scopes.map((entry) => entry.path.split('/').at(-1)).concat(['root', 'hooks', 'deps']);
 const allowed = named.length > 0 ? named : scopes.length > 0 ? derived : [];
 const off = rulesOff('commits/commitlint');

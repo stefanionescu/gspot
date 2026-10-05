@@ -3,7 +3,7 @@ const off = [
     ...rulesOff('docker/hadolint'),
     ...(isAll ? [] : ['DL3001', 'DL3003', 'DL3010', 'DL3020', 'DL3048', 'DL4001']),
 ];
-const registries = settings['tools.hadolint.trusted_registries'] ?? [];
+const registries = settings['tools.hadolint.trusted_registries'];
 const document = {
     'failure-threshold': 'style',
     ...(off.length > 0 ? { ignored: off } : {}),

@@ -2,13 +2,8 @@ import { join } from 'node:path';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
-import { WORKSPACE_SUFFIX, XCODE_DESTINATION } from '#cli/config/checks/language/swift.ts';
+import { WORKSPACE_SUFFIX } from '#cli/config/checks/language/swift.ts';
 import type { SwiftBuildPlan, SwiftBuildPurpose } from '#cli/types/checks/language/swift.ts';
-
-function stringSetting(input: EngineInput, key: string): string {
-    const found = input.view.settings[key];
-    return typeof found === 'string' ? found : '';
-}
 
 /**
  * Locate independent native build state for one project scope and consumer.
@@ -34,7 +29,7 @@ export function scopeBuildFolder(input: Pick<EngineInput, 'root' | 'scope'>, pur
 export function buildPlan(input: EngineInput, purpose: SwiftBuildPurpose = 'compile'): SwiftBuildPlan {
     const folder = scopeBuildFolder(input, purpose);
     const log = join(folder, 'build.log');
-    const project = stringSetting(input, 'tools.xcode.project');
+    const project = (input.view.settings['tools.xcode.project'] as string | undefined) ?? '';
     if (project === '') {
         const scratch = join(folder, 'package');
         return {
@@ -53,9 +48,9 @@ export function buildPlan(input: EngineInput, purpose: SwiftBuildPurpose = 'comp
         container,
         project,
         '-scheme',
-        stringSetting(input, 'tools.xcode.scheme'),
+        input.view.settings['tools.xcode.scheme'] as string,
         '-destination',
-        stringSetting(input, 'tools.xcode.destination') || XCODE_DESTINATION,
+        input.view.settings['tools.xcode.destination'] as string,
         '-derivedDataPath',
         join(folder, 'derived'),
         'CODE_SIGNING_ALLOWED=NO',

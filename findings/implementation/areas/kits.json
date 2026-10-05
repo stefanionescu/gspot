@@ -798,10 +798,19 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/commits/commitlint.config.cjs.tmpl:2`, `packages/cli/kits/library/zustand/eslint.fragment.js.tmpl:3`, `packages/cli/kits/language/swift/swiftformat.tmpl:22`, `packages/cli/kits/tool/docker/trivy.yml.tmpl:3` | Templates repeat manifest defaults as fallbacks, so each default has two owners. | Read defaults from the manifest only. |",
         "owner": "`packages/cli/kits/general/commits/commitlint.config.cjs.tmpl:2`, `packages/cli/kits/library/zustand/eslint.fragment.js.tmpl:3`, `packages/cli/kits/language/swift/swiftformat.tmpl:22`, `packages/cli/kits/tool/docker/trivy.yml.tmpl:3`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/commits/commitlint.config.cjs.tmpl",
+            "packages/cli/configurations/library/zustand/eslint.fragment.js.tmpl",
+            "packages/cli/configurations/language/swift/swiftformat.tmpl",
+            "packages/cli/configurations/tool/docker/trivy.yml.tmpl"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Commitlint, Zustand, SwiftFormat and Trivy read resolved manifest settings without duplicate default literals. The required manifest defaults remain the existing authoritative owners.",
+            "Every generated template parses at both levels, and all 383 affected CLI cases pass with one platform skip. Native Ruff, SwiftLint, SwiftFormat and Hadolint defect/correction cases pass: /tmp/gspot-default-cli.log and /tmp/gspot-default-native.log.",
+            "Canonical apply twice changes none of 142 outputs: /tmp/gspot-default-apply.json and /tmp/gspot-default-second-apply.json."
+        ]
     },
     {
         "id": "areas/kits/068",

@@ -10,7 +10,7 @@ customCatalog:
               - .config/mise/config.toml
               - .config/mise/conf.d/*.toml
           location: https://mise.jdx.dev/schema/mise.json
-<% for (const entry of (settings['tools.v8r.schemas'] ?? [])) { if (entry && typeof entry === 'object' && entry.pattern && entry.schema) { %>        - name: <%= json(String(entry.pattern)) %>
+<% for (const entry of settings['tools.v8r.schemas']) { if (entry && typeof entry === 'object' && entry.pattern && entry.schema) { %>        - name: <%= json(String(entry.pattern)) %>
           fileMatch:
               - <%= json(String(entry.pattern)) %>
           location: <%= json(String(entry.schema)) %>

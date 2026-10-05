@@ -23,7 +23,7 @@ const document = {
         linebreaks: 'lf',
         importgrouping: 'length,alpha',
         self: 'init-only',
-        swiftversion: settings['tools.swiftformat.swift_version'] ?? '5.9',
+        swiftversion: settings['tools.swiftformat.swift_version'],
     },
     enable: isAll ? ['wrapEnumCases'].filter((rule) => !rulesOff('swift/swiftformat').includes(rule)) : [],
     disable: [...new Set([

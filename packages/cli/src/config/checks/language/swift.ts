@@ -25,8 +25,6 @@ export const SWIFTLINT_COMMAND = [
 
 export const DOC_RULE = 'doc_comment_style';
 
-export const XCODE_DESTINATION = 'generic/platform=iOS Simulator';
-
 export const WORKSPACE_SUFFIX = '.xcworkspace';
 
 export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;

@@ -82,7 +82,6 @@ const OPT_IN = [
     'discouraged_optional_collection',
 ];
 const ANALYZER = ['capture_variable', 'typesafe_array_init', 'unused_import', 'unused_declaration'];
-const at = (key, otherwise) => limit(key, 'swift') ?? limit(key) ?? otherwise;
 const pair = (count) => ({ warning: count, error: count });
 const off = [
     ...rulesOff('swift/swiftlint'),
@@ -128,17 +127,17 @@ const off = [
 const offSet = new Set(off);
 const options = {
     line_length: { ...pair(format.print_width), ignores_urls: true },
-    file_length: { ...pair(at('file_lines', 300)), ignore_comment_only_lines: true },
-    type_body_length: pair(settings['limits.swift.type_lines'] ?? 300),
-    function_parameter_count: { ...pair(at('function_parameters', 7)), ignores_default_parameters: false },
-    function_body_length: pair(at('function_lines', 60)),
-    cyclomatic_complexity: pair(at('cyclomatic_complexity', 8)),
-    closure_body_length: pair(settings['limits.swift.closure_lines'] ?? 60),
+    file_length: { ...pair(limit('file_lines', 'swift')), ignore_comment_only_lines: true },
+    type_body_length: pair(settings['limits.swift.type_lines']),
+    function_parameter_count: { ...pair(limit('function_parameters', 'swift')), ignores_default_parameters: false },
+    function_body_length: pair(limit('function_lines', 'swift')),
+    cyclomatic_complexity: pair(limit('cyclomatic_complexity', 'swift')),
+    closure_body_length: pair(settings['limits.swift.closure_lines']),
     identifier_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] ?? 40 },
     type_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] ?? 40 },
     nesting: { type_level: pair(1), function_level: pair(2) },
     missing_docs: { error: ['open', 'public'] },
-    unused_import: { always_keep_imports: settings['tools.swiftlint.keep_imports'] ?? ['CoreGraphics'] },
+    unused_import: { always_keep_imports: settings['tools.swiftlint.keep_imports'] },
     trailing_comma: { mandatory_comma: format.trailing_commas !== 'none' },
 };
 const document = {

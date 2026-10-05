@@ -1,5 +1,4 @@
 <%
-const at = (key, otherwise) => limit(key, 'python') ?? limit(key) ?? otherwise;
 const off = rulesOff('python/ruff');
 const baseline = [
     'ARG001',
@@ -819,19 +818,19 @@ const document = {
         preview: false,
         'explicit-preview-rules': true,
         isort: { 'length-sort': true, 'length-sort-straight': true, 'force-sort-within-sections': true },
-        mccabe: { 'max-complexity': at('cyclomatic_complexity', 8) },
+        mccabe: { 'max-complexity': limit('cyclomatic_complexity', 'python') },
         ...(convention === undefined ? {} : { pydocstyle: { convention } }),
         'pep8-naming': { 'extend-ignore-names': ['setUp', 'setUpClass', 'tearDown', 'tearDownClass'] },
         pylint: {
-            'max-args': at('function_parameters', 7),
-            'max-positional-args': at('positional_arguments', at('function_parameters', 7)),
-            'max-bool-expr': at('boolean_operators', 4),
-            'max-branches': at('branches', 8),
-            'max-locals': at('locals', 10),
-            'max-public-methods': at('public_methods', 12),
-            'max-returns': at('returns', 4),
-            'max-statements': at('statements', 30),
-            'max-nested-blocks': at('nesting', 3),
+            'max-args': limit('function_parameters', 'python'),
+            'max-positional-args': limit('positional_arguments', 'python') ?? limit('function_parameters', 'python'),
+            'max-bool-expr': limit('boolean_operators', 'python'),
+            'max-branches': limit('branches', 'python'),
+            'max-locals': limit('locals', 'python'),
+            'max-public-methods': limit('public_methods', 'python'),
+            'max-returns': limit('returns', 'python'),
+            'max-statements': limit('statements', 'python'),
+            'max-nested-blocks': limit('nesting', 'python'),
         },
         ...(byPath.size === 0 ? {} : { 'per-file-ignores': Object.fromEntries(byPath) }),
     },

@@ -238,3 +238,29 @@ test.skipIf(!isPosix)(
         ]);
     },
 );
+
+test.each(['default', 'platform=macOS', ''])(
+    'Xcode build plans retain destination %s for every build purpose',
+    async (destination) => {
+        await using sandbox = await testdir();
+        const declared = destination === 'default' ? '' : `destination = ${JSON.stringify(destination)}\n`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['swift', 'xcode'], {
+                tables: `[tools.xcode]\nproject = "App.xcodeproj"\nscheme = "App"\n${declared}`,
+            }),
+        });
+        const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const expected =
+            destination === 'default'
+                ? (configurationManifests()
+                      .get('xcode')!
+                      .settings.find(({ name }) => name === 'tools.xcode.destination')!.default as string)
+                : destination;
+        for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
+            const { argv } = buildPlan(input, purpose);
+            expect(argv[argv.indexOf('-destination') + 1]).toStrictEqual(expected);
+            expect(argv[argv.indexOf('-scheme') + 1]).toBe('App');
+            expect(argv).toContain('App.xcodeproj');
+        }
+    },
+);
