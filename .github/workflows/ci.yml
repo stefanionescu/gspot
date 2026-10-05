@@ -51,7 +51,7 @@ jobs:
                          scripts/pins.ts scripts/config/pins.ts scripts/types/pins.ts scripts/parsers/releases.ts \
                          scripts/test-tools.ts scripts/config/test-tools.ts scripts/eslint-presets.ts \
                          scripts/config/eslint-presets.ts scripts/parsers/npm.ts scripts/types/npm.ts \
-                         packages/cli/src/config/generation/eslint.ts packages/cli/src/generation/eslint/presets.ts \
+                         packages/cli/src/config/eslint.ts packages/cli/src/generation/eslint/presets.ts \
                          packages/cli/src/parsers/schema/eslint.ts | rg .; then
                       echo 'changed=true' >> "$GITHUB_OUTPUT"
                   fi
