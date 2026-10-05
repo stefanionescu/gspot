@@ -586,10 +586,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/spawn/termination.test.ts:33,183` | `duration < 1500` and `duration < 2000` are wall-clock bounds with the flaw that FINDINGS names for line 94. A slow runner fails them with no bug. | Keep the `isTimedOut` and `isCanceled` assertions and the descendant exit. Drop the duration bounds. |",
         "owner": "`cli/platform/spawn/termination.test.ts:33,183`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/spawn/termination.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Termination tests now assert timeout and cancellation classifications, failure status, captured bytes, and actual child or descendant exit. Removed only the three incidental duration assertion sites (six runtime assertions); all 34 other assertion sites and all ten runtime cases remain unchanged.",
+            "The CLI exit probe keeps native Bun.spawn with its remaining-budget timeout and SIGKILL, plus explicit finally disposal and output draining. Removed the manual timer that duplicated the native deadline. The direct-spawn audit confirms all nine native test invocations still use prepared.options.timeoutMs.",
+            "Root TypeScript, affected ESLint, and formatting passed. Spawn backends, termination, and command cancellation passed 36 tests with 193 assertions across three files on macOS. AST comparison confirms identical outcome assertions and scenario names; platform guards remain intact."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/048",

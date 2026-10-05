@@ -850,10 +850,14 @@
         "section": "Findings",
         "finding": "| `cli/platform/spawn/termination.test.ts:94`, \"%s capture stops descendants on %s before they can write after the deadline\" | `duration < 2000` with a 1,500 ms deadline leaves 500 ms to kill and reap the process. A slow runner fails with no bug. | Raise the bound, or assert only `isTimedOut` or `isCanceled` and that the descendant exits. |",
         "owner": "`cli/platform/spawn/termination.test.ts:94`, \"%s capture stops descendants on %s before they can write after the deadline\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/platform/spawn/termination.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Termination tests now assert timeout and cancellation classifications, failure status, captured bytes, and actual child or descendant exit. Removed only the three incidental duration assertion sites (six runtime assertions); all 34 other assertion sites and all ten runtime cases remain unchanged.",
+            "The CLI exit probe keeps native Bun.spawn with its remaining-budget timeout and SIGKILL, plus explicit finally disposal and output draining. Removed the manual timer that duplicated the native deadline. The direct-spawn audit confirms all nine native test invocations still use prepared.options.timeoutMs.",
+            "Root TypeScript, affected ESLint, and formatting passed. Spawn backends, termination, and command cancellation passed 36 tests with 193 assertions across three files on macOS. AST comparison confirms identical outcome assertions and scenario names; platform guards remain intact."
+        ]
     },
     {
         "id": "areas/integration-tests/071",

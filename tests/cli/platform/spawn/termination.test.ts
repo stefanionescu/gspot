@@ -33,7 +33,6 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
             child.stdout?.emit('error', new Error('Test stream failure.'));
         }
         const result = await running;
-        expect(result.duration).toBeLessThan(1500);
         expect(result.isTimedOut).toBe(false);
         expect(result.isCanceled).toBe(false);
         expect(result.code).not.toBe(0);
@@ -94,7 +93,6 @@ test.each([
         expect(Buffer.from(result.stdout).toString('utf8')).toContain('descendant-ready');
         expect(result.isTimedOut).toBe(termination === 'timeout');
         expect(result.isCanceled).toBe(termination === 'canceled');
-        expect(result.duration).toBeLessThan(2000);
         const pid = Number(readFileSync(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
@@ -117,9 +115,6 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     });
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
-    const timer = setTimeout(() => {
-        child.kill('SIGKILL');
-    }, prepared.options.timeoutMs);
     try {
         expect(await child.exited, await errors).toBe(19);
         const printed = await output;
@@ -127,7 +122,6 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
     } finally {
-        clearTimeout(timer);
         if (child.exitCode === null) child.kill('SIGKILL');
         await child.exited;
         await output;
@@ -191,7 +185,6 @@ test.each(['text', 'binary'] as const)(
         expect(Buffer.from(result.stdout).toString('utf8')).toContain('ready');
         expect(result.isTimedOut).toBe(false);
         expect(result.isCanceled).toBe(false);
-        expect(result.duration).toBeLessThan(2000);
         const pid = Number(readFileSync(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
