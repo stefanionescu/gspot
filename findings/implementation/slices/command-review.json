@@ -508,10 +508,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/install/command.ts:70-71` | The JSDoc of `registerInstall` reads \"Register immutable installation for a clone.\" | Rewrite as \"Registers install.\" |",
         "owner": "`commands/install/command.ts:70-71`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/install.ts", "packages/cli/src/lifecycle/install.ts"],
+        "status": "closed",
+        "outcome": "The install registration doc describes tool and hook installation rather than an immutable clone operation.",
+        "verification": [
+            "The current registration summary is Registers tool and hook installation. Traced installCommand into the installation phases that install locked tool projects and clone-local hooks. The generated command reference successfully traverses this real registration.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/030",
@@ -556,10 +560,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/program.ts:71-72` `buildProgram` | The comment says \"Exported so tests can walk it\". Tests import only `main`. The docs reference `docs/src/content/reference/commands.ts` walks `buildProgram`. | Rewrite as \"Exported so the docs reference can list the commands.\" |",
         "owner": "`commands/program.ts:71-72` `buildProgram`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/program.ts", "docs/src/content/reference/commands.ts"],
+        "status": "closed",
+        "outcome": "The program documentation identifies executable registration and the generated command reference as its consumers.",
+        "verification": [
+            "The current buildProgram doc describes both execution and generated reference use. The actual commandPages producer imported it and generated pages for all twelve registered commands without missing help sections. Public argument refusals and recovery to readable help passed in the affected suite.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/034",
@@ -580,10 +588,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/ignore.ts:106, 109` `registerIgnore` | The help for `--paths` says \"without it, to the whole scope\". `ignore` has no `--scope` and writes the root `[[ignore]]` table. The help for `--remove` says \"Delete the matching ignore\", but it can delete several entries. | Write \"without it, everywhere\" and \"Delete the matching ignore entries\". |",
         "owner": "`commands/ignore.ts:106, 109` `registerIgnore`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/ignore.ts", "tests/cli/commands/program.test.ts"],
+        "status": "closed",
+        "outcome": "Ignore help describes pathless ignores as applying everywhere and removal as deleting matching entries.",
+        "verification": [
+            "Both short and long help flags pass against malformed policy input without reading it or writing files. The tests require the corrected descriptions, empty stderr and no nonexistent scope flag. Both fail against the old descriptions. Actual generated reference pages contain the same option text.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/036",
@@ -610,10 +622,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/export.ts:24, 27` `exportCommand` | Line 24 runs `mutationTarget(file)` on the path relative to the working directory. The rules apply to paths relative to the root, which line 26 already checks. From a subfolder, line 24 can refuse a safe path. `parseProfile(saved.text, file)` is called only for its throw, and nothing says so. | Delete line 24. Add a comment above line 27: the export refuses a profile that would not parse back. |",
         "owner": "`commands/export.ts:24, 27` `exportCommand`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/export.ts", "tests/cli/policy/template.test.ts"],
+        "status": "closed",
+        "outcome": "Export validates repository-relative destinations and documents the parse-back requirement before publishing.",
+        "verification": [
+            "The new nested-working-directory control exports ../team.template.toml safely inside the root, parses the saved template through the real reader and preserves policy and source bytes. Restoring the redundant cwd-relative mutation check makes this case fail. Existing external-path, symlink, managed/unowned destination, idempotency and crash-recovery controls remain.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/038",
@@ -638,10 +654,19 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/init/plan/text.ts:13, 41, 42` | \"none: the rules install alone\" prints even with `--no-rules`. The heading \"kept active\" sits above shared files whose notes say \"the generated X configuration takes over\" (`replaced.ts:24`). \"could not read; fix the file\" sits above rows whose note says the file is missing (`replaced.ts:13`). | Print \"none\". Retitle the sections \"left in place, no longer read\" and \"missing; restore or delete it\". |",
         "owner": "`commands/init/plan/text.ts:13, 41, 42`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/init/plan.ts",
+            "packages/cli/src/commands/init/replaced.ts",
+            "tests/cli/commands/init/ci.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Empty selections print none; missing inputs use the restore-or-delete heading. Mixed retained rows use left in place with accurate notes for each row.",
+        "verification": [
+            "The real human preview combines a shared SQLFluff configuration with an authored CI lint job. Its retained section explains that generated SQLFluff configuration takes over and that the CI job stays active. A blanket no-longer-read heading would misdescribe CI, so the neutral heading preserves both contracts. The empty-selection control disables rules and rejects the old rules-install-alone text; both previews preserve the complete repository and Git tree.",
+            "Read the missing-input producer and renderer: captureOwned adds unread rows only when a file is missing, and initPlanText labels that section missing; restore or delete it.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/040",
@@ -845,10 +870,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/init/propose.ts:52` | The comment \"Initialization selects enabled integrations.\" says nothing about the function. | Rewrite as \"Writes the hooks, ci, rules, and runner tables from the answers.\" |",
         "owner": "`commands/init/propose.ts:52`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/init/policy-text.ts", "tests/cli/commands/init/policy-text.test.ts"],
+        "status": "closed",
+        "outcome": "The integration comment identifies the hooks, CI, agent rules and runner tables written from answers.",
+        "verification": [
+            "The current applyIntegrations comment names all four tables. Traced its writes and deletions through proposeText; fresh policy-text cases retain authored empty hooks and template sibling settings while applying repository answers.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "slices/commands/050",

@@ -159,11 +159,11 @@ export function registerIgnore(program: Program): void {
             'after',
             '\nExit codes:\n- 0: the ignore was written and applied, or the preview finished.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
         )
-        .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, to the whole scope')
+        .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, everywhere')
         .option('--rule <rule>', 'Turn off one rule of the check')
         .option('--reason <text>', 'Say why; required when require_reasons is true')
         .option('--until <date>', 'Stop applying this ignore on YYYY-MM-DD (UTC)')
-        .option('--remove', 'Delete the matching ignore')
+        .option('--remove', 'Delete the matching ignore entries')
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (check, flags, command) => {
             const global = command.optsWithGlobals();

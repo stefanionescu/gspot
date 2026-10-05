@@ -875,10 +875,19 @@
         "section": "Findings",
         "finding": "| `generation/outputs.ts:23`, `templates.ts:1`, `set.ts:1`, `init/plan/text.ts:1` | Wrong comments. `outputs.ts:23` says \"Integrations for the selected hook tool\" above the CI workflow writer. The other three are copied or stale headers. | Rewrite them. |",
         "owner": "`generation/outputs.ts:23`, `templates.ts:1`, `set.ts:1`, `init/plan/text.ts:1`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/generation/templates.ts",
+            "packages/cli/src/commands/set.ts",
+            "packages/cli/src/commands/init/plan.ts"
+        ],
+        "status": "closed",
+        "outcome": "Headers and purpose comments describe their current generation, setting and initialization owners.",
+        "verification": [
+            "Read all four current owners. The CI comment now describes manual-check inclusion and Swift platform selection; template rendering, setting preview/publication and initialization plan headers already describe their actual work. CI generation controls retain both providers, manual selection and the Swift macOS addition.",
+            "The affected public argument/help, ignore add/remove, initialization, template publication and CI owners passed 82 cases and 416 assertions across nine files. After the final test formatting and bounded section parsing changes, the three modified test owners passed 35 cases and 173 assertions. Root TypeScript, affected ESLint and formatting passed.",
+            "A syntax-tree comparison preserved production behavior apart from the two approved help strings and comments. All twelve original declarations and their assertions in the three changed test files remain unchanged."
+        ]
     },
     {
         "id": "areas/commands/050",

@@ -74,6 +74,19 @@ test('template publication is idempotent, preserves edits, and survives apply', 
     expect(readFileSync(path, 'utf8')).toContain('# Authored note.');
 });
 
+test('template export resolves a parent destination inside the repository from a nested working directory', async () => {
+    await using directory = await testdir();
+    const policy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    await createFileTree(directory.path, { 'gspot.toml': policy, 'app/entry.sh': 'echo example\n' });
+    const exported = exportCommand(join(directory.path, 'app'), '../team.template.toml');
+    expect(exported.exitCode).toBe(0);
+    expect(exported.json).toStrictEqual({ file: '../team.template.toml', leftOut: [] });
+    const restored = await getTemplate('team.template.toml', directory.path);
+    expect(restored.tables.configurations).toStrictEqual(['bash']);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(readFileSync(join(directory.path, 'app/entry.sh'), 'utf8')).toBe('echo example\n');
+});
+
 test.each([
     '../outside.toml',
     '/outside.toml',

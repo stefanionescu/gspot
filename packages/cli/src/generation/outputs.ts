@@ -27,7 +27,7 @@ import { PRIVATE_PATHS, GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outp
 import { requiredToolNames, applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
-// Integrations for the selected hook tool. Native gspot hooks need no integration.
+// CI includes the selected manual checks and adds macOS when a scope selects Swift.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
     if (policy.ci === undefined) return;
     const swiftScope = scopes.find((selection) =>

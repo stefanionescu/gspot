@@ -26,6 +26,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     const saved = exportTemplate(policyFile.text, file);
     const path = toPosix(relative(root, resolve(cwd, file)));
     assertMutationTarget(path);
+    // Refuse a template that cannot parse back before writing its destination.
     parseTemplate(saved.text, file);
     using log = openOwnership(root);
     if (log.files.read('gspot.toml')?.bytes.toString('utf8') !== policyFile.text)

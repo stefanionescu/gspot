@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { INIT_CI_CASES } from '#tests/config/cli/commands/init/ci.ts';
 
 test.each(INIT_CI_CASES)(
@@ -51,3 +52,30 @@ test.each(INIT_CI_CASES)(
         }
     },
 );
+
+test('initialization distinguishes retained CI jobs from tool settings that generated configuration replaces', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'setup.cfg': '[flake8]\nignore = E501\n[sqlfluff]\nexclude_rules = LT01\n',
+        '.gitlab-ci.yml': 'quality:\n  script: npm run lint\n',
+        'query.sql': 'SELECT 1;\n',
+    });
+    commitAll(sandbox.path);
+    const before = readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, [...buildInitArguments(['sql']), '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stderr).toBe('');
+    const retained = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
+    expect(retained).toContain('setup.cfg');
+    expect(retained).toContain('generated sqlfluff configuration takes over');
+    expect(retained).toContain('.gitlab-ci.yml: quality');
+    expect(retained).toContain('existing lint job retained; no duplicate CI job proposed');
+    expect(preview.stdout).not.toContain('kept active');
+    expect(preview.stdout).not.toContain('left in place, no longer read');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const empty = await runGspot(sandbox.path, [...buildInitArguments(['none']), '--dry-run']);
+    expect(empty.code, empty.stdout + empty.stderr).toBe(0);
+    expect(empty.stdout).toContain('\nconfigurations\n  none\n');
+    expect(empty.stdout).not.toContain('the rules install alone');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+});

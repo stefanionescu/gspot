@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { readTree } from '#tests/harness/preservation.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import { ARGUMENT_REFUSALS } from '#tests/config/cli/commands/program.ts';
 
@@ -51,4 +52,19 @@ test('help remains readable and exits 0 after a structured argument failure', as
     expect(help.stderr).toBe('');
     expect(help.stdout).toContain('Usage: gspot');
     expect(help.stdout).toContain('Commands:');
+});
+
+test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal of multiple entries', async (flag) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'gspot.toml': 'malformed = [' });
+    const before = readTree(directory.path);
+    const help = await runGspot(directory.path, ['ignore', flag]);
+    expect(help.code, help.stdout + help.stderr).toBe(0);
+    expect(help.stderr).toBe('');
+    expect(help.stdout.replaceAll(/\s+/gu, ' ')).toContain(
+        'Apply the ignore to these paths only; without it, everywhere',
+    );
+    expect(help.stdout).toContain('Delete the matching ignore entries');
+    expect(help.stdout).not.toContain('--scope');
+    expect(readTree(directory.path)).toStrictEqual(before);
 });
