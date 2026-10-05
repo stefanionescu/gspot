@@ -248,8 +248,6 @@ export const RUNNER_LOCKS: RunnerLock[] = [
     { file: 'yarn.lock', runner: 'yarn' },
     { file: 'package-lock.json', runner: 'npm' },
     { file: 'package.json', runner: 'npm' },
-    { file: 'uv.lock', runner: 'none' },
-    { file: 'pyproject.toml', runner: 'none' },
 ];
 
 export const LINT_TOOL_PACKAGE_PREFIXES = [

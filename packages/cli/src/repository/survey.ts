@@ -68,7 +68,7 @@ function detectRunner(paths: Set<string>): RunnerSelection {
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
     if (lock === undefined) return { runner: 'none' };
-    return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
+    return { runner: lock.runner, runnerFile: 'package.json' };
 }
 
 function jobCommands(job: object): string[] {

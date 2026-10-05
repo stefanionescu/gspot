@@ -85,7 +85,7 @@ export type DirectoryContents = { entries: Dirent[]; rules: PathIgnore[] };
 /** A directory waiting to be read with its inherited ignore rules. */
 export type PendingDirectory = { directory: string; rules: PathIgnore[] };
 /** A lock file that declares the repository's package manager. */
-export type RunnerLock = { file: string; runner: Tooling['runner'] };
+export type RunnerLock = { file: string; runner: Exclude<Runner, 'mise'> };
 
 /** Captured content and location for classifying one inventory entry. */
 export type FileClassification = { root: string; entry: RawEntry; prefix: Buffer; isBinary: boolean };

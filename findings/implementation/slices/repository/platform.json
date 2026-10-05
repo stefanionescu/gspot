@@ -865,10 +865,20 @@
         "section": "Repository and Platform",
         "finding": "| `repository/survey.ts:59` `detectRunner`, `config/repository/repository.ts:216-217` | The `uv.lock` and `pyproject.toml` entries map to runner `'none'`, which is the same as no match. `runnerFile: 'pyproject.toml'` is never shown, because `commands/init/detection.ts:31` prints only \"none\" for that runner. | Delete the two entries and the ternary. Return `runnerFile: 'package.json'`. |",
         "owner": "`repository/survey.ts:59` `detectRunner`, `config/repository/repository.ts:216-217`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/inventory.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/types/repository/inventory.ts",
+            "tests/cli/repository/runners.test.ts",
+            "tests/config/cli/repository/runners.ts"
+        ],
+        "status": "closed",
+        "outcome": "Python project and lock inputs no longer create a phantom runner file. Package-manager locks select their manager with package.json, and mise files retain precedence. RunnerLock excludes none and mise, matching the owned package-manager table.",
+        "verification": [
+            "Fifteen independent real-repository cases cover an empty repository, Python manifest/lock/both, all six existing package-manager entries and all five mise filenames ahead of package/Python inputs. Each verifies the exact runner and optional file presence, every authored byte, removal back to no runner and unrelated source preservation. Before the fix, the three Python cases failed while 12 controls passed.",
+            "Repository/init/doctor regressions passed 284 cases and 1025 assertions across 28 files. After adding the explicit mutable fixture-tree type, the changed runner owner passed 15 cases and 145 assertions. Root and CLI TypeScript, affected ESLint and formatting passed.",
+            "Traced runnerFile through the survey and init detection renderer; none displays without a filename. The two unused Python entries and source ternary are gone. No compatibility export, extra detection layer or consumer-fixture path change was added."
+        ]
     },
     {
         "id": "slices/repository-platform/045",

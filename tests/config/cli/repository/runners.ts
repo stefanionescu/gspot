@@ -1,0 +1,67 @@
+export const RUNNER_CASES = [
+    { name: 'an empty repository', paths: [], runner: 'none', runnerFile: undefined } as const,
+    { name: 'a Python manifest', paths: ['pyproject.toml'], runner: 'none', runnerFile: undefined } as const,
+    { name: 'a Python lock', paths: ['uv.lock'], runner: 'none', runnerFile: undefined } as const,
+    {
+        name: 'Python project inputs',
+        paths: ['pyproject.toml', 'uv.lock'],
+        runner: 'none',
+        runnerFile: undefined,
+    } as const,
+    { name: 'an npm manifest', paths: ['package.json'], runner: 'npm', runnerFile: 'package.json' } as const,
+    {
+        name: 'an npm lock',
+        paths: ['package.json', 'package-lock.json'],
+        runner: 'npm',
+        runnerFile: 'package.json',
+    } as const,
+    {
+        name: 'a Bun text lock',
+        paths: ['package.json', 'bun.lock'],
+        runner: 'bun',
+        runnerFile: 'package.json',
+    } as const,
+    {
+        name: 'a Bun binary lock',
+        paths: ['package.json', 'bun.lockb'],
+        runner: 'bun',
+        runnerFile: 'package.json',
+    } as const,
+    {
+        name: 'a pnpm lock',
+        paths: ['package.json', 'pnpm-lock.yaml'],
+        runner: 'pnpm',
+        runnerFile: 'package.json',
+    } as const,
+    { name: 'a Yarn lock', paths: ['package.json', 'yarn.lock'], runner: 'yarn', runnerFile: 'package.json' } as const,
+    {
+        name: 'mise.toml ahead of project locks',
+        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', 'mise.toml'],
+        runner: 'mise',
+        runnerFile: 'mise.toml',
+    } as const,
+    {
+        name: '.mise.toml ahead of project locks',
+        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.mise.toml'],
+        runner: 'mise',
+        runnerFile: '.mise.toml',
+    } as const,
+    {
+        name: '.mise/config.toml ahead of project locks',
+        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.mise/config.toml'],
+        runner: 'mise',
+        runnerFile: '.mise/config.toml',
+    } as const,
+    {
+        name: '.tool-versions ahead of project locks',
+        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.tool-versions'],
+        runner: 'mise',
+        runnerFile: '.tool-versions',
+    } as const,
+    {
+        name: 'mise.local.toml ahead of project locks',
+        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', 'mise.local.toml'],
+        runner: 'mise',
+        runnerFile: 'mise.local.toml',
+    } as const,
+];
