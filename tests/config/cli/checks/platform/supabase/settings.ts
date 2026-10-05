@@ -20,11 +20,6 @@ export const KEY = 'SUPABASE_SERVICE_ROLE_KEY';
 export const CASES: FindingCase[] = [
     {
         check: 'supabase/config',
-        files: { 'supabase/config.toml': `${SUPABASE_CONFIG}\n[functions.missing]\nverify_jwt = true\n` },
-        expected: { file: 'supabase/config.toml', rule: 'function', line: 1 },
-    },
-    {
-        check: 'supabase/config',
         files: { 'supabase/config.toml': 'project_id = \n' },
         expected: { file: 'supabase/config.toml', rule: 'syntax', line: 1 },
     },

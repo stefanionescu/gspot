@@ -38,38 +38,35 @@ test.each([
 });
 
 test.each([
-    ['cloudflare', 'wrangler.toml'],
-    ['cloudflare', 'apps/api/wrangler.toml'],
-    ['cloudflare', 'wrangler.json'],
-    ['cloudflare', 'apps/api/wrangler.json'],
-    ['cloudflare', 'wrangler.jsonc'],
-    ['cloudflare', 'apps/api/wrangler.jsonc'],
-    ['cloudflare', '_worker.js'],
-    ['cloudflare', 'public/_worker.js'],
-    ['cloudflare', 'functions/_middleware.js'],
-    ['cloudflare', 'functions/_middleware.ts'],
-    ['cloudflare', 'apps/api/functions/_middleware.ts'],
-    ['supabase', 'supabase/config.toml'],
-    ['supabase', 'apps/api/supabase/config.toml'],
-    ['python', 'pyproject.toml'],
-    ['python', 'apps/api/pyproject.toml'],
-    ['python', 'requirements.txt'],
-    ['python', 'apps/api/requirements-dev.txt'],
-    ['python', 'Pipfile'],
-    ['python', 'apps/api/Pipfile'],
+    ['cloudflare', 'wrangler.toml', undefined],
+    ['cloudflare', 'apps/api/wrangler.toml', undefined],
+    ['cloudflare', 'wrangler.json', undefined],
+    ['cloudflare', 'apps/api/wrangler.json', undefined],
+    ['cloudflare', 'wrangler.jsonc', undefined],
+    ['cloudflare', 'apps/api/wrangler.jsonc', undefined],
+    ['cloudflare', '_worker.js', undefined],
+    ['cloudflare', 'public/_worker.js', undefined],
+    ['cloudflare', 'functions/_middleware.js', undefined],
+    ['cloudflare', 'functions/_middleware.ts', undefined],
+    ['cloudflare', 'apps/api/functions/_middleware.ts', undefined],
+    ['supabase', 'supabase/config.toml', undefined],
+    ['supabase', 'apps/api/supabase/config.toml', undefined],
+    ['python', 'pyproject.toml', undefined],
+    ['python', 'apps/api/pyproject.toml', undefined],
+    ['python', 'requirements.txt', undefined],
+    ['python', 'apps/api/requirements-dev.txt', undefined],
+    ['python', 'Pipfile', undefined],
+    ['python', 'apps/api/Pipfile', undefined],
     ['swift', 'Package.swift', '1 .swift file'],
     ['swift', 'apps/api/Package.swift', '1 .swift file'],
-])(
-    '%s detects the supported project path %s without unrelated file evidence',
-    (configuration, path, evidence = path) => {
-        const manifests = configurationManifests();
-        expect(
-            detectConfigurations([buildTrackedFile(path)], manifests, []).find(
-                (row) => row.configuration === configuration,
-            ),
-        ).toMatchObject({ configuration, evidence });
-        expect(
-            detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
-        ).not.toContain(configuration);
-    },
-);
+])('%s detects the supported project path %s without unrelated file evidence', (configuration, path, evidence) => {
+    const manifests = configurationManifests();
+    expect(
+        detectConfigurations([buildTrackedFile(path)], manifests, []).find(
+            (row) => row.configuration === configuration,
+        ),
+    ).toMatchObject({ configuration, evidence: evidence ?? path });
+    expect(
+        detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
+    ).not.toContain(configuration);
+});

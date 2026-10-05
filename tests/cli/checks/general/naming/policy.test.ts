@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { SCOPE_POLICY, TEST_PATH_FILES, TEST_PATH_POLICY } from '#tests/config/cli/checks/naming.ts';
 
 const MISMATCHED_POLICY = SCOPE_POLICY.replace('name = "remote_record"', 'name = "remoteRecord"');
@@ -98,7 +98,10 @@ test('naming policy validates inherited and scoped declarations against the comp
     await Bun.write(join(sandbox.path, 'web/source.js'), 'export const localRecord = 1;\n');
     const unused = await runGspot(sandbox.path, command);
     expect(unused.code, unused.stdout + unused.stderr).toBe(1);
-    expect((JSON.parse(unused.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toHaveLength(2);
+    expect((JSON.parse(unused.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'gspot.toml', rule: 'stale-entry', message: textContaining('naming.allowed names "remoteRecord"') },
+        { file: 'gspot.toml', rule: 'stale-entry', message: textContaining('naming.allowed names "remoteRecord"') },
+    ]);
     await Bun.write(join(sandbox.path, 'web/source.js'), 'export const remoteRecord = 1;\n');
     renameSync(join(sandbox.path, 'web/source.js'), join(sandbox.path, 'web/renamed.js'));
     const unmatched = await runGspot(sandbox.path, command);
@@ -115,40 +118,37 @@ test('naming policy validates inherited and scoped declarations against the comp
     expect(await Bun.file(join(sandbox.path, 'worker/source.py')).text()).toBe('remote_record = 1\n');
 });
 
-test.each(['constructor', 'toString', '__proto__'])(
-    'unknown case %s stays a policy finding while neighboring identifier checks remain active',
-    async (caseName) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['typescript', 'naming'], {
-                tables: `[[naming.paths]]\npaths = ["source.ts"]\ncase = ["${caseName}"]\n`,
-                level: 'all',
-            }),
-            'source.ts': 'export const bad_name = 1;\n',
-        });
-        const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy'];
-        const failed = await runGspot(sandbox.path, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed', 'failed']);
-        expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
-        await Bun.write(
-            join(sandbox.path, 'gspot.toml'),
-            buildPolicy(['typescript', 'naming'], {
-                tables: '[[naming.paths]]\npaths = ["source.ts"]\ncase = ["camel"]\n',
-                level: 'all',
-            }),
-        );
-        const neighbor = await runGspot(sandbox.path, command);
-        expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);
-        expect((JSON.parse(neighbor.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
-            { file: 'source.ts', line: 1, rule: 'case' },
-        ]);
-        await Bun.write(join(sandbox.path, 'source.ts'), 'export const goodName = 1;\n');
-        const corrected = await runGspot(sandbox.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
+test('an unknown prototype case stays a policy finding while neighboring identifier checks remain active', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript', 'naming'], {
+            tables: `[[naming.paths]]\npaths = ["source.ts"]\ncase = ["__proto__"]\n`,
+            level: 'all',
+        }),
+        'source.ts': 'export const bad_name = 1;\n',
+    });
+    const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy'];
+    const failed = await runGspot(sandbox.path, command);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const report = JSON.parse(failed.stdout) as RunReport;
+    expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed', 'failed']);
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        buildPolicy(['typescript', 'naming'], {
+            tables: '[[naming.paths]]\npaths = ["source.ts"]\ncase = ["camel"]\n',
+            level: 'all',
+        }),
+    );
+    const neighbor = await runGspot(sandbox.path, command);
+    expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);
+    expect((JSON.parse(neighbor.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'source.ts', line: 1, rule: 'case' },
+    ]);
+    await Bun.write(join(sandbox.path, 'source.ts'), 'export const goodName = 1;\n');
+    const corrected = await runGspot(sandbox.path, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();

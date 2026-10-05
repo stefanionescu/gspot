@@ -60,52 +60,11 @@ export const CASES: FindingCase[] = [
         expected: { file: 'example/empty.py', rule: 'placeholder-docstring', line: 4 },
     },
     {
-        check: 'python/private-prefix',
-        files: {
-            'example/leaky.py': `"""A test module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n`,
-        },
-        expected: { file: 'example/leaky.py', rule: 'private-prefix', line: 9 },
-    },
-    {
-        check: 'python/private-before-public',
-        files: {
-            'example/order.py': `"""A test module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n`,
-        },
-        expected: { file: 'example/order.py', rule: 'private-before-public', line: 9 },
-    },
-    {
-        check: 'python/exports-at-bottom',
-        files: {
-            'example/top.py': `"""A test module."""\n\n\n__all__ = ["shown"]\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n`,
-        },
-        expected: { file: 'example/top.py', rule: 'exports-at-bottom', line: 4 },
-    },
-    {
-        check: 'python/import-comments',
-        files: {
-            'example/noted.py': `"""A test module."""\n\nimport os\n# the path tools\nimport sys\n\nVALUE = [os.sep, sys.prefix]\n`,
-        },
-        expected: { file: 'example/noted.py', rule: 'import-comment', line: 4 },
-    },
-    {
-        check: 'python/export-order',
-        files: {
-            'example/listed.py': `"""A test module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef ab() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown", "ab"]\n`,
-        },
-        expected: { file: 'example/listed.py', rule: 'export-order', line: 14 },
-    },
-    {
         check: 'python/lazy-exports',
         files: {
             'example/lazy.py': `"""A test module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,
         },
         expected: { file: 'example/lazy.py', rule: 'lazy-export', line: 4 },
-    },
-    {
-        check: 'python/package-exports',
-        files: { 'example/__init__.py': `"""A test module."""\n\n\n__all__ = ["a", "b", "c"]\n` },
-        policy: '[limits.python]\npackage_exports = 2\n',
-        expected: { file: 'example/__init__.py', rule: 'package-exports', line: 4 },
     },
     {
         check: 'python/singletons',

@@ -61,10 +61,9 @@ test.each(['', 'apps/api'])(
     'OpenAPI freshness in %s reports failed generation and preserves dirty and untracked input',
     async (scope) => {
         const testRepository = await applyChanges('{"fail":true}\n', scope);
-        await using directory = testRepository.directory;
+        await using _directory = testRepository.directory;
         expect(await rejection(openapiFresh(testRepository.input))).toContain('Generation failed');
         expectPreserved(testRepository);
-        expect(directory.path).toBe(testRepository.directory.path);
     },
 );
 

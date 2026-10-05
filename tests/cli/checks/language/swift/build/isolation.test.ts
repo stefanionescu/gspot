@@ -29,7 +29,7 @@ test('Swift build side effects stay in the source copy and do not become later i
     const initial = buildEngineInput(await openSession(sandbox.path), 'swift/build');
     const next = buildEngineInput(await openSession(sandbox.path), 'swift/build');
     const mode = statSync(original).mode;
-    let calls = 0;
+    let scratch = '';
     const run = spyOn(spawn, 'run').mockImplementation((_argv, options) => {
         const cwd = options.cwd;
         expect(cwd).not.toBe(sandbox.path);
@@ -41,13 +41,13 @@ test('Swift build side effects stay in the source copy and do not become later i
         writeFileSync(join(cwd, 'Generated/side-effect'), 'generated');
         writeFileSync(join(cwd, 'Package.resolved'), 'generated resolution');
         writeFileSync(join(cwd, 'Sources/Value.swift'), 'modified by build');
-        calls += 1;
+        scratch = cwd;
         return Promise.resolve({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     });
     try {
         expect(await swiftBuild(initial)).toStrictEqual([]);
         expect(await swiftBuild(next)).toStrictEqual([]);
-        expect(calls).toBe(2);
+        expect(scratch).not.toBe('');
         expect(readFileSync(original, 'utf8')).toBe('let value = 1\n');
         expect(statSync(original).mode).toBe(mode);
         expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);

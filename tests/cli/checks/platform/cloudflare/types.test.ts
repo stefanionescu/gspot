@@ -11,7 +11,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { headers, typesFresh } from '#cli/checks/platform/cloudflare.ts';
+import { typesFresh } from '#cli/checks/platform/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
 
@@ -104,35 +104,6 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         }
     },
 );
-
-test('Cloudflare header checks report only files in their owning scope', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['cloudflare'], {
-            tables: '[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n',
-        }),
-        _headers: '  Invalid header\n',
-        'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
-    });
-    const session = await openSession(directory.path);
-    const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
-    const input = buildEngineInput(session, spec.name);
-    const found = headers(input);
-    expect(found).toStrictEqual([
-        {
-            check: spec.name,
-            file: '_headers',
-            line: 1,
-            rule: 'syntax',
-            message: 'Add a path line before this header.',
-            fixable: false,
-        },
-    ]);
-    expect(headers({ ...input, scope: 'workers/api' })).toStrictEqual([]);
-    writeFileSync(join(directory.path, '_headers'), '/*\n  X-Frame-Options: DENY\n');
-    const corrected = await openSession(directory.path);
-    expect(headers(buildEngineInput(corrected, spec.name))).toStrictEqual([]);
-});
 
 test('custom Worker type files retain the configured interface and child scope', async () => {
     await using sandbox = await testdir();
