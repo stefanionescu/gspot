@@ -36,6 +36,7 @@ function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
         return [
             { uses: pinned(MISE), with: { version: MISE_MIN_VERSION, cache: false } },
             { run: 'mise exec -- gspot install' },
+            { run: 'mise exec -- gspot doctor' },
         ];
     return [
         { uses: pinned(NODE), with: { 'node-version': NODE_VERSION } },
@@ -54,7 +55,7 @@ function buildCheckScript(command: string, isFull: boolean): string {
         `    '' | 0000000000000000000000000000000000000000 | 0000000000000000000000000000000000000000000000000000000000000000) ${command} ;;`,
         '    *)',
         '        if [[ ! ${base} =~ ^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$ ]]; then',
-        '            echo "Invalid CI comparison object" >&2',
+        '            echo "GSPOT_CI_BASE is not a commit SHA: ${base}" >&2',
         '            exit 2',
         '        fi',
         `        ${command} --changed --base "\${base}"`,

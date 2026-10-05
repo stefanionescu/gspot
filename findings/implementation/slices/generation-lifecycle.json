@@ -122,10 +122,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/ci.ts:25-29` `setupSteps` | With mise, the GitHub job runs `gspot install` but not `gspot doctor`. Without mise, it runs both, and the GitLab job always runs both. No comment says why. | Add `mise exec -- gspot doctor` to the mise branch, or drop `doctor` from the other two. |",
         "owner": "`generation/ci.ts:25-29` `setupSteps`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "tests/cli/generation/ci.test.ts",
+            "tests/cli/commands/ci.test.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed both original second-pass rows, all provider setup branches, shared generated shell validation and their public consumers. Mise-based GitHub jobs now run mise exec -- gspot doctor after installation and before checking, matching the existing npm and GitLab safeguards. Invalid bases retain exit 2 and now identify GSPOT_CI_BASE and its invalid value.",
+            "New cases execute the generated mise shell steps with only external executables replaced. The successful case records install, doctor and check in order. The failed-doctor case retains the external exit code and records no check invocation, with exact empty stdout/stderr. The public GitHub/GitLab invalid-base cases verify the precise diagnostic cause and that the shell payload creates no injected file.",
+            "Before/after proof across 64 provider combinations shows all 128 files change only the mise doctor step and invalid-base diagnostic (/tmp/gspot-ci-errors-render.ts, /tmp/gspot-ci-errors-proof.log). Pins, paths, job conditions, cache selection and provider semantics remain unchanged.",
+            "All 27 cases in five CI/generation owners pass with 164 assertions, including real generated provider scripts, changed/full-tree selection, authored job preservation and installation failures (/tmp/gspot-ci-errors-tests.log). All original test cases and unique assertions are retained.",
+            "Removing the doctor step and restoring the old diagnostic fails all four relevant regression controls: 0 pass, 4 fail. The generator is restored byte for byte (/tmp/gspot-ci-errors-mutation-proof.log, /tmp/gspot-ci-errors-mutation.log).",
+            "Root TypeScript, affected formatting and repository ESLint pass (/tmp/gspot-ci-errors-types.log, /tmp/gspot-ci-errors-format.log, /tmp/gspot-ci-errors-lint.json). Static external-program fixtures remain in the existing workflow configuration owner."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/008",
@@ -134,10 +146,22 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/ci.ts:47` `buildCheckScript` | When `GSPOT_CI_BASE` is not a SHA, the generated script prints \"Invalid CI comparison object\". \"Comparison object\" is jargon, and the bad value is not shown. | Print `GSPOT_CI_BASE is not a commit SHA: ${base}`. |",
         "owner": "`generation/ci.ts:47` `buildCheckScript`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/ci.ts",
+            "tests/cli/generation/ci.test.ts",
+            "tests/cli/commands/ci.test.ts",
+            "tests/config/cli/generation/workflow.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed both original second-pass rows, all provider setup branches, shared generated shell validation and their public consumers. Mise-based GitHub jobs now run mise exec -- gspot doctor after installation and before checking, matching the existing npm and GitLab safeguards. Invalid bases retain exit 2 and now identify GSPOT_CI_BASE and its invalid value.",
+            "New cases execute the generated mise shell steps with only external executables replaced. The successful case records install, doctor and check in order. The failed-doctor case retains the external exit code and records no check invocation, with exact empty stdout/stderr. The public GitHub/GitLab invalid-base cases verify the precise diagnostic cause and that the shell payload creates no injected file.",
+            "Before/after proof across 64 provider combinations shows all 128 files change only the mise doctor step and invalid-base diagnostic (/tmp/gspot-ci-errors-render.ts, /tmp/gspot-ci-errors-proof.log). Pins, paths, job conditions, cache selection and provider semantics remain unchanged.",
+            "All 27 cases in five CI/generation owners pass with 164 assertions, including real generated provider scripts, changed/full-tree selection, authored job preservation and installation failures (/tmp/gspot-ci-errors-tests.log). All original test cases and unique assertions are retained.",
+            "Removing the doctor step and restoring the old diagnostic fails all four relevant regression controls: 0 pass, 4 fail. The generator is restored byte for byte (/tmp/gspot-ci-errors-mutation-proof.log, /tmp/gspot-ci-errors-mutation.log).",
+            "Root TypeScript, affected formatting and repository ESLint pass (/tmp/gspot-ci-errors-types.log, /tmp/gspot-ci-errors-format.log, /tmp/gspot-ci-errors-lint.json). Static external-program fixtures remain in the existing workflow configuration owner."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/009",

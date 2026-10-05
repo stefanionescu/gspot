@@ -168,7 +168,7 @@ test.each(['gitlab', 'github'] as const)(
         expect(initial.code).toBe(1);
         const malformed = await runCiJob(repository.path, generated, install.directory, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(malformed.stderr).toContain('Invalid CI comparison object');
+        expect(malformed.stderr).toContain('GSPOT_CI_BASE is not a commit SHA: $(touch injected)\n');
         expect(existsSync(join(repository.path, 'injected'))).toBe(false);
         const missing = await runCiJob(repository.path, generated, install.directory, 'f'.repeat(40));
         expect(missing.code).not.toBe(0);
