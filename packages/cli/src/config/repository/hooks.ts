@@ -4,3 +4,5 @@ export const MISE_HOOK_DIRECTORY = '.mise/tasks/hook';
 
 /** Hook scripts keep their runner's names, including scripts nested beneath these folders. */
 export const HOOK_DIRECTORIES = [HOOKS_DIRECTORY, MISE_HOOK_DIRECTORY, '.githooks', '.husky', '.git-hooks'];
+
+export const HOOK_CONFIGURATION_FILES = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'];

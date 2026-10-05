@@ -9,8 +9,8 @@ import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
-import { HOOK_DIRECTORIES, MISE_HOOK_DIRECTORY } from '#cli/config/repository/hooks.ts';
 import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
+import { HOOK_DIRECTORIES, MISE_HOOK_DIRECTORY, HOOK_CONFIGURATION_FILES } from '#cli/config/repository/hooks.ts';
 
 import {
     LINT_PAIRS,
@@ -106,7 +106,7 @@ export function getHooks(root: string): Tooling['hooks'] {
     const packageHooks = manifest !== undefined && Object.hasOwn(manifest, 'simple-git-hooks');
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
-    const present: string[] = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
+    const present: string[] = HOOK_CONFIGURATION_FILES.filter(
         (name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined,
     );
     const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
