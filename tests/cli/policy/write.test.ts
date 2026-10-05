@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { readTree } from '#tests/harness/preservation.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { AUTHORED_POLICY } from '#tests/config/cli/policy/write.ts';
@@ -24,16 +25,18 @@ test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode ch
     expect(readFileSync(path)).toStrictEqual(invalid);
     writeFileSync(path, AUTHORED_POLICY);
     chmodSync(path, 0o644);
+    const plan = preparePolicy(sandbox.path, (raw) => {
+        setKey(raw, 'level', 'all');
+    });
+    chmodSync(path, 0o444);
+    using log = openOwnership(sandbox.path);
+    const before = readTree(sandbox.path);
     expect(() => {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            setKey(raw, 'level', 'all');
-            chmodSync(path, 0o444);
-        });
-        using log = openOwnership(sandbox.path);
         return writePolicy(log, plan);
-    }).toThrow('The gspot.toml file changed while gspot was running.');
+    }).toThrow('The gspot.toml file changed while gspot was running. Run the command again.');
     expect(readFileSync(path, 'utf8')).toBe(AUTHORED_POLICY);
     expect(statSync(path).mode & 0o222).toBe(0);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
     chmodSync(path, 0o644);
 });
 
@@ -139,10 +142,14 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
         setKey(raw, 'level', 'all');
     });
     writeFileSync(path, `${AUTHORED_POLICY}\n# Concurrent edit.\n`);
-    expect(() => {
+    {
         using log = openOwnership(sandbox.path);
-        return writePolicy(log, plan);
-    }).toThrow('The gspot.toml file changed while gspot was running.');
+        const before = readTree(sandbox.path);
+        expect(() => writePolicy(log, plan)).toThrow(
+            'The gspot.toml file changed while gspot was running. Run the command again.',
+        );
+        expect(readTree(sandbox.path)).toStrictEqual(before);
+    }
     expect(readFileSync(path, 'utf8')).toBe(`${AUTHORED_POLICY}\n# Concurrent edit.\n`);
     const corrected = preparePolicy(sandbox.path, (raw) => {
         setKey(raw, 'level', 'all');

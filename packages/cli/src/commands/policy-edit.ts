@@ -64,7 +64,7 @@ export function writePolicy(log: Log, plan: PreparedPolicy): Proposal {
             throw new GspotError('policy', [
                 'The gspot.toml file changed while gspot was running. Run the command again.',
             ]);
-        const status = applyPlan(
+        applyPlan(
             log,
             proposeReplacement(log, {
                 path: 'gspot.toml',
@@ -73,10 +73,6 @@ export function writePolicy(log: Log, plan: PreparedPolicy): Proposal {
                 canReplace: true,
             }),
         );
-        if (status === 'preserved')
-            throw new GspotError('policy', [
-                'gspot.toml was not written because the file changed outside gspot. Retry the command.',
-            ]);
     }
     return plan;
 }

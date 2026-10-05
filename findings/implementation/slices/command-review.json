@@ -231,10 +231,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/edit.ts:52` `writePolicy` | The message \"The policy edit could not preserve the current input.\" says the opposite of what happened. The status `'preserved'` means gspot kept the file as it was and did not write the edit. | Rewrite as \"gspot.toml was not written, because the file changed outside gspot. Retry the command.\" |",
         "owner": "`commands/edit.ts:52` `writePolicy`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/lifecycle/ownership/plans.ts",
+            "tests/cli/policy/write.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Removed the unreachable preserved-status diagnostic from policy writes. Changed input is refused before planning with the actionable retry message.",
+        "verification": [
+            "The ownership planner cannot preserve a policy replacement: canReplace is true for unowned input, and kind policy excludes the edited-owned preservation branch. The existing snapshot comparison remains the actual changed-input refusal; commit-time checks still refuse stale plans.",
+            "Existing byte-change and permission-change controls now assert the complete retry diagnostic and unchanged filesystem and ownership state. The existing fresh-plan control still publishes the validated bytes. Original policy mutation and preservation assertions remain.",
+            "Policy write, editing, templates, previews, apply preparation and ownership conflicts passed 59 cases and 358 assertions across six files. Removing the actual snapshot guard made both changed-input controls fail; source was restored exactly. Root TypeScript, affected ESLint and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/015",
