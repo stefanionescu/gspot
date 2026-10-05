@@ -22,18 +22,20 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
     const failures = fixes.results.filter((result) => result.status === 'failed');
     for (const result of failures) warn(`a fixer failed: ${result.check}: ${result.note}`);
     const count = fixes.changed.length;
+    const noun = count === 1 ? 'file' : 'files';
     if (isDryRun) {
-        const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} file(s) would change`;
+        const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} ${noun} would change`;
         return `${fixes.diffs.join('\n')}\n${verdict}\n\n${text}`;
     }
-    if (count === 0) note('no fixer changed anything');
-    else {
-        const shown = fixes.changed.slice(0, CHANGED_SHOWN).join(' ');
-        const more = count > CHANGED_SHOWN ? ' ...' : '';
-        warn(
-            `fixers changed ${String(count)} file(s); the changes are in the working tree and are not staged: ${shown}${more}`,
-        );
+    if (count === 0) {
+        note('no fixer changed anything');
+        return text;
     }
+    const shown = fixes.changed.slice(0, CHANGED_SHOWN).join(' ');
+    const more = count > CHANGED_SHOWN ? ' ...' : '';
+    warn(
+        `fixers changed ${String(count)} ${noun}; the changes are in the working tree and are not staged: ${shown}${more}`,
+    );
     return text;
 }
 

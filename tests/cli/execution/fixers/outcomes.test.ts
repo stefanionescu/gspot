@@ -151,7 +151,7 @@ test('check --fix --dry-run prints the diff of a correction and leaves the file 
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stdout).toContain('-original');
     expect(preview.stdout).toContain('+corrected');
-    expect(preview.stdout).toContain('1 file(s) would change');
+    expect(preview.stdout).toContain('1 file would change');
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
 });
 

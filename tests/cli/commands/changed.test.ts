@@ -79,12 +79,17 @@ test('changed selection resolves the remote default and refuses absent upstream 
     expect((JSON.parse(missing.stdout) as CommandFailureJson).message).toContain('refs/heads/upstream');
 });
 
-test.each(['--changed', '--staged'])('%s reports a setup error outside Git', async (flag) => {
+test.each(['--changed', '--staged', '--hook'])('%s reports a setup error outside Git', async (flag) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.txt': 'before' });
-    const result = await runGspot(sandbox.path, ['check', flag, '--json']);
+    const result = await runGspot(sandbox.path, ['check', flag, ...(flag === '--hook' ? ['pre-push'] : []), '--json']);
     expect(result.code).toBe(2);
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('requires a Git repository');
+    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
+        '--staged, --changed, and pre-push checks need a Git repository.',
+    );
+    expect((JSON.parse(result.stdout) as CommandFailureJson).error).toBe('selection');
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    expect(await Bun.file(join(sandbox.path, 'api/source.txt')).text()).toBe('before');
 });
 
 test('a shallow comparison failure explains how to fetch the missing history', async () => {

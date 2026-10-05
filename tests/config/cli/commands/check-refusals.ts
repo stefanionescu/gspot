@@ -1,5 +1,6 @@
 // Inputs and diagnostics for command refusal and working-tree preservation cases.
 export const FIX_REFUSALS = [
+    [['--dry-run'], '--dry-run requires --fix.'],
     [['--staged', '--fix'], 'Staged checks do not run fixers'],
     [['--hook', 'pre-push', '--fix'], 'Pre-push object checks cannot be combined'],
 ] as const;
@@ -27,3 +28,9 @@ export const SELECTION_REFUSALS = [
     ['a path that matches nothing', ['check', 'missing'], 'matches no repository files'],
     ['a message file that does not exist', ['check', '--message-file', 'missing-message.txt'], 'cannot be read'],
 ] as const;
+
+/** Git supplies exactly two remote arguments to a pre-push hook. */
+export const PUSH_ARGUMENT_REFUSALS = [
+    { name: 'a missing remote URL', arguments: ['origin'] },
+    { name: 'an extra remote argument', arguments: ['origin', 'unused', 'extra'] },
+];

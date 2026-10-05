@@ -80,10 +80,18 @@
         "section": "Findings",
         "finding": "| `commands/check/command.ts:17-29, 98`, `types/commands/check.ts` `CheckFlags.changed` | `CheckCommand.parseOptions` rewrites `--changed` to `--changed=`, so `flags.changed` is `''` and never `true`. That makes `flags.changed === true ? undefined : ...` dead. I verified this with commander. Help shows `--changed [ref]`, but `gspot check --changed main` turns `main` into a path and fails with \"Path main matches no repository files\". | Make `--changed` a boolean and add `--base <ref>`, or show `--changed[=ref]` in the usage line. Delete the dead branch and the `true` member of the type. |",
         "owner": "`commands/check/command.ts:17-29, 98`, `types/commands/check.ts` `CheckFlags.changed`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/types/commands/check.ts",
+            "tests/cli/commands/changed.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "--changed is boolean and --base supplies the reference while implying changed selection. Positional folders remain paths; the option-rewriting subclass and string-or-boolean flag contract are absent.",
+        "verification": [
+            "Real Git cases verify a following positional folder, explicit merge-base reference, missing ref, remote default, absent upstream and shallow history, with working-tree comparison and exact selected findings.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "areas/commands/007",
@@ -92,10 +100,20 @@
         "section": "Findings",
         "finding": "| `check/command.ts:139`, `config/commands/check.ts:5`, `config/generation/generation.ts:70-74` | Four flags choose what `check` reads: `--staged`, `--hook commit` or `--hook push`, the hidden `--push`, and `--message-file`. The hook scripts call `--staged`, `--push`, and `--message-file`, never `--hook`. Yet the help for `--hook` says \"as that hook does\". `--hook push` does not read the pushed refs. The `--hook` choices `commit` and `push` do not match the hook names `pre-commit` and `pre-push`. | One `--hook <pre-commit or pre-push or commit-msg>` that the scripts call, which replaces `--push` and the stage meaning of `--staged`. Or delete `--hook`. See the questions. |",
         "owner": "`check/command.ts:139`, `config/commands/check.ts:5`, `config/generation/generation.ts:70-74`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/generation/hooks.ts",
+            "tests/cli/lifecycle/hooks.test.ts",
+            "tests/cli/commands/check/selection.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Generated hooks use --hook pre-commit, pre-push and commit-msg. Pre-push reads Git remote arguments and stdin; commit-msg uses its message-file flag. --staged remains an independent exact-index selector with default stages, as required by the retained product interface. The hidden --push path is gone.",
+        "verification": [
+            "Public selection tests distinguish --staged default stages from pre-commit commit-stage selection. Real installed hooks in a linked worktree and below the Git root block indexed defects, preserve unstaged working bytes and accept corrected index bytes. Existing hook configurations remain unchanged and receive the exact hook commands.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "areas/commands/008",
@@ -104,10 +122,18 @@
         "section": "Findings",
         "finding": "| `execution/execute.ts:155-162` via `check/command.ts:138` | `gspot check --dry-run` without `--fix` is silently ignored. | Refuse it, the same way `--staged --fix` is refused (`check/run.ts:14-17`). |",
         "owner": "`execution/execute.ts:155-162` via `check/command.ts:138`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "tests/cli/commands/check/refusals.test.ts",
+            "tests/config/cli/commands/check-refusals.ts"
+        ],
+        "status": "closed",
+        "outcome": "The router refuses --dry-run without --fix before checking the tree.",
+        "verification": [
+            "The added public-command refusal requires exit 2 and the exact actionable diagnostic, preserves source bytes and leaves Git status clean. Existing staged/pre-push fix refusals remain. Zero-, one- and two-file dry-run correction controls verify valid previews preserve source bytes.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "areas/commands/009",
@@ -116,10 +142,18 @@
         "section": "Findings",
         "finding": "| `commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts` | One run passes through about 10 hops: action → `runCheck` → `printCommand` → `checkedCommand` → `checkCommand` (`run.ts`) → `checkStaged`, `checkPush`, or `checkContent` → `selectionsFor` → `changedSet` → `revisionSelection` → `getChanged`. `checkedCommand` and `checkCommand` differ by two letters. `run.ts` is 52 lines of routing. `changedSet` → `revisionSelection` → `getChanged` is a wrapper on a wrapper. | Merge `run.ts` into `command.ts`. Inline `revisionSelection` into `changedSet`. Rename `content.ts`/`checkContent` to `tree.ts`/`checkTree`, `unknownSelection` to `refuseUnknownChecks`, and `checkedCommand` to `runOrCancel`. |",
         "owner": "`commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/tree.ts",
+            "packages/cli/src/commands/check/selection.ts"
+        ],
+        "status": "closed",
+        "outcome": "Routing lives in command.ts; content is tree/checkTree; changedSet directly calls the revision reader; unknown checks use refuseUnknownChecks. runCancelable retains real signal handling and snapshot cancellation. Shared selection calculations and substantial tree/push orchestration remain.",
+        "verification": [
+            "Source audit confirms only command, tree, push and selection remain under commands/check; run.ts, content.ts, checkedCommand, revisionSelection, unknownSelection and checkContent are absent. Actual index, working-tree, pushed-object and cancellation tests exercise the owners.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "areas/commands/010",
@@ -128,10 +162,18 @@
         "section": "Findings",
         "finding": "| `check/run.ts:47-48` and `selection.ts:110-111`; `check/command.ts:51` and `push.ts:87`; `run.ts:20` and `content.ts:173` | Three guards run twice: \"Revision selection requires a Git repository.\", `assertPushOptions`, and `refusalFor` on `--staged` runs (once before the index checkout and once inside it). | Run each guard once, in the router. |",
         "owner": "`check/run.ts:47-48` and `selection.ts:110-111`; `check/command.ts:51` and `push.ts:87`; `run.ts:20` and `content.ts:173`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/push.ts",
+            "packages/cli/src/commands/check/selection.ts"
+        ],
+        "status": "closed",
+        "outcome": "The public command checks Git selection once and calls assertPushOptions once before reading push stdin. The duplicate staged environment-file refusal is removed; the selected secrets check owns those findings.",
+        "verification": [
+            "Direct source search proves one assertPushOptions caller and one public Git guard, with no refusalFor. Public refusal cases stop conflicting flags before writes; staged environment cases verify selected failure, absent configuration, accepted ignore and explicit skip with preserved policy and environment-file bytes.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "areas/commands/011",

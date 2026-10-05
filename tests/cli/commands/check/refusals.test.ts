@@ -10,7 +10,13 @@ import { prepareTestCommand } from '#tests/harness/command.ts';
 import { runGspot, startGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { FIX_REFUSALS, SELECTION_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/cli/commands/check-refusals.ts';
+
+import {
+    FIX_REFUSALS,
+    SELECTION_REFUSALS,
+    PUSH_INPUT_REFUSALS,
+    PUSH_ARGUMENT_REFUSALS,
+} from '#tests/config/cli/commands/check-refusals.ts';
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -101,3 +107,35 @@ test.each(SELECTION_REFUSALS)('check with %s exits 2 and names the problem', asy
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain(expected);
 });
+
+test.each(PUSH_ARGUMENT_REFUSALS)(
+    'a pre-push hook reports $name in human and JSON output',
+    async ({ arguments: argv }) => {
+        await using sandbox = await fixableSandbox();
+        for (const json of [false, true]) {
+            const child = startGspot(
+                sandbox.path,
+                ['check', '--hook', 'pre-push', ...(json ? ['--json'] : []), '--', ...argv],
+                {},
+                { stdin: '' },
+            );
+            await using capture = captureChild(child);
+            expect(await child.exited).toBe(2);
+            const stdout = await capture.output;
+            const stderr = await capture.errors;
+            const diagnostic = 'Pre-push expects the remote name and URL supplied by Git.';
+            if (json) {
+                expect(JSON.parse(stdout) as CommandFailureJson).toStrictEqual({
+                    error: 'selection',
+                    message: diagnostic,
+                });
+                expect(stderr).toBe('');
+            } else {
+                expect(stdout).toBe('');
+                expect(stderr).toBe(`${diagnostic}\n`);
+            }
+            expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+            expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
+        }
+    },
+);

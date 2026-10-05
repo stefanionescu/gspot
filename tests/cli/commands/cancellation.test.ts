@@ -115,7 +115,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
         expect(await child.exited, await errors).toBe(2);
         expect(JSON.parse(await output)).toStrictEqual({
             error: 'canceled',
-            message: 'Check canceled before all selected content was checked.',
+            message: 'Check stopped before every check finished.',
             exitCode: 2,
         });
         await waitForExit(started.pid);
@@ -220,7 +220,7 @@ await import(${JSON.stringify(gspot)});
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toStrictEqual({
                 error: 'canceled',
-                message: 'Check canceled before all selected content was checked.',
+                message: 'Check stopped before every check finished.',
                 exitCode: 2,
             });
             expect(git(root, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
@@ -294,7 +294,7 @@ await import(${JSON.stringify(gspot)});
         expect(await child.exited, await errors).toBe(2);
         expect(JSON.parse(await output)).toStrictEqual({
             error: 'canceled',
-            message: 'Check canceled before all selected content was checked.',
+            message: 'Check stopped before every check finished.',
             exitCode: 2,
         });
         expect(existsSync(dirname(read.destination))).toBe(false);

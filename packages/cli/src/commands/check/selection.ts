@@ -1,4 +1,4 @@
-// What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
+// Selects positional repository paths and refuses unknown check names.
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { isInScope } from '#cli/repository/selectors.ts';

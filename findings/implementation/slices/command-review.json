@@ -6,10 +6,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/check/command.ts:47-49` `pushOptions` | Bug. A wrong number of pre-push arguments throws commander's `InvalidArgumentError` from inside the action. `printCommand` rethrows it, and `exitCodeFor` (`program.ts:65`) returns 2 for any `CommanderError` without printing. Without `--json`, the user gets exit 2 and no message. The review verified this: `gspot check --push a b c </dev/null` prints nothing. | Throw `new GspotError('selection', [...])` instead. |",
         "owner": "`commands/check/command.ts:47-49` `pushOptions`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "tests/cli/commands/check/refusals.test.ts",
+            "tests/config/cli/commands/check-refusals.ts"
+        ],
+        "status": "closed",
+        "outcome": "Wrong pre-push argument counts raise GspotError(selection), so both human and JSON output retain an actionable message.",
+        "verification": [
+            "The new missing-URL and extra-argument cases run actual bounded CLI children with closed stdin. Each checks human stderr and empty stdout, then one exact JSON selection error and empty stderr, while source bytes and Git status remain unchanged.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/002",
@@ -234,10 +242,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/check/selection.ts:46-52` `refusalFor` | The staged environment-file refusal repeats the check `secrets/env-files` (`checks/general/secrets/env-files.ts`) outside the policy. It fires when the kit is not selected, when an `[[ignore]]` covers the check, and with `--skip secrets/env-files`. `options.skips` is never read here. | Let the check report the staged file, or skip the refusal when the check is skipped, ignored, or not selected. |",
         "owner": "`commands/check/selection.ts:46-52` `refusalFor`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/selection.ts",
+            "packages/cli/src/checks/general/secrets.ts",
+            "tests/cli/checks/general/secrets/env-files.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Staged environment files are handled by the selected secrets/env-files check rather than an unconditional selection refusal.",
+        "verification": [
+            "Four public staged cases verify a selected finding, an absent configuration, an accepted path ignore and an explicit skip. They require the expected status and findings and preserve authored policy and environment-file bytes. Direct source search confirms refusalFor is absent.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/019",
@@ -246,10 +262,19 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/check/content.ts:117-145` `runSelected`, `81-88` `revisionOptions` | `comparison` and `commits` are set twice. The `compact({...})` block sets them from `changed`, and then `...revisionOptions(revision)` overwrites them for snapshot runs. The first `comparison` is dead whenever a revision exists. | Compute `comparison` and `commits` in one branch: from the revision when there is one, and from `changed` otherwise. |",
         "owner": "`commands/check/content.ts:117-145` `runSelected`, `81-88` `revisionOptions`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/tree.ts",
+            "tests/cli/commands/changed.test.ts",
+            "tests/cli/commands/check/snapshot.test.ts",
+            "tests/cli/commands/push/revisions.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Tree comparison is selected in one branch, from revision metadata when present or changed metadata otherwise. Commit history is assigned once from the same source selection; no revisionOptions overwrite layer remains.",
+        "verification": [
+            "Working-tree merge-base cases assert comparison and file findings; index cases assert content/index object and preserve source bytes; pushed revision cases assert exact commit comparison and selected commit messages. Source reread confirms comparison, commits and historyComplete are assigned without later overriding spreads.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/020",
@@ -258,10 +283,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/check/push.ts:81-88` `checkPush`, `run.ts:49` | `checkPush(root, options, options.push, signal)` passes `options.push` twice. The parameter `input` has a field also called `input` (`input.input`). | Read `options.push` inside `checkPush`, and delete the parameter. Rename the field to `stdin` (`types/commands/check.ts:44`). |",
         "owner": "`commands/check/push.ts:81-88` `checkPush`, `run.ts:49`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/push.ts",
+            "packages/cli/src/types/repository/revisions.ts"
+        ],
+        "status": "closed",
+        "outcome": "checkPush reads its required options.push, with protocol bytes named stdin. The redundant input parameter and input.input shape are absent.",
+        "verification": [
+            "Source signature requires a populated push field and receives only root, options and signal. Actual pushed-object, malformed stdin, exact argument refusal and cancellation cases cover the public protocol and preserved working-tree bytes.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/021",
@@ -270,10 +303,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `content.ts:39` `warnAboutHooks`, `content.ts:64` `stagedSet`, `content.ts:102` `selectionsFor`, `set.ts:170` `commitSetting` | Each takes `root` next to a `session` that has the same value as `session.root`. | Delete the `root` parameter, and use `session.root`. |",
         "owner": "`content.ts:39` `warnAboutHooks`, `content.ts:64` `stagedSet`, `content.ts:102` `selectionsFor`, `set.ts:170` `commitSetting`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/check/tree.ts", "packages/cli/src/commands/set.ts"],
+        "status": "closed",
+        "outcome": "warnAboutHooks, stagedSet, selectionsFor and commitSetting use session.root rather than receiving a second copy of root.",
+        "verification": [
+            "Every cited signature and caller was reread. Current check tests cover staged and changed selection and installed hooks. The preceding ignore-feedback batch passed the unchanged set command owner among 31 cases and 187 assertions; current root TypeScript confirms all signatures and callers.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/022",
@@ -663,10 +700,19 @@
         "section": "Commands and the Entry Point",
         "finding": "| `check/run.ts:1, 12, 39`, `run.ts:48`, `selection.ts:111` | The file header says run.ts opens the session, honors the pin, renders, and decides the exit code. It only routes. The JSDoc of `checkCommand` leaves out push. \"with the report published to the repository\" (also in `content.ts:38`) is unclear. The user message \"Revision selection requires a Git repository.\" is jargon. | Header: \"Routes check to a pre-push, staged, or working-tree run.\" Message: \"--staged, --changed, and pre-push checks need a Git repository.\" |",
         "owner": "`check/run.ts:1, 12, 39`, `run.ts:48`, `selection.ts:111`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/tree.ts",
+            "packages/cli/src/commands/check/selection.ts",
+            "tests/cli/commands/changed.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The routing and snapshot comments describe their current responsibilities. Git refusal names --staged, --changed and pre-push directly. Obsolete run.ts is absent.",
+        "verification": [
+            "All three public selection modes outside Git require the exact selection error and new Git message while preserving policy and source bytes. Source audit confirms one Git guard and current router dispatch for push, staged and working-tree checks.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/046",
@@ -675,10 +721,21 @@
         "section": "Commands and the Entry Point",
         "finding": "| `check/command.ts:56, 69`, `content.ts:24, 32` | \"Check canceled before all selected content was checked.\" uses \"content\" as jargon. The fix lines print \"file(s)\". | Write \"Check stopped before every check finished.\" Pick the singular or plural, as `apply.ts:17` does. |",
         "owner": "`check/command.ts:56, 69`, `content.ts:24, 32`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/commands/check/tree.ts",
+            "tests/cli/commands/cancellation.test.ts",
+            "tests/cli/execution/fixers/outcomes.test.ts",
+            "tests/cli/commands/check/feedback.test.ts",
+            "tests/config/cli/commands/correction-feedback.ts"
+        ],
+        "status": "closed",
+        "outcome": "Cancellation says Check stopped before every check finished. Correction feedback uses file for one changed file and files otherwise. JSON cancellation codes and progress/report streams retain their existing contracts.",
+        "verification": [
+            "Before the wording fix, three outside-Git cases, the original single-file preview and both new nonzero preview controls fail: 19 pass and 6 fail. Afterward, zero/one/two-file public correction cases verify preview output, preserved preview bytes, stderr-only applied feedback, corrected selected files and unchanged policy/control bytes. Real POSIX signal cases preserve completed reports, dispose active children and snapshots, identify pending refs and permit retry.",
+            "Affected check routing, changed selection, cancellation, push, correction, staged environment policy and installed-hook suites passed 93 cases and 606 assertions across twelve files. After flattening only the zero-change branch to meet the existing complexity limit, the final correction/refusal owners passed 32 cases and 144 assertions across three files, with public feedback and its data under the command owners. Root TypeScript, affected ESLint and formatting passed.",
+            "AST reconstruction proves routing executable changes only the Git/cancellation diagnostic strings, selection executable is unchanged, and fixer changes are limited to noun selection and flattening the zero-change branch. All 24 original declarations and 111 assertion subjects in the four affected test owners remain; two declarations were added. Cancellation tests otherwise retain the exact original executable AST."
+        ]
     },
     {
         "id": "slices/commands/047",

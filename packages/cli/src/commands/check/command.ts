@@ -45,7 +45,7 @@ async function pushOptions(options: CheckOptions, paths: string[], signal: Abort
     return { ...options, paths: [], push: { stdin: input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
 }
 
-// Checks an exact snapshot of the staged index, with the report published to the repository.
+// Checks an exact staged-index snapshot and writes the report in the working repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
         throw new GspotError('selection', [
@@ -89,7 +89,7 @@ async function checkCommand(root: string, options: CheckOptions, signal: AbortSi
     return await (selected.staged ? checkStaged(root, selected, signal) : checkTree(root, selected, signal));
 }
 
-// Runs check, or reports the cancellation when the signal fired before every selected content was checked.
+// Runs check, or reports cancellation before every check finished.
 async function runCancelable(
     options: CheckOptions,
     paths: string[],
@@ -99,16 +99,16 @@ async function runCancelable(
     try {
         const root = findRoot(options.cwd);
         if ((options.staged || isPush || options.changed !== undefined) && !isGitRepository(root))
-            throw new GspotError('selection', ['Revision selection requires a Git repository.']);
+            throw new GspotError('selection', ['--staged, --changed, and pre-push checks need a Git repository.']);
         const selected = isPush ? await pushOptions(options, paths, signal) : options;
         return await checkCommand(root, selected, signal);
     } catch (error) {
         if (!signal.aborted) throw error;
         return {
-            text: 'Check canceled before all selected content was checked.\n',
+            text: 'Check stopped before every check finished.\n',
             json: {
                 error: 'canceled',
-                message: 'Check canceled before all selected content was checked.',
+                message: 'Check stopped before every check finished.',
                 exitCode: EXIT_ERROR,
             },
             exitCode: EXIT_ERROR,
