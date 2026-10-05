@@ -66,10 +66,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/cancellation.test.ts:155`, \"push cancellation while stdin remains open handles %s and permits retry\" | The retry on line 187 runs `check --staged`, not `check --push`. Nothing shows that a push run works after a canceled push. | Retry with `check --push` and a complete ref line on stdin, and assert exit 0. |",
         "owner": "`cli/commands/cancellation.test.ts:155`, \"push cancellation while stdin remains open handles %s and permits retry\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/cancellation.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The SIGINT and SIGTERM open-stdin cases now commit their fixture and retry check --hook pre-push with a complete ref/object line. They assert exit zero and a PushReport revision containing the actual committed object, ref and passing bash/syntax result. The canceled run still preserves the index and reports the exact cancellation record.",
+            "Zero-object fields use each actual object hash length, including the completed/pending push-report case. Existing live-child deadlines and disposal remain intact.",
+            "AST comparison preserves every assertion site and strengthens only the retry report assertion; runtime names preserve all nine cancellation cases. Root TypeScript, affected lint and formatting passed. The push/cancellation suite passed 18 tests with 158 assertions across three files; GIT_DEFAULT_HASH=sha256 passed all nine cancellation tests with 78 assertions. Signal cases retain their POSIX guard; verification ran on macOS."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/006",

@@ -145,7 +145,7 @@ test.skipIf(!isPosix)(
             `#!${process.execPath}\nconst args=process.argv.slice(2);\nif(args[0]==='clone'){\nconst file=Bun.file(${JSON.stringify(counter)});\nconst count=await file.exists()?Number(await file.text()):0;\nawait Bun.write(file,String(count+1));\nif(count===1){await Bun.write(${JSON.stringify(marker)},JSON.stringify({pid:process.pid,checkout:args.at(-1)}));await Bun.sleep(60_000);}\n}\nconst child=Bun.spawn([${JSON.stringify(nativeGit)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n`,
             { mode: 0o755 },
         );
-        const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(40)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(40)}\n`;
+        const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
         const child = startGspot(
             sandbox.path,
             ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json'],
@@ -177,27 +177,27 @@ test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
     'push cancellation while stdin remains open handles %s and permits retry',
     async (signal) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        const root = sandbox.path;
+        await createFileTree(root, {
             'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
             'source.sh': 'echo indexed\n',
         });
-        expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const indexed = git(sandbox.path, ['ls-files', '--stage', '-z']).stdout;
-        const started = join(sandbox.path, 'listening');
+        expect(git(root, ['init', '-q']).code).toBe(0);
+        expect(git(root, ['add', '-A']).code).toBe(0);
+        gitOutput(root, ['commit', '-qm', 'feat: push input']);
+        const revision = gitOutput(root, ['rev-parse', 'HEAD']);
+        const ref = gitOutput(root, ['symbolic-ref', 'HEAD']);
+        const indexed = git(root, ['ls-files', '--stage', '-z']).stdout;
+        const started = join(root, 'listening');
         const program = `
 process.on('newListener',(name)=>{ if(name==='SIGTERM') setImmediate(()=>require('node:fs').writeFileSync(${JSON.stringify(started)},'ready')); });
 process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--hook', 'pre-push','--json'];
 await import(${JSON.stringify(gspot)});
 `;
         const command = [process.execPath, '-e', program];
-        const prepared = prepareTestCommand(
-            command,
-            { cwd: sandbox.path, timeoutMs: CHILD_OPTIONS.timeout },
-            'push input cancellation',
-        );
+        const prepared = prepareTestCommand(command, { cwd: root, timeoutMs: CHILD_OPTIONS.timeout }, 'push input');
         const child = Bun.spawn(command, {
-            cwd: sandbox.path,
+            cwd: root,
             stdin: 'pipe',
             ...CHILD_OPTIONS,
             timeout: prepared.options.timeoutMs,
@@ -215,10 +215,22 @@ await import(${JSON.stringify(gspot)});
                 message: 'Check canceled before all selected content was checked.',
                 exitCode: 2,
             });
-            expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
-            const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+            expect(git(root, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
+            const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;
+            const retry = await spawnGspot(
+                root,
+                ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json'],
+                {},
+                { stdin: protocol },
+            );
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
+            expect((JSON.parse(retry.stdout) as PushReport).revisions).toMatchObject([
+                {
+                    object: revision,
+                    refs: [ref],
+                    report: { exitCode: 0, checks: [{ check: 'bash/syntax', status: 'passed' }] },
+                },
+            ]);
         } finally {
             await child.stdin.end();
         }
