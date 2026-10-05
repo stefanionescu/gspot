@@ -1248,9 +1248,25 @@
         "section": "Findings",
         "finding": "| `tools/command.ts:6`, `tools/packages/locks.ts:23`, `execution/checkout/installed.ts:122`, `repository/kind.ts:130`; missing blank line before doc comments at `repository/tags.ts:62`, `repository/tree.ts:66`, `execution/planning/files.ts:104`, `execution/planning/plan.ts:183`, `execution/tool/placeholders.ts:135,162,181`, `execution/tool/runner.ts:243`, `tools/vale.ts:84` | Comments were moved or stranded by an automated reorder. A JSDoc sits on an import line, so the file has no header. A function's comment trails a `const`. `copyTree`'s comment sits above `copyDirectoryLink`. A section comment has nothing under it. | Put each comment back on its declaration. Add the missing file headers. |",
         "owner": "`tools/command.ts:6`, `tools/packages/locks.ts:23`, `execution/checkout/installed.ts:122`, `repository/kind.ts:130`; missing blank line before doc comments at `repository/tags.ts:62`, `repository/tree.ts:66`, `execution/planning/files.ts:104`, `execution/planning/plan.ts:183`, `execution/tool/placeholders.ts:135,162,181`, `execution/tool/runner.ts:243`, `tools/vale.ts:84`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/tools/run.ts",
+            "packages/cli/src/tools/npm/locks.ts",
+            "packages/cli/src/execution/snapshot/installed.ts",
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/repository/tags.ts",
+            "packages/cli/src/repository/read.ts",
+            "packages/cli/src/execution/planning/files.ts",
+            "packages/cli/src/execution/planning/plan.ts",
+            "packages/cli/src/execution/command/placeholders.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/tools/vale.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the current owners of all eleven comment locations. Tool execution, npm lock parsing, dependency copying, classification, tagging, repository reading, planning, command expansion, execution, and Vale comments now identify their actual declarations. copyDirectoryLink and copyTree describe their own link and drainage contracts.",
+            "Added the missing Vale header and separated the substitute and perFileCommands documentation from their preceding declarations. AST comparison confirms that these two source edits change no executable syntax; all reviewed owners have their headers and declaration gaps.",
+            "CLI TypeScript, affected ESLint, and formatting passed. Existing Vale acquisition, placeholder, and command-expansion owners passed 13 cases with 47 assertions on macOS."
+        ]
     }
 ]

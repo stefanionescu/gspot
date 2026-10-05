@@ -190,6 +190,7 @@ export function substituteValue(
         .replaceAll('{indent}', () => String(substitutions.indent))
         .replaceAll('{message_file}', () => substitutions.messageFile ?? '');
 }
+
 /**
  * Expands policy and scope arguments while retaining individual file slots.
  * @param session the repository session
@@ -209,6 +210,7 @@ export function substitute(
         return policyPart ?? plainPart(session, planned, part, substitutions);
     });
 }
+
 /**
  * Replaces every file marker after variable-length arguments have expanded.
  * @param parts the expanded command

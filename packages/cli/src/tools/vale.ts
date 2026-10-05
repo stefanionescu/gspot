@@ -1,3 +1,4 @@
+// Inspect and synchronize configured Vale style packages in managed storage.
 import { join, dirname } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { toolPin } from '#cli/tools/pins.ts';
