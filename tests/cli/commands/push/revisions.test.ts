@@ -32,7 +32,7 @@ async function preparePushRepository(root: string): Promise<PushRepository> {
     const broken = gitOutput(root, ['rev-parse', 'HEAD']);
     writeFileSync(join(root, 'changed.sh'), 'echo repaired only in the working tree\n');
     writeFileSync(join(root, 'gspot.toml'), 'invalid working policy');
-    return { base, reviewed, broken, command: PUSH_CHECK_ARGV, zero: '0'.repeat(base.length) };
+    return { base, reviewed, broken, command: [...PUSH_CHECK_ARGV, 'origin', 'unused'], zero: '0'.repeat(base.length) };
 }
 
 /** Require the pushed tree and uncommitted source and policy to stay unchanged. */
@@ -107,10 +107,10 @@ test('negative fetch selectors exclude comparison objects until replaced by an e
 
 test('new references without fetched comparison objects check the full tree', async () => {
     await using sandbox = await testdir();
-    const { reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
+    const { reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     const noFetched = await spawnGspot(
         sandbox.path,
-        command.slice(0, -2).concat('unseen', 'unused'),
+        [...PUSH_CHECK_ARGV, 'unseen', 'unused'],
         {},
         { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
     );
