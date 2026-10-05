@@ -12,8 +12,8 @@ import { DIRECTORY_MODE } from '#cli/config/platform/modes.ts';
 import { WRITE_BATCH } from '#cli/config/execution/snapshot.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { getBlobs, getEntries } from '#cli/repository/revisions/objects.ts';
-import { copyDependencies, copyValePackages } from '#cli/execution/snapshot/installed.ts';
 import { ENTRY_MODES, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { copyValePackages, copyInstalledDependencies } from '#cli/execution/snapshot/installed.ts';
 
 // Writes one tracked entry into the snapshot: a directory for a gitlink, otherwise the blob with its mode.
 function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>): void {
@@ -113,7 +113,7 @@ export async function checkOutRevision<Result>(
         checkout,
         entries.map((entry) => entry.path),
     );
-    await copyDependencies(toplevel, checkout, entries, cancelSignal);
+    await copyInstalledDependencies(toplevel, checkout, entries, cancelSignal);
     await setImmediate();
     cancelSignal?.throwIfAborted();
     return await action(join(checkout, directory), tree.trim());

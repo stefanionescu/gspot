@@ -42,7 +42,7 @@ async function copySelected(context: WorktreeCopy, paths: string[], dependencies
 }
 
 // Clones each installed dependency folder that exists, and queues it for link repair.
-async function copyDependencies(context: WorktreeCopy, dependencies: string[]): Promise<void> {
+async function copyWorkingDependencies(context: WorktreeCopy, dependencies: string[]): Promise<void> {
     for (const folder of dependencies) {
         if (statSync(join(context.root, folder), { throwIfNoEntry: false }) === undefined) continue;
         const source = realpathSync(join(context.root, folder));
@@ -179,7 +179,7 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
             ),
         ];
         await copySelected(context, paths, dependencies);
-        await copyDependencies(context, dependencies);
+        await copyWorkingDependencies(context, dependencies);
         for (let directory = context.pending.pop(); directory !== undefined; directory = context.pending.pop())
             for (const entry of await outerTargetsFirst(directory.source)) await visitEntry(context, directory, entry);
         await relinkFiles(context);

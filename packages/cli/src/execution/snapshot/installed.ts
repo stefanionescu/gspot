@@ -14,7 +14,7 @@ import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import type { RevisionRoots, DependencyFolder } from '#cli/types/execution/snapshot.ts';
-import { LOCKS, PACKAGE_INPUTS, COPY_CONCURRENCY } from '#cli/config/execution/snapshot.ts';
+import { LOCKS, CLONE_OPTIONS, PACKAGE_INPUTS, COPY_CONCURRENCY } from '#cli/config/execution/snapshot.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 
 // Checks one copied link. Some links point at files the revision does not track, such as the build output of a
@@ -139,8 +139,7 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
                 cancelSignal?.throwIfAborted();
                 if (await copyDirectoryLink(join(source, name), join(target, name))) return;
                 await cp(join(source, name), join(target, name), {
-                    recursive: true,
-                    verbatimSymlinks: true,
+                    ...CLONE_OPTIONS,
                     mode: constants.COPYFILE_FICLONE,
                     filter: () => {
                         cancelSignal?.throwIfAborted();
@@ -201,7 +200,7 @@ export function copyValePackages(root: string, checkout: string, paths: string[]
  * @param entries the snapshot's Git entries, among them the project manifests that own dependencies
  * @param cancelSignal cancellation for the copy
  */
-export async function copyDependencies(
+export async function copyInstalledDependencies(
     root: string,
     checkout: string,
     entries: GitEntry[],

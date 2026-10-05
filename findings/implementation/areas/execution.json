@@ -1138,10 +1138,20 @@
         "section": "Findings",
         "finding": "| `execution/checkout/installed.ts:135-160,214`, `execution/tool/workspace.ts:24,39,120,156`, `platform/filesystem.ts:168` | Two exported `copyDependencies` copy dependency trees with the same `cp` options and different link rules. Temporary copies have four names: checkout, workspace, scratch copy, scratch folder. | Put both in `execution/snapshot/` and share one tree copy. Rename to `snapshotDependencies` and `copyWorkingDependencies`. Use one word for temporary copies. |",
         "owner": "`execution/checkout/installed.ts:135-160,214`, `execution/tool/workspace.ts:24,39,120,156`, `platform/filesystem.ts:168`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/execution/snapshot/installed.ts",
+            "packages/cli/src/execution/snapshot/workspace.ts",
+            "packages/cli/src/execution/snapshot/revision.ts",
+            "packages/cli/src/config/execution/snapshot.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both dependency-copy owners live in execution/snapshot. The public immutable operation is copyInstalledDependencies; the private working-copy operation is copyWorkingDependencies. Every real caller uses the new name and the former names have no compatibility export.",
+            "Both owners use the same literal CLONE_OPTIONS. The second pass corrects the claim of two exports: only the installed-copy function was exported. Its bounded child copying, allSettled drainage, Windows directory-link typing, immutable-input guard, and cancellation remain intact. Mutable working copies retain their separate link relocation and repair, so no forwarding tree helper or mode-dependent implementation replaces the two contracts.",
+            "AST comparison preserves every implementation node after reversing the two renames and expanding the shared literal options. Snapshot names identify the immutable operation; workspace and scratch types retain their actual isolation and disposal roles.",
+            "All four TypeScript targets passed. Affected ESLint and formatting passed after sorting the renamed import. Workspace and immutable snapshot owners passed 23 cases with 95 assertions, including concurrent process output, nested dependency stores, repaired and broken links, outside targets, binary selected inputs, sibling exclusion, cancellation drainage, SHA-1/SHA-256, and CRLF manifest matching."
+        ]
     },
     {
         "id": "areas/execution/054",
@@ -1150,10 +1160,17 @@
         "section": "Findings",
         "finding": "| `execution/tool/workspace.ts:51-57` `relocated` | It reimplements `isInside` from `platform/paths.ts:127`. | Use `isInside`. |",
         "owner": "`execution/tool/workspace.ts:51-57` `relocated`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/execution/snapshot/workspace.ts",
+            "packages/cli/src/platform/paths.ts",
+            "tests/cli/execution/workspace.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The local relocated calculation computes relative paths and calls the shared isInside predicate. It retains longest-original-first selection before joining the destination, so nested dependency copies win over ancestor copies. No local path-containment predicate remains.",
+            "All four TypeScript targets passed. Affected ESLint and formatting passed after sorting the renamed import. Workspace and immutable snapshot owners passed 23 cases with 95 assertions, including concurrent process output, nested dependency stores, repaired and broken links, outside targets, binary selected inputs, sibling exclusion, cancellation drainage, SHA-1/SHA-256, and CRLF manifest matching."
+        ]
     },
     {
         "id": "areas/execution/055",
