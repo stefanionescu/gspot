@@ -37,6 +37,10 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     );
     expect(all.code, all.stdout + all.stderr).toBe(1);
     expect(
-        (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file),
-    ).toStrictEqual(['legacy.sh', 'legacy.sh']);
+        new Set(
+            (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
+        ),
+    ).toStrictEqual(new Set(['legacy.sh']));
 });

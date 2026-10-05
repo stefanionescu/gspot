@@ -272,10 +272,9 @@ test('an ignored folder includes descendants while a negated file remains enforc
     const checked = await runGspot(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
-        'legacy scripts/required.sh',
-        'legacy scripts/required.sh',
-    ]);
+    expect(new Set(report.checks[0]?.findings.map(({ file }) => file))).toStrictEqual(
+        new Set(['legacy scripts/required.sh']),
+    );
     expect(report.ignores[0]?.matched).toBe(0);
     writeFileSync(join(directory.path, 'legacy scripts/required.sh'), 'echo corrected\n');
     const corrected = await runGspot(directory.path, command);
@@ -291,8 +290,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await runGspot(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
-        'legacy scripts/nested/example.sh',
-        'legacy scripts/nested/example.sh',
-    ]);
+    expect(
+        new Set((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)),
+    ).toStrictEqual(new Set(['legacy scripts/nested/example.sh']));
 });

@@ -33,10 +33,9 @@ test('generated and vendored settings classify directories and removal returns f
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
     expect(checked?.fileCount).toBe(2);
-    expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
-        'output types/broken.sh',
-        'output types/broken.sh',
-    ]);
+    expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['output types/broken.sh']),
+    );
     writeFileSync(join(directory.path, 'output types/broken.sh'), 'echo corrected\n');
     const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -94,10 +93,9 @@ test('excluded directories stay out of checks until the policy removes their exc
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
     expect(checked?.fileCount).toBe(2);
-    expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
-        'legacy scripts/broken.sh',
-        'legacy scripts/broken.sh',
-    ]);
+    expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['legacy scripts/broken.sh']),
+    );
     writeFileSync(join(directory.path, 'legacy scripts/broken.sh'), 'echo corrected\n');
     const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

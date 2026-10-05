@@ -28,10 +28,9 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const failedReport = JSON.parse(failed.stdout) as RunReport;
     expect(failedReport.comparison?.content).toBe('index');
     expect(failedReport.checks[0]?.reproduce).toContain('--staged');
-    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
-        'script with spaces.sh',
-        'script with spaces.sh',
-    ]);
+    expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['script with spaces.sh']),
+    );
     expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe(

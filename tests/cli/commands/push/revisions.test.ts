@@ -84,10 +84,12 @@ test('negative fetch selectors exclude comparison objects until replaced by an e
     );
     expect(excluded.code, excluded.stdout + excluded.stderr).toBe(1);
     expect(
-        (JSON.parse(excluded.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
-            (finding) => finding.file,
+        new Set(
+            (JSON.parse(excluded.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ),
-    ).toStrictEqual(['legacy.sh', 'legacy.sh']);
+    ).toStrictEqual(new Set(['legacy.sh']));
     expect(git(sandbox.path, ['config', '--unset-all', 'remote.origin.fetch']).code).toBe(0);
     expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/main:refs/fetched/origin/main']).code).toBe(
         0,
@@ -114,10 +116,12 @@ test('new references without fetched comparison objects check the full tree', as
     );
     expect(noFetched.code, noFetched.stdout + noFetched.stderr).toBe(1);
     expect(
-        (JSON.parse(noFetched.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
-            (finding) => finding.file,
+        new Set(
+            (JSON.parse(noFetched.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ),
-    ).toStrictEqual(['legacy.sh', 'legacy.sh']);
+    ).toStrictEqual(new Set(['legacy.sh']));
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
@@ -194,10 +198,12 @@ test('pre-push checks exact supplied objects despite conflicting working-tree re
     );
     expect(failing.code, failing.stdout + failing.stderr).toBe(1);
     expect(
-        (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
-            (finding) => finding.file,
+        new Set(
+            (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ),
-    ).toStrictEqual(['changed.sh', 'changed.sh']);
+    ).toStrictEqual(new Set(['changed.sh']));
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
@@ -248,8 +254,9 @@ test('pre-push reports multiple objects once per object and handles forced rewin
     expect(pushed.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
     expect(pushed.revisions.map((revision) => revision.report.comparison?.reference)).toStrictEqual([broken, reviewed]);
     expect(
-        pushed.revisions.map((revision) => revision.report.checks.flatMap((check) => check.findings).length),
-    ).toStrictEqual([2, 0]);
+        new Set(pushed.revisions[0]!.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))),
+    ).toStrictEqual(new Set(['changed.sh']));
+    expect(pushed.revisions[1]!.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     const duplicated = await spawnGspot(
         sandbox.path,
         command,

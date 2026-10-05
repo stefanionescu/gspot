@@ -226,10 +226,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/push.test.ts:229-231`, \"pre-push reports multiple objects once per object and handles forced rewinds\" | `[2, 0]` counts the two lines that `bash -n` prints for `if then`. This is the incidental tool output that the FINDINGS row about `['legacy.sh', 'legacy.sh']` names, at a line that row does not list. | Assert that the broken object has findings and the reviewed object has none. |",
         "owner": "`cli/commands/push.test.ts:229-231`, \"pre-push reports multiple objects once per object and handles forced rewinds\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/push/revisions.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All eleven repeated Bash finding-file assertions in the reviewed declaration, scope, push, snapshot, and ignore cases now compare exact file sets. Expected data names each file once; missing or unexpected files still fail without depending on repeated native diagnostics.",
+            "The multi-object push case retains exact exit-code and comparison-reference assertions. Its failing revision must identify changed.sh, and its passing revision must have no findings, replacing the incidental [2, 0] count. AST comparison retains every scenario name and all 185 unrelated assertion sites; twelve prior count-based sites become thirteen outcome assertions.",
+            "A disposable real-CLI/Bash probe confirmed two invalid sources emitting respectively two and one diagnostics for the same entry.sh, followed by corrected source with exit zero and no findings. The probe preserved an unrelated file and removed its owned fixture. Root TypeScript, affected ESLint, and formatting passed; all six affected owners passed 28 tests with 229 assertions."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/017",

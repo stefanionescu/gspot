@@ -94,10 +94,21 @@
         "section": "Findings",
         "finding": "| `cli/commands/declarations.test.ts:36,95`, `nested-scopes.test.ts:59-63`, `push.test.ts:64,94,174,271`, `selectors.test.ts:25-28,51-54,70-73` | These assert each broken file twice, as in `['legacy.sh', 'legacy.sh']`, because `bash -n` prints two diagnostics for `if then`. That pins incidental tool output. A bash release that prints one line breaks all of them with no gspot bug. | Compare the set of files (`new Set(...)`) or use `toContainEqual`. |",
         "owner": "`cli/commands/declarations.test.ts:36,95`, `nested-scopes.test.ts:59-63`, `push.test.ts:64,94,174,271`, `selectors.test.ts:25-28,51-54,70-73`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/commands/declarations.test.ts",
+            "tests/cli/commands/nested-scopes.test.ts",
+            "tests/cli/commands/push/revisions.test.ts",
+            "tests/cli/commands/push/policy.test.ts",
+            "tests/cli/commands/check/snapshot.test.ts",
+            "tests/cli/commands/ignores.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All eleven repeated Bash finding-file assertions in the reviewed declaration, scope, push, snapshot, and ignore cases now compare exact file sets. Expected data names each file once; missing or unexpected files still fail without depending on repeated native diagnostics.",
+            "The multi-object push case retains exact exit-code and comparison-reference assertions. Its failing revision must identify changed.sh, and its passing revision must have no findings, replacing the incidental [2, 0] count. AST comparison retains every scenario name and all 185 unrelated assertion sites; twelve prior count-based sites become thirteen outcome assertions.",
+            "A disposable real-CLI/Bash probe confirmed two invalid sources emitting respectively two and one diagnostics for the same entry.sh, followed by corrected source with exit zero and no findings. The probe preserved an unrelated file and removed its owned fixture. Root TypeScript, affected ESLint, and formatting passed; all six affected owners passed 28 tests with 229 assertions."
+        ]
     },
     {
         "id": "areas/integration-tests/009",
