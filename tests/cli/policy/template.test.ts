@@ -1,15 +1,18 @@
+// Bun template fixtures verify publication, recovery, and preservation through the real lifecycle.
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { setKey } from '#cli/policy/edit.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
-import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { getTemplate, exportTemplate } from '#cli/policy/templates.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
+import { writePolicy, preparePolicy } from '#cli/commands/policy-edit.ts';
+import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 
 describe('template file paths', () => {
     test('an absolute template loads from a different working directory', async () => {
@@ -61,7 +64,6 @@ test('template publication is idempotent, preserves edits, and survives apply', 
     const first = readFileSync(path);
     expect(exportCommand(directory.path, 'shared.template.toml').exitCode).toBe(0);
     expect(readFileSync(path)).toStrictEqual(first);
-    expect(getOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
     const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
     expect(readFileSync(path)).toStrictEqual(first);
@@ -104,8 +106,18 @@ test('template export preserves an unowned destination and refuses the managed r
     expect(() => exportCommand(directory.path, 'occupied.toml')).toThrow(/occupied\.toml.*not overwritten/u);
     expect(readFileSync(occupied, 'utf8')).toBe('original bytes');
     expect(statSync(occupied).mode & 0o200).toBe(0);
+    // Commit a real policy edit so this refusal exercises a managed policy destination.
+    const plan = preparePolicy(directory.path, (raw) => {
+        setKey(raw, 'require_reasons', true);
+    });
+    {
+        using log = openOwnership(directory.path);
+        writePolicy(log, plan);
+    }
     const original = readFileSync(join(directory.path, 'gspot.toml'));
-    expect(() => exportCommand(directory.path, 'gspot.toml')).toThrow(Error);
+    expect(() => exportCommand(directory.path, 'gspot.toml')).toThrow(
+        'Template export cannot replace managed gspot.toml. Choose another destination.',
+    );
     expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 

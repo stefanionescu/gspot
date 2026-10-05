@@ -462,10 +462,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/policy/profile.test.ts:63`, \"profile publication is idempotent, preserves edits, and survives apply\" | The test counts entries of kind `export` in `.gspot/state/ownership.json`, a private field. FINDINGS names lines 127 and 132 of this file for the same reason, but not this line. | Delete the line. Lines 61-62 already prove that a second export changes nothing. |",
         "owner": "`cli/policy/profile.test.ts:63`, \"profile publication is idempotent, preserves edits, and survives apply\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/policy/template.test.ts", "packages/cli/src/commands/export.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the idempotence assertion that counted private ownership entries of kind export. The same case still exports twice, requires both public exit statuses to succeed, compares exact template bytes, applies, compares bytes again, and verifies preservation of an authored edit.",
+            "AST comparison preserves all 29 other assertion sites and every template case name, apart from the separately strengthened managed-policy refusal. Recovery tests retain their real filesystem fault, restoration, retry, and output checks.",
+            "Root TypeScript, affected ESLint, and formatting passed. Template publication, source loading, export parsing, and policy writing passed 32 cases with 94 assertions across four files on macOS."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/034",
@@ -474,10 +478,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/policy/profile.test.ts:109`, \"profile export preserves an unowned destination and refuses the managed repository policy\" | `toBeInstanceOf(Error)` passes for any failure. FINDINGS names this only at line 91. | Assert the message that refuses `gspot.toml` as the destination. |",
         "owner": "`cli/policy/profile.test.ts:109`, \"profile export preserves an unowned destination and refuses the managed repository policy\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/policy/template.test.ts", "packages/cli/src/commands/export.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The export refusal now requires the diagnostic Template export cannot replace managed gspot.toml. Choose another destination. Its fixture first prepares and commits a real policy edit through the production ownership lifecycle, then disposes that log before attempting export. This exercises the managed-kind guard rather than the generic unowned-file refusal.",
+            "A direct before-state probe showed that a merely authored gspot.toml was rejected as unowned while retaining its bytes. The corrected fixture reaches the managed policy guard in exportCommand and still verifies exact policy bytes plus preservation of the separate occupied destination and its permissions.",
+            "AST comparison retains all 29 unrelated outcome assertion sites and every scenario name. Root TypeScript, affected ESLint, and formatting passed; the four affected template and policy owners passed 32 cases with 94 assertions on macOS."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/035",
