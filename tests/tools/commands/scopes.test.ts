@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -32,17 +33,7 @@ test(
         const environment = {
             PATH: buildSandboxPath(['typos', 'ec', 'ast-grep']),
         };
-        const argv = [
-            'init',
-            '--yes',
-            '--scope-configurations',
-            'api=typescript',
-            '--no-task',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
-        ];
+        const argv = ['init', '--yes', '--scope-configurations', 'api=typescript', ...QUIET_INIT];
         // The root configurations init selects in every repository install tools the ESLint check never runs.
         await install(sandbox.path, argv, environment, { level: 'all', without: ROOT_CONFIGURATIONS });
         const command = ['check', '--only', 'javascript/eslint', '--json'];

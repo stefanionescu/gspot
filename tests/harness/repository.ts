@@ -47,6 +47,9 @@ export async function prepareTestRepository(
     await createFileTree(root, {
         '.gitignore': 'node_modules\n',
         ...buildManifest(sandbox.dependencies),
+        ...(sandbox.tsconfig === undefined
+            ? {}
+            : { 'tsconfig.json': JSON.stringify(sandbox.tsconfig, null, 4) + '\n' }),
         ...sandbox.files,
     });
     if (sandbox.modules !== false) linkInstalledModules(join(root, 'node_modules'));

@@ -1,16 +1,6 @@
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 /** Bash commands copied between two source files. */
-export const DUPLICATION_INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'bash',
-    'duplication',
-    '--no-task',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
+export const DUPLICATION_INIT = ['init', '--yes', '--configurations', 'bash', 'duplication', ...QUIET_INIT];
 
 /** The configurations the duplication sandbox leaves out after init. */
 export const DUPLICATION_LEFT_OUT = ['naming'];

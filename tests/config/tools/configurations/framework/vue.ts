@@ -9,9 +9,9 @@ export const VUE_CLEAN =
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'vue', 'css'],
+    tsconfig: COMPONENT_TSCONFIG,
     dependencies: { vue: vueManifest.version },
     files: {
-        'tsconfig.json': COMPONENT_TSCONFIG,
         'src/answer.ts': COMPONENT_SOURCE,
         'src/env.d.ts': "import 'vue';\n",
         'src/UserGreeting.vue': VUE_CLEAN,

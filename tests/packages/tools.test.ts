@@ -2,6 +2,7 @@
 import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, relative, delimiter } from 'node:path';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import { runPackageCheck } from '#tests/harness/check-case.ts';
@@ -81,19 +82,7 @@ async function prepareNativeConsumer(installation: Consumer): Promise<NativeCons
     writeFileSync(join(nativeConsumer, 'notes.json'), '"text"   ');
     const nativeOptions = { ...installation.onlineOptions, cwd: nativeConsumer };
     const nativeInit = await runTestCommand(
-        [
-            ...installation.command,
-            'init',
-            '--yes',
-            '--configurations',
-            'files',
-            '--no-task',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
-            '--json',
-        ],
+        [...installation.command, 'init', '--yes', '--configurations', 'files', ...QUIET_INIT, '--json'],
         nativeOptions,
     );
     if (nativeInit.code !== 0) throw new Error(`Native fixture init failed: ${nativeInit.stdout}${nativeInit.stderr}`);

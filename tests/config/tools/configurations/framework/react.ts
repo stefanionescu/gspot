@@ -21,8 +21,9 @@ export const RAW_NATIVE_TEXT =
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'react-dom'],
+    tsconfig: WEB_TSCONFIG,
     dependencies: WEB_DEPENDENCIES,
-    files: { 'tsconfig.json': WEB_TSCONFIG, 'src/Greeting.tsx': CLEAN_COMPONENT },
+    files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
 };
 
 /** Defects, expected findings, and explicit corrections. */
@@ -43,8 +44,9 @@ export const CASES: FindingCase[] = [
 /** Authored inputs and configuration selection for this scenario. */
 export const EXPO_REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'expo'],
+    tsconfig: NATIVE_TSCONFIG,
     dependencies: EXPO_DEPENDENCIES,
-    files: { 'tsconfig.json': NATIVE_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE },
+    files: { 'src/answer.ts': COMPONENT_SOURCE },
 };
 
 /** Defects, expected findings, and explicit corrections. */
@@ -62,8 +64,9 @@ export const EXPO_CASES: FindingCase[] = [
 /** Authored inputs and configuration selection for this scenario. */
 export const NATIVE_REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'react-native'],
+    tsconfig: NATIVE_TSCONFIG,
     dependencies: NATIVE_DEPENDENCIES,
-    files: { 'tsconfig.json': NATIVE_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE },
+    files: { 'src/answer.ts': COMPONENT_SOURCE },
 };
 
 /** Defects, expected findings, and explicit corrections. */

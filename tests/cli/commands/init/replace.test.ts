@@ -9,6 +9,7 @@ import { git, commitAll } from '#tests/harness/git.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { PLAN_INIT } from '#tests/config/cli/commands/init/replace.ts';
@@ -91,11 +92,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             '--json',
             '--configurations',
             'sql',
-            '--no-task',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
+            ...QUIET_INIT,
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(readPolicy(sandbox.path).policy.ignores).toStrictEqual([]);
@@ -119,17 +116,7 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
         'db/.sqlfluffignore': '# Templates\ntemplates/\n',
     });
     commitAll(sandbox.path);
-    const argv = [
-        'init',
-        '--yes',
-        '--scope-configurations',
-        'db=sql',
-        '--no-task',
-        '--no-ci',
-        '--no-hooks',
-        '--no-rules',
-        '--no-install',
-    ];
+    const argv = ['init', '--yes', '--scope-configurations', 'db=sql', ...QUIET_INIT];
     const initialized = await runGspot(sandbox.path, argv);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();

@@ -1,3 +1,4 @@
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
@@ -18,7 +19,7 @@ export const REPOSITORY: RepositoryScenario = {
     configurations: ['actions'],
     modules: false,
     without: [],
-    init: ['--no-task', '--no-ci', '--no-rules', '--no-install', '--no-hooks'],
+    init: [...QUIET_INIT],
     tools: ['actionlint', 'zizmor'],
     files: { '.github/workflows/build.yml': `${WORKFLOW_HEAD}            - run: echo built\n` },
 };

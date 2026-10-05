@@ -1,3 +1,4 @@
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
@@ -18,7 +19,7 @@ export const REPOSITORY: RepositoryScenario = {
     configurations: ['files'],
     modules: false,
     without: [],
-    init: ['--no-task', '--no-ci', '--no-rules', '--no-install', '--no-hooks'],
+    init: [...QUIET_INIT],
     tools: ['taplo', 'yamllint', 'dotenv-linter'],
     files: { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'settings/clean.toml': 'a = 1\n' },
 };

@@ -1,15 +1,6 @@
-export const SECURITY_INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'security',
-    '--no-task',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
+
+export const SECURITY_INIT = ['init', '--yes', '--configurations', 'typescript', 'security', ...QUIET_INIT];
 
 export const SECURITY_CLEAN = 'export function double(value: number): number {\n    return value * 2;\n}\n';
 

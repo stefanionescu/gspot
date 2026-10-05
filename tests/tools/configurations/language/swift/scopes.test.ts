@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
@@ -21,17 +22,7 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
-        const argv = [
-            'init',
-            '--yes',
-            '--scope-configurations',
-            'ios=swift',
-            '--no-task',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
-        ];
+        const argv = ['init', '--yes', '--scope-configurations', 'ios=swift', ...QUIET_INIT];
         await install(sandbox.path, argv, environment, { level: 'all' });
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
             const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);

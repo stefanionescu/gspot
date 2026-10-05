@@ -34,7 +34,7 @@ async function reported(
             type: 'module',
             dependencies: web ? WEB_DEPENDENCIES : EXPO_DEPENDENCIES,
         }),
-        'tsconfig.json': web ? WEB_TSCONFIG : NATIVE_TSCONFIG,
+        'tsconfig.json': JSON.stringify(web ? WEB_TSCONFIG : NATIVE_TSCONFIG, null, 4) + '\n',
         'src/Greeting.tsx': CLEAN_COMPONENT,
         ...files,
     });

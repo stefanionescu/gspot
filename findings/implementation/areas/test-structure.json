@@ -215,10 +215,17 @@
         "section": "Findings",
         "finding": "| `harness/tools/install.ts:104-115` and `harness/planted/sandbox.ts:28-38`; `acceptance/kits/general/files.test.ts:148-150,194-196` | `installAtLevel` and `installTools` run the same steps with the same error text, and `files.test.ts` copies them inline twice. | Keep one `install(root, argv, { level, without })` in `harness/sandbox.ts`. Call it from `installSandbox` and the tests. |",
         "owner": "`harness/tools/install.ts:104-115` and `harness/planted/sandbox.ts:28-38`; `acceptance/kits/general/files.test.ts:148-150,194-196`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/harness/install.ts",
+            "tests/harness/repository.ts",
+            "tests/tools/configurations/general/files.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One shared install owns initialization, selected level, optional configuration removal and private installation. The repository callback prepares PATH and arguments but delegates that lifecycle; files tests also call install instead of copying it. Native fixture regressions pass: /tmp/gspot-test-owners-native.log and /tmp/gspot-test-owners-native-retry.log (the retry uses existing GitHub authentication for the pinned EditorConfig Checker release after anonymous requests were rate-limited).",
+            "After moving JSON serialization out of configuration, the root TypeScript target and direct React generation cases pass. Thirteen native React, Expo, React Native, Next.js, Astro, Vue and Svelte defects/corrections pass with static project data: /tmp/gspot-test-owners-static-types.log, /tmp/gspot-test-owners-static-cli.log and /tmp/gspot-test-owners-static-native.log."
+        ]
     },
     {
         "id": "areas/test-structure/014",
@@ -227,10 +234,17 @@
         "section": "Findings",
         "finding": "| `config/cli.ts:5`, `harness/planted/init.ts:11`, `samples/python.ts:2-12`, `harness/package/published.ts:64-80`; `acceptance/kits/general/dependencies.test.ts:13-23`, `security.test.ts:12-23`, `licenses.test.ts:12-22`, `duplication.test.ts:12-23`; `files.test.ts:13,21`, `tool/actions.test.ts:13,21` | The quiet init flag list exists in four support files and about 20 tests. The four named lists equal `initArgs([...])`. The `init:` keys in `files.test.ts:21` and `actions.test.ts:21` equal the default `QUIET_INIT`. | Keep `QUIET_INIT` and `initArgs` in `harness/policy.ts`. Replace the equal copies, delete the redundant `init:` keys, and delete `STRUCTURE_INIT`. |",
         "owner": "`config/cli.ts:5`, `harness/planted/init.ts:11`, `samples/python.ts:2-12`, `harness/package/published.ts:64-80`; `acceptance/kits/general/dependencies.test.ts:13-23`, `security.test.ts:12-23`, `licenses.test.ts:12-22`, `duplication.test.ts:12-23`; `files.test.ts:13,21`, `tool/actions.test.ts:13,21`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/harness/init.ts",
+            "tests/harness/init.ts",
+            "tests/config/tools/configurations/general/files.ts",
+            "tests/cli/commands/init/replace.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Replaced thirteen exact copies of the five quiet-init flags with their static owner, retaining deliberately different flag sets. No STRUCTURE_INIT remains. CLI initialization and native configuration setup, corrections and scope cases pass: /tmp/gspot-test-owners-cli.log and /tmp/gspot-test-owners-native.log and /tmp/gspot-test-owners-native-retry.log (the retry uses existing GitHub authentication for the pinned EditorConfig Checker release after anonymous requests were rate-limited)."
+        ]
     },
     {
         "id": "areas/test-structure/015",
@@ -251,10 +265,17 @@
         "section": "Findings",
         "finding": "| `harness/registry/python.ts:25` and `harness/tools/python.ts:26` | Two files serve the same two tests (`tools/cli/execution/python-staged.test.ts`, `tools/cli/lifecycle/python-project.test.ts`), split only by folder theme. | Merge them into `harness/uv.ts`. |",
         "owner": "`harness/registry/python.ts:25` and `harness/tools/python.ts:26`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "scripts/registry/python.ts",
+            "scripts/config/registry.ts",
+            "tests/tools/execution/python-staged.test.ts",
+            "tests/tools/lifecycle/python-project.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Merged wheel production, authenticated serving and disposal into the shared registry owner, as the explicit scripts/registry ownership plan requires. Both original tests call createPythonRegistry directly; no duplicate harness implementation remains. Both native lifecycle and staged-source regressions pass: /tmp/gspot-test-owners-native.log and /tmp/gspot-test-owners-native-retry.log (the retry uses existing GitHub authentication for the pinned EditorConfig Checker release after anonymous requests were rate-limited)."
+        ]
     },
     {
         "id": "areas/test-structure/017",
@@ -263,10 +284,16 @@
         "section": "Findings",
         "finding": "| `harness/cli/site.ts:8` and `samples/site.ts:2` | A helper and a sample with the same two users (`integration/cli/checks/general/site/build.test.ts`, `output.test.ts`) live in two folders. | Merge them into one file, or into the two tests once `siteInput` goes away. |",
         "owner": "`harness/cli/site.ts:8` and `samples/site.ts:2`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/samples/site.ts",
+            "tests/cli/checks/general/site/build.test.ts",
+            "tests/cli/checks/general/site/output.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed siteInput and its forwarding module. Both tests build the actual engine input and share static site data through config, retaining the explicit repository folder decision. Site build/output failure, correction, caching and preservation cases pass: /tmp/gspot-test-owners-cli.log."
+        ]
     },
     {
         "id": "areas/test-structure/018",
@@ -329,10 +356,18 @@
         "section": "Findings",
         "finding": "| `harness/planted/cases.ts:29-38,52-61,114-123`; `integration/cli/commands/ci.test.ts:22-26,67-70,109-112,138-141` | The same inline object type, with its doc comments, is written three times in `cases.ts` and four times in `ci.test.ts`. `gspot/types-placement` forbids a local alias, so authors copy the literal. | Name the type in `cases.ts`, beside `plantedCases`. For tests, see the fifth question below. |",
         "owner": "`harness/planted/cases.ts:29-38,52-61,114-123`; `integration/cli/commands/ci.test.ts:22-26,67-70,109-112,138-141`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/types/harness/check-case.ts",
+            "tests/types/generation/workflow.ts",
+            "tests/harness/check-case.ts",
+            "tests/cli/commands/ci.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Named Correction, FindingCase, CheckCommand, GithubWorkflow, GitlabPipeline and CiDocument replace the repeated declaration bags in their actual consumers. Types remain in behavior-owned types folders by explicit instruction. All four TypeScript targets, provider CI and native correction cases pass: /tmp/gspot-test-owners-types-*.log, /tmp/gspot-test-owners-cli.log and /tmp/gspot-test-owners-native.log and /tmp/gspot-test-owners-native-retry.log (the retry uses existing GitHub authentication for the pinned EditorConfig Checker release after anonymous requests were rate-limited).",
+            "After moving JSON serialization out of configuration, the root TypeScript target and direct React generation cases pass. Thirteen native React, Expo, React Native, Next.js, Astro, Vue and Svelte defects/corrections pass with static project data: /tmp/gspot-test-owners-static-types.log, /tmp/gspot-test-owners-static-cli.log and /tmp/gspot-test-owners-static-native.log."
+        ]
     },
     {
         "id": "areas/test-structure/022",
@@ -427,10 +462,12 @@
         "section": "Findings",
         "finding": "| `integration/package-runner.test.ts` | It tests that `scripts/package.ts` removes its temporary registry. That is a test of test infrastructure, and it is the only non-CLI file in `integration`. | Delete it (third question below). |",
         "owner": "`integration/package-runner.test.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["scripts/package.ts", "scripts/registry/lifecycle.ts", "tests/packages"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the package-runner infrastructure test without a replacement. Registry lifetime is owned by orchestration and its required disposal; delivered consumer scenarios remain under packages. The installed-package security asset scenario passes against the built archive: /tmp/gspot-semgrep-names-package.log."
+        ]
     },
     {
         "id": "areas/test-structure/028",
@@ -495,10 +532,12 @@
         "section": "Findings",
         "finding": "| `config/cli.ts:2,8` | A config file imports the harness, and `MINIMAL_POLICY` is `policyOf(['bash'])`, a one-line call stored as a constant. | Move `QUIET_INIT` into `harness/policy.ts`. Replace `MINIMAL_POLICY` with `policyOf(['bash'])` in its three users. |",
         "owner": "`config/cli.ts:2,8`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/config/harness/init.ts", "tests/harness/init.ts", "tests/harness/policy.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "MINIMAL_POLICY is removed. The shared flags are static data in config; policy construction stays with the harness, so configuration imports no runtime harness. This respects the explicit config/types folder decision. Affected CLI policy and initialization cases and all TypeScript targets pass: /tmp/gspot-test-owners-cli.log and /tmp/gspot-test-owners-types-*.log."
+        ]
     },
     {
         "id": "areas/test-structure/032",
@@ -507,10 +546,18 @@
         "section": "Findings",
         "finding": "| `config/timeouts.ts:3,8,10,16,21-34` | `WINDOWS_SLOWDOWN` is exported with no outside user. Nine limits have one user each (`HELP`, `LINT`, `SETUP`, `STARTUP`, `REQUEST`, `SHUTDOWN`, `ACCEPTANCE`, `PACKAGE_RUN`, `SOURCE_COMMAND`). `CONFIGURATION.md` says to group constants by domain, not in one bag. | Move each one-user limit to its user, stop exporting `WINDOWS_SLOWDOWN`, and keep `PLANTED`, `INSTALL`, and `RELEASE` in `harness/timeouts.ts`. |",
         "owner": "`config/timeouts.ts:3,8,10,16,21-34`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/timeouts.ts",
+            "tests/config/harness/command.ts",
+            "tests/harness/command.ts",
+            "tests/harness/preload.ts",
+            "mise.toml"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Only two shared suite defaults remain: CLI/plugin 60000 ms, tools/packages 900000 ms. Removed WINDOWS_SLOWDOWN and the old one-user timeout bag. The preload opens each test deadline; prepareTestCommand clamps children to remaining time and reserves cleanup. CLI, native and installed consumer scenarios pass with these owners: /tmp/gspot-test-owners-cli.log, /tmp/gspot-test-owners-native.log and /tmp/gspot-semgrep-names-package.log."
+        ]
     },
     {
         "id": "areas/test-structure/033",
@@ -542,10 +589,21 @@
         "section": "Findings",
         "finding": "| `samples/components.ts:2,10`; `samples/components.ts:6`, `samples/react.ts:10,14`, `acceptance/kits/framework/nextjs.test.ts:19-37` | `LIBRARIES_CLEAN` and `COMPONENT_SOURCE` are the same string. Four copies of one strict `tsconfig` differ only in `module`, `jsx`, and `lib`. | Delete `LIBRARIES_CLEAN`. Build the compiler options from one object with per-use overrides. |",
         "owner": "`samples/components.ts:2,10`; `samples/components.ts:6`, `samples/react.ts:10,14`, `acceptance/kits/framework/nextjs.test.ts:19-37`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/samples/typescript.ts",
+            "tests/config/samples/components.ts",
+            "tests/config/samples/react.ts",
+            "tests/config/tools/configurations/framework/nextjs.ts",
+            "tests/harness/repository.ts",
+            "tests/types/harness/repository.ts",
+            "tests/cli/generation/react-rules.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "LIBRARIES_CLEAN is removed; fixtures share COMPONENT_SOURCE. Configuration holds static project objects; the shared repository fixture and direct generation test own JSON serialization. Four strict compiler fixtures now derive from STRICT_COMPILER_OPTIONS with only their module/JSX/lib/framework overrides. Evaluated before/after JSON values are exactly equal; all TypeScript targets and native React/scoped TypeScript scenarios pass: /tmp/gspot-test-owner-compiler-before.json, /tmp/gspot-test-owner-compiler-after.json and /tmp/gspot-test-owners-native.log and /tmp/gspot-test-owners-native-retry.log (the retry uses existing GitHub authentication for the pinned EditorConfig Checker release after anonymous requests were rate-limited).",
+            "After moving JSON serialization out of configuration, the root TypeScript target and direct React generation cases pass. Thirteen native React, Expo, React Native, Next.js, Astro, Vue and Svelte defects/corrections pass with static project data: /tmp/gspot-test-owners-static-types.log, /tmp/gspot-test-owners-static-cli.log and /tmp/gspot-test-owners-static-native.log."
+        ]
     },
     {
         "id": "areas/test-structure/035",

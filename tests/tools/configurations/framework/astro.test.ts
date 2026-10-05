@@ -19,7 +19,8 @@ test(
         const environment = await prepareTestRepository(root, {
             configurations: ['typescript', 'astro', 'format'],
             dependencies: { astro: '7.3.2' },
-            files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, [PAGE]: CLEAN },
+            tsconfig: COMPONENT_TSCONFIG,
+            files: { 'src/answer.ts': COMPONENT_SOURCE, [PAGE]: CLEAN },
         });
         const linted = await runCheckCase(
             root,

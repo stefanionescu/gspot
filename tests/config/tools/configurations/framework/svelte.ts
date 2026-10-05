@@ -16,9 +16,9 @@ export const CARD =
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'svelte', 'css', 'format'],
+    tsconfig: COMPONENT_TSCONFIG,
     dependencies: { svelte: '5.57.0' },
     files: {
-        'tsconfig.json': COMPONENT_TSCONFIG,
         'src/answer.ts': COMPONENT_SOURCE,
         'src/Greeting.svelte': SVELTE_CLEAN,
     },
