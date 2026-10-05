@@ -35,36 +35,34 @@ test.each([false, true])(
 test.each([false, true])(
     'named allowances follow require_reasons=%s and removal restores enforcement',
     async (required) => {
-        {
-            await using directory = await testdir();
-            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash", "naming"]\n[agent_rules]\nenabled = false\n`;
-            await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
-            const entry = '{"name":"helper_command"}';
-            const allowed = await runGspot(directory.path, ['set', 'naming.allowed', entry]);
-            expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
-            expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
-            const explained = required
-                ? await runGspot(directory.path, [
-                      'set',
-                      'naming.allowed',
-                      entry,
-                      '--reason',
-                      'External protocol fixes this name',
-                  ])
-                : allowed;
-            expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-            const command = ['check', '--only', 'naming/identifiers', '--json'];
-            const checked = await runGspot(directory.path, command);
-            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            const removed = await runGspot(directory.path, ['set', 'naming.allowed', 'helper_command', '--remove']);
-            expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-            const restored = await runGspot(directory.path, command);
-            expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-            const report = JSON.parse(restored.stdout) as RunReport;
-            expect(report.checks[0]?.findings).toStrictEqual([
-                containing({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
-            ]);
-        }
+        await using directory = await testdir();
+        const policy = `level = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash", "naming"]\n[agent_rules]\nenabled = false\n`;
+        await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
+        const entry = '{"name":"helper_command"}';
+        const allowed = await runGspot(directory.path, ['set', 'naming.allowed', entry]);
+        expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
+        expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
+        const explained = required
+            ? await runGspot(directory.path, [
+                  'set',
+                  'naming.allowed',
+                  entry,
+                  '--reason',
+                  'External protocol fixes this name',
+              ])
+            : allowed;
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+        const command = ['check', '--only', 'naming/identifiers', '--json'];
+        const checked = await runGspot(directory.path, command);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const removed = await runGspot(directory.path, ['set', 'naming.allowed', 'helper_command', '--remove']);
+        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+        const restored = await runGspot(directory.path, command);
+        expect(restored.code, restored.stdout + restored.stderr).toBe(1);
+        const report = JSON.parse(restored.stdout) as RunReport;
+        expect(report.checks[0]?.findings).toStrictEqual([
+            containing({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
+        ]);
     },
 );
 

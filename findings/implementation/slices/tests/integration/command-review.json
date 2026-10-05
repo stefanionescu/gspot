@@ -566,10 +566,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/reasons.test.ts:39-70`, \"named allowances follow require_reasons=%s and removal restores enforcement\" | The body sits in an extra `{ ... }` block that does nothing. | Remove the block. |",
         "owner": "`cli/commands/reasons.test.ts:39-70`, \"named allowances follow require_reasons=%s and removal restores enforcement\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/reasons.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The named-allowance callback no longer wraps its complete body in a redundant block. Its async directory disposal remains at the same callback boundary.",
+            "AST comparison after flattening that sole block preserves the entire remaining syntax, including all 36 assertion sites, fixtures, CLI arguments, and scenario names. Root TypeScript, affected ESLint, and formatting passed; the reasons owner passed 15 cases with 93 assertions on macOS."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/042",
