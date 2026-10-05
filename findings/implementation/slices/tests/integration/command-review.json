@@ -6,10 +6,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/roots.test.ts:56-63`, \"a configuration below the Git root owns only its own project writes and changed paths\" | Cannot fail. The test breaks `outside.sh` at the Git root to prove that changes outside `app/` stay out of the run. The run selects only `sql/syntax`, which never reads a `.sh` file. `fileCount: 1` holds even if outside paths leak into the changed set. | Plant the outside change as a broken `outside.sql` at the Git root, or add a `[[check]]` with `paths = [\"**\"]`. Assert that the check receives only `src/query.sql`. |",
         "owner": "`cli/commands/roots.test.ts:56-63`, \"a configuration below the Git root owns only its own project writes and changed paths\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/roots.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The changed-path boundary fixture stages a healthy outside.sql and then breaks it with SELECT FROM;. The SQL run still reports exit 0 and exactly one selected SQL file beneath app/.",
+            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/002",
@@ -18,10 +21,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/local-override.test.ts:18`, \"a leftover local file cannot hide a check while an explicit skip applies only to that run\" | \"Applies only to that run\" is never tested. No run after the `--skip` run still has `entry.txt` broken. The last run (lines 44-46) passes only because the test fixed the file. | After the skipped run, run `check` again without `--skip` while `entry.txt` says `bad`, and assert exit 1. Delete the correction run. |",
         "owner": "`cli/commands/local-override.test.ts:18`, \"a leftover local file cannot hide a check while an explicit skip applies only to that run\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/local-override.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The run after --skip omits the flag while entry.txt remains bad. It reports exit 1 and project/entry failed. The correction run and its unused write import are removed.",
+            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/003",
@@ -30,10 +36,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/local-override.test.ts:36`, same test | `expect(doctor.code).not.toBe(2)` accepts both 0 and 1. | Assert the exact exit code doctor gives for this repository. |",
         "owner": "`cli/commands/local-override.test.ts:36`, same test",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/local-override.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Doctor reports exit 0 for the fixture with no selected tools or hooks. The assertion requires exactly 0 instead of accepting either success or findings.",
+            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/004",
@@ -42,10 +51,13 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/cancellation.test.ts:88`, \"staged cancellation during %s preserves source content and permits retry\", row `diff` | For `diff`, the fake git writes no `checkout`. The expression is then `false`, so the assertion passes whatever happens. | Assert the snapshot removal only in the `clone` and `cat-file` rows. For `diff`, assert that the run made no snapshot folder at all. |",
         "owner": "`cli/commands/cancellation.test.ts:88`, \"staged cancellation during %s preserves source content and permits retry\", row `diff`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/cancellation.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "TMPDIR belongs to the fixture. The diff case asserts that no snapshot folder exists while diff is stalled; all cases assert that the temporary directory is empty after cancellation. Clone and cat-file also require a recorded checkout and verify its removal.",
+            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/005",

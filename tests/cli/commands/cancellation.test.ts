@@ -62,16 +62,18 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
             'source.sh': 'echo indexed\n',
+            scratch: {},
+            bin: {},
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
         const indexed = git(sandbox.path, ['ls-files', '--stage', '-z']).stdout;
+        const scratch = join(sandbox.path, 'scratch');
         writeFileSync(join(sandbox.path, 'source.sh'), 'echo authored\n');
         const nativeGit = Bun.which('git');
         expect(nativeGit).not.toBeNull();
         const marker = join(sandbox.path, 'started.json');
         const binaryDirectory = join(sandbox.path, 'bin');
-        mkdirSync(binaryDirectory);
         writeFileSync(
             join(binaryDirectory, 'git'),
             `#!${process.execPath}\nconst args = process.argv.slice(2);\nif (args[0] === ${JSON.stringify(operation)}) {\nawait Bun.write(${JSON.stringify(marker)}, JSON.stringify({pid:process.pid,checkout:args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined}));\nawait Bun.sleep(60_000);\n} else {\nconst child=Bun.spawn([${JSON.stringify(nativeGit)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n}\n`,
@@ -82,6 +84,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
             ['check', '--staged', '--only', 'bash/syntax', '--json'],
             {
                 ...environmentVariables(),
+                TMPDIR: scratch,
                 PATH: `${binaryDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             },
             { timeoutMs: CHILD_OPTIONS.timeout },
@@ -89,6 +92,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
         await using capture = captureChild(child);
         const { output, errors } = capture;
         const started = (await waitForJson(marker)) as SnapshotMarker;
+        if (operation === 'diff') expect(readdirSync(scratch)).toStrictEqual([]);
         child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
         expect(await child.exited, await errors).toBe(2);
         expect(JSON.parse(await output)).toStrictEqual({
@@ -97,8 +101,11 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'])(
             exitCode: 2,
         });
         await waitForExit(started.pid);
-        // A snapshot the run had started is gone with it.
-        expect(started.checkout !== undefined && existsSync(started.checkout)).toBe(false);
+        if (operation !== 'diff') {
+            expect(started.checkout).toBeDefined();
+            expect(existsSync(started.checkout!)).toBe(false);
+        }
+        expect(readdirSync(scratch)).toStrictEqual([]);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
         const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);

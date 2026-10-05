@@ -36,7 +36,7 @@ test('a configuration below the Git root owns only its own project writes and ch
     await createFileTree(directory.path, {
         'gspot.toml': outerPolicy,
         '.gspot/authored.txt': 'Preserve outside the configuration root.\n',
-        'outside.sh': 'echo original\n',
+        'outside.sql': 'SELECT 1;\n',
         'app/gspot.toml': innerPolicy,
         'app/src/query.sql': 'SELECT 1;\n',
     });
@@ -55,7 +55,7 @@ test('a configuration below the Git root owns only its own project writes and ch
     );
     expect(readFileSync(join(app, 'gspot.toml'), 'utf8')).toContain('level = "all"');
     writeFileSync(join(app, 'src/query.sql'), 'SELECT 2;\n');
-    writeFileSync(join(directory.path, 'outside.sh'), 'if then\n');
+    writeFileSync(join(directory.path, 'outside.sql'), 'SELECT FROM;\n');
     const checked = await runGspot(source, ['check', '--changed', '--base', 'HEAD', '--only', 'sql/syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const checks = (JSON.parse(checked.stdout) as RunReport).checks;

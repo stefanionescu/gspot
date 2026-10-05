@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 // A declared check on host Bun that fails while entry.txt says bad.
@@ -32,9 +32,11 @@ test('a leftover local file cannot hide a check while an explicit skip applies o
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     expect((JSON.parse(skipped.stdout) as RunReport).skips).toStrictEqual([{ check: 'project/entry', cause: 'flag' }]);
     const doctor = await runGspot(directory.path, ['doctor', '--json']);
-    expect(doctor.code, doctor.stdout + doctor.stderr).not.toBe(2);
+    expect(doctor.code, doctor.stdout + doctor.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'gspot.local.toml'), 'utf8')).toBe(local);
-    writeFileSync(join(directory.path, 'entry.txt'), 'good\n');
-    const corrected = await runGspot(directory.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    const resumed = await runGspot(directory.path, command);
+    expect(resumed.code, resumed.stdout + resumed.stderr).toBe(1);
+    expect((JSON.parse(resumed.stdout) as RunReport).checks).toMatchObject([
+        { check: 'project/entry', status: 'failed' },
+    ]);
 });
