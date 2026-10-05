@@ -1,4 +1,8 @@
 <%
+const secretName = String.raw`(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*`;
+const sensitiveIdentifier = {
+    'metavariable-regex': { metavariable: '$SECRET', regex: `(?i)^${secretName}$` },
+};
 const document = {
     rules: [
         {
@@ -17,12 +21,32 @@ const document = {
             id: 'gspot.swift.no-secrets-in-userdefaults',
             patterns: [
                 {
-                    pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)',
+                    'pattern-either': [
+                        { pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)' },
+                        { pattern: 'UserDefaults(...).set($VALUE, forKey: $KEY)' },
+                        { pattern: 'UserDefaults(...)!.set($VALUE, forKey: $KEY)' },
+                        {
+                            patterns: [
+                                { pattern: '$DEFAULTS.set($VALUE, forKey: $KEY)' },
+                                {
+                                    'pattern-either': [
+                                        'let $DEFAULTS = UserDefaults.$INSTANCE\n...',
+                                        'var $DEFAULTS = UserDefaults.$INSTANCE\n...',
+                                        'let $DEFAULTS = UserDefaults(...)!\n...',
+                                        'var $DEFAULTS = UserDefaults(...)!\n...',
+                                        'let $DEFAULTS: UserDefaults = ...\n...',
+                                        'var $DEFAULTS: UserDefaults = ...\n...',
+                                        'func $FUNCTION(..., $DEFAULTS: UserDefaults, ...) { ... }',
+                                    ].map((pattern) => ({ 'pattern-inside': pattern })),
+                                },
+                            ],
+                        },
+                    ],
                 },
                 {
                     'metavariable-regex': {
                         metavariable: '$KEY',
-                        regex: '(?i).*(token|password|secret|credential|session).*',
+                        regex: '(?i).*(token|password|secret|credential).*',
                     },
                 },
             ],
@@ -94,24 +118,54 @@ const document = {
                 {
                     'pattern-either': [
                         {
-                            pattern: 'print($X)',
+                            patterns: [
+                                {
+                                    'pattern-either': [
+                                        { pattern: 'print("...\\($SECRET)...")' },
+                                        { pattern: 'print($SECRET)' },
+                                        { pattern: 'NSLog("...\\($SECRET)...")' },
+                                        { pattern: 'NSLog($FORMAT, ..., $SECRET, ...)' },
+                                        { pattern: 'os_log("...\\($SECRET)...", ...)' },
+                                        { pattern: 'os_log($FORMAT, ..., $SECRET, ...)' },
+                                    ],
+                                },
+                                sensitiveIdentifier,
+                            ],
                         },
                         {
-                            pattern: 'NSLog($X)',
-                        },
-                        {
-                            pattern: 'os_log($X, ...)',
-                        },
-                        {
-                            pattern: 'Logger.$METHOD($X)',
+                            patterns: [
+                                {
+                                    'pattern-either': [
+                                        {
+                                            patterns: [
+                                                { pattern: '$LOGGER.$LEVEL($SECRET)' },
+                                                sensitiveIdentifier,
+                                            ],
+                                        },
+                                        {
+                                            patterns: [
+                                                { pattern: '$LOGGER.$LEVEL("...\\($SECRET)...")' },
+                                                { pattern: '$LOGGER.$LEVEL($MESSAGE)' },
+                                                sensitiveIdentifier,
+                                                {
+                                                    'metavariable-regex': {
+                                                        metavariable: '$MESSAGE',
+                                                        regex: String.raw`(?is)^".*(?<!\\)\\\(\s*${secretName}\s*(?:,\s*privacy:\s*\.public)?\s*\)`,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                                {
+                                    'metavariable-regex': {
+                                        metavariable: '$LEVEL',
+                                        regex: '^(trace|debug|info|notice|warning|warn|error|fault|critical|log)$',
+                                    },
+                                },
+                            ],
                         },
                     ],
-                },
-                {
-                    'metavariable-regex': {
-                        metavariable: '$X',
-                        regex: '(?i).*(token|password|secret|credential).*',
-                    },
                 },
             ],
             message: 'Potentially logging sensitive data. Redact tokens, passwords, and credentials before logging.\n',

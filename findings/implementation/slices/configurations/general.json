@@ -544,10 +544,15 @@
         "section": "Kits: General",
         "finding": "| `general/security/semgrep/node.yml.tmpl:97-99` `node-jwt-no-algorithm-none` message | \"May accept none\" describes jsonwebtoken below 9. Version 9 rejects `none` unless the caller allows it. | Say that the rule pins the expected algorithm, or limit it to jsonwebtoken below 9. |",
         "owner": "`general/security/semgrep/node.yml.tmpl:97-99` `node-jwt-no-algorithm-none` message",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/semgrep/javascript.yml.tmpl",
+            "tests/tools/generation/secrets.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The JWT diagnostic now requires the expected signing algorithms instead of claiming that current jsonwebtoken implicitly accepts none. Native cases assert the exact new diagnostic for a two-argument verification call, accept explicit RS256 verification, and accept the corrected call at both levels. Dependency gating remains tracked separately under areas/kits/026. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
+        ]
     },
     {
         "id": "slices/kits-general/043",

@@ -299,10 +299,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/semgrep/node.yml.tmpl:77-80` | `node-no-secret-in-log` knows only an object named `logger`. | Match `$LOGGER.$LEVEL(process.env.$VAR)` and limit `$LEVEL` with a regex. |",
         "owner": "`packages/cli/kits/general/security/semgrep/node.yml.tmpl:77-80`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/semgrep/javascript.yml.tmpl",
+            "tests/config/tools/generation/secrets.ts",
+            "tests/tools/generation/secrets.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Replaced literal console/logger receivers with $LOGGER.$LEVEL and an explicit logging-level predicate. Native recommended/all scans report console.info, auditLogger.warn, this.logger.error, and applicationLog.trace for sensitive environment names; PORT reads, non-logging storage.write, and literal status text remain accepted. Redaction removes the exact defects and the unrelated source remains intact. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
+        ]
     },
     {
         "id": "areas/kits/026",

@@ -431,10 +431,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:141-160` (`ios-log-sensitive-data`) | The rule matches words anywhere in the argument, so `print(\"Token refreshed\")` was reported. `logger.info(\"Signed in with \\(token)\")` was not, because `Logger.$METHOD` matches only the type name, not a `logger` value. `os_log($X, ...)` checks the format string, not the logged values. | Match `$LOGGER.$LEVEL(...)` and `print(...)` when an interpolated identifier matches the regex. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:141-160` (`ios-log-sensitive-data`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/config/tools/generation/secrets.ts",
+            "tests/tools/generation/secrets.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The Swift rule captures sensitive identifiers in interpolation and raw logged arguments, supports logger variables with logging-level predicates, and checks os_log values rather than its format string. Native recommended/all cases assert exact lines for print, NSLog, variable loggers, nested credential properties, and both os_log argument forms. Literal Token refreshed messages, user.name interpolation, and explicit private redaction stay accepted; correction preserves neighboring positive cases. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
+        ]
     },
     {
         "id": "slices/kits-other-languages/033",
@@ -443,10 +449,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:15-30` (`ios-no-secrets-in-userdefaults`) | `session` in the key regex reported the key `\"sessionCount\"`. The pattern matches only `UserDefaults.<member>.set`, not a `UserDefaults` instance kept in a variable. | Remove `session`, and match any `UserDefaults` value. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:15-30` (`ios-no-secrets-in-userdefaults`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/config/tools/generation/secrets.ts",
+            "tests/tools/generation/secrets.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed session from the sensitive-key predicate. The native Swift parser does not support metavariable-type, so receiver ownership follows actual UserDefaults construction, standard-instance bindings, explicit type declarations, and typed function parameters. Native recommended/all cases report direct, local, suite, mutable, typed, and parameter receivers at exact lines while accepting sessionCount and an unrelated DictionaryStore.set. Corrections move sensitive values to Keychain calls and preserve harmless preferences. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
+        ]
     },
     {
         "id": "slices/kits-other-languages/034",

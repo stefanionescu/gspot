@@ -72,16 +72,10 @@ rules:
       category: security
   - id: gspot.javascript.no-secret-in-log
     patterns:
-      - pattern-either:
-          - pattern: console.log(process.env.$VAR)
-          - pattern: console.info(process.env.$VAR)
-          - pattern: console.warn(process.env.$VAR)
-          - pattern: console.error(process.env.$VAR)
-          - pattern: console.debug(process.env.$VAR)
-          - pattern: logger.info(process.env.$VAR)
-          - pattern: logger.warn(process.env.$VAR)
-          - pattern: logger.error(process.env.$VAR)
-          - pattern: logger.debug(process.env.$VAR)
+      - pattern: $LOGGER.$LEVEL(process.env.$VAR)
+      - metavariable-regex:
+          metavariable: $LEVEL
+          regex: ^(log|trace|debug|info|warn|error|fatal)$
       - metavariable-regex:
           metavariable: $VAR
           regex: .*(KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL).*
@@ -101,8 +95,8 @@ rules:
       - pattern-not: |
           jwt.verify($TOKEN, $SECRET, {algorithms: ...})
     message: >
-      jwt.verify() without explicit algorithms option may accept "none". Always
-      pass { algorithms: ["HS256"] } or similar.
+      Require the expected JWT signing algorithms when verifying a token. Pass
+      an algorithms option that matches the signing contract.
     languages:
       - typescript
       - javascript
