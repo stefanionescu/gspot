@@ -350,7 +350,7 @@ example = "A `killall worker` command outside bash.safety_owners reports a broad
 level = "recommended"
 stage = "commit"
 alternatives_checked = ["shellcheck", "semgrep"]
-summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, and sourced state files."
+summary = "Finds broad process kills and recursive deletes outside their owners, except traps that remove mktemp paths. At all, it also reports discarded failures."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
 help = "Handle the failure, and move the delete or kill into a script named under bash.safety_owners."
 

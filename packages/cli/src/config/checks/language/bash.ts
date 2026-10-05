@@ -28,8 +28,6 @@ export const OTHER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
 
 export const READONLY_WORD = 'readonly';
 
-export const REMOVE_CALL = /\brm\b/u;
-
 /** The fourth header line: the Bash version and the platforms. */
 export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, (?<platforms>.+)\.$/u;
 
@@ -56,11 +54,6 @@ export const RUNTIME_EMBEDS: [RegExp, string][] = [
 /** Safety-rule patterns and their diagnostic text. */
 export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
-    [
-        /\bsource\b[^\n]*(?:state|snapshot|last[_-]?config|\.env)\b/u,
-        'state-source',
-        'a generated state file is sourced',
-    ],
 ];
 
 /** Patterns only a safety owner may carry. */
@@ -69,10 +62,6 @@ export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\bkillall\b/u, 'broad-kill', 'processes are matched broadly'],
     [/\brm\s+-[\dA-Z_a-qs-z]*r\w*f\b/u, 'recursive-remove', 'files are removed recursively'],
     [/\brm\s+-[\dA-Z_a-eg-z]*f\w*r\b/u, 'recursive-remove', 'files are removed recursively'],
-    [/\$\{HOME\}\/\.cache["}]/u, 'unowned-cleanup', 'the home cache is swept'],
-    [/\/root\/\.cache[" ]/u, 'unowned-cleanup', 'the root cache is swept'],
-    [/\/tmp\/\S*\*/u, 'unowned-cleanup', 'a temporary tree is swept with a glob'],
-    [/\/dev\/shm\/\S*\*/u, 'unowned-cleanup', 'shared memory is swept with a glob'],
 ];
 
 /** A top-level assignment of an upper-case name. */

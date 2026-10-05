@@ -708,11 +708,18 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/bash/manifest.toml:340-349` (`safety`, `recommended`), `packages/cli/src/config/checks/language/bash.ts:144-163,186` | `unchecked-cd` repeats ShellCheck SC2164, which is on by default. Both reported `cd \"$dir\"`, and gspot also reported `cd \"$dir\" && ls`, which is safe. `recursive-remove` reports every `rm -rf` outside `tools.bash.safety_owners`, which defaults to an empty list. That includes the `trap 'rm -rf \"$tmp\"' EXIT` line that `bash/contract` requires after `mktemp` (`packages/cli/src/checks/language/bash/contract.ts:159-162`). `\\|\\| true` is the usual way to allow a failure under `set -e`, which `contract` also requires. | Remove `unchecked-cd`, and let ShellCheck own it. Exempt `rm` inside a trap for a `mktemp` path. Move `blanket-success` to `all`, or delete it. |",
         "owner": "`packages/cli/kits/language/bash/manifest.toml:340-349` (`safety`, `recommended`), `packages/cli/src/config/checks/language/bash.ts:144-163,186`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
+        "location": [
+            "packages/cli/src/parsers/bash.ts",
+            "packages/cli/src/checks/language/bash/contract.ts",
+            "packages/cli/src/checks/language/bash/safety.ts"
+        ],
+        "status": "closed",
+        "outcome": "ShellCheck owns unchecked cd. The shared native Bash parser ties cleanup traps to exact mktemp assignments without reassignment or unrelated removal targets. Contract and safety consume the same owned cleanup data. Blanket success is checked only at all, directly from the level.",
         "verification": [
-            "Partial implementation: unchecked-cd is removed with pinned ShellCheck SC2164 equivalence proof and native CLI ownership regressions in /tmp/gspot-shell-dialects-final-native.log. Cleanup-trap exemptions and the blanket-success level remain unresolved; this record stays open."
+            "Pinned ShellCheck SC2164 ownership proof and guarded-cd regressions: /tmp/gspot-shell-dialects-final-native.log.",
+            "Exact native AST and public CLI cleanup cases cover multiline traps, local bindings, shadowing, reassignment including the deferred body, extra targets, and multiple removals on one line. Recommended and all failure-discard cases use no extra enabling setting: /tmp/gspot-bash-safety-cli-complete.log (76 passes, 232 assertions, eight files).",
+            "Pinned root/scoped ShellCheck accepts temporary cleanup at both levels and preserves source bytes: /tmp/gspot-bash-safety-native-final.log (15 passes, 127 assertions, four files).",
+            "All four TypeScript targets: /tmp/gspot-bash-safety-types-final.log. Source lint: /tmp/gspot-bash-safety-ready-lint.log."
         ]
     },
     {
@@ -722,10 +729,17 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/src/config/checks/language/bash.ts:147,159-162` (used by `bash/safety`) | These patterns come from one project's cleanup scripts. One reports sourcing a file whose name holds `state`, `snapshot`, or `last_config`. Others report clearing `${HOME}/.cache`, `/root/.cache`, and `/dev/shm/*`. | Delete them. ShellCheck SC2115 already covers `rm -rf \"$var/\"` when `$var` is empty. |",
         "owner": "`packages/cli/src/config/checks/language/bash.ts:147,159-162` (used by `bash/safety`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/language/bash.ts",
+            "tests/cli/checks/language/bash/safety.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Removed application-specific source-file, cache, temporary-directory, and shared-memory patterns. Native ShellCheck retains empty-path removal protection; shared safety still reports broad process kills and recursive removal outside declared owners.",
+        "verification": [
+            "Public CLI fixtures accept project path names at both levels while retaining recursive removal findings: /tmp/gspot-bash-safety-cli-complete.log.",
+            "Pinned ShellCheck still reports SC2115 for rm -rf \"$root/\" when root can be empty: /tmp/gspot-bash-safety-native-empty-path.json.",
+            "Pinned native root/scoped safety and ShellCheck regressions: /tmp/gspot-bash-safety-native-final.log. All four TypeScript targets: /tmp/gspot-bash-safety-types-final.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/041",

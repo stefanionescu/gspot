@@ -89,7 +89,6 @@ configurations = [
     "react",
     "svelte",
     "vitest",
-    "vue",
     "react-dom",
 ]
 

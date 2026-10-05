@@ -56,8 +56,8 @@ test.each(['recommended', 'all'] as const)(
                 .filter(({ check }) => check === 'bash/shellcheck')
                 .map(({ scope, status, fileCount, findings }) => ({ scope, status, fileCount, findings })),
         ).toStrictEqual([
-            { scope: '', status: 'passed', fileCount: 5, findings: [] },
-            { scope: 'app', status: 'passed', fileCount: 1, findings: [] },
+            { scope: '', status: 'passed', fileCount: 6, findings: [] },
+            { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
         ]);
         const formatted = await spawnGspot(
             sandbox.path,

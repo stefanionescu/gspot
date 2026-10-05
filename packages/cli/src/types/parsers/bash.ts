@@ -19,12 +19,27 @@ export type QuotedArgument = { command: string; start: number; end: number };
 /** A comment-free code line, keyed by its one-based number. */
 export type CodeLine = { number: number; code: string };
 
+/** A mktemp assignment and the trap lines that remove its unchanged path. */
+export type TemporaryPath = { name: string; line: number; cleanupLines: number[] };
+
+/** Created paths remain visible even when reassignment prevents an exact cleanup binding. */
+export type TemporaryBindings = { paths: TemporaryPath[]; bindings: Map<string, TemporaryPath>; declared: Set<string> };
+
+/** A deferred trap's native removals retain their source offset and variable ownership. */
+export type CleanupContext = {
+    lineOffset: number;
+    owner: number | undefined;
+    registry: TemporaryBindings;
+    lines: Map<number, Array<TemporaryPath | undefined>>;
+};
+
 /** The shell syntax every check shares after the tree is disposed. */
 export type ScriptSyntax = {
     code: string[];
     functions: ScriptFunction[];
     calls: FunctionCall[];
     quotedArguments: QuotedArgument[];
+    temporaryPaths: TemporaryPath[];
     isTrivialFile: boolean;
 };
 

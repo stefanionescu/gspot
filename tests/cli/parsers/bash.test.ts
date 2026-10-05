@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { COMMENT_CASES } from '#tests/config/cli/parsers/bash.ts';
 import { codeLines, parseBashScript } from '#cli/parsers/bash.ts';
+import { COMMENT_CASES, TEMPORARY_CASES } from '#tests/config/cli/parsers/bash.ts';
 
 test.each(COMMENT_CASES)('Bash comments preserve quoted and parameter hashes in %s', async (source, expected) => {
     const parsed = await parseBashScript(source, { minimumStatements: undefined });
@@ -11,6 +11,14 @@ test('masked comments retain code line numbers and omit blank lines', async () =
     const parsed = await parseBashScript('\n# note\na=1 # b\n  ', { minimumStatements: undefined });
     expect(codeLines(parsed.code)).toStrictEqual([{ number: 3, code: 'a=1' }]);
 });
+
+test.each(TEMPORARY_CASES)(
+    'native Bash syntax resolves only exact temporary cleanup paths in $source',
+    async ({ source, expected }) => {
+        const parsed = await parseBashScript(source, { minimumStatements: undefined });
+        expect(parsed.temporaryPaths).toStrictEqual(expected);
+    },
+);
 
 test('Bash functions retain source ranges, bodies, statements, and positional reads', async () => {
     const parsed = await parseBashScript(

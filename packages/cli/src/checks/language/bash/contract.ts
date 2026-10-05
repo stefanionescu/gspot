@@ -10,7 +10,6 @@ import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.
 import {
     EXIT_CALL,
     MAIN_CALL,
-    REMOVE_CALL,
     STRICT_MODE,
     RUNTIME_LINE,
     BASH_FEATURES,
@@ -117,13 +116,6 @@ function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: bool
     }
 }
 
-function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
-    const temporary = code.find((line) => /\bmktemp\b/u.test(line.code));
-    const isTrapped = code.some((line) => line.code.startsWith('trap ') && REMOVE_CALL.test(line.code));
-    if (temporary !== undefined && !isTrapped)
-        report(temporary.number, 'mktemp-trap', 'A temporary file needs a trap that removes it.');
-}
-
 function fileProblems(
     input: EngineInput,
     file: ScriptFile,
@@ -142,7 +134,9 @@ function fileProblems(
     if (file.isExecutable) strictModeProblems(code, version, report);
     if (file.isExecutable) entryProblems(file, code, report);
     else libraryProblems(file, code, isConfigOwner, report);
-    cleanupProblems(code, report);
+    for (const temporary of file.temporaryPaths)
+        if (temporary.cleanupLines.length === 0)
+            report(temporary.line, 'mktemp-trap', `The temporary path ${temporary.name} needs a trap that removes it.`);
     return findings;
 }
 

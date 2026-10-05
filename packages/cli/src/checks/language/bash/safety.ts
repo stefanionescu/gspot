@@ -5,7 +5,7 @@ import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
 
 /**
- * One finding per line that discards a failure, sources state, or sweeps processes or trees outside an owner.
+ * One finding per unsafe process kill or removal; all also reports discarded failures.
  * @param input the check context
  * @returns the findings
  */
@@ -15,9 +15,14 @@ export const safety: Engine = async (input) => {
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         file.code.flatMap((code, position) => {
-            const rules = [...SAFETY_LINE_RULES, ...(isOwner(file.path) ? [] : SAFETY_OWNER_RULES)];
+            const rules = [
+                ...(input.policyFiles.policy.level === 'all' ? SAFETY_LINE_RULES : []),
+                ...(isOwner(file.path) ? [] : SAFETY_OWNER_RULES),
+            ];
+            const isCleanup = file.temporaryPaths.some((temporary) => temporary.cleanupLines.includes(position + 1));
             return rules
                 .filter(([pattern]) => pattern.test(code))
+                .filter(([, rule]) => rule !== 'recursive-remove' || !isCleanup)
                 .map(([, rule, text]) =>
                     findingAt(input, { file: file.path, line: position + 1 }, rule, `Here ${text}.`),
                 );

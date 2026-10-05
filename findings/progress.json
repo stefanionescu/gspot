@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -13122,7 +13122,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema → toolProjectSchema",
+            "name": "packageSchema \u2192 toolProjectSchema",
             "type": false
         },
         {
@@ -13140,7 +13140,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity → PackageClientIdentity",
+            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
             "type": true
         },
         {
@@ -18422,6 +18422,41 @@
                 "Actual staged gate and normal hook-enabled commit and push.",
                 "Continue remaining implementation batches and separately authorized publication/deployment."
             ]
+        },
+        {
+            "subsystem": "Portable Bash structure delivery",
+            "outcome": "Commit 06eb1df9 is pushed normally to origin/main with hooks enabled. Four records closed; 969 records remained open.",
+            "evidence": [
+                "/tmp/gspot-bash-portable-verified-staged.json (72 passed, 7 skipped, no findings/errors).",
+                "/tmp/gspot-bash-portable-commit.log (hook-enabled commit).",
+                "/tmp/gspot-bash-portable-push.log (72 passed, 7 skipped, main -> main)."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Bash temporary cleanup and safety ownership",
+            "rows": ["slices/kits-other-languages/039", "slices/kits-other-languages/040"],
+            "outcome": "Native syntax owns exact temporary cleanup bindings shared by contract and safety. Project-specific path patterns are removed, and discarded failures are checked only at all. All original records and unique assertions remain represented.",
+            "evidence": [
+                "/tmp/gspot-bash-safety-cli-complete.log (76 passes, 232 assertions, eight files).",
+                "/tmp/gspot-bash-safety-native-final.log (15 passes, 127 assertions, four files; root and scoped cleanup accepted at both levels).",
+                "/tmp/gspot-bash-safety-native-empty-path.json (pinned ShellCheck SC2115 retained).",
+                "/tmp/gspot-bash-safety-types-final.log (all four TypeScript targets).",
+                "/tmp/gspot-bash-safety-ready-lint.log (source lint passes).",
+                "/tmp/gspot-bash-safety-docs.log; /tmp/gspot-bash-safety-apply-first.json; /tmp/gspot-bash-safety-apply-second.json.",
+                "The first actual staged gate identified one prose comment and new lockfile advisories: /tmp/gspot-bash-safety-verified-staged.json. The comment is corrected, root selector-parser overrides resolve to patched 7.1.6, and the unnecessary workspace Vue installation is removed. Vue fixture libraries are installed only in isolated native consumer repositories; product checks and advisories are not disabled.",
+                "Authoritative advisories: https://github.com/vuejs/core/security/advisories/GHSA-g2v6-rqmx-r4w6 (no published fix); https://github.com/postcss/postcss-selector-parser/security/advisories/GHSA-rj75-hqrm-r3gf (7.1.6 is patched).",
+                "Actual root-installed PurgeCSS preserves the expected kept CSS and rejected selector through the override: /tmp/gspot-bash-safety-purgecss-override.json.",
+                "Expanded CLI cohort: /tmp/gspot-bash-safety-verified-cli.log (107 passes, 335 assertions, 12 files).",
+                "All four TypeScript targets after final fixture isolation: /tmp/gspot-bash-safety-ready-types.log. Documentation after the lockfile changes validates 316 pages: /tmp/gspot-bash-safety-verified-docs.log.",
+                "Managed regeneration and lock installation: /tmp/gspot-bash-safety-managed-install.log. The previous unrelated Python lock resolution is preserved: /tmp/gspot-bash-safety-preserved-python-lock.log. Canonical apply succeeds twice unchanged with no notes: /tmp/gspot-bash-safety-ready-apply-first.json and /tmp/gspot-bash-safety-ready-apply-second.json.",
+                "/tmp/gspot-bash-safety-isolated-vue-native.log (five passes, 25 assertions; declared consumer libraries are installed in isolated fixtures with no linked workspace modules).",
+                "/tmp/gspot-bash-safety-dependencies-native.log (Vue, site, and CSS native cohort passes; final isolated Vue rerun is recorded separately)."
+            ],
+            "remaining": [
+                "Actual staged gate and normal hook-enabled commit and push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
         }
     ],
     "implementationBatches": {
@@ -21630,6 +21665,15 @@
                     "packages/cli/src/checks/language/bash/contract.ts",
                     "packages/cli/src/checks/language/bash/embeds.ts",
                     "packages/cli/configurations/language/bash/ast-grep/assignments.yml"
+                ]
+            },
+            {
+                "id": "bash-owned-temporary-cleanups",
+                "records": ["slices/kits-other-languages/039", "slices/kits-other-languages/040"],
+                "owners": [
+                    "packages/cli/src/parsers/bash.ts",
+                    "packages/cli/src/checks/language/bash/contract.ts",
+                    "packages/cli/src/checks/language/bash/safety.ts"
                 ]
             }
         ]

@@ -5,14 +5,21 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import vueManifest from 'vue/package.json' with { type: 'json' };
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import { runCheckCase, runFindingCase } from '#tests/harness/check-case.ts';
-import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { CASES, REPOSITORY } from '#tests/config/tools/configurations/framework/vue.ts';
+import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
+import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { CASES, REPOSITORY, VUE_VERSION } from '#tests/config/tools/configurations/framework/vue.ts';
+
+const repository: RepositoryScenario = {
+    ...REPOSITORY,
+    prepare: async (root) => {
+        const installed = await runTestCommand(['bun', 'install'], { cwd: root });
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    },
+};
 
 describe('the vue configuration', () => {
     const resources = new AsyncDisposableStack();
@@ -20,7 +27,7 @@ describe('the vue configuration', () => {
     beforeAll(async () => {
         const budget = openTestBudget(suiteTimeout());
         try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+            testRepository = resources.use(await createTestRepository(repository, spawnGspot));
         } finally {
             budget[Symbol.dispose]();
         }
@@ -72,8 +79,9 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareTestRepository(sandbox.path, {
+            modules: false,
             configurations: ['javascript', 'vue', 'svelte'],
-            dependencies: { vue: vueManifest.version, svelte: '5.57.0' },
+            dependencies: { vue: VUE_VERSION, svelte: '5.57.0' },
             files: {
                 'src/build.js': 'export const build = (value) => value + 1;',
                 'src/Greeting.vue':
@@ -81,6 +89,8 @@ test(
                 'src/Product.svelte': '<script>\n    let { source } = $props();\n</script>\n\n<img src={source} />\n',
             },
         });
+        const installed = await runTestCommand(['bun', 'install'], { cwd: sandbox.path });
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const outcome = await runCheckCase(
             sandbox.path,
             {

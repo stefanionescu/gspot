@@ -1,16 +1,19 @@
-import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
+
+/** The consumer version installed only in native Vue fixture repositories. */
+export const VUE_VERSION = '3.5.22';
 
 export const VUE_CLEAN =
     '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
 
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
+    modules: false,
     configurations: ['typescript', 'vue', 'css'],
     tsconfig: COMPONENT_TSCONFIG,
-    dependencies: { vue: vueManifest.version },
+    dependencies: { vue: VUE_VERSION },
     files: {
         'src/answer.ts': COMPONENT_SOURCE,
         'src/env.d.ts': "import 'vue';\n",
