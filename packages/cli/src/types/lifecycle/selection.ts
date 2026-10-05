@@ -4,6 +4,12 @@ import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
+/** The CI provider init selects, including an explicit choice to write no workflow. */
+export type CiChoice = NonNullable<Policy['ci']>['provider'] | 'none';
+
+/** The runner init selects, including an explicit choice to write no task setup. */
+export type RunnerChoice = NonNullable<Policy['run_with']> | 'none';
+
 export type InitOptions = {
     cwd: string;
     yes: boolean;
@@ -11,9 +17,9 @@ export type InitOptions = {
     configurations?: string[];
     scopes?: string[];
     hooks?: boolean;
-    ci?: NonNullable<Policy['ci']>['provider'] | 'none';
+    ci?: CiChoice;
     rules?: boolean;
-    runner?: NonNullable<Policy['run_with']> | 'none';
+    runner?: RunnerChoice;
     from?: string;
     template?: Template;
     isListExact?: boolean;

@@ -4,7 +4,7 @@ import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSearch } from '#cli/types/tools/install.ts';
 import type { Session } from '#cli/types/execution/session.ts';
-import type { PlanOptions } from '#cli/types/execution/planning.ts';
+import type { Stage, PlanOptions } from '#cli/types/execution/planning.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import type { resultSchema, findingSchema } from '#cli/parsers/schema/report.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -109,7 +109,7 @@ export type CheckResult = Defined<Omit<z.infer<typeof resultSchema>, 'findings'>
 export type RunReport = {
     comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
     version: string;
-    stage: string;
+    stage: StageFilter;
     started: string;
     duration: number;
     checks: CheckResult[];
@@ -143,7 +143,7 @@ export type Finding = Defined<z.infer<typeof findingSchema>>;
 /** Where a finding points: the file, and the line and column when the check knows them. */
 export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
 
-export type StageFilter = 'all' | 'commit' | 'push' | 'manual' | 'message';
+export type StageFilter = Stage | 'all';
 
 /** Checks and fixer outcomes prepared for the subsequent execution pass. */
 export type ReplannedFixResult = { executables: Executable[]; fixes: FixReport | undefined };

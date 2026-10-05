@@ -603,10 +603,17 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/check.ts:6` `PushRevision`, `:60` `PushReport.skipped` | `PushRevision` is exported twice under the same name. `types/repository/revisions.ts:13` declares it, and `check.ts` declares it again as `PushSelection['revisions'][number]`, which is the same type. `PushReport.skipped` repeats the element type of `PushSelection.skipped` (`revisions.ts:7`). | Delete the alias and import `PushRevision` from `revisions.ts`. Write `skipped: PushSelection['skipped']`. |",
         "owner": "`types/commands/check.ts:6` `PushRevision`, `:60` `PushReport.skipped`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/commands/check.ts",
+            "packages/cli/src/types/repository/revisions.ts",
+            "packages/cli/src/commands/check/push.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "PushReport.skipped uses PushSelection['skipped']; buildPushReport passes selected.skipped directly. PushRevision has one declaration under repository/revisions and check/push imports it there. Checked describes an actual reported revision, not a duplicate PushRevision declaration.",
+            "All four TypeScript targets passed. TypeChecker comparison confirms unchanged shared field shapes and stage values; transpilation confirms identical JavaScript in six modules. The temporary type probe rejects arbitrary report stages, planner-only any, and malformed init JSON. Affected lint and formatting passed; init, push, check, planning and output tests passed: 113 tests, 462 assertions across 15 files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/031",
@@ -778,10 +785,18 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/execution/execution.ts:96` `StageFilter`, `:36` `RunReport.stage`; `types/execution/planning.ts:42` `Stage` | `StageFilter` writes the manifest stage enum again by hand and adds `'all'`. `RunReport.stage` widens it to `string`. | `StageFilter = Stage` plus `'all'`. Type `RunReport.stage` as `StageFilter`. |",
         "owner": "`types/execution/execution.ts:96` `StageFilter`, `:36` `RunReport.stage`; `types/execution/planning.ts:42` `Stage`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/execution/runtime.ts",
+            "packages/cli/src/types/execution/planning.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/execution/report.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "StageFilter derives from the manifest-owned Stage plus all; RunReport.stage is StageFilter. The schema's four stage values and all are preserved. buildRunReport copies the already typed run option; planner-only any remains confined to PlanOptions.",
+            "All four TypeScript targets passed. TypeChecker comparison confirms unchanged shared field shapes and stage values; transpilation confirms identical JavaScript in six modules. The temporary type probe rejects arbitrary report stages, planner-only any, and malformed init JSON. Affected lint and formatting passed; init, push, check, planning and output tests passed: 113 tests, 462 assertions across 15 files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/040",
@@ -859,10 +874,13 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/init.ts:44,46,79,81,117,119` | The CI and runner choices, `NonNullable<Policy['ci']>['provider']` plus `'none'` and the runner equivalent, are each written three times. `InitPlan` goes through `RawPolicy` and the others through `Policy`. | Name `CiChoice` and `RunnerChoice` once. |",
         "owner": "`types/commands/init.ts:44,46,79,81,117,119`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/lifecycle/selection.ts", "packages/cli/src/types/commands/init.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CiChoice and RunnerChoice are declared in the lifecycle selection owner. InitOptions, PolicyDraft and InitAnswers use those same choices, with optional fields retained only on InitOptions. TypeChecker comparison confirms the raw and normalized policy choices have the same accepted values.",
+            "All four TypeScript targets passed. TypeChecker comparison confirms unchanged shared field shapes and stage values; transpilation confirms identical JavaScript in six modules. The temporary type probe rejects arbitrary report stages, planner-only any, and malformed init JSON. Affected lint and formatting passed; init, push, check, planning and output tests passed: 113 tests, 462 assertions across 15 files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/046",
@@ -871,10 +889,19 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/init.ts:21-23,127-132`, `types/commands/doctor.ts:7-8,22` | `{ path: string; note: string }` is written nine times in `init.ts`. `doctor.ts` names the same row `ChangeRow` (plus `command`), but `Changes.unowned` and `Changes.authored` write it inline. `{ kit, evidence, command }` is written twice. | Name `PathNote` once. Type the doctor rows as `ChangeRow[]` and one `KitRow[]`. |",
         "owner": "`types/commands/init.ts:21-23,127-132`, `types/commands/doctor.ts:7-8,22`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/commands/init.ts",
+            "packages/cli/src/commands/init/plan.ts",
+            "packages/cli/src/types/commands/doctor.ts",
+            "packages/cli/src/types/configurations.ts",
+            "packages/cli/src/commands/doctor/suggestions.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All nine init path/note arrays use the existing InitFileRow declaration, also consumed by the plan formatter. Doctor unowned and authored rows already use SuggestionRow[] from their owner, and detected/recommended rows use the single ConfigurationSuggestion declaration. Their real producers and consumers use those contracts; no forwarding PathNote, ChangeRow or KitRow aliases were added.",
+            "All four TypeScript targets passed. TypeChecker comparison confirms unchanged shared field shapes and stage values; transpilation confirms identical JavaScript in six modules. The temporary type probe rejects arbitrary report stages, planner-only any, and malformed init JSON. Affected lint and formatting passed; init, push, check, planning and output tests passed: 113 tests, 462 assertions across 15 files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/047",
@@ -883,10 +910,17 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/init.ts:64` `InitResult`, `types/commands/commands.ts:26` `CommandResult` | `InitResult` repeats `CommandResult` with a narrower `json`. | Make `CommandResult<Json = unknown>` generic, and write `CommandResult<InitJson>`. |",
         "owner": "`types/commands/init.ts:64` `InitResult`, `types/commands/commands.ts:26` `CommandResult`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/output.ts",
+            "packages/cli/src/types/commands/init.ts",
+            "packages/cli/src/commands/init/command.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CommandResult<Json = unknown> owns the shared text/json/exitCode contract. Init's real return annotations use CommandResult<InitJson>; the redundant InitResult declaration is removed without compatibility exports. Existing callers retain the unknown JSON default.",
+            "All four TypeScript targets passed. TypeChecker comparison confirms unchanged shared field shapes and stage values; transpilation confirms identical JavaScript in six modules. The temporary type probe rejects arbitrary report stages, planner-only any, and malformed init JSON. Affected lint and formatting passed; init, push, check, planning and output tests passed: 113 tests, 462 assertions across 15 files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/048",

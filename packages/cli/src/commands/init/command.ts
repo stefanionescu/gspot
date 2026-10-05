@@ -8,6 +8,7 @@ import { Option } from '@commander-js/extra-typings';
 import { getTemplate } from '#cli/policy/templates.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
+import type { CommandResult } from '#cli/types/output.ts';
 import { initPlanText } from '#cli/commands/init/plan.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
@@ -18,7 +19,7 @@ import { askConfirmation } from '#cli/commands/init/questions.ts';
 import { note, print, printResult } from '#cli/output/messages.ts';
 import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
-import type { InitResult, InitPrepared } from '#cli/types/commands/init.ts';
+import type { InitJson, InitPrepared } from '#cli/types/commands/init.ts';
 
 // A template answers the questions a flag did not: its configurations, hooks, workflow, runner, and rules.
 function templateAnswers(template: Template): Partial<InitOptions> {
@@ -35,7 +36,7 @@ function templateAnswers(template: Template): Partial<InitOptions> {
 }
 
 // Show the plan before confirmation. Dry runs and unreadable files return immediately.
-function presentPlan(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
+function presentPlan(root: string, options: InitOptions, prepared: InitPrepared): CommandResult<InitJson> | undefined {
     const { plan, policyText } = prepared;
     print(initPlanText(plan));
     if (options.isDryRun) {
@@ -61,7 +62,7 @@ function presentPlan(root: string, options: InitOptions, prepared: InitPrepared)
  * @param options the init flags
  * @returns the text, the JSON report, and the exit code
  */
-export async function initCommand(options: InitOptions): Promise<InitResult> {
+export async function initCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root))
         return {

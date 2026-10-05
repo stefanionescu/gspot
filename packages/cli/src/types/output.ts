@@ -5,7 +5,7 @@ export type ReporterOptions = { quiet: boolean; verbose: boolean; hook?: 'pre-co
 export type Columns = { scope: number; check: number };
 
 /** A completed command rendered as text or JSON with its contractual exit code. */
-export type CommandResult = { text: string; json: unknown; exitCode: number };
+export type CommandResult<Json = unknown> = { text: string; json: Json; exitCode: number };
 
 /** A command failure rendered as one JSON object. */
 export type CommandFailureJson = { error: string; message: string };

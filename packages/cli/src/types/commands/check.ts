@@ -1,6 +1,6 @@
 import type { CommandResult } from '#cli/types/output.ts';
 import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/runtime.ts';
-import type { PushInput, StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
+import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
 export type Checked = PushReport['revisions'][number];
 
@@ -10,7 +10,7 @@ export type CheckCommandResult = CommandResult & { report?: RunReport };
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
-    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: PushSelection['skipped'];
     exitCode: number;
 };
 
