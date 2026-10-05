@@ -1,7 +1,7 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
 import { valueAt } from '#cli/platform/objects.ts';
 import type { Finding } from '#cli/types/execution/runtime.ts';
-import type { OutputFormat, JsonFindingSpec } from '#cli/types/parsers/output.ts';
+import type { OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : valueAt(value, path.split('.'));
@@ -62,7 +62,7 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
  * @param help the fix text of the check.
  * @returns the findings from a valid report.
  */
-export function parseJson(check: string, output: OutputFormat, stdout: string, help: string): Finding[] {
+export function parseJson(check: string, output: OutputSpec, stdout: string, help: string): Finding[] {
     const start = stdout.search(/[[{]/u);
     if (start === -1) throw new Error('The tool returned no JSON report.');
     const parsed: unknown = JSON.parse(stdout.slice(start));

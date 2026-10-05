@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
 
-export type StatementLanguage = 'python' | 'swift' | 'bash';
+export type CountedLanguage = 'python' | 'swift' | 'bash';
 
-export type StatementContent = (node: Node, language: StatementLanguage, threshold: number) => boolean;
+export type IsSubstantial = (node: Node, language: CountedLanguage, threshold: number) => boolean;

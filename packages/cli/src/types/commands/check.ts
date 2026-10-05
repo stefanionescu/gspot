@@ -14,10 +14,13 @@ export type PushReport = {
     exitCode: number;
 };
 
+/** The selected index paths when present, and the count of unstaged changes. */
+export type StagedSelection = StagedPaths | { staged: undefined; unstaged: number };
+
 export type Selections = {
     paths: string[] | undefined;
     changed: ChangedPaths | undefined;
-    set: StagedPaths | { staged: undefined; unstaged: number };
+    staging: StagedSelection;
     stage: StageFilter;
 };
 

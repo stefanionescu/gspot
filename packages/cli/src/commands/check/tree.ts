@@ -68,7 +68,7 @@ async function stagedSet(
     options: CheckOptions,
     signal: AbortSignal,
     revision: Revision | undefined,
-): Promise<Selections['set']> {
+): Promise<Selections['staging']> {
     if (revision?.staged !== undefined) return revision.staged;
     return options.staged ? getStaged(session.root, signal) : { staged: undefined, unstaged: 0 };
 }
@@ -97,10 +97,10 @@ async function selectionsFor(
     revision: Revision | undefined,
 ): Promise<Selections> {
     const changed = await changedSet(session, options, signal, revision);
-    const set = await stagedSet(session, options, signal, revision);
+    const staging = await stagedSet(session, options, signal, revision);
     const stage: StageFilter = options.stage ?? 'all';
-    const paths = selectedPaths(session, options, [...(set.staged ?? []), ...(changed?.paths ?? [])]);
-    return { changed, set, stage, paths: paths.length === 0 ? undefined : paths };
+    const paths = selectedPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
+    return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
 }
 
 // Runs the selected checks and formats their results.
@@ -111,7 +111,7 @@ async function runSelected(
     revision: Revision | undefined,
     selections: Selections,
 ): Promise<CheckCommandResult> {
-    const { changed, set, stage, paths } = selections;
+    const { changed, staging, stage, paths } = selections;
     let comparison: RunOptions['comparison'];
     if (revision !== undefined) comparison = { content: revision.content, reference: revision.reference };
     else if (changed !== undefined) comparison = { content: 'working-tree', reference: changed.reference };
@@ -123,7 +123,7 @@ async function runSelected(
             fix: options.fix,
             isDryRun: options.isDryRun,
             onResult: options.onResult,
-            staged: set.staged,
+            staged: staging.staged,
             changed: changed?.paths,
             comparison,
             only: options.only,
@@ -133,7 +133,7 @@ async function runSelected(
             commits: revision === undefined ? changed?.commits : revision.commits,
             historyComplete: revision?.historyComplete,
         }),
-        unstagedChanges: set.unstaged,
+        unstagedChanges: staging.unstaged,
         cancelSignal: signal,
     });
     if (options.push !== undefined) rewriteReproductions(outcome.report.checks, options);

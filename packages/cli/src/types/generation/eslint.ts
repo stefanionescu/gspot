@@ -11,7 +11,7 @@ export type SelectorGroup = {
     selectors: { selector: string; message: string }[];
 };
 
-/** ESLint settings retain the validation shape of their policy owner. */
+/** The `[tools.eslint]` table of gspot.toml. */
 export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;
 
 /** One block of the generated ESLint configuration: the files it covers and what it sets for them. */

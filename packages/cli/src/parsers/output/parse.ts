@@ -6,7 +6,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/parsers/output/json.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/execution/runtime.ts';
-import type { Parsing, OutputSpec, OutputPaths, RegexParser, OutputFormat } from '#cli/types/parsers/output.ts';
+import type { Parsing, OutputSpec, OutputPaths, RegexParser, ParsingCheck } from '#cli/types/parsers/output.ts';
 
 import {
     typosFindings,
@@ -48,7 +48,7 @@ function splitTrailingRule(finding: Finding): void {
     finding.message = text.slice(0, trailing.index).trim();
 }
 
-function isFixable(output: OutputFormat, fixable: RegExp | undefined, line: string): boolean {
+function isFixable(output: OutputSpec, fixable: RegExp | undefined, line: string): boolean {
     if (fixable) return fixable.test(line);
     // A fixed message describes files the tool marks for formatting.
     return output.message !== undefined;
@@ -75,7 +75,7 @@ function regexFinding(
     return finding;
 }
 
-function parseRegex(check: string, output: OutputFormat, text: string, help: string): Finding[] {
+function parseRegex(check: string, output: OutputSpec, text: string, help: string): Finding[] {
     const pattern = compiled(output.pattern, DEFAULT_PATTERN);
     const fixable = output.fixable === undefined ? undefined : new RegExp(output.fixable, 'u');
     const parser: RegexParser = { output, fixable, help };
@@ -90,7 +90,7 @@ function parseRegex(check: string, output: OutputFormat, text: string, help: str
     return findings.values().toArray();
 }
 
-function parseGrouped(check: string, output: OutputFormat, text: string, help: string): Finding[] {
+function parseGrouped(check: string, output: OutputSpec, text: string, help: string): Finding[] {
     const filePattern = compiled(output.file_pattern, DEFAULT_FILE_PATTERN);
     const pattern = compiled(output.pattern, DEFAULT_GROUPED_PATTERN);
     const findings: Finding[] = [];
@@ -111,7 +111,7 @@ function parseGrouped(check: string, output: OutputFormat, text: string, help: s
 }
 
 // Findings from a JSON report, or an error for an unreadable report.
-function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
+function jsonFindings(parsing: Parsing, output: OutputSpec): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
     } catch (error) {
@@ -120,7 +120,7 @@ function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
 }
 
 // The reader of each output format a manifest can declare.
-const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: OutputFormat) => Finding[]> = {
+const FORMAT_READERS: Record<OutputSpec['format'], (parsing: Parsing, output: OutputSpec) => Finding[]> = {
     none: () => [],
     json: jsonFindings,
     'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
@@ -160,7 +160,7 @@ function relativeTo(root: string, file: string): string {
  * @param paths the repository root and tool working directory, for resolving reported source paths.
  * @returns the findings.
  */
-export function parseOutput(spec: OutputSpec, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
+export function parseOutput(spec: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
     const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.

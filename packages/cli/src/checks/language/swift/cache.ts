@@ -29,20 +29,20 @@ function assertBuildLinksInside(folder: string, files: Root): void {
 }
 
 // The sources to build, each as the snapshot it must have under source/ in the build folder.
-function desiredSources(root: string, paths: string[]): Map<string, Snapshot> {
+function readBuildSources(root: string, paths: string[]): Map<string, Snapshot> {
     using source = openRoot(root, 'native');
-    const desired = new Map<string, Snapshot>();
+    const wantedFiles = new Map<string, Snapshot>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
-        desired.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
+        wantedFiles.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
     }
-    return desired;
+    return wantedFiles;
 }
 
 // Removes unwanted files and then their containing folders, deepest first.
-function pruneSources(folder: string, files: Root, desired: Map<string, Snapshot>): void {
-    const wanted = new Set(
-        [...desired.keys()].flatMap((path) => {
+function pruneSources(folder: string, files: Root, wantedFiles: Map<string, Snapshot>): void {
+    const wantedFolders = new Set(
+        [...wantedFiles.keys()].flatMap((path) => {
             const parts = path.split('/');
             return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
         }),
@@ -51,10 +51,10 @@ function pruneSources(folder: string, files: Root, desired: Map<string, Snapshot
     walkRoot(files, BUILD_SOURCE_DIRECTORY, (path) => {
         const entry = lstatSync(join(folder, path));
         if (entry.isDirectory()) {
-            if (!wanted.has(path)) empty.push(path);
+            if (!wantedFolders.has(path)) empty.push(path);
             return true;
         }
-        if (!entry.isSymbolicLink() && desired.has(path)) return false;
+        if (!entry.isSymbolicLink() && wantedFiles.has(path)) return false;
         const current = entry.isSymbolicLink() ? files.readKeepingLinks(path) : files.read(path);
         if (current !== undefined) files.remove(path, current);
         return false;
@@ -102,10 +102,10 @@ export function openBuildCache(folder: string): Root {
  * @returns the source directory inside the build folder
  */
 export function prepareBuildSources(root: string, paths: string[], folder: string, files: Root): string {
-    const desired = desiredSources(root, paths);
-    pruneSources(folder, files, desired);
+    const wantedFiles = readBuildSources(root, paths);
+    pruneSources(folder, files, wantedFiles);
     files.mkdir(BUILD_SOURCE_DIRECTORY, PRIVATE_DIRECTORY);
-    for (const [path, next] of desired) {
+    for (const [path, next] of wantedFiles) {
         const current = files.read(path);
         if (!isDeepStrictEqual(current, next)) files.write(path, next, current);
     }

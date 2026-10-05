@@ -9,8 +9,8 @@ import { FILE_PLACEHOLDER } from '#cli/config/execution/command.ts';
 import { FINDING_EXIT_CODES } from '#cli/config/execution/runtime.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import type { CommandInvocation } from '#cli/types/execution/command.ts';
+import type { OutputSpec, OutputPaths } from '#cli/types/parsers/output.ts';
 import type { Finding, PlannedCheck } from '#cli/types/execution/runtime.ts';
-import type { OutputPaths, OutputFormat } from '#cli/types/parsers/output.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { FILELESS_FORMATS, TRUFFLEHOG_FINDINGS } from '#cli/config/execution/output.ts';
 import type { OutputCheck, CommandRunState, InvocationOutput } from '#cli/types/execution/output.ts';
@@ -66,7 +66,7 @@ function attributeFile(parsed: Finding[], invocation: CommandInvocation, spec: C
 }
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
-function isFileNamed(output: OutputFormat | undefined): boolean {
+function isFileNamed(output: OutputSpec | undefined): boolean {
     if (output === undefined || ['eslint', 'typos', 'markdownlint'].includes(output.format)) return true;
     if (FILELESS_FORMATS.has(output.format) || (output.file_type ?? 'path') !== 'path') return false;
     if (output.pattern !== undefined) return output.pattern.includes('(?<file>');

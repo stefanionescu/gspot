@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { StatementContent, StatementLanguage } from '#cli/types/parsers/statements.ts';
+import type { IsSubstantial, CountedLanguage } from '#cli/types/parsers/statements.ts';
 
 import {
     NAMES,
@@ -19,7 +19,7 @@ function isBashStatement(node: Node): boolean {
 }
 
 // How many executable statements one node counts as in each language, before its children are counted.
-const STATEMENT_COUNTS: Record<StatementLanguage, (node: Node) => number> = {
+const STATEMENT_COUNTS: Record<CountedLanguage, (node: Node) => number> = {
     swift: (node) => (node.parent?.type === 'statements' ? 1 : 0),
     python: (node) => {
         const isClass = node.type === 'class_definition';
@@ -30,7 +30,7 @@ const STATEMENT_COUNTS: Record<StatementLanguage, (node: Node) => number> = {
 };
 
 // Whether a function holds more executable statements than the trivial threshold, ignoring a Python docstring.
-function isSubstantialFunction(node: Node, language: StatementLanguage, threshold: number): boolean {
+function isSubstantialFunction(node: Node, language: CountedLanguage, threshold: number): boolean {
     if (node.type === 'lambda') return false;
     if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
         return node.namedChildren.some((child) => isSubstantial(child, language, threshold));
@@ -41,7 +41,7 @@ function isSubstantialFunction(node: Node, language: StatementLanguage, threshol
 }
 
 // Whether an assignment does more than forward a name: it declares a type, or its value is substantial.
-function isSubstantialAssignment(node: Node, language: StatementLanguage, threshold: number): boolean {
+function isSubstantialAssignment(node: Node, language: CountedLanguage, threshold: number): boolean {
     if (node.childForFieldName('left')?.text === '__all__') return false;
     const value = node.childForFieldName('right');
     return node.childForFieldName('type') !== null || (value !== null && isSubstantial(value, language, threshold));
@@ -53,7 +53,7 @@ function isNonReferenceAlias(node: Node): boolean {
     return value !== undefined && !TYPE_REFERENCES.has(value.type);
 }
 // What each kind of node must hold to count as substantial, by node type.
-const SUBSTANCE: Record<string, StatementContent> = {
+const SUBSTANCE: Record<string, IsSubstantial> = {
     expression_statement: (node, language, threshold) => {
         const child = node.namedChildren[0];
         return child !== undefined && child.type !== 'string' && isSubstantial(child, language, threshold);
@@ -67,7 +67,7 @@ const SUBSTANCE: Record<string, StatementContent> = {
     typealias_declaration: isNonReferenceAlias,
 };
 // The node kinds one language reads differently from the others.
-const LANGUAGE_SUBSTANCE: Record<StatementLanguage, Record<string, StatementContent>> = {
+const LANGUAGE_SUBSTANCE: Record<CountedLanguage, Record<string, IsSubstantial>> = {
     bash: {
         command: (node: Node): boolean => {
             const name = node.childForFieldName('name')?.text;
@@ -85,7 +85,7 @@ function isInert(node: Node): boolean {
 }
 
 // Identify substantive nodes beyond imports, names, forwarding declarations, and trivial functions.
-function isSubstantial(node: Node, language: StatementLanguage, threshold: number): boolean {
+function isSubstantial(node: Node, language: CountedLanguage, threshold: number): boolean {
     if (isInert(node)) return false;
     if (FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, threshold);
     if (CONTAINER_NODES.has(node.type)) {
@@ -104,7 +104,7 @@ function isSubstantial(node: Node, language: StatementLanguage, threshold: numbe
  * @param language the language the nodes were parsed as
  * @returns the count
  */
-export function executableStatements(nodes: Node[], language: StatementLanguage): number {
+export function executableStatements(nodes: Node[], language: CountedLanguage): number {
     let count = 0;
     for (const node of nodes) {
         if (node.type.includes('comment') || TYPE_ALIASES.has(node.type)) continue;
@@ -138,7 +138,7 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
  * @param threshold the statement count at or under which a function is trivial
  * @returns whether the file holds nothing substantial
  */
-export function isTrivialFile(root: Node, language: StatementLanguage, threshold: number): boolean {
+export function isTrivialFile(root: Node, language: CountedLanguage, threshold: number): boolean {
     const siblings = root.namedChildren;
     const statements = siblings.filter(
         (node) => !node.type.includes('comment') && !(language === 'python' && isDocstring(node, siblings)),

@@ -19,7 +19,7 @@ export type NameProblem = {
     source?: string;
 };
 
-/** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
+/** The naming policy and whether this is a React file or a test file. */
 export type NamingInputs = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };
 
 /** A path-scoped rule, compiled. */

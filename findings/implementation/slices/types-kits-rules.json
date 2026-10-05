@@ -646,10 +646,17 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/generation/generation.ts:48,66,72,73` `TemplateInputs.view`, `importAliases`, `header`, `headerLines`; `generation/templates.ts:103,204,207-208` | No template under `kits/*.tmpl` and no source file reads these four inputs (`git grep -w`). `header` is built from a made-up path, `headerFor('x.toml', version)`. | Delete the four fields and the code that fills them. |",
         "owner": "`types/generation/generation.ts:48,66,72,73` `TemplateInputs.view`, `importAliases`, `header`, `headerLines`; `generation/templates.ts:103,204,207-208`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/generation/templates.ts",
+            "packages/cli/src/generation/templates.ts",
+            "packages/cli/src/generation/outputs.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "TemplateInputs no longer declares view, importAliases, header or headerLines, and its real producers do not populate them. Shipped templates contain no it.view, it.importAliases, it.header or it.headerLines consumers. headerFor remains only at actual render targets, using targetPath. Every configuration renders reader-valid files at both levels in the passing every-template regression.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/033",
@@ -805,10 +812,19 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/execution/tool.ts:49-50` `OutputFormat` | The type is the whole `output` table (format, items, fields, pattern, and more), not its format. Callers write `OutputFormat['format']` (`execution/tool/formats.ts:154`). The doc says \"configuration\" where it means a kit check. | Rename it to `OutputSpec`. Fix the doc. |",
         "owner": "`types/execution/tool.ts:49-50` `OutputFormat`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/parsers/output.ts",
+            "packages/cli/src/parsers/output/parse.ts",
+            "packages/cli/src/parsers/output/json.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/config/parsers/output.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "OutputSpec now names the schema-derived output table. ParsingCheck names the check identity/help/output/fixer input consumed by parsing. All output consumers use the new owner names; OutputFormat is absent and no compatibility aliases were added. The output-table comment describes configuration and repository checks.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/041",
@@ -958,10 +974,13 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/commands/check.ts:11` `Selections.set` | A field named `set` holds the staged-file result. Its union, `StagedPaths` or `{ staged: undefined; unstaged: number }`, is written again at `commands/check/content.ts:69`. | Name the field `staging`, and name the union once. |",
         "owner": "`types/commands/check.ts:11` `Selections.set`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/commands/check.ts", "packages/cli/src/commands/check/tree.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Selections.staging describes the staged-path result. StagedSelection declares its existing union once; stagedSet returns the indexed field type and selectionsFor/runSelected use staging throughout. Reversing that private property/local rename produces identical runtime output. Check and push regressions preserve reports and selection behavior.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/051",
@@ -982,10 +1001,13 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/checks/general/naming.ts:36-37` `NamingInputs` | The doc says it holds \"the policy and the language the file belongs to.\" The fields are `policy`, `isReactFile`, and `isTestFile`. | Fix the doc. |",
         "owner": "`types/checks/general/naming.ts:36-37` `NamingInputs`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/checks/general/naming.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "NamingInputs documentation names its actual values: the naming policy, whether the file is React, and whether it is a test. It no longer claims a language field. The declaration shape is unchanged in the AST proof and naming parser regressions pass.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/053",
@@ -994,10 +1016,13 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/parsers/sql.ts:17` | The comment \"Keep psql substitutions outside SQL strings and comments while preserving character positions\" describes the scanner in `parsers/sql/source.ts`, not the type below it. | Move it to the scanner. |",
         "owner": "`types/parsers/sql.ts:17`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/parsers/sql.ts", "packages/cli/src/parsers/sql/lexer.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The SQL types document their span, token kind and original UTF-16 boundaries. Scanner behavior is documented on sqlTokens and maskPsqlSyntax in the lexer owner. Passing psql regressions preserve diagnostic positions, casts, quoted bodies and nested comments; declaration-variable naming remains distinct from authored identifiers.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/054",
@@ -1006,10 +1031,22 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/checks/general/structure.ts:14-15` `Language`, `Substance`; `types/checks/general/site.ts:11` `said`; `types/checks/language/swift.ts:30-31` `desired`, `wanted`; `types/tools/packages.ts:13` `Inputs`, `:23` `BunPackage`; `types/execution/checkout.ts:7` `Directory` | Vague names. `Language` means only the three languages whose statements gspot counts, and it collides with web-tree-sitter's `Language` class. `Substance` is a predicate. `said` is the tail of the build output. `desired` and `wanted` are the wanted files and the wanted folders. `Inputs` says nothing. `BunPackage` is a tuple with unnamed slots. `Directory` is an installed dependency folder. | `CountedLanguage`, `IsSubstantial`, `outputTail`, `wantedFiles` and `wantedFolders`, a name for what `Inputs` holds (for example `InstallFiles`), named tuple slots, and `DependencyFolder`. |",
         "owner": "`types/checks/general/structure.ts:14-15` `Language`, `Substance`; `types/checks/general/site.ts:11` `said`; `types/checks/language/swift.ts:30-31` `desired`, `wanted`; `types/tools/packages.ts:13` `Inputs`, `:23` `BunPackage`; `types/execution/checkout.ts:7` `Directory`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/parsers/statements.ts",
+            "packages/cli/src/parsers/statements.ts",
+            "packages/cli/src/types/checks/general/site.ts",
+            "packages/cli/src/checks/general/site/build.ts",
+            "packages/cli/src/checks/language/swift/cache.ts",
+            "packages/cli/src/types/parsers/lockfiles.ts",
+            "packages/cli/src/types/tools/npm.ts",
+            "packages/cli/src/types/execution/snapshot.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CountedLanguage names the three languages counted by the statement parser, and IsSubstantial is its predicate contract. Swift source preparation distinguishes wantedFiles and wantedFolders. BunPackage labels identity, resolved, metadata and integrity while deriving each slot from its existing schema. SiteBuild.outputTail, InstallFiles and DependencyFolder already have one behavioral owner and real consumers; their existing site, npm and snapshot/selection regressions pass. Retired names have no compatibility exports.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     },
     {
         "id": "slices/types-kits-rules/055",
@@ -1018,9 +1055,12 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/generation/eslint.ts:46` `EslintSettings` | The doc reads \"ESLint settings retain the validation shape of their policy owner.\" It says nothing. | \"The `[tools.eslint]` table of gspot.toml.\" |",
         "owner": "`types/generation/eslint.ts:46` `EslintSettings`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/generation/eslint.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "EslintSettings documentation now states that it is the [tools.eslint] table of gspot.toml. Its inferred schema contract is unchanged and the real ESLint generation regressions pass.",
+            "All four TypeScript targets passed. AST/transpilation comparison of 13 modules found no emitted JavaScript change beyond the reviewed internal identifier/property renames; type shapes match after resolving StagedSelection. TypeChecker comparison preserves all four Bun tuple slot types and length. Affected lint and formatting passed. Regressions passed: 133 tests, one platform skip, 403 assertions across 17 files, plus six template/ESLint tests and eight assertions across two files."
+        ]
     }
 ]

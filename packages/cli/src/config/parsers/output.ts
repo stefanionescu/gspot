@@ -1,4 +1,4 @@
-import type { OutputFormat } from '#cli/types/parsers/output.ts';
+import type { OutputSpec } from '#cli/types/parsers/output.ts';
 
 export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
 
@@ -12,7 +12,7 @@ export const LEADING_DOT_SLASH = /^\.\//u;
 
 export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
-export const DEFAULT_OUTPUT_FORMAT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
+export const DEFAULT_OUTPUT_FORMAT: OutputSpec = { format: 'regex', pattern: DEFAULT_PATTERN };
 
 export const LINE_FEED = 10;
 
