@@ -245,10 +245,15 @@
         "section": "Repository and Platform",
         "finding": "| `platform/root/writes.ts:84,93-97,164-180` `claimLock`, `lockHolder`, `acquireLock` | Three races. (1) If the holder releases between a failed `claimLock` and `readEntry`, `current` is undefined. (2) `writeFileSync(..., { flag: 'wx' })` creates the file before it writes the token, so another process can read it empty. Both cases throw \"Incomplete lifecycle lock ... Remove it\", which tells the user to delete a lock that is gone or still in use. (3) Two writers that see the same stale lock can both pass the check on line 179. The second `unlinkSync` then throws ENOENT, or deletes the lock the first writer just took. | Treat an absent or empty lock as \"try again\". Take over a stale lock by renaming it aside, which is atomic, instead of checking it and then deleting it. |",
         "owner": "`platform/root/writes.ts:84,93-97,164-180` `claimLock`, `lockHolder`, `acquireLock`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/root/writes.ts", "tests/cli/platform/locks.test.ts"],
+        "status": "closed",
+        "outcome": "Absent locks retry exclusive creation. Empty locks wait within the initialization budget and remain intact if initialization never finishes. An exclusive recovery-directory lease serializes cooperating stale-lock reclaimers; the holder is read again under that lease before deletion, so a live replacement survives. This uses a lease and recheck instead of the proposed unchecked rename.",
+        "verification": [
+            "Inspected acquireLock, waitForLockInitialization and retireStaleLock. Recovery always releases its lease, rejects an occupied lease, and never unlinks an absent, empty or live lock read under that lease. Successful acquisition records its token; disposal only deletes a still-matching token.",
+            "Added five public-root regressions through actual filesystem and process boundaries: release between failed exclusive creation and reading; a real child publishing its token from an empty lock; replacement of a dead holder with a live token before recovery; occupied recovery lease followed by successful correction; and abandoned empty initialization followed by explicit correction. They check live/stale token bytes, lease preservation and removal, owned-lock release and unrelated file preservation. Child commands use the remaining test budget and disposable capture.",
+            "Root TypeScript, affected ESLint and Prettier passed. The platform root/lock and lifecycle ownership cases passed on macOS: 76 cases, 468 assertions, 12 files. No Windows subprocess execution is claimed.",
+            "Three temporary mutations of the source each made the corresponding final regression fail: removing the absent-lock retry; removing the empty-lock waiting branch; and unconditionally deleting a stale observation without the under-lease holder recheck. The unmodified implementation passed all five new race cases."
+        ]
     },
     {
         "id": "slices/repository-platform/011",
@@ -724,7 +729,7 @@
             "All56 shipped manifests passed assertManifests. The parent completed the coherent full CLI TypeScript check successfully with exit0: /tmp/gspot-root-command-cli-types.log. The earlier in-flight InitJson error is resolved.",
             "Root reviewed the complete original row and current parser/source owners. Current full four-target TypeScript passes (/tmp/gspot-tests-parser-command-types-final.log).",
             "The required visitor/disposal, null-parser, Swift setter-visibility, and environment-read regression cases pass in /tmp/gspot-tests-parser-command-focused.log. That larger batch is not reported green: unrelated fixture failures are being corrected and the test/execution umbrella stays open.",
-            "Agreed deviation: The parser visitors consume this real shared platform reader directly. This avoids widening parser→repository inventory boundaries or adding another source reader/wrapper."
+            "Agreed deviation: The parser visitors consume this real shared platform reader directly. This avoids widening parser\u2192repository inventory boundaries or adding another source reader/wrapper."
         ]
     },
     {
