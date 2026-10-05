@@ -37,30 +37,21 @@ test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode ch
     chmodSync(path, 0o644);
 });
 
-test.each([true, false])(
-    'writePolicy > policy edits reject an external symlink before evaluating a mutation (dry run: %s)',
-    async (isDryRun) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'project/.keep': '', 'outside.toml': AUTHORED_POLICY });
-        const root = join(sandbox.path, 'project');
-        symlinkSync('../outside.toml', join(root, 'gspot.toml'));
-        let evaluated = false;
-        expect(() => {
-            const plan = preparePolicy(root, () => {
-                evaluated = true;
-            });
-            using log = openOwnership(root);
-            return isDryRun
-                ? preparePolicy(root, () => {
-                      evaluated = true;
-                  })
-                : writePolicy(log, plan);
-        }).toThrow('private regular file');
-        expect(evaluated).toBe(false);
-        expect(readFileSync(join(sandbox.path, 'outside.toml'), 'utf8')).toBe(AUTHORED_POLICY);
-        expect(existsSync(join(root, '.gspot'))).toBe(false);
-    },
-);
+test('preparePolicy rejects an external symlink before evaluating its mutation', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'project/.keep': '', 'outside.toml': AUTHORED_POLICY });
+    const root = join(sandbox.path, 'project');
+    symlinkSync('../outside.toml', join(root, 'gspot.toml'));
+    let evaluated = false;
+    expect(() =>
+        preparePolicy(root, () => {
+            evaluated = true;
+        }),
+    ).toThrow('private regular file');
+    expect(evaluated).toBe(false);
+    expect(readFileSync(join(sandbox.path, 'outside.toml'), 'utf8')).toBe(AUTHORED_POLICY);
+    expect(existsSync(join(root, '.gspot'))).toBe(false);
+});
 
 test('writePolicy > sets a nested key, then deletes it and the empty table', async () => {
     await using sandbox = await testdir();
@@ -81,6 +72,7 @@ test('writePolicy > sets a nested key, then deletes it and the empty table', asy
         writePolicy(log, plan);
     }
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('file_lines');
+    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('[limits');
 });
 
 test('writePolicy > deduplicates list values and named entries with reordered keys', async () => {

@@ -422,10 +422,18 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/policy/write.test.ts:44-68`, \"writePolicy > policy edits reject an external symlink before evaluating a mutation (dry run: %s)\" | Both rows end in the same throw. In the `false` row, `preparePolicy` runs first as the argument of `writePolicy` and refuses the link (`commands/edit.ts:25-31`). `writePolicy` is never reached. `preparePolicy` has no dry-run flag, so \"dry run\" names nothing. | Make it one plain test of `preparePolicy`. Drop the table and the dry-run wording. |",
         "owner": "`cli/policy/write.test.ts:44-68`, \"writePolicy > policy edits reject an external symlink before evaluating a mutation (dry run: %s)\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/policy/write.test.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/policy/edit.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The duplicated dry-run table is now one explicitly named preparePolicy boundary test. It calls the actual preflight directly and retains refusal of the external symlink, proof that the mutation is not evaluated, preservation of the outside policy, and absence of ownership output. The unreachable write/log branch is removed.",
+            "Source tracing confirms preparePolicy reads and validates the original file before proposing the mutation. Its refusal precedes opening the ownership log or calling writePolicy, so the old dry-run parameter exercised no separate contract.",
+            "AST comparison preserves all 25 other assertion sites, revises only the boundary throw callback, and adds the separate empty-parent assertion. Root TypeScript, affected ESLint, and formatting passed; write, edit, and key-path coverage passed 24 tests with 84 assertions across three files on macOS. One duplicated runtime row is removed; no unique boundary outcome is lost."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/032",
@@ -434,10 +442,18 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/policy/write.test.ts:92`, \"writePolicy > sets a nested key, then deletes it and the empty table\" | Line 98 checks only that `file_lines` is gone. A leftover empty `[limits.bash]` table still passes. | Also assert that the text no longer holds `[limits`. |",
         "owner": "`cli/policy/write.test.ts:92`, \"writePolicy > sets a nested key, then deletes it and the empty table\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/policy/write.test.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "packages/cli/src/policy/edit.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The nested-key deletion case now also rejects any remaining [limits table header after deleting its last key. The existing added-table and removed-file_lines assertions remain intact, so an empty parent left in the written document now fails.",
+            "A disposable direct proposal probe confirms the current implementation adds limits.bash, then removes both the key and its empty parent tables through deleteKey and TOML patching. No production change was needed.",
+            "Root TypeScript, affected ESLint, and formatting passed. Write, edit, and key-path coverage passed 24 tests with 84 assertions across three files. AST comparison retains the existing deletion assertions and all 25 unrelated outcome sites."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/033",
