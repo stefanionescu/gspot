@@ -6,6 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { gspot, spawnGspot, startGspot } from '#tests/harness/gspot.ts';
@@ -189,10 +190,17 @@ process.on('newListener',(name)=>{ if(name==='SIGTERM') setImmediate(()=>require
 process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--hook', 'pre-push','--json'];
 await import(${JSON.stringify(gspot)});
 `;
-        const child = Bun.spawn([process.execPath, '-e', program], {
+        const command = [process.execPath, '-e', program];
+        const prepared = prepareTestCommand(
+            command,
+            { cwd: sandbox.path, timeoutMs: CHILD_OPTIONS.timeout },
+            'push input cancellation',
+        );
+        const child = Bun.spawn(command, {
             cwd: sandbox.path,
             stdin: 'pipe',
             ...CHILD_OPTIONS,
+            timeout: prepared.options.timeoutMs,
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;
@@ -248,9 +256,16 @@ return copy(source,destination,options);
 process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--staged','--only','bash/syntax','--json'];
 await import(${JSON.stringify(gspot)});
 `;
-        const child = Bun.spawn([process.execPath, '-e', program], {
+        const command = [process.execPath, '-e', program];
+        const prepared = prepareTestCommand(
+            command,
+            { cwd: sandbox.path, timeoutMs: CHILD_OPTIONS.timeout },
+            'dependency copy cancellation',
+        );
+        const child = Bun.spawn(command, {
             cwd: sandbox.path,
             ...CHILD_OPTIONS,
+            timeout: prepared.options.timeoutMs,
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;

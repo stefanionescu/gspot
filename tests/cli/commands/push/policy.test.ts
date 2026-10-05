@@ -3,10 +3,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { gspot, runGspot } from '#tests/harness/gspot.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 
 test('full-tree pre-push policy checks unchanged files in the pushed object', async () => {
@@ -28,22 +27,11 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);
     expect(git(sandbox.path, ['commit', '-qm', 'full pushed tree']).code).toBe(0);
     const pushedCommit = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
-    const all = await processes.run(
-        [
-            process.execPath,
-            gspot,
-            'check',
-            '--hook',
-            'pre-push',
-            '--only',
-            'bash/syntax',
-            '--json',
-            '--',
-            'origin',
-            'unused',
-        ],
+    const all = await spawnGspot(
+        sandbox.path,
+        ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json', '--', 'origin', 'unused'],
+        {},
         {
-            cwd: sandbox.path,
             stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${base}\n`,
         },
     );

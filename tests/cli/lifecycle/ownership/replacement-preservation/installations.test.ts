@@ -7,6 +7,7 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { readInstalledTree } from '#cli/tools/installed-files.ts';
+import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -67,13 +68,9 @@ try {
     console.log(JSON.stringify({first, repeated, restored, isRemoved: log.files.read('config.txt') === undefined}));
 } finally {log[Symbol.dispose]();}
 `;
-    const child = Bun.spawnSync([process.execPath, '-e', program], {
-        cwd: directory.path,
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
-    expect(child.exitCode, child.stderr.toString()).toBe(0);
-    expect(JSON.parse(child.stdout.toString())).toStrictEqual({
+    const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: directory.path });
+    expect(child.code, child.stderr).toBe(0);
+    expect(JSON.parse(child.stdout)).toStrictEqual({
         first: 'changed',
         repeated: 'unchanged',
         restored: 'changed',

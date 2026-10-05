@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -38,9 +39,8 @@ const log=openOwnership(process.cwd());
 ${call}
 log[Symbol.dispose]();
 `;
-    const child = Bun.spawn([process.execPath, '-e', program], { cwd, stdout: 'pipe', stderr: 'pipe' });
-    const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
-    expect(await child.exited, streams.join('\n')).toBe(73);
+    const child = await runTestCommand([process.execPath, '-e', program], { cwd });
+    expect(child.code, child.stdout + child.stderr).toBe(73);
 }
 
 test.each(['before', 'after'] as const)(

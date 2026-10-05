@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
+import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 
 import {
     mkdirSync,
@@ -25,14 +26,19 @@ test('dependency copies let concurrent native process output drain', async () =>
             Array.from({ length: 2048 }, (_, index) => [`node_modules/example/file-${String(index)}.json`, '{}']),
         ),
     );
-    const producer = Bun.spawn(
-        [
-            process.execPath,
-            '-e',
-            'process.stdout.write("ready"); await Bun.stdin.text(); await Bun.write(Bun.stdout, Buffer.alloc(8 * 1024 * 1024, 97));',
-        ],
-        { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' },
-    );
+    const command = [
+        process.execPath,
+        '-e',
+        'process.stdout.write("ready"); await Bun.stdin.text(); await Bun.write(Bun.stdout, Buffer.alloc(8 * 1024 * 1024, 97));',
+    ];
+    const prepared = prepareTestCommand(command, { cwd: repository.path }, 'concurrent dependency-copy output');
+    await using producer = Bun.spawn(command, {
+        cwd: repository.path,
+        stdin: 'pipe',
+        stdout: 'pipe',
+        stderr: 'pipe',
+        timeout: prepared.options.timeoutMs,
+    });
     const reader = producer.stdout.getReader();
     const ready = await reader.read();
     expect(new TextDecoder().decode(ready.value)).toBe('ready');
@@ -81,13 +87,9 @@ test('preview copies workspace dependencies and preserves executable links witho
         session.repository.scopes.map((scope) => scope.path),
     );
     const scratch = copy.path;
-    const result = Bun.spawnSync(['node', 'node_modules/.bin/tool'], {
-        cwd: scratch,
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
-    expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(result.stdout.toString().trim()).toBe('tool works');
+    const result = runTestCommandBlocking(['node', 'node_modules/.bin/tool'], { cwd: scratch });
+    expect(result.code, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe('tool works');
     writeFileSync(join(scratch, 'node_modules/core/value.js'), 'preview edit');
     writeFileSync(join(scratch, 'node_modules/external/value.js'), 'external preview edit');
     expect(readFileSync(join(repository.path, 'packages/core/value.js'), 'utf8')).toBe('export default "original";');

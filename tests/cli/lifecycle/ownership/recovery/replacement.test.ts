@@ -2,7 +2,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
@@ -11,6 +10,7 @@ import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { PublicationProject } from '#tests/types/cli/lifecycle/ownership.ts';
+import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
 const boundary = getCliSourcePath('platform/root/open.ts');
@@ -57,14 +57,8 @@ try {
     } else if (point !== 'error' || error.message !== 'Publication failed') throw error;
 } finally { log[Symbol.dispose](); }
 `;
-    const child = Bun.spawnSync([process.execPath, '-e', program], {
-        cwd: directory.path,
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
-    expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
-        ['error', 'restoration error'].includes(point) ? 0 : 73,
-    );
+    const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: directory.path });
+    expect(child.code, child.stdout + child.stderr).toBe(['error', 'restoration error'].includes(point) ? 0 : 73);
     return { directory, original, destination };
 }
 
@@ -177,7 +171,7 @@ try {
     console.log(JSON.stringify({ code: error.code }));
 } finally { log[Symbol.dispose](); }
 `;
-    const { stdout, stderr, code } = await processes.run([process.execPath, '-e', program], { cwd: directory.path });
+    const { stdout, stderr, code } = await runTestCommand([process.execPath, '-e', program], { cwd: directory.path });
     expect(code, stderr).toBe(0);
     expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
     for (const name of ['first.bin', 'second.bin']) {

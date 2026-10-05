@@ -9,6 +9,7 @@ import { readTree } from '#tests/harness/preservation.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { chmodSync, existsSync, unlinkSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -86,7 +87,9 @@ test.each([
 ] as const)('apply refuses a writer lock %s and names it', async (_, holder) => {
     await using directory = await testdir();
     // A process that outlives the run stands for the holder; disposing it kills it.
-    await using sleeper = Bun.spawn([process.execPath, '-e', 'await Bun.sleep(60_000)']);
+    const command = [process.execPath, '-e', 'await Bun.sleep(60_000)'];
+    const prepared = prepareTestCommand(command, { cwd: directory.path }, 'live writer lock holder');
+    await using sleeper = Bun.spawn(command, { cwd: directory.path, timeout: prepared.options.timeoutMs });
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
         '.gspot/state/writer.lock': holder(sleeper.pid),

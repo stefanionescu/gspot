@@ -6,6 +6,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { waitForExit } from '#tests/harness/process.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 
 const captures = { text: run, binary: runBinary };
@@ -105,12 +106,20 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     const descendant = 'console.log(process.pid); setInterval(() => {}, 1000);';
     const sourceUrl = pathToFileURL(join(root, 'packages/cli/src/platform/spawn.ts')).href;
     const script = `import {run} from ${JSON.stringify(sourceUrl)}; void run([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
-    const child = Bun.spawn([process.execPath, '-e', script], { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
+    const command = [process.execPath, '-e', script];
+    const prepared = prepareTestCommand(command, { cwd: sandbox.path, timeoutMs: 5000 }, 'CLI process-group exit');
+    const child = Bun.spawn(command, {
+        cwd: sandbox.path,
+        stdout: 'pipe',
+        stderr: 'pipe',
+        timeout: prepared.options.timeoutMs,
+        killSignal: 'SIGKILL',
+    });
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
     const timer = setTimeout(() => {
         child.kill('SIGKILL');
-    }, 5000);
+    }, prepared.options.timeoutMs);
     try {
         expect(await child.exited, await errors).toBe(19);
         const printed = await output;

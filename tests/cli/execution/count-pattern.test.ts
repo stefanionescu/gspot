@@ -4,9 +4,9 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { buildRunOptions } from '#tests/harness/gspot.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
 
@@ -64,17 +64,7 @@ test('malformed custom JSON output produces inability instead of a discarded fin
         'source.txt': 'original',
         '.gspot/version': RUNNING_VERSION + '\n',
     });
-    const cli = Bun.spawnSync(
-        [
-            process.execPath,
-            Bun.resolveSync('#cli/main.ts', import.meta.dir),
-            'check',
-            '--only',
-            'sandbox/json',
-            '--json',
-        ],
-        { cwd: sandbox.path },
-    );
-    expect(cli.exitCode, cli.stdout.toString() + cli.stderr.toString()).toBe(2);
-    expect((JSON.parse(cli.stdout.toString()) as RunReport).checks[0]!.status).toBe('error');
+    const cli = await spawnGspot(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
+    expect(cli.code, cli.stdout + cli.stderr).toBe(2);
+    expect((JSON.parse(cli.stdout) as RunReport).checks[0]!.status).toBe('error');
 });

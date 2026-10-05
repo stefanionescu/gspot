@@ -7,6 +7,7 @@ import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 
@@ -98,9 +99,9 @@ if (isPosix) {
             expect(applyPlan(log, proposeReplacement(log, { path: path, next: next, kind: 'config' }))).toBe(
                 'unchanged',
             );
-            const executed = Bun.spawnSync([absolute], { stdout: 'pipe', stderr: 'pipe' });
-            expect(executed.exitCode, executed.stderr.toString()).toBe(0);
-            expect(executed.stdout.toString()).toBe('installed');
+            const executed = runTestCommandBlocking([absolute], { cwd: directory.path });
+            expect(executed.code, executed.stderr).toBe(0);
+            expect(executed.stdout).toBe('installed');
             expect(() => log.files.read(path)).toThrow();
             log[Symbol.dispose]();
             log = openOwnership(directory.path);

@@ -687,9 +687,21 @@
         "section": "Findings",
         "finding": "| `tests/acceptance/cli/scopes.test.ts:18-74` \"typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none\"; `tests/config/timeouts.ts`; `tests/harness/tools/install.ts:65-115` | On Windows the test usually takes 217 to 290 s, and its limit is 480 s (`PLANTED_TIMEOUT_MS * 4`). Its steps allow more than that: init, the kit removal, `set level`, and each of the two checks may take 240 s (`spawnGspot`), and the tool install 600 s (`INSTALL_TIMEOUT_MS`). When one step is slow, Bun stops the test first, prints `killed 1 dangling process`, and the log does not name the step. This happened on main in runs 37099650151 and 37123600043 (Windows 2/4), and reruns passed. Sandbox installs also passed the 600 s limit (run 37104588754). | Give every step a limit that fits inside the limit of its test. When a step runs out, throw with the command and the output it printed so far. Then fix the step the next failure names. If it is the tool install, install the npm tools once per shard and link them into each sandbox, as `linkInstalledModules` does for the root `node_modules`. Use one limit per suite (decision 13). |",
         "owner": "`tests/acceptance/cli/scopes.test.ts:18-74` \"typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none\"; `tests/config/timeouts.ts`; `tests/harness/tools/install.ts:65-115`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/tools/commands/scopes.test.ts",
+            "tests/harness/command.ts",
+            "tests/harness/gspot.ts",
+            "tests/harness/install.ts",
+            "tests/harness/preload.ts",
+            "tests/config/timeouts.ts"
+        ],
+        "status": "closed",
+        "outcome": "Native tools and package tests use one 900-second default; CLI and plugin tests use 60 seconds. The preload opens one scenario deadline and reserves cleanup time. Installation, initialization, configuration removal, and checks all share that deadline through spawnGspot and runTestCommand. A timed-out step reports its command, directory, step name, and captured output. This removes the former independent per-step budgets without changing the scoped ESLint scenario.",
+        "verification": [
+            "Reviewed the full scoped-TypeScript scenario and all install/remove/installPrivateTools calls: each source subprocess uses the shared deadline-aware runner. No 240-second or 600-second step budget remains in these owners.",
+            "The current native scoped-TypeScript replay passes one test with five assertions. This run verifies real initialization, private tool installation, scope-specific ESLint findings, and the correction. It is a macOS replay; no claim of a fresh Windows run is made.",
+            "The complete CLI/plugin run passes 2,424 tests, two platform skips, zero failures, and 7,575 assertions. Budget regressions verify all four suite defaults, file and folder selection, shared remaining time, timeout context and output, synchronous timeout handling, and refusal before spawning when exhausted.",
+            "AST audit finds nine direct Bun spawn calls in the complete test tree, all with remaining-budget timeouts. The root TypeScript target and changed-file ESLint and Prettier checks pass."
+        ]
     }
 ]

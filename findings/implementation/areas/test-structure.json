@@ -103,10 +103,21 @@
         "section": "Findings",
         "finding": "| `harness/cli/command.ts:67-78`; `harness/tools/install.ts:85`; `harness/planted/push.ts:37-48`; `acceptance/cli/commits.test.ts:47,150`; `acceptance/kits/general/secrets/pushed.test.ts:29,74,116`; `integration/cli/repository/snapshot/hash-formats.test.ts:45`, `links.test.ts:78`; `tools/cli/packages/locks.test.ts:27,40`, `native.test.ts:18`; `tools/cli/lifecycle/mise-execution.test.ts:51,61` | Tests build `[process.execPath, gspot, ...]` and call `processes.run` because `spawnGspot` cannot pass stdin or options. That makes a third and fourth way to start the CLI beside `runGspot` and `spawnGspot`. | Give `spawnGspot` an options argument with `stdin` and `timeoutMs`. Replace every hand-built command with it. |",
         "owner": "`harness/cli/command.ts:67-78`; `harness/tools/install.ts:85`; `harness/planted/push.ts:37-48`; `acceptance/cli/commits.test.ts:47,150`; `acceptance/kits/general/secrets/pushed.test.ts:29,74,116`; `integration/cli/repository/snapshot/hash-formats.test.ts:45`, `links.test.ts:78`; `tools/cli/packages/locks.test.ts:27,40`, `native.test.ts:18`; `tools/cli/lifecycle/mise-execution.test.ts:51,61`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/harness/gspot.ts",
+            "tests/types/harness/command.ts",
+            "tests/cli/commands/check/refusals.test.ts",
+            "tests/cli/commands/push/policy.test.ts",
+            "tests/cli/execution/count-pattern.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Finite source CLI calls use spawnGspot with stdin and timeout options. Live children use startGspot when a scenario requires signals or exact bytes, with captureChild owning cleanup. The remaining push-policy and JSON-output calls no longer build parallel source commands. Instrumented child programs retain their required boundary hooks and use prepareTestCommand to clamp their native timeouts.",
+        "verification": [
+            "Reviewed all original consumer owners and their current paths: installation, pushed secrets, commits, revision hash formats and links, npm locks, and mise execution use the shared source runners.",
+            "AST audit of the complete test tree finds nine direct Bun spawn calls, each using prepared.options.timeoutMs. Source CLI executable arrays occur only in the shared gspot harness; no test recomputes the main.ts path.",
+            "Complete CLI/plugin replay passes: 2,424 tests, two platform skips, zero failures, and 7,575 assertions across 331 files. The invalid UTF-8 row, signals, snapshot refusals, and crash-recovery cases remain covered.",
+            "The root TypeScript target and changed-file ESLint and Prettier checks pass. All 64 existing named registrations and 311 assertion sites across the 16 affected test owners are preserved; one new exhausted-budget regression adds three assertions."
+        ]
     },
     {
         "id": "areas/test-structure/008",

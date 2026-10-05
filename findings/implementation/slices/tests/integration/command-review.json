@@ -330,10 +330,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/assets.test.ts:35,44` | Both `Bun.spawnSync` calls have no `timeout`. A hang blocks the whole run, because the test limit cannot interrupt a synchronous call. | Pass `timeout`, as `cli/sql-parser.test.ts:11` does. |",
         "owner": "`cli/platform/assets.test.ts:35,44`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": "tests/cli/platform/assets.test.ts",
+        "status": "closed",
+        "outcome": "Both fresh-process asset probes use runTestCommandBlocking, which clamps their timeout to the remaining scenario budget and reports the command, working directory, step, and captured streams if they time out.",
+        "verification": [
+            "Source audit confirms both probes use the bounded runner; no unbounded synchronous Bun call remains in this owner.",
+            "The missing-grammar refusal and valid packaged-grammar observations retain all four assertions. The complete CLI/plugin replay passes 2,424 tests with two platform skips, zero failures, and 7,575 assertions.",
+            "Changed-file ESLint and Prettier checks and the root TypeScript target pass. The existing synchronous timeout regression verifies timeout diagnostics and captured output."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/028",

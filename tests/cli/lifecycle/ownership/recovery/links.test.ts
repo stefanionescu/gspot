@@ -5,6 +5,7 @@ import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { symlinkSync, readFileSync, readlinkSync } from 'node:fs';
+import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
@@ -35,12 +36,8 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
             using log = openOwnership(process.cwd());
             applyPlan(log, proposeReplacement(log,{path: 'tool', next: {bytes: Buffer.from('target'), mode: 511, isLink: true}, kind: 'config', canReplace: true}));
         `;
-            const child = Bun.spawnSync([process.execPath, '-e', script], {
-                cwd: directory.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            });
-            expect(child.exitCode, child.stderr.toString()).toBe(73);
+            const child = runTestCommandBlocking([process.execPath, '-e', script], { cwd: directory.path });
+            expect(child.code, child.stderr).toBe(73);
             {
                 using log = openOwnership(directory.path);
 
@@ -78,12 +75,8 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
             using log = openOwnership(process.cwd());
             applyPlan(log, proposeReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 420}, kind: 'config', canReplace: true}));
         `;
-            const child = Bun.spawnSync([process.execPath, '-e', script], {
-                cwd: directory.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            });
-            expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(73);
+            const child = runTestCommandBlocking([process.execPath, '-e', script], { cwd: directory.path });
+            expect(child.code, child.stdout + child.stderr).toBe(73);
             const pending = ownershipSchema.parse(
                 JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );

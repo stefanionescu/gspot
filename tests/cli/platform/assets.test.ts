@@ -3,6 +3,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cpSync, symlinkSync, readFileSync } from 'node:fs';
 import { workspaceRoot as root } from '#automation/workspace.ts';
+import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { CHECKOUT, ASSET_READER_SCRIPT, ASSETS_CONFIGURATION } from '#tests/config/cli/platform/assets.ts';
 
 describe('development assets', () => {
@@ -19,22 +20,18 @@ describe('development assets', () => {
         cpSync(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
         symlinkSync(join(root, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
         symlinkSync(join(root, 'node_modules'), join(cwd, 'node_modules'), 'junction');
-        const missing = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
+        const missing = runTestCommandBlocking([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
             cwd,
-            stdout: 'pipe',
-            stderr: 'pipe',
         });
         // Source and packaged execution both require the WebAssembly files produced by setup.
-        expect(missing.exitCode).toBe(1);
-        expect(missing.stderr.toString()).toContain('The WebAssembly file bash.wasm is missing');
+        expect(missing.code).toBe(1);
+        expect(missing.stderr).toContain('The WebAssembly file bash.wasm is missing');
         cpSync(join(root, 'packages/cli/grammars'), join(cwd, 'packages/cli/grammars'), { recursive: true });
-        const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
+        const result = runTestCommandBlocking([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
             cwd,
-            stdout: 'pipe',
-            stderr: 'pipe',
         });
-        expect(result.exitCode, result.stderr.toString()).toBe(0);
-        expect(JSON.parse(result.stdout.toString())).toStrictEqual({
+        expect(result.code, result.stderr).toBe(0);
+        expect(JSON.parse(result.stdout)).toStrictEqual({
             text: ASSETS_CONFIGURATION,
             files: ['configurations/language/bash/manifest.toml'],
         });

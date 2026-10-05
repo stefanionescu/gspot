@@ -11,7 +11,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CapturedProcess } from '#tests/types/harness/process.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
-import type { SpawnOutcome, GspotSpawnOptions } from '#tests/types/harness/command.ts';
+import type { SpawnOutcome, GspotChildOptions, GspotSpawnOptions } from '#tests/types/harness/command.ts';
 
 /** Resolve the source executable once for this checkout's test processes. */
 export const gspot = join(workspaceRoot, SOURCE_CLI_PATH);
@@ -79,7 +79,7 @@ export async function spawnGspot(
 }
 
 /**
- * Start a source CLI subprocess that the scenario must signal while it runs.
+ * Start a source CLI subprocess for signals or exact byte input.
  * @param cwd the test repository
  * @param argv the command line after gspot
  * @param environment verbatim variables
@@ -90,14 +90,15 @@ export function startGspot(
     cwd: string,
     argv: string[],
     environment: Record<string, string> = {},
-    options: GspotSpawnOptions = {},
+    options: GspotChildOptions = {},
 ): CapturedProcess {
     const command = [process.execPath, gspot, ...argv];
-    const prepared = prepareTestCommand(command, { cwd, ...options }, 'source CLI cancellation');
+    const { stdin, ...limits } = options;
+    const prepared = prepareTestCommand(command, { cwd, ...limits }, 'source CLI subprocess');
     return Bun.spawn(command, {
         cwd,
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
-        stdin: options.stdin === undefined ? 'ignore' : Buffer.from(options.stdin),
+        stdin: typeof stdin === 'string' ? Buffer.from(stdin) : (stdin ?? 'ignore'),
         stdout: 'pipe',
         stderr: 'pipe',
         timeout: prepared.options.timeoutMs,

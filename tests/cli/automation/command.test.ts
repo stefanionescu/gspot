@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
+import { spawnGspot, startGspot } from '#tests/harness/gspot.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { TEST_CLEANUP_MS } from '#tests/config/harness/command.ts';
@@ -96,6 +97,21 @@ test('an exhausted scenario starts no subprocess and names the refused step', as
         expect(error).toContain('The test budget is exhausted.');
         expect(error).toContain('Step: install');
         expect(await Bun.file(join(sandbox.path, 'started')).exists()).toBe(false);
+    } finally {
+        budget[Symbol.dispose]();
+    }
+});
+
+test('an exhausted scenario refuses both finite and live source CLI children', async () => {
+    await using sandbox = await testdir();
+    const budget = openTestBudget(TEST_CLEANUP_MS);
+    try {
+        const error = await rejection(spawnGspot(sandbox.path, ['--version']));
+        expect(error).toContain('The test budget is exhausted.');
+        expect(error).toContain(`Working directory: ${sandbox.path}`);
+        expect(() => startGspot(sandbox.path, ['--version'], {}, { stdin: new Uint8Array([0xff]) })).toThrow(
+            'The test budget is exhausted.',
+        );
     } finally {
         budget[Symbol.dispose]();
     }

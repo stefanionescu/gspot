@@ -4,11 +4,12 @@ import { tmpdir } from 'node:os';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { gspot, runGspot } from '#tests/harness/gspot.ts';
+import { captureChild } from '#tests/harness/process.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
+import { runGspot, startGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -40,16 +41,10 @@ test.each([
     ['bytes that are not UTF-8', Buffer.from([0xff, 0xfe, 0x0a])],
 ])('a push hook given %s exits 2 and leaves the working tree as it was', async (_, stdin) => {
     await using sandbox = await fixableSandbox();
-    // The input goes in as bytes, which the product's runner, built for text, cannot send.
-    const child = Bun.spawn([process.execPath, gspot, 'check', '--hook', 'pre-push', '--', 'origin', 'unused'], {
-        cwd: sandbox.path,
-        env: { ...environmentVariables(), NO_COLOR: '1', CI: '1' },
-        stdin,
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
+    const child = startGspot(sandbox.path, ['check', '--hook', 'pre-push', '--', 'origin', 'unused'], {}, { stdin });
+    await using capture = captureChild(child);
     expect(await child.exited).toBe(2);
-    expect(await new Response(child.stderr).text()).not.toBe('');
+    expect(await capture.errors).not.toBe('');
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
     expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
@@ -82,7 +77,9 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sn
     // The index takes the raw name on standard input; most file systems refuse to hold it.
     const name = Buffer.concat([Buffer.from('bad-'), Buffer.from([0xff]), Buffer.from('.txt')]);
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
-    const indexed = Bun.spawnSync(['git', 'update-index', '--index-info'], { cwd: sandbox.path, stdin: line });
+    const command = ['git', 'update-index', '--index-info'];
+    const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'index a raw filename');
+    const indexed = Bun.spawnSync(command, { cwd: sandbox.path, stdin: line, timeout: prepared.options.timeoutMs });
     expect(indexed.exitCode, indexed.stderr.toString()).toBe(0);
     const before = snapshotFolders();
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);

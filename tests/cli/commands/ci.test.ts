@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { gspot, runGspot } from '#tests/harness/gspot.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
@@ -108,7 +108,7 @@ async function runCiJob(
             ? generated.gspot.script
             : generated.jobs['check-linux']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
     // An absolute executable puts its own folder first on PATH, and Ubuntu has a curl in /bin, so bash is named bare.
-    return await processes.run(['bash', '-e', '-c', script.join('\n')], {
+    return await runTestCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
             PATH: `${directory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
