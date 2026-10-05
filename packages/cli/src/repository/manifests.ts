@@ -1,5 +1,5 @@
 import { readText } from '#cli/platform/source.ts';
-import { isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { isToolingPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { manifestParser, parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { PackageManifest, ProjectManifest } from '#cli/types/parsers/packages.ts';
@@ -12,12 +12,7 @@ import type { PackageManifest, ProjectManifest } from '#cli/types/parsers/packag
  */
 export function readManifests(root: string, files: TrackedFile[]): ProjectManifest[] {
     return files
-        .filter(
-            (file) =>
-                file.kind === 'source' &&
-                !isPrivateToolPath(file.path) &&
-                !file.path.split('/').includes('node_modules'),
-        )
+        .filter((file) => file.kind === 'source' && !isToolingPath(file.path))
         .flatMap((file) => {
             try {
                 const parse = manifestParser(file.path);

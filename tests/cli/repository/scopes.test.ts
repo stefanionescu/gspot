@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
+import { scopeOf, proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
 import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each([
@@ -167,4 +167,17 @@ test('workspace discovery accepts linked authored declarations and package manif
     symlinkSync('../../settings/app.json', join(sandbox.path, 'packages/app/package.json'));
     expect(packageWorkspaces(sandbox.path)).toStrictEqual(['packages/app']);
     expect(readFileSync(join(sandbox.path, 'settings/workspace.yaml'), 'utf8')).toBe('packages: ["packages/*"]\n');
+});
+
+test('root selections remain local to each repository read and missing-scope fallback', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'source.py': 'answer = 1\n' });
+    const first = await readRepository(sandbox.path, [], [], []);
+    const second = await readRepository(sandbox.path, [], [], []);
+    first.scopes[0]!.configurations.push('python');
+    expect(second.scopes[0]).toStrictEqual({ name: 'root', path: '', configurations: [], source: 'root' });
+    const root = scopeOf('source.py', []);
+    root.configurations.push('swift');
+    expect(scopeOf('source.py', [])).toStrictEqual({ name: 'root', path: '', configurations: [], source: 'root' });
+    expect(first.scopes[0]!.configurations).toStrictEqual(['python']);
 });

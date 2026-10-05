@@ -1,12 +1,12 @@
 // Reads the repository inventory, classifies source files, and records authored scopes.
-import { posix } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { buildScope } from '#cli/repository/scopes.ts';
 import { isGitRepository } from '#cli/repository/root.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
 import { kindOf, readAttributes } from '#cli/repository/kind.ts';
 import { readPrefix, readSource } from '#cli/platform/source.ts';
 import { tagEntry, swiftSourceTags } from '#cli/repository/tags.ts';
-import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
+import { ROOT_SCOPE, FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 
 import type {
     Tagged,
@@ -74,12 +74,11 @@ export async function readRepository(
         hasGit,
         files,
         scopes: [
-            { name: 'root', path: '', configurations: [], source: 'root' },
+            { ...ROOT_SCOPE, configurations: [] },
             ...scopeEntries
                 .filter((entry) => directory.stat(entry.path)?.isDirectory() === true)
-                .map(
-                    (entry): ScopeEntry => ({
-                        name: posix.basename(entry.path),
+                .map((entry) =>
+                    buildScope({
                         path: entry.path,
                         configurations: entry.configurations,
                         source: 'gspot.toml',

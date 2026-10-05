@@ -13,6 +13,9 @@ export const DEPENDENCY_FOLDERS = [
 
 export const FILE_PREFIX_BYTES = 4096;
 
+/** Root scope metadata; each repository owns its configuration list. */
+export const ROOT_SCOPE = { name: 'root', path: '', source: 'root' } as const;
+
 export const GENERATED_BANNERS: RegExp[] = [
     // A comment line that carries the marker, so a source file that only names it stays source.
     /^[ \t]*(?:\/\/|#|\/?\*|<!--|--).*@generated\b/mu,

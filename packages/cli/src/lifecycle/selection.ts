@@ -1,6 +1,8 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { buildScope } from '#cli/repository/scopes.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
+import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
@@ -32,7 +34,7 @@ function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
 
 function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<string, string[]>): ScopeEntry[] {
     const scopes: ScopeEntry[] = [
-        { name: 'root', path: '', configurations: [], source: 'root' },
+        { ...ROOT_SCOPE, configurations: [] },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
     using files = openRoot(root);
@@ -41,7 +43,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         if (files.stat(path)?.isDirectory() !== true)
             throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
         if (scopes.every((scope) => scope.path !== path))
-            scopes.push({ name: path.split('/').pop() ?? path, path, configurations: [], source: 'flag' });
+            scopes.push(buildScope({ path, configurations: [], source: 'flag' }));
     }
     return scopes;
 }

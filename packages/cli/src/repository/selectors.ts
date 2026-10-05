@@ -124,6 +124,15 @@ export function isPrivateToolPath(path: string): boolean {
 }
 
 /**
+ * Whether a repository path belongs to private tools or installed npm dependencies.
+ * @param path the repository-relative path
+ * @returns whether project discovery must leave out the path
+ */
+export function isToolingPath(path: string): boolean {
+    return isPrivateToolPath(path) || path.split('/').includes('node_modules');
+}
+
+/**
  * Whether picomatch interprets a selector as a glob, including brackets and extended globs.
  * @param pattern the authored selector
  * @returns whether the selector has glob syntax

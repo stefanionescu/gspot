@@ -12,10 +12,10 @@ import { portableSegments } from '#cli/platform/root/rules.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
+import { isGlob, isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { isGlob, isInScope, isPrivateToolPath } from '#cli/repository/selectors.ts';
 import { rushProjectsSchema, workspacePatternsSchema } from '#cli/parsers/schema/repository.ts';
-import { DEPENDENCY_FOLDERS, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/inventory.ts';
+import { ROOT_SCOPE, DEPENDENCY_FOLDERS, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/inventory.ts';
 
 // Validate filesystem access before the workspace resolver reads package manifests.
 function assertWorkspaceInsideRoot(root: string, patterns: string[]): void {
@@ -82,6 +82,15 @@ function workspacePackages(root: string): Package[] {
 }
 
 /**
+ * Name a project, policy, or flag scope from its repository-relative folder.
+ * @param scope the path, configuration selection, and source
+ * @returns the named scope entry
+ */
+export function buildScope(scope: Omit<ScopeEntry, 'name'>): ScopeEntry {
+    return { name: posix.basename(scope.path), ...scope };
+}
+
+/**
  * The scopes initialization proposes from tracked project files, excluding root and lint-only packages.
  * @param files the repository inventory
  * @param projectManifests the parsed project manifests
@@ -96,11 +105,7 @@ export function proposedScopes(
     const lintOnly = new Set(projectManifests.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
     const folders = new Set<string>();
     const sources = files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !lintOnly.has(file.path) &&
-            !isPrivateToolPath(file.path) &&
-            !file.path.split('/').includes('node_modules'),
+        (file) => file.kind === 'source' && !lintOnly.has(file.path) && !isToolingPath(file.path),
     );
     for (const file of sources) {
         for (const pattern of patterns) {
@@ -110,7 +115,7 @@ export function proposedScopes(
     }
     return [...folders]
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => ({ name: posix.basename(path), path, configurations: [], source: 'project' }));
+        .map((path) => buildScope({ path, configurations: [], source: 'project' }));
 }
 
 /**
@@ -171,12 +176,7 @@ export function isLintOnlyManifest(projectManifest: ProjectManifest): boolean {
  * @returns the scope
  */
 export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
-    const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? {
-        name: 'root',
-        path: '',
-        configurations: [],
-        source: 'root',
-    };
+    const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (
         scopes
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))

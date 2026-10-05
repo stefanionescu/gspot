@@ -582,10 +582,24 @@
         "section": "Findings",
         "finding": "| `repository/tree.ts:103-111`, `repository/scopes.ts:19,196-197,222-224,238-243,37`, `repository/packages.ts:248` | Scope entries are built in three places, with the root scope literal written twice. The dedupe-by-path loop is written twice. The `.gspot`/`node_modules` filter is copied between scopes and manifests. | `scopes.ts` exports `scopeEntry()`, `ROOT_SCOPE` and `uniqueByPath()`. Add one `isToolingPath` predicate. |",
         "owner": "`repository/tree.ts:103-111`, `repository/scopes.ts:19,196-197,222-224,238-243,37`, `repository/packages.ts:248`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/scopes.ts",
+            "packages/cli/src/repository/read.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/repository/selectors.ts",
+            "packages/cli/src/lifecycle/selection.ts",
+            "packages/cli/src/config/repository/inventory.ts",
+            "tests/cli/repository/scopes.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Root metadata has one static owner in config/repository/inventory. Each repository, initialization, and missing-scope fallback creates its own configuration list. buildScope owns the folder-name calculation used by discovered projects, authored scope declarations, and scope flags. No exported mutable root selection or forwarding owner was added.",
+            "isToolingPath shares the existing private-folder plus installed-node_modules exclusion between manifest and scope discovery. It preserves the private-folder case rule and exact node_modules segment matching without broadening either filter.",
+            "Discovered folders deduplicate through their existing Set. Reconciliation uses a Map with authored entries taking precedence over discovered entries; flag selection avoids duplicate scope paths. These distinct selection rules remain at their consumers instead of being replaced by a generic uniqueByPath export.",
+            "AST comparison preserves all existing scope-test bodies and their 17 assertion sites. Fifteen representative naming comparisons and ten tooling-path comparisons retain the previous contracts. The added three-assertion regression proves root-selection isolation across repository reads and fallback entries.",
+            "All four TypeScript targets, affected ESLint, and formatting passed. Repository, initialization, nested scopes, execution scopes, generation selection, and configuration detection passed 239 cases with 729 assertions on macOS. Both canonical apply runs reported all 142 files up to date and left no additional changes."
+        ]
     },
     {
         "id": "areas/execution/027",
