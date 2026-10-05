@@ -157,7 +157,7 @@ test('a scoped rule preview changes only the matching project configuration', as
         buildPolicy(['bash'], {
             tables:
                 tables +
-                '[scope.tools.shellcheck.verbatim]\ndisable = "SC2086"\nreason = "The scoped launcher intentionally splits words."\n',
+                '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["api/**"]\nreason = "The scoped launcher intentionally splits words."\n',
         }),
     );
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });

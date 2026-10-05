@@ -654,9 +654,17 @@
         "finding": "| `packages/cli/kits/language/bash/shellcheckrc.tmpl:1` (`shell=bash`) | `shell=bash` overrides the shebang. The tagger marks `#!/bin/sh` files as `bash` (`packages/cli/src/repository/tags.ts:28`). A `sh` script that uses `[[ ]]` passed ShellCheck with this file, and SC3010 appeared only without it. At `all`, SC2292 (`require-double-brackets`) told a `sh` script to use `[[ ]]`, which fails under dash. | Delete `shell=bash`. Pass `--shell=bash` only for files with no shebang. Tag `sh` and `dash` shebangs as `sh`. |",
         "owner": "`packages/cli/kits/language/bash/shellcheckrc.tmpl:1` (`shell=bash`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "ShellCheck no longer receives a scope-wide Bash dialect. POSIX sh and dash shebangs replace the Bash extension tag, and ShellCheck and shfmt select those scripts. The native runner retains shebang discovery and supplies Bash or Bats only to shebangless files. Both coverage levels reject native enable/disable as separate rule selection and retain scoped gspot ignores.",
+        "verification": [
+            "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
+            "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
+            "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
+            "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
+            "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
+            "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
+            "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
+        ]
     },
     {
         "id": "slices/kits-other-languages/037",
@@ -692,7 +700,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [
+            "Partial implementation: unchecked-cd is removed with pinned ShellCheck SC2164 equivalence proof and native CLI ownership regressions in /tmp/gspot-shell-dialects-final-native.log. Cleanup-trap exemptions and the blanket-success level remain unresolved; this record stays open."
+        ]
     },
     {
         "id": "slices/kits-other-languages/040",
@@ -714,9 +724,17 @@
         "finding": "| `packages/cli/kits/language/bash/manifest.toml:133-134` (shfmt `-i {indent}`) | `{indent}` is `format.indent_width` (`packages/cli/src/execution/tool/runner.ts:228`), so shfmt ignores `format.indent_style = \"tab\"`. Ruff, SwiftFormat, and sqlfluff all follow it. | Pass `-i 0` when the indent style is `tab`. |",
         "owner": "`packages/cli/kits/language/bash/manifest.toml:133-134` (shfmt `-i {indent}`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The shared command environment already passes indent zero for tab style. New native tests verify shfmt corrects root, scoped, and dash scripts to tabs at recommended and all, then accepts the formatted files unchanged.",
+        "verification": [
+            "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
+            "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
+            "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
+            "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
+            "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
+            "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
+            "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
+        ]
     },
     {
         "id": "slices/kits-other-languages/042",

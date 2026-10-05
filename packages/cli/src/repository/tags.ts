@@ -14,6 +14,7 @@ import {
     FILENAME_TAGS,
     EXTENSION_TAGS,
     BINARY_EXTENSIONS,
+    INTERPRETER_DIALECTS,
     SHEBANG_INTERPRETERS,
 } from '#cli/config/repository/inventory.ts';
 
@@ -29,7 +30,7 @@ function shebangTags(firstLine: string): string[] {
     if (interpreter === undefined) return [];
     const shebang = SHEBANG_INTERPRETERS[interpreter] ?? SHEBANG_INTERPRETERS[withoutTrailingVersion(interpreter)];
     if (shebang === undefined) return [];
-    const dialect = ['zsh', 'bats'].includes(interpreter) ? interpreter : 'bash';
+    const dialect = INTERPRETER_DIALECTS[interpreter] ?? 'bash';
     const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
     return [
         ...(SHEBANG_TAGS[shebang] ?? []),
@@ -41,7 +42,7 @@ function shebangTags(firstLine: string): string[] {
 
 function textTags(tags: Set<string>, firstLine: string): Tagged {
     for (const tag of shebangTags(firstLine)) tags.add(tag);
-    if (tags.has('zsh') || tags.has('bats')) tags.delete('bash');
+    if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete('bash');
     tags.add('text');
     return { tags: [...tags], binary: false };
 }

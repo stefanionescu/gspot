@@ -1,7 +1,8 @@
 /** Interpreter cases distinguish shell dialects from JavaScript runtime evidence. */
 export const SHEBANG_CASES = [
     { name: 'Bash', source: '#!/usr/bin/env bash', tags: ['shell', 'executable', 'text', 'shebang:shell', 'bash'] },
-    { name: 'POSIX shell', source: '#!/bin/sh', tags: ['shell', 'executable', 'text', 'shebang:shell', 'bash'] },
+    { name: 'POSIX shell', source: '#!/bin/sh', tags: ['shell', 'executable', 'text', 'shebang:shell', 'sh'] },
+    { name: 'Dash', source: '#!/bin/dash', tags: ['shell', 'executable', 'text', 'shebang:shell', 'sh'] },
     { name: 'zsh', source: '#!/bin/zsh', tags: ['shell', 'executable', 'text', 'shebang:shell', 'zsh'] },
     { name: 'Bats', source: '#!/usr/bin/env bats', tags: ['shell', 'executable', 'text', 'shebang:shell', 'bats'] },
     {

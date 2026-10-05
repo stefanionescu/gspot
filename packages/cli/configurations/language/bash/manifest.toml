@@ -14,6 +14,9 @@ tags = ["shebang:shell"]
 
 [[tool]]
 name = "shellcheck"
+refused_options = [
+    {paths = ["enable", "disable"], message = "ShellCheck rule selection comes from level recommended or all and gspot ignore. Remove enable and disable from tools.shellcheck.verbatim."},
+]
 rule_url = "https://www.shellcheck.net/wiki/{rule}"
 suppression = {marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)"}
 version = "0.11.0"
@@ -117,7 +120,7 @@ example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the
 level = "recommended"
 stage = "commit"
 runs = "files"
-files = {tags = ["bash", "bats"]}
+files = {tags = ["bash", "sh", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 exit_codes = [1]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
@@ -132,7 +135,7 @@ example = "In a script, `if true;then echo hello;fi` differs from shfmt output. 
 level = "recommended"
 stage = "commit"
 runs = "files"
-files = {tags = ["bash", "bats"]}
+files = {tags = ["bash", "sh", "bats"]}
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 output = {format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- "}
@@ -344,13 +347,13 @@ help = "Read the variable in the owner named under architecture.roles.env and pa
 [[check]]
 name = "safety"
 title = "Find unsafe shell commands"
-example = "An unchecked `cd \"$directory\"` reports a safety finding. Handle failure with `cd \"$directory\" || return 1` inside a function, so later commands cannot run in the wrong directory."
+example = "A `killall worker` command outside bash.safety_owners reports a broad-kill finding. Target the specific process, or move shared process management into its declared owner."
 level = "recommended"
 stage = "commit"
 alternatives_checked = ["shellcheck", "semgrep"]
-summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
+summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, and sourced state files."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
-help = "Handle the failure, check the cd, and move the delete or kill into a script named under bash.safety_owners."
+help = "Handle the failure, and move the delete or kill into a script named under bash.safety_owners."
 
 [[setting]]
 name = "bash.doc_style"

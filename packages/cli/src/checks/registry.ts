@@ -27,6 +27,7 @@ import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 import type { CheckRegistry } from '#cli/types/execution/runtime.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
+import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { spectral, openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { tsc, checkjs } from '#cli/checks/language/javascript/tsc.ts';
@@ -273,6 +274,7 @@ export const CHECKS: CheckRegistry = {
     'typescript/tsc': { run: tsc },
     'javascript/tsc': { run: checkjs },
     'swift/swiftlint': { run: swiftlint },
+    'bash/shellcheck': { run: shellcheck },
     'python/pydoclint': { run: pydoclint },
     'python/deptry': { run: deptry },
     'actions/actionlint': { run: actionlint },

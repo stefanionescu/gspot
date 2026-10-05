@@ -42,3 +42,10 @@ test('binary content receives no shebang language or runtime tags', () => {
         tags: ['binary', 'executable'],
     });
 });
+
+test.each(['sh', 'dash'])('%s overrides the Bash extension tag of a shell script', (interpreter) => {
+    const prefix = Buffer.from(`#!/bin/${interpreter}\nprintf "%s\\n" example\n`);
+    const result = tagEntry({ path: 'script.sh', size: prefix.length, executable: false, symlink: false }, prefix);
+    expect(result.tags).toContain('sh');
+    expect(result.tags).not.toContain('bash');
+});

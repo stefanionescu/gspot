@@ -18337,6 +18337,34 @@
                 "Run the actual staged gate, commit with hooks, and push normally to origin/main.",
                 "Continue the remaining review records and separately authorized release actions."
             ]
+        },
+        {
+            "subsystem": "Policy ownership delivery",
+            "outcome": "Commit de29aaa5 is pushed normally to origin/main with hooks enabled. All starting finding IDs remain represented; 977 findings remain open.",
+            "evidence": [
+                "/tmp/gspot-policy-ownership-final-staged.json (71 passed, 7 skipped, 0 findings/errors)",
+                "/tmp/gspot-policy-ownership-commit.log (45 pre-commit checks passed; commit-message validation passed)",
+                "/tmp/gspot-policy-ownership-push.log (71 passed, 7 skipped, 0 findings/errors; main -> main)"
+            ],
+            "remaining": ["Remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Native shell dialects and coverage ownership",
+            "rows": ["areas/checks/033", "slices/kits-other-languages/036", "slices/kits-other-languages/041"],
+            "outcome": "Native shell dialect detection, scoped ignores, single unchecked-cd ownership, and tab formatting pass at both coverage levels. The batch retains every review ID, including the partially implemented safety record.",
+            "evidence": [
+                "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
+                "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
+                "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
+                "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
+                "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
+                "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
+                "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
+            ],
+            "remaining": [
+                "Run the actual staged gate, commit with hooks, and push normally.",
+                "Continue the remaining review findings and separately authorized release actions."
+            ]
         }
     ],
     "implementationBatches": {
@@ -21507,6 +21535,20 @@
                 "owners": [
                     "packages/cli/configurations/language/python/manifest.toml",
                     "tests/tools/execution/parse-output/partial-output.test.ts"
+                ]
+            },
+            {
+                "id": "native-shell-dialects",
+                "records": [
+                    "areas/checks/033",
+                    "slices/kits-other-languages/036",
+                    "slices/kits-other-languages/041",
+                    "slices/kits-other-languages/039"
+                ],
+                "owners": [
+                    "packages/cli/configurations/language/bash/manifest.toml",
+                    "packages/cli/src/checks/language/bash/shellcheck.ts",
+                    "packages/cli/src/repository/tags.ts"
                 ]
             }
         ]

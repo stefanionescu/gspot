@@ -100,6 +100,24 @@ test.each(['recommended', 'all'] as const)('%s refuses native rule selection as 
 });
 
 test.each(['recommended', 'all'] as const)(
+    '%s keeps ShellCheck rule selection with its coverage level and ignores',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            for (const option of ['enable = "all"', 'disable = "SC2086"'])
+                expect(() =>
+                    parseStrictPolicy(
+                        buildPolicy(['bash'], {
+                            level,
+                            tables: `${scope}[${table}.shellcheck.verbatim]\n${option}\nreason = "Project preference"`,
+                        }),
+                    ),
+                ).toThrow('ShellCheck rule selection');
+        }
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
     '%s keeps scoped framework rules and syntax selectors inside their project',
     async (level) => {
         await using sandbox = await testdir();

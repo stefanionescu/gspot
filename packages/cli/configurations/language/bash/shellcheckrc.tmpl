@@ -1,22 +1,10 @@
 <%
 const extras = verbatim('shellcheck') ?? {};
-const extraRules = Object.fromEntries(
-    ['enable', 'disable'].map((key) => [
-        key,
-        extras[key] === undefined
-            ? []
-            : String(extras[key])
-                  .replace(/^(['"])(.*)\1$/, '$2')
-                  .split(',')
-                  .map((rule) => rule.trim()),
-    ]),
-);
 const document = {
     options: [
-        ['shell', 'bash'],
         ['source-path', 'SCRIPTDIR'],
         ['external-sources', 'true'],
-        ...Object.entries(extras).filter(([key]) => key !== 'enable' && key !== 'disable'),
+        ...Object.entries(extras),
     ],
     enable: [
         ...(isAll
@@ -34,9 +22,8 @@ const document = {
                   'useless-use-of-cat',
               ]
             : ['check-extra-masked-returns', 'check-set-e-suppressed', 'check-unassigned-uppercase']),
-        ...extraRules.enable,
     ],
-    disable: [...rulesOff('bash/shellcheck'), ...extraRules.disable],
+    disable: rulesOff('bash/shellcheck'),
 };
 recordRules(document);
 %><% for (const [key, value] of document.options) { %><%= key %>=<%= value %>

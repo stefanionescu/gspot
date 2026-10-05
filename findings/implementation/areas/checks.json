@@ -526,9 +526,17 @@
         "finding": "| `language/bash/safety.ts:27` unchecked-cd | ShellCheck SC2164 already reports a `cd` without a failure path, and ShellCheck already runs. | Delete the rule. |",
         "owner": "`language/bash/safety.ts:27` unchecked-cd",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "Removed the custom unchecked-cd rule and its static pattern. Pinned native regressions prove ShellCheck SC2164 owns unchecked directory changes and accepts guarded directory changes. The native CLI fixture verifies bash/safety adds no duplicate finding.",
+        "verification": [
+            "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
+            "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
+            "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
+            "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
+            "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
+            "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
+            "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
+        ]
     },
     {
         "id": "areas/checks/034",

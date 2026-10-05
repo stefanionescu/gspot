@@ -122,6 +122,9 @@ export const SHEBANG_INTERPRETERS: Record<string, string> = {
     tsx: 'node',
 };
 
+/** Shell shebangs that replace the default Bash extension tag. */
+export const INTERPRETER_DIALECTS: Record<string, string> = { sh: 'sh', dash: 'sh', zsh: 'zsh', bats: 'bats' };
+
 export const BINARY_EXTENSIONS = [
     '.png',
     '.jpg',

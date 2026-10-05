@@ -78,9 +78,6 @@ export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\/dev\/shm\/\S*\*/u, 'unowned-cleanup', 'shared memory is swept with a glob'],
 ];
 
-/** A cd that must carry a failure path. */
-export const UNCHECKED_CD = /^cd(?:\s|$)/u;
-
 /** A top-level assignment of an upper-case name. */
 export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
 
