@@ -6,12 +6,12 @@ import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 
 /**
- * Manage Bun installation safeguards while preserving unrelated authored fields.
+ * The `[install]` keys gspot sets in each bunfig.toml beside a Bun lockfile, in scopes that select dependencies.
  * @param root the repository root
  * @param scopes every resolved scope
- * @returns the shared configuration keys to install in each Bun configuration file
+ * @returns each file path and its installation key changes
  */
-export function bunConfiguration(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
+export function bunfigChanges(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
     using files = openRoot(root);
     const selected = scopes
         .filter((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'))

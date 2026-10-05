@@ -5,13 +5,13 @@ import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
+import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
-import { javascriptConfiguration } from '#cli/generation/jsconfig.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
@@ -125,7 +125,13 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
     return {
         ...scopeInputs(policy, scopes, selection, manifests),
         ...eslintInputs(session, selection),
-        javascriptConfig: (targetPath) => javascriptConfiguration(root, policy, targetPath, selection.scope.path),
+        javascriptConfig: (target) =>
+            buildJsconfig({
+                root,
+                declarationPaths: policy.declarations.flatMap((entry) => entry.paths),
+                target,
+                scope: selection.scope.path,
+            }),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',

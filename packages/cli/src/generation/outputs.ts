@@ -6,12 +6,12 @@ import { toolPackages } from '#cli/generation/npm.ts';
 import { miseToolsFile } from '#cli/generation/mise.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
+import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { managedBlock } from '#cli/rules/instructions.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { toolEnvironment } from '#cli/generation/python.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { bunConfiguration } from '#cli/generation/bunfig.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -164,7 +164,7 @@ export function emitAll(session: Session): Generated {
             scope: scopeConsumers,
         });
     }
-    generated.configurations.push(...bunConfiguration(root, scopes));
+    generated.configurations.push(...bunfigChanges(root, scopes));
     generated.files.push(
         ...hookFiles(root, policy, version),
         ...toolPackages(manifests, packageInstaller, policy.run_with),

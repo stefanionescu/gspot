@@ -1,7 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { Policy } from '#cli/types/policy/settings.ts';
+import type { JsconfigInput } from '#cli/types/generation/jsconfig.ts';
 
 import {
     JAVASCRIPT_IMPORTS,
@@ -12,32 +12,22 @@ import {
 
 /**
  * Generates JavaScript compiler settings using the scope's authored resolution and input selection.
- * @param root the repository root
- * @param policy the repository policy
- * @param target the path of the generated file
- * @param scope the scope path, '' for the root
+ * @param input the repository root, generated target, authored scope, and declaration paths to exclude
  * @returns the jsconfig contents
  */
-export function javascriptConfiguration(
-    root: string,
-    policy: Policy,
-    target: string,
-    scope: string,
-): Record<string, unknown> {
-    const config = getTsconfig(root, join(root, scope, 'jsconfig.json'));
+export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
+    const { root, declarationPaths, target, scope } = input;
+    const authored = getTsconfig(root, join(root, scope, 'jsconfig.json'));
     const prefix = toPosix(relative(dirname(target), scope || '.')) + '/';
     const compilerOptions = { ...JAVASCRIPT_OPTIONS };
-    const configuration: Record<string, unknown> = { compilerOptions };
-    if (config === undefined) {
+    const jsconfig: Record<string, unknown> = { compilerOptions };
+    if (authored === undefined) {
         Object.assign(compilerOptions, JAVASCRIPT_IMPORTS);
-        configuration['exclude'] = [
-            ...JAVASCRIPT_EXCLUSIONS,
-            ...policy.declarations.flatMap((entry) => entry.paths),
-        ].map((path) => `${prefix}${path}`);
-    } else configuration['extends'] = `${prefix}jsconfig.json`;
-    const raw: unknown = config?.raw;
-    const listsSources = typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);
-    if (!listsSources)
-        configuration['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
-    return configuration;
+        jsconfig['exclude'] = [...JAVASCRIPT_EXCLUSIONS, ...declarationPaths].map((path) => `${prefix}${path}`);
+    } else jsconfig['extends'] = `${prefix}jsconfig.json`;
+    const raw: unknown = authored?.raw;
+    const hasSourceSelection = typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);
+    if (!hasSourceSelection)
+        jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
+    return jsconfig;
 }

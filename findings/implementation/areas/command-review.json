@@ -892,10 +892,23 @@
         "section": "Findings",
         "finding": "| `generation/javascript.ts` | Mixes import-alias resolution (`aliasesFor`, used by `eslint/configuration.ts` and `templates.ts`) with jsconfig generation. Lines 57-59 stack a comment on top of a JSDoc block. | Rename to `jsconfig.ts`. Move `aliasesFor` to `repository/aliases.ts`. |",
         "owner": "`generation/javascript.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/bunfig.ts",
+            "packages/cli/src/generation/jsconfig.ts",
+            "packages/cli/src/types/generation/jsconfig.ts",
+            "packages/cli/src/generation/ignore-patterns.ts",
+            "packages/cli/src/repository/aliases.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Reviewed the complete original area row and second-pass corrections, source generators, their actual consumers and alias owner. bunfigChanges now names and documents its installation key edits. buildJsconfig accepts only the declaration paths it uses, with root, target and scope in one named input contract under types/generation/jsconfig.ts. Authored configuration and the generated jsconfig have distinct names; the required bound template callback remains.",
+            "Import-alias resolution lives exclusively under repository/aliases.ts and is consumed directly by the ESLint generator. generation/jsconfig.ts owns only compiler configuration construction; the obsolete generation/javascript.ts module and javascriptConfiguration/bunConfiguration exports have no surviving source, test, script or docs references. No compatibility exports or forwarding modules are added.",
+            "Ignore-pattern calculations now use withGlobstarSkips, rebaseOntoScope and expandAlternatives; braceStart and branchStart name offsets. Computed predicates and the rebased patterns have descriptive names. The ordered pattern algorithm, brace/escape handling and scope projection are unchanged.",
+            "Before/after proof covers 135 jsconfig cases across authored/default/inherited configuration, scopes, target paths and declaration exclusions, plus 588 ignore-pattern cases across negation, globs, alternatives, escaping and scopes. All 723 outputs remain identical (/tmp/gspot-generation-names-render.ts, /tmp/gspot-generation-names-proof.log).",
+            "Existing CLI generation and empty-scope compiler owners pass 26 cases with 63 assertions, including Bun age/scanner edits, stricter authored settings, idempotence and exact restoration (/tmp/gspot-generation-names-tests.log). Native JavaScript tests pass four cases with 35 assertions: authored and default resolution, deepest-scope isolation, private exclusions, exact defects and correction, preserved source/config/cache bytes and generated modes (/tmp/gspot-generation-names-native.log).",
+            "The existing repository aliases owner passes independently, covering package and compiler aliases, inherited paths, precedence, external-link refusals and corrected inputs (/tmp/gspot-generation-names-aliases.log). All existing regression assertions remain unchanged. Root TypeScript and repository ESLint pass (/tmp/gspot-generation-names-types.log, /tmp/gspot-generation-names-lint.json)."
+        ]
     },
     {
         "id": "areas/commands/048",
