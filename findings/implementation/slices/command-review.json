@@ -588,10 +588,14 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/remove.ts:30-31` | The two refusals read wrong for `remove`. `withoutRequired` (`policy/messages.ts:61-62`) says \"cannot be left out ... Leave out `Y` too\", which is wording from a `--without` flag that no longer exists. `kitNotListed` (`messages.ts:73`) says \"Run gspot list settings to see the selection\", but `list settings` does not show kits. The review verified that. | Rewrite as \"Cannot remove X: Y requires it. Remove Y first, or keep X.\" and \"Run gspot list to see the selected kits.\" |",
         "owner": "`commands/remove.ts:30-31`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/configurations.ts", "tests/cli/commands/remove.test.ts"],
+        "status": "closed",
+        "outcome": "Removal refusals name the dependency to remove first or identify the absent root or scope selection. Their repair instruction uses gspot list. Configuration terminology follows the user’s decision to preserve the existing product vocabulary.",
+        "verification": [
+            "The existing three negative removal cases now assert exact human diagnostics, empty stdout, exact JSON policy failures, empty stderr, and unchanged complete repository trees after both calls. Original policy preservation assertions remain.",
+            "Restoring the obsolete refusal wording and gspot list settings instruction made all three strengthened cases fail. The original source was then restored byte for byte.",
+            "The real remove, policy-preview, and nested-scopes owners passed 31 cases and 301 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/035",

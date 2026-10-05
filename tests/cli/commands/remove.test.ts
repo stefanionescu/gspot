@@ -7,23 +7,45 @@ import { existsSync, readFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { readTree } from '#tests/harness/preservation.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { INSTALLATION_MUTATIONS } from '#tests/config/cli/commands/remove.ts';
 
 test.each([
-    ['a configuration another configuration requires', ['remove', 'javascript'], 'typescript requires javascript'],
-    ['a configuration the selection does not list', ['remove', 'bash'], 'bash'],
-    ['a configuration a scope does not list', ['remove', 'typescript', '--scope', 'api'], 'typescript'],
+    [
+        'a configuration another configuration requires',
+        ['remove', 'javascript'],
+        'Cannot remove `javascript`: typescript requires javascript. Remove `typescript` first, or keep `javascript`.',
+    ],
+    [
+        'a configuration the selection does not list',
+        ['remove', 'bash'],
+        '`bash` is not in the root configurations, so there is nothing to remove. Run gspot list to see the selected configurations.',
+    ],
+    [
+        'a configuration a scope does not list',
+        ['remove', 'typescript', '--scope', 'api'],
+        '`typescript` is not in the configurations of scope api, so there is nothing to remove. Run gspot list to see the selected configurations.',
+    ],
 ])('removing %s exits 2 and leaves the policy as it was', async (_, argv, expected) => {
     await using sandbox = await testdir();
     const policy =
         'configurations = ["typescript"]\n[agent_rules]\nenabled = false\n[[scope]]\npath = "api"\nconfigurations = ["bash"]\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/entry.sh': 'echo api\n' });
     commitAll(sandbox.path);
+    const before = readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, argv);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toContain(expected);
+    expect(refused.stdout).toBe('');
+    expect(refused.stderr).toBe(`${expected}\n`);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...argv, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'policy', message: expected });
+    expect(readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test.each(INSTALLATION_MUTATIONS)(
