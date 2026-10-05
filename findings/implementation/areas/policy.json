@@ -1202,10 +1202,20 @@
         "section": "Findings",
         "finding": "| `config/parsers/parsers.ts:14` `SWIFT_GRAMMAR` | Runtime source holds data that only the build script `packages/cli/scripts/grammars.ts:6` reads. | Move it into that script. |",
         "owner": "`config/parsers/parsers.ts:14` `SWIFT_GRAMMAR`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "scripts/config/grammars.ts",
+            "scripts/types/grammars.ts",
+            "packages/cli/scripts/grammars.ts",
+            "packages/cli/src/config/platform/assets.ts",
+            "packages/cli/src/types/platform/runtime.ts"
+        ],
+        "status": "closed",
+        "outcome": "Swift download metadata and its deadline now belong to the grammar build configuration; PinnedDownload belongs to the script types. Runtime assets retain only the prepared Swift filename. The required standalone compiler declaration is grouped with runtime types. The obsolete assets type module is removed without forwarding exports.",
+        "verification": [
+            "Grammar preparation succeeds with the unchanged upstream SHA-256 checks (/tmp/gspot-build-owners-grammars.log). The emitted CLI bundle contains neither the Swift download URL nor its pinned download checksum.",
+            "Affected CLI regression cohort: 163 cases pass with 760 assertions across 18 files, including source asset resolution, CI, init, installation, managed version pins, schema, and Vale consumers (/tmp/gspot-build-owners-cli.log). Packaged language, syntax, and standalone consumer checks pass (/tmp/gspot-build-owners-packages.log).",
+            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-build-owners-types.log, /tmp/gspot-build-owners-lint.log). Both canonical apply runs leave all 137 outputs unchanged (/tmp/gspot-build-owners-apply-first.json, /tmp/gspot-build-owners-apply-second.json). The staged gate passes (/tmp/gspot-build-owners-staged.json)."
+        ]
     },
     {
         "id": "areas/policy/056",

@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { statSync, readFileSync } from 'node:fs';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { ROOT_SEARCH_DEPTH } from '#cli/config/platform/runtime.ts';
-import { RUNTIME_WASM, SWIFT_GRAMMAR, GRAMMAR_PACKAGES, STANDALONE_BUILD } from '#cli/config/platform/assets.ts';
+import { RUNTIME_WASM, GRAMMAR_PACKAGES, STANDALONE_BUILD, SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 
 let packageDirectory: string | undefined;
 
@@ -58,7 +58,7 @@ export function readAsset(path: string): string {
  * @returns the WASM file path
  */
 export function wasmPath(name: string): string {
-    if (!Object.hasOwn(GRAMMAR_PACKAGES, name) && !Object.hasOwn(RUNTIME_WASM, name) && name !== SWIFT_GRAMMAR.name)
+    if (!Object.hasOwn(GRAMMAR_PACKAGES, name) && !Object.hasOwn(RUNTIME_WASM, name) && name !== SWIFT_GRAMMAR_FILE)
         throw new Error(`No WebAssembly file named ${name} ships with gspot.`);
     const root = packageRoot();
     const path = join(root, 'grammars', name);

@@ -1,6 +1,6 @@
 import type { Choice, InitAnswers } from '#cli/types/commands/init.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-import { HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
+import { VERSION_FILE, HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 
 export const COLUMN_GAP = 2;
 
@@ -15,7 +15,7 @@ export const HOOKS_ROW = {
 };
 
 export const CI_SETUP = {
-    commands: ['npm install --global "@gspothq/cli@$(cat .gspot/version)"', 'gspot install', 'gspot check'],
+    commands: [`npm install --global "@gspothq/cli@$(cat ${VERSION_FILE})"`, 'gspot install', 'gspot check'],
 };
 
 export const JSON_SCHEMA_URL = 'https://gspot.dev/schema/gspot.schema.json';

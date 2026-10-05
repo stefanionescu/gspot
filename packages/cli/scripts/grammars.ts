@@ -2,9 +2,10 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { createHash, randomUUID } from 'node:crypto';
-import type { PinnedDownload } from '#cli/types/platform/assets.ts';
+import type { PinnedDownload } from '#automation/types/grammars.ts';
+import { RUNTIME_WASM, GRAMMAR_PACKAGES } from '#cli/config/platform/assets.ts';
+import { SWIFT_GRAMMAR, DOWNLOAD_TIMEOUT_MS } from '#automation/config/grammars.ts';
 import { rmSync, mkdirSync, existsSync, renameSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
-import { RUNTIME_WASM, SWIFT_GRAMMAR, GRAMMAR_PACKAGES, DOWNLOAD_TIMEOUT_MS } from '#cli/config/platform/assets.ts';
 
 /**
  * Downloads a pinned file unless it exists, and verifies its SHA-256.

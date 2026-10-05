@@ -33,6 +33,7 @@ import {
     VALE_CONFIG,
     YARN_SETTINGS,
     MISE_CONFIG_PATH,
+    STYLES_DIRECTORY,
     TOOL_PYTHON_PROJECT,
     TOOL_PACKAGE_PROJECT,
 } from '#cli/config/platform/locations.ts';
@@ -201,7 +202,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                 const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
                 throw new GspotError('installation', failure);
             }
-            return 'installed Vale packages in .gspot/config/vale/styles';
+            return `installed Vale packages in ${STYLES_DIRECTORY}`;
         },
     },
     {
@@ -227,10 +228,9 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
 
 async function runInstallationPhases(session: Session, context: InstallationContext): Promise<string[]> {
     const manifests = applicableManifests(session);
-    const notes: string[] = [];
     const failures: GspotError[] = [];
     const { preparation, phases } = installationPlan(session, context.refreshLocks);
-    notes.push(await preparation.phase.run(session, manifests, context, preparation));
+    const notes = [await preparation.phase.run(session, manifests, context, preparation)];
     for (const installation of phases) {
         try {
             notes.push(await installation.phase.run(session, manifests, context, installation));

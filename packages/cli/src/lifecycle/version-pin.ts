@@ -35,7 +35,7 @@ export function writeVersionPin(log: Log): void {
             canReplace: true,
         }),
     );
-    if (status === 'preserved') throw new Error('.gspot/version was edited by hand. Delete it, then run gspot apply.');
+    if (status === 'preserved') throw new Error(`${VERSION_FILE} was edited by hand. Delete it, then run gspot apply.`);
 }
 
 /**

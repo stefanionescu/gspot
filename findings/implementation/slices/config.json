@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": [
             "packages/cli/src/checks/language/swift/plan.ts",
@@ -346,10 +346,21 @@
         "section": "The Config Constants",
         "finding": "| `config/platform/locations.ts:1` (header), `config/generation/generation.ts:134` `MISE_CONFIG_PATH`, `config/commands/init.ts:7,10,39` `SCHEMA_LINE`, `HOOK_CHOICES`, `CI_SETUP` | The header says \"each named once,\" which is false. These paths are also written as literals: `.gspot/gitleaks-baseline.json` (`checks/general/secrets/gitleaks/history.ts:34`), the styles folder (`lifecycle/write.ts:19`), four paths in `generation/ci.ts:101`, `.gspot/hooks` and `.gspot/version` (`init.ts:10,39`), `tools/python.ts:284`, and `tools/packages/project.ts:177`. `MISE_CONFIG_PATH` is a path gspot writes, with 8 users, but it lives in the generation file. The schema URL is written twice (`SCHEMA_LINE` and `policy/json-schema.ts:51`). | Use the constants. Move `MISE_CONFIG_PATH` and the one `gspot.toml` name into `platform/locations.ts`. Share the schema URL. |",
         "owner": "`config/platform/locations.ts:1` (header), `config/generation/generation.ts:134` `MISE_CONFIG_PATH`, `config/commands/init.ts:7,10,39` `SCHEMA_LINE`, `HOOK_CHOICES`, `CI_SETUP`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/platform/locations.ts",
+            "packages/cli/src/config/commands/init.ts",
+            "packages/cli/src/generation/ci.ts",
+            "packages/cli/src/lifecycle/install.ts",
+            "packages/cli/src/lifecycle/version-pin.ts",
+            "docs/src/content/reference/schema.ts"
+        ],
+        "status": "closed",
+        "outcome": "Operational generated paths use the location owner, including the remaining install preview version-file command, Vale acquisition summary, and version-pin refusal. MISE_CONFIG_PATH and POLICY_FILE are location-owned. Init and the docs schema share one JSON_SCHEMA_URL declaration. The misleading named-once header is absent. Explanatory comments and deliberate consumer fixtures retain their descriptive paths.",
+        "verification": [
+            "Grammar preparation succeeds with the unchanged upstream SHA-256 checks (/tmp/gspot-build-owners-grammars.log). The emitted CLI bundle contains neither the Swift download URL nor its pinned download checksum.",
+            "Affected CLI regression cohort: 163 cases pass with 760 assertions across 18 files, including source asset resolution, CI, init, installation, managed version pins, schema, and Vale consumers (/tmp/gspot-build-owners-cli.log). Packaged language, syntax, and standalone consumer checks pass (/tmp/gspot-build-owners-packages.log).",
+            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-build-owners-types.log, /tmp/gspot-build-owners-lint.log). Both canonical apply runs leave all 137 outputs unchanged (/tmp/gspot-build-owners-apply-first.json, /tmp/gspot-build-owners-apply-second.json). The staged gate passes (/tmp/gspot-build-owners-staged.json)."
+        ]
     },
     {
         "id": "slices/config/017",
@@ -560,7 +571,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": [
             "packages/cli/src/config/checks/general/files.ts",
