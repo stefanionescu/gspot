@@ -1,9 +1,10 @@
-// Owns reads from the process environment and normalizes variables for tool execution.
+// Reads the host and process environment for tool execution.
 
 import { isCI } from 'std-env';
 import envPaths from 'env-paths';
 import { homedir } from 'node:os';
 import { join, isAbsolute } from 'node:path';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 /**
  * True when a person can answer a prompt: both standard streams are terminals and no CI runner is detected.
@@ -46,4 +47,12 @@ export function cacheDirectory(): string {
     if (!isAbsolute(cache))
         throw new Error('The cache directory must be absolute; set XDG_CACHE_HOME or LOCALAPPDATA to one.');
     return cache;
+}
+
+/**
+ * Translate the host name reported by Node for planning, doctor, and native test selection.
+ * @returns the gspot name, or the original Node name for another operating system
+ */
+export function hostPlatform(): string {
+    return OPERATING_SYSTEMS.find((platform) => platform.node === process.platform)?.name ?? process.platform;
 }

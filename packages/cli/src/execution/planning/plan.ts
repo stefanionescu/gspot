@@ -2,11 +2,11 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { toolPin, toolName } from '#cli/tools/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
+import { hostPlatform } from '#cli/platform/environment.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { isOutsideChildren } from '#cli/repository/selectors.ts';
 import { HISTORY_CHECKS } from '#cli/config/execution/runtime.ts';
-import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -123,7 +123,7 @@ function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] 
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const wholeSeen = new Set<string>();
-    const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
+    const platform = hostPlatform();
     const narrow = narrowSet(options);
     return session.scopes.map((scope) => {
         const context: PlanInputs = {

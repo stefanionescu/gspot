@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": null,
         "status": "open",
@@ -383,10 +383,27 @@
         "section": "The Config Constants",
         "finding": "| `config/kits.ts:41` `TOOL_PLATFORMS`, `config/execution/planning.ts:4,6` `PLATFORM_LABELS`, `PLATFORM_NAMES`, `config/tools/tools.ts:36` `PLATFORM_INSTALLERS`, `config/generation/generation.ts:43` `RUNNERS` | Operating systems have three vocabularies: Node (`darwin`, `win32`), gspot (`macos`, `windows`), and CI (`ubuntu`, `policy/schema.ts:179`). Five tables translate between them by hand. `PLATFORM_NAMES[process.platform] ?? process.platform` is written twice (`execution/planning/plan.ts:138`, `commands/doctor/report.ts:91`). `RUNNERS` is typed `Record<string, string>`, so `generation/ci.ts:69` needs a run-time throw. | Keep one table in `platform/`: Node name, gspot name, label, and installers, plus `hostPlatform()`. Type `RUNNERS` by the zod `ciPlatform` enum, and delete the throw. |",
         "owner": "`config/kits.ts:41` `TOOL_PLATFORMS`, `config/execution/planning.ts:4,6` `PLATFORM_LABELS`, `PLATFORM_NAMES`, `config/tools/tools.ts:36` `PLATFORM_INSTALLERS`, `config/generation/generation.ts:43` `RUNNERS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/platform/operating-systems.ts",
+            "packages/cli/src/platform/environment.ts",
+            "packages/cli/src/parsers/schema/settings.ts",
+            "packages/cli/src/parsers/schema/configurations/tool.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/execution/planning/skips.ts",
+            "packages/cli/src/tools/inspect.ts",
+            "packages/cli/src/tools/mise.ts",
+            "packages/cli/src/config/generation/ci.ts",
+            "tests/harness/platforms.ts"
+        ],
+        "status": "closed",
+        "outcome": "One operating-system table owns Node names, gspot names, display labels, and ordered host installers. Check and CI validation share the schema derived from that table; tool build variants and mise OS handling derive from the same rows. Check planning, doctor, and native-test selection use hostPlatform in the existing process-environment owner. The obsolete platform maps, tool-platform list, installer list, OS list, and unused installer type are deleted. Existing installer order, Linux CI default, and unsupported-host names are retained. CI runner labels are exhaustively typed by the validated policy platform union, and generation has no impossible-platform throw.",
+        "verification": [
+            "319 affected CLI cases pass with 900 assertions across 35 files: /tmp/gspot-platform-tests.log. These cover tool acquisition and inspection, manifests, policy validation, check planning, doctor, CI/TOML generation, host environment, and CodeQL build selection.",
+            "All four TypeScript targets pass: /tmp/gspot-platform-types-0.log through /tmp/gspot-platform-types-3.log.",
+            "Affected lint and formatting pass: /tmp/gspot-platform-format-lint-final.log.",
+            "Canonical generation and a second apply each leave all 142 outputs unchanged: /tmp/gspot-platform-apply.json and /tmp/gspot-platform-second-apply.json.",
+            "Active packages, scripts, tests, and docs have no references to the deleted platform tables or module."
+        ]
     },
     {
         "id": "slices/config/021",
@@ -512,7 +529,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": [
             "packages/cli/src/config/checks/general/files.ts",

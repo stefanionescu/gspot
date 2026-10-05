@@ -1,8 +1,12 @@
 import { z } from 'zod';
 import type { SettingSpec } from '#cli/types/configurations.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 /** The public policy and check levels. Preview rules have no supported level. */
 export const levelSchema = z.enum(['recommended', 'all']);
+
+/** Operating systems supported by declared checks and generated CI. */
+export const operatingSystemSchema = z.enum(OPERATING_SYSTEMS.map((system) => system.name));
 
 /** Package and task runners supported by the public run_with setting. */
 export const runnerSchema = z.enum(['mise', 'npm', 'bun', 'pnpm', 'yarn']);

@@ -5,9 +5,10 @@ import { pythonPins, collectPins } from '#cli/tools/pins.ts';
 import { PRIVATE_PIN_FILES } from '#cli/config/tools/mise.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { privateToolInstallation } from '#cli/tools/installation.ts';
+import { UV_INSTALLER, MISE_BACKENDS } from '#cli/config/tools/install.ts';
 import type { MisePin, DuplicateMisePin } from '#cli/types/tools/install.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import type { ToolPin, Manifest, InstallerPin } from '#cli/types/configurations.ts';
-import { EVERY_OS, UV_INSTALLER, MISE_BACKENDS } from '#cli/config/tools/install.ts';
 
 /**
  * The operating systems mise installs a tool on, from the platforms its manifest names.
@@ -17,7 +18,7 @@ import { EVERY_OS, UV_INSTALLER, MISE_BACKENDS } from '#cli/config/tools/install
 function miseOs(tool: ToolPin): string[] | undefined {
     if (tool.platforms === undefined) return undefined;
     const os = [...new Set(tool.platforms.map((platform) => platform.replace(/-(?:x64|arm64)$/u, '')))];
-    return os.length === EVERY_OS.length ? undefined : os;
+    return os.length === OPERATING_SYSTEMS.length ? undefined : os;
 }
 
 /**

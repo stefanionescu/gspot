@@ -69,8 +69,6 @@ export type DuplicateMisePin = { tool: string; version: string; gspotFile: strin
 export type PrivateToolPackage = { kind: InstallationKind; name: string; version: string };
 /** A declared mise installer and its backend prefix. */
 export type MiseBackend = { installer: string; prefix: string };
-/** An acquisition command available on one operating system. */
-export type PlatformInstaller = { platform: NodeJS.Platform; installer: string; command: string };
 
 /** Folders and private-installation ownership restricting executable discovery. */
 export type LocateOptions = {

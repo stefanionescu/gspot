@@ -7,9 +7,9 @@ import { reasoned, namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { toolsSchema, licenseSettingsSchema } from '#cli/policy/schema/tools.ts';
 import { configurationSettingSchemas } from '#cli/policy/schema/configurations.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
-import { levelSchema, runnerSchema, numberSettingSchema } from '#cli/parsers/schema/settings.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
+import { levelSchema, runnerSchema, numberSettingSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';
 
 const anyTable = z.record(z.string(), z.unknown());
 
@@ -120,14 +120,12 @@ const checkSchema = z.strictObject({
         .optional()
         .meta({ description: 'Capabilities that must be available before the command runs.' }),
     platforms: z
-        .array(z.enum(['macos', 'linux', 'windows']))
+        .array(operatingSystemSchema)
         .optional()
         .meta({ description: 'Operating systems where the command is supported.' }),
     summary: z.string().optional().meta({ description: 'A short description shown in check listings.' }),
     output: outputSchema.optional().describe('The parser and location patterns used to read findings.'),
 });
-
-const ciPlatform = z.enum(['linux', 'macos', 'windows']);
 
 const hooksSchema = z.strictObject({
     push_files: z
@@ -154,7 +152,7 @@ const scopeBody = {
 const ciSchema = z.strictObject({
     provider: z.enum(['github', 'gitlab']).meta({ description: 'The CI provider that receives generated jobs.' }),
     platforms: z
-        .array(ciPlatform)
+        .array(operatingSystemSchema)
         .min(1)
         .default(['linux'])
         .meta({ description: 'Platforms for GitHub check and manual jobs.' }),

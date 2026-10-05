@@ -1,4 +1,4 @@
-import type { MiseBackend, PlatformInstaller } from '#cli/types/tools/install.ts';
+import type { MiseBackend } from '#cli/types/tools/install.ts';
 
 export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
 
@@ -26,13 +26,6 @@ export const HOST_HINTS: Record<string, string> = {
     bash: 'install Bash 4.4 or newer, such as with brew install bash on macOS',
 };
 
-export const PLATFORM_INSTALLERS: PlatformInstaller[] = [
-    { platform: 'darwin', installer: 'brew', command: 'brew install' },
-    { platform: 'linux', installer: 'apt', command: 'sudo apt install' },
-    { platform: 'win32', installer: 'winget', command: 'winget install' },
-    { platform: 'win32', installer: 'scoop', command: 'scoop install' },
-];
-
 export const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 
 /** Maximum characters retained after installation diagnostics have been redacted. */
@@ -46,11 +39,6 @@ export const CREDENTIAL_ASSIGNMENT =
     /((?:_authToken|_auth|_password|password|token|secret|credential)\s*[=:]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/giu;
 
 export const AUTHORIZATION_HEADER = /(authorization\s*:\s*)(?:bearer|basic)\s+[^\s]+/giu;
-
-/** The operating systems mise names; a tool with all three needs no os list. */
-export const EVERY_OS = ['macos', 'linux', 'windows'];
-
-/** The lock file each package manager writes. */
 
 /** Private tool trees owned and replaced as complete installations. */
 export const INSTALLATION_KINDS = ['npm', 'python'] as const;

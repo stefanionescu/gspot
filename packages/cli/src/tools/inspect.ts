@@ -9,8 +9,9 @@ import type { ToolPin } from '#cli/types/configurations.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import { privateToolInstallation } from '#cli/tools/installation.ts';
 import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
+import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { HOST_HINTS, VERSION_TIMEOUT_MS, PLATFORM_INSTALLERS } from '#cli/config/tools/install.ts';
 import { miseVersion, packageVersion, installedPackage, locateCandidates } from '#cli/tools/locate.ts';
 
 import type {
@@ -30,11 +31,11 @@ import type {
 function installHint(tool: ToolPin, runner?: string): string {
     if (tool.system === true) return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
     if (runner === 'mise' || privateToolInstallation(tool, runner) !== undefined) return 'Run: gspot install';
-    const [command] = PLATFORM_INSTALLERS.filter(({ platform }) => platform === process.platform).flatMap(
-        ({ installer, command }) => {
+    const [command] = OPERATING_SYSTEMS.filter(({ node }) => node === process.platform).flatMap((system) =>
+        system.installers.flatMap(({ installer, command }) => {
             const pin = tool.installers[installer];
             return pin === undefined ? [] : [`${command} ${pin.name}`];
-        },
+        }),
     );
     if (command !== undefined) return command;
     const pin = misePin(tool);

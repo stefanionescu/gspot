@@ -6,6 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
+import { hostPlatform } from '#cli/platform/environment.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { colors, printResult } from '#cli/output/messages.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
@@ -14,7 +15,6 @@ import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
 import type { ToolInspection } from '#cli/types/tools/install.ts';
-import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
@@ -73,7 +73,7 @@ function versionLine(report: DoctorReport): string {
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
 function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
+    const platform = hostPlatform();
     // A tool with no build for this host is left out: the checks that need it skip here.
     const tools = collectPins(applicableManifests(session))
         .filter((tool) => missingBuild(tool, platform, process.arch) === undefined)

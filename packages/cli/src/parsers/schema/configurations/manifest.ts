@@ -7,8 +7,8 @@ import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
 import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { toolSchema } from '#cli/parsers/schema/configurations/tool.ts';
-import { levelSchema, settingValidationSchema } from '#cli/parsers/schema/settings.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
+import { levelSchema, operatingSystemSchema, settingValidationSchema } from '#cli/parsers/schema/settings.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -125,7 +125,7 @@ const checkFields = z.strictObject({
         .array(z.enum(['build', 'docker', 'network']))
         .min(1)
         .optional(),
-    platforms: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
+    platforms: z.array(operatingSystemSchema).optional(),
     tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
     files: filesSchema.optional(),
     output: outputSchema.optional(),

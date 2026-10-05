@@ -1,8 +1,8 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
 import { join, dirname } from 'node:path';
 import { toolPin } from '#cli/tools/pins.ts';
+import { hostPlatform } from '#cli/platform/environment.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
-import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
 import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'n
  * @returns whether a native test may run it here
  */
 export function hasToolBuild(name: string): boolean {
-    const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
+    const platform = hostPlatform();
     const pin = toolPin(configurationManifests().values(), name);
     return missingBuild(pin, platform, process.arch) === undefined;
 }

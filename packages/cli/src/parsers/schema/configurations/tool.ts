@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { compact } from '#cli/platform/objects.ts';
-import { TOOL_PLATFORMS } from '#cli/config/configurations.ts';
 import { commandSchema } from '#cli/parsers/schema/command.ts';
 import { MAX_EXIT_CODE } from '#cli/config/platform/runtime.ts';
 import type { InstallerPin } from '#cli/types/configurations.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
 const installerSchema = z.union([z.string(), installerDefinition]);
@@ -61,7 +61,16 @@ export const toolSchema = z
         min_version: z.string().optional(),
         system: z.boolean().optional(),
         // The platforms the tool has a build for; unset means every platform.
-        platforms: z.array(z.enum(TOOL_PLATFORMS)).min(1).optional(),
+        platforms: z
+            .array(
+                z.enum(
+                    OPERATING_SYSTEMS.flatMap(
+                        (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
+                    ),
+                ),
+            )
+            .min(1)
+            .optional(),
         version_command: commandSchema.optional(),
         version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
         version_pattern: z.string().optional(),

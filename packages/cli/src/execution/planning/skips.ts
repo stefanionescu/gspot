@@ -4,10 +4,10 @@ import { toolName } from '#cli/tools/pins.ts';
 import { readText } from '#cli/platform/source.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
-import { PLATFORM_LABELS } from '#cli/config/execution/planning.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import type { Host, Skip, PlanOptions, NativeIgnore, SelectionStatus } from '#cli/types/execution/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
@@ -150,7 +150,7 @@ export function missingBuild(tool: ToolPin, platform: string, arch: string): str
     const named: readonly string[] = tool.platforms ?? [];
     if (tool.platforms === undefined || named.includes(platform) || named.includes(`${platform}-${arch}`))
         return undefined;
-    const label = PLATFORM_LABELS[platform] ?? platform;
+    const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
     // A pin that names the operating system with another architecture lacks this architecture only.
     return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
 }
