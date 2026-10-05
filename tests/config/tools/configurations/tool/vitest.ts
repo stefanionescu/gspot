@@ -21,6 +21,8 @@ export const REPOSITORY: RepositoryScenario = {
         'tsconfig.json':
             '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": [\n        "src"\n    ]\n}' +
             '\n',
+        'testing/coverage.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
+        'vitest.config.mjs': "export default { test: { include: ['missing/*.test.ts'] } };\n",
         'src/public.ts': VITEST_SOURCE,
         'src/math.test.ts': TEST,
     },
@@ -35,6 +37,7 @@ export const CASES: FindingCase[] = [
     {
         check: 'vitest/coverage',
         files: { 'src/public.ts': UNTESTED },
+        policy: '[vitest]\nconfig_file = "testing/coverage.config.mjs"\n',
         expected: { message: 'Coverage for functions (50%) does not meet global threshold (80%)' },
         corrected: { files: { 'src/public.ts': UNTESTED, 'src/math.test.ts': TRIPLED } },
     },

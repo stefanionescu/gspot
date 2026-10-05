@@ -35,7 +35,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['site'], {
-            tables: '[site]\nbuild = "bun build.js"\nsizes = [{paths = ["**/*"], kb = 100}]\n',
+            tables: '[site]\nbuild = "bun build.js"\n[limits.site]\nkilobytes = [{paths = ["**/*"], kb = 100}]\n',
             level: 'all',
         }),
         'build.js': 'console.error("Test build failure"); process.exitCode = 1;',

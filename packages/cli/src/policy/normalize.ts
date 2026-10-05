@@ -76,7 +76,7 @@ function toReasoned<T>(value: T | Required<Reasoned<T>>): Reasoned<T> {
 }
 
 /**
- * Splits [limits] into root limits and per-language groups, every value reasoned.
+ * Splits [limits] into root limits and groups, every value reasoned.
  * @param raw the table as written, if any
  * @returns the limits
  */
@@ -85,11 +85,11 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
         if (!isRecord(value) || isReasoned(value)) {
-            limits.root[key] = toReasoned(value);
+            limits.root[key] = toReasoned(value as number | Required<Reasoned<number>>);
             continue;
         }
         limits.groups[key] = Object.fromEntries(
-            Object.entries(value).map(([inner, entry]) => [inner, toReasoned(entry as number)]),
+            Object.entries(value).map(([inner, entry]) => [inner, toReasoned(entry as number | unknown[])]),
         );
     }
     return limits;

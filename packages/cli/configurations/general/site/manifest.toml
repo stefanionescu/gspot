@@ -110,11 +110,11 @@ name = "size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
-when = {setting = "site.sizes"}
+when = {setting = "limits.site.kilobytes"}
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Sums the compressed weight of the output paths each ceiling in site.sizes names."
+summary = "Sums the compressed weight of the output paths each ceiling in limits.site.kilobytes names."
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
@@ -202,7 +202,7 @@ default = "dist"
 summary = "The folder the build writes."
 
 [[setting]]
-name = "site.sizes"
+name = "limits.site.kilobytes"
 type = "list"
 direction = "tightening"
 default = []

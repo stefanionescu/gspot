@@ -15,11 +15,13 @@ const anyTable = z.record(z.string(), z.unknown());
 
 const reasonedNumber = reasoned(z.number());
 
-const languageLimits = z.record(z.string(), reasonedNumber);
+const groupedLimits = z.record(z.string(), reasonedNumber);
 
-const limitValue = z.union([reasonedNumber, languageLimits]);
+const limitValue = z.union([reasonedNumber, groupedLimits]);
 
-const limitsSchema = z.record(z.string(), limitValue);
+const limitsSchema = z
+    .object({ site: z.strictObject({ kilobytes: reasoned(z.array(z.unknown())).optional() }).optional() })
+    .catchall(limitValue);
 
 const namingLanguage = z.object(namingCategorySchema.shape).catchall(namingCategorySchema);
 

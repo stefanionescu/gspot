@@ -46,7 +46,7 @@ gspot check --only vitest/coverage
 
 Set the floors under `tools.vitest.coverage`: `lines`, `branches`, `functions`, and
 `statements`. When your Vitest configuration lives outside the usual paths, set
-`tools.vitest.config`. Paths are relative to the scope.
+`vitest.config_file`. Paths are relative to the scope.
 
 ## Python
 

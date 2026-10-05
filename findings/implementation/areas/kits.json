@@ -1686,10 +1686,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/database/postgres/manifest.toml:129-134` | `tools.squawk.frozen_through` controls `postgres/migrations-frozen`, not only squawk. | Rename it to `postgres.frozen_through`. |",
         "owner": "`packages/cli/kits/database/postgres/manifest.toml:129-134`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/database/postgres/manifest.toml",
+            "packages/cli/configurations/database/postgres/squawk.toml.tmpl",
+            "packages/cli/src/checks/database/postgres/history.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The declaration, Squawk template and migration-freeze reader share postgres.frozen_through. The obsolete tools.squawk key has no source consumer. Fresh migration-history and TOML generation cases pass, including numeric order, frozen committed text and all-boundary serialization: /tmp/gspot-setting-names-cli.log."
+        ]
     },
     {
         "id": "areas/kits/133",
@@ -1746,10 +1752,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/tool/jest/manifest.toml:76-81` | `tools.jest.test_module` is vague. | Rename it to `tools.jest.globals_module`. |",
         "owner": "`packages/cli/kits/tool/jest/manifest.toml:76-81`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/tool/jest/manifest.toml",
+            "packages/cli/configurations/tool/jest/eslint.fragment.js.tmpl",
+            "tests/cli/generation/plugin-levels/jest.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The manifest and emitted ESLint read tools.jest.globals_module. Fresh generated recommended/all cases verify native expect argument counts and focused-test findings for @jest/globals and bun:test, with corrections and scope isolation. This closes the setting rename only, not separate Bun coverage behavior: /tmp/gspot-setting-names-cli.log."
+        ]
     },
     {
         "id": "areas/kits/138",
@@ -1770,10 +1782,18 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/manifest.toml:121-126`, `packages/cli/kits/general/site/manifest.toml:190-195`, `packages/cli/kits/tool/vitest/manifest.toml:45-50` | `tools.semgrep.configs`, `tools.site.sizes`, and `tools.vitest.config` do not say what they hold. `sizes` is a limit kept under `tools`. | Rename them to `semgrep.rule_files`, `limits.site.kilobytes`, and `vitest.config_file`. |",
         "owner": "`packages/cli/kits/general/security/manifest.toml:121-126`, `packages/cli/kits/general/site/manifest.toml:190-195`, `packages/cli/kits/tool/vitest/manifest.toml:45-50`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/manifest.toml",
+            "packages/cli/configurations/general/site/manifest.toml",
+            "packages/cli/configurations/tool/vitest/manifest.toml",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/checks/general/site/output.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Renamed all three declarations and consumers to semgrep.rule_files, limits.site.kilobytes and vitest.config_file. Preserved list/string defaults, scope-relative paths and compressed-kilobyte values. Runtime and published schemas accept the new values and reject obsolete names; numeric limits remain numeric. Native custom Semgrep rules report their defect and accept corrections; native Vitest explicitly selects a custom config over a conflicting default, reports insufficient coverage and accepts added tests (2 cases, 13 assertions): /tmp/gspot-setting-names-native.log. CLI site-size defects and corrections pass. All four TypeScript targets and 317-page docs build pass. Both canonical applies leave all 137 outputs unchanged."
+        ]
     },
     {
         "id": "areas/kits/140",
@@ -1866,10 +1886,17 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/kits/schema.ts:210-213` | `auto`, `proposed`, and `check_references` do not say what they do. They mean selected in every repository, not added by `init --yes`, and checks taken from another kit. | Rename them to `always_selected`, `opt_in`, and `borrowed_checks`. |",
         "owner": "`packages/cli/src/kits/schema.ts:210-213`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/configurations/detect.ts",
+            "packages/cli/src/configurations/manifests.ts",
+            "packages/cli/src/commands/init/detection.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The strict manifest schema and every shipped declaration use always_selected, opt_in and borrowed_checks. Detection reads always_selected; check assembly and declaration validation read borrowed_checks; explain reads the opt-in declaration. Old fields are absent. Fresh manifest parsing, initialization selection, configuration listing and conditional-output generation cases pass: /tmp/gspot-setting-names-cli.log and /tmp/gspot-setting-names-generation.log."
+        ]
     },
     {
         "id": "areas/kits/148",
@@ -1878,10 +1905,19 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/kits/schema.ts:76-82,103-104,122-125,130`, `packages/cli/src/kits/tools.ts:52-53` | These manifest fields are vague: `rules_path`, `pointer`, `header`, `components`, `isolated_files`, `file_prefix`, `nested_config`, `searched`, `floor`, `host`. | Rename them to `rule_keys`, `stub_file`, `generated_header`, `component_globs`, `run_in_copy`, `path_prefix`, `nested_config_file`, `alternatives_checked`, `min_version`, and `system`. |",
         "owner": "`packages/cli/src/kits/schema.ts:76-82,103-104,122-125,130`, `packages/cli/src/kits/tools.ts:52-53`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/parsers/schema/configurations/tool.ts",
+            "packages/cli/src/generation/configurations.ts",
+            "packages/cli/src/execution/command/runner.ts",
+            "packages/cli/src/tools/inspect.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All ten manifest fields have their requested names. Trace confirmed generation consumes rule_keys, stub_file, generated_header and component_globs; execution consumes run_in_copy, path_prefix and nested_config_file; tool installation/inspection consumes min_version and system; alternatives_checked remains observation metadata. No old manifest field aliases remain. Fresh parser refusal/acceptance cases, every-template generation, pointer/document serialization and actual installed native Semgrep/Vitest runs pass. Evidence: /tmp/gspot-setting-names-cli.log, /tmp/gspot-setting-names-generation.log, /tmp/gspot-setting-names-native.log.",
+            "Fresh command-expansion, workspace execution, required-ESLint enforcement and installation/inspection cases: 130 passed, 565 assertions, /tmp/gspot-setting-names-contracts.log."
+        ]
     },
     {
         "id": "areas/kits/149",
@@ -1890,10 +1926,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/kits/schema.ts:162-163,233-235` | `default_all` on a setting and the `[defaults_all]` table are one letter apart and do different jobs. | Rename the tables to `[set]` and `[set_all]` (\"values this kit sets for other kits' settings\"). |",
         "owner": "`packages/cli/src/kits/schema.ts:162-163,233-235`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/policy/settings/known.ts",
+            "packages/cli/src/configurations/problems.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The manifest exposes set and set_all; known settings merge set and apply set_all only at all. Declaration validation checks both tables against declared settings. Shipped declarations use the new tables; setting-level default_all remains intentionally distinct. Fresh policy default/override and recommended/all generated-configuration cases pass: /tmp/gspot-setting-names-cli.log and /tmp/gspot-setting-names-generation.log."
+        ]
     },
     {
         "id": "areas/kits/150",
@@ -1902,10 +1944,17 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/kits/schema.ts:251-262` | `rules_off` has a `tool` field that can only be `eslint`. `required_rules` keys are file extensions with no hint. | Rename them to `eslint_rules_off` (and drop `tool`) and `required_eslint_rules`. |",
         "owner": "`packages/cli/src/kits/schema.ts:251-262`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/generation/eslint/blocks.ts",
+            "packages/cli/src/checks/language/javascript/rules-off.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The strict manifest uses required_eslint_rules and eslint_rules_off. Disable rows have rules/reason/files/when and no redundant tool field. Generation consumes the renamed rows; enforcement consumes required rules per extension. Fresh framework and language ESLint generation cases exercise conditional exceptions and required rules with defect/correction behavior: /tmp/gspot-setting-names-generation.log. The four TypeScript targets pass; no compatibility declarations remain.",
+            "Fresh command-expansion, workspace execution, required-ESLint enforcement and installation/inspection cases: 130 passed, 565 assertions, /tmp/gspot-setting-names-contracts.log."
+        ]
     },
     {
         "id": "areas/kits/151",

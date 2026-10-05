@@ -85,7 +85,7 @@ export type RawScope = z.infer<typeof scopeSchema>;
 
 export type StructureSettings = NonNullable<RawPolicy['structure']>;
 
-export type LimitTable = Record<string, Reasoned<number>>;
+export type LimitTable = Record<string, Reasoned<number | unknown[]>>;
 
 /** Root-relative path and selected configurations of an authored policy scope. */
 export type PolicyScope = { path: string; configurations: string[] };

@@ -147,7 +147,7 @@ export async function purgecss(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each ceiling passed
  */
 export async function siteSize(input: EngineInput): Promise<Finding[]> {
-    const limits = input.view.options('site')['sizes'] as SizeLimit[];
+    const limits = input.view.options('limits.site')['kilobytes'] as SizeLimit[];
     const build = await requireBuild(input);
     const files = filesUnder(build.output);
     return limits.flatMap((limit) => {

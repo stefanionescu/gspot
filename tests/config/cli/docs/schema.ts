@@ -5,6 +5,39 @@ export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['
 
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
+    {
+        name: 'custom Semgrep rule files',
+        input: { configurations: ['security'], semgrep: { rule_files: ['security/own.yml'] } },
+        valid: true,
+    },
+    {
+        name: 'a scoped Vitest configuration file',
+        input: { configurations: ['vitest'], scope: [{ path: 'app', vitest: { config_file: 'testing/config.mjs' } }] },
+        valid: true,
+    },
+    {
+        name: 'site kilobyte limits',
+        input: { configurations: ['site'], limits: { site: { kilobytes: [{ paths: ['**/*.html'], kb: 10 }] } } },
+        valid: true,
+    },
+    {
+        name: 'obsolete Semgrep configs',
+        input: { configurations: ['security'], tools: { semgrep: { configs: ['security/own.yml'] } } },
+        valid: false,
+        key: 'tools.semgrep.configs',
+    },
+    {
+        name: 'obsolete Vitest config',
+        input: { configurations: ['vitest'], tools: { vitest: { config: 'testing/config.mjs' } } },
+        valid: false,
+        key: 'tools.vitest.config',
+    },
+    {
+        name: 'obsolete site sizes',
+        input: { configurations: ['site'], site: { sizes: [{ paths: ['**/*.html'], kb: 10 }] } },
+        valid: false,
+        key: 'site.sizes',
+    },
     { name: 'finding code 2', input: { check: [{ ...SCHEMA_CHECK, exit_codes: [2] }] }, valid: true },
     {
         name: 'finding code 0',

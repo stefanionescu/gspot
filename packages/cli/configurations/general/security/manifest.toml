@@ -51,7 +51,7 @@ stage = "push"
 runs = "files"
 exit_codes = [1]
 platforms = ["macos", "linux"]
-command = ["semgrep", "scan", "--strict", "--config", "{root}/.gspot/config/{scope}/semgrep", "{each:--config:tools.semgrep.configs}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
+command = ["semgrep", "scan", "--strict", "--config", "{root}/.gspot/config/{scope}/semgrep", "{each:--config:semgrep.rule_files}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
@@ -108,7 +108,7 @@ default = []
 summary = "CodeQL results accepted as false positives: the rule id, the paths, and the reason."
 
 [[setting]]
-name = "tools.semgrep.configs"
+name = "semgrep.rule_files"
 type = "list"
 direction = "tightening"
 default = []
