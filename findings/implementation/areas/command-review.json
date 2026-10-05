@@ -832,10 +832,19 @@
         "section": "Findings",
         "finding": "| `output/reporter.ts:188-196`, `check/command.ts:102` | `progress()` writes failed-check lines to stdout even when stdout is not a terminal, and the final report then repeats them. `messages.ts:1` says run messages go to stderr. | Send progress to stderr. |",
         "owner": "`output/reporter.ts:188-196`, `check/command.ts:102`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/command.ts",
+            "packages/cli/src/output/reporter.ts",
+            "tests/cli/commands/check/verbosity.test.ts",
+            "tests/cli/output/progress.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Human check progress uses stderr. Stdout retains the final report, while JSON continues to disable progress. Existing terminal and quiet status selection remains in the reporter.",
+        "verification": [
+            "All five verbosity/order cases fail against the original stdout progress routing after assertions are scoped to the fixture progress lines. They pass with stderr routing, require no raw progress line in stdout, retain full JSON findings with empty JSON stderr, and verify a successful correction has no fixture progress on redirected stderr and preserves source bytes. The unrelated stale-setup warning is intentionally outside the progress assertion.",
+            "Affected check-command, reporter and pre-push regressions passed 56 cases and 330 assertions across nine files. Root TypeScript, affected ESLint and formatting passed.",
+            "Executable AST reconstruction proves that production changes only the progress stream argument. The existing test declaration and all ten original assertion subjects remain, with five additional assertion sites. Reporter unit cases still exercise interactive and redirected streams, quiet success suppression, failures and execution errors."
+        ]
     },
     {
         "id": "areas/commands/053",

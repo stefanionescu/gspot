@@ -29,6 +29,10 @@ test.each([...VERBOSITY_CASES])(
         await Bun.write(join(sandbox.path, 'source.txt'), 'after');
         const result = await runGspot(sandbox.path, [...flags, 'check', '--base', 'HEAD']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
+        expect(result.stderr.split('\n').filter((line) => line.startsWith('root  example/'))).toStrictEqual([
+            'root  example/findings  failed',
+        ]);
+        expect(result.stdout).not.toContain('root  example/findings  failed\n');
         expect(result.stdout.includes('example/passing')).toBe(verbosity !== 'quiet');
         expect(result.stdout.includes('Working tree compared')).toBe(verbosity !== 'quiet');
         expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(verbosity === 'verbose');
@@ -42,5 +46,10 @@ test.each([...VERBOSITY_CASES])(
         );
         expect(report.checks.find((check) => check.check === 'example/passing')?.status).toBe('passed');
         expect(json.stderr).toBe('');
+        await Bun.write(join(sandbox.path, 'findings.ts'), 'process.exitCode=0;');
+        const repaired = await runGspot(sandbox.path, [...flags, 'check', '--base', 'HEAD']);
+        expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
+        expect(repaired.stderr.split('\n').filter((line) => line.startsWith('root  example/'))).toStrictEqual([]);
+        expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('after');
     },
 );

@@ -144,7 +144,7 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
                 only: flags.only,
                 changed: flags.changed === true ? flags.base : undefined,
                 messageFile: flags.messageFile,
-                onResult: global.json === true ? undefined : progress(process.stdout, verbosity),
+                onResult: global.json === true ? undefined : progress(process.stderr, verbosity),
             }),
         };
         if (hook === 'pre-commit') {
