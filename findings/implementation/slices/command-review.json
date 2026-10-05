@@ -82,9 +82,13 @@
         "finding": "| `commands/init/prepare.ts:36` `chosenSelection` | Under `--json`, the kits question is skipped without a message. The hooks, CI, rules, runner, and \"Continue?\" questions are still asked, and clack draws them on stdout, inside the JSON output. | Treat `--json` like a run with no terminal: take the flags or `--yes`, and refuse otherwise. Delete the `options.json` test. |",
         "owner": "`commands/init/prepare.ts:36` `chosenSelection`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "registerInit refuses JSON without --yes before finding or reading the project. Existing public invalid-package input control checks exit 2, a parseable prompt error naming --yes, no package diagnostic, and exact tree preservation. Accepted public JSON plans remain parseable and contain no prompt output.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/006",
@@ -94,9 +98,13 @@
         "finding": "| `commands/init/selection.ts:47` `getCandidate` | A `proposed` kit is selected from detection only under `--yes`. For example, `licenses` is detected from `package.json`. So `gspot init --dry-run` and the interactive preselection show one kit list, and `gspot init --yes` writes a longer one. The `--yes` help says only \"Accept the plan without asking\". | Make the selection independent of `--yes`: never preselect proposed kits, or always preselect them. If the difference must stay, state it in the `--yes` help. |",
         "owner": "`commands/init/selection.ts:47` `getCandidate`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "getCandidate depends on manifest availability and Git, never yes. New public human previews with and without --yes select detected licenses and produce identical plan text. The entire repository tree remains unchanged.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/007",
@@ -106,9 +114,13 @@
         "finding": "| `commands/init/selection.ts:38`, `init/detection.ts:15` `scopesRow` | A scope named only by `--scope` gets the source `'gspot.toml'`, so init prints \"from gspot.toml\". No gspot.toml exists yet: init refuses to run when one does. | Add a `'flag'` source, and print \"from --scope\". |",
         "owner": "`commands/init/selection.ts:38`, `init/detection.ts:15` `scopesRow`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Flag-created scopes carry source flag. detectionText reports from --scope-configurations, the actual public option name. New public preview asserts the scope line, absence of from gspot.toml, and exact tree preservation without a policy.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/008",
@@ -118,9 +130,13 @@
         "finding": "| `commands/init/plan/build.ts:164, 167` `buildInitPlan` | The plan always lists the `.gitignore` block, and it lists `HOOKS_ROW` whenever the hooks answer is yes. Outside Git, `blockOutputs` (`generation/outputs.ts:74`) writes no `.gitignore` block, and `installHooks` (`lifecycle/hooks-path.ts:49`) installs nothing. So the plan shows writes that never happen. | Build both rows only when `repo.hasGit` is true. |",
         "owner": "`commands/init/plan/build.ts:164, 167` `buildInitPlan`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Planning now receives repo.hasGit from the existing repository read. buildInitPlan gates both gitignore and hook installation rows on that value, retaining row order in Git. Actual no-Git and Git public previews preserve every path/byte/mode including Git state; actual initialization writes gitignore only in Git. Existing hook policy and generated attributes are preserved. The no-Git regression failed against the original implementation before the fix (/tmp/gspot-init-plan-before-tests.log).",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/009",
@@ -130,9 +146,13 @@
         "finding": "| `commands/init/write.ts:85` `write` | Init writes the `.gitignore` block itself, and then `writeOutputs` writes the same block again through `blockOutputs` (`generation/outputs.ts:74`). | If the early write is there so that `openSession` reads the tree with the new ignores, add a comment that says so. Otherwise delete it. |",
         "owner": "`commands/init/write.ts:85` `write`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "writeSetup has no early gitignore write: writeOutputs remains the sole output publication owner. Reviewed originals are passed to ownership publication, and public initialization plus replacement/preservation controls pass. No second implementation or compatibility layer was added.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/010",
@@ -159,9 +179,13 @@
         "finding": "| `commands/prompts.ts:26, 53`, `init/command.ts:71` | `askConfirmation('Continue?', '--yes', ...)` produces \"Continue? There is no terminal to ask in. Pass --yes, or --yes to take every plan.\" The flag appears twice, and \"take every plan\" is jargon. | Rewrite as \"Pass {flag}, or --yes to accept every default.\" When the flag is `--yes`, say \"Pass --yes to accept the plan.\" |",
         "owner": "`commands/prompts.ts:26, 53`, `init/command.ts:71`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "requireTerminal has a distinct --yes instruction. New public nonterminal initialization asserts the exact single --yes diagnostic and unchanged tree, then retries with --yes and proves the policy is written while source bytes remain intact.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/012",
@@ -171,9 +195,13 @@
         "finding": "| `commands/prompts.ts:74-84` `askChoices` `useDefaults` | Dead parameter. The only caller, `askKits` (`questions.ts:72, 83`), returns early when `options.yes` is true, so it always passes `false`. | Delete the parameter, and keep only the no-terminal branch. |",
         "owner": "`commands/prompts.ts:74-84` `askChoices` `useDefaults`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "askChoices has only question, flag, choices and initial; its dead useDefaults argument is absent. askConfigurations handles options.yes before invoking it. Shared option mapping is retained, and actual human default preview and accepted JSON selection regressions pass.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/013",
@@ -572,9 +600,13 @@
         "finding": "| `commands/init/write.ts:94-97` | The note \"retained X: directory contents or subsequent edits are not authorized for deletion\" is passive and abstract. | Rewrite as \"kept X: it is a folder, or it changed after init read it\". |",
         "owner": "`commands/init/write.ts:94-97`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "writeSetup reports kept <path>: it is a folder, or it changed after init read it. The abstract deletion-authorization sentence is absent. Existing actual retained shared configuration, linked target and subsequent edit controls pass.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/039",
@@ -596,9 +628,13 @@
         "finding": "| `commands/init/write.ts:74` `write` | The name `write` says nothing about what is written. `options` is used only for `options.install`. | Rename it to `writeSetup`, and pass the `install` value instead of the whole options object. |",
         "owner": "`commands/init/write.ts:74` `write`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "writeSetup owns initialization publication and accepts Pick<InitOptions, install>; the sole public caller passes only { install: options.install }. The named options shape follows repository guidance against positional booleans. InitPrepared and installation orchestration remain substantive and verified.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "slices/commands/041",
@@ -841,8 +877,12 @@
         "finding": "| `init/questions.ts:11-18` `RUNNER_CHOICES` | The runner choices are defined in this file. The hook and CI choices live in `config/commands/init.ts`. | Keep all three lists in one place. |",
         "owner": "`init/questions.ts:11-18` `RUNNER_CHOICES`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "RUNNER_CHOICES and CI_CHOICES have one static owner in config/commands/init.ts. Questions imports both. Hook choices were eliminated in favor of boolean confirmation as required by the more specific review; configuration/type directories remain per the user instruction.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     }
 ]

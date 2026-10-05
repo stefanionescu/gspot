@@ -28,9 +28,13 @@
         "finding": "| `commands/init/questions.ts:44-46` (`askCi`) | Bug. If the repository has any lint job, an explicit `--ci github` or `--ci gitlab` is ignored without a message. | Check `options.ci` first, or refuse the flag and name the lint job that blocks it. |",
         "owner": "`commands/init/questions.ts:44-46` (`askCi`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "askQuestions reads options.ci before existing lint jobs. New public CI cases preview both explicit providers against authored GitHub and GitLab lint jobs, assert the provider and exact proposed/retained rows, and preserve the entire tree including Git state and authored bytes.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/003",
@@ -260,9 +264,13 @@
         "finding": "| `commands/prompts.ts` | Only `init/command.ts` and `init/questions.ts` use it. `askConfirmation` and `askChoice` repeat the same \"no terminal\" and \"cancelled\" errors. `askChoice` and `askChoices` repeat the same mapping into clack options. | Move into `init/questions.ts`. Share one `requireTerminal()` and one `toOptions()`. |",
         "owner": "`commands/prompts.ts`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The obsolete command prompts module is absent. Initialization questions owns prompt orchestration. requireTerminal is shared by confirmation and single selection; toOptions is shared by single and multiple selection. Multiple selection retains its distinct nonterminal default-and-note behavior. Required callbacks and real shared calculations remain.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/016",
@@ -272,9 +280,13 @@
         "finding": "| `init/command.ts:21-24`, `init/questions.ts:39-53`, `types/commands/init.ts:43-45, 77-82, 116-118` | The rules answer goes from a boolean flag to `'yes'` or `'no'` (`ruleAnswer`), back to a boolean (`askRules`), then to `isRules`, then to `rules`. The hooks question is a yes/no question, but it is asked as a choice between `'gspot'` and `'none'`. | Make `InitOptions.rules` and `InitOptions.hooks` booleans and ask both with `askConfirmation`. Delete `ruleAnswer` and `HOOK_CHOICES`. Rename `isRules` to `rules`. |",
         "owner": "`init/command.ts:21-24`, `init/questions.ts:39-53`, `types/commands/init.ts:43-45, 77-82, 116-118`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "InitOptions and InitAnswers keep hooks and rules as booleans. Both questions call askConfirmation. ruleAnswer, isRules and HOOK_CHOICES are absent; actual initialization flags and template integration defaults pass their existing regression controls.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/017",
@@ -284,9 +296,13 @@
         "finding": "| `types/commands/init.ts:88`, `init/prepare.ts:109` | Dead field: `InitPrepared.runner` is written and never read. | Delete it. |",
         "owner": "`types/commands/init.ts:88`, `init/prepare.ts:109`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "InitPrepared has only plan, policyText, removed and read. prepare constructs exactly those fields. The unused runner field is absent; runner remains only in actual answers, policy and selection consumers.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/018",
@@ -327,9 +343,13 @@
         "finding": "| `commands/init/plan/` | A subfolder holds two files for one concept. The header of `text.ts:1` mentions an \"upgrade\" plan, but no upgrade command exists. | Merge into `init/plan.ts` (about 220 lines) and fix the header. |",
         "owner": "`commands/init/plan/`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "One commands/init/plan.ts owns plan construction and text; the obsolete plan subfolder is absent. Its header names initialization and dry runs. Existing and new public preview/template/selection controls verify its output.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/020",
@@ -339,9 +359,13 @@
         "finding": "| `init/selection.ts:148-155` (`closure`) | Loops over ids and calls `selectKits([id])` once per id, though `selectKits` takes a list. | Use `new Set(selectKits([...ids], manifests).map((m) => m.kit.name))` and delete `closure`. |",
         "owner": "`init/selection.ts:148-155` (`closure`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "lifecycle/selection.ts passes the complete root and scope ID list once to selectConfigurations and builds selectedIds from its returned manifests. The redundant closure owner is absent. Public recommended-language, explicit configuration, dependency, workspace and multi-scope controls pass.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/021",
@@ -413,9 +437,13 @@
         "finding": "| `init/write.ts:36, 53`, `ownership/plans.ts:130, 215`, `ReplacePlan`, `ReplaceRemovalResult` | Leftover \"replace\" wording from the takeover days. Users see \"No replace read exists\" and \"Configuration changed after replace was planned\", but no replace command exists. | Say \"changed after init read it\". Rename the types as in the plan-naming row. |",
         "owner": "`init/write.ts:36, 53`, `ownership/plans.ts:130, 215`, `ReplacePlan`, `ReplaceRemovalResult`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "writeSetup names input changes after init read them and missing original reads with actionable Run gspot init again guidance. Shared ownership replacement/retirement planners correctly say gspot read it because they serve other commands too. ReplacementRequest and RetirementResult replace the obsolete type names. Actual changed/vanished takeover input and stale ownership batch controls refuse publication and preserve state.",
+            "/tmp/gspot-init-plan-affected-tests.log: 139 passed, 0 failed, 736 assertions across 20 files. Actual public initialization runs, template plans, generated hooks, hook integration, selection and ownership preservation/recovery passed.",
+            "/tmp/gspot-init-plan-final-types.log: root TypeScript passed; /tmp/gspot-init-plan-final-lint.log and /tmp/gspot-init-plan-selection-lint.log: affected source, test and configuration lint passed; /tmp/gspot-init-plan-final-format.log: formatting passed."
+        ]
     },
     {
         "id": "areas/commands/025",

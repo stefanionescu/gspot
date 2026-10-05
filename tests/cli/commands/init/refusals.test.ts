@@ -10,7 +10,7 @@ import { readTree } from '#tests/harness/preservation.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { QUIET, PREVIEW } from '#tests/config/cli/commands/init/refusals.ts';
+import { QUIET, PREVIEW, GIT_PLAN_CASES } from '#tests/config/cli/commands/init/refusals.ts';
 
 test('a preview writes nothing and prints parseable JSON', async () => {
     await using sandbox = await testdir();
@@ -145,4 +145,42 @@ test('JSON initialization without --yes reports the argument before reading inva
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'prompt', message: textContaining('--yes') });
     expect(result.stdout).not.toContain('package.json');
     expect(readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test.each(GIT_PLAN_CASES)('initialization in $name previews only applicable Git changes', async ({ hasGit }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
+    if (hasGit) commitAll(sandbox.path);
+    const argv = ['init', '--yes', '--configurations', 'none', ...QUIET, '--json'];
+    const before = readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, [...argv, '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stderr).toBe('');
+    const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
+    const changes = report.plan.change.map((entry) => entry.path);
+    expect(changes.includes('.gitignore')).toBe(hasGit);
+    expect(changes.includes('.gspot/hooks')).toBe(hasGit);
+    expect(changes).toContain('.gitattributes');
+    expect(parseStrictPolicy(report.policy).hooks).toBeDefined();
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const initialized = await runGspot(sandbox.path, argv);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(hasGit);
+    expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
+    expect(await Bun.file(join(sandbox.path, 'control.txt')).text()).toBe('preserve this source\n');
+});
+
+test('initialization without a terminal names --yes once and writes only after explicit acceptance', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
+    const argv = ['init', '--configurations', 'none', '--no-hooks', ...QUIET];
+    const before = readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, argv);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toBe('Continue? There is no terminal to ask in. Pass --yes to accept the plan.\n');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+    const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
+    expect(await Bun.file(join(sandbox.path, 'control.txt')).text()).toBe('preserve this source\n');
 });

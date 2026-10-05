@@ -15,6 +15,7 @@ export type Choice<T extends string> = { value: T; label: string; hint?: string 
 
 export type Planning = {
     root: string;
+    hasGit: boolean;
     options: InitOptions;
     tooling: Tooling;
     selection: InitSelection;

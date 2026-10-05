@@ -1,5 +1,6 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/output/messages.ts';
+import { compact } from '#cli/platform/objects.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
@@ -125,22 +126,27 @@ export function buildInitPlan(
     policyText: string,
     requirements: Manifest[],
 ): InitPlan {
-    const { root, tooling, everySelected, selection, answers, replaced, options } = planning;
-    const template =
-        options.template === undefined
-            ? undefined
-            : {
-                  name: options.template.tables.template,
-                  digest: options.template.digest,
-                  selection: options.template.tables.selection,
-                  detected: selection.detected
-                      .map((evidence) => evidence.configuration)
-                      .filter((id) => !selection.selectedIds.has(id)),
-              };
+    const { root, hasGit, tooling, everySelected, selection, answers, replaced, options } = planning;
+    const template = options.template && {
+        name: options.template.tables.template,
+        digest: options.template.digest,
+        selection: options.template.tables.selection,
+        detected: selection.detected
+            .map((evidence) => evidence.configuration)
+            .filter((id) => !selection.selectedIds.has(id)),
+    };
     const agents = policy.agentRules.enabled ? [...new Set(['AGENTS.md', ...policy.agentRules.instruction_files])] : [];
     const submodules = getSubmodulePaths(readIndexEntries(root));
+    const change = [
+        { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
+        ...runnerRows(answers, requirements),
+    ];
+    if (hasGit) {
+        change.unshift({ path: '.gitignore', note: 'one managed block' });
+        if (answers.hooks) change.push(HOOKS_ROW);
+    }
     return {
-        ...(template ? { template } : {}),
+        ...compact({ template }),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
         configurations: everySelected.map((manifest) => ({
             configuration: manifest.configuration.name,
@@ -170,12 +176,7 @@ export function buildInitPlan(
             ...submodules.map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...retainedCiRows(answers.ci, tooling.ci, getLintJobs(root, tooling.ci)),
         ],
-        change: [
-            { path: '.gitignore', note: 'one managed block' },
-            { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
-            ...runnerRows(answers, requirements),
-            ...(answers.hooks ? [HOOKS_ROW] : []),
-        ],
+        change,
         noLongerRuns: noLongerRuns(tooling, duplicateMisePins(root, requirements, answers.runner)),
     };
 }

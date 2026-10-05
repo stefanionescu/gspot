@@ -14,6 +14,47 @@ import { parseToolProject } from '#cli/parsers/packages.ts';
 import type { RawPolicy } from '#cli/types/policy/settings.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
+test('accepting defaults leaves the detected initialization plan unchanged', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"name":"example","private":true,"type":"module"}\n',
+        'source.js': 'export const port = 8080;\n',
+    });
+    commitAll(sandbox.path);
+    const before = readTree(sandbox.path);
+    const argv = ['init', '--dry-run', ...QUIET_INIT];
+    const selected = await runGspot(sandbox.path, argv);
+    const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
+    for (const result of [selected, accepted]) {
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout).toContain('\nconfigurations\n');
+        expect(result.stdout).toMatch(/^ {2}licenses\s+detected\s/mu);
+    }
+    expect(selected.stdout.slice(selected.stdout.indexOf('\nconfigurations\n'))).toBe(
+        accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
+    );
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('initialization identifies a scope flag without attributing it to an absent policy', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'jobs/run.sh': 'echo example\n' });
+    commitAll(sandbox.path);
+    const before = readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, [
+        'init',
+        '--yes',
+        '--dry-run',
+        '--scope-configurations',
+        'jobs=bash',
+        ...QUIET_INIT,
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toMatch(/^scopes\s+jobs\s+from --scope-configurations$/mu);
+    expect(result.stdout).not.toContain('from gspot.toml');
+    expect(readTree(sandbox.path)).toStrictEqual(before);
+});
+
 async function selected(root: string): Promise<string[]> {
     const result = await runGspot(root, [...SELECTION_INIT, ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);

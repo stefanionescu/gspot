@@ -93,7 +93,16 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
-    const planning: Planning = { root, options, tooling, selection, everySelected, answers, replaced };
+    const planning: Planning = {
+        root,
+        hasGit: repo.hasGit,
+        options,
+        tooling,
+        selection,
+        everySelected,
+        answers,
+        replaced,
+    };
     const draft = draftPolicy(selection, answers);
     const templateTables = options.template?.tables as TomlTable | undefined;
     const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
