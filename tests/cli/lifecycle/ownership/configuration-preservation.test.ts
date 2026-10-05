@@ -9,6 +9,7 @@ import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { proposeBlock, proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
+import { MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
     await using directory = await testdir();
@@ -24,7 +25,7 @@ test('managed block updates and removal preserve authored bytes and subsequent s
         writeFileSync(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
         expect(applyPlan(log, proposeBlock(log, 'AGENTS.md', 'updated instructions', 'markdown'))).toBe('changed');
         expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
-            prefix + applyBlock(original, 'updated instructions', 'markdown') + suffix,
+            prefix + applyBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) + suffix,
         );
         log[Symbol.dispose]();
         log = openOwnership(directory.path);
@@ -175,7 +176,10 @@ test('adopting identical authored configuration restores its bytes and permissio
 
 test('identical unrecorded blocks and configuration fields survive adoption, later edits, and restoration', async () => {
     await using directory = await testdir();
-    const instructions = applyBlock('Authored instructions.\n', 'existing instructions', 'markdown');
+    const instructions = applyBlock('Authored instructions.\n', 'existing instructions', {
+        path: 'AGENTS.md',
+        style: 'markdown',
+    });
     const configuration = 'authored = true\n[scripts]\ncheck = "gspot check"\n';
     await createFileTree(directory.path, { 'AGENTS.md': instructions, 'package.toml': configuration });
     {
@@ -238,4 +242,49 @@ test('shared TOML removes created empty parents and preserves authored empty par
     } finally {
         log[Symbol.dispose]();
     }
+});
+
+test.each(MALFORMED_BLOCKS)(
+    'ownership refuses malformed $path without changing authored bytes or records: $source',
+    async ({ path, style, source }) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { [path]: source });
+        using log = openOwnership(directory.path);
+        const records = structuredClone(log.state);
+        expect(() => proposeBlock(log, path, 'replacement', style)).toThrow(
+            `${path} has incomplete or repeated gspot block markers.`,
+        );
+        expect(readFileSync(join(directory.path, path), 'utf8')).toBe(source);
+        expect(log.state).toStrictEqual(records);
+    },
+);
+
+test('restoration names malformed files and preserves their bytes and ownership records', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'AGENTS.md': 'Authored instructions.\n',
+        'bunfig.toml': '[install]\nexact = true\n',
+    });
+    using log = openOwnership(directory.path);
+    applyPlans(log, [
+        proposeBlock(log, 'AGENTS.md', 'instructions', 'markdown'),
+        proposeMerge(log, 'bunfig.toml', [{ path: ['install', 'minimumReleaseAge'], value: 604_800 }], true),
+    ]);
+    const records = structuredClone(log.state);
+    const instructions = log.files
+        .read('AGENTS.md')!
+        .bytes.toString('utf8')
+        .replace('<!-- <<< gspot managed <<< -->', '');
+    const toml = '[install\n';
+    writeFileSync(join(directory.path, 'AGENTS.md'), instructions);
+    writeFileSync(join(directory.path, 'bunfig.toml'), toml);
+    expect(() => proposeRestoration(log, 'AGENTS.md')).toThrow(
+        'AGENTS.md has incomplete or repeated gspot block markers.',
+    );
+    expect(() => proposeRestoration(log, 'bunfig.toml')).toThrow(
+        'bunfig.toml is not valid TOML. Fix the file, then run gspot apply.',
+    );
+    expect(readFileSync(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(instructions);
+    expect(readFileSync(join(directory.path, 'bunfig.toml'), 'utf8')).toBe(toml);
+    expect(log.state).toStrictEqual(records);
 });

@@ -26,9 +26,14 @@ test('agent instructions reach AGENTS.md and configured files, and other agent f
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), 'markdown');
+    const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), {
+        path: 'AGENTS.md',
+        style: 'markdown',
+    });
     expect(instructions).toContain('agent/WORKING.md');
-    expect(currentBlock(readFileSync(join(sandbox.path, 'TEAM.md'), 'utf8'), 'markdown')).toBe(instructions);
+    expect(
+        currentBlock(readFileSync(join(sandbox.path, 'TEAM.md'), 'utf8'), { path: 'TEAM.md', style: 'markdown' }),
+    ).toBe(instructions);
     expect(readFileSync(gemini, 'utf8')).toBe(original);
     expect(statSync(gemini).mode).toBe(mode);
     expect(readFileSync(join(sandbox.path, '.github/copilot-instructions.md'), 'utf8')).toBe(
@@ -68,7 +73,7 @@ test('init deletes CLAUDE.md and moves its text to the end of AGENTS.md', async 
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
     const agents = readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    expect(currentBlock(agents, 'markdown')).toContain('WORKING.md');
+    expect(currentBlock(agents, { path: 'AGENTS.md', style: 'markdown' })).toContain('WORKING.md');
     expect(agents).toEndWith('<<< -->\n\n## Other instructions\n\n# Claude notes\n\nRun the tests.\n');
     expect(readFileSync(join(sandbox.path, 'GEMINI.md'), 'utf8')).toBe('# Keep this\n');
 });

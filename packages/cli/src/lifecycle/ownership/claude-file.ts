@@ -11,7 +11,7 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 function authoredText(file: Snapshot): string {
     if (file.isLink === true) return '';
     const text = file.bytes.toString('utf8');
-    const span = blockSpan(text, 'markdown');
+    const span = blockSpan(text, { path: 'CLAUDE.md', style: 'markdown' });
     return (span === undefined ? text : text.slice(0, span.start) + text.slice(span.end)).trim();
 }
 

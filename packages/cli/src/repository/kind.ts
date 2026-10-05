@@ -74,7 +74,7 @@ function classifyToolFile(path: string, prefix: Buffer): Verdict | undefined {
 function sourceKind(root: string, entry: RawEntry, prefix: Buffer): Verdict {
     if (entry.symlink || !entry.path.endsWith('.md') || !prefix.includes(MANAGED_BLOCK_START)) return SOURCE_KIND;
     const text = readSource(root, entry.path).toString('utf8');
-    const span = blockSpan(text, 'markdown');
+    const span = blockSpan(text, { path: entry.path, style: 'markdown' });
     if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
     return { kind: 'generated', source: 'gspot' };
 }

@@ -54,10 +54,10 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     );
     const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
-    const content = applyBlock(authored, block, 'hash');
+    const content = applyBlock(authored, block, { path: '.gitignore', style: 'hash' });
     await createFileTree(repository.path, { '.gitignore': content });
     expect(content.startsWith(authored)).toBe(true);
-    expect(applyBlock(content, block, 'hash')).toBe(content);
+    expect(applyBlock(content, block, { path: '.gitignore', style: 'hash' })).toBe(content);
     expect(content.match(/\.gspot\/local\/downloads\//gu)).toHaveLength(1);
     const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
     expect(initialized.code, initialized.stderr).toBe(0);

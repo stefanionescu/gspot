@@ -38,3 +38,23 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     log[Symbol.dispose]();
     expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
 });
+
+test.each(['', 'apps/api/'])(
+    'Bun generation names malformed %sbunfig.toml and preserves authored bytes',
+    async (prefix) => {
+        await using repository = await testdir();
+        const source = '[install\n';
+        const path = `${prefix}bunfig.toml`;
+        await createFileTree(repository.path, {
+            'gspot.toml': buildPolicy(['dependencies'], {
+                tables: '[agent_rules]\nenabled = false\n[[scope]]\npath = "apps/api"\nconfigurations = ["dependencies"]\n',
+            }),
+            [`${prefix}bun.lock`]: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+            [path]: source,
+            'apps/api/source.js': 'export const value = 1;\n',
+        });
+        const session = await openSession(repository.path);
+        expect(() => emitAll(session)).toThrow(`${path} is not valid TOML. Fix the file, then run gspot apply.`);
+        expect(readFileSync(join(repository.path, path), 'utf8')).toBe(source);
+    },
+);

@@ -1,6 +1,6 @@
-import { parse as parseToml } from 'smol-toml';
 import { readText } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation/bunfig.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
@@ -20,7 +20,7 @@ export function bunfigChanges(root: string, scopes: ScopeSelection[]): Configura
     return selected.map(({ selection, prefix }) => {
         const path = `${prefix}bunfig.toml`;
         const source = readText(root, path);
-        const document = source === undefined ? {} : parseToml(source);
+        const document = source === undefined ? {} : parseTomlFile({ path, source });
         const install = document['install'] as Record<string, unknown> | undefined;
         const { settings } = selection.view;
         const required = Number(settings['dependencies.min_release_age_days']) * SECONDS_PER_DAY;

@@ -736,10 +736,17 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/eslint/configuration.ts:77, 139-145` `boundaryBlocks`, `eslintSettings` | `boundaryBlocks` ignores test files with the hard-coded globs `**/*.test.*` and `**/*.spec.*`. The `tests` setting names the test files, and `eslintSettings` reads it. The `eslintSettings` comment says its values come from `[tools.eslint]`, but `tests` does not. | Pass the `tests` setting to `boundaryBlocks`. Fix the comment. |",
         "owner": "`generation/eslint/configuration.ts:77, 139-145` `boundaryBlocks`, `eslintSettings`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "tests/cli/generation/import-boundaries.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Architecture blocks use each selection view’s effective tests list, prefixed by its scope. The eslintSettings comment names the effective settings and selected defaults.",
+            "Native Node ESLint verifies eight files across root and nested architecture categories: authored tests and inherited defaults are exempt; production imports fail; a nested authored exclusion does not exempt the corresponding root file. Existing alias and cross-project regression assertions pass unchanged.",
+            "Combined affected checkpoint: 191 other CLI cases passed in /tmp/gspot-authored-batch-tests.log; corrected native architecture cases both pass (13 assertions) in /tmp/gspot-authored-batch-boundaries.log. Root TypeScript and affected ESLint checks pass in /tmp/gspot-authored-batch-types.log and /tmp/gspot-authored-batch-imports.json."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/039",
@@ -1051,10 +1058,19 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/markers.ts:32` `blockSpan`, `lifecycle/merge/document.ts:15, 56, 66`, `generation/bunfig.ts:23` | These errors name no file, and no caller adds the path. A user sees \"Managed block markers are incomplete or repeated\" or \"Shared configuration must be a valid JSON object.\" and has to guess which file. A broken `bunfig.toml` surfaces as a raw smol-toml error. \"Shared configuration\" is internal wording. | Pass the path in and name it, for example \"AGENTS.md has a broken or repeated gspot block marker. Fix the markers, then run gspot apply.\" |",
         "owner": "`generation/markers.ts:32` `blockSpan`, `lifecycle/merge/document.ts:15, 56, 66`, `generation/bunfig.ts:23`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/managed-blocks.ts",
+            "packages/cli/src/parsers/toml/document.ts",
+            "packages/cli/src/generation/bunfig.ts",
+            "packages/cli/src/lifecycle/ownership/restoration.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every block operation receives the actual file path. TOML parsing is shared by generation and lifecycle document editing, names the file, gives an apply repair action, and preserves the native parser cause. Scalar/table conflicts and preservation errors name the file. Removed JSON/YAML merge paths remain absent.",
+            "Root and scoped malformed bunfig generation, malformed shared TOML inspection, scalar/table conflicts, ownership and restoration failures preserve authored bytes and records.",
+            "Combined affected checkpoint: 191 other CLI cases passed in /tmp/gspot-authored-batch-tests.log; corrected native architecture cases both pass (13 assertions) in /tmp/gspot-authored-batch-boundaries.log. Root TypeScript and affected ESLint checks pass in /tmp/gspot-authored-batch-types.log and /tmp/gspot-authored-batch-imports.json."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/057",

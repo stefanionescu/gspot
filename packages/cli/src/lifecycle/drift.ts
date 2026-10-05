@@ -61,7 +61,7 @@ function blockDrift(root: string, generated: Generated): Drift[] {
     using files = openRoot(root);
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
-        const current = currentBlock(text, block.style);
+        const current = currentBlock(text, { path: block.path, style: block.style });
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
         else if (current !== wanted)

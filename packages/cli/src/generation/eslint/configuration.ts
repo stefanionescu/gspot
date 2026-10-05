@@ -71,8 +71,8 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
 // One boundaries block for each scope whose own architecture table declares elements. Element paths are relative to
 // the scope that names them, so a nested scope never takes the elements of the root.
 function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[] {
-    const paths = ['', ...scopes.map((entry) => entry.scope.path).filter((path) => path !== '')];
-    return paths.flatMap((path): EslintBlock[] => {
+    return scopes.flatMap(({ scope, view }): EslintBlock[] => {
+        const { path } = scope;
         const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
         if (table === undefined || table.modules.length === 0) return [];
         const prefix = path === '' ? '' : `${path}/`;
@@ -88,7 +88,10 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
         return [
             {
                 files: [`${prefix}${ESLINT_CODE_FILES}`],
-                settings: { 'boundaries/files': categories, 'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'] },
+                settings: {
+                    'boundaries/files': categories,
+                    'boundaries/ignore': (view.settings['tests'] as string[]).map((pattern) => `${prefix}${pattern}`),
+                },
                 rules: { 'boundaries/dependencies': ['error', { default: 'disallow', policies }] },
             },
         ];

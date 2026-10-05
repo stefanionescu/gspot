@@ -144,7 +144,7 @@ export function planMerge(request: MergeRequest): MergePlan | undefined {
     const { changes, current, existing } = request;
     const text = current === undefined ? '' : decodeUtf8(current.bytes);
     if (text === undefined) throw new Error(`${request.path} is not UTF-8 text`);
-    const document = openTomlDocument(text);
+    const document = openTomlDocument({ path: request.path, source: text });
     if (hasUnrecordedEdits(request)) return undefined;
     const requested = fieldsSchema.parse(
         changes.map((change) => ({ path: change.path, installed: z.json().parse(change.value) })),

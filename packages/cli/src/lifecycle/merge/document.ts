@@ -15,6 +15,6 @@ export function hasFields(root: string, output: ConfigurationOutput): boolean {
     using files = openRoot(root);
     const current = files.read(output.path);
     if (current === undefined) return false;
-    const document = openTomlDocument(current.bytes.toString('utf8'));
+    const document = openTomlDocument({ path: output.path, source: current.bytes.toString('utf8') });
     return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), field.value));
 }

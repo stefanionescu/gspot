@@ -106,7 +106,9 @@ test('malformed shared TOML fails inspection without changing authored bytes', a
     await using sandbox = await testdir();
     const source = '[tasks\n';
     await createFileTree(sandbox.path, { 'mise.toml': source });
-    expect(() => hasFields(sandbox.path, { path: 'mise.toml', changes: [] })).toThrow('Invalid TOML document:');
+    expect(() => hasFields(sandbox.path, { path: 'mise.toml', changes: [] })).toThrow(
+        'mise.toml is not valid TOML. Fix the file, then run gspot apply.',
+    );
     expect(readFileSync(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(source);
 });
 

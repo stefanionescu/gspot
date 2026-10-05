@@ -798,10 +798,18 @@
         "section": "Findings",
         "finding": "| `generation/markers.ts` | Only lifecycle files import it (`drift.ts`, `claude-file.ts`, `plans.ts`, `restoration.ts`). `currentBlock` (64-70) parses the markers again without the checks that `blockSpan` makes. | Move it to `lifecycle/managed-block.ts` and build `currentBlock` on `blockSpan`. |",
         "owner": "`generation/markers.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/platform/managed-blocks.ts",
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/lifecycle/drift.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "currentBlock uses blockSpan for the same incomplete, reversed, and repeated-marker refusals as writes. Platform ownership is retained because repository/kind is a real consumer outside lifecycle.",
+            "Ten malformed marker layouts across Markdown and hash styles exercise read, span, apply, and ownership planning. LF/CRLF cases preserve authored surrounding text. Malformed restoration leaves file bytes and ownership records unchanged.",
+            "Combined affected checkpoint: 191 other CLI cases passed in /tmp/gspot-authored-batch-tests.log; corrected native architecture cases both pass (13 assertions) in /tmp/gspot-authored-batch-boundaries.log. Root TypeScript and affected ESLint checks pass in /tmp/gspot-authored-batch-types.log and /tmp/gspot-authored-batch-imports.json."
+        ]
     },
     {
         "id": "areas/commands/041",

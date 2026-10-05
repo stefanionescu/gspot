@@ -240,8 +240,14 @@ export default [
         }
     ],
     "boundaries/ignore": [
+        "**/test/**",
+        "**/tests/**",
+        "**/__tests__/**",
         "**/*.test.*",
-        "**/*.spec.*"
+        "**/*.spec.*",
+        "**/test_*.py",
+        "**/*_test.py",
+        "**/conftest.py"
     ]
 }, "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["commands","checks","output","execution","lifecycle","generation","tools","policy","rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"output"}},"allow":{"to":{"file":{"categories":{"anyOf":["output","execution","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["rules","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}},{"from":{"file":{"categories":"tool-output"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","parsers","execution","repository","platform"]}}}}}]}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"]},
 

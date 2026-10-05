@@ -9,7 +9,7 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import { isMatch, identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
-import type { BlockSpan, BlockStyle } from '#cli/types/platform/managed-blocks.ts';
+import type { BlockSpan, BlockStyle, BlockContext } from '#cli/types/platform/managed-blocks.ts';
 
 import type {
     Log,
@@ -64,13 +64,13 @@ function planUpdate(
     text: string,
     span: BlockSpan | undefined,
     recorded: OwnedBlock,
-    style: BlockStyle,
+    context: BlockContext,
     body: string,
 ): PlannedBlock | undefined {
-    if (recorded.style !== style || span === undefined) return undefined;
+    if (recorded.style !== context.style || span === undefined) return undefined;
     const start = recordedBlockStart(text, span, recorded);
     if (start === undefined) return undefined;
-    const installed = recorded.prefix + applyBlock('', body, style);
+    const installed = recorded.prefix + applyBlock('', body, context);
     return { nextText: text.slice(0, start) + installed + text.slice(span.end), block: { ...recorded, installed } };
 }
 
@@ -79,15 +79,15 @@ function planInsert(
     text: string,
     current: Snapshot | undefined,
     span: BlockSpan | undefined,
-    style: BlockStyle,
+    context: BlockContext,
     body: string,
 ): PlannedBlock {
-    const nextText = applyBlock(text, body, style);
+    const nextText = applyBlock(text, body, context);
     let prefix = '';
     if (span === undefined && text !== '') prefix = text.endsWith('\n') ? '\n' : '\n\n';
     const original = span === undefined ? '' : text.slice(span.start, span.end);
-    const installed = prefix + applyBlock('', body, style);
-    return { nextText, block: { style, installed, original, prefix, created: current === undefined } };
+    const installed = prefix + applyBlock('', body, context);
+    return { nextText, block: { style: context.style, installed, original, prefix, created: current === undefined } };
 }
 
 // The plan a planned block yields: unchanged when the bytes already stand, otherwise the new record.
@@ -152,15 +152,16 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
     const current = log.files.read(path);
     const text = current === undefined ? '' : decodeUtf8(current.bytes);
     if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
-    const span = blockSpan(text, style);
+    const context = { path, style };
+    const span = blockSpan(text, context);
     const recorded = existing?.block;
     if (recorded !== undefined && current !== undefined) {
-        const planned = planUpdate(text, span, recorded, style, body);
+        const planned = planUpdate(text, span, recorded, context, body);
         if (planned === undefined) return { path, before: current, previous: existing, status: 'preserved' };
         return planBlock(path, current, existing, planned);
     }
     if (isEdited(existing, current)) return { path, before: current, previous: existing, status: 'preserved' };
-    return planBlock(path, current, existing, planInsert(text, current, span, style, body));
+    return planBlock(path, current, existing, planInsert(text, current, span, context, body));
 }
 
 /**

@@ -3,6 +3,14 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
+import type { BoundaryResult } from '#tests/types/cli/generation/import-boundaries.ts';
+
+import {
+    BOUNDARY_CASES,
+    BOUNDARY_LINT_SCRIPT,
+    TEST_BOUNDARY_POLICY,
+} from '#tests/config/cli/generation/import-boundaries.ts';
 
 test('generated boundaries report a cross-project import once and fix scoped aliases from the repository root', async () => {
     await using sandbox = await testdir();
@@ -47,4 +55,37 @@ test('generated boundaries report a cross-project import once and fix scoped ali
     expect(
         corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'gspot/import-boundaries')),
     ).toStrictEqual([]);
+});
+
+test('architecture rules use authored test patterns in each scope and keep checking other files', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript'], { level: 'all', tables: TEST_BOUNDARY_POLICY }),
+        'package.json': '{"name":"boundaries","private":true,"type":"module"}',
+        'storage/value.js': 'export const value = 1;\n',
+        'apps/api/storage/value.js': 'export const value = 1;\n',
+        ...Object.fromEntries(
+            BOUNDARY_CASES.map(({ path, importPath }) => [
+                path,
+                `import { value } from '${importPath}';\nconsole.log(value);\n`,
+            ]),
+        ),
+    });
+    await createEslint(sandbox.path);
+    const native = await runTestCommand(
+        [
+            'node',
+            '--input-type=module',
+            '-e',
+            BOUNDARY_LINT_SCRIPT,
+            JSON.stringify(BOUNDARY_CASES.map(({ path }) => path)),
+        ],
+        { cwd: sandbox.path },
+    );
+    expect(native.code, native.stderr).toBe(0);
+    const results = JSON.parse(native.stdout) as BoundaryResult[];
+    for (const { path, count } of BOUNDARY_CASES) {
+        const result = results.find(({ filePath }) => filePath === join(sandbox.path, path));
+        expect(result?.findings, path).toHaveLength(count);
+    }
 });

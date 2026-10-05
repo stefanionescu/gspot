@@ -65,7 +65,7 @@ test('shared TOML preserves changed managed keys and rejects malformed input', a
         writeFileSync(join(directory.path, 'invalid.toml'), '[ unfinished');
         expect(() =>
             applyPlan(log, proposeMerge(log, 'invalid.toml', [{ path: ['value'], value: true }], true)),
-        ).toThrow('Invalid TOML document:');
+        ).toThrow('invalid.toml is not valid TOML. Fix the file, then run gspot apply.');
         expect(log.files.read('invalid.toml')!.bytes.toString('utf8')).toBe('[ unfinished');
     }
 });

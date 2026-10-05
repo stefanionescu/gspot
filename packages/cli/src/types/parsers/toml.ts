@@ -36,3 +36,9 @@ export type TomlDocument = {
     set(path: KeyPath, value: unknown): void;
     text(): string;
 };
+
+/** The authored file and its TOML text. */
+export type TomlInput = { path: string; source: string };
+
+/** A parent table to retrieve or create while editing a file. */
+export type TomlTableOptions = { filePath: string; keys: KeyPath; create: boolean };

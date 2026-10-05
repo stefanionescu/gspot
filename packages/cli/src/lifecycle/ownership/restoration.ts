@@ -21,10 +21,10 @@ function restorableRecord(existing: OwnershipEntry, current: Snapshot | undefine
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreFields(current: Snapshot, configuration: MergeRecord): Snapshot | undefined {
+function restoreFields(path: string, current: Snapshot, configuration: MergeRecord): Snapshot | undefined {
     const text = decodeUtf8(current.bytes);
     if (text === undefined) return undefined;
-    const document = openTomlDocument(text);
+    const document = openTomlDocument({ path, source: text });
     for (const field of configuration.fields) {
         if (!isDeepStrictEqual(document.value(field.path), field.installed)) return undefined;
     }
@@ -35,10 +35,14 @@ function restoreFields(current: Snapshot, configuration: MergeRecord): Snapshot 
 
 // Puts back the text a managed block replaced, or undefined when the block was edited away. A file the block
 // created is deleted when nothing else was written to it.
-function restoreBlock(current: Snapshot, block: NonNullable<OwnershipEntry['block']>): Restoration | undefined {
+function restoreBlock(
+    path: string,
+    current: Snapshot,
+    block: NonNullable<OwnershipEntry['block']>,
+): Restoration | undefined {
     const text = decodeUtf8(current.bytes);
     if (text === undefined) return undefined;
-    const span = blockSpan(text, block.style);
+    const span = blockSpan(text, { path, style: block.style });
     if (span === undefined) return undefined;
     const start = recordedBlockStart(text, span, block);
     if (start === undefined) return undefined;
@@ -58,10 +62,11 @@ function fileRestoration(existing: OwnershipEntry, current: Snapshot | undefined
 function getRestoration(existing: OwnershipEntry, current: Snapshot | undefined): Restoration | undefined {
     const record = restorableRecord(existing, current);
     if (current !== undefined && record !== undefined) {
-        const next = restoreFields(current, record);
+        const next = restoreFields(existing.path, current, record);
         return next === undefined ? undefined : { next };
     }
-    if (current !== undefined && existing.block !== undefined) return restoreBlock(current, existing.block);
+    if (current !== undefined && existing.block !== undefined)
+        return restoreBlock(existing.path, current, existing.block);
     return fileRestoration(existing, current);
 }
 
