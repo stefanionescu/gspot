@@ -29,6 +29,9 @@ export const GENERATED_BANNERS: RegExp[] = [
     /^\/\/\/ <reference types="next"/,
 ];
 
+/** Gradle and Maven generate these launchers for their build distributions. */
+export const GENERATED_BUILD_WRAPPERS = new Set(['gradlew', 'gradlew.bat', 'mvnw', 'mvnw.cmd']);
+
 export const VENDORED_DIRECTORIES = [
     'vendor',
     'third_party',

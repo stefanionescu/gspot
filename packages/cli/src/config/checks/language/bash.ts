@@ -12,9 +12,6 @@ export const BASH_FEATURES: [RegExp, string, string][] = [
 /** The two shebangs a Bash script may open with. */
 export const BASH_SHEBANGS = ['#!/usr/bin/env bash', '#!/bin/bash'];
 
-/** The four pieces a computed directory constant carries. */
-export const DIRECTORY_CONSTANT_PIECES = ['CDPATH=', 'cd --', 'pwd -P', '||'];
-
 export const EXIT_CALL = /\bexit(?:\s|$)/u;
 
 /** Lines 2 and 3 of the header, joined: a bare # line, then a comment that says what the script does. */
@@ -51,7 +48,7 @@ export const RUNTIME_EMBEDS: [RegExp, string][] = [
     [/\bpython[0-9.]*\s+-\s*<</u, 'an inline Python heredoc'],
     [/\$\w+"?\s+-\s*<</u, 'a heredoc piped into an interpreter variable'],
     [/\$\{\w+\}"?\s+-\s*<</u, 'a heredoc piped into an interpreter variable'],
-    [/\bnode\s+-e\b/u, 'an inline Node command'],
+    [/\bnode\s+-[ep]\b/u, 'an inline Node command'],
     [/\bnode\s+<</u, 'an inline Node heredoc'],
     [/\bcat\s+>[^<]+<</u, 'a generated script heredoc'],
 ];
@@ -97,9 +94,6 @@ export const FORWARDER_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
 
 /** The most non-comment lines a script may have and still count as a forwarding wrapper. */
 export const FORWARDER_MAX_LINES = 4;
-
-/** An inline Node snippet. */
-export const INLINE_NODE = /\bnode\s+(?:-e|-p|<<)/u;
 
 /** A source statement. */
 export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
@@ -152,11 +146,6 @@ export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>[A-Z_][A-Z0-9_]*):-\} \]\] && 
 
 /** A variable read with a non-empty default. */
 export const DEFAULT_EXPANSION = /\$\{[A-Z_][A-Z0-9_]*:-[^}]+\}/u;
-
-/** The start of a computed directory constant, and the three signs that mark one. */
-export const DIRECTORY_START = /^[A-Z_][A-Z0-9_]*=/u;
-
-export const DIRECTORY_CONSTANT_SIGNS = ['cd', 'BASH_SOURCE[0]', 'pwd'];
 
 export const SCRIPT_TAG = 'shell';
 

@@ -28,6 +28,7 @@ import {
     VALE_OWN_PREFIXES,
     ENV_TEMPLATE_NAMES,
     VENDORED_DIRECTORIES,
+    GENERATED_BUILD_WRAPPERS,
 } from '#cli/config/repository/inventory.ts';
 
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
@@ -65,6 +66,7 @@ function isLicenseFile(path: string): boolean {
 function classifyToolFile(path: string, prefix: Buffer): Verdict | undefined {
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
     if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', source: 'gspot' };
+    if (GENERATED_BUILD_WRAPPERS.has(posix.basename(path))) return { kind: 'generated', source: 'build wrapper' };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     if (hasHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
         return { kind: 'generated', source: 'banner' };

@@ -5,7 +5,6 @@ import type { Engine } from '#cli/types/execution/runtime.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 import {
-    INLINE_NODE,
     FORWARDER_STEM,
     DEPRECATED_ALIAS,
     FORWARDED_SCRIPT,
@@ -14,7 +13,7 @@ import {
 } from '#cli/config/checks/language/bash.ts';
 
 /**
- * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.
+ * One finding per wrapper stem, deprecated alias, or forwarding body.
  * @param input the check context
  * @returns the findings
  */
@@ -23,16 +22,6 @@ export const wrappers: Engine = async (input) => {
     return index.files.flatMap((file) => {
         const findings = [];
         const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
-        const inlineNode = code.find((line) => INLINE_NODE.test(line.code));
-        if (inlineNode !== undefined)
-            findings.push(
-                findingAt(
-                    input,
-                    { file: file.path, line: inlineNode.number },
-                    'inline-node',
-                    'An inline Node snippet belongs in a .js file.',
-                ),
-            );
         if (FORWARDER_STEM.test(stemOf(file.path)))
             findings.push(
                 findingAt(

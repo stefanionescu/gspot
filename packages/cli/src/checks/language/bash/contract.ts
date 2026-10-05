@@ -1,4 +1,4 @@
-// The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
+// The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, mktemp cleanup.
 import semver from 'semver';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
@@ -19,13 +19,10 @@ import {
     READONLY_WORD,
     HEADER_COMMENT,
     RUNTIME_HEADER,
-    DIRECTORY_START,
     SOURCE_STATEMENT,
     BARE_COMMENT_LINE,
     INHERITED_ERREXIT,
     TOP_LEVEL_ASSIGNMENT,
-    DIRECTORY_CONSTANT_SIGNS,
-    DIRECTORY_CONSTANT_PIECES,
 } from '#cli/config/checks/language/bash.ts';
 
 // The shebang every script opens with, then the four-line header when bash.platforms names its platforms.
@@ -57,46 +54,6 @@ function versionProblems(file: ScriptFile, version: string | undefined, report: 
     }
 }
 
-// Three contract rules recognize a script-directory assignment through the same declaration syntax.
-function isDirectoryConstant(code: string): boolean {
-    return (
-        DIRECTORY_START.test(withoutDeclaration(code)) && DIRECTORY_CONSTANT_SIGNS.every((sign) => code.includes(sign))
-    );
-}
-
-function directoryProblems(code: CodeLine[], report: ScriptReport): void {
-    for (const line of code) {
-        if (!isDirectoryConstant(line.code)) continue;
-        const missing = DIRECTORY_CONSTANT_PIECES.filter((piece) => !line.code.includes(piece));
-        if (missing.length > 0)
-            report(line.number, 'directory-constant', `A computed directory needs ${missing.join(', ')}.`);
-    }
-}
-
-function isFrozenLater(code: CodeLine[], after: number, name: string): boolean {
-    return code.some((line) => {
-        if (line.number <= after) return false;
-        const words = line.code.split(/\s+/u);
-        return (
-            words[0] === READONLY_WORD && words.slice(1).some((word) => word === name || word.startsWith(`${name}=`))
-        );
-    });
-}
-
-function unfrozenName(file: ScriptFile, line: CodeLine): string | undefined {
-    if (functionAt(file.functions, line.number) !== undefined || line.code.startsWith(READONLY_WORD)) return undefined;
-    const name = TOP_LEVEL_ASSIGNMENT.exec(withoutDeclaration(line.code))?.groups?.['name'];
-    return name === undefined || isDirectoryConstant(line.code) ? undefined : name;
-}
-
-function readonlyProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
-    for (const line of code) {
-        const name = unfrozenName(file, line);
-        if (name !== undefined && !isFrozenLater(code, line.number, name))
-            report(line.number, 'top-level-assignment', `${name} is assigned at the top level without readonly.`);
-    }
-}
-
 function strictModeProblems(code: CodeLine[], version: string | undefined, report: ScriptReport): void {
     const first = code.findIndex((line) => !line.code.startsWith('set ') && !line.code.startsWith('shopt '));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.code));
@@ -109,6 +66,7 @@ function strictModeProblems(code: CodeLine[], version: string | undefined, repor
 }
 
 function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
+    if (file.functions.length === 0) return;
     if (file.functions.filter((entry) => entry.name === 'main').length !== 1)
         report(1, 'main-function', 'An executable defines exactly one main function.');
     const last = code.at(-1);
@@ -154,7 +112,7 @@ function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: bool
             isConfigOwner ||
             SOURCE_STATEMENT.test(line.code) ||
             line.code.startsWith(READONLY_WORD) ||
-            isDirectoryConstant(line.code);
+            TOP_LEVEL_ASSIGNMENT.test(withoutDeclaration(line.code));
         libraryLineProblems(line, file, isDeclarative, report);
     }
 }
@@ -181,8 +139,6 @@ function fileProblems(
     const version = platforms === undefined ? undefined : runtimeVersion(file, platforms, report);
     versionProblems(file, version, report);
     const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
-    directoryProblems(code, report);
-    readonlyProblems(file, code, report);
     if (file.isExecutable) strictModeProblems(code, version, report);
     if (file.isExecutable) entryProblems(file, code, report);
     else libraryProblems(file, code, isConfigOwner, report);

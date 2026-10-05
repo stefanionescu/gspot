@@ -149,9 +149,9 @@ example = "With bash.platforms set to `macOS and Linux`, an executable Bash scri
 level = "all"
 stage = "commit"
 alternatives_checked = ["shellcheck", "shfmt", "bashate"]
-summary = "Checks the contract every Bash script keeps: the shebang, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files, and the four-line header when bash.platforms is set."
+summary = "Checks the contract every Bash script keeps: the shebang, strict mode, a main called last when functions are defined, declarative libraries, cleaned-up temporary files, and the four-line header when bash.platforms is set."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
-help = "Open with the shebang and, when bash.platforms is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
+help = "Open with the shebang and, when bash.platforms is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. When an executable defines functions, end it with a call to main."
 
 [[check]]
 name = "doc-comments"
@@ -262,20 +262,20 @@ example = "A script over `limits.bash.file_lines` reports `file-lines`; a functi
 level = "all"
 stage = "commit"
 alternatives_checked = ["shellcheck", "shfmt"]
-summary = "Checks every shell script and function against the size ceilings: code lines, branches, nesting, and reassignments."
-why = "A long script holds more than one job, and a function with many branches or reassignments is several functions with one name."
+summary = "Checks every shell script and function against the size ceilings: code lines, branches, nesting, and assignments."
+why = "A long script holds more than one job, and a function with many branches or assignments is several functions with one name."
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 
 [[check]]
 name = "wrappers"
 title = "Find wrappers and aliases"
-example = "Invoking a repository script as `bash scripts/build.sh` reports an interpreter-wrapper finding. Give the script its required shebang and executable permission, then invoke `scripts/build.sh` directly."
+example = "A short launcher containing only `exec bash scripts/build.sh` reports a forwarding-wrapper finding. Invoke `scripts/build.sh` directly and remove the redundant launcher."
 level = "all"
 stage = "commit"
 alternatives_checked = ["shellcheck", "semgrep"]
-summary = "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
-why = "A wrapper is a second entry point that drifts from the first; inline Node is a second language nobody lints."
-help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
+summary = "Finds forwarding wrappers and compatibility aliases in shell scripts."
+why = "A wrapper is a second entry point that drifts from the first."
+help = "Call the target script directly and delete the redundant launcher or alias."
 
 [[check]]
 name = "embeds"
@@ -284,7 +284,7 @@ example = "A shell heredoc containing a Python program reports embedded code. Mo
 level = "all"
 stage = "commit"
 alternatives_checked = ["shellcheck", "semgrep"]
-summary = "Finds inline Python, Node and generated-script heredocs in shell scripts."
+summary = "Finds inline Python, Node, and generated-script heredocs in shell scripts."
 why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
 

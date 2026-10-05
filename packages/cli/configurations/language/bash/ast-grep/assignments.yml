@@ -4,6 +4,19 @@ language: bash
 rule:
     kind: variable_assignment
     not:
-        inside:
-            kind: declaration_command
-            stopBy: end
+        any:
+            - inside:
+                  kind: declaration_command
+                  stopBy: end
+            - inside:
+                  kind: c_style_for_statement
+                  field: initializer
+                  stopBy: end
+            - inside:
+                  kind: c_style_for_statement
+                  field: condition
+                  stopBy: end
+            - inside:
+                  kind: c_style_for_statement
+                  field: update
+                  stopBy: end

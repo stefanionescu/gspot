@@ -18390,6 +18390,38 @@
                 "Actual staged gate and normal hook-enabled commit and push.",
                 "Continue remaining implementation batches and separately authorized publication/deployment."
             ]
+        },
+        {
+            "subsystem": "Check-owned native minimum delivery",
+            "outcome": "Commit cfd52729 is pushed normally to origin/main with hooks enabled. This batch closed the stock macOS Bash finding; 973 findings remained open.",
+            "evidence": [
+                "/tmp/gspot-bats-floor-verified-staged.json (71 passed, 7 skipped, no findings/errors).",
+                "/tmp/gspot-bats-floor-verified-types.log (all four TypeScript targets).",
+                "/tmp/gspot-bats-floor-verified-commit.log (45 pre-commit checks passed and commit-message check passed).",
+                "/tmp/gspot-bats-floor-push.log (71 passed, 7 skipped, main -> main)."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Portable Bash structure and generated launchers",
+            "rows": [
+                "slices/kits-other-languages/037",
+                "slices/kits-other-languages/042",
+                "slices/kits-other-languages/043",
+                "slices/kits-other-languages/044"
+            ],
+            "outcome": "Generated launcher exclusion, single Node embed ownership, small executable contracts, and C-style loop counts pass their corrected regressions. All original finding IDs and unique inline runtime assertions remain represented.",
+            "evidence": [
+                "CLI repository, detection, Bash, scope, and parser cohort: /tmp/gspot-bash-portable-cli.log (316 passes and two new fixture errors, 31 files). Both corrected fixtures and the entire Bash structure cohort pass: /tmp/gspot-bash-portable-corrections.log (30 passing cases, 144 assertions).",
+                "Pinned native Bash configuration, ShellCheck, shfmt, and count cohort: /tmp/gspot-bash-portable-native.log (10 passes and one new fixture acquisition error). With declared mise acquisition, root/scoped C-style counts and correction pass: /tmp/gspot-bash-portable-counts-correction.log (one case, nine assertions).",
+                "All four TypeScript targets pass: /tmp/gspot-bash-portable-final-types.log. Source lint passes: /tmp/gspot-bash-portable-ready-lint.log. Native TOML formatting passes: /tmp/gspot-bash-portable-toml.log.",
+                "Native rule field semantics verified against the official ast-grep reference: https://ast-grep.github.io/reference/rule.html.",
+                "Documentation and links validate 316 pages: /tmp/gspot-bash-portable-docs.log. Canonical generation succeeds twice without changes: /tmp/gspot-bash-portable-apply-first.json and /tmp/gspot-bash-portable-apply-second.json."
+            ],
+            "remaining": [
+                "Actual staged gate and normal hook-enabled commit and push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
         }
     ],
     "implementationBatches": {
@@ -21583,6 +21615,21 @@
                     "packages/cli/configurations/language/bash/manifest.toml",
                     "packages/cli/src/execution/planning/requirements.ts",
                     "packages/cli/src/tools/pins.ts"
+                ]
+            },
+            {
+                "id": "portable-bash-structure",
+                "records": [
+                    "slices/kits-other-languages/037",
+                    "slices/kits-other-languages/042",
+                    "slices/kits-other-languages/043",
+                    "slices/kits-other-languages/044"
+                ],
+                "owners": [
+                    "packages/cli/src/repository/kind.ts",
+                    "packages/cli/src/checks/language/bash/contract.ts",
+                    "packages/cli/src/checks/language/bash/embeds.ts",
+                    "packages/cli/configurations/language/bash/ast-grep/assignments.yml"
                 ]
             }
         ]

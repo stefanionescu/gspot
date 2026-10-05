@@ -121,9 +121,16 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'bash/wrappers',
         files: {
+            'scripts/build.sh': '#!/usr/bin/env bash\nexec bash scripts/target.sh\n',
+        },
+        expected: { file: 'scripts/build.sh', rule: 'forwarding-wrapper', line: 2 },
+    },
+    {
+        check: 'bash/embeds',
+        files: {
             'scripts/node.sh': `${HEAD}# main: runs the script.\nmain() {\n    node -e 'console.log(1)' "$1"\n}\n\nmain "$@"\n`,
         },
-        expected: { file: 'scripts/node.sh', rule: 'inline-node', line: 10 },
+        expected: { file: 'scripts/node.sh', rule: 'runtime-embed', line: 10 },
     },
     {
         check: 'bash/embeds',

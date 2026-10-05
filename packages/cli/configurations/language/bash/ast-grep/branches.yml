@@ -8,3 +8,4 @@ rule:
         - kind: case_item
         - kind: while_statement
         - kind: for_statement
+        - kind: c_style_for_statement
