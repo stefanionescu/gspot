@@ -1,11 +1,6 @@
-/** Entered, read, and written by the owner alone: the mode of a private directory. */
-export const PRIVATE_DIRECTORY = 0o700;
-
 export const COPY_CONCURRENCY = 8;
 
 export const WRITE_BATCH = 64;
-
-export const DIRECTORY_MODE = 0o755;
 
 export const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
 

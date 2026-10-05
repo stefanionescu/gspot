@@ -8,9 +8,10 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
+import { DIRECTORY_MODE } from '#cli/config/platform/modes.ts';
+import { WRITE_BATCH } from '#cli/config/execution/snapshot.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { getBlobs, getEntries } from '#cli/repository/revisions/objects.ts';
-import { WRITE_BATCH, DIRECTORY_MODE } from '#cli/config/execution/snapshot.ts';
 import { copyDependencies, copyValePackages } from '#cli/execution/snapshot/installed.ts';
 import { ENTRY_MODES, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 

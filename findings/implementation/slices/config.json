@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": null,
         "status": "open",
@@ -235,10 +235,14 @@
         "section": "The Config Constants",
         "finding": "| `config/platform/platform.ts:88` `PERMISSION_BITS` | The doc comment is wrong. It says 0o777 is \"also the mode Git records for a link.\" Git records `120000`, and 0o777 is the permission a link gets on disk. `ENTRY_MODES` (`config/execution/checkout.ts:11`) uses it that way. | Rewrite the doc comment: \"The permission bits of a mode; also the mode a checkout gives a link.\" |",
         "owner": "`config/platform/platform.ts:88` `PERMISSION_BITS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": "packages/cli/src/config/platform/modes.ts:24",
+        "status": "closed",
+        "outcome": "The permission-mask comment now describes only the permission bits, without the file type. It no longer identifies 0o777 as a Git link entry mode.",
+        "verification": [
+            "Source inspection: PERMISSION_BITS remains 0o777; the repository revision modes still distinguish Git link entries from permission masks.",
+            "All four TypeScript targets pass. The affected platform, snapshot, tool, and lifecycle suite passes: 289 tests and 1,294 assertions.",
+            "The standalone archive regression passes: one test and 12 assertions, including checksum, assets, and native source diagnostics."
+        ]
     },
     {
         "id": "slices/config/018",
@@ -247,10 +251,14 @@
         "section": "The Config Constants",
         "finding": "| `config/platform/platform.ts:9,12,15,83,86,89`, `config/platform/root.ts:4,7`, `config/execution/checkout.ts:17` `PRIVATE_DIRECTORY`, `config/repository/repository.ts:175` `EXECUTABLE_BITS` | File-mode constants are spread over four files. `PRIVATE_DIRECTORY` sits in the checkout file, but the Swift cache uses it too. | Move all ten into one `platform/modes.ts`. |",
         "owner": "`config/platform/platform.ts:9,12,15,83,86,89`, `config/platform/root.ts:4,7`, `config/execution/checkout.ts:17` `PRIVATE_DIRECTORY`, `config/repository/repository.ts:175` `EXECUTABLE_BITS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": "packages/cli/src/config/platform/modes.ts",
+        "status": "closed",
+        "outcome": "All 11 current octal file-mode constants have one behavioral owner under config/platform/modes.ts, as required by the repository config-folder policy. The three former owners contain no compatibility exports; every consumer imports the new owner. Numeric values and constant names are unchanged.",
+        "verification": [
+            "Compared the old and new declarations of all 11 constants; their octal literals are identical. TypeScript checks pass for the root, CLI, plugin, and docs targets.",
+            "Affected source regressions pass: 289 tests across 47 files with 1,294 assertions. The standalone archive regression also passes with 12 assertions.",
+            "Changed-file Prettier and ESLint checks pass. Canonical generation and a second apply both report all 142 files up to date."
+        ]
     },
     {
         "id": "slices/config/019",
@@ -341,7 +349,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": null,
         "status": "open",

@@ -5,7 +5,7 @@ import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
 import { MOVED_HEADING } from '#cli/config/lifecycle/ownership.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 
 // The text of a file without the gspot block, trimmed; a link holds none of its own.
 function authoredText(file: Read): string {

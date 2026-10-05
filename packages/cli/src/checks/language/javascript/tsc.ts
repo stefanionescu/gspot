@@ -6,7 +6,7 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';

@@ -7,7 +7,7 @@ import type { TomlDocument } from '#cli/types/parsers/toml.ts';
 import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
 import type { Field, MergePlan, MergeRequest } from '#cli/types/lifecycle/merge.ts';
 

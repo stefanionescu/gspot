@@ -12,7 +12,7 @@ import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import type { AssetInstallation } from '#cli/types/tools/install.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
-import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 

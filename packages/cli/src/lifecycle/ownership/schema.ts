@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
-import { MODE_BITS } from '#cli/config/platform/root.ts';
+import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { INSTALLATION_KINDS } from '#cli/config/tools/install.ts';
 import { ruleSettingsSchema } from '#cli/parsers/schema/rules.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';

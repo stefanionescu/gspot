@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { buildEslintWorker } from './eslint-worker.ts';
 import { rmSync, chmodSync, copyFileSync } from 'node:fs';
-import { EXECUTABLE_FILE } from '#cli/config/platform/root.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { ESLINT_WORKER_FILES } from '#cli/config/tools/eslint.ts';
 import { assertManifests } from '#cli/configurations/problems.ts';

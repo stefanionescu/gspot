@@ -5,7 +5,7 @@ import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { VERSION_FILE } from '#cli/config/platform/locations.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 
 /**

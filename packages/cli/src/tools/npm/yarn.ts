@@ -3,7 +3,7 @@ import { parse, stringify } from 'yaml';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { addEnvironmentReference } from '#cli/tools/credentials.ts';
 import { yarnSettingSchema, yarnConfigEntrySchema, yarnConnectionSettingsSchema } from '#cli/parsers/schema/yarn.ts';
 

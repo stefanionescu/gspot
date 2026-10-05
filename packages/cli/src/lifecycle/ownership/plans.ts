@@ -5,7 +5,7 @@ import type { Read } from '#cli/types/platform/root.ts';
 import { planMerge } from '#cli/lifecycle/merge/plan.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import { isMatch, identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';

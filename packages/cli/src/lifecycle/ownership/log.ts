@@ -8,7 +8,7 @@ import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
 import { fileMode, assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
-import { PRIVATE_FILE, READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Log, Identity, Ownership, OwnershipEntry, PendingOwnership } from '#cli/types/lifecycle/ownership.ts';
 
 // Settles one interrupted mutation: accepted when it completed, left unwritten when the file is as before or gone,

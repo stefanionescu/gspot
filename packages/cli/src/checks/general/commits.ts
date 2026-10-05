@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/platform/git.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';

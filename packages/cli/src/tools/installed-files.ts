@@ -1,7 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Read } from '#cli/types/platform/root.ts';
-import { MODE_BITS } from '#cli/config/platform/root.ts';
+import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
 import type { InstalledOutput, InstallationKind } from '#cli/types/tools/install.ts';

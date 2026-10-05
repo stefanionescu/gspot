@@ -6,7 +6,7 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { PERMISSION_BITS } from '#cli/config/platform/root.ts';
+import { PERMISSION_BITS } from '#cli/config/platform/modes.ts';
 import { sep, join, posix, dirname, relative } from 'node:path';
 import type { ScratchFolder } from '#cli/types/platform/scratch.ts';
 import type { TreeCopy, WorktreeCopy, FileWorkspace } from '#cli/types/execution/snapshot.ts';

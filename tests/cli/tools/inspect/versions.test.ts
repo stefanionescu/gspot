@@ -8,7 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
-import { EXECUTABLE_FILE } from '#cli/config/platform/root.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { GITLEAKS_VERSIONS } from '#tests/config/cli/tools/versions.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

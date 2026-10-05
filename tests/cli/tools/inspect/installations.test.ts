@@ -11,7 +11,7 @@ import { locateCandidates } from '#cli/tools/locate.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import * as environment from '#cli/platform/environment.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { EXECUTABLE_FILE } from '#cli/config/platform/root.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';

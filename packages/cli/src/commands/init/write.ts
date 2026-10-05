@@ -11,7 +11,7 @@ import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
 import { preparePackageProject } from '#cli/tools/npm/project.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { preparePythonProject } from '#cli/tools/python/project.ts';
 import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';

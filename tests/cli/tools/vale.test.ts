@@ -4,7 +4,7 @@ import { toolPin } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { EXECUTABLE_FILE } from '#cli/config/platform/root.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { VALE_ACQUISITION_FAILURES, CORRECTED_VALE_ACQUISITION } from '#tests/config/cli/tools/vale.ts';

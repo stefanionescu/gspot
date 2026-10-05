@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { PAIR } from '#cli/config/platform/runtime.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { ACTIVE_SEVERITIES } from '#cli/config/tools/eslint.ts';
 import { ESLINT_FILE, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import type { EslintCoverageRequest, EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';

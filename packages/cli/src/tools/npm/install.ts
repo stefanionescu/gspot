@@ -10,7 +10,7 @@ import { LOCKS } from '#cli/config/parsers/lockfiles.ts';
 import { executableNames } from '#cli/platform/paths.ts';
 import { toolVersionState } from '#cli/tools/inspect.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { registryPasswords } from '#cli/parsers/credentials.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';

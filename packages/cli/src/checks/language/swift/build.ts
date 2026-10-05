@@ -3,7 +3,7 @@ import { memo } from '#cli/platform/memo.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/root.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';

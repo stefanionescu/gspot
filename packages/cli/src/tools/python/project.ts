@@ -16,7 +16,7 @@ import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
 import { assertCredentialFreeLock } from '#cli/tools/credentials.ts';
 import { pyprojectSchema } from '#cli/parsers/schema/python/tools.ts';
-import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { pythonLockMatches, parsePythonSettings } from '#cli/parsers/python/tools.ts';
 import type { LockDrift, ToolOwner, LockPreparation } from '#cli/types/tools/install.ts';
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';

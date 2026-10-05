@@ -1,6 +1,7 @@
 // Resolving and reading paths inside one root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
-import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
+import { MODE_BITS } from '#cli/config/platform/modes.ts';
+import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
 import type { Read, Bounds, Proposed, PathFormat } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
 import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';

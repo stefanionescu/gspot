@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { readSource } from '#cli/platform/source.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';

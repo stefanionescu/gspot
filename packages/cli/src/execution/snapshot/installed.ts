@@ -7,14 +7,14 @@ import { listStyleFiles } from '#cli/tools/vale.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
-import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import type { RevisionRoots, DependencyFolder } from '#cli/types/execution/snapshot.ts';
-import { LOCKS, PACKAGE_INPUTS, COPY_CONCURRENCY, PRIVATE_DIRECTORY } from '#cli/config/execution/snapshot.ts';
+import { LOCKS, PACKAGE_INPUTS, COPY_CONCURRENCY } from '#cli/config/execution/snapshot.ts';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 
 // Checks one copied link. Some links point at files the revision does not track, such as the build output of a

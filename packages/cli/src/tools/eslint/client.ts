@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { assetPath } from '#cli/platform/assets.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { ESLINT_WORKER_FILES } from '#cli/config/tools/eslint.ts';
 import { STANDALONE_BUILD } from '#cli/config/platform/assets.ts';

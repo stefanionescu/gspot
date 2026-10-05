@@ -17,7 +17,7 @@ import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installProsePackages } from '#cli/tools/vale.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
-import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
 import { installPythonProject, preparePythonProject, pythonInstallationPlan } from '#cli/tools/python/project.ts';
 

@@ -3,15 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import type { Read, Bounds, Staging } from '#cli/types/platform/root.ts';
+import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform/modes.ts';
 import { readEntry, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
+import { LOCK_POLL_MS, LOCK_WAIT_BYTES, LOCK_INITIALIZATION_MS } from '#cli/config/platform/root.ts';
 
-import {
-    LOCK_POLL_MS,
-    PRIVATE_FILE,
-    LOCK_WAIT_BYTES,
-    OWNER_WRITE_BIT,
-    LOCK_INITIALIZATION_MS,
-} from '#cli/config/platform/root.ts';
 import {
     openSync,
     closeSync,

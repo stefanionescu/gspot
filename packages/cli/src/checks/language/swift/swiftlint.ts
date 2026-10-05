@@ -3,7 +3,7 @@ import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/platform/objects.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';

@@ -9,8 +9,8 @@ import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
 

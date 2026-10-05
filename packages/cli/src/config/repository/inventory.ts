@@ -1,8 +1,6 @@
 import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Verdict, RunnerLock } from '#cli/types/repository/inventory.ts';
 
-export const EXECUTABLE_BITS = 0o111;
-
 export const DEPENDENCY_FOLDERS = [
     'node_modules',
     'bower_components',

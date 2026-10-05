@@ -1,4 +1,4 @@
-import { EXECUTABLE_FILE, PERMISSION_BITS, OWNER_WRITABLE_FILE } from '#cli/config/platform/root.ts';
+import { EXECUTABLE_FILE, PERMISSION_BITS, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 
 export const ABSENT_HASH = /^0+$/u;
 

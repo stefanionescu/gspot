@@ -4,13 +4,12 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
-import { MODE_BITS } from '#cli/config/platform/root.ts';
 import type { Read, Root } from '#cli/types/platform/root.ts';
 import { cacheDirectory } from '#cli/platform/environment.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
-import { PRIVATE_DIRECTORY } from '#cli/config/execution/snapshot.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import type { PreparedSwiftBuild } from '#cli/types/checks/language/swift.ts';
 import { BUILD_SOURCE_DIRECTORY } from '#cli/config/checks/language/swift.ts';
 

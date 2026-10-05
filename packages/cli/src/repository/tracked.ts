@@ -8,11 +8,12 @@ import { readSource } from '#cli/platform/source.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
+import { EXECUTABLE_BITS } from '#cli/config/platform/modes.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/root.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { isOutsideGit, inspectWorkTree } from '#cli/repository/root.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { EXECUTABLE_BITS, DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import type { RawEntry, PathIgnore, PendingDirectory, DirectoryContents } from '#cli/types/repository/inventory.ts';
 
 // A link to a folder, or one that leaves the repository, is left out, so no check reads past it. A dangling link is
