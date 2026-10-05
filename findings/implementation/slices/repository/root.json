@@ -117,7 +117,7 @@
         "status": "closed",
         "outcome": "implemented",
         "verification": [
-            "AST audit of 622 files and 2706 literal imports proves checks→rules and execution→rules unused; removed both. commands→parsers and execution→parsers now have real callers, so retained them. Removed additional proven-unused output→generation and tool-output→configurations/policy. No remaining unused cross-module allowed edge. /tmp/gspot-policy-import-evidence.json preserves each retained edge caller.",
+            "AST audit of 622 files and 2706 literal imports proves checks\u2192rules and execution\u2192rules unused; removed both. commands\u2192parsers and execution\u2192parsers now have real callers, so retained them. Removed additional proven-unused output\u2192generation and tool-output\u2192configurations/policy. No remaining unused cross-module allowed edge. /tmp/gspot-policy-import-evidence.json preserves each retained edge caller.",
             "Focused code, data, workflow, and prose checks passed; source evidence and check reports recorded in /tmp/gspot-repository-cleanup-outcomes.json."
         ]
     },
@@ -607,10 +607,15 @@
         "section": "Repository Files, Line by Line",
         "finding": "| `AGENTS.md:7`, `packages/cli/src/rules/instructions.ts:51` | \"apply only at all\" leaves out the word \"level\" and the code format that line 5 uses. The sentence lists seven items. | \"These rules apply only at level `all`, or when the project turns them on: vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity.\" |",
         "owner": "`AGENTS.md:7`, `packages/cli/src/rules/instructions.ts:51`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/config/rules.ts", "packages/cli/src/rules/instructions.ts", "AGENTS.md"],
+        "status": "closed",
+        "outcome": "The authoritative summary names level `all` explicitly. Canonical apply regenerates AGENTS.md with the corrected sentence.",
+        "verification": [
+            "266 affected regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Root TypeScript check passes: /tmp/gspot-selection-batch-types.log.",
+            "Affected ESLint passes: /tmp/gspot-selection-batch-imports.json.",
+            "Canonical apply and a second unchanged apply: /tmp/gspot-selection-batch-apply.json and /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/repository-root/041",

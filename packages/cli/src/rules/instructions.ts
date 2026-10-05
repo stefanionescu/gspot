@@ -24,8 +24,7 @@ function rulesByArea(files: RuleFile[]): [string, string[]][] {
 
 function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
     const { folder, project_folder: local } = rules;
-    const projectRow: [string, string[]][] =
-        local === undefined || local === '' ? [] : [['Project rules', [`\`${local}/\``]]];
+    const projectRow: [string, string[]][] = local === undefined ? [] : [['Project rules', [`\`${local}/\``]]];
     return [
         `Read ${FIRST_READ.map((path) => '`' + folder + '/' + path + '`').join(' and ')} first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
         '',

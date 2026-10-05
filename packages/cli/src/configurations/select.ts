@@ -113,3 +113,13 @@ export function everyManifest(scopes: SelectedConfigurations[]): Manifest[] {
             if (!seen.has(manifest.configuration.name)) seen.set(manifest.configuration.name, manifest);
     return seen.values().toArray();
 }
+
+/**
+ * Tests whether any resolved scope selects a configuration.
+ * @param scopes the validated scope selections
+ * @param name the configuration name
+ * @returns whether the configuration is selected in at least one scope
+ */
+export function isConfigurationSelected(scopes: SelectedConfigurations[], name: string): boolean {
+    return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
+}

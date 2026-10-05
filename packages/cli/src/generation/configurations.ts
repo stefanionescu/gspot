@@ -8,6 +8,7 @@ import { collectRuleSettings } from '#cli/generation/rules.ts';
 import type { RuleSettings } from '#cli/types/generation/rules.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
 import type { ConfigurationFile, GeneratedConfigurationFile } from '#cli/types/configurations.ts';
 
@@ -104,9 +105,7 @@ function isTargetEnabled(configuration: ConfigurationFile, context: EmitInputs, 
     const { when: condition } = configuration;
     if (condition === undefined) return true;
     const selectedScopes = configuration.scoped ? [selection] : scopes;
-    return selectedScopes.some((entry) =>
-        entry.selected.some((owner) => owner.configuration.name === condition.configuration),
-    );
+    return isConfigurationSelected(selectedScopes, condition.configuration);
 }
 
 // Emits one configuration target: its file, its nested copies, and its pointer.

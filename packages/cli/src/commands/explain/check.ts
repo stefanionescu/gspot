@@ -9,6 +9,7 @@ import type { Session } from '#cli/types/execution/session.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { TOOL_TIMEOUT_MS, ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT } from '#cli/config/commands/explain.ts';
 import type { Found, CheckFacts, Explanation, DeclaredCheck, RuleSummarizer } from '#cli/types/commands/explain.ts';
@@ -102,9 +103,7 @@ function repositoryLines(
         );
     if (session && configuration !== undefined)
         lines.push(
-            session.scopes.some((scope) =>
-                scope.selected.some((manifest) => manifest.configuration.name === configuration.configuration.name),
-            )
+            isConfigurationSelected(session.scopes, configuration.configuration.name)
                 ? 'Selected in this repository: yes'
                 : `Selected in this repository: no (gspot add ${configuration.configuration.name})`,
         );

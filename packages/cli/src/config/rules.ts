@@ -28,4 +28,4 @@ export const LEVEL_SUMMARY =
     'Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.';
 
 export const ALL_LEVEL_SUMMARY =
-    'Rules about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.';
+    'These rules apply only at level `all`, or when the project turns them on: vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.';

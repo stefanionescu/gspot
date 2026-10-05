@@ -268,10 +268,25 @@
         "section": "The Agent Rules",
         "finding": "| `rules/agent/WORKING.md:48-50` \"...or when a rule of the repository asks for them, as the database and end-to-end rules do. ... report that follow-up instead of editing tests unasked.\" | POSTGRES.md and PLAYWRIGHT.md never ask for tests. Other kit files tell the agent which tests to write: OPENAPI.md:39-43, SWIFT.md:119-120, SWIFTUI.md:80-84, UIKIT.md:78, XCTEST.md:11-29, DRIZZLE.md:229-230, SUPABASE.md:71-72, I18N.md:92-96, and REACTHOOKFORM.md:220-222. The express/untested-routes check requires a test for each listed route. \"Report instead of editing tests\" also blocks the test fixes a rename needs (L25, L103). | \"Write tests when the user asks or a check requires them. When your change breaks a test, fix the test. Test rules in kit files say how to write a test, not when.\" Start each kit test line with \"When you write tests, ...\". |",
         "owner": "`rules/agent/WORKING.md:48-50` \"...or when a rule of the repository asks for them, as the database and end-to-end rules do. ... report that follow-up instead of editing tests unasked.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/agent/WORKING.md",
+            "packages/cli/configurations/tool/openapi/rules/OPENAPI.md",
+            "packages/cli/configurations/language/swift/rules/SWIFT.md",
+            "packages/cli/configurations/language/swift/rules/SWIFTUI.md",
+            "packages/cli/configurations/language/swift/rules/UIKIT.md",
+            "packages/cli/configurations/tool/xctest/rules/XCTEST.md",
+            "packages/cli/configurations/library/drizzle/rules/DRIZZLE.md",
+            "packages/cli/configurations/platform/supabase/rules/SUPABASE.md",
+            "packages/cli/configurations/library/i18n/rules/I18N.md",
+            "packages/cli/configurations/library/react-hook-form/rules/REACTHOOKFORM.md"
+        ],
+        "status": "closed",
+        "outcome": "WORKING owns the trigger for new tests and requires repairs after a change breaks tests. OpenAPI, Swift, UIKit, XCTest, Drizzle and Supabase qualify their test guidance; SwiftUI, i18n and React Hook Form no longer prescribe extra tests.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/018",
@@ -410,10 +425,21 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/ACCESSIBILITY.md:42-45` \"Stable `camelCase` accessibility identifiers ... name the interaction surface\" | A test rule in the accessibility file. Near copies are in swift NAMING.md:114-117, SWIFTUI.md:73 and 85, XCTEST.md:85, and PLAYWRIGHT.md:11. \"Interaction surface\" is jargon. | Move one copy to TESTING.md: \"Name a test ID in camelCase for the control it marks (`submitButton`). Never put visible text, user data, or IDs in it. Prefer role and label queries, and use a test ID last.\" Delete the others. |",
         "owner": "`rules/code/ACCESSIBILITY.md:42-45` \"Stable `camelCase` accessibility identifiers ... name the interaction surface\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/TESTING.md",
+            "packages/cli/configurations/general/engineering/rules/code/ACCESSIBILITY.md",
+            "packages/cli/configurations/language/swift/rules/NAMING.md",
+            "packages/cli/configurations/language/swift/rules/SWIFTUI.md",
+            "packages/cli/configurations/tool/xctest/rules/XCTEST.md",
+            "packages/cli/configurations/tool/vitest/rules/PLAYWRIGHT.md"
+        ],
+        "status": "closed",
+        "outcome": "TESTING owns camelCase test IDs, role/label priority and logging assertions. Accessibility, Swift naming, SwiftUI, XCTest and Playwright contain no duplicate test-ID instruction.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/027",
@@ -438,10 +464,14 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/CLI.md:21-23` \"Required inputs have an argument, flag, or declared configuration source for automation.\" | Jargon. | \"Every value a prompt asks for also has a flag. Without a terminal, fail and name the missing flag.\" |",
         "owner": "`rules/code/CLI.md:21-23` \"Required inputs have an argument, flag, or declared configuration source for automation.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/general/engineering/rules/code/CLI.md"],
+        "status": "closed",
+        "outcome": "CLI requires a flag for every prompted value and a missing-flag diagnostic when no terminal exists.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/029",
@@ -533,10 +563,22 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/COMMENTS.md:51-52` \"Do not leave `TODO`, `FIXME`, `XXX`, or `HACK` in comments.\" | unicorn/expiring-todo-comments, Ruff FIX/TD, and SwiftLint todo enforce this. Six files copy it: BASH.md:223, JAVASCRIPT.md:183, TYPESCRIPT.md:145, PYTHON.md:127, SWIFT.md:139, and SQL.md:21. | Keep it here, because Bash and SQL have no check. Delete the six copies. |",
         "owner": "`rules/code/COMMENTS.md:51-52` \"Do not leave `TODO`, `FIXME`, `XXX`, or `HACK` in comments.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/COMMENTS.md",
+            "packages/cli/configurations/language/bash/rules/BASH.md",
+            "packages/cli/configurations/language/javascript/rules/JAVASCRIPT.md",
+            "packages/cli/configurations/language/typescript/rules/TYPESCRIPT.md",
+            "packages/cli/configurations/language/python/rules/PYTHON.md",
+            "packages/cli/configurations/language/swift/rules/SWIFT.md",
+            "packages/cli/configurations/language/sql/rules/SQL.md"
+        ],
+        "status": "closed",
+        "outcome": "COMMENTS owns unfinished-comment guidance. Bash, JavaScript, TypeScript, Python, Swift and SQL omit the duplicate prohibition; mktemp XXXXXX remains a filename template.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/035",
@@ -772,10 +814,18 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/ERRORS.md:17, 20` \"Throw or raise only the language's error type\" / \"Do not catch only to rethrow unchanged.\" | no-throw-literal, only-throw-error, no-useless-catch, and Ruff TRY203 enforce these. Python and Swift cannot throw anything else. TYPESCRIPT.md:111-113 and FLOW.md:11-13 copy them. | Delete L17, L20, and the copies. |",
         "owner": "`rules/code/ERRORS.md:17, 20` \"Throw or raise only the language's error type\" / \"Do not catch only to rethrow unchanged.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/ERRORS.md",
+            "packages/cli/configurations/language/typescript/rules/TYPESCRIPT.md",
+            "packages/cli/configurations/language/python/rules/FLOW.md"
+        ],
+        "status": "closed",
+        "outcome": "Removed throw-only-error and catch-only-to-rethrow rules from ERRORS, TypeScript and Python FLOW. Narrow catches, cause preservation and deliberate isolation remain distinct requirements.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/050",
@@ -849,10 +899,17 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/ERRORS.md:61-62` \"Use sentence case for error messages.\" | FLOW.md:129-130 repeats it word for word. The JS check enforces a capital first letter at `all`. | Delete the FLOW copy. |",
         "owner": "`rules/code/ERRORS.md:61-62` \"Use sentence case for error messages.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/ERRORS.md",
+            "packages/cli/configurations/language/python/rules/FLOW.md"
+        ],
+        "status": "closed",
+        "outcome": "ERRORS owns sentence case. Python FLOW no longer repeats it.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/055",
@@ -861,10 +918,17 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/GENERATED.md:9-13` \"Identify generated ownership explicitly ... record ownership in the generator manifest or project configuration ... declared as generated, so formatting, naming, and structure rules skip it\" | Never says how to declare a file, and it describes gspot internals. NAMING-FILES.md:93-94 repeats it. | \"Mark a generated file with a header that names its command. If the format has no comments, list the file in the `[generated]` table of `gspot.toml`.\" Delete NAMING-FILES.md:93-94. |",
         "owner": "`rules/code/GENERATED.md:9-13` \"Identify generated ownership explicitly ... record ownership in the generator manifest or project configuration ... declared as generated, so formatting, naming, and structure rules skip it\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/GENERATED.md",
+            "packages/cli/configurations/general/engineering/rules/code/NAMING-FILES.md"
+        ],
+        "status": "closed",
+        "outcome": "GENERATED names the generating command and the actual repeatable [[generated]] policy table; NAMING-FILES omits the duplicate declaration instruction.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/056",
@@ -954,10 +1018,17 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/LOGGING.md:41` \"Use `lower_snake_case` for new event names and field keys\" | NAMING-FILES.md:24 repeats it. | Keep it here and delete the copy. |",
         "owner": "`rules/code/LOGGING.md:41` \"Use `lower_snake_case` for new event names and field keys\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/LOGGING.md",
+            "packages/cli/configurations/general/engineering/rules/code/NAMING-FILES.md"
+        ],
+        "status": "closed",
+        "outcome": "LOGGING owns event and field spelling. NAMING-FILES no longer duplicates it.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/062",
@@ -1163,10 +1234,20 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/NAMING.md:84-86` \"`handle` exists only in a framework callback ... `Handler` is never a type suffix.\" | Four files copy it: JS NAMING.md:47-48, TS NAMING.md:83-84, py NAMING.md:29-30, and swift NAMING.md:79-80. The policy bans `handler`. | Keep it here. Delete the four copies. |",
         "owner": "`rules/code/NAMING.md:84-86` \"`handle` exists only in a framework callback ... `Handler` is never a type suffix.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/NAMING.md",
+            "packages/cli/configurations/language/javascript/rules/NAMING.md",
+            "packages/cli/configurations/language/typescript/rules/NAMING.md",
+            "packages/cli/configurations/language/python/rules/NAMING.md",
+            "packages/cli/configurations/language/swift/rules/NAMING.md"
+        ],
+        "status": "closed",
+        "outcome": "General NAMING owns callback handle and Handler guidance. JavaScript, TypeScript and Python omit the copies. Swift retains only its specific @objc UIKit target-action and notification interface guidance.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/075",
@@ -1191,10 +1272,19 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/NAMING.md:90-93` \"Positional booleans ... become an options parameter ... `isCancellable` in `MenuOptions` ... a function that only forwards to a date library is replaced by the direct call.\" | API design, not naming. Ruff FBT and the trivial-functions checks enforce parts of it. TS NAMING.md:127-129 and 141-143 repeat the example, and JAVASCRIPT.md:86 and 102 repeat the rule. | Keep one sentence in WORKING.md under Abstractions. Delete the rest. |",
         "owner": "`rules/code/NAMING.md:90-93` \"Positional booleans ... become an options parameter ... `isCancellable` in `MenuOptions` ... a function that only forwards to a date library is replaced by the direct call.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/agent/WORKING.md",
+            "packages/cli/configurations/general/engineering/rules/code/NAMING.md",
+            "packages/cli/configurations/language/typescript/rules/NAMING.md",
+            "packages/cli/configurations/language/javascript/rules/JAVASCRIPT.md"
+        ],
+        "status": "closed",
+        "outcome": "WORKING owns named options and forwarding-abstraction guidance. General and TypeScript naming and JavaScript omit the old positional-boolean and MenuOptions examples.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/077",
@@ -1252,10 +1342,20 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/SECRETS.md:12-13` \"Never put real secrets in OpenAPI examples. Never put real secrets in `.env.example`.\" | Repeats CONFIGURATION.md:28-29, DOCS-CONTENT.md:74-78, OPENAPI.md:20, and DOCS-SURFACES.md:62-63. | Keep one line here: \"Examples, docs, and templates hold placeholders, never real secrets.\" Delete the copies. |",
         "owner": "`rules/code/SECRETS.md:12-13` \"Never put real secrets in OpenAPI examples. Never put real secrets in `.env.example`.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/SECRETS.md",
+            "packages/cli/configurations/general/engineering/rules/code/CONFIGURATION.md",
+            "packages/cli/configurations/general/engineering/rules/prose/DOCS-CONTENT.md",
+            "packages/cli/configurations/general/engineering/rules/prose/DOCS-SURFACES.md",
+            "packages/cli/configurations/tool/openapi/rules/OPENAPI.md"
+        ],
+        "status": "closed",
+        "outcome": "SECRETS owns placeholders in examples, documentation and templates. Configuration, docs and OpenAPI omit the duplicate examples-only instruction; distinct documentation metadata and operational no-secret requirements remain.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/081",
@@ -1264,10 +1364,17 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/SECRETS.md:17-32` \"Secrets in logs\" | Repeats LOGGING.md:43-49. | Delete the section. Move the code example to LOGGING.md. |",
         "owner": "`rules/code/SECRETS.md:17-32` \"Secrets in logs\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/SECRETS.md",
+            "packages/cli/configurations/general/engineering/rules/code/LOGGING.md"
+        ],
+        "status": "closed",
+        "outcome": "LOGGING owns forbidden log data, centralized redaction and the header example. SECRETS has no duplicate logging section.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/082",
@@ -1292,10 +1399,20 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/SECURITY.md:20` \"No `eval`, `new Function`, string timers, `exec` with a shell\" | no-implied-eval, security/detect-eval-with-expression, Ruff S102, S307, and S602-S605, and the Semgrep rule gspot.bash.eval enforce this. BASH.md:122-123, LANGUAGE.md:86-87, PYTHON.md:183-184, and FLOW.md:108 copy it. | Keep it here. Delete the copies. |",
         "owner": "`rules/code/SECURITY.md:20` \"No `eval`, `new Function`, string timers, `exec` with a shell\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/SECURITY.md",
+            "packages/cli/configurations/language/bash/rules/BASH.md",
+            "packages/cli/configurations/language/bash/rules/LANGUAGE.md",
+            "packages/cli/configurations/language/python/rules/PYTHON.md",
+            "packages/cli/configurations/language/python/rules/FLOW.md"
+        ],
+        "status": "closed",
+        "outcome": "SECURITY owns input-driven execution restrictions. Bash BASH/LANGUAGE and Python PYTHON/FLOW omit the duplicate eval prohibition.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/084",
@@ -1304,10 +1421,20 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/SECURITY.md:25-27` \"through one reviewed sanitizer with an allowlist. Never through `innerHTML`, ..., or `dangerouslySetInnerHTML` outside that adapter.\" | At `all`, react/no-danger, astro/no-set-html-directive, svelte/no-at-html-tags, and vue/no-v-html ban the sink everywhere, the adapter too. REACT.md:15, ASTRO.md:33, SVELTE.md:45, and VUE.md:45 repeat this rule. | \"Render untrusted content as text. When HTML is required, sanitize it in one module and add a suppression with the reason there.\" Delete the four copies. |",
         "owner": "`rules/code/SECURITY.md:25-27` \"through one reviewed sanitizer with an allowlist. Never through `innerHTML`, ..., or `dangerouslySetInnerHTML` outside that adapter.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/engineering/rules/code/SECURITY.md",
+            "packages/cli/configurations/framework/react/rules/REACT.md",
+            "packages/cli/configurations/framework/astro/rules/ASTRO.md",
+            "packages/cli/configurations/framework/svelte/rules/SVELTE.md",
+            "packages/cli/configurations/framework/vue/rules/VUE.md"
+        ],
+        "status": "closed",
+        "outcome": "SECURITY permits sanitized HTML through one module with a local reasoned suppression, consistent with all-level sink bans. React, Astro, Svelte and Vue omit conflicting sanitizer copies.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/085",
@@ -1381,10 +1508,14 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/TESTING.md:15, 38, 85, 97` \"such as model hubs, file systems, subprocesses\" / \"Mock provider, network, database, and filesystem boundaries.\" | Four lists of what to mock. \"Model hubs\" comes from one ML project. | Keep one list: \"Mock only what leaves the process: network, filesystem, subprocesses, clock, and database.\" |",
         "owner": "`rules/code/TESTING.md:15, 38, 85, 97` \"such as model hubs, file systems, subprocesses\" / \"Mock provider, network, database, and filesystem boundaries.\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/general/engineering/rules/code/TESTING.md"],
+        "status": "closed",
+        "outcome": "TESTING has one boundary list for mocks. Remaining mock rules cover isolation, ownership and reset rather than repeat that list.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/090",
@@ -1393,10 +1524,14 @@
         "section": "The Agent Rules",
         "finding": "| `rules/code/TESTING.md:17, 21-22` name and bad-test bullets | Repeat L58, L95, L99, and L13. | Delete the copies. |",
         "owner": "`rules/code/TESTING.md:17, 21-22` name and bad-test bullets",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/general/engineering/rules/code/TESTING.md"],
+        "status": "closed",
+        "outcome": "TESTING has one scenario/outcome naming instruction and one set of bad-test criteria. The old repeated name and snapshot bullets are absent.",
+        "verification": [
+            "Reviewed the current shipped source and all duplicate owners named in the original row; retained instructions have distinct contracts.",
+            "266 CLI generation, rules, configuration and explain regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Canonical apply installs shipped rules; second apply changes nothing: /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "slices/agent-rules/091",

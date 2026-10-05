@@ -12,7 +12,6 @@ import { pythonProject } from '#cli/generation/python.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
@@ -23,6 +22,7 @@ import type { Repository } from '#cli/types/repository/inventory.ts';
 import { emitConfigurations } from '#cli/generation/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { PRIVATE_PATHS, GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outputs.ts';
 import { requiredToolNames, applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
@@ -30,9 +30,7 @@ import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#
 // CI includes the selected manual checks and adds macOS when a scope selects Swift.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
     if (policy.ci === undefined) return;
-    const hasSwift = scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.configuration.name === 'swift'),
-    );
+    const hasSwift = isConfigurationSelected(scopes, 'swift');
     generated.files.push(
         (policy.ci.provider === 'github' ? githubFile : gitlabFile)({
             version,

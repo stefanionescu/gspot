@@ -4,7 +4,7 @@
 
 Selected level: `all`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.
 
-Rules about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.
+These rules apply only at level `all`, or when the project turns them on: vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.
 
 Read `.gspot/rules/general/engineering/agent/WORKING.md` and `.gspot/rules/general/engineering/prose/WRITING.md` first. Then read the rules for the files you change. A more specific rule wins over a general one.
 

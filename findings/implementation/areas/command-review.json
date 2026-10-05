@@ -81,7 +81,7 @@
         "source": "findings/areas/commands.md",
         "line": 105,
         "section": "Findings",
-        "finding": "| `install/command.ts:59-68, 97-118`, `install/steps.ts:99-131` | Wrapper chain: `installCommand` → `installEverything` → `installTools(session, true)`, and `finishInstall(session, isInstalling)` → `installTools`. The `isInstalling` flag is false only for `init --no-install`. `installCommand` turns every error into exit 2 with a hard-coded `2`, so programming errors skip the shared error path in `printCommand`. | Keep one `installTools(session)` that returns `{ note, exitCode }`. Let `init` check `options.install` itself. Delete `installEverything` and the boolean. Let unknown errors reach `printCommand`. |",
+        "finding": "| `install/command.ts:59-68, 97-118`, `install/steps.ts:99-131` | Wrapper chain: `installCommand` \u2192 `installEverything` \u2192 `installTools(session, true)`, and `finishInstall(session, isInstalling)` \u2192 `installTools`. The `isInstalling` flag is false only for `init --no-install`. `installCommand` turns every error into exit 2 with a hard-coded `2`, so programming errors skip the shared error path in `printCommand`. | Keep one `installTools(session)` that returns `{ note, exitCode }`. Let `init` check `options.install` itself. Delete `installEverything` and the boolean. Let unknown errors reach `printCommand`. |",
         "owner": "`install/command.ts:59-68, 97-118`, `install/steps.ts:99-131`",
         "location": [
             "packages/cli/src/commands/install.ts",
@@ -165,7 +165,7 @@
         "source": "findings/areas/commands.md",
         "line": 109,
         "section": "Findings",
-        "finding": "| `commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts` | One run passes through about 10 hops: action → `runCheck` → `printCommand` → `checkedCommand` → `checkCommand` (`run.ts`) → `checkStaged`, `checkPush`, or `checkContent` → `selectionsFor` → `changedSet` → `revisionSelection` → `getChanged`. `checkedCommand` and `checkCommand` differ by two letters. `run.ts` is 52 lines of routing. `changedSet` → `revisionSelection` → `getChanged` is a wrapper on a wrapper. | Merge `run.ts` into `command.ts`. Inline `revisionSelection` into `changedSet`. Rename `content.ts`/`checkContent` to `tree.ts`/`checkTree`, `unknownSelection` to `refuseUnknownChecks`, and `checkedCommand` to `runOrCancel`. |",
+        "finding": "| `commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts` | One run passes through about 10 hops: action \u2192 `runCheck` \u2192 `printCommand` \u2192 `checkedCommand` \u2192 `checkCommand` (`run.ts`) \u2192 `checkStaged`, `checkPush`, or `checkContent` \u2192 `selectionsFor` \u2192 `changedSet` \u2192 `revisionSelection` \u2192 `getChanged`. `checkedCommand` and `checkCommand` differ by two letters. `run.ts` is 52 lines of routing. `changedSet` \u2192 `revisionSelection` \u2192 `getChanged` is a wrapper on a wrapper. | Merge `run.ts` into `command.ts`. Inline `revisionSelection` into `changedSet`. Rename `content.ts`/`checkContent` to `tree.ts`/`checkTree`, `unknownSelection` to `refuseUnknownChecks`, and `checkedCommand` to `runOrCancel`. |",
         "owner": "`commands/check/command.ts`, `run.ts`, `content.ts`, `selection.ts`",
         "location": [
             "packages/cli/src/commands/check/command.ts",
@@ -548,7 +548,7 @@
         "source": "findings/areas/commands.md",
         "line": 128,
         "section": "Findings",
-        "finding": "| `explain/command.ts`, `explain/subjects.ts`, `explain/checks.ts`, `explain/path.ts` | `command.ts` is a 35-line wrapper around `explain()`. Explain returns `{ error }` objects, while every other command throws `GspotError`. In `checks.ts:36`, `getPin` (a tool pin) shares a name with `lifecycle/version-pin.ts` `getPin` (the gspot version). In the kit JSON, `rules` holds guide paths (`subjects.ts:37`) and the type is `ListingRow`. `explainCheck` → `buildCheckExplanation` → `describeCheck` plus `getFacts` passes 5 or 6 parameters at each step. | Merge `command.ts` into `subjects.ts` as `explain/command.ts`. Throw `GspotError`. Rename `getPin` to `findToolPin`, the field `rules` to `guides`, and `ListingRow` to `KitExplanation`. Fold `buildCheckExplanation` into `explainCheck`. |",
+        "finding": "| `explain/command.ts`, `explain/subjects.ts`, `explain/checks.ts`, `explain/path.ts` | `command.ts` is a 35-line wrapper around `explain()`. Explain returns `{ error }` objects, while every other command throws `GspotError`. In `checks.ts:36`, `getPin` (a tool pin) shares a name with `lifecycle/version-pin.ts` `getPin` (the gspot version). In the kit JSON, `rules` holds guide paths (`subjects.ts:37`) and the type is `ListingRow`. `explainCheck` \u2192 `buildCheckExplanation` \u2192 `describeCheck` plus `getFacts` passes 5 or 6 parameters at each step. | Merge `command.ts` into `subjects.ts` as `explain/command.ts`. Throw `GspotError`. Rename `getPin` to `findToolPin`, the field `rules` to `guides`, and `ListingRow` to `KitExplanation`. Fold `buildCheckExplanation` into `explainCheck`. |",
         "owner": "`explain/command.ts`, `explain/subjects.ts`, `explain/checks.ts`, `explain/path.ts`",
         "location": [
             "packages/cli/src/commands/explain/command.ts",
@@ -585,7 +585,7 @@
             "docs/src/content/docs/guides/policy.md"
         ],
         "status": "closed",
-        "outcome": "Human configuration listings emit one row per check with its scope states. Human settings show root rows and authored scope overrides, shorten values to the declared column width, and name extra native tables clearly. JSON preserves complete values, inherited rows, and separate check scope entries. The public configurations argument and terminology follow the user’s decision to preserve existing product vocabulary.",
+        "outcome": "Human configuration listings emit one row per check with its scope states. Human settings show root rows and authored scope overrides, shorten values to the declared column width, and name extra native tables clearly. JSON preserves complete values, inherited rows, and separate check scope entries. The public configurations argument and terminology follow the user\u2019s decision to preserve existing product vocabulary.",
         "verification": [
             "Three real CLI cases verify grouped root and nested-scope check states, unique rows for every selected check, authored scope overrides, full inherited JSON values, shortened human values, complete JSON arrays, extra-table labels and reasons, empty diagnostic streams, and unchanged complete repository trees.",
             "Running the final three cases against the original listing implementation failed all three. Restoring the final implementation passed all 29 cases and 163 assertions across list, nested scopes, and both explanation owners.",
@@ -976,10 +976,20 @@
         "section": "Findings",
         "finding": "| `outputs.ts:26, 143`, `lifecycle/write.ts:71`, `tools/vale.ts:151`, `generation/bunfig.ts:16`, `explain/checks.ts:85` | \"Is kit X selected in some scope\" is written 6 times as nested `.some(...)` calls. | Add `isKitSelected(scopes, name)` in `kits/select.ts`. |",
         "owner": "`outputs.ts:26, 143`, `lifecycle/write.ts:71`, `tools/vale.ts:151`, `generation/bunfig.ts:16`, `explain/checks.ts:85`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/configurations/select.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/generation/configurations.ts",
+            "packages/cli/src/commands/explain/check.ts"
+        ],
+        "status": "closed",
+        "outcome": "isConfigurationSelected owns aggregate selection with three real consumers: CI, conditional configuration outputs and explain. Lifecycle and Vale derive applicability from actual outputs/tool requirements. Bun retains its distinct per-scope filter.",
+        "verification": [
+            "266 affected regressions pass: /tmp/gspot-selection-batch-tests.log.",
+            "Root TypeScript check passes: /tmp/gspot-selection-batch-types.log.",
+            "Affected ESLint passes: /tmp/gspot-selection-batch-imports.json.",
+            "Canonical apply and a second unchanged apply: /tmp/gspot-selection-batch-apply.json and /tmp/gspot-selection-batch-second-apply.json."
+        ]
     },
     {
         "id": "areas/commands/051",
