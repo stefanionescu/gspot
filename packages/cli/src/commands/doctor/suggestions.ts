@@ -81,9 +81,9 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
  * @returns detected and recommended configurations, unowned config files, authored lint jobs, and duplicate pins
  */
 export function getSuggestions(session: Session): Suggestions {
-    const fields = readManifests(session.root, session.repository.files);
+    const projectManifests = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
-    const tooling = getTooling(session.root, session.repository.files, fields);
+    const tooling = getTooling(session.root, session.repository.files, projectManifests);
     const generated = emitAll(session);
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {

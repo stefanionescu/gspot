@@ -20,16 +20,16 @@ test('Python project detection uses captured dependencies and actual project fil
         'member-only/main.py': 'print("not a project file")\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const fields = readManifests(sandbox.path, repository.files);
-    expect(fields.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
+    const projectManifests = readManifests(sandbox.path, repository.files);
+    expect(projectManifests.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
         fastapi: 'fastapi>=1',
     });
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[invalid');
-    expect(proposedScopes(repository.files, fields, ['pyproject.toml']).map((scope) => scope.path)).toStrictEqual([
-        'api',
-    ]);
     expect(
-        detectConfigurations(repository.files, configurationManifests(), fields, 'api').some(
+        proposedScopes(repository.files, projectManifests, ['pyproject.toml']).map((scope) => scope.path),
+    ).toStrictEqual(['api']);
+    expect(
+        detectConfigurations(repository.files, configurationManifests(), projectManifests, 'api').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(true);
@@ -80,8 +80,8 @@ test('Python group includes coexist with dependency detection', async () => {
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const fields = readManifests(sandbox.path, repository.files);
-    expect(fields[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
+    const projectManifests = readManifests(sandbox.path, repository.files);
+    expect(projectManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
 test('manifest inspection refuses an external link replacing a manifest and accepts restored bytes', async () => {
@@ -123,17 +123,16 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [`api/${path}`]: source, 'other/readme.txt': 'No Python dependencies.\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const fields = readManifests(sandbox.path, repository.files);
-    expect(Object.keys(fields[0]!.dependencies).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'fastapi',
-        'friendly-bard',
-    ]);
+    const projectManifests = readManifests(sandbox.path, repository.files);
+    expect(
+        Object.keys(projectManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['fastapi', 'friendly-bard']);
     const manifests = configurationManifests();
-    const proposed = detectConfigurations(repository.files, manifests, fields, 'api');
+    const proposed = detectConfigurations(repository.files, manifests, projectManifests, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectConfigurations(repository.files, manifests, fields, 'other').some(
+        detectConfigurations(repository.files, manifests, projectManifests, 'other').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(false);
@@ -171,13 +170,15 @@ test('captured manifests follow authored links inside the repository and reject 
     const repository = await readRepository(sandbox.path, [], [], []);
     rmSync(join(sandbox.path, 'package.json'));
     symlinkSync('settings/manifest.json', join(sandbox.path, 'package.json'));
-    expect(readManifests(sandbox.path, repository.files).map((fields) => fields.dependencies)).toStrictEqual([
-        { next: '16.0.0' },
-    ]);
+    expect(
+        readManifests(sandbox.path, repository.files).map((projectManifest) => projectManifest.dependencies),
+    ).toStrictEqual([{ next: '16.0.0' }]);
     writeFileSync(join(sandbox.path, 'settings/manifest.json'), Buffer.from([0xc3, 0x28]));
     expect(() => readManifests(sandbox.path, repository.files)).toThrow('package.json is not UTF-8 text.');
     writeFileSync(join(sandbox.path, 'settings/manifest.json'), '{}');
-    expect(readManifests(sandbox.path, repository.files).map((fields) => fields.dependencies)).toStrictEqual([{}]);
+    expect(
+        readManifests(sandbox.path, repository.files).map((projectManifest) => projectManifest.dependencies),
+    ).toStrictEqual([{}]);
     expect(readFileSync(join(sandbox.path, 'image.bin'))).toStrictEqual(Buffer.from([0xff, 0xfe]));
 });
 
@@ -190,11 +191,11 @@ test.each(RUNTIME_EVIDENCE_CASES)('$name determines runtime applicability within
         'api/.gspot/package.json': JSON.stringify('privatePackage' in entry ? entry.privatePackage : {}),
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const fields = readManifests(sandbox.path, repository.files);
+    const projectManifests = readManifests(sandbox.path, repository.files);
     const manifest = parseManifest(
         `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`,
         'configurations/general/runtime',
     );
-    const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), fields, 'api');
+    const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), projectManifests, 'api');
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
 });

@@ -2,15 +2,15 @@ import { readText } from '#cli/platform/source.ts';
 import { isPrivateToolPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { manifestParser, parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { ManifestSummary, PackageManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest, ProjectManifest } from '#cli/types/parsers/packages.ts';
 
 /**
- * Validated summaries from every supported manifest in the tree.
+ * Read supported project manifests for dependency and runtime detection.
  * @param root the repository root
  * @param files the tracked files
- * @returns one fields entry per supported manifest
+ * @returns one project manifest per supported source file
  */
-export function readManifests(root: string, files: TrackedFile[]): ManifestSummary[] {
+export function readManifests(root: string, files: TrackedFile[]): ProjectManifest[] {
     return files
         .filter(
             (file) =>

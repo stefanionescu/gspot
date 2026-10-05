@@ -26,8 +26,8 @@ import type {
     ManifestParser,
     PoetrySettings,
     PythonManifest,
-    ManifestSummary,
     PackageManifest,
+    ProjectManifest,
     PackageInstaller,
     PackageInstallerDeclaration,
 } from '#cli/types/parsers/packages.ts';
@@ -81,7 +81,7 @@ function pythonDependencies(parsed: PythonManifest): DependencyMap {
     );
 }
 
-function parseRequirements(path: string, text: string): ManifestSummary {
+function parseRequirements(path: string, text: string): ProjectManifest {
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
         const comment = line.search(/\s#/u);
@@ -97,7 +97,7 @@ function parseRequirements(path: string, text: string): ManifestSummary {
     };
 }
 
-const readers: Record<string, (path: string, text: string) => ManifestSummary> = {
+const readers: Record<string, (path: string, text: string) => ProjectManifest> = {
     'package.json': parsePackageSummary,
     'pyproject.toml': parsePyproject,
     'Package.swift': parseSwiftPackage,
@@ -115,7 +115,7 @@ function packageRuntimes(path: string, manifest: PackageManifest): Record<string
     return runtimes;
 }
 
-function parsePackageSummary(path: string, text: string): ManifestSummary {
+function parsePackageSummary(path: string, text: string): ProjectManifest {
     const parsed = parsePackageManifest(text);
     const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
     const dependencies: DependencyMap = {
@@ -132,7 +132,7 @@ function parsePackageSummary(path: string, text: string): ManifestSummary {
     };
 }
 
-function parsePipfile(path: string, text: string): ManifestSummary {
+function parsePipfile(path: string, text: string): ProjectManifest {
     const parsed = pipfileSchema.parse(parseToml(text));
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
@@ -141,7 +141,7 @@ function parsePipfile(path: string, text: string): ManifestSummary {
     return { path, kind: 'Pipfile', dependencies, installed: dependencies };
 }
 
-function parsePyproject(path: string, text: string): ManifestSummary {
+function parsePyproject(path: string, text: string): ProjectManifest {
     const parsed = pythonManifestSchema.parse(parseToml(text));
     const dependencies = pythonDependencies(parsed);
     return {
@@ -152,7 +152,7 @@ function parsePyproject(path: string, text: string): ManifestSummary {
     };
 }
 
-function parseSwiftPackage(path: string, text: string): ManifestSummary {
+function parseSwiftPackage(path: string, text: string): ProjectManifest {
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
         const url = match[1] ?? '';

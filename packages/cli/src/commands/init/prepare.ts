@@ -77,15 +77,15 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const manifests = configurationManifests();
     const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
-    const fields = readManifests(root, repo.files);
+    const projectManifests = readManifests(root, repo.files);
     const workspace = proposedScopes(
         repo.files,
-        fields,
+        projectManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
     );
-    const inputs = { root, repo, fields, workspace, manifests };
+    const inputs = { root, repo, projectManifests, workspace, manifests };
     const detected = selectForInit({ ...inputs, options });
-    const tooling = getTooling(root, repo.files, fields);
+    const tooling = getTooling(root, repo.files, projectManifests);
     printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
     const replaced = getReplaced(root, tooling, selection.selectedIds);

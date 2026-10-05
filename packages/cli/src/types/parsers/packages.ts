@@ -23,7 +23,8 @@ export type PackageManifest = z.infer<typeof packageManifestSchema>;
 
 export type DependencyMap = Record<string, string>;
 
-export type ManifestSummary = {
+/** Dependencies and runtime evidence from one supported project manifest. */
+export type ProjectManifest = {
     path: string;
     kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
     dependencies: DependencyMap;
@@ -32,7 +33,7 @@ export type ManifestSummary = {
 };
 
 /** Pure parser selected by a supported repository manifest name. */
-export type ManifestParser = (text: string) => ManifestSummary;
+export type ManifestParser = (text: string) => ProjectManifest;
 
 export type PythonManifest = z.infer<typeof pythonManifestSchema>;
 

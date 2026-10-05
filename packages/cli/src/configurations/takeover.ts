@@ -3,7 +3,7 @@ import { readText } from '#cli/platform/source.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
 import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
-import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { isGlob, pathMatcher, isPrivateToolPath } from '#cli/repository/selectors.ts';
 import type { Tooling, ToolFile, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -70,10 +70,10 @@ export function isReplaced(tool: string, selected: Set<string>): boolean {
  * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
  * @param root the repository root
  * @param files the tracked files
- * @param fields the manifests read from the tree
+ * @param projectManifests the parsed project manifests
  * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function getTooling(root: string, files: TrackedFile[], fields: ManifestSummary[]): Tooling {
+export function getTooling(root: string, files: TrackedFile[], projectManifests: ProjectManifest[]): Tooling {
     const configurations = getToolConfigs(
         root,
         files.filter((file) => file.kind === 'source').map((file) => file.path),
@@ -87,6 +87,6 @@ export function getTooling(root: string, files: TrackedFile[], fields: ManifestS
                 ]),
             ).values(),
         ],
-        ...surveyRepository(root, files, fields),
+        ...surveyRepository(root, files, projectManifests),
     };
 }

@@ -20,7 +20,7 @@ async function readConfigurationSelection(root: string) {
     const selection = selectForInit({
         root,
         repo: await readRepository(root, [], [], []),
-        fields: [],
+        projectManifests: [],
         workspace: [],
         manifests,
         options: { ...options, configurations: ['bash', 'markdown'], isListExact: true },

@@ -10,7 +10,7 @@ import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isGlob, isInScope, isPrivateToolPath } from '#cli/repository/selectors.ts';
@@ -84,12 +84,16 @@ function workspacePackages(root: string): Package[] {
 /**
  * The scopes initialization proposes from tracked project files, excluding root and lint-only packages.
  * @param files the repository inventory
- * @param fields captured package manifests
+ * @param projectManifests the parsed project manifests
  * @param patterns project-file patterns declared by configurations
  * @returns project scopes in path order
  */
-export function proposedScopes(files: TrackedFile[], fields: ManifestSummary[], patterns: string[]): ScopeEntry[] {
-    const lintOnly = new Set(fields.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
+export function proposedScopes(
+    files: TrackedFile[],
+    projectManifests: ProjectManifest[],
+    patterns: string[],
+): ScopeEntry[] {
+    const lintOnly = new Set(projectManifests.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
     const folders = new Set<string>();
     const sources = files.filter(
         (file) =>
@@ -147,11 +151,11 @@ export function projectFolder(path: string, pattern: string): string | undefined
 
 /**
  * True when every dependency of a manifest is a lint tool gspot pins, so the manifest exists only to hold tooling.
- * @param fields the manifest
+ * @param projectManifest the parsed project manifest
  * @returns whether it holds tooling only
  */
-export function isLintOnlyManifest(fields: ManifestSummary): boolean {
-    const names = Object.keys(fields.installed);
+export function isLintOnlyManifest(projectManifest: ProjectManifest): boolean {
+    const names = Object.keys(projectManifest.installed);
     if (names.length === 0) return false;
     return names.every((name) =>
         LINT_TOOL_PACKAGE_PREFIXES.some(

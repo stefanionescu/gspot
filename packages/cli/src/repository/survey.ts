@@ -6,7 +6,7 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
 import { HOOK_DIRECTORIES, MISE_HOOK_DIRECTORY } from '#cli/config/repository/hooks.ts';
@@ -135,16 +135,16 @@ export function getHooks(root: string): Tooling['hooks'] {
  * Find the hooks, CI files, agent files, rules and lint folders, and task runner a repository already has.
  * @param root the repository root
  * @param files the tracked files
- * @param fields the manifests read from the tree
+ * @param projectManifests the parsed project manifests
  * @returns everything init lists except the tool configurations, which need the configurations
  */
 export function surveyRepository(
     root: string,
     files: TrackedFile[],
-    fields: ManifestSummary[],
+    projectManifests: ProjectManifest[],
 ): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
-    const lintOnlyManifests = fields
+    const lintOnlyManifests = projectManifests
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));

@@ -2,7 +2,7 @@
 import { extensionOf } from '#cli/platform/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import type { ManifestSummary } from '#cli/types/parsers/packages.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { isInScope, pathMatcher, filenameMatcher, isPrivateToolPath } from '#cli/repository/selectors.ts';
@@ -15,16 +15,16 @@ import type {
     ConfigurationSuggestion,
 } from '#cli/types/configurations.ts';
 
-function dependencyMap(fields: ManifestSummary[], scope: string): Map<string, string> {
+function dependencyMap(projectManifests: ProjectManifest[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
-    for (const fact of fields) {
+    for (const fact of projectManifests) {
         if (!isInScope(fact.path, scope)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
 }
 
-function layout(files: TrackedFile[], fields: ManifestSummary[], scope: string): Layout {
+function layout(files: TrackedFile[], projectManifests: ProjectManifest[], scope: string): Layout {
     const candidates = files.filter(
         (file) => file.kind === 'source' && !isPrivateToolPath(file.path) && isInScope(file.path, scope),
     );
@@ -35,7 +35,7 @@ function layout(files: TrackedFile[], fields: ManifestSummary[], scope: string):
         ),
     );
     const paths = new Set(candidates.map((file) => file.path));
-    const scopeSummaries = fields.filter((fact) => paths.has(fact.path));
+    const scopeSummaries = projectManifests.filter((fact) => paths.has(fact.path));
     const runtimes = new Map([
         ...candidates.flatMap((file) =>
             file.tags
@@ -136,17 +136,17 @@ function tagEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidenc
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
  * @param manifests every configuration manifest
- * @param fields the package manifests read from the tree
+ * @param projectManifests the parsed project manifests
  * @param scope the scope path, '' for the root
  * @returns each applicable configuration with its repository evidence
  */
 export function detectConfigurations(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
-    fields: ManifestSummary[],
+    projectManifests: ProjectManifest[],
     scope = '',
 ): ConfigurationEvidence[] {
-    const tree = layout(files, fields, scope);
+    const tree = layout(files, projectManifests, scope);
     return manifests
         .values()
         .map((manifest) => evidenceFor(manifest, tree))
@@ -158,15 +158,15 @@ export function detectConfigurations(
  * Selects conditional declarations using the shared file and dependency evidence.
  * @param conditions the detection conditions declared by selected manifests.
  * @param files the repository source inventory.
- * @param fields the package dependency reads.
+ * @param projectManifests the parsed project manifests.
  * @returns the matching condition objects.
  */
 export function detectConditions(
     conditions: Manifest['detect'][],
     files: TrackedFile[],
-    fields: ManifestSummary[],
+    projectManifests: ProjectManifest[],
 ): Set<Manifest['detect']> {
-    const tree = layout(files, fields, '');
+    const tree = layout(files, projectManifests, '');
     const matched = new Set<Manifest['detect']>();
     for (const condition of conditions)
         if (evidenceReaders.some((source) => source(condition, tree) !== undefined)) matched.add(condition);
@@ -188,8 +188,8 @@ export function detectUnselected(
     configured: Manifest[],
 ): ConfigurationSuggestion[] {
     const selected = new Set(configured.map((manifest) => manifest.configuration.name));
-    const fields = readManifests(root, files);
-    return detectConfigurations(files, manifests, fields)
+    const projectManifests = readManifests(root, files);
+    return detectConfigurations(files, manifests, projectManifests)
         .filter((detection) => !selected.has(detection.configuration))
         .map((detection) => ({
             configuration: detection.configuration,

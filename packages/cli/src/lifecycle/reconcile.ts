@@ -29,10 +29,10 @@ export function reconcileConfigurations(session: Session): ConfigurationReconcil
         manifests,
         policyFiles: { policy },
     } = session;
-    const fields = readManifests(root, repo.files);
+    const projectManifests = readManifests(root, repo.files);
     const discovered = proposedScopes(
         repo.files,
-        fields,
+        projectManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
     );
     const workspace = new Map(
@@ -41,7 +41,7 @@ export function reconcileConfigurations(session: Session): ConfigurationReconcil
     const detected = selectForInit({
         root,
         repo,
-        fields,
+        projectManifests,
         manifests,
         workspace: [...workspace.values()],
         options: { cwd: root, yes: true, isDryRun: true, install: false },

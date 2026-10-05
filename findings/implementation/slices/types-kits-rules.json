@@ -866,10 +866,22 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/repository/repository.ts:64` `Fields`, `types/lifecycle/merge.ts:20` `Field` | `Fields` is one parsed project manifest (`package.json`, `pyproject.toml`, `Package.swift`, and so on). Its parameters are documented as \"the package manifests read from the tree\" (`kits/detect.ts:118`, `kits/takeover.ts:160`). `Field`, one letter shorter, is an unrelated owned config key. | Rename `Fields` to `ProjectManifest`, and its parameters to `projectManifests`. |",
         "owner": "`types/repository/repository.ts:64` `Fields`, `types/lifecycle/merge.ts:20` `Field`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/parsers/packages.ts",
+            "packages/cli/src/types/lifecycle/selection.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/configurations/detect.ts",
+            "packages/cli/src/configurations/takeover.ts",
+            "packages/cli/src/lifecycle/selection.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "ProjectManifest names the dependency and runtime evidence parsed from each supported project manifest. Its declaration remains with the parser types; PackageManifest still names the separate schema-derived npm package shape. No Fields or ManifestSummary compatibility alias remains.",
+            "Type-aware identifier edits rename project-manifest arrays and internal InitInputs/InitDetection properties to projectManifests, and individual project-manifest values to projectManifest. Every producer and caller, including the empty initialization selection fixture, is updated. Parameter and return comments describe project manifests rather than npm-only packages. Unrelated output mappings, SQL fields and configuration keys retain their existing names.",
+            "AST comparison covers all 15 changed modules and all 78 identifier edits. After reversing the reviewed names and normalizing type-only import ordering, type syntax and emitted JavaScript syntax are identical; the three changed test owners retain their complete assertion and scenario syntax.",
+            "All four TypeScript targets passed. Affected ESLint and Prettier checks passed. Manifest parsing, scopes, discovery, configuration detection, initialization selection/questions/replacement, list/doctor, initialization and apply-publication regressions passed: 129 tests, 419 assertions across eleven files. Canonical apply and second apply each report all 142 files unchanged."
+        ]
     },
     {
         "id": "slices/types-kits-rules/044",
