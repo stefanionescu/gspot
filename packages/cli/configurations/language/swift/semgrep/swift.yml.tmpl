@@ -3,16 +3,9 @@ const document = {
     rules: [
         {
             id: 'gspot.swift.keychain-accessible-always',
-            'pattern-either': [
-                {
-                    pattern: 'kSecAttrAccessibleAlways',
-                },
-                {
-                    pattern: 'kSecAttrAccessibleAfterFirstUnlock',
-                },
-            ],
+            pattern: 'kSecAttrAccessibleAlways',
             message:
-                'Keychain accessibility permits access while the device is locked. Use kSecAttrAccessibleWhenUnlockedThisDeviceOnly for sensitive data.',
+                'This Keychain class permits access regardless of device lock state. Choose an accessibility class that matches when the item must be available.',
             languages: ['swift'],
             severity: 'ERROR',
             metadata: {
@@ -72,54 +65,6 @@ const document = {
             },
         },
         {
-            id: 'gspot.swift.hardcoded-url-with-credentials',
-            'pattern-regex': 'https?://[a-zA-Z0-9._-]+:[^@]+@[a-zA-Z0-9._-]+',
-            message: 'URL with embedded credentials. Use a credential store instead of embedding user:pass in URLs.\n',
-            languages: ['swift'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-798'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'gspot.swift.insecure-http-url',
-            'pattern-regex': 'http://(?!(?:localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\])(?=[:/\\"\\s]|$))',
-            message: 'Insecure HTTP URL detected. Use HTTPS for all network communication.\n',
-            languages: ['swift'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-319'],
-                category: 'security',
-            },
-        },
-        ...(isAll
-            ? [
-                  {
-                      id: 'gspot.swift.unsafe-pointer-cast',
-                      'pattern-either': [
-                          {
-                              pattern: 'UnsafeRawPointer(...)',
-                          },
-                          {
-                              pattern: 'UnsafeMutablePointer<$T>(...)',
-                          },
-                          {
-                              pattern: '$X.withUnsafeMutableBytes(...)',
-                          },
-                      ],
-                      message:
-                          'Unsafe pointer operations bypass Swift memory safety. Use safe alternatives unless performance-critical and audited.\n',
-                      languages: ['swift'],
-                      severity: 'ERROR',
-                      metadata: {
-                          cwe: ['CWE-787'],
-                          category: 'security',
-                      },
-                  },
-              ]
-            : []),
-        {
             id: 'gspot.swift.weak-hash-algorithm',
             'pattern-either': [
                 {
@@ -143,33 +88,6 @@ const document = {
                 category: 'security',
             },
         },
-        {
-            id: 'gspot.swift.no-uiwebview',
-            pattern: 'UIWebView(...)',
-            message: 'UIWebView is deprecated and insecure. Use WKWebView instead.\n',
-            languages: ['swift'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-919'],
-                category: 'security',
-            },
-        },
-        ...(isAll
-            ? [
-                  {
-                      id: 'gspot.swift.wkwebview-javascript-enabled',
-                      pattern: '$CONFIG.preferences.javaScriptEnabled = true\n',
-                      message:
-                          'WKWebView with JavaScript enabled. Ensure content is trusted or implement proper CSP and input validation.\n',
-                      languages: ['swift'],
-                      severity: 'ERROR',
-                      metadata: {
-                          cwe: ['CWE-79'],
-                          category: 'security',
-                      },
-                  },
-              ]
-            : []),
         {
             id: 'gspot.swift.log-sensitive-data',
             patterns: [

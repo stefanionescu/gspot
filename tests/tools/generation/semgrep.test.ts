@@ -9,7 +9,6 @@ import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
 
 import {
@@ -19,6 +18,7 @@ import {
     FRAMEWORK_FILES,
     FRAMEWORK_FINDINGS,
     EXPRESS_SOURCE_CASES,
+    BASH_DOWNLOAD_DEFECTS,
     PLATFORM_SOURCE_CASES,
     SEMGREP_PROJECT_FILES,
     EXPRESS_SOURCE_FINDINGS,
@@ -77,7 +77,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
 test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configurations and the level', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const script = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
+    const script = BASH_DOWNLOAD_DEFECTS;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['bash', 'swift', 'security'], {
             tables: '[agent_rules]\nenabled = false\n',
@@ -96,7 +96,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         (JSON.parse(recommended.stdout) as RunReport).checks
             .flatMap((check) => check.findings)
             .flatMap(({ rule }) => (rule?.startsWith('gspot.swift.') === true ? [rule] : [])),
-    ).toStrictEqual(['gspot.swift.keychain-accessible-always']);
+    ).toStrictEqual(['gspot.swift.keychain-accessible-always', 'gspot.swift.weak-hash-algorithm']);
     await Bun.write(
         join(root, 'gspot.toml'),
         buildPolicy(['bash', 'swift', 'security'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
@@ -106,17 +106,26 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
     const all = await spawnGspot(root, command, environment);
     expect(all.code, all.stdout + all.stderr).toBe(1);
     const findings = (JSON.parse(all.stdout) as RunReport).checks.flatMap((check) => check.findings);
-    expect(findings).toStrictEqual(
-        containingAll([
-            containing({ file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' }),
-            containing({ file: 'script.sh', line: 3, rule: 'gspot.bash.eval' }),
-            containing({ file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' }),
-            containing({ file: 'Value.swift', line: 2, rule: 'gspot.swift.unsafe-pointer-cast' }),
-        ]),
-    );
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' },
+        { file: 'Value.swift', line: 3, rule: 'gspot.swift.weak-hash-algorithm' },
+        { file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' },
+        { file: 'script.sh', line: 3, rule: 'gspot.bash.eval' },
+        { file: 'script.sh', line: 4, rule: 'gspot.bash.curl-pipe-shell' },
+        { file: 'script.sh', line: 5, rule: 'gspot.bash.curl-pipe-shell' },
+        { file: 'script.sh', line: 6, rule: 'gspot.bash.curl-pipe-shell' },
+        { file: 'script.sh', line: 7, rule: 'gspot.bash.curl-pipe-shell' },
+    ]);
+    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DEFECTS);
     expect(await Bun.file(join(root, 'script.sh')).text()).toBe(script);
     await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
-    await Bun.write(join(root, 'Value.swift'), 'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\n');
+    await Bun.write(
+        join(root, 'Value.swift'),
+        SWIFT_DEFECTS.replace('kSecAttrAccessibleAlways', 'kSecAttrAccessibleWhenUnlockedThisDeviceOnly').replace(
+            'Insecure.MD5',
+            'SHA256',
+        ),
+    );
     const clean = await spawnGspot(root, command, environment);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 });

@@ -18,12 +18,6 @@ brew = "semgrep"
 platforms = ["macos", "linux"]
 
 [[tool.replace]]
-file = "bearer.yml"
-
-[[tool.replace]]
-file = "bearer.ignore"
-
-[[tool.replace]]
 file = ".semgrepignore"
 
 [[tool]]

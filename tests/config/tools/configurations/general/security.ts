@@ -9,3 +9,9 @@ export const EVALUATED =
 
 export const OWN_RULE =
     'rules:\n    - id: test-no-double\n      pattern: double(...)\n      message: The test rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
+
+/** Configuration owned by Bearer, which Semgrep must preserve at initialization. */
+export const BEARER_FILES = {
+    'bearer.yml': 'severity: [critical, high]\n',
+    'bearer.ignore': 'src/vendor.ts\n',
+};

@@ -473,10 +473,16 @@
         "section": "Kits: General",
         "finding": "| `general/security/manifest.toml:20-24` `[[tool.replace]]` | Semgrep \"replaces\" `bearer.yml` and `bearer.ignore`, which belong to another tool, Bearer. A project that runs Bearer loses its configuration. | Delete both rows. |",
         "owner": "`general/security/manifest.toml:20-24` `[[tool.replace]]`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/security/manifest.toml",
+            "tests/config/tools/configurations/general/security.ts",
+            "tests/tools/configurations/general/security.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted both Semgrep replacement rows for bearer.yml and bearer.ignore. The native initialization, custom-rule defect and correction workflow preserves the original bytes of both files through install and checks. No replacement alias remains: /tmp/gspot-security-false-positives-native-final.log."
+        ]
     },
     {
         "id": "slices/kits-general/038",

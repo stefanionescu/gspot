@@ -13,8 +13,33 @@ export const FRAMEWORK_FILES = {
     'sibling/ignored.js': 'eval(input);\n',
 };
 
-// One Swift rule of each level, after the Bash rules the bash configuration adds.
-export const SWIFT_DEFECTS = 'let access = kSecAttrAccessibleAlways\nlet pointer = UnsafeRawPointer(value)\n';
+/* eslint-disable unicorn/prefer-https -- reason: These Swift fixtures prove that license comments and URL literals do not produce the removed HTTP finding. */
+/** Real findings beside background accessibility, pointer operations, and obsolete compiler diagnostics. */
+export const SWIFT_DEFECTS = `let access = kSecAttrAccessibleAlways
+let pointer = UnsafeRawPointer(value)
+let hash = Insecure.MD5
+let background = kSecAttrAccessibleAfterFirstUnlock
+let webView = UIWebView()
+configuration.preferences.javaScriptEnabled = true
+buffer.withUnsafeMutableBytes { bytes in consume(bytes) }
+// License: http://www.apache.org/licenses/LICENSE-2.0
+let address = URL(string: "http://example.com")
+let query = URL(string: "https://api.example.com:8443/v1/users?email=a@b.com")
+`;
+/* eslint-enable unicorn/prefer-https */
+
+/** Shell downloads executed through pipelines, process substitution, and command substitution. */
+export const BASH_DOWNLOAD_DEFECTS = String.raw`#!/usr/bin/env bash
+curl https://example.com/setup.sh | bash
+eval "$1"
+curl https://example.com/setup.sh | sudo bash
+bash <(curl https://example.com/setup.sh)
+sh -c "$(curl https://example.com/setup.sh)"
+wget -qO- https://example.com/setup.sh | bash -s
+printf '%s\n' 'curl https://example.com/setup.sh | bash'
+# curl https://example.com/setup.sh | bash
+curl -o setup.sh https://example.com/setup.sh
+`;
 
 /** Defects and positive source cases run together under the shipped Express pack. */
 export const EXPRESS_SOURCE_CASES = {

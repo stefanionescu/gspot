@@ -12,6 +12,7 @@ import { containing, containingAll } from '#tests/harness/expectations.ts';
 import {
     OWN_RULE,
     EVALUATED,
+    BEARER_FILES,
     SECURITY_INIT,
     SECURITY_CLEAN,
 } from '#tests/config/tools/configurations/general/security.ts';
@@ -21,6 +22,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
+            ...BEARER_FILES,
             'src/index.ts': SECURITY_CLEAN,
             'package.json': '{\n    "name": "example",\n    "private": true\n}\n',
         });
@@ -35,12 +37,17 @@ test(
         const found = await spawnGspot(sandbox.path, command, environment);
         // Semgrep ships no Windows build, so the check is skipped there and the run passes.
         const isWindows = process.platform === 'win32';
-        const evaluated: Finding = containing({ rule: 'gspot.javascript.no-eval', file: 'src/run.ts', line: 3 });
         expect(found.code, found.stdout + found.stderr).toBe(isWindows ? 0 : 1);
         expect((JSON.parse(found.stdout) as RunReport).checks).toMatchObject([
             isWindows
                 ? { check: 'security/semgrep', status: 'skipped' }
-                : { check: 'security/semgrep', status: 'failed', findings: [evaluated] },
+                : {
+                      check: 'security/semgrep',
+                      status: 'failed',
+                      findings: [
+                          containing<Finding>({ rule: 'gspot.javascript.no-eval', file: 'src/run.ts', line: 3 }),
+                      ],
+                  },
         ]);
         await Bun.write(join(sandbox.path, 'security/own.yml'), OWN_RULE);
         await Bun.write(
@@ -60,6 +67,11 @@ test(
         await Bun.write(join(sandbox.path, 'src/run.ts'), SECURITY_CLEAN);
         await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
         const corrected = await spawnGspot(sandbox.path, command, environment);
+        expect(
+            await Promise.all(
+                Object.keys(BEARER_FILES).map(async (path) => [path, await Bun.file(join(sandbox.path, path)).text()]),
+            ),
+        ).toStrictEqual(Object.entries(BEARER_FILES));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'security/semgrep', status: isWindows ? 'skipped' : 'passed', findings: [] },

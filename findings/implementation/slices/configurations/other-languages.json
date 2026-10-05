@@ -413,10 +413,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2-14,115-125` | `ios-keychain-accessible-always` also matches `kSecAttrAccessibleAfterFirstUnlock`, the class Apple recommends for items read in the background. The scan reported it. Its message (\"while the device is locked\") is wrong for that class. `kSecAttrAccessibleAlways` and `UIWebView` are deprecated, so the compiler already warns about both. | Remove `kSecAttrAccessibleAfterFirstUnlock` from the rule, and delete `ios-no-uiwebview`. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2-14,115-125`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The accessibility rule now matches only kSecAttrAccessibleAlways, with a message that lets the project choose its required accessibility class. Removed the deprecated UIWebView rule. Native recommended/all scans keep AfterFirstUnlock and UIWebView source as accepted neighboring cases while detecting Always and the separate weak-hash defect; correcting those defects leaves the neighboring source intact and passes: /tmp/gspot-security-false-positives-native-final.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/032",
@@ -449,10 +455,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:60-82` (`ios-hardcoded-url-with-credentials`, `ios-insecure-http-url`) | `[^@]+` crosses `/`, so `https://api.example.com:8443/v1/users?email=a@b.com` was reported as embedded credentials. The HTTP rule runs on every line, comments included, so an Apache license header URL was reported. `xcode/ats` already blocks cleartext loads at run time. | Delete the credentials rule along with the other secret rules (FINDINGS row 38). Delete the HTTP rule, or limit it to string literals passed to `URL(string:)` and `URLRequest`. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:60-82` (`ios-hardcoded-url-with-credentials`, `ios-insecure-http-url`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted both the credentials-URL regex and the generic HTTP regex. Fresh native scans accept the port/path URL with an email query, the HTTP license comment and URL literal at both levels without extra findings. The fixture keeps those values after correcting genuine Keychain and weak-hash defects. Existing Xcode ATS native defect/correction cases and CLI secrets baseline cases remain active and pass: /tmp/gspot-security-false-positives-native.log, /tmp/gspot-security-false-positives-native-final.log and /tmp/gspot-security-false-positives-cli.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/035",
@@ -461,10 +473,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:84-98,127-139` | `ios-unsafe-pointer-cast` reports creating pointers and every `withUnsafeMutableBytes` call, not casts. The Swift 6.2 compiler flag `-strict-memory-safety` checks unsafe code properly. JavaScript is on by default in `WKWebView`, and `preferences.javaScriptEnabled` has been deprecated since iOS 14. So `ios-wkwebview-javascript-enabled` catches only an explicit `= true` set through that deprecated property. | Delete both rules. |",
         "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:84-98,127-139`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted the broad unsafe-pointer rule and the deprecated WKWebView JavaScript property rule, including their empty level wrappers. Native recommended/all cases accept pointer creation, withUnsafeMutableBytes and the old explicit preference assignment, retain the real Keychain/weak-hash findings and accept their corrections. Every shipped pack validates with the native Semgrep parser at both levels: /tmp/gspot-security-false-positives-native.log and /tmp/gspot-security-false-positives-native-final.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/036",
@@ -581,10 +599,16 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:6-10` (`gspot.bash.curl-pipe-shell`) | Only the plain `curl ... \\| sh` form matched. `\\| sudo bash`, `bash <(curl ...)`, `sh -c \"$(curl ...)\"`, and `wget -qO- ... \\| bash -s` were missed. | Add patterns for these forms. |",
         "owner": "`packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:6-10` (`gspot.bash.curl-pipe-shell`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/bash/semgrep/bash.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Added command arguments, sudo pipelines, process substitution and command substitution patterns for curl/wget and sh/bash. Native scans find the plain pipeline, sudo bash, bash process substitution, sh -c command substitution and wget -qO- piped to bash -s at their exact source lines. Quoted command text, comments and a download to a file produce no extra findings; the explicit shell correction passes. Evidence: /tmp/gspot-security-false-positives-native-final.log."
+        ]
     },
     {
         "id": "slices/kits-other-languages/046",
