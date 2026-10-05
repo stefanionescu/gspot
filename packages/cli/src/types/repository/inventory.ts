@@ -68,7 +68,7 @@ export type ScopeEntry = {
 export type ToolFile = {
     tool: string;
     path: string;
-    shared?: boolean;
+    shared: boolean;
     table?: string;
     key?: string;
 };

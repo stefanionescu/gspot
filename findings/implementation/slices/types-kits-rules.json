@@ -989,10 +989,19 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/repository/repository.ts:11` `ToolFile.shared?` | The only producer always sets it (`kits/takeover.ts:98`). That forces `shared === true` in `commands/init/replaced.ts:21`. | `shared: boolean`. |",
         "owner": "`types/repository/repository.ts:11` `ToolFile.shared?`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/repository/inventory.ts",
+            "packages/cli/src/configurations/takeover.ts",
+            "packages/cli/src/commands/init/replaced.ts",
+            "packages/cli/src/parsers/schema/configurations/tool.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "ToolFile.shared is required. The sole producer, getReplacedConfigs, always copies the validated replacement row shared value. toolSchema defaults omitted shared to false and rejects key/table selections that do not retain their shared file.",
+            "Initialization uses the required boolean directly when capturing owned files, retaining shared sections and recording removals. The schema probe confirms omitted/false/true inputs produce false/false/true. A TypeScript probe rejects a ToolFile without shared and accepts both boolean states. Transpilation confirms unchanged inventory runtime and equivalent replacement branches for these validated booleans.",
+            "All four TypeScript targets, affected ESLint and formatting passed. Replacement, discovery, selector validation, replacement recovery and installed-file preservation regressions passed: 56 tests and 209 assertions across six files, including retained shared bytes, modes and links, owned removals, and changes after planning."
+        ]
     },
     {
         "id": "slices/types-kits-rules/052",

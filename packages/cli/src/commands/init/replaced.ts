@@ -18,7 +18,7 @@ function captureOwned(root: string, owned: ToolFile[], replaced: Replaced): void
 // Records what init does with one file: a shared file stays for the developer, an owned one is deleted.
 function recordOutcome(entry: ToolFile, replaced: Replaced): void {
     const { tool, path, shared, table, key } = entry;
-    if (shared === true)
+    if (shared)
         replaced.retained.push({
             path,
             note: `${table ?? key ?? tool} settings stay here, and the generated ${tool} configuration takes over. Delete the section when ready.`,
@@ -38,11 +38,11 @@ export function getReplaced(root: string, tooling: Tooling, selected: Set<string
     const owned = tooling.configs.filter(({ tool }) => isReplaced(tool, selected));
     captureOwned(
         root,
-        owned.filter((entry) => entry.shared !== true),
+        owned.filter((entry) => !entry.shared),
         replaced,
     );
     for (const entry of owned) {
-        if (entry.shared === true || replaced.read.has(entry.path)) recordOutcome(entry, replaced);
+        if (entry.shared || replaced.read.has(entry.path)) recordOutcome(entry, replaced);
     }
     return replaced;
 }
