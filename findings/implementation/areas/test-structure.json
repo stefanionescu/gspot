@@ -23,11 +23,20 @@
         "section": "Findings",
         "finding": "| `CONTRIBUTING.md:100-101`, `mise.toml:79`, `ci.yml:166-167` | `unit` and `integration` run in one task and one job, so no runner uses the split. The definition is not held: 145 of 188 integration files never call `runGspot`, integration spawns gspot (`commands/cancellation.test.ts:30`, `commands/push.test.ts:22`) and needs Swift (`swift/build/analyzer.test.ts:13`), and `unit/cli/output/reporter.test.ts:128` calls `main()`. | Merge both into `tests/cli` and `tests/plugin`, mirroring the source folders. Rewrite `CONTRIBUTING.md:98-109` to describe three suites by what they need. |",
         "owner": "`CONTRIBUTING.md:100-101`, `mise.toml:79`, `ci.yml:166-167`",
-        "location": ["tests/cli", "tests/plugin", "CONTRIBUTING.md", "mise.toml"],
+        "location": [
+            "tests/cli",
+            "tests/plugin",
+            "tests/tools",
+            "tests/packages",
+            "CONTRIBUTING.md",
+            "mise.toml",
+            ".github/workflows/ci.yml"
+        ],
         "status": "closed",
-        "outcome": "overridden by an agreed decision",
+        "outcome": "implemented",
         "verification": [
-            "The agreed plan explicitly retains distinct unit and integration suites and places plugin unit tests within unit. The current directories and tasks follow that decision. Duplicate cases, unnecessary native requirements and internal mocks remain separately tracked; this override does not close them."
+            "The current user plan supersedes the earlier separate unit/integration decision. CLI unit and integration cases share cli; plugin cases share plugin. The default task selects cli/plugin, one sharded native task selects tools, and delivered suites select packages. CI and contributor instructions use these owners.",
+            "Complete CLI/plugin, native tools, and delivered-package organization replays remain recorded under test-structure/001 and /006. Fresh generation, rule, and merged-owner cases pass in /tmp/gspot-generated-test-owner-cli.log, /tmp/gspot-generated-test-owner-cli-final.log, /tmp/gspot-generated-test-owner-merges-final.log, and /tmp/gspot-generated-test-owner-native-final.log."
         ]
     },
     {
@@ -37,10 +46,17 @@
         "section": "Findings",
         "finding": "| `unit/cli/sql-parser.test.ts` + `integration/cli/sql-parser.test.ts`; `unit/cli/checks/general/copied-blocks.test.ts` + `integration/cli/checks/general/copied-blocks.test.ts`; `unit/.../python/docstrings.test.ts` + `integration/.../python/docstrings.test.ts` | One subject split across two tiers under the same file name. These are the only path collisions the merge creates. | Merge each pair into one file. |",
         "owner": "`unit/cli/sql-parser.test.ts` + `integration/cli/sql-parser.test.ts`; `unit/cli/checks/general/copied-blocks.test.ts` + `integration/cli/checks/general/copied-blocks.test.ts`; `unit/.../python/docstrings.test.ts` + `integration/.../python/docstrings.test.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/cli/parsers/sql",
+            "tests/cli/checks/general/duplication.test.ts",
+            "tests/cli/checks/language/python/pydoclint.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The agreed nine filename merges preserve all 127 unique assertion sites and all original test registrations. Before/after evidence: /tmp/gspot-organization-test-merges.json. The duplication and Python documentation owners use the requested names. SQL statement analysis and native parser acquisition have separate behavioral owners, with concurrent parsing, corrected source, and exact diagnostic positions verified.",
+            "All nine merged owners pass across /tmp/gspot-generated-test-owner-cli.log, /tmp/gspot-generated-test-owner-cli-final.log and /tmp/gspot-generated-test-owner-merges-final.log. The stale SQL diagnostic expectation now asserts the location-first diagnostic emitted by its actual parser owner."
+        ]
     },
     {
         "id": "areas/test-structure/004",
@@ -66,10 +82,19 @@
         "section": "Findings",
         "finding": "| `acceptance/cli/spelling.test.ts`, `prose-ignore.test.ts`, `commits.test.ts`; `integration/cli/doctor.test.ts` | Kit tests sit under `cli` while the other general kits sit under `acceptance/kits/general`. `doctor.test.ts` sits at the root, but the source is `commands/doctor`. | Move the three kit tests to `tools/kits/general/`, and move `doctor.test.ts` to `cli/commands/`. |",
         "owner": "`acceptance/cli/spelling.test.ts`, `prose-ignore.test.ts`, `commits.test.ts`; `integration/cli/doctor.test.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/tools/generation/spelling.test.ts",
+            "tests/tools/commands/spelling.test.ts",
+            "tests/tools/configurations/general/prose.test.ts",
+            "tests/tools/configurations/general/commits.test.ts",
+            "tests/cli/commands/doctor.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Native generation, public spelling mutation, and prose/commit configuration cases follow their behavioral owners in tools. Doctor cases follow commands/doctor in cli. No acceptance or obsolete cli test tier remains.",
+            "Fresh native prose and commit cases pass in /tmp/gspot-generated-test-owner-native.log; spelling generation and public corrections pass in /tmp/gspot-generated-test-owner-native-final.log. Doctor passes in /tmp/gspot-generated-test-owner-cli.log."
+        ]
     },
     {
         "id": "areas/test-structure/006",
@@ -203,10 +228,14 @@
         "section": "Findings",
         "finding": "| `harness/cli/generated.ts:21-24,42-45,58-61,69-72`, `harness/cli/swift.ts:38-42`, `harness/tools/install.ts:121-131`, and 13 tests (`tools/cli/generation/*.test.ts`, `integration/cli/generation/formatting.test.ts`, `level-contract.test.ts`, both licenses tests) | `emitAll` is called three times with the same arguments in one file. `writeConfigs`, `writeSwiftlint`, `installSemgrep`, and the tests write emitted files by hand, \"the way apply writes them\". That is a second implementation of `gspot apply`. | Call `runGspot(root, ['apply'])` where a test needs the generated files. Keep `emitted` only for tests that read one generated file. Delete `writeConfigs` and `writeSwiftlint`, and use `emitted` inside `generatedFile` and `generatedEslint`. |",
         "owner": "`harness/cli/generated.ts:21-24,42-45,58-61,69-72`, `harness/cli/swift.ts:38-42`, `harness/tools/install.ts:121-131`, and 13 tests (`tools/cli/generation/*.test.ts`, `integration/cli/generation/formatting.test.ts`, `level-contract.test.ts`, both licenses tests)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/harness/generated.ts", "tests/tools/generation", "tests/cli/generation"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed manual full-generation write loops from the affected CLI and native generation cases. Setup uses the existing production writeOutputs lifecycle with ownership logging or the existing createEslint owner. It now respects production file modes and headers. XCTest intentionally mutates one managed configuration and restores its original mode. No second apply writer or new forwarding helper remains.",
+            "The second-pass warning against resolving registry locks in offline tests is respected. Deliberate EditorConfig-only, Prettier discovery, standalone hook consumer, and post-apply corruption fixtures remain isolated. Semgrep and license installation scenarios already use public apply. Removed writeConfigs, writeSwiftlint, and installSemgrep exports remain absent.",
+            "Fresh CLI generation/plugin cohort: 313 passing cases; corrected SQL and remaining merge owners: 48 passing cases, two platform skips, zero failures. Native generated Ruff, SQLFluff, Squawk, JavaScript, and parameter-limit cases pass in /tmp/gspot-generated-test-owner-native.log. Corrected XCTest and spelling setup passes in /tmp/gspot-generated-test-owner-native-final.log. All four TypeScript targets and all five repository ESLint scopes pass."
+        ]
     },
     {
         "id": "areas/test-structure/013",
@@ -253,10 +282,18 @@
         "section": "Findings",
         "finding": "| `harness/cli/nextjs.ts`, `harness/cli/tooling.ts:7,25`, `harness/planted/secrets.ts:18,27,53`, `harness/registry/packages.ts:8`, `harness/tools/install.ts:121` (`installSemgrep`), `harness/cli/swift.ts:38` (`writeSwiftlint`) | Each of these helpers has one user. `tooling.ts` puts two unrelated one-user exports in one file. | Move each helper into its user. Keep only `PLANTED_KEY_ID` and `PLANTED_SETTINGS` (two users) in `harness/samples/secrets.ts`, and merge `registry/packages.ts` into `npm.ts`. |",
         "owner": "`harness/cli/nextjs.ts`, `harness/cli/tooling.ts:7,25`, `harness/planted/secrets.ts:18,27,53`, `harness/registry/packages.ts:8`, `harness/tools/install.ts:121` (`installSemgrep`), `harness/cli/swift.ts:38` (`writeSwiftlint`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/harness/tooling.ts",
+            "tests/harness/npm.ts",
+            "scripts/registry/packages.ts",
+            "tests/tools/npm/installation.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The former Next.js, discovery, planted-secrets, Swift writer, and Semgrep installer single-caller layers are absent. The retained manifest parser has real selection/parsing consumers. Registry lifecycle remains under scripts/registry as the agreed plan requires.",
+            "createPackageRegistry has two real callers: npm fixture orchestration and native package installation. It retains archive creation, integrity checks, authenticated requests, and disposal. Native installation verifies immutable failures, same-version byte changes, refresh preview isolation, and correction through the real registry: /tmp/gspot-generated-test-owner-native-final.log. CLI generation and all four TypeScript targets pass."
+        ]
     },
     {
         "id": "areas/test-structure/016",
@@ -612,10 +649,17 @@
         "section": "Findings",
         "finding": "| `samples/client-environment.json`; `samples/python.ts:14,17,23`; `samples/react.ts:18,27` | One-user samples: the JSON (`unit/plugin/rules/no-client-env.test.ts`), `TOOLS_CLEAN`, `TOOLS_MODULE`, and `STRUCTURE_LEFT_OUT` (`acceptance/kits/language/python.test.ts`), and `RENDERED_TEST` and `plantedComponent` (`integration/cli/generation/react-rules.test.ts`). | Move each into its test. |",
         "owner": "`samples/client-environment.json`; `samples/python.ts:14,17,23`; `samples/react.ts:18,27`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/plugin/rules/no-client-env.json",
+            "tests/plugin/rules/no-client-env.test.ts",
+            "tests/config/samples/react.ts"
+        ],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The user explicitly keeps static data under config by behavioral owner rather than inlining it in a test. Moved the client environment JSON to plugin/rules/no-client-env.json and updated its sole rule consumer; the obsolete path is deleted. No alias or duplicate remains.",
+            "TOOLS_CLEAN, TOOLS_MODULE, STRUCTURE_LEFT_OUT, RENDERED_TEST, and plantedComponent are absent. Retained React exports have genuine shared consumers; compiler fixture values were verified unchanged in the earlier static-data ownership batch. Fresh client-environment RuleTester cases and React generation cases pass: /tmp/gspot-generated-test-owner-cli.log. All four TypeScript targets pass."
+        ]
     },
     {
         "id": "areas/test-structure/036",
@@ -624,10 +668,17 @@
         "section": "Findings",
         "finding": "| `harness/planted/cases.ts:75` (`script`), `samples/bash.ts:7` (`HEAD`); `samples/typescript.ts:3` | The most used planted file (61 files) lives in the harness, not in samples, and repeats the header that `bash.ts` declares. `CONFIGURATION_ARRIVAL_PACKAGE` is named after one test but has three users. | Move `script` into `harness/samples/bash.ts` and build it from `HEAD`. Rename the package constant after what it holds (`ZOD_PACKAGE`). |",
         "owner": "`harness/planted/cases.ts:75` (`script`), `samples/bash.ts:7` (`HEAD`); `samples/typescript.ts:3`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/config/samples/bash.ts",
+            "tests/config/samples/typescript.ts",
+            "tests/tools/commands/add-remove-configurations.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "CLEAN_BASH_SCRIPT lives under static Bash data and builds from HEAD; no duplicate harness script remains. ZOD_PACKAGE names the package contents and has three actual consumers: command mutations, CLI library checks, and native library fixtures.",
+            "Fresh Bash checks and template scenarios pass in /tmp/gspot-generated-test-owner-cli.log and /tmp/gspot-generated-test-owner-native.log. Library contracts pass in /tmp/gspot-generated-test-owner-cli-final.log. The public Zod add/remove scenario rejects its defect, accepts its correction, and removes the plugin through the native lifecycle: /tmp/gspot-generated-test-owner-native-final.log."
+        ]
     },
     {
         "id": "areas/test-structure/037",

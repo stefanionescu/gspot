@@ -1,12 +1,7 @@
-import { ESLint } from 'eslint';
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { linkInstalledModules } from '#tests/harness/platforms.ts';
+import { createEslint } from '#tests/harness/generated.ts';
 
 for (const language of ['javascript', 'typescript']) {
     test.each([7, 8])(`${language} counts declared parameters with maximum %i`, async (maximum) => {
@@ -28,17 +23,8 @@ for (const language of ['javascript', 'typescript']) {
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
         });
-        linkInstalledModules(join(directory.path, 'node_modules'));
-        const session = await openSession(directory.path);
-        const files = emitAll(session).files;
-        const configName = '.gspot/config/eslint.config.mjs';
-        const config = files.find(({ path }) => path === configName)!;
-        mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
-        writeFileSync(join(directory.path, configName), config.content);
-        const results = await new ESLint({
-            cwd: directory.path,
-            overrideConfigFile: join(directory.path, configName),
-        }).lintFiles([`example.${extension}`]);
+        const eslint = await createEslint(directory.path);
+        const results = await eslint.lintFiles([`example.${extension}`]);
         expect(
             results.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'max-params'),
         ).toMatchObject(maximum === 7 ? [{ ruleId: 'max-params', line: 2 }] : []);

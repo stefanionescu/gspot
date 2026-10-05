@@ -1,6 +1,6 @@
 import { noClientEnv } from '#plugin/rules/no-client-env.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import example from '#tests/config/plugin/client-environment.json';
+import example from '#tests/config/plugin/rules/no-client-env.json';
 import type { ClientEnvOptions } from '#plugin/types/environment.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
 

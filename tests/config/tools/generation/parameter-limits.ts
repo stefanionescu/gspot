@@ -3,7 +3,6 @@ export const PARAMETER_CASES = [
     {
         language: 'python',
         file: 'example.py',
-        configName: '.gspot/config/ruff.toml',
         command: ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--output-format', 'json', 'example.py'],
         source: `"""Parameter-limit fixtures."""
 
@@ -30,7 +29,6 @@ def _eight(
     {
         language: 'swift',
         file: 'example.swift',
-        configName: '.gspot/config/swiftlint.yml',
         command: [
             'swiftlint',
             'lint',

@@ -1,14 +1,16 @@
 import { join } from 'node:path';
-import { unlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { statSync, chmodSync, unlinkSync } from 'node:fs';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { DEFECT, CORRECT } from '#tests/config/tools/generation/xctest.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
@@ -20,6 +22,9 @@ async function expectConfigurationChanges(root: string, prefix: string, command:
     expect(ran.code).toBe(0);
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
     const nested = await Bun.file(nestedPath).text();
+    const mode = statSync(nestedPath).mode & 0o777;
+    // The fixture deliberately changes a managed, read-only configuration to exercise native enforcement.
+    chmodSync(nestedPath, mode | 0o200);
     await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
     const changedConfiguration = await spawnGspot(root, command);
     expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
@@ -27,6 +32,7 @@ async function expectConfigurationChanges(root: string, prefix: string, command:
         containing({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
     );
     await Bun.write(nestedPath, nested);
+    chmodSync(nestedPath, mode);
     await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT.replace('value: String', 'value:String'));
     const fixed = await spawnGspot(root, [...command, '--fix']);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -52,9 +58,11 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['', 'ios # app'])(
             [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
         });
         const session = await openSession(root);
-        const outputs = emitAll(session).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+        const rendered = emitAll(session);
+        const outputs = rendered.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        for (const output of outputs) await Bun.write(join(root, output.path), output.content);
+        using log = openOwnership(root);
+        writeOutputs(session, log, undefined, rendered);
         const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
         expect(planned).toHaveLength(1);
         expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
@@ -89,9 +97,11 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
             [`${scope}/Value.swift`]: DEFECT,
         });
         const session = await openSession(sandbox.path);
-        const outputs = emitAll(session).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+        const rendered = emitAll(session);
+        const outputs = rendered.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
-        for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
+        using log = openOwnership(sandbox.path);
+        writeOutputs(session, log, undefined, rendered);
         const native = await runTestCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
             { cwd: join(sandbox.path, scope) },

@@ -3,8 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { SQL_FUNCTION_SOURCE } from '#tests/config/tools/generation/sqlfluff.ts';
 
@@ -19,9 +21,11 @@ test('SQLFluff honors root and nested dialect settings over the database default
         'warehouse/child/query.sql': 'SELECT * EXCLUDE (secret) FROM records;\n',
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
+    const rendered = emitAll(session);
+    const configs = rendered.files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     const config = configs.find((file) => file.path === '.gspot/config/sqlfluff.cfg')!;
-    for (const file of configs) await Bun.write(join(sandbox.path, file.path), file.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, rendered);
     const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
     const options = { cwd: sandbox.path, timeoutMs: NATIVE_TEST_TIMEOUT_MS };
     const wrong = await runTestCommand([...lint, '--dialect', 'postgres', 'query.sql'], options);
@@ -70,8 +74,10 @@ test.each(['recommended', 'all'] as const)(
             'functions.sql': SQL_FUNCTION_SOURCE,
         });
         const session = await openSession(sandbox.path);
-        const config = emitAll(session).files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
-        await Bun.write(join(sandbox.path, config.path), config.content);
+        const rendered = emitAll(session);
+        const config = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        using log = openOwnership(sandbox.path);
+        writeOutputs(session, log, undefined, rendered);
         const lintArguments = [
             '--config',
             config.path,

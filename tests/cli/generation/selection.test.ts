@@ -1,11 +1,13 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import type { LicenseAllowlist } from '#cli/types/checks/general/licenses.ts';
 
@@ -39,8 +41,8 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
     const output = emitAll(session);
     const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
     expect(config).toBeDefined();
-    mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
-    writeFileSync(join(sandbox.path, '.gspot/config/eslint.config.mjs'), config!.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, output);
     const eslint = new ESLint({
         cwd: sandbox.path,
         overrideConfigFile: join(sandbox.path, '.gspot/config/eslint.config.mjs'),

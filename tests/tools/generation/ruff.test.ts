@@ -4,8 +4,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
@@ -19,12 +21,14 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         'app/tests/test_example.py': defect,
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter(({ path }) => path.endsWith('/ruff.toml'));
+    const rendered = emitAll(session);
+    const configs = rendered.files.filter(({ path }) => path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
     ]);
-    for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, rendered);
     const root = parse(configs.find(({ path }) => path === '.gspot/config/ruff.toml')!.content);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });

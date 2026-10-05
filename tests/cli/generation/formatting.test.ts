@@ -7,12 +7,14 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { knownSettings } from '#cli/policy/settings/known.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -47,6 +49,7 @@ test('the format width reaches editors and generated tool configurations', async
         commandEnvironment(session, bashCheck!),
     );
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
+    // Isolate EditorConfig discovery from the Prettier generated configuration for this native consumer.
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
@@ -81,10 +84,9 @@ test('an explicit YAML width override remains consistent between EditorConfig an
         'sample.yaml': 'parent:\n child: value\n',
     });
     const session = await openSession(directory.path);
-    const generated = new Map(emitAll(session).files.map((file) => [file.path, file.content]));
-    await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
-    await Bun.write(join(directory.path, '.gspot/config/prettier.json'), generated.get('.gspot/config/prettier.json')!);
-    await Bun.write(join(directory.path, '.prettierrc.json'), generated.get('.prettierrc.json')!);
+    const generated = emitAll(session);
+    using log = openOwnership(directory.path);
+    writeOutputs(session, log, undefined, generated);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const native = await prettier.resolveConfig(path, {
@@ -112,7 +114,8 @@ test('formatter overrides agree for explicit configuration and editor discovery'
         'package.json': '{"private":true}\n',
         ...Object.fromEntries(FORMAT_CASES.map(({ file }) => [file, 'const greeting="hello";'])),
     });
-    for (const file of emitAll(await openSession(root)).files) await Bun.write(join(root, file.path), file.content);
+    using log = openOwnership(root);
+    writeOutputs(await openSession(root), log);
     for (const { file, ...expected } of FORMAT_CASES) {
         for (const config of ['.gspot/config/prettier.json', '.prettierrc.json']) {
             const resolved = await prettier.resolveConfig(join(root, file), {

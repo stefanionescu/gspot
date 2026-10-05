@@ -4,7 +4,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 
@@ -31,7 +33,8 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         'transactional/child/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter(({ path }) => path.endsWith('/squawk.toml'));
+    const rendered = emitAll(session);
+    const configs = rendered.files.filter(({ path }) => path.endsWith('/squawk.toml'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, parse(content)['assume_in_transaction']])),
     ).toStrictEqual({
@@ -39,7 +42,8 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/squawk.toml': true,
         '.gspot/config/transactional/child/squawk.toml': true,
     });
-    for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, rendered);
     const transactional = squawk(sandbox.path, '.gspot/config/transactional/child/squawk.toml');
     expect(transactional.code, transactional.stderr).toBe(0);
     const failed = squawk(sandbox.path, '.gspot/config/squawk.toml');

@@ -1,13 +1,16 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 
 test('native spelling file-type allowances preserve unrelated findings and neighboring files at all', async () => {
@@ -21,10 +24,12 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
         'neighbor.txt': `${TYPO.color} ${TYPO.the}\n`,
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter(({ path }) => path.endsWith('typos.toml'));
+    const rendered = emitAll(session);
+    const configs = rendered.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, rendered);
     for (const config of configs) {
-        await Bun.write(join(sandbox.path, config.path), config.content);
         const policy = runTestCommandBlocking(['typos', '--isolated', '--config', config.path, 'gspot.toml'], {
             cwd: sandbox.path,
         });
@@ -71,7 +76,8 @@ test('spelling locales and word allowances remain scoped in generated configurat
         '.gspot/config/british/typos.toml',
         '.gspot/config/typos.toml',
     ]);
-    for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log, undefined, output);
 
     const run = (config: string, path: string) =>
         runTestCommandBlocking(
@@ -121,8 +127,8 @@ test.each([
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
     });
     const session = await openSession(sandbox.path);
-    const outputs = emitAll(session).files.filter(({ path }) => path.endsWith('typos.toml'));
-    for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log);
     const selected = patterns.includes('nested')
         ? ['.gspot/config/typos.toml']
         : ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'];
@@ -149,6 +155,6 @@ test.each([
     });
     if (patterns.includes('nested')) {
         expect(root).toStrictEqual([]);
-        expect(outputs.map(({ path }) => path)).not.toContain('.gspot/config/nested/typos.toml');
+        expect(existsSync(join(sandbox.path, '.gspot/config/nested/typos.toml'))).toBe(false);
     } else expect(scope).toStrictEqual(root);
 });

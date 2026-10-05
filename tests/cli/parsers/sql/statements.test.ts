@@ -24,7 +24,9 @@ test('SQL analyses share concurrent parses and refresh after source corrections'
         line: 2,
         column: 1,
     });
-    expect(await rejection(sqlIdentifiers('broken.sql', broken, reads))).toContain('SQL parse failed at 2:1');
+    expect(await rejection(sqlIdentifiers('broken.sql', broken, reads))).toBe(
+        `broken.sql:2:1: SQL parse failed: syntax error at or near "${TYPO.select}"`,
+    );
     const corrected = await parseSqlFile(broken.replace(`${TYPO.select} 2`, 'SELECT 2'), reads);
     expect(corrected.error).toBeUndefined();
     const refreshed = parseSqlFile(source, { root: reads.root, sources: new Map(), memo: new Map() });

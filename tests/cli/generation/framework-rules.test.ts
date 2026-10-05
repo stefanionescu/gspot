@@ -1,12 +1,9 @@
 // Framework manifests own shared-rule overrides. React Native disables DOM accessibility rules while React retains them.
-import { ESLint } from 'eslint';
 import { join } from 'node:path';
-import type { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import type { ESLint, Linter } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
@@ -19,14 +16,9 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
     });
-    linkInstalledModules(join(sandbox.path, 'node_modules'));
-    mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
-    // The generated configuration imports its plugins from the private installation.
+    // Preserve the fixture's private plugin installation; shared setup owns emission and writes.
     linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-    const session = await openSession(sandbox.path);
-    const config = emitAll(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
-    writeFileSync(join(sandbox.path, config.path), config.content);
-    const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
+    const eslint = await createEslint(sandbox.path);
     const results: Record<string, Record<string, unknown[]>> = {};
     for (const file of files) {
         const resolved = (await eslint.calculateConfigForFile(file)) as ResolvedEslint;
