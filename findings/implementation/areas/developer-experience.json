@@ -272,10 +272,17 @@
         "section": "Findings",
         "finding": "| `packages/cli/src/tools/inspect.ts:237-240`, `packages/cli/src/commands/install/steps.ts:25` | `installHint` returns \"Run: gspot install\" for any tool with a mise, npm, PyPI, GitHub, or cargo installer. `gspot install` installs native tools only when the runner is mise. With the default runner for Python and Swift (`none`), the hint for SwiftLint, gitleaks, and the others sends the user in a loop. | When the runner is not mise, return the platform command, such as `brew install swiftlint`, or `mise use swiftlint@0.63.2`. |",
         "owner": "`packages/cli/src/tools/inspect.ts:237-240`, `packages/cli/src/commands/install/steps.ts:25`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/tools/inspect.ts",
+            "tests/cli/tools/installation.test.ts",
+            "tests/config/cli/tools/installation.ts"
+        ],
+        "status": "closed",
+        "outcome": "The inspection owner selects gspot install for mise-managed tools or private npm/Python installations. Other native tools receive a platform acquisition command or their pinned mise command. Regressions remove executables from PATH and verify missing SwiftLint and gitleaks guidance with and without mise, including the final availability diagnostic.",
+        "verification": [
+            "Affected tool and lifecycle failure cohort: 129 cases pass with 402 assertions across 14 files (/tmp/gspot-acquisition-tests.log). The final native-hint fixture uses real PATH isolation and passes its 11 cases separately (/tmp/gspot-acquisition-hints-final.log).",
+            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-acquisition-types.log, /tmp/gspot-acquisition-lint.log). The complete staged gate passes (/tmp/gspot-acquisition-staged.json)."
+        ]
     },
     {
         "id": "areas/developer-experience/023",

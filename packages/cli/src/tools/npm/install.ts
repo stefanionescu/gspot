@@ -28,6 +28,7 @@ import {
     INSTALL_ARGUMENTS,
     CONNECTION_URL_KEY,
     NPM_SETTING_PREFIX,
+    GITHUB_DOWNLOAD_URL,
     ENCODED_CREDENTIAL_KEY,
     PACKAGE_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/tools/npm.ts';
@@ -230,6 +231,7 @@ export function installArgv(installer: PackageInstaller): string[] {
  * @returns the note, or undefined when the output names no cause gspot knows
  */
 export function githubRefusalNote(output: string): string | undefined {
-    if (!GITHUB_REFUSAL.test(output)) return undefined;
-    return 'A tool fetches its binary from GitHub at install time and GitHub refused the anonymous request. Set GITHUB_TOKEN to a token that reads public releases and retry.';
+    if (!output.split('\n').some((line) => GITHUB_DOWNLOAD_URL.test(line) && GITHUB_REFUSAL.test(line)))
+        return undefined;
+    return 'GitHub refused a tool download. Set GITHUB_TOKEN to a token that reads public releases and retry.';
 }

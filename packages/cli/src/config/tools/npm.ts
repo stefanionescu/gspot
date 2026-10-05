@@ -19,7 +19,10 @@ export const PACKAGE_SETTING_VARIABLE_PREFIX = 'GSPOT_PACKAGE_SETTING_';
 export const YARN_SETTING_VARIABLE_PREFIX = 'GSPOT_YARN_SETTING_';
 
 // A package that fetches its binary at install time can fail for a reason the package manager does not name.
-export const GITHUB_REFUSAL = /api\.github\.com|github\.com\/.*\/releases|HTTP 403|rate limit/iu;
+export const GITHUB_DOWNLOAD_URL =
+    /https?:\/\/(?:api\.github\.com\/|github\.com\/[^/\s?#]+\/[^/\s?#]+\/releases(?:\/|[?\s]|$))/iu;
+
+export const GITHUB_REFUSAL = /\b(?:HTTP 403|status 403|403 Forbidden|rate limit exceeded)\b/iu;
 
 export const CONNECTION_KEYS = new Set([
     'registry',

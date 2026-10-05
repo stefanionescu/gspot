@@ -413,10 +413,18 @@
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/acquisition.test.ts:12`, \"output without a known cause adds no note\" | `GITHUB_REFUSAL` (`packages/cli/src/config/tools/packages.ts:7`) matches `HTTP 403` and `rate limit` from any host. As a result, a 403 from a private npm registry gets the `GITHUB_TOKEN` note. The negative case uses unrelated output, so it cannot catch this. | Add a negative row for a 403 from a host that is not GitHub. If it fails, tie each alternative of the pattern to GitHub. |",
         "owner": "`tests/unit/cli/acquisition.test.ts:12`, \"output without a known cause adds no note\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/tools/npm.ts",
+            "packages/cli/src/tools/npm/install.ts",
+            "tests/cli/tools/npm.test.ts",
+            "tests/cli/tools/package-failures.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "GitHub token guidance now requires a GitHub API or release URL and a refusal on the same output line. Private registry 403s, bare rate limits, unrelated successful GitHub downloads, and lookalike hosts receive no GitHub note. Frozen installation and lock resolution preserve their original diagnostics, redaction, and file bytes.",
+        "verification": [
+            "Affected tool and lifecycle failure cohort: 129 cases pass with 402 assertions across 14 files (/tmp/gspot-acquisition-tests.log). The final native-hint fixture uses real PATH isolation and passes its 11 cases separately (/tmp/gspot-acquisition-hints-final.log).",
+            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-acquisition-types.log, /tmp/gspot-acquisition-lint.log). The complete staged gate passes (/tmp/gspot-acquisition-staged.json)."
+        ]
     },
     {
         "id": "slices/tests-unit/029",

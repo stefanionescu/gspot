@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
+import { PACKAGE_FAILURES } from '#tests/config/cli/tools/npm.ts';
 import { installPackageLock, preparePackageLock } from '#cli/tools/npm/install.ts';
 
 test.each([
@@ -20,9 +21,9 @@ test.each([
     },
 );
 
-test.each([false, true])(
-    'a package failure reports redacted diagnostics and preserves files with frozen=%s',
-    async (frozen) => {
+test.each(PACKAGE_FAILURES)(
+    'a package failure preserves files and redacts $refusal with frozen=$frozen',
+    async ({ frozen, refusal }) => {
         await using repository = await testdir();
         await using isolated = await testdir();
         const token = 'synthetic-registry-failure-token';
@@ -39,8 +40,10 @@ test.each([false, true])(
                 code: version ? 0 : 1,
                 missing: false,
                 duration: 0,
-                stdout: version ? '1.4.2\n' : `Downloading ${registry}private-check-tool\n${password}\n${token}`,
-                stderr: version ? '' : 'error: private-check-tool@1.0.0 was not found',
+                stdout: version
+                    ? '1.4.2\n'
+                    : `Downloading https://api.github.com/repos/example/tool/releases\nDownloading ${registry}private-check-tool\n${password}\n${token}`,
+                stderr: version ? '' : `${refusal} from ${registry}private-check-tool`,
             });
         });
         try {
@@ -54,7 +57,8 @@ test.each([false, true])(
             expect(diagnostic).toContain(
                 `bun ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit 1)`,
             );
-            expect(diagnostic).toContain('private-check-tool@1.0.0 was not found');
+            expect(diagnostic).toContain(refusal);
+            expect(diagnostic).not.toContain('GITHUB_TOKEN');
             expect(diagnostic).toContain('Run: gspot apply, then gspot install');
             for (const credential of [token, password, encodeURIComponent(password)])
                 expect(diagnostic).not.toContain(credential);

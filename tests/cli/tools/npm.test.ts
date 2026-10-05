@@ -1,20 +1,15 @@
 import { test, expect } from 'bun:test';
 import { npmProject } from '#cli/generation/npm.ts';
-import { YARN_MANAGERS } from '#tests/config/cli/tools/npm.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import { lockArgv, installArgv, githubRefusalNote } from '#cli/tools/npm/install.ts';
+import { YARN_MANAGERS, OTHER_DOWNLOAD_OUTPUT, GITHUB_DOWNLOAD_FAILURES } from '#tests/config/cli/tools/npm.ts';
 
-test.each([
-    'error: Request to https://api.github.com/repos/editorconfig-checker/editorconfig-checker/releases/tags/v3.4.0 failed with status 403',
-    'Error: HTTP 403 from https://github.com/editorconfig-checker/editorconfig-checker/releases/download/v3.4.0/ec-darwin-arm64.tar.gz',
-    'API rate limit exceeded for 203.0.113.9.',
-])('output that shows a GitHub refusal names the token to set: %s', (line) => {
+test.each(GITHUB_DOWNLOAD_FAILURES)('a refused GitHub download names the token to set: %s', (line) => {
     expect(githubRefusalNote(`postinstall failed\n${line}\n`)).toContain('GITHUB_TOKEN');
 });
 
-test('output without a known cause adds no note', () => {
-    expect(githubRefusalNote('error: package "left-pad@0.0.1" not found\n')).toBeUndefined();
-    expect(githubRefusalNote('')).toBeUndefined();
+test.each(OTHER_DOWNLOAD_OUTPUT)('output without a refused GitHub download adds no token note: %s', (output) => {
+    expect(githubRefusalNote(output)).toBeUndefined();
 });
 
 test.each(YARN_MANAGERS)(

@@ -63,3 +63,17 @@ export const PRIVATE_INSTALLATIONS = [
         expected: undefined,
     },
 ] as const;
+
+/** Native acquisition hints must account for the repository's chosen installation runner. */
+export const NATIVE_HINTS = [
+    ['swiftlint', 'none'],
+    ['swiftlint', 'mise'],
+    ['gitleaks', 'none'],
+    ['gitleaks', 'mise'],
+] as const;
+
+export const NATIVE_HINT_COMMANDS: Record<string, Record<string, string>> = {
+    darwin: { swiftlint: 'brew install swiftlint', gitleaks: 'brew install gitleaks' },
+    linux: { swiftlint: 'mise install swiftlint@', gitleaks: 'mise install gitleaks@' },
+    win32: { swiftlint: 'mise install swiftlint@', gitleaks: 'winget install Gitleaks.Gitleaks' },
+};
