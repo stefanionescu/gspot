@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { toolPackages } from '#cli/generation/npm.ts';
+import { npmProject } from '#cli/generation/npm.ts';
 import { YARN_MANAGERS } from '#tests/config/cli/tools/npm.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import { lockArgv, installArgv, githubRefusalNote } from '#cli/tools/npm/install.ts';
@@ -22,7 +22,7 @@ test.each(YARN_MANAGERS)(
     ({ installer, lock, install, settings }) => {
         expect(lockArgv(installer)).toStrictEqual(lock);
         expect(installArgv(installer)).toStrictEqual(install);
-        const files = toolPackages([], installer, 'mise');
+        const files = npmProject([], installer, 'mise');
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? ['.gspot/package.json', '.gspot/.yarnrc.yml'] : ['.gspot/package.json'],
         );

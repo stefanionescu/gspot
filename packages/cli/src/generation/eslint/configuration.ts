@@ -1,10 +1,10 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
 import { aliasesFor } from '#cli/repository/aliases.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
+import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
@@ -122,31 +122,27 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
     const { policy, selection } = context;
     const { architecture } = policy;
     const roles = directionRoles(architecture, harnessFolders(policy, selection.scope.path));
-    const trivial = limits['trivialStatements'] === undefined ? {} : { maxStatements: limits['trivialStatements'] };
     const barrels = { 'gspot/max-barrel-reexports': ['error', { max: limits['barrelReexports'] }] };
     return {
-        'gspot/no-trivial-functions': ['error', trivial],
-        'gspot/no-trivial-files': ['error', { ...trivial, allowIndex: policy.structure.reexports === 'index-only' }],
         ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),
         ...(policy.level === 'all' && policy.structure.reexports !== 'none' ? barrels : {}),
     };
 }
 
 // The limits of one language, each falling back to the general limit.
-
 function limitsOf(view: ScopeView, language: string, keys: Record<string, string>): EslintConfiguration['limits'] {
     return Object.fromEntries(Object.entries(keys).map(([name, key]) => [name, view.limit(key, language)]));
 }
 
-// The file sets and plain settings [tools.eslint] holds, with their defaults.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reading these four settings with their defaults inside eslintConfiguration puts it over the complexity limit.
+// The effective test patterns and ESLint settings, including the selected configuration defaults.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reading these four effective settings inside eslintConfiguration puts it over the complexity limit.
 function eslintSettings(view: ScopeView) {
     const { settings } = view;
     return {
-        testFiles: (settings['tests'] ?? []) as string[],
-        scriptFiles: (settings['tools.eslint.script_files'] ?? []) as string[],
+        testFiles: settings['tests'] as string[],
+        scriptFiles: settings['tools.eslint.script_files'] as string[],
         nodeVersion: settings['tools.eslint.node_version'] as string,
-        restrictedImports: (settings['tools.eslint.restricted_imports'] ?? []) as unknown[],
+        restrictedImports: settings['tools.eslint.restricted_imports'] as unknown[],
     };
 }
 
@@ -195,7 +191,10 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
         runtimes: runtimeBlocks(scopes),
         boundaryBlocks: boundaryBlocks(policy, scopes),
         scopeBlocks: scopeBlocks(context),
-        ignoredPaths: ['**/node_modules/**', `${DOT_GSPOT}/**`, ...policy.declarations.flatMap((entry) => entry.paths)],
+        ignoredPaths: generatedIgnores(
+            policy.declarations.flatMap((entry) => entry.paths),
+            [],
+        ),
         verbatim: extraBlock(context),
     };
 }

@@ -9,7 +9,7 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
 import { RULE_OFF_PATHS } from '#cli/config/checks/language/javascript.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { eslintAllRulesSchema, eslintCoverageResponse } from '#cli/parsers/schema/eslint.ts';
+import { eslintAllRulesSchema, eslintCoverageResponseSchema } from '#cli/parsers/schema/eslint.ts';
 import type { MissingEslintRule, RequiredEslintRules } from '#cli/types/checks/language/javascript.ts';
 import ESLINT_ALL_RULES from '../../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
@@ -70,7 +70,7 @@ export async function rulesOff(input: EngineInput): Promise<Finding[]> {
             required.has(posix.extname(file.path).slice(1)),
     );
     if (files.length === 0) return [];
-    const resolved = eslintCoverageResponse.parse(
+    const resolved = eslintCoverageResponseSchema.parse(
         await readEslintCoverage({ root: input.root, paths: files.map((file) => file.path) }, (command) =>
             runEngineTool(input, command, { cwd: input.root }),
         ),

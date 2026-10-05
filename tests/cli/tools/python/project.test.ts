@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parse, TomlError, stringify } from 'smol-toml';
 import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
+import { pythonProject } from '#cli/generation/python.ts';
 import { UV_LOCK } from '#cli/config/platform/locations.ts';
-import { toolEnvironment } from '#cli/generation/python.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { pyprojectSchema } from '#cli/parsers/schema/python/tools.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -46,7 +46,7 @@ function lockFor(dependencies: string[], constraints: (typeof CONSTRAINT)[]): st
 
 test('a pypi constraint reaches the tool project, and only a lock resolved under it is current', async () => {
     await using sandbox = await testdir();
-    const generated = toolEnvironment([constrainedManifest()]);
+    const generated = pythonProject([constrainedManifest()]);
     const project = pyprojectSchema.parse(parse(generated[0]!.content));
     expect(project.tool.uv['constraint-dependencies']).toStrictEqual(['pyjwt>=2.14.0']);
     await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, []) });

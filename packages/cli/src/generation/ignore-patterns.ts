@@ -1,4 +1,5 @@
 import picomatch from 'picomatch';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 
 // Expand alternatives before splitting paths because a brace branch can contain a directory separator.
 function expandAlternatives(pattern: string): string[] {
@@ -85,4 +86,14 @@ export function scopeIgnorePatterns(patterns: string[], scope: string): string[]
         const rebased = expandAlternatives(bare).flatMap((entry) => rebaseOntoScope(entry, scope));
         return [...new Set(rebased)].map((entry) => `${isNegated ? '!' : ''}${entry}`);
     });
+}
+
+/**
+ * The private tool folders and declared outputs excluded from generated code configurations.
+ * @param declarationPaths authored generated and vendored paths
+ * @param exclusions additional exclusions of the native configuration
+ * @returns ordered repository-relative patterns
+ */
+export function generatedIgnores(declarationPaths: string[], exclusions: string[]): string[] {
+    return ['**/node_modules/**', `${DOT_GSPOT}/**`, ...exclusions, ...declarationPaths];
 }

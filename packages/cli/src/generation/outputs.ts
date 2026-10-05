@@ -1,16 +1,16 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
 import { pathKey } from '#cli/platform/paths.ts';
+import { miseFile } from '#cli/generation/mise.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
+import { npmProject } from '#cli/generation/npm.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
-import { toolPackages } from '#cli/generation/npm.ts';
-import { miseToolsFile } from '#cli/generation/mise.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { managedBlock } from '#cli/rules/instructions.ts';
+import { pythonProject } from '#cli/generation/python.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
-import { toolEnvironment } from '#cli/generation/python.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
@@ -167,10 +167,10 @@ export function emitAll(session: Session): Generated {
     generated.configurations.push(...bunfigChanges(root, scopes));
     generated.files.push(
         ...hookFiles(root, policy, version),
-        ...toolPackages(manifests, packageInstaller, policy.run_with),
-        ...toolEnvironment(manifests),
+        ...npmProject(manifests, packageInstaller, policy.run_with),
+        ...pythonProject(manifests),
     );
-    if (policy.run_with === 'mise') generated.files.push(miseToolsFile(manifests, version));
+    if (policy.run_with === 'mise') generated.files.push(miseFile(manifests, version));
     workflowOutput(policy, scopes, version, generated);
     const selected = everyManifest(scopes);
     const rules = selectRuleFiles(policy.agentRules, selected, repository, policy.level);

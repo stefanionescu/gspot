@@ -24,13 +24,11 @@ export const ESLINT_LIMITS: Record<string, string> = {
     nestedCallbacks: 'callback_nesting',
     identicalFunctions: 'identical_function_lines',
     barrelReexports: 'barrel_reexports',
-    trivialStatements: 'min_function_statements',
 };
 
 // The limits JavaScript files read on their own, over the TypeScript ones.
 export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
     parameters: 'function_parameters',
-    trivialStatements: 'min_function_statements',
 };
 
 // The roles import-direction reads from architecture.roles; the types and harness roles also have their own settings.

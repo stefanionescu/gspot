@@ -48,9 +48,9 @@ test('saved native exclusions remove unused Prettier output and remain stable af
     expect(applicableManifests(excluded).flatMap((manifest) => manifest.tools.map((tool) => tool.name))).not.toContain(
         'prettier',
     );
-    const outputs = emitAll(excluded);
-    expect(outputs.files.map((file) => file.path)).not.toContain('.gspot/config/prettier.json');
-    const removed = writeOutputs(excluded, log, undefined, outputs);
+    const generated = emitAll(excluded);
+    expect(generated.files.map((file) => file.path)).not.toContain('.gspot/config/prettier.json');
+    const removed = writeOutputs(excluded, log, undefined, generated);
     expect(removed.removed).toContain('.prettierignore');
     expect(existsSync(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);

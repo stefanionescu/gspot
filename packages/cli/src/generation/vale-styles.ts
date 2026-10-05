@@ -21,7 +21,7 @@ function renderedRule(stem: string, text: string, view: ScopeView): string {
         .replace(LONGER_THAN, () => `longer than ${String(limit)}`);
 }
 /**
- * The style and vocabulary files apply writes under .gspot/config/vale/styles.
+ * The style and vocabulary files apply writes under the Vale styles folder.
  * @param policy the repository policy.
  * @param view the root scope's merged view, for the docs limits.
  * @returns the generated files.
@@ -34,12 +34,16 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
             path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
             content:
                 renderedRule(stem, readAsset(asset), view) +
-                (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
+                (stem === 'alt-text' && policy.level === 'all'
+                    ? readAsset('configurations/general/prose/alt-text-all.txt')
+                    : ''),
             readOnly: true,
             kind: 'config',
         };
     });
-    const shipped = readAsset('configurations/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt`)
+        .trim()
+        .split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [

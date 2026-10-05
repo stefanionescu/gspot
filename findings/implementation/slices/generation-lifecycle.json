@@ -75,10 +75,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/bunfig.ts:26`, `config/generation/generation.ts:46` `DEFAULT_RELEASE_AGE_DAYS`, `checks/general/dependencies/install.ts:55` `RELEASE_AGE_DAYS`, `generation/eslint/configuration.ts:145-147` `DEFAULT_NODE_VERSION` | These fallbacks are dead and copy kit defaults. The dependencies kit declares `install.min_release_age_days` with `default = 7`. The javascript kit declares `tools.eslint.node_version`, `script_files`, and `restricted_imports` with defaults. Each scope's `view.settings` holds the defaults of the kits it selects, and these generators run only for a scope that selects the kit. The number 7 now lives in three places. | Delete `DEFAULT_RELEASE_AGE_DAYS`, `RELEASE_AGE_DAYS`, `DEFAULT_NODE_VERSION`, and the `??` fallbacks. Read each setting directly. |",
         "owner": "`generation/bunfig.ts:26`, `config/generation/generation.ts:46` `DEFAULT_RELEASE_AGE_DAYS`, `checks/general/dependencies/install.ts:55` `RELEASE_AGE_DAYS`, `generation/eslint/configuration.ts:145-147` `DEFAULT_NODE_VERSION`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/eslint/configuration.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Bun release-age and dependency readers already use effective configuration defaults. ESLint now reads its selected defaults directly. Template-wide file inputs retain absence handling because they also serve non-JavaScript configurations.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/005",
@@ -328,10 +331,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/fragments.ts:11-13, 58, 65` param `owner`, `fragmentOwners` | The `owner` parameter is a `ConfigurationTarget`, and its doc says \"the target\". \"Owner\" already means the ownership owner, and in `fragmentOwners` it means kits. The `fragmentOwners` comment says \"The configurations whose fragments...\", but the function returns kits (`Manifest[]`). | Rename the parameter to `target`. Comment: \"The kits whose fragments a target takes\". |",
         "owner": "`generation/fragments.ts:11-13, 58, 65` param `owner`, `fragmentOwners`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/fragments.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "fragmentInputs and fragmentOwners use target for the configuration target. Documentation uses the retained product term configuration and describes scoped versus repository-wide fragment ownership.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/015",
@@ -340,10 +346,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/fragments.ts:21, 99-101`, `generation/kits.ts:26-27`, `generation/eslint/blocks.ts:95-97` | The list of scopes nested inside a scope is built four times, in three ways: with `isInScope`, with a hand-written `startsWith`, and with a filter on `''`. | Add one `nestedScopes(scopes, scope): string[]` beside `isInScope` and use it in all four places. |",
         "owner": "`generation/fragments.ts:21, 99-101`, `generation/kits.ts:26-27`, `generation/eslint/blocks.ts:95-97`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/selectors.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "nestedScopes is the shared scope-membership calculation used by fragment rendering, directory pointers, manifest exclusions, and selector groups. Nested framework and native compiler cases exercise those consumers.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/016",
@@ -352,10 +361,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/eslint/blocks.ts:27-30, 65`, `generation/formatting/settings.ts:21-24`, `generation/templates.ts:40-45, 58-65` `byDepth` | The list \"root table, then each scope table\" is built three times, and each copy sorts by depth its own way: by string length (`structuralRuleBlocks`), by segment count (`eslintRuleBlocks`, `formatEntries`), or by segment count and then name (`byDepth`). `entryFiles` re-implements `policyTables(policy, scope)` from `policy/settings.ts`. The suppression on `byDepth` says \"Both scope listings\" use it, but it has one caller (line 95). | Add one `policyLayers(policy)` sorted with `byDepth`, and use `byDepth` for all four sorts so its suppression reason becomes true. Give `PolicyLayer` a `path` field so `entryFiles` can call `policyTables`. |",
         "owner": "`generation/eslint/blocks.ts:27-30, 65`, `generation/formatting/settings.ts:21-24`, `generation/templates.ts:40-45, 58-65` `byDepth`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/policy/settings/entries.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "everyTable owns root and authored scope locations; tablesFor owns applicable layers. Formatting, structural rules, authored ESLint rules, and entry selection all use byScopeDepth. Authored locations remain intact for diagnostics. No redundant forwarding sort or stale byDepth suppression remains.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/017",
@@ -364,10 +376,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/templates.ts:117-123` `markdownlintRules(view, isAll = false)` | The default is never used, because the one caller passes `policy.level === 'all'`. The doc (\"Share effective Markdown rules between native editor and structured CLI configurations\") does not say what it returns. | Drop the default. Doc: \"The markdownlint rules: the shipped defaults unless the policy sets `default`, then the policy's rules, then the rules turned off.\" |",
         "owner": "`generation/templates.ts:117-123` `markdownlintRules(view, isAll = false)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The former markdownlintRules helper is gone. Its authoritative asset combines shipped defaults when default is absent, authored rules, and ignored rules in that order. It renders at both levels through the generation cases.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/018",
@@ -376,10 +391,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/templates.ts:220-225` `emitTarget(..., isHeaderWanted = true)` | The default is never used. The kit schema defaults `header` to `true` (`kits/schema.ts:80`), and both callers pass `configuration.header`. | Drop the default. |",
         "owner": "`generation/templates.ts:220-225` `emitTarget(..., isHeaderWanted = true)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/templates.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "emitTarget requires isHeaderWanted. Every configuration and pointer caller passes the manifest-derived generated_header value; no unused renderer default remains.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/019",
@@ -388,10 +406,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/kits.ts:125, 150` `emitConfiguration`, `emitConfigurations` | For targets that are not fragments, `configuration.template === undefined` and `?? ''` are dead. The kit schema fills `template` from the target name whenever a config is not a fragment (`kits/schema.ts:85-88`). | Type the parsed config so that a config that is not a fragment has `template: string`. Then delete both. |",
         "owner": "`generation/kits.ts:125, 150` `emitConfiguration`, `emitConfigurations`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/configurations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The manifest schema resolves template for fragment:false. GeneratedConfigurationFile selects that discriminant, and emitConfiguration reads its required template directly without undefined checks or an empty fallback.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/020",
@@ -400,10 +421,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/kits.ts:58-74` `pointerFile` | It has five parameters, and `pointer` is always `configuration.pointer`. `configuration` is read only for `.header`. | Take `(context, configuration, file, path)` and read the pointer from `configuration`. |",
         "owner": "`generation/kits.ts:58-74` `pointerFile`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/configurations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The pointerFile forwarding layer is absent. addPointer reads configuration.stub_file itself and directly invokes bodyPointer or the actual template renderer. No compatibility module remains.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/021",
@@ -412,10 +436,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/kits.ts:76-104` `pointerFor` | The name hides the action: the function pushes into `plan`. `replaced` hides the rule that a fragment kit's directory pointer at the same path wins. To compare paths, it runs `directoryPointers`, an `ownedBy` scan of every tracked file, for each fragment config. `emitConfigurations` then builds the same pointers again (line 147). | Rename to `addPointer`. Rename `replaced` to `isWrittenByFragment` and add a one-line why. Build the fragment directory pointers once and pass their paths in. |",
         "owner": "`generation/kits.ts:76-104` `pointerFor`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/configurations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "addPointer documents fragment directory-pointer precedence. emitConfigurations builds each fragment directory pointer list once, retains it on the target, and passes only its paths to base pointer selection. Scoped component and serialization cases verify the consumers.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/022",
@@ -424,10 +451,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/kits.ts:107-111` `isWanted` | This is a seventh copy of \"is kit X selected in some scope\". The first audit counts six. `isWanted` is a vague name. | Use the audit's `isKitSelected`. Rename to `isTargetEnabled`. |",
         "owner": "`generation/kits.ts:107-111` `isWanted`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/configurations.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "isTargetEnabled has the requested precise name. It preserves the distinct scoped and repository-wide dependency contracts, including applicable checks and tools; replacing those contracts with a blanket selection predicate would change generated outputs. Consumer and nested framework cases pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/023",
@@ -436,10 +466,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `types/generation/generation.ts:95, 108` `Pointer`, `PointerSpec` | The same type, `NonNullable<ConfigurationTarget['pointer']>`, is declared twice. `kits.ts` uses one name and `pointers.ts` uses the other. | Keep `Pointer` and delete `PointerSpec`. |",
         "owner": "`types/generation/generation.ts:95, 108` `Pointer`, `PointerSpec`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/pointers.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The duplicate Pointer and PointerSpec aliases are absent. bodyPointer uses the parsed ConfigurationFile stub_file contract directly, and pointer generation and escaped-module serialization cases pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/024",
@@ -448,10 +481,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/outputs.ts:110-117` `emitAll` doc | \"While retaining reads at the caller's lifecycle lock boundary\" tells a reader nothing. `@returns` says \"package edits\", but `configurations` holds `bunfig.toml` keys, and the doc does not mention `notes`. | \"Renders every output in memory and writes nothing. @returns the files, managed blocks, key edits, and notes.\" |",
         "owner": "`generation/outputs.ts:110-117` `emitAll` doc",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/outputs.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "emitAll documentation states that it renders in memory and writes nothing, and lists files, managed blocks, authored config-file edits, and notes. Preview cases verify preserved bytes and ownership records.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/025",
@@ -460,10 +496,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/outputs.ts:98` `validatePlan` | It throws, so the verb table calls for `assert`. It calls `mutationTarget` only so that call can throw. | Rename to `assertDistinctPaths`. |",
         "owner": "`generation/outputs.ts:98` `validatePlan`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/outputs.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "assertDistinctPaths has the throwing assertion name and calls assertMutationTarget explicitly before detecting normalized destination collisions. Generation and lifecycle cases exercise the validated outputs; the old validatePlan and dummy mutationTarget call are absent.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/026",
@@ -495,10 +534,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/outputs.ts:74-75` `blockOutputs` | `.gitignore` gets its block only when `repository.hasGit`, but `.gitattributes` always gets one, so a folder without Git gains a `.gitattributes`. | Gate both on `hasGit`, or neither, and say which in a comment. |",
         "owner": "`generation/outputs.ts:74-75` `blockOutputs`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/outputs.ts"],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The retained product contract intentionally emits LF attributes before Git initialization, while the private Git ignore block requires Git. attributesBlock explains the LF contract. Generated attributes, ownership, and compiler cases pass; the prior verified platform decision takes precedence over the proposed Git-only restriction.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/028",
@@ -530,10 +572,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/pointers.ts:19` `fillTarget` | `rel` drops letters, which the naming rule bans. `dirname(pointerPath) === '.' ? '' : ...` changes nothing, because `path.relative` treats `'.'` and `''` the same. | Rename to `relativePath` and pass `dirname(pointerPath)` directly. |",
         "owner": "`generation/pointers.ts:19` `fillTarget`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/pointers.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "fillTarget uses relativePath and passes dirname(pointerPath) directly to relative. No equivalent dot/empty-directory branch remains. Native pointer and escaped-module serialization cases pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/030",
@@ -542,10 +587,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/templates.ts:197-198`, `generation/kits.ts:20`, `generation/tools/packages.ts:35`, `lifecycle/merge/document.ts:97` | `PACKAGE_JSON_INDENT` sets the indent of every JSON value that templates write, not only `package.json`. The merge engine spells the same 4 as `tabSize: 4`. | Rename to `JSON_INDENT` and use it in `document.ts`. |",
         "owner": "`generation/templates.ts:197-198`, `generation/kits.ts:20`, `generation/tools/packages.ts:35`, `lifecycle/merge/document.ts:97`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/config/generation/templates.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "JSON_INDENT is the existing general JSON formatting constant used by template and npm project producers. The former generic JSON merge engine and its separate tabSize literal are gone; current authored-field merges use the TOML document owner.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/031",
@@ -554,10 +602,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/vale-styles.ts:58-65` `styleNames`, `generation/templates.ts:187` `prose.styles` | These are the rules of the one `gspot` style, not style names: the Vale template writes `gspot.<%= style %>`. In Vale, a style is the folder. | Rename to `styleRules` and `prose.rules`, and fix the doc. |",
         "owner": "`generation/vale-styles.ts:58-65` `styleNames`, `generation/templates.ts:187` `prose.styles`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/vale-styles.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "styleRules and prose.rules name rules within the gspot style, and their documentation names rules. The Vale asset and native prose consumers pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/032",
@@ -566,10 +617,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/vale-styles.ts:68` `PROSE_FORMATS` | This module value is computed, but it uses UPPER_SNAKE_CASE. The TypeScript naming rule makes computed module values camelCase. | Rename to `proseFormats`. |",
         "owner": "`generation/vale-styles.ts:68` `PROSE_FORMATS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/vale-styles.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "proseFormats uses function casing for the computed grammar mapping. Its asset consumer uses the exact format/extension pairs; the obsolete PROSE_FORMATS identifier is absent.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/033",
@@ -578,10 +632,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/vale-styles.ts:24, 37, 43` `styleFiles` | Kit data is hard-coded in TypeScript. At level `all`, a regex token is appended to `alt-text.yml` as a string. The vocabulary asset path spells out `gspot` instead of using `GSPOT_STYLE`. The doc names a path. | Move the extra token into the alt-text asset, as a template or a second file for level `all`. Build the vocabulary path from `GSPOT_STYLE`. Doc: \"under the Vale styles folder\". |",
         "owner": "`generation/vale-styles.ts:24, 37, 43` `styleFiles`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/vale-styles.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The all-level alt-text token now lives in the shipped prose asset alt-text-all.txt with its original bytes. Vocabulary lookup uses GSPOT_STYLE, and the generator documentation names the Vale styles folder. No rule payload remains as a TypeScript string.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/034",
@@ -615,10 +672,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/javascript.ts:85-92`, `generation/eslint/configuration.ts:198` | Both ignore lists start with `**/node_modules/**`, `${DOT_GSPOT}/**`, and every declaration path. | Add one `generatedIgnores(policy)` and use it in both. |",
         "owner": "`generation/javascript.ts:85-92`, `generation/eslint/configuration.ts:198`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/ignore-patterns.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "generatedIgnores now owns private folders, native exclusions, and declaration paths for both ESLint and JavaScript compiler generation. JavaScript-specific ESLint-config exclusions keep their original position before declarations. All 723 compiler/ignore outputs and 144 native ESLint configurations remain identical.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/036",
@@ -627,10 +687,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/eslint/configuration.ts:131-136` `limitsOf`, `generation/eslint/blocks.ts:71-72` | In `view.limit(key, language) ?? view.limit(key)`, the second call is dead. `limitOf` (`policy/merge.ts:30-40`) already falls back to the general limit when the language has none. The suppression on `limitsOf` gives that fallback as its reason. | Drop `?? view.limit(key)` in both places, and drop the stale suppression reason. |",
         "owner": "`generation/eslint/configuration.ts:131-136` `limitsOf`, `generation/eslint/blocks.ts:71-72`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/eslint/configuration.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "limitsOf and structuralRuleBlocks call view.limit once. The effective limit owner handles language-to-general fallback; no duplicated fallback call or stale limitsOf suppression remains. Native options match for root, language, and scope limits.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/037",
@@ -685,10 +748,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/eslint/blocks.ts:21-25, 86-90` | The `eslintRuleBlocks` doc leaves out the third group it returns: the `gspot ignore` entries for the lint check. The `manifestRuleBlocks` doc says \"Applies\", but the function builds blocks. | Add \"then one block per lint ignore entry\". Start the second doc with \"The blocks that turn off...\". |",
         "owner": "`generation/eslint/blocks.ts:21-25, 86-90`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/generation/eslint/blocks.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "eslintRuleBlocks documents base rules, ordered path overrides, and lint ignore entries. manifestRuleBlocks describes the blocks it builds. Native ignore ordering and nested-scope regressions pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/040",
@@ -697,10 +763,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `generation/eslint/configuration.ts:152-156`, `generation/formatting/settings.ts:107-108`, `kits/general/format/editorconfig.tmpl:21`, `kits/language/bash/shellcheckrc.tmpl:8`, `kits/language/javascript/knip.json.tmpl:26` | Five places drop the `reason` key from an `extra` table by hand. | Make `MergedView.extra` return the table without `reason`. Give ESLint, the only reader of the reason, a separate accessor. |",
         "owner": "`generation/eslint/configuration.ts:152-156`, `generation/formatting/settings.ts:107-108`, `kits/general/format/editorconfig.tmpl:21`, `kits/language/bash/shellcheckrc.tmpl:8`, `kits/language/javascript/knip.json.tmpl:26`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/policy/settings/view.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "ScopeView.verbatim removes reason once while merging native options. Formatting, EditorConfig, ShellCheck, and knip consume those options without repeating removal. ESLint reads its comment reason separately from the authored scope layers. Generated native option and formatting consumers pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/041",
@@ -778,10 +847,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `types/generation/generation.ts:92` `packageClient` (15 uses), `generation/tools/packages.ts:19` `client` | `Client` is the role word for an external API boundary. This value is the package manager's name and version. | Rename both to `packageManager`. |",
         "owner": "`types/generation/generation.ts:92` `packageClient` (15 uses), `generation/tools/packages.ts:19` `client`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/types/execution/session.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The obsolete packageClient value and client parameter are absent. The actual inspected installer identity is named PackageInstaller and session.packageInstaller, and npmProject consumes installer explicitly. The external packageManager manifest field remains unchanged. Npm and Python producer and native compiler consumers pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/045",
@@ -930,10 +1002,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/drift.ts:1` header | The header says \"apply --dry-run ... print the diff\". `computeDrift` also serves the generated-files check (`execution/engines.ts:93`), and nothing in the file prints. | \"Compares the outputs gspot would write with the files on disk.\" |",
         "owner": "`lifecycle/drift.ts:1` header",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/drift.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The header now describes comparison of proposed outputs with disk. It no longer claims that this owner prints a preview; actual apply preview and drift consumers pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/054",
@@ -1031,10 +1106,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `types/lifecycle/merge.ts:29` `KitDocument`, `lifecycle/merge/document.ts:5, 8` | The type is a configuration document, not a kit's document. `document.ts` imports it `as Document`, and imports `valueAt as getValue`. These are the alias imports the first audit removes elsewhere. | Rename to `EditableDocument`. Drop both aliases. |",
         "owner": "`types/lifecycle/merge.ts:29` `KitDocument`, `lifecycle/merge/document.ts:5, 8`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/merge/document.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old KitDocument and aliased EditableDocument merge layer is gone. Authored TOML fields use openTomlDocument and its actual owned contract. Merge preservation, retirement, edited-field refusal, and serialization consumers pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/060",
@@ -1043,10 +1121,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/merge/plan.ts:149-153` `planMerge` | `@returns` says the result is undefined only \"when the recorded format differs\". It is also undefined when an edited file has no recorded fields, when a developer's value blocks a field, and when a retired field was edited. | \"@returns ..., or undefined when the file must be preserved.\" |",
         "owner": "`lifecycle/merge/plan.ts:149-153` `planMerge`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/merge/plan.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "planMerge documentation now describes every preservation refusal, rather than only edited authored fields. Existing configuration preservation, conflict, and restoration cases pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/061",
@@ -1055,10 +1136,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/merge/plan.ts:114-120` `planned` | The builder is named with an adjective. It takes five positional parameters, two of them strings (`text`, `nextText`). | Rename to `buildMergePlan`, and pass `{ text, nextText }` as one object. |",
         "owner": "`lifecycle/merge/plan.ts:114-120` `planned`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/merge/plan.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "buildMergePlan replaces planned and accepts named text, nextText, fields, and parents through MergePlanContents in the existing type owner. No positional string pair or forwarding wrapper remains. Merge lifecycle regressions pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/062",
@@ -1257,10 +1341,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/eslint/worker.ts:46` `getActiveRules` | It is exported, but nothing imports it, and importing `worker.ts` would run the worker's top-level `try` block. The request operation that reaches it is called `coverage`. | Unexport it. Rename the operation to `active-rules` so the two names match. |",
         "owner": "`lifecycle/preview/eslint/worker.ts:46` `getActiveRules`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/tools/eslint/worker.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "readActiveRules is private. The worker has one coverage request contract, so the removed multi-operation preview protocol does not gain another operation selector. Real native worker cases verify later overrides, correction, load failure, cancellation, and aggregate coverage.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/073",
@@ -1269,10 +1356,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/eslint/client.ts:17, 40-45`, `lifecycle/preview/eslint/worker.ts:22` `evaluate` | Two functions on the two sides of the process are both named `evaluate`. The client one starts the ESLint worker. Its errors say \"Tool configuration evaluation failed\", and the rules-off check can pass that text on to users. | Rename the client one to `runEslintWorker` and the worker one to `answerRequest`. Message: \"ESLint could not load the generated configuration: ...\". |",
         "owner": "`lifecycle/preview/eslint/client.ts:17, 40-45`, `lifecycle/preview/eslint/worker.ts:22` `evaluate`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/tools/eslint/client.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "readEslintCoverage names the actual coverage subprocess operation. No generic evaluate functions remain. Coverage failures identify ESLint and retain its diagnostic; existing native worker cases assert the actual configuration error and cancellation contracts.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/074",
@@ -1281,10 +1371,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/eslint/protocol.ts:6-22` | Five schemas use two naming styles. `previewRequestSchema` has the suffix. `eslintPreviewResponse`, `eslintCoverageRequest`, `eslintCoverageResponse`, and `configurationRequest` do not, so `z.infer<typeof configurationRequest>` reads like a value. | Use one style: `previewRequestSchema`, `previewResponseSchema`, `activeRulesRequestSchema`, `activeRulesResponseSchema`, `workerRequestSchema`. |",
         "owner": "`lifecycle/preview/eslint/protocol.ts:6-22`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/schema/eslint.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All active ESLint protocol and resolved-configuration schemas now use the Schema suffix, including request, response, worker arguments, and rule settings. Types, the worker, and the rules-off consumer import the canonical declarations without aliases.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/075",
@@ -1293,10 +1386,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/eslint/declarations.ts` (file), `rewriteImports` | The file holds `previewRules`, which loads two ESLint configurations and collects their rules. \"Declarations\" names neither. `rewriteImports` does not say why it exists: the module runs from a scratch folder, so its relative imports and `import.meta.url` must point back at the real path. | Rename the file to `preview-rules.ts`. Add that one-line reason above `rewriteImports`. |",
         "owner": "`lifecycle/preview/eslint/declarations.ts` (file), `rewriteImports`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/rule-diff.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The native preview declarations/rewriteImports layer was removed under the recorded-rule-data design. compareRules compares the last successful apply baseline with proposed rule data. Offline preview tests prove that edited executable configuration is not executed or rewritten.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/076",
@@ -1305,10 +1401,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/eslint/diff.ts:9-23` `diffEslintRules` | It takes five positional parameters, and the two optional ones (`view`, `signal`) come before the required ones. \"Enrich an explicit apply preview\" does not say what changes. | Take `(root, generated, drift, { view, signal })`. Doc: \"Replaces the rule diff of each changed `eslint.config.mjs` with the rules ESLint resolves from the old and the new file.\" |",
         "owner": "`lifecycle/preview/eslint/diff.ts:9-23` `diffEslintRules`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/drift.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The old five-argument native preview diff entry point is gone. fileDrift compares captured rule data through compareRules and retains byte diffs separately. Scoped and failed-write preview cases verify that ownership advances only after successful apply.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/077",
@@ -1317,10 +1416,13 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/compare.ts:41, 59` `document`, `getTable` | `document` is a noun naming a function that parses a configuration file. `getTable` returns whatever sits at the path: a list, a table, or a scalar. | Rename to `parseConfiguration` and `valueAtRulePath`. |",
         "owner": "`lifecycle/preview/compare.ts:41, 59` `document`, `getTable`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/rule-diff.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The serialized-configuration reparsing document/getTable layer is absent. Rule collection uses authoritative generator data and compareRules compares exact recorded values. Native rule-group, false/zero/null, option-order, and offline preview cases pass.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/generation-lifecycle/078",
@@ -1329,9 +1431,12 @@
         "section": "Generation and Lifecycle",
         "finding": "| `lifecycle/preview/gixy.ts:13, 34` | `parseOption` rewrites `tests` to `checks`, so the `'tests'` entry in the list on line 34 never matches. | Delete `'tests'` from the list. |",
         "owner": "`lifecycle/preview/gixy.ts:13, 34`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/lifecycle/rule-diff.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The obsolete Gixy preview parser and unreachable tests key are absent. Generator-provided checks and skips remain separate rule groups, verified by exact rule collection and apply preview cases.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     }
 ]

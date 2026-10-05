@@ -66,10 +66,16 @@
         "section": "Policy",
         "finding": "| `policy/merge.ts:39`, `generation/eslint/blocks.ts:72`, `generation/eslint/configuration.ts:135` | `limit(key, language)` already falls back to the generic `limits.<key>` (line 39). So `view.limit(key, language) ?? view.limit(key)` at the two callers never reaches the right side. | Drop `?? view.limit(key)` at both callers. |",
         "owner": "`policy/merge.ts:39`, `generation/eslint/blocks.ts:72`, `generation/eslint/configuration.ts:135`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "packages/cli/src/generation/eslint/blocks.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Both callers use the effective view.limit contract without repeating its generic fallback. Root, language, and scoped native resolved options match all 144 captured configurations.",
+            "Batch verification: 435 CLI cases with 2251 assertions across 72 files; two native ESLint worker cases with 14 assertions; five native JavaScript/Vale cases with 47 assertions. Root TypeScript and affected ESLint pass. Native rule configurations match all 144 captured cases, and all 723 compiler/ignore outputs match. Canonical apply succeeds and a second apply writes, updates, removes, and preserves nothing. Evidence: /tmp/gspot-generation-batch-tests.log, /tmp/gspot-generation-batch-worker.log, /tmp/gspot-generation-batch-native.log, /tmp/gspot-generation-batch-types.log, /tmp/gspot-generation-batch-native-options.log, /tmp/gspot-generation-batch-ignore-proof.log, /tmp/gspot-generation-batch-second-apply.json. The bundled Node worker also resolves actual required rules from the repository configuration (/tmp/gspot-generation-batch-bundle.log)."
+        ]
     },
     {
         "id": "slices/policy/007",

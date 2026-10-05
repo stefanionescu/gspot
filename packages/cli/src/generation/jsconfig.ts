@@ -1,6 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import type { JsconfigInput } from '#cli/types/generation/jsconfig.ts';
 
 import {
@@ -23,7 +24,9 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
     const jsconfig: Record<string, unknown> = { compilerOptions };
     if (authored === undefined) {
         Object.assign(compilerOptions, JAVASCRIPT_IMPORTS);
-        jsconfig['exclude'] = [...JAVASCRIPT_EXCLUSIONS, ...declarationPaths].map((path) => `${prefix}${path}`);
+        jsconfig['exclude'] = generatedIgnores(declarationPaths, JAVASCRIPT_EXCLUSIONS).map(
+            (path) => `${prefix}${path}`,
+        );
     } else jsconfig['extends'] = `${prefix}jsconfig.json`;
     const raw: unknown = authored?.raw;
     const hasSourceSelection = typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);

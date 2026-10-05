@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { toolPackages } from '#cli/generation/npm.ts';
+import { npmProject } from '#cli/generation/npm.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { pythonProject } from '#cli/generation/python.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { toolEnvironment } from '#cli/generation/python.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -101,10 +101,7 @@ beforeAll(async () => {
     }));
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: 'run_with = "mise"\n' }) });
     privateContext.policyFiles = readPolicy(sandbox.path);
-    const files = [
-        ...toolEnvironment(selected),
-        ...toolPackages(selected, { name: 'bun', version: Bun.version }, 'mise'),
-    ];
+    const files = [...pythonProject(selected), ...npmProject(selected, { name: 'bun', version: Bun.version }, 'mise')];
     {
         using log = openOwnership(sandbox.path);
         await preparePythonProject(

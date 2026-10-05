@@ -10,7 +10,7 @@ import { TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
  * @param manifests the selected manifests
  * @returns the private Python project files, or none without Python tools
  */
-export function toolEnvironment(manifests: Manifest[]): GeneratedFile[] {
+export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
     const dependencies = pythonPins(manifests);
     if (dependencies.length === 0) return [];
     const constraints = pythonConstraints(manifests);

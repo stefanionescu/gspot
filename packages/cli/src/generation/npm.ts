@@ -15,7 +15,7 @@ import { YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locati
  * @param runner the task runner the policy names, or undefined.
  * @returns the private project's files, or none without a package manager.
  */
-export function toolPackages(
+export function npmProject(
     manifests: Manifest[],
     installer: PackageInstaller | undefined,
     runner: string | undefined,

@@ -1,4 +1,4 @@
-// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
+// Compares generated outputs with the files on disk.
 import { createTwoFilesPatch } from 'diff';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/root/open.ts';

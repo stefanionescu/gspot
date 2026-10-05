@@ -9,7 +9,7 @@ import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
-import type { Field, MergePlan, MergeRequest } from '#cli/types/lifecycle/merge.ts';
+import type { Field, MergePlan, MergeRequest, MergePlanContents } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
 function isEmptyContainer(value: unknown): boolean {
@@ -105,13 +105,8 @@ function buildRecord(
 }
 
 // The ownership to record after the plan: unchanged when the fields and the text are what was recorded.
-function planned(
-    request: MergeRequest,
-    text: string,
-    nextText: string,
-    fields: Field[],
-    parents: KeyPath[],
-): MergePlan {
+function buildMergePlan(request: MergeRequest, contents: MergePlanContents): MergePlan {
+    const { text, nextText, fields, parents } = contents;
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
@@ -143,7 +138,7 @@ export function pruneParents(document: TomlDocument, parents: KeyPath[], keptPat
 /**
  * Plans the merge of owned keys into a shared configuration file the developer keeps.
  * @param request the destination, requested fields, and read ownership
- * @returns the next snapshot with its ownership, or undefined when an authored field was edited
+ * @returns the next snapshot with its ownership, or undefined when the file must be preserved
  */
 export function planMerge(request: MergeRequest): MergePlan | undefined {
     const { changes, current, existing } = request;
@@ -163,5 +158,5 @@ export function planMerge(request: MergeRequest): MergePlan | undefined {
         parents,
         requested.map((field) => field.path),
     );
-    return planned(request, text, document.text(), fields, remaining);
+    return buildMergePlan(request, { text, nextText: document.text(), fields, parents: remaining });
 }

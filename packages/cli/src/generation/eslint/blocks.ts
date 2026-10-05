@@ -31,9 +31,9 @@ function allowedPaths(selection: ScopeSelection, setting: string): string[] {
 }
 
 /**
- * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
+ * Build base rules, ordered path overrides, then lint ignore entries, each bounded by its owning scope.
  * @param policy the repository policy
- * @returns one rule block per scope and path override, in the order ESLint applies them
+ * @returns one block per scope, path override, and lint ignore entry, in application order
  */
 export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     const tables = everyTable(policy).toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''));
@@ -67,11 +67,18 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
  * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
  * @param scopes the resolved scopes, in any order.
  * @param policy the policy selecting structural rules and scoped exceptions.
- * @returns one block per scope and language, shallowest scope first
+ * @returns disabled rules at recommended, otherwise one block per scope and language, shallowest first
  */
 export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
     const blocks: EslintRuleBlock[] = [];
-    if (policy.level !== 'all') return blocks;
+    if (policy.level !== 'all')
+        return [
+            {
+                scope: '',
+                ...pathExpressions(['**/*']),
+                rules: { 'gspot/no-trivial-files': 'off', 'gspot/no-trivial-functions': 'off' },
+            },
+        ];
     for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
         for (const [language, pattern] of [
             ['javascript', '**/*.{js,mjs,cjs,jsx}'],
@@ -99,7 +106,7 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
 }
 
 /**
- * Applies reasoned manifest exclusions after structural defaults and before authored policy.
+ * The blocks that turn off reasoned manifest exclusions after structural defaults and before authored policy.
  * @param scopes the selected configurations and their owning scopes.
  * @param policy the effective root policy.
  * @returns scoped rule blocks that exclude every nested scope.

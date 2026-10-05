@@ -11,10 +11,10 @@ import { ESLINT_FILE, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/location
 import type { EslintCoverageRequest, EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
 
 import {
-    workerArguments,
-    eslintCoverageRequest,
-    eslintCoverageResponse,
-    eslintResolvedConfiguration,
+    workerArgumentsSchema,
+    eslintCoverageRequestSchema,
+    eslintCoverageResponseSchema,
+    eslintResolvedConfigurationSchema,
 } from '#cli/parsers/schema/eslint.ts';
 
 /**
@@ -35,7 +35,7 @@ async function readActiveRules(request: EslintCoverageRequest): Promise<EslintCo
     });
     const result: Record<string, string[]> = {};
     for (const path of request.paths) {
-        const config = eslintResolvedConfiguration.parse(await eslint.calculateConfigForFile(path));
+        const config = eslintResolvedConfigurationSchema.parse(await eslint.calculateConfigForFile(path));
         if (config === undefined) throw new Error(`ESLint did not resolve a configuration for ${path}.`);
         result[path] = Object.entries(config.rules ?? {}).flatMap(([name, entry]) => {
             const level: unknown = Array.isArray(entry) ? entry[0] : entry;
@@ -46,9 +46,9 @@ async function readActiveRules(request: EslintCoverageRequest): Promise<EslintCo
 }
 
 try {
-    const [requestPath, output] = workerArguments.parse(process.argv.slice(PAIR));
-    const request = eslintCoverageRequest.parse(JSON.parse(readFileSync(requestPath, 'utf8')));
-    const result = eslintCoverageResponse.parse(await readActiveRules(request));
+    const [requestPath, output] = workerArgumentsSchema.parse(process.argv.slice(PAIR));
+    const request = eslintCoverageRequestSchema.parse(JSON.parse(readFileSync(requestPath, 'utf8')));
+    const result = eslintCoverageResponseSchema.parse(await readActiveRules(request));
     using files = openRoot(dirname(output));
     files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: PRIVATE_FILE }, undefined);
 } catch (error) {

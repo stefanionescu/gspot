@@ -27,7 +27,7 @@ export function miseToolLine(pin: MisePin): string {
  * @param version the gspot version
  * @returns the generated file
  */
-export function miseToolsFile(manifests: Manifest[], version: string): GeneratedFile {
+export function miseFile(manifests: Manifest[], version: string): GeneratedFile {
     const lines = [
         headerFor(MISE_CONFIG_PATH, version).trimEnd(),
         '',

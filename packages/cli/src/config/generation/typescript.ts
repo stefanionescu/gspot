@@ -1,5 +1,3 @@
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-
 /** Compiler flags that add diagnostics without changing module resolution or emitted JavaScript. */
 export const RECOMMENDED_OPTIONS = {
     strict: true,
@@ -28,12 +26,6 @@ export const JAVASCRIPT_IMPORTS = {
     resolveJsonModule: true,
 };
 
-export const JAVASCRIPT_EXCLUSIONS = [
-    '**/node_modules/**',
-    `${DOT_GSPOT}/**`,
-    '**/eslint.config.mjs',
-    '**/eslint.config.js',
-    '**/eslint.config.cjs',
-];
+export const JAVASCRIPT_EXCLUSIONS = ['**/eslint.config.mjs', '**/eslint.config.js', '**/eslint.config.cjs'];
 
 export const JAVASCRIPT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx'];

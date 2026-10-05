@@ -313,7 +313,7 @@ export default [
 <% for (const [name, files, source] of [['packageJson', ['**/package.json'], 'packageJson.configs.recommended'], ['prettier', CODE, 'prettierConfig']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files, ...preset }, `...${source}`) %>,
 <% } %>
-    <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'max-params': ['error', JAVASCRIPT_LIMITS.parameters], 'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }], 'gspot/no-trivial-files': ['error', { ...gspotRules['gspot/no-trivial-files'][1], maxStatements: JAVASCRIPT_LIMITS.trivialStatements }] } }) %>,
+    <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'max-params': ['error', JAVASCRIPT_LIMITS.parameters] } }) %>,
 <% const overrides = []; if (config.verbatim !== undefined) { overrides.push(config.verbatim.entries); %>
     // [tools.eslint.verbatim]: <%= json(config.verbatim.reason, 0) %>
     <%= json(config.verbatim.entries) %>,
