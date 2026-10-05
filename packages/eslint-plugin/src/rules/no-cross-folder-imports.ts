@@ -1,8 +1,9 @@
 import { ASTUtils } from '@typescript-eslint/utils';
+import type { ImportSource } from '#plugin/types/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedPath, relativeImportPath } from '#plugin/files.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ImportSource, CrossFolderImportsOptions } from '#plugin/types/rules.ts';
+import type { CrossFolderImportsOptions } from '#plugin/types/folder-imports.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
     for (const [prefix, directory] of Object.entries(aliases)) {

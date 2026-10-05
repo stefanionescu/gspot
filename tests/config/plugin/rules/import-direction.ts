@@ -1,4 +1,4 @@
-import type { ImportDirectionOptions } from '#plugin/types/rules.ts';
+import type { ImportDirectionOptions } from '#plugin/types/import-direction.ts';
 
 export const ALIASES = { '@/': 'src/', '@tests/': 'tests/', '@config/': 'config/', '@app-types/': 'types/' };
 

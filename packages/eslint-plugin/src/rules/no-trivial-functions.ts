@@ -1,7 +1,7 @@
 import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { TrivialFunctionsOptions } from '#plugin/types/rules.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
+import type { TrivialFunctionsOptions } from '#plugin/types/function-content.ts';
 import type { FunctionBinding, ImplementedFunction } from '#plugin/types/syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SHARED_READS, VALUE_PARENTS, EXPORT_REFERENCES } from '#plugin/config/function-references.ts';

@@ -5,8 +5,8 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { HelpersBesideTestsOptions } from '#plugin/types/rules.ts';
-import { TEST_PATTERN, TEST_DIRECTORIES, ASSERTION_MODULES } from '#plugin/config/rules.ts';
+import type { HelpersBesideTestsOptions } from '#plugin/types/test-placement.ts';
+import { TEST_PATTERN, TEST_DIRECTORIES, ASSERTION_MODULES } from '#plugin/config/test-placement.ts';
 
 function hasAssertions(
     context: Readonly<TSESLint.RuleContext<'misplaced', HelpersBesideTestsOptions>>,

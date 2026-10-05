@@ -1,5 +1,5 @@
-import { MAX_REEXPORTS } from '#plugin/config/rules.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
+import { MAX_REEXPORTS } from '#plugin/config/max-barrel-reexports.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 
 const exports = Array.from(

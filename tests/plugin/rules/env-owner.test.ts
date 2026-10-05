@@ -1,4 +1,4 @@
-import { OWNERS } from '#tests/config/cli/plugin-env-owner.ts';
+import { OWNERS } from '#tests/config/plugin/rules/env-owner.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
 import { envOwner as environmentAccessOwner } from '#plugin/rules/env-owner.ts';

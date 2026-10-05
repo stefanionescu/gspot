@@ -1,6 +1,6 @@
-import type { EnvOwnerOptions } from '#plugin/types/rules.ts';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { EnvOwnerOptions } from '#plugin/types/environment.ts';
 import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';
 import { environmentNames, environmentReads } from '#plugin/environment.ts';
 

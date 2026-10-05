@@ -1,4 +1,4 @@
-import type { HelpersBesideTestsOptions } from '#plugin/types/rules.ts';
+import type { HelpersBesideTestsOptions } from '#plugin/types/test-placement.ts';
 
 /** Files that distinguish test siblings, declaration files, and support directories. */
 export const TEST_FILES = {

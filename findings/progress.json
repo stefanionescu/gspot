@@ -16330,6 +16330,252 @@
             "to": "tests/tools/checks/supabase/types.test.ts",
             "name": "actual behavior owner",
             "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/test-placement.ts",
+            "name": "TEST_PATTERN",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/test-placement.ts",
+            "name": "ASSERTION_MODULES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/test-placement.ts",
+            "name": "TEST_DIRECTORIES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/files.ts",
+            "name": "INTERNAL_PREFIXES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/files.ts",
+            "name": "EXTENSIONS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/private-before-public.ts",
+            "name": "DECLARATIONS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/import-direction.ts",
+            "name": "NO_ROLES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/import-direction.ts",
+            "name": "CONTRACTS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/import-direction.ts",
+            "name": "ROLE_ORDER",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/import-direction.ts",
+            "name": "TEST_ROLES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/import-direction.ts",
+            "name": "CONFIG_ROLES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/max-barrel-reexports.ts",
+            "name": "MAX_REEXPORTS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/index-imports.ts",
+            "name": "MODULE_MOCK_METHODS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/file-content.ts",
+            "name": "STRUCTURED_EXPRESSIONS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/file-content.ts",
+            "name": "FORWARDING_NODES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/instances-in-registry.ts",
+            "name": "VALUE_CONSTRUCTORS",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/config/rules.ts",
+            "to": "packages/eslint-plugin/src/config/instances-in-registry.ts",
+            "name": "REGISTRY_FILES",
+            "type": false
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/export-sources.ts",
+            "name": "ExportSources",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/test-placement.ts",
+            "name": "HelpersBesideTestsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/extensions.ts",
+            "name": "ImportExtensionsName",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/extensions.ts",
+            "name": "ImportExtensionsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/instances-in-registry.ts",
+            "name": "InstancesInRegistryOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/environment.ts",
+            "name": "ClientEnvOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/scope-imports.ts",
+            "name": "CrossScopeImportsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportDirectionRoles",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportDirectionRole",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportLocation",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportDirectionMessages",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportEdge",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/imports.ts",
+            "name": "ImportNode",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportVerdict",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/import-direction.ts",
+            "name": "ImportDirectionOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/max-barrel-reexports.ts",
+            "name": "MaxBarrelReexportsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/function-content.ts",
+            "name": "TrivialFunctionsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/file-content.ts",
+            "name": "TrivialFilesOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/file-content.ts",
+            "name": "ContentCheck",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/environment.ts",
+            "name": "EnvOwnerOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/folder-imports.ts",
+            "name": "CrossFolderImportsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/reexports.ts",
+            "name": "ReexportsOptions",
+            "type": true
+        },
+        {
+            "from": "packages/eslint-plugin/src/types/rules.ts",
+            "to": "packages/eslint-plugin/src/types/imports.ts",
+            "name": "ImportSource",
+            "type": true
+        },
+        {
+            "from": "tests/config/cli/plugin-env-owner.ts",
+            "to": "tests/config/plugin/rules/env-owner.ts",
+            "name": "env-owner test options",
+            "type": false
         }
     ],
     "checklists": [
@@ -17939,6 +18185,25 @@
                 "Full native tools suite",
                 "Remaining individual audit findings",
                 "Verified commits and pushes"
+            ]
+        },
+        {
+            "subsystem": "Verified repository organization foundation",
+            "outcome": "Commit 4ce293ae is pushed normally to origin/main with pre-commit, commit-message, and pre-push hooks enabled.",
+            "evidence": [
+                "All four TypeScript targets: /tmp/gspot-organization-final-peer-types.log",
+                "CLI/plugin: 2430 passed, 2 platform skips, 0 failures: /tmp/gspot-organization-final-peer-owner-tests.log",
+                "Packaged consumers: 8 passed, 0 failures: /tmp/gspot-organization-final-peer-package-tests.log",
+                "Native shards: 107, 64, and 63 passed with 4 total platform skips: /tmp/gspot-organization-native-shard-1-repaired.log, /tmp/gspot-organization-native-shard-2-repaired.log, /tmp/gspot-organization-native-shard-3-repaired.log",
+                "The fourth native shard passes 57 cases and skips one platform case. Its generation-drift failure during a source change passes on the frozen source with its five assertions unchanged: /tmp/gspot-organization-native-shard-4-repaired.log and /tmp/gspot-organization-native-example-frozen.log",
+                "Final TypeScript baseline and native Markdown/spelling replay: /tmp/gspot-organization-final-compiler-formatter-regressions.log (TypeScript passes; invalid Markdown fixture policy was then repaired) and /tmp/gspot-organization-final-markdown-regressions.log (2 passed, 27 assertions)",
+                "Final staged check and pre-push: 132 passed, 7 skips, 0 findings: /tmp/gspot-organization-final-staged.json and /tmp/gspot-organization-push.log",
+                "Docs: 320 pages, valid local links: /tmp/gspot-organization-final-peer-docs.log",
+                "Canonical second apply changes none of 145 recorded outputs: /tmp/gspot-organization-peer-second-apply.log and /tmp/gspot-organization-peer-generated-after.json"
+            ],
+            "remaining": [
+                "Remaining individual findings",
+                "Publication and deployment require their separate authorization."
             ]
         }
     ]

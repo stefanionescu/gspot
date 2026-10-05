@@ -2,20 +2,19 @@ import { posix } from 'node:path';
 import { isRequireCall } from '#plugin/imports.ts';
 import { CODE_EXTENSION } from '#plugin/config/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { ImportNode, ImportSource } from '#plugin/types/imports.ts';
 import { lintedPath, normalizePath, isAnyGlobMatch } from '#plugin/files.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { NO_ROLES, CONTRACTS, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES } from '#plugin/config/rules.ts';
+import { NO_ROLES, CONTRACTS, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES } from '#plugin/config/import-direction.ts';
 
 import type {
     ImportEdge,
-    ImportNode,
-    ImportSource,
     ImportVerdict,
     ImportLocation,
     ImportDirectionRoles,
     ImportDirectionOptions,
     ImportDirectionMessages,
-} from '#plugin/types/rules.ts';
+} from '#plugin/types/import-direction.ts';
 
 function aliasTarget(source: string, prefix: string, target: string): string | undefined {
     const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;

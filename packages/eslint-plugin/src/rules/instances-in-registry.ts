@@ -1,8 +1,8 @@
 import { unwrap } from '#plugin/syntax.ts';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import type { InstancesInRegistryOptions } from '#plugin/types/rules.ts';
-import { REGISTRY_FILES, VALUE_CONSTRUCTORS } from '#plugin/config/rules.ts';
+import type { InstancesInRegistryOptions } from '#plugin/types/instances-in-registry.ts';
+import { REGISTRY_FILES, VALUE_CONSTRUCTORS } from '#plugin/config/instances-in-registry.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isConstructed(

@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { createRule } from '#plugin/definition.ts';
 import { ASTUtils } from '@typescript-eslint/utils';
-import { INDEX_BASENAMES } from '#plugin/config/files.ts';
-import type { ImportSource } from '#plugin/types/rules.ts';
+import type { ImportSource } from '#plugin/types/imports.ts';
+import { MODULE_MOCK_METHODS } from '#plugin/config/index-imports.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { INTERNAL_PREFIXES, MODULE_MOCK_METHODS } from '#plugin/config/rules.ts';
+import { INDEX_BASENAMES, INTERNAL_PREFIXES } from '#plugin/config/files.ts';
 
 export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',

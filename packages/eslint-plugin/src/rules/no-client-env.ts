@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ClientEnvOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';
+import type { ClientEnvOptions } from '#plugin/types/environment.ts';
 import { environmentNames, environmentReads } from '#plugin/environment.ts';
 
 export const noClientEnv = createRule<ClientEnvOptions, 'private'>({

@@ -1,8 +1,9 @@
 import { ASTUtils } from '@typescript-eslint/utils';
 import type { TSESTree } from '@typescript-eslint/utils';
+import type { ImportSource } from '#plugin/types/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedPath, relativeImportPath } from '#plugin/files.ts';
-import type { ImportSource, CrossScopeImportsOptions } from '#plugin/types/rules.ts';
+import type { CrossScopeImportsOptions } from '#plugin/types/scope-imports.ts';
 
 export const noCrossScopeImports = createRule<CrossScopeImportsOptions, 'escape'>({
     name: 'no-cross-scope-imports',

@@ -1,7 +1,7 @@
 import { createRule } from '#plugin/definition.ts';
 import { isRequireCall } from '#plugin/imports.ts';
-import { DECLARATIONS } from '#plugin/config/rules.ts';
 import { getDeclarationNames } from '#plugin/syntax.ts';
+import { DECLARATIONS } from '#plugin/config/private-before-public.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getDeclarationName(statement: TSESTree.Statement): string {

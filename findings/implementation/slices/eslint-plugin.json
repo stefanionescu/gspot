@@ -186,10 +186,21 @@
         "section": "The ESLint Plugin",
         "finding": "| `src/config/*.ts`, `src/types/*.ts` | The same ceremony as the CLI. 28 of 33 constants and 26 of 31 types have one user file, for example `ATTACHED_DISTANCE`, `WHITESPACE`, `INDEX_PATTERNS`, `LayoutLine`, `ContentCheck`, and every `*Options` type. Three files are named `plugin.ts`, and `config/plugin.ts` holds the constants of the helper modules, not of `plugin.ts`. The headers \"The literal values plugin reads\" and \"The types of plugin in this package\" are not sentences. | After `types_directory` and `config_directory` leave `gspot.toml` (FINDINGS.md), move each single-user name into its user, unexported. Put the few shared names in the module that owns the behavior, for example `ImplementedFunction` in `syntax.ts` and `LayoutMessages` in `layout.ts`. Delete both folders. |",
         "owner": "`src/config/*.ts`, `src/types/*.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/config/import-direction.ts",
+            "packages/eslint-plugin/src/config/file-content.ts",
+            "packages/eslint-plugin/src/types/import-direction.ts",
+            "packages/eslint-plugin/src/types/imports.ts",
+            "packages/eslint-plugin/src/types/environment.ts"
+        ],
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "The user requires config/ and types/ in every package, grouped by behavioral owner. AGENTS.md and findings/progress.json record this decision, which overrides the recommendation to delete these folders.",
+            "The mixed config/rules.ts and types/rules.ts files are deleted. Their 40 declarations now live with the import, environment, registry, export, test-placement, and trivial-code behavior that consumes them. Every source and test import uses those owners; no compatibility module remains.",
+            "AST comparison against commit 4ce293ae preserves all 40 declaration bodies: /tmp/gspot-plugin-owner-declaration-proof.json. The plugin and generated-configuration focus passes 458 cases with 0 failures: /tmp/gspot-plugin-ownership-tests.log. The env-owner data relocation preserves all 18 cases: /tmp/gspot-plugin-env-owner-relocation-tests.log.",
+            "Plugin and workspace TypeScript targets pass: /tmp/gspot-plugin-ownership-types.log and /tmp/gspot-plugin-ownership-root-types.log. Owned source and test consumers pass ESLint: /tmp/gspot-plugin-ownership-final-lint.log."
+        ]
     },
     {
         "id": "slices/eslint-plugin/017",
