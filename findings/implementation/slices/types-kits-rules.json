@@ -792,10 +792,15 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/platform/platform.ts:37` `Read` | A data type is named with a verb. Its own reader calls it \"the snapshot\" (`platform/root/reads.ts:89`), and fields read oddly, for example `GeneratedFile.read?: Read` and `Replaced.read: Map<string, Read>`. | Rename it to `Snapshot`. |",
         "owner": "`types/platform/platform.ts:37` `Read`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": "packages/cli/src/types/platform/root.ts:4",
+        "status": "closed",
+        "outcome": "The file-entry data type is Snapshot. All 106 identifiers in its declaration and 24 consuming modules use that name. Snapshot keeps the exact bytes, mode, and optional link marker shape; no Read compatibility type or export remains.",
+        "verification": [
+            "Compared all 25 changed files against their committed versions after formatting and lint. Their emitted runtime JavaScript is identical, and every type declaration has the same shape apart from the Read-to-Snapshot rename.",
+            "All four TypeScript targets pass: root, CLI, plugin, and docs. Changed-file ESLint and Prettier checks pass.",
+            "Affected platform, repository-snapshot, tool, and lifecycle regressions pass 289 tests across 47 files with 1,294 assertions. Existing stale-write, binary-byte, mode, link, lock, and recovery coverage remains intact.",
+            "The staged naming check initially rejected Snapshot as a testing term. A precise repository-only naming.allowed entry now states that Snapshot names filesystem state. The allowance was written through gspot set; shipped naming terms and other policy limits were not changed. Canonical apply and its second run leave all 142 files up to date."
+        ]
     },
     {
         "id": "slices/types-kits-rules/042",
@@ -804,10 +809,14 @@
         "section": "Types, the Kit Loader, and Rule Assembly",
         "finding": "| `types/platform/platform.ts:83` `Root.source` | `source(path)` returns the real path after checking its link chain (`platform/filesystem.ts:26-27,130`). The name reads like the file's content. None of the 16 `Root` members has a doc comment. | Rename it to `realPath`. Document each member in one line. |",
         "owner": "`types/platform/platform.ts:83` `Root.source`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": "packages/cli/src/types/platform/root.ts:16",
+        "status": "closed",
+        "outcome": "The filesystem boundary uses realPath for the checked real location. All 17 current Root operations now have one-line documentation grounded in the implementation, including absence, links, snapshot matching, directory operations, and writer-lock disposal.",
+        "verification": [
+            "Reviewed Root against platform/root/open.ts, reads.ts, writes.ts, and rules.ts. The documentation does not claim that revision links must point inside the root or that the root handles hostile concurrent directory replacement.",
+            "AST inspection confirms each of the 17 Root members has exactly one doc comment. The emitted runtime code and type declaration shapes are unchanged apart from the Snapshot rename.",
+            "All four TypeScript targets, changed-file ESLint and Prettier checks, and 289 affected regressions with 1,294 assertions pass."
+        ]
     },
     {
         "id": "slices/types-kits-rules/043",

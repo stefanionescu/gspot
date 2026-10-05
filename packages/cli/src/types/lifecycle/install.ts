@@ -1,5 +1,5 @@
-import type { Read } from '#cli/types/platform/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
@@ -12,8 +12,8 @@ import type { ToolOwner, InstalledOutput, InstallationKind } from '#cli/types/to
 export type InstallationContext = {
     log: Log;
     inputs: ToolOwner;
-    original: Map<string, Read | undefined>;
-    prepared: Map<string, Read>;
+    original: Map<string, Snapshot | undefined>;
+    prepared: Map<string, Snapshot>;
     plans: Planned[];
     trees: Map<InstallationKind, InstalledOutput[]>;
     refreshLocks: boolean;

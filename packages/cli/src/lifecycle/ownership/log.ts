@@ -2,7 +2,7 @@
 import { pathKey } from '#cli/platform/paths.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
-import type { Read, Root } from '#cli/types/platform/root.ts';
+import type { Root, Snapshot } from '#cli/types/platform/root.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
@@ -27,7 +27,7 @@ function recoverPending(files: Root, pending: PendingOwnership, accept: (pending
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function parseOwnership(recorded: Read | undefined): Ownership {
+function parseOwnership(recorded: Snapshot | undefined): Ownership {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }
@@ -97,7 +97,7 @@ function openLog(files: Root): Log {
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
-export function identify(file: Read): Identity {
+export function identify(file: Snapshot): Identity {
     return {
         hash: contentDigest(file.bytes),
         mode: fileMode(file),
@@ -111,7 +111,7 @@ export function identify(file: Read): Identity {
  * @param expected the recorded identity, or undefined when none was recorded
  * @returns whether they agree
  */
-export function isMatch(file: Read | undefined, expected: Identity | undefined): boolean {
+export function isMatch(file: Snapshot | undefined, expected: Identity | undefined): boolean {
     if (file === undefined) return expected === undefined;
     if (expected === undefined) return false;
     const found = identify(file);
@@ -125,7 +125,7 @@ export function isMatch(file: Read | undefined, expected: Identity | undefined):
  * @param recorded the recorded identity, or undefined when none was recorded
  * @returns whether the file is unedited
  */
-export function isRecorded(file: Read | undefined, recorded: Identity | undefined): boolean {
+export function isRecorded(file: Snapshot | undefined, recorded: Identity | undefined): boolean {
     if (isMatch(file, recorded)) return true;
     if (file === undefined || recorded === undefined || file.isLink === true || recorded.isLink === true) return false;
     const found = identify(file);
@@ -170,7 +170,7 @@ export function getOwnership(root: string): Ownership {
  * @param current the current file
  * @returns the snapshot to write
  */
-export function preserveMode(proposed: Read, current: Read | undefined): Read {
+export function preserveMode(proposed: Snapshot, current: Snapshot | undefined): Snapshot {
     const mode = current !== undefined && isRecorded(current, identify(proposed)) ? current.mode : fileMode(proposed);
     return { bytes: proposed.bytes, mode };
 }

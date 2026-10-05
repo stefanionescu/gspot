@@ -1,4 +1,4 @@
-import type { Read } from '#cli/types/platform/root.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Outcome, OwnershipEntry as OwnedFile } from '#cli/types/lifecycle/ownership.ts';
 
@@ -8,8 +8,8 @@ export type WriteRequest = {
     generated: Generated;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean; python: boolean };
-    reviewedOriginals?: ReadonlyMap<string, Read> | undefined;
-    conflictedOutputs?: ReadonlyMap<string, Read>;
+    reviewedOriginals?: ReadonlyMap<string, Snapshot> | undefined;
+    conflictedOutputs?: ReadonlyMap<string, Snapshot>;
 };
 
 export type ApplyReport = {
@@ -27,10 +27,10 @@ export type MergeRecord = NonNullable<OwnedFile['configuration']>;
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
 export type Planned = {
     path: string;
-    before: Read | undefined;
+    before: Snapshot | undefined;
     previous: OwnedFile | undefined;
     status: Outcome;
-    after?: Read;
+    after?: Snapshot;
     entry?: OwnedFile;
 };
 

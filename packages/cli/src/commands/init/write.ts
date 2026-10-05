@@ -3,10 +3,10 @@ import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import type { Read } from '#cli/types/platform/root.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
@@ -19,7 +19,11 @@ import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/
 import type { Written, InitPrepared, RetirementResult } from '#cli/types/commands/init.ts';
 
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.
-function retireReplaced(log: Log, removed: InitPrepared['removed'], read: ReadonlyMap<string, Read>): RetirementResult {
+function retireReplaced(
+    log: Log,
+    removed: InitPrepared['removed'],
+    read: ReadonlyMap<string, Snapshot>,
+): RetirementResult {
     const result: RetirementResult = { removed: [], preserved: [] };
     const plans = [];
     for (const entry of removed) {
@@ -44,7 +48,7 @@ function retireReplaced(log: Log, removed: InitPrepared['removed'], read: Readon
 }
 
 // Refuses writes when an input changed after init read it.
-function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Read>): void {
+function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Snapshot>): void {
     for (const [path, original] of read)
         if (!isDeepStrictEqual(log.files.read(path), original))
             throw new GspotError('policy', [

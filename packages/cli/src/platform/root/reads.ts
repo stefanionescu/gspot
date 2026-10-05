@@ -2,8 +2,8 @@
 import { join, posix } from 'node:path';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
-import type { Read, Bounds, Proposed, PathFormat } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
+import type { Bounds, Proposed, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
 import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
 
 // A missing parent is created; a competing creator may finish before this one does.
@@ -22,14 +22,14 @@ function preparedDirectory(directory: string): Stats {
 }
 
 // The snapshot of a symbolic link: its target text and its own mode.
-function linkRead(target: string, stat: Stats): Read {
+function linkRead(target: string, stat: Stats): Snapshot {
     const bytes = Buffer.from(readlinkSync(target));
     const mode = fileMode({ mode: stat.mode & MODE_BITS, isLink: true });
     return { bytes, mode, isLink: true };
 }
 
 // The snapshot of a regular file, refusing one that changed while it was read.
-function fileRead(target: string, stat: Stats, path: string): Read {
+function fileRead(target: string, stat: Stats, path: string): Snapshot {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new Error(`Lifecycle destination is not a private regular file: ${path}`);
     const bytes = readFileSync(target);
@@ -40,7 +40,7 @@ function fileRead(target: string, stat: Stats, path: string): Read {
 }
 
 // Whether a link's target text is one the lifecycle refuses: not valid UTF-8, empty, absolute, or unsafe.
-function isUnsafeLinkTarget(bounds: Bounds, value: Read, target: string): boolean {
+function isUnsafeLinkTarget(bounds: Bounds, value: Snapshot, target: string): boolean {
     if (!Buffer.from(target).equals(value.bytes) || target === '' || target.startsWith('/')) return true;
     return bounds.pathFormat === 'portable' ? PORTABLE_LINK_TARGET.test(target) : target.includes('\0');
 }
@@ -110,7 +110,7 @@ export function preparedPath(bounds: Bounds, path: string): string {
  * @param allowLink whether a symbolic link is read as itself instead of refused
  * @returns the snapshot
  */
-export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Read | undefined {
+export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Snapshot | undefined {
     try {
         const target = checkedPath(bounds, path);
         const stat = lstatSync(target);
@@ -131,7 +131,7 @@ export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Rea
  * @param proposed files about to be written, consulted before the disk for a link's destination.
  * @returns the link target text, or undefined for a regular file.
  */
-export function validateRead(bounds: Bounds, path: string, value: Read, proposed?: Proposed): string | undefined {
+export function validateRead(bounds: Bounds, path: string, value: Snapshot, proposed?: Proposed): string | undefined {
     bounds.partsOf(path);
     if (!value.isLink) return undefined;
     const target = value.bytes.toString('utf8');

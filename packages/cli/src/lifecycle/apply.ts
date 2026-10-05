@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { assertNoProblems } from '#cli/policy/read.ts';
-import type { Read } from '#cli/types/platform/root.ts';
 import { removeValePackages } from '#cli/tools/vale.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { packageLockDrift } from '#cli/tools/npm/project.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -106,8 +106,8 @@ function assertPolicyUnchanged(log: Log, session: Session): void {
 }
 
 // A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again.
-function conflictedOutputs(log: Log, generated: Generated): Map<string, Read> {
-    const conflicted = new Map<string, Read>();
+function conflictedOutputs(log: Log, generated: Generated): Map<string, Snapshot> {
+    const conflicted = new Map<string, Snapshot>();
     for (const file of generated.files) {
         const current = log.files.read(file.path);
         if (current !== undefined && CONFLICT_MARKERS.test(current.bytes.toString('utf8')))
@@ -127,7 +127,7 @@ function conflictedOutputs(log: Log, generated: Generated): Map<string, Read> {
 export function writeOutputs(
     session: Session,
     log: Log,
-    reviewedOriginals?: ReadonlyMap<string, Read>,
+    reviewedOriginals?: ReadonlyMap<string, Snapshot>,
     prepared?: Generated,
 ): ApplyReport {
     // Generation requires a valid policy. Refuse errors before writing proposed files.

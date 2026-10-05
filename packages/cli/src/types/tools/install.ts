@@ -1,4 +1,4 @@
-import type { Read } from '#cli/types/platform/root.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import type { PolicyFile } from '#cli/types/policy/settings.ts';
 import type { INSTALLATION_KINDS } from '#cli/config/tools/install.ts';
@@ -42,11 +42,11 @@ export type ToolSearch = {
 export type InstallationKind = (typeof INSTALLATION_KINDS)[number];
 
 /** One file of a finished installation, at its path under the installation folder. */
-export type InstalledOutput = { path: string; file: Read };
+export type InstalledOutput = { path: string; file: Snapshot };
 
 /** The part of the lifecycle owner a tool project reads and installs through. */
 export type ToolOwner = {
-    read(path: string): Read | undefined;
+    read(path: string): Snapshot | undefined;
     installTree(kind: InstallationKind, outputs: InstalledOutput[]): void;
 };
 

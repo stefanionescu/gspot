@@ -4,9 +4,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
-import type { Read, Root } from '#cli/types/platform/root.ts';
 import { cacheDirectory } from '#cli/platform/environment.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import type { Root, Snapshot } from '#cli/types/platform/root.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
@@ -29,9 +29,9 @@ function assertBuildLinksInside(folder: string, files: Root): void {
 }
 
 // The sources to build, each as the snapshot it must have under source/ in the build folder.
-function desiredSources(root: string, paths: string[]): Map<string, Read> {
+function desiredSources(root: string, paths: string[]): Map<string, Snapshot> {
     using source = openRoot(root, 'native');
-    const desired = new Map<string, Read>();
+    const desired = new Map<string, Snapshot>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
         desired.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
@@ -40,7 +40,7 @@ function desiredSources(root: string, paths: string[]): Map<string, Read> {
 }
 
 // Removes unwanted files and then their containing folders, deepest first.
-function pruneSources(folder: string, files: Root, desired: Map<string, Read>): void {
+function pruneSources(folder: string, files: Root, desired: Map<string, Snapshot>): void {
     const wanted = new Set(
         [...desired.keys()].flatMap((path) => {
             const parts = path.split('/');

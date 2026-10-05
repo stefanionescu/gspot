@@ -805,6 +805,10 @@ reason = "This filename identifies the published ESLint rule no-helpers-beside-t
 name = "no-helpers-beside-tests.test"
 reason = "This test filename identifies its published ESLint rule no-helpers-beside-tests."
 
+[[naming.allowed]]
+name = "Snapshot"
+reason = "Snapshot records file bytes and mode, or a symbolic link target. It names filesystem state rather than a testing snapshot."
+
 [[structure.lone_files_allowed]]
 paths = [
     "packages/cli/src/config/checks/database",

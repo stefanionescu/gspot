@@ -1,7 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
-import type { Read } from '#cli/types/platform/root.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
 import type { InstalledOutput, InstallationKind } from '#cli/types/tools/install.ts';
@@ -29,7 +29,7 @@ function linkTarget(entry: string): string | undefined {
 }
 
 // Preserve file links at their original location and copy their bytes inside a directory alias.
-function installedFile(directory: string, realPath: string, outputPath: string, source: string): Read {
+function installedFile(directory: string, realPath: string, outputPath: string, source: string): Snapshot {
     if (realPath === outputPath) {
         const entry = join(directory, realPath);
         const link = linkTarget(entry);

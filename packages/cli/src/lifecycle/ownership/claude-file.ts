@@ -1,6 +1,6 @@
 // Moving `CLAUDE.md` into `AGENTS.md`: its own text goes to the end of `AGENTS.md`, and the file goes.
-import type { Read } from '#cli/types/platform/root.ts';
 import { identify } from '#cli/lifecycle/ownership/log.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
@@ -8,7 +8,7 @@ import { MOVED_HEADING } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 
 // The text of a file without the gspot block, trimmed; a link holds none of its own.
-function authoredText(file: Read): string {
+function authoredText(file: Snapshot): string {
     if (file.isLink === true) return '';
     const text = file.bytes.toString('utf8');
     const span = blockSpan(text, 'markdown');

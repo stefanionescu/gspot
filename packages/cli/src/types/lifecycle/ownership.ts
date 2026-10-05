@@ -1,9 +1,9 @@
 import type { z } from 'zod';
 import type { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
-import type { Read, Root, Proposed } from '#cli/types/platform/root.ts';
 import type { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
+import type { Root, Proposed, Snapshot } from '#cli/types/platform/root.ts';
 
-export type Restoration = { next?: Read };
+export type Restoration = { next?: Snapshot };
 
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
 
@@ -13,10 +13,10 @@ export type PlannedBlock = { nextText: string; block: OwnedBlock };
 
 export type ReplacementRequest = {
     path: string;
-    next: Read;
+    next: Snapshot;
     kind: OwnedKind;
     canReplace?: boolean | undefined;
-    expected?: Read | undefined;
+    expected?: Snapshot | undefined;
     proposed?: Proposed | undefined;
 };
 

@@ -4,8 +4,8 @@ import type { Stats } from 'node:fs';
 import { isInside } from '#cli/platform/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
-import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform/root.ts';
 import { writeLink, acquireLock, replaceEntry } from '#cli/platform/root/writes.ts';
+import type { Root, Bounds, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
 import { boundsOf, readEntry, checkedPath, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
 
 import {
@@ -20,7 +20,7 @@ import {
     realpathSync,
 } from 'node:fs';
 
-// The real path of an entry inside the root, refusing one whose link chain leaves the root.
+// The real path of an entry, refusing a resolved destination outside the root.
 function sourceOf(bounds: Bounds, path: string): string {
     const target = realpathSync(join(bounds.canonical, ...bounds.partsOf(path)));
     const local = relative(bounds.canonical, target);
@@ -68,7 +68,7 @@ function removeTree(bounds: Bounds, path: string): void {
 }
 
 // Removes a file inside the root after checking that it is still the one the caller last saw.
-function removeEntry(bounds: Bounds, path: string, expected: Read): void {
+function removeEntry(bounds: Bounds, path: string, expected: Snapshot): void {
     if (!sameEntry(readEntry(bounds, path, expected.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during removal: ${path}`);
     unlinkSync(checkedPath(bounds, path));

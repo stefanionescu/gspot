@@ -1,4 +1,4 @@
-import type { Read } from '#cli/types/platform/root.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Policy, RawPolicy, TomlTable } from '#cli/types/policy/settings.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Tooling, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -30,7 +30,7 @@ export type InitPlan = {
 
 /** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
 export type Replaced = {
-    read: Map<string, Read>;
+    read: Map<string, Snapshot>;
     removed: { path: string; note: string }[];
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];
@@ -60,7 +60,7 @@ export type InitPrepared = {
     plan: InitPlan;
     policyText: string;
     removed: { path: string }[];
-    read: Map<string, Read>;
+    read: Map<string, Snapshot>;
 };
 
 export type Written = { lines: string[]; installNote: string; exitCode: number };

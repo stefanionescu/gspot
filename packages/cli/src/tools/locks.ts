@@ -1,4 +1,4 @@
-import type { Read } from '#cli/types/platform/root.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 
 /**
@@ -8,7 +8,7 @@ import type { GeneratedFile } from '#cli/types/generation/output.ts';
  * @param original the snapshot read before preparing the lock
  * @returns the read-only lock output
  */
-export function buildLockFile(path: string, content: string, original: Read | undefined): GeneratedFile {
+export function buildLockFile(path: string, content: string, original: Snapshot | undefined): GeneratedFile {
     const file: GeneratedFile = { path, content, readOnly: true, kind: 'lock' };
     if (original !== undefined) file.read = original;
     return file;

@@ -1,8 +1,8 @@
-import type { Read } from '#cli/types/platform/root.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 
-export type InstallFiles = { project: Read; recorded: Read; yarn: Read | undefined };
+export type InstallFiles = { project: Snapshot; recorded: Snapshot; yarn: Snapshot | undefined };
 
 export type PackageExecution = {
     work: string;

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { Read } from '#cli/types/platform/root.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
+import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
@@ -23,7 +23,7 @@ import {
 } from 'node:fs';
 
 // Later user edits remain intact across replacement and giving the file back.
-function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: Read): void {
+function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: Snapshot): void {
     expect(applyPlan(log, proposeReplacement(log, { path: path, next: next, kind: 'config', canReplace: true }))).toBe(
         'changed',
     );
