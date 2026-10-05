@@ -26,11 +26,11 @@ function headerLines(version: string): string[] {
 }
 
 /**
- * The generated header as hash comments.
+ * The generated notice as comments beginning with `#`.
  * @param version the gspot version
  * @returns the comment block ending in a newline
  */
-export function hashHeader(version: string): string {
+export function hashCommentHeader(version: string): string {
     return commented(headerLines(version), '#');
 }
 
@@ -51,7 +51,7 @@ export function headerFor(path: string, version: string): string {
         return `<!--\n${indented}\n-->\n`;
     }
     if (extension === '.sql') return commented(headerLines(version), '--');
-    return hashHeader(version);
+    return hashCommentHeader(version);
 }
 
 /**

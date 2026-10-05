@@ -1,9 +1,9 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { runGitBlocking } from '#cli/platform/git.ts';
-import { hashHeader } from '#cli/generation/headers.ts';
 import { isGitRepository } from '#cli/repository/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
+import { hashCommentHeader } from '#cli/generation/headers.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { HOOK_ARGS, HOOK_FILES, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
@@ -29,7 +29,7 @@ function hookScript(name: HookName, runner: Policy['run_with'], prefix: string, 
         `GSPOT_HOOK=${name} exec ${hookLine(name, runner)}`,
         '',
     ].join('\n');
-    return `#!/bin/sh\n${hashHeader(version)}${body}`;
+    return `#!/bin/sh\n${hashCommentHeader(version)}${body}`;
 }
 
 /**

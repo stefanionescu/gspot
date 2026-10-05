@@ -1,7 +1,7 @@
 // Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
-import { hashHeader } from '#cli/generation/headers.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import { hashCommentHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 
@@ -140,7 +140,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
         ),
     });
     const path = GITHUB_WORKFLOW;
-    const content = `${hashHeader(pipeline.version)}${workflow.toString({ lineWidth: 0 })}`;
+    const content = `${hashCommentHeader(pipeline.version)}${workflow.toString({ lineWidth: 0 })}`;
     return { path, content, readOnly: true, kind: 'workflow' };
 }
 
@@ -171,5 +171,5 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, `${command} doctor`, check],
         },
     });
-    return { path, content: `${hashHeader(pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
+    return { path, content: `${hashCommentHeader(pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
 }
