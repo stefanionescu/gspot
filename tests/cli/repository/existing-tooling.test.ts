@@ -1,12 +1,19 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
-import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { PACKAGE_HOOK_CONFIGURATIONS } from '#tests/config/cli/repository/existing-tooling.ts';
+import { isPosix } from '#tests/config/harness/platforms.ts';
+import { mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+
+import {
+    LINKED_HOOK_FILES,
+    LINKED_HOOK_FOLDERS,
+    LINKED_RULE_FOLDERS,
+    PACKAGE_HOOK_CONFIGURATIONS,
+} from '#tests/config/cli/repository/existing-tooling.ts';
 
 test('hook discovery preserves path whitespace and refuses malformed Git configuration', async () => {
     const hooksPath = ' .custom hooks';
@@ -210,3 +217,59 @@ test('hook discovery reports foreign folders and leaves managed and task scripts
         { kind: 'husky', path: '.husky', files: ['pre-commit'] },
     ]);
 });
+
+test.skipIf(!isPosix).each(LINKED_HOOK_FOLDERS)(
+    'a linked $path counts as $kind without exposing external hook files',
+    async ({ path, kind }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'project/source.ts': 'export {};\n',
+            'outside/pre-commit': '#!/bin/sh\nexit 0\n',
+        });
+        const root = join(sandbox.path, 'project');
+        symlinkSync('../outside', join(root, path), 'dir');
+        expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
+        unlinkSync(join(root, path));
+        await createFileTree(root, { [`${path}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
+        expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: ['pre-commit'] }]);
+        expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
+        expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
+    },
+);
+
+test.skipIf(!isPosix).each(LINKED_RULE_FOLDERS)(
+    'a linked %s counts as present without reading an external rules folder',
+    async (path) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'project/source.ts': 'export {};\n',
+            'outside/guide.md': 'external rules\n',
+        });
+        const root = join(sandbox.path, 'project');
+        mkdirSync(dirname(join(root, path)), { recursive: true });
+        symlinkSync(join(sandbox.path, 'outside'), join(root, path), 'dir');
+        expect(getTooling(root, [], []).rulesDirectories).toStrictEqual([path]);
+        unlinkSync(join(root, path));
+        await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
+        expect(getTooling(root, [], []).rulesDirectories).toStrictEqual([path]);
+        expect(readFileSync(join(sandbox.path, 'outside/guide.md'), 'utf8')).toBe('external rules\n');
+        expect(readFileSync(join(root, path, 'guide.md'), 'utf8')).toBe('authored rules\n');
+        expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
+    },
+);
+
+test.skipIf(!isPosix).each(LINKED_HOOK_FILES)(
+    'a linked $path counts as $kind and preserves its external configuration',
+    async ({ path, kind }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'project/source.ts': 'export {};\n',
+            'outside/configuration': 'authored hook configuration\n',
+        });
+        const root = join(sandbox.path, 'project');
+        symlinkSync('../outside/configuration', join(root, path));
+        expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
+        expect(readFileSync(join(sandbox.path, 'outside/configuration'), 'utf8')).toBe('authored hook configuration\n');
+        expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
+    },
+);

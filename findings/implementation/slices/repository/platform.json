@@ -73,10 +73,13 @@
         "section": "Repository and Platform",
         "finding": "| `platform/errors.ts:1` header | \"The one error gspot raises on purpose\" is wrong. The source has 316 `throw new Error(...)` calls that reach the user too, printed as \"gspot did not run: ...\" (`commands/program.ts:67`). | Rewrite as \"An error with a failure code. Callers branch on the code; any other Error prints as 'gspot did not run'.\" |",
         "owner": "`platform/errors.ts:1` header",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/errors.ts", "packages/cli/src/commands/program.ts"],
+        "status": "closed",
+        "outcome": "The error header describes coded failures and qualifies the gspot stopped prefix as text output. JSON failures retain their structured code and message.",
+        "verification": [
+            "Inspected printFailure and GspotError. The header now precedes imports; its qualification matches the actual text and JSON branches. The entire error-module executable AST is unchanged.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/003",
@@ -387,10 +390,13 @@
         "section": "Repository and Platform",
         "finding": "| `platform/text.ts:34` `codeList(items, limit = LIST_LIMIT)` | None of the 4 calls (`kits/messages.ts`, `policy/messages.ts`) passes `limit`. | Delete the parameter and use `LIST_LIMIT` inside the function. |",
         "owner": "`platform/text.ts:34` `codeList(items, limit = LIST_LIMIT)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/text.ts"],
+        "status": "closed",
+        "outcome": "codeList accepts only items and uses its owned LIST_LIMIT constant. No optional limit or compatibility signature remains.",
+        "verification": [
+            "Inspected the function and all live callers. Four direct formatter checks passed for empty, short, exact-limit and over-limit input, including the exact remaining count.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/019",
@@ -399,10 +405,13 @@
         "section": "Repository and Platform",
         "finding": "| `platform/text.ts:91` `decodedText` | The verb table names this act `decode`. | Rename it to `decodeUtf8` (7 callers). |",
         "owner": "`platform/text.ts:91` `decodedText`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/platform/text.ts"],
+        "status": "closed",
+        "outcome": "decodeUtf8 owns checked byte decoding, and current source, Git, secret and lifecycle consumers use that name. The old decodedText name is absent from live source.",
+        "verification": [
+            "Traced current imports and calls. Three direct decoding checks passed for valid Unicode, valid NUL and invalid UTF-8 bytes. Root TypeScript validates the actual callers.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/020",
@@ -411,10 +420,13 @@
         "section": "Repository and Platform",
         "finding": "| `platform/quoting.ts:2-3,18-25` `commandArguments` | The function parses a command line, so its verb should be `parse`. It throws the same message for two separate checks. No message names the command, so the user sees \"gspot did not run: Configure one executable with literal arguments.\" and cannot tell which setting is wrong. Line 3 has no blank line after the import. | Rename it to `parseCommand` and merge the two checks. Make the message `The command \"${source}\" must be one executable with literal arguments: no pipes, &&, redirection, or variables.` Add the blank line. |",
         "owner": "`platform/quoting.ts:2-3,18-25` `commandArguments`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/command.ts", "packages/cli/src/platform/quoting.ts"],
+        "status": "closed",
+        "outcome": "Command parsing belongs to parseCommand in the parser owner. Quoting remains in platform/quoting. Validated command-shape refusals identify the authored command and explain literal arguments.",
+        "verification": [
+            "The parser and its site-build/OpenAPI consumers use parseCommand. Seven direct parser checks passed: quoted and empty arguments plus refusal of pipes, conjunctions, multiple commands, redirection, variable expansion and environment assignments. Existing escaped-space cases also pass. The old commandArguments export is gone.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/021",
@@ -423,10 +435,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/jsonc.ts:9,21` `parseJsonc`, `jsoncValue` | `lifecycle/preview/compare.ts:17` defines a private `parseJsonc` on top of `jsoncValue`, with a different message. It copies the exported `parseJsonc`. | Delete the private copy and import `parseJsonc`. |",
         "owner": "`repository/jsonc.ts:9,21` `parseJsonc`, `jsoncValue`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/jsonc.ts",
+            "packages/cli/src/parsers/lockfiles.ts",
+            "packages/cli/src/repository/scopes.ts"
+        ],
+        "status": "closed",
+        "outcome": "One exported parseJsonc owns strict JSONC diagnostics. The lifecycle private copy and old repository/jsonc owner are gone. jsoncValue retains its distinct nonthrowing reader contract.",
+        "verification": [
+            "Traced all definitions and consumers. The JSONC cases require valid comments/trailing commas and reject partial results with offsets; current lockfile and workspace consumers pass their real regression cases. No lifecycle-local parseJsonc remains.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/022",
@@ -567,10 +586,18 @@
         "section": "Repository and Platform",
         "finding": "| `repository/packages.ts:32-38,95,107-115,125-133,144-152` `Fields.scripts`, `engines`, `installer`, `type` | All five readers fill these four fields, and nothing reads them. Consumers read only `path`, `kind`, `dependencies`, `installed`, and the root pyproject's `workspaces` (`kits/detect.ts`, `repository/scopes.ts`, `repository/survey.ts`). `checks/general/docs/stale-paths.ts:45` reads `scripts` from package.json itself. Lines 36-38 also use `typeof` checks and bracket access on fields the schema already types. The package.json `workspaces` value is unread too: `scopes.ts:108` reads it again from disk. | Delete the four fields from `Fields` (`types/repository/repository.ts:64`) and from the readers. Delete lines 36-38. |",
         "owner": "`repository/packages.ts:32-38,95,107-115,125-133,144-152` `Fields.scripts`, `engines`, `installer`, `type`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/parsers/packages.ts",
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/configurations/detect.ts"
+        ],
+        "status": "closed",
+        "outcome": "ProjectManifest holds dependency and runtime evidence. It no longer carries unused scripts, engines, installer, type or workspace copies. Authored PackageManifest fields remain validated for their actual consumers.",
+        "verification": [
+            "Inspected ProjectManifest and every parser result. Runtime evidence is computed from authored engines/scripts and consumed by configuration detection, rather than copied as unread fields. The actual manifest and runtime-applicability cases pass; schema-typed authored fields and installed package metadata retain their separate contracts.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/030",
@@ -600,10 +627,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/packages.ts:19,89,98,118,136` reader names, `Fields` | Five readers name one act five ways: `packageJsonFacts`, `pipfile`, `requirements`, `pyproject`, and `swift`. `Fields` names no concept, and consumers call each one a `fact`. | Rename the readers to `readPackageJson`, `readPipfile`, `readRequirements`, `readPyproject`, and `readPackageSwift`. Rename `Fields` to `ManifestSummary`. |",
         "owner": "`repository/packages.ts:19,89,98,118,136` reader names, `Fields`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "packages/cli/src/types/parsers/packages.ts"
+        ],
+        "status": "closed",
+        "outcome": "File I/O stays in repository/manifests; pure per-format parsers use parsePackageSummary, parsePipfile, parseRequirements, parsePyproject and parseSwiftPackage. ProjectManifest names the dependency/runtime evidence.",
+        "verification": [
+            "Traced manifestParser, its private parser registry, repository reads and consumers. The read-prefix proposal is superseded by the pure parser ownership: these functions receive text and do no I/O. Old Fields/fact-reader function names and compatibility exports are absent. Actual supported-format discovery and malformed-file cases pass.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/032",
@@ -612,10 +646,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/packages.ts:43-53` `isNamedRequirement`, `requirementName` | Both functions cut the name at `REQUIREMENT_NAME_END`, and `requirements()` calls both for each line. | Merge them into one `requirementName(spec): string \\| undefined` that returns undefined for an invalid name. |",
         "owner": "`repository/packages.ts:43-53` `isNamedRequirement`, `requirementName`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/packages.ts"],
+        "status": "closed",
+        "outcome": "requirementName performs one name cut and validation, returning undefined for unnamed requirements. Requirement files and Python dependency groups share that calculation.",
+        "verification": [
+            "Inspected both actual callers: each input calls requirementName once. isNamedRequirement is gone. Current manifest cases verify extras, direct URLs, comments, includes, distribution normalization and invalid typed dependency values while preserving authored bytes.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/033",
@@ -624,10 +661,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/packages.ts:81` `pythonDependencies` | When `[tool.pytest]` exists, `{ pytest: 'tool.pytest' }` records pytest as a dependency the project never declared. No comment says why. | Write the reason in a comment (\"a [tool.pytest] table means the project runs pytest, so detection treats it as a dependency\"), or use a separate field. |",
         "owner": "`repository/packages.ts:81` `pythonDependencies`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/repository/manifests.ts",
+            "tests/cli/repository/manifests.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "The Python parser explains why a tool.pytest table records pytest use even when another installer supplies the dependency.",
+        "verification": [
+            "Added a real repository/manifest case containing only tool.pytest.ini_options, without an authored dependency. It requires pytest detection evidence and exact preservation of the project and unrelated source bytes.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/034",
@@ -636,10 +680,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/packages.ts:55-57` `poetryDependencies` | The parameter type `NonNullable<ReturnType<typeof pythonManifestSchema.parse>['tool']>['poetry']` is hard to read. | Use `z.infer<typeof poetryTool> \\| undefined`. |",
         "owner": "`repository/packages.ts:55-57` `poetryDependencies`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/parsers/packages.ts",
+            "packages/cli/src/parsers/schema/packages.ts",
+            "packages/cli/src/parsers/packages.ts"
+        ],
+        "status": "closed",
+        "outcome": "PoetrySettings infers the owned poetryToolSchema and adds undefined at its usage boundary. The nested NonNullable/ReturnType parameter expression is gone.",
+        "verification": [
+            "Inspected the schema-derived type and poetryDependencies consumer. Root TypeScript and actual scalar/table/group Poetry dependency and malformed-value cases pass.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/035",
@@ -689,10 +740,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/scopes.ts:49-69` `inspectWorkspacePaths` | \"Inspect\" hides that the function exists to throw. It checks each pattern, and it reads each member's package.json through the root only so that a link leaving the repository throws. The read result is dropped. Line 54 replaces glob characters with `x` and has no comment. | Rename it to `assertWorkspaceInsideRoot`. Comment line 54: \"Glob characters are not path characters; replace them so the segment rules check the rest.\" |",
         "owner": "`repository/scopes.ts:49-69` `inspectWorkspacePaths`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/scopes.ts"],
+        "status": "closed",
+        "outcome": "assertWorkspaceInsideRoot states its validation role and documents the glob-character mask before portable segment checks. Reads verify filesystem boundaries before external workspace discovery.",
+        "verification": [
+            "Inspected the function and every workspace resolver caller. The actual workspace cases verify escaped/symlinked members, authored paths, ignored tooling directories, root and nested projects, and preservation. No inspectWorkspacePaths alias remains.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/038",
@@ -701,10 +755,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/scopes.ts:262` `scopeAncestors` | The filter rewrites `isInScope(path, entry.path)` from `selectors.ts`. | Use `isInScope`. |",
         "owner": "`repository/scopes.ts:262` `scopeAncestors`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/scopes.ts", "packages/cli/src/repository/selectors.ts"],
+        "status": "closed",
+        "outcome": "scopeAncestors uses isInScope for inclusion and retains its shortest-to-longest ordering.",
+        "verification": [
+            "Inspected the filter and its consumers. Current repository scope and push-selection cases pass. The existing boundary predicate supplies the path-segment contract; no duplicate startsWith expression remains in scopeAncestors.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/039",
@@ -768,10 +825,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/survey.ts:43,105` `getFiles`, `getHooks` | `Root.stat` throws on a link. If `.husky`, `.githooks`, a rules folder such as `.cursor/rules` or `.claude/rules`, or `lefthook.yml` is a symlink, `gspot init` and `gspot doctor` stop with \"gspot did not run: Unsafe lifecycle destination: .cursor/rules\". This is the `Root.stat` side of the FINDINGS row on `Root.read`. | Count a link as present. List its target only when the target stays inside the root. |",
         "owner": "`repository/survey.ts:43,105` `getFiles`, `getHooks`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/platform/root/open.ts",
+            "tests/cli/repository/existing-tooling.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Linked hook directories, rule folders and hook configuration files count as present. Directory contents are read through the root boundary, so external hook files are not listed.",
+        "verification": [
+            "Six added real-filesystem cases cover .husky, .githooks, .cursor/rules, .claude/rules, .lefthook.yml and .pre-commit-config.yaml. They verify presence, safe directory replacement where relevant, and exact external and unrelated byte preservation. They run on macOS and remain visible as six skips in the simulated Windows registration check; no native Windows filesystem execution is claimed.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/043",
@@ -804,10 +868,17 @@
         "section": "Repository and Platform",
         "finding": "| `repository/tags.ts:23-41` `Tagged.shebang`, `shebangTags`, `textTags` | `shebang` is computed and returned, but nothing reads it: `tree.ts` uses only `tags` and `binary`. `shebangTags` also parses the shebang twice, once through `shebangInterpreter` and once through `shebangExecutable`. | Delete `shebang` from `Tagged` (`types/repository/repository.ts:84`) and from the return values. Read the executable once and get the interpreter from it. |",
         "owner": "`repository/tags.ts:23-41` `Tagged.shebang`, `shebangTags`, `textTags`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/tags.ts",
+            "packages/cli/src/parsers/shebang.ts",
+            "packages/cli/src/types/repository/inventory.ts"
+        ],
+        "status": "closed",
+        "outcome": "Tagged contains only tags and binary. Shebang parsing occurs once, and the parsed interpreter supplies both dialect and runtime evidence.",
+        "verification": [
+            "Inspected shebangTags and Tagged. The nine actual interpreter rows cover shell dialects, env -S Bun, Node, Deno, Python and plain text; the binary case forbids shebang/runtime tags. All pass through current tagEntry and repository discovery.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/046",
@@ -816,10 +887,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/tags.ts:49-53` `shebangExecutable` doc | The doc says \"Reads the executable token, including env -S and interpreter arguments\". The function skips `env` and `-S`, returns only the interpreter's base name, and reads no arguments. | Rewrite as \"The interpreter a shebang runs, as a base name: the first word, or the word after `env` and `-S`.\" |",
         "owner": "`repository/tags.ts:49-53` `shebangExecutable` doc",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/shebang.ts", "packages/cli/src/repository/tags.ts"],
+        "status": "closed",
+        "outcome": "The parser header and documentation describe the executable basename and env/-S skipping. They no longer claim to return interpreter arguments.",
+        "verification": [
+            "Inspected parseShebang, its caller and the env -S fixture. The source receives only the interpreter basename; actual tag cases confirm the applicable language and runtime evidence.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/047",
@@ -899,10 +973,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/revisions/push.ts:30-38,48-55,132-141` `selectPush`, `getFetchedCommits`, `peelCommit` | Every push resolves every fetched ref up front, with two Git processes per ref (`rev-parse ^{}`, then `cat-file -t`), run one after another. Yet `context.fetched` is read only when a line creates a new remote ref (`comparison`, line 66). With 500 remote branches, each push of an existing branch runs 1,000 Git processes. | Resolve fetched commits only when a line has an absent remote hash. Peel them all with one `git cat-file --batch-check='%(objectname) %(objecttype)'` call that takes `<hash>^{}` lines on stdin. |",
         "owner": "`repository/revisions/push.ts:30-38,48-55,132-141` `selectPush`, `getFetchedCommits`, `peelCommit`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/revisions/push.ts"],
+        "status": "closed",
+        "outcome": "Fetched commits resolve lazily for a new remote reference and are peeled in one batch-check query. The command-owned promise and commit map retain reuse and cancellation.",
+        "verification": [
+            "The source audit verifies one batch-check over fetched object input, no per-fetched-object peelCommit calls, and lazy initialization after existing-ref and shallow handling. Actual pre-push cases pass for new/existing refs, mapped and negative refspecs, annotated tags, non-commit objects, missing objects, forced rewinds and duplicate pushed trees. This evidence does not claim a measured 500-branch performance bound.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/052",
@@ -911,10 +988,13 @@
         "section": "Repository and Platform",
         "finding": "| `repository/revisions/push.ts:68,77` `comparison`, `buildRevision` | For a new ref, every fetched commit goes on the command line after `--not`. Windows limits a command line to 32,767 characters, so about 800 remote branches (41 characters each) stop `git log` and `git rev-list` from starting. | Pass the excluded commits as `^<hash>` lines with `--stdin`. Both commands accept it, and `runGit` takes `stdin`. |",
         "owner": "`repository/revisions/push.ts:68,77` `comparison`, `buildRevision`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/revisions/push.ts", "packages/cli/src/platform/git.ts"],
+        "status": "closed",
+        "outcome": "Commit exclusions travel on stdin to both log and rev-list. The fetched-commit list no longer grows those argument vectors.",
+        "verification": [
+            "The source audit verifies --stdin and caret-prefixed exclusions in comparison and buildRevision. Real pre-push cases exercise the resulting selections and preserved working-tree bytes. The source removes the command-line growth mechanism; no native Windows command-line limit test is claimed.",
+            "Root TypeScript, affected ESLint and Prettier passed. The current repository, pre-push, command/JSONC/Git/lockfile parser run passed 240 cases and 667 assertions across 27 files. After correcting readonly test-table typing, the two changed test owners again passed 60 cases and 146 assertions. Fourteen direct text/command boundary checks passed. AST inspection preserves all 21 prior declarations and 58 assertion sites in the edited test owners."
+        ]
     },
     {
         "id": "slices/repository-platform/053",

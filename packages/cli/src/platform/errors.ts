@@ -1,6 +1,6 @@
+// An error with a failure code so callers can branch.
+// Other errors use the `gspot stopped` prefix in text output.
 import type { ErrorCode } from '#cli/types/platform/runtime.ts';
-
-// An error with a failure code. Callers branch on the code. Other errors use the `gspot stopped` prefix.
 
 export class GspotError extends Error {
     readonly code: ErrorCode;

@@ -84,6 +84,17 @@ test('Python group includes coexist with dependency detection', async () => {
     expect(projectManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
+test('pytest configuration records tool use without requiring an authored dependency', async () => {
+    await using sandbox = await testdir();
+    const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
+    await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const manifests = readManifests(sandbox.path, repository.files);
+    expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
+    expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(source);
+    expect(readFileSync(join(sandbox.path, 'source.py'), 'utf8')).toBe('print("authored")\n');
+});
+
 test('manifest inspection refuses an external link replacing a manifest and accepts restored bytes', async () => {
     const path = 'package.json';
     await using directory = await testdir();
