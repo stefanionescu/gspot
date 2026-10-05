@@ -3,18 +3,7 @@ const document = {
     rules: [
         {
             id: 'workers-no-user-controlled-fetch',
-            patterns: [
-                {
-                    'pattern-either': [
-                        {
-                            pattern: 'fetch($REQUEST.url, ...)',
-                        },
-                        {
-                            pattern: 'fetch($URL.searchParams.get(...), ...)',
-                        },
-                    ],
-                },
-            ],
+            pattern: 'fetch($URL.searchParams.get(...), ...)',
             message: 'SSRF risk. Validate and allowlist outbound fetch targets.',
             languages: ['javascript', 'typescript'],
             severity: 'ERROR',

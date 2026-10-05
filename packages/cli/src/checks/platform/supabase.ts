@@ -245,7 +245,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * Reports service role keys outside supabase.admin_key_files and the effective test paths.
+ * Reports privileged Supabase keys outside supabase.admin_key_files and the effective test paths.
  * @param input the engine input
  * @returns the findings
  */
@@ -270,7 +270,7 @@ export function adminKey(input: EngineInput): Finding[] {
             .flatMap((text, index): Finding[] => {
                 if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
                 const diagnostic =
-                    'This file names the service role key, which bypasses row level security, outside the paths allowed to hold it.';
+                    'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
                 return [findingAt(input, { file: file.path, line: index + 1 }, 'admin-key', diagnostic)];
             }),
     );

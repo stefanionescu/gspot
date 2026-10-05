@@ -19,8 +19,11 @@ import {
     FRAMEWORK_FILES,
     FRAMEWORK_FINDINGS,
     EXPRESS_SOURCE_CASES,
+    PLATFORM_SOURCE_CASES,
     SEMGREP_PROJECT_FILES,
     EXPRESS_SOURCE_FINDINGS,
+    PLATFORM_SOURCE_FINDINGS,
+    PLATFORM_SOURCE_CORRECTIONS,
 } from '#tests/config/tools/generation/semgrep.ts';
 
 test.skipIf(!hasToolBuild('semgrep'))(
@@ -224,5 +227,44 @@ test.skipIf(!hasToolBuild('semgrep'))(
         expect(await Bun.file(join(sandbox.path, 'neighbor.py')).text()).toBe(
             'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
         );
+    },
+);
+
+test.skipIf(!hasToolBuild('semgrep'))(
+    'platform security packs report raw inputs once and accept documented forms and corrections',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'package.json': SEMGREP_PROJECT_FILES['package.json'],
+            'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
+            'wrangler.toml': SEMGREP_PROJECT_FILES['wrangler.toml'],
+            'supabase/config.toml': SEMGREP_PROJECT_FILES['supabase/config.toml'],
+            'gspot.toml': buildPolicy(['javascript', 'supabase', 'cloudflare', 'security']),
+            ...PLATFORM_SOURCE_CASES,
+        });
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const environment = await installGeneratedPythonTools(sandbox.path);
+        const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+        const command = ['check', '--only', 'security/semgrep', '--json'];
+        const failed = await spawnGspot(sandbox.path, command, environment);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const findings = (JSON.parse(failed.stdout) as RunReport).checks
+            .flatMap((check) => check.findings)
+            .map(({ file, rule, line }) => ({ file, rule, line }));
+        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
+            PLATFORM_SOURCE_FINDINGS,
+        );
+        for (const [path, source] of Object.entries(PLATFORM_SOURCE_CORRECTIONS))
+            await Bun.write(join(sandbox.path, path), source);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const preserved = Object.entries(PLATFORM_SOURCE_CASES).filter(
+            ([path]) => !Object.hasOwn(PLATFORM_SOURCE_CORRECTIONS, path),
+        );
+        expect(await Promise.all(preserved.map(([path]) => Bun.file(join(sandbox.path, path)).text()))).toStrictEqual(
+            preserved.map(([, source]) => source),
+        );
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     },
 );

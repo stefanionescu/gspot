@@ -63,3 +63,45 @@ export const SEMGREP_PROJECT_FILES = {
     'wrangler.toml': 'name = "example"\ncompatibility_date = "2026-01-01"\n',
     'supabase/config.toml': 'project_id = "example"\n',
 };
+
+/** Native platform defects beside documented origin fetches, CORS, and query forms. */
+export const PLATFORM_SOURCE_CASES = {
+    'functions/input.js': 'fetch(new URL(request.url).searchParams.get("target"));\n',
+    'functions/proxy.js': 'fetch(context.request.url, { cf: { cacheTtl: 5 } });\n',
+    'supabase/functions/_shared/cors.ts': 'export const headers = { "Access-Control-Allow-Origin": "*" };\n',
+    'supabase/functions/cors/index.ts':
+        'export const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": "true" };\n',
+    'supabase/functions/eval/index.ts': 'eval(input);\n',
+    'supabase/functions/remote/index.ts': 'const loaded = import(modulePath);\n',
+    'supabase/functions/lazy/index.ts': 'const loaded = import("./local.ts");\n',
+    'src/rpc.js': 'client.rpc(`fetch_${name}`);\n',
+    'src/select.js': 'client.from("users").select(`id,${column}`);\n',
+    'src/equal.js': 'client.from("users").filter("name", "eq", `${name}`);\n',
+    'src/filter.js': 'client.from("users").or(`id.eq.${input}`);\n',
+    'src/list.js': 'client.from("users").filter("id", "in", `(${input})`);\n',
+    'src/search.js': 'client.from("docs").textSearch("body", `\'${term}\'`);\n',
+    'src/plain.js': 'client.from("docs").textSearch("body", `${term}`, { type: "plain" });\n',
+    'src/phrase.js': 'client.from("docs").textSearch("body", `${term}`, { type: "phrase" });\n',
+    'src/websearch.js': 'client.from("docs").textSearch("body", `${term}`, { type: "websearch" });\n',
+};
+
+export const PLATFORM_SOURCE_FINDINGS = [
+    { file: 'functions/input.js', rule: 'workers-no-user-controlled-fetch', line: 1 },
+    { file: 'src/filter.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
+    { file: 'src/list.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
+    { file: 'src/search.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
+    { file: 'supabase/functions/cors/index.ts', rule: 'supabase-edge-cors-wildcard-with-credentials', line: 1 },
+    { file: 'supabase/functions/eval/index.ts', rule: 'node-no-eval', line: 1 },
+    { file: 'supabase/functions/remote/index.ts', rule: 'node-no-configured-require', line: 1 },
+];
+
+export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {
+    'functions/input.js': 'fetch("https://example.com/api");\n',
+    'src/filter.js': 'client.from("users").eq("id", input);\n',
+    'src/list.js': 'client.from("users").in("id", input);\n',
+    'src/search.js': 'client.from("docs").textSearch("body", `${term}`, { type: "plain" });\n',
+    'supabase/functions/cors/index.ts':
+        'export const headers = { "Access-Control-Allow-Origin": "https://example.com", "Access-Control-Allow-Credentials": "true" };\n',
+    'supabase/functions/eval/index.ts': 'const parsed = Number(input);\n',
+    'supabase/functions/remote/index.ts': 'const loaded = import("./local.ts");\n',
+};

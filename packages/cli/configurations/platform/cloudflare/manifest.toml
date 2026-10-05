@@ -5,7 +5,8 @@ recommends = ["security"]
 description = "Cloudflare Pages and Workers: a wrangler configuration that parses and pins its date, headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
 
 [detect]
-paths = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "**/wrangler.toml", "**/wrangler.jsonc", "functions/_middleware.js", "functions/_worker.js"]
+filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_worker.js"]
+paths = ["**/functions/_middleware.{js,ts}"]
 dependencies = ["wrangler", "@opennextjs/cloudflare"]
 
 [files]

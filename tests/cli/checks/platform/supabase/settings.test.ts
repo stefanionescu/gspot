@@ -17,6 +17,7 @@ import {
     CASES,
     REPOSITORY,
     TEST_PATH_FILES,
+    SECRET_KEY_READS,
     TEST_PATH_POLICY,
 } from '#tests/config/cli/checks/platform/supabase/settings.ts';
 
@@ -107,3 +108,42 @@ test('service role keys are refused in component and module clients while allowe
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(readFileSync(join(sandbox.path, 'server/allowed.ts'), 'utf8')).toBe(sources['server/allowed.ts']);
 });
+
+test.each(SECRET_KEY_READS)(
+    'privileged Supabase keys reject %s in client scopes and preserve allowed files',
+    async (read) => {
+        await using sandbox = await testdir();
+        const policy = buildPolicy(['supabase'], {
+            tables: 'tests = ["qa/**"]\n[supabase]\nadmin_key_files = ["server/**"]\n[[scope]]\npath = "apps/web"\n',
+        });
+        const source = `export const key = ${read};\n`;
+        const allowed = {
+            'server/admin.ts': source,
+            'qa/admin.ts': source,
+            'apps/web/server/admin.ts': source,
+            'publishable.ts': 'export const key = "sb_publishable_example";\n',
+        };
+        const clients = ['client.ts', 'apps/web/client.ts'];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            ...allowed,
+            ...Object.fromEntries(clients.map((path) => [path, source])),
+        });
+        const command = ['check', '--only', 'supabase/admin-key', '--json'];
+        const failed = await runGspot(sandbox.path, command);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(
+            (JSON.parse(failed.stdout) as RunReport).checks
+                .flatMap((check) => check.findings)
+                .map(({ file, line, rule }) => ({ file, line, rule })),
+        ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'admin-key' })));
+        for (const path of clients)
+            await Bun.write(join(sandbox.path, path), 'export const key = "sb_publishable_example";\n');
+        const corrected = await runGspot(sandbox.path, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(
+            await Promise.all(Object.keys(allowed).map((path) => Bun.file(join(sandbox.path, path)).text())),
+        ).toStrictEqual(Object.values(allowed));
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    },
+);

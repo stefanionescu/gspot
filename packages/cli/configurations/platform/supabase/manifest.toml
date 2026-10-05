@@ -2,11 +2,10 @@
 title = "Supabase"
 requires = ["postgres"]
 recommends = ["typescript", "security"]
-description = "A Supabase project: a project file that parses, edge functions under Deno, and migrations named as the CLI names them. Every storage bucket has a policy, and the service role key stays where it belongs."
+description = "A Supabase project: a project file that parses, edge functions under Deno, and migrations named as the CLI names them. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 
 [detect]
-filenames = ["supabase/config.toml"]
-paths = ["supabase/config.toml", "**/supabase/config.toml"]
+paths = ["**/supabase/config.toml"]
 project_files = ["supabase/config.toml"]
 
 [files]
@@ -73,13 +72,13 @@ help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
 name = "admin-key"
-title = "Contain the service role key"
-example = "A client source reading the Supabase service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
+title = "Contain privileged Supabase keys"
+example = "A client source reading a Supabase secret or service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
 level = "recommended"
 stage = "commit"
 runs = "scope"
-summary = "Checks that the service role key is named only under supabase.admin_key_files."
-why = "The service role key bypasses row level security, so one client bundle that holds it gives every user the whole database."
+summary = "Checks that secret and service role keys are named only under supabase.admin_key_files."
+why = "Secret and service role keys bypass row level security, so a client bundle that holds either exposes privileged database access."
 help = "Move the code to a server path, or add the path to supabase.admin_key_files when it never reaches a client."
 
 [[check]]
@@ -137,7 +136,7 @@ name = "supabase.admin_key_files"
 type = "list"
 direction = "loosening"
 default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]
-summary = "Paths relative to the scope that may name the service role key."
+summary = "Paths relative to the scope that may name secret or service role keys."
 
 [set]
 "tools.squawk.assume_in_transaction" = true

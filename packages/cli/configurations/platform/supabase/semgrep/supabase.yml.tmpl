@@ -2,25 +2,24 @@
 const document = {
     rules: [
         {
-            id: 'supabase-no-raw-sql-interpolation',
+            id: 'supabase-postgrest-filter-interpolation',
             patterns: [
                 {
                     'pattern-either': [
-                        {
-                            pattern: '$CLIENT.rpc(`...${$VAR}...`)\n',
-                        },
-                        {
-                            pattern: '$CLIENT.from($TABLE).select(`...${$VAR}...`)\n',
-                        },
+                        { pattern: '$CLIENT.or(`...${$VAR}...`, ...)' },
+                        { pattern: '$CLIENT.filter($COLUMN, "in", `...${$VAR}...`, ...)' },
+                        { pattern: '$CLIENT.textSearch($COLUMN, `...${$VAR}...`, ...)' },
                     ],
                 },
+                { 'pattern-not': '$CLIENT.textSearch(..., {..., type: "plain", ...})' },
+                { 'pattern-not': '$CLIENT.textSearch(..., {..., type: "phrase", ...})' },
+                { 'pattern-not': '$CLIENT.textSearch(..., {..., type: "websearch", ...})' },
             ],
-            message:
-                'SQL injection risk: string interpolation in Supabase query. Use parameterised arguments or RPC parameters.\n',
+            message: 'An interpolated value enters raw PostgREST filter syntax. Escape it for the operator or use a typed filter.\n',
             languages: ['typescript', 'javascript'],
             severity: 'ERROR',
             metadata: {
-                cwe: ['CWE-89'],
+                cwe: ['CWE-20'],
                 category: 'security',
             },
         },
@@ -90,52 +89,9 @@ const document = {
             },
         },
         {
-            id: 'supabase-edge-no-eval',
-            'pattern-either': [
-                {
-                    pattern: 'eval(...)',
-                },
-                {
-                    pattern: 'new Function(...)',
-                },
-            ],
-            message: 'eval()/new Function() in edge functions risks arbitrary code execution.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            paths: {
-                include: ['**/supabase/functions/**'],
-            },
-            metadata: {
-                cwe: ['CWE-94'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'supabase-edge-no-configured-import',
-            pattern: 'import($VAR)',
-            message: 'Dynamic import() in edge functions may source untrusted modules. Use static imports.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            paths: {
-                include: ['**/supabase/functions/**'],
-            },
-            metadata: {
-                cwe: ['CWE-94'],
-                category: 'security',
-            },
-        },
-        {
             id: 'supabase-edge-cors-wildcard-with-credentials',
-            'pattern-either': [
-                {
-                    pattern: '"Access-Control-Allow-Origin": "*"\n',
-                },
-                {
-                    pattern: "'Access-Control-Allow-Origin': '*'\n",
-                },
-            ],
-            message:
-                'Wildcard CORS origin: if used with credentials, this allows any origin to access the endpoint. Use a specific origin.\n',
+            pattern: '{..., "Access-Control-Allow-Origin": "*", ..., "Access-Control-Allow-Credentials": "true", ...}',
+            message: 'Wildcard origins cannot be used with credentialed requests. List the permitted origins.\n',
             languages: ['typescript', 'javascript'],
             severity: 'ERROR',
             paths: {

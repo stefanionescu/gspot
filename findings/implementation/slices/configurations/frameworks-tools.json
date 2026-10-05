@@ -426,10 +426,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/cloudflare/manifest.toml:7-9` | Pages reads `_worker.js` from the build output folder, not from `functions/`, so the `functions/_worker.js` entry never matches a real project. `functions/_middleware.ts` (TypeScript) is not detected. `**/wrangler.json` is missing, while `**/wrangler.toml` and `**/wrangler.jsonc` are listed. | Use `filenames = [\"wrangler.toml\", \"wrangler.json\", \"wrangler.jsonc\", \"_worker.js\"]` and `paths = [\"**/functions/_middleware.{js,ts}\"]`. |",
         "owner": "`platform/cloudflare/manifest.toml:7-9`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/cloudflare/manifest.toml",
+            "tests/cli/configurations/detect.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Cloudflare detection uses Wrangler and _worker.js base names plus JavaScript/TypeScript functions middleware paths. Root and nested project cases pass in /tmp/gspot-platform-security-cli.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/032",
@@ -462,10 +467,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/cloudflare/semgrep/workers.yml.tmpl:2-15` `workers-no-user-controlled-fetch` | `fetch($REQUEST.url, ...)` reports a fetch of the request's own URL to the origin, such as `fetch(context.request.url, { cf: … })`. A sample scan confirmed it. That fetch is not SSRF. | Keep only the `searchParams.get(...)` pattern, or track data from request input to `fetch`. |",
         "owner": "`platform/cloudflare/semgrep/workers.yml.tmpl:2-15` `workers-no-user-controlled-fetch`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/cloudflare/semgrep/workers.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the request-origin fetch pattern. The native case reports a search-parameter target, accepts context.request.url with Cloudflare options, and accepts the fixed-origin correction: /tmp/gspot-platform-security-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/035",
@@ -474,10 +484,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/supabase/manifest.toml:7-10` | `filenames = [\"supabase/config.toml\"]` never matches. Detection compares a name without glob characters with base names only (`src/kits/detect.ts:39-40`). `paths` also lists the root form beside `**/supabase/config.toml`. | Delete `filenames` and the root `paths` entry. Keep `project_files` and `**/supabase/config.toml`. |",
         "owner": "`platform/supabase/manifest.toml:7-10`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/manifest.toml",
+            "tests/cli/configurations/detect.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the impossible filename and redundant root path. The project marker remains; root and nested Supabase detection and an unrelated config.toml negative case pass in /tmp/gspot-platform-security-cli.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/036",
@@ -486,10 +501,18 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/supabase/manifest.toml:73-82`, `src/config/checks/platform/supabase.ts:10` | `admin-key` matches only `SERVICE_ROLE_KEY`, `service_role_key`, and `serviceRoleKey`. Supabase's newer secret API keys (`sb_secret_…`) also bypass row level security, and the check does not see them. | Also match `sb_secret_` and the secret-key names. Update the title and why. |",
         "owner": "`platform/supabase/manifest.toml:73-82`, `src/config/checks/platform/supabase.ts:10`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/platform/supabase.ts",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "packages/cli/configurations/platform/supabase/manifest.toml",
+            "tests/cli/checks/platform/supabase/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The check recognizes SUPABASE_SECRET_KEY, supabase_secret_key, supabaseSecretKey and sb_secret_ literals beside legacy service-role keys. Public CLI cases report client sources in root and child scopes, accept publishable-key corrections, and preserve allowed server/test files and policy: /tmp/gspot-platform-security-cli.log.",
+            "Names and privileged-key descriptions were checked against https://supabase.com/docs/guides/getting-started/api-keys and https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/037",
@@ -510,10 +533,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/supabase/semgrep/supabase.yml.tmpl:93-109` `supabase-edge-cors-wildcard-with-credentials` | The rule matches any `'Access-Control-Allow-Origin': '*'`, with or without credentials. Supabase's own Edge Functions CORS guide ships exactly that in `_shared/cors.ts`. A sample scan confirmed the rule reports it, as an error at level recommended. | Match only together with `'Access-Control-Allow-Credentials': 'true'`, or delete the rule. |",
         "owner": "`platform/supabase/semgrep/supabase.yml.tmpl:93-109` `supabase-edge-cors-wildcard-with-credentials`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The CORS rule requires both wildcard origin and credentials=true in the same object. Native validation passes at both levels; the public check accepts the documented wildcard-only helper, reports the credentialed wildcard, and accepts its explicit-origin correction: /tmp/gspot-platform-security-native.log and /tmp/gspot-platform-security-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/039",
@@ -522,10 +550,17 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/supabase/semgrep/supabase.yml.tmpl:3-17` `supabase-no-raw-sql-interpolation` | The first argument of `.rpc()` is a function name, and `.select()` takes a column list; neither is SQL. In supabase-js, the injection point is a string filter such as `.or()` or `.filter()`, and the rule misses both. | Match template strings passed to `.or()`, `.filter()`, and `.textSearch()`. Call it PostgREST filter injection. |",
         "owner": "`platform/supabase/semgrep/supabase.yml.tmpl:3-17` `supabase-no-raw-sql-interpolation`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Replaced the incorrect SQL rule with PostgREST filter interpolation matching or(), filter(..., in, ...), and raw textSearch(). Equality values and plain/phrase/websearch normalization do not carry raw filter syntax; these exclusions follow https://supabase.com/docs/reference/javascript/or, https://supabase.com/docs/reference/javascript/filter and https://supabase.com/docs/reference/javascript/textsearch.",
+            "The native public check reports all three raw forms, accepts RPC names, select columns, equality values and normalized searches, and passes after corrections with benign files and policy preserved: /tmp/gspot-platform-security-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/040",
@@ -534,10 +569,15 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `platform/supabase/semgrep/supabase.yml.tmpl:64-91` | `supabase-edge-no-eval` repeats `node-no-eval` (`general/security/semgrep/node.yml.tmpl:2-14`): same patterns, no path limit. `supabase-edge-no-configured-import` repeats `node-no-configured-require`, which already matches `import($VAR)`. Each hit is reported twice. The edge rule also reports literal paths such as `import(\"./x.ts\")`. | Delete both. |",
         "owner": "`platform/supabase/semgrep/supabase.yml.tmpl:64-91`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/platform/supabase/semgrep/supabase.yml.tmpl",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Deleted both duplicate Edge Functions rules. The native JavaScript/Cloudflare/Supabase project reports eval and variable import once under the generic Node owners and accepts literal imports and corrected sources: /tmp/gspot-platform-security-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/041",

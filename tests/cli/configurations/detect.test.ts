@@ -36,3 +36,27 @@ test.each([
         detectUnselected(sandbox.path, removed.repository.files, removed.manifests, []).map((row) => row.configuration),
     ).not.toContain('tanstack-query');
 });
+
+test.each([
+    ['cloudflare', 'wrangler.toml'],
+    ['cloudflare', 'apps/api/wrangler.toml'],
+    ['cloudflare', 'wrangler.json'],
+    ['cloudflare', 'apps/api/wrangler.json'],
+    ['cloudflare', 'wrangler.jsonc'],
+    ['cloudflare', 'apps/api/wrangler.jsonc'],
+    ['cloudflare', '_worker.js'],
+    ['cloudflare', 'public/_worker.js'],
+    ['cloudflare', 'functions/_middleware.js'],
+    ['cloudflare', 'functions/_middleware.ts'],
+    ['cloudflare', 'apps/api/functions/_middleware.ts'],
+    ['supabase', 'supabase/config.toml'],
+    ['supabase', 'apps/api/supabase/config.toml'],
+])('%s detects the supported project path %s without unrelated file evidence', (configuration, path) => {
+    const manifests = configurationManifests();
+    expect(detectConfigurations([buildTrackedFile(path)], manifests, []).map((row) => row.configuration)).toContain(
+        configuration,
+    );
+    expect(
+        detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
+    ).not.toContain(configuration);
+});

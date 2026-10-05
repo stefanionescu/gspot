@@ -56,3 +56,11 @@ export const TEST_PATH_FILES = {
     'apps/web/qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'apps/web/client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
 };
+
+/** Secret-key reads and the safe publishable-key replacement for each source. */
+export const SECRET_KEY_READS = [
+    'process.env.SUPABASE_SECRET_KEY',
+    'settings.supabase_secret_key',
+    'settings.supabaseSecretKey',
+    '"sb_secret_example"',
+];
