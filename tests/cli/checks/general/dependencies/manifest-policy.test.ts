@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { MANIFEST } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
@@ -42,3 +43,26 @@ describe('manifest policy reads', () => {
         expect(manifests(await input(sandbox.path))).toStrictEqual([]);
     });
 });
+
+test.each(['npm:example@^1.2.3', 'npm:@example/library@^1.2.3', 'npm:example'])(
+    'registry alias %s requires an exact version and accepts a pinned correction',
+    async (version) => {
+        await using sandbox = await testdir();
+        const base = parsePackageManifest(MANIFEST);
+        await createFileTree(sandbox.path, {
+            'gspot.toml': DEPENDENCIES_POLICY,
+            'package.json': JSON.stringify({ ...base, dependencies: { alias: version } }),
+        });
+        expect(manifests(await input(sandbox.path))).toMatchObject([{ file: 'package.json', rule: 'version-range' }]);
+        fs.writeFileSync(
+            join(sandbox.path, 'package.json'),
+            JSON.stringify({
+                ...base,
+                dependencies: {
+                    alias: version.includes('@example/') ? 'npm:@example/library@1.2.3' : 'npm:example@1.2.3',
+                },
+            }),
+        );
+        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
+    },
+);

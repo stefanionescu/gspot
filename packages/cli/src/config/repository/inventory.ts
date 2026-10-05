@@ -39,8 +39,11 @@ export const VENDORED_DIRECTORIES = [
     '.build',
 ];
 
-/** License and notice files are another party's text, kept as written: the name alone or with a suffix such as -MIT. */
-export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING|NOTICE)(?:$|[.-])/iu;
+/** License filenames accepted by the repository inventory and README checks. */
+export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING)(?:$|[.-])/iu;
+
+/** Notice filenames identify legal text but do not satisfy the license requirement. */
+export const NOTICE_FILE = /^NOTICE(?:$|[.-])/iu;
 
 /** The tags of an extension a license text may carry; one a code language claims makes the file source. */
 export const LICENSE_TAGS = new Set(['text', 'markdown']);

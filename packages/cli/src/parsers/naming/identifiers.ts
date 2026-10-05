@@ -1,3 +1,4 @@
+import { CATEGORY_LABELS } from '#cli/config/parsers/naming.ts';
 import type { Identifier, ExtractSink, IdentifierDeclaration } from '#cli/types/parsers/naming.ts';
 
 /**
@@ -10,6 +11,6 @@ export function createIdentifier(
     source: Pick<ExtractSink, 'file' | 'language'>,
     declaration: IdentifierDeclaration,
 ): Identifier {
-    const { label, ...identifier } = declaration;
-    return { ...identifier, file: source.file, language: source.language, kind: `${source.language} ${label}` };
+    const label = CATEGORY_LABELS[declaration.category] ?? declaration.category;
+    return { ...declaration, file: source.file, language: source.language, kind: `${source.language} ${label}` };
 }

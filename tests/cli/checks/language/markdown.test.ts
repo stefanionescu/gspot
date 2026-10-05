@@ -71,3 +71,15 @@ test('Bash examples report syntax errors, accept corrections, and stop on cancel
     selected.cancelSignal = AbortSignal.abort();
     await rejects(fences(selected), { message: 'The command was canceled.' });
 });
+
+test.each(['tsx', 'jsx'])('a %s fence rejects unclosed JSX and accepts its correction', async (language) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
+        'example.md': '```' + language + '\nexport const panel = <div>Hello;\n```',
+    });
+    expect(await fences(buildEngineInput(await openSession(sandbox.path), 'markdown/fences'))).toMatchObject([
+        { file: 'example.md', line: 2, rule: 'syntax' },
+    ]);
+    writeFileSync(join(sandbox.path, 'example.md'), '```' + language + '\nexport const panel = <div>Hello</div>;\n```');
+    expect(await fences(buildEngineInput(await openSession(sandbox.path), 'markdown/fences'))).toStrictEqual([]);
+});

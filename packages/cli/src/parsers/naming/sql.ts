@@ -1,4 +1,3 @@
-import { SQL_LABELS } from '#cli/config/parsers/naming.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
 import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
@@ -55,7 +54,7 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
                     {
                         ...positionAt(source, found === -1 ? statement.start : found),
                         category: entry.category,
-                        label: SQL_LABELS[entry.category] ?? entry.category,
+
                         name: entry.name,
                     },
                 ),

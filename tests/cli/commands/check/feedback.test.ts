@@ -34,6 +34,7 @@ test.each(FIXER_FEEDBACK_CASES)(
             'source.txt': 'original\n',
             'other.txt': 'original\n',
             'control.md': '# Preserve this file\n',
+            ...Object.fromEntries(paths.map((path) => [path, 'original\n'])),
         });
         const planned = await runGspot(sandbox.path, ['check', '--fix', '--dry-run']);
         expect(planned.code, planned.stdout + planned.stderr).toBe(0);
@@ -44,7 +45,7 @@ test.each(FIXER_FEEDBACK_CASES)(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.stderr).toContain(applied);
         expect(corrected.stdout).not.toContain(applied);
-        for (const path of ['source.txt', 'other.txt'])
+        for (const path of new Set(['source.txt', 'other.txt', ...paths]))
             expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(
                 paths.includes(path) ? 'corrected\n' : 'original\n',
             );

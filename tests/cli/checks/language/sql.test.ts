@@ -10,7 +10,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['sql'], {
-            tables: `[limits]\nmin_function_statements = ${String(threshold)}\n`,
+            tables: `[limits]\nmin_function_statements = ${String(threshold)}\n[tools.sqlfluff]\ndialect = "postgres"\n`,
             level: 'all',
         }),
         'functions.sql': [
@@ -43,7 +43,10 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     ]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
-        buildPolicy(['sql'], { tables: '[limits.sql]\nfunction_parameters = 8\n', level: 'all' }),
+        buildPolicy(['sql'], {
+            tables: '[limits.sql]\nfunction_parameters = 8\n[tools.sqlfluff]\ndialect = "postgres"\n',
+            level: 'all',
+        }),
     );
     const overridden = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['sql/functions'] }));
     expect(overridden.report.exitCode).toBe(1);
@@ -58,7 +61,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
 test('SQL atomic bodies count each statement and reject files containing only trivial functions', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['sql'], { level: 'all' }),
+        'gspot.toml': buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
         'owner.sql':
             'CREATE FUNCTION substantial() RETURNS int LANGUAGE SQL BEGIN ATOMIC SELECT 1; SELECT 2; SELECT 3; END;',
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
@@ -78,7 +81,7 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
     await using sandbox = await testdir();
     const source = "\\set label '前言'\nCREATE FUNCTION value() RETURNS int LANGUAGE sql AS $$ SELECT :value $$;\n";
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['sql'], { level: 'all' }),
+        'gspot.toml': buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
         'functions.sql': source,
     });
     const options = buildRunOptions({ only: ['sql/functions'] });
@@ -97,4 +100,27 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
         { rule: 'trivial-file', line: 1, column: undefined },
     ]);
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(corrected);
+});
+
+test('the default ANSI dialect leaves PostgreSQL syntax and function parsing to its own dialect checker', async () => {
+    await using sandbox = await testdir();
+    const source = 'CREATE TABLE ;';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['sql'], { level: 'all' }),
+        'query.sql': source,
+    });
+    const options = buildRunOptions({ only: ['sql/syntax', 'sql/functions'] });
+    const delegated = await executeRun(await openSession(sandbox.path), options);
+    expect(delegated.report.checks.map((check) => check.status)).toStrictEqual(['passed', 'passed']);
+    expect(delegated.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
+    await Bun.write(
+        `${sandbox.path}/gspot.toml`,
+        buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
+    );
+    const postgres = await executeRun(await openSession(sandbox.path), options);
+    expect(postgres.report.checks.find((check) => check.check === 'sql/syntax')).toMatchObject({
+        status: 'failed',
+        findings: [{ file: 'query.sql', rule: 'syntax' }],
+    });
+    expect(await Bun.file(`${sandbox.path}/query.sql`).text()).toBe(source);
 });

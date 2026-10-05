@@ -82,7 +82,7 @@ title = "Check code block syntax"
 example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
 level = "recommended"
 stage = "commit"
-summary = "Checks that every fenced code block with a language tag parses in that language."
+summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown (.md) files for syntax errors."
 why = "A code block that does not parse is documentation that lies about the code."
 help = "Fix the code in the block, or tag the block text when it is not code."
 

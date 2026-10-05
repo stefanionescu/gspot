@@ -1,3 +1,5 @@
+import type { FenceParser } from '#cli/types/parsers/markdown.ts';
+
 export const TRAILING_PUNCTUATION = '.,;:';
 
 export const PATH_CHARS = /^[\w./-]+$/u;
@@ -6,7 +8,7 @@ export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
 
 export const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
 
-export const PATH_TOKEN_SKIPS = [/^https?:/u, /^[a-z]+:\/\//u, /^\.\.?\/?$/u, /^\/dev\//u, /^\d+\/\d+$/u, /^\//u];
+export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u];
 
 export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 
@@ -14,10 +16,7 @@ export const ELLIPSIS_ARGUMENTS = '(...)';
 
 export const ANGLE_PLACEHOLDER = /<[A-Z][A-Z0-9_-]*>/gu;
 
-export const FENCE_PARSERS: Record<
-    string,
-    'json' | 'jsonc' | 'toml' | 'yaml' | 'bash' | 'typescript' | 'tsx' | 'javascript' | 'python'
-> = {
+export const FENCE_PARSERS: Record<string, FenceParser> = {
     json: 'json',
     jsonc: 'jsonc',
     toml: 'toml',
@@ -30,6 +29,7 @@ export const FENCE_PARSERS: Record<
     typescript: 'typescript',
     tsx: 'tsx',
     js: 'javascript',
+    jsx: 'javascript',
     javascript: 'javascript',
     mjs: 'javascript',
     cjs: 'javascript',

@@ -17,6 +17,7 @@ import type {
     FileClassificationRules,
 } from '#cli/types/repository/inventory.ts';
 import {
+    NOTICE_FILE,
     SOURCE_KIND,
     BANNER_BYTES,
     LICENSE_FILE,
@@ -57,7 +58,7 @@ function attributeKind(attributes: Record<string, string> | undefined): Verdict 
 function isLicenseFile(path: string): boolean {
     const name = posix.basename(path);
     const tags = EXTENSION_TAGS[extensionOf(name)] ?? [];
-    return LICENSE_FILE.test(name) && tags.every((tag) => LICENSE_TAGS.has(tag));
+    return (LICENSE_FILE.test(name) || NOTICE_FILE.test(name)) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
 
 // Tool paths and banners identify generated files; downloaded Vale styles are another party's text.

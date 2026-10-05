@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": null,
         "status": "open",
@@ -18,10 +18,19 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/database.ts:3` `DOC_SECTIONS`, `:20` `STATEMENT_WORDS` | The fallback at `checks/database/postgres/migration-docs.ts:113` holds 6 section names. The manifest default `tools.postgres.doc_sections` (`kits/database/postgres/manifest.toml:161`) holds 8, including \"Row Level Security\" and \"Grants.\" The two tables also share the same six keys. | Delete the fallback. Merge the two tables into one map: statement kind to `{ section, words }`. If the first audit's deletion of `migration-docs` goes ahead, delete both tables. |",
         "owner": "`config/checks/database.ts:3` `DOC_SECTIONS`, `:20` `STATEMENT_WORDS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/database/postgres.ts",
+            "packages/cli/src/types/checks/database/postgres.ts",
+            "packages/cli/src/checks/database/postgres/migration-docs.ts"
+        ],
+        "status": "closed",
+        "outcome": "The required postgres.doc_sections setting remains the sole default. MIGRATION_STATEMENTS combines section classification and displayed statement words into one table; both old tables and the fallback lookup are gone. The migration documentation check remains a supported product decision.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/003",
@@ -30,10 +39,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/platform/supabase.ts:9` `ADMIN_KEY_PATHS` | This dead fallback disagrees with the manifest default. It builds 11 globs from `TEST_FILE_GLOBS`. The default of `tools.supabase.admin_key_files` (`kits/platform/supabase/manifest.toml:138`) has 6. | Delete it. Keep the manifest default. |",
         "owner": "`config/checks/platform/supabase.ts:9` `ADMIN_KEY_PATHS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/platform/supabase.ts",
+            "packages/cli/configurations/platform/supabase/manifest.toml",
+            "tests/cli/checks/platform/supabase/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "ADMIN_KEY_PATHS is deleted. adminKey reads the effective supabase.admin_key_files default from the manifest and combines it with the effective tests selection. This preserves authored test paths without a second default.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json.",
+            "Supabase custom functions, required settings, and source preservation regressions also pass in the prior pushed batch: /tmp/gspot-scope-supabase-final.log."
+        ]
     },
     {
         "id": "slices/config/004",
@@ -42,10 +61,15 @@
         "section": "The Config Constants",
         "finding": "| `config/policy/policy.ts:184` `REFUSED_REASONS` | The list never changes a result. Every entry is one word or empty. `isReasonAccepted` (`policy/loosening.ts:17-18`) compares the whole trimmed reason with the list, and then requires two words. As a result, the two-word rule already refuses every entry, and \"todo later\" passes both tests. | Delete the list. To refuse placeholders, test the first word (\"TODO: later\") against it instead. |",
         "owner": "`config/policy/policy.ts:184` `REFUSED_REASONS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/policy/problems/reasons.ts", "tests/cli/policy/read-policy/recovery.test.ts"],
+        "status": "closed",
+        "outcome": "REFUSED_REASONS is deleted. The existing minimum-word rule determines accepted reasons in its single policy owner. This implements the recommended deletion without adding a new placeholder policy.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/005",
@@ -101,10 +125,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/language/markdown.ts:20` `FENCE_PARSERS`, `:3-4` `STRUCTURED_PARSERS`, `TREE_PARSERS` | Bug. `tsx` maps to the `typescript` grammar, which cannot parse JSX. Every ` ```tsx ` fence with JSX reports \"typescript syntax error.\" Files avoid this by using the `tsx` grammar (`parsers/tree-sitter.ts:79-80`). `jsx` is missing from the map. The two sets repeat the map's values, which forces the `as GrammarName` cast at `checks/language/markdown.ts:66`. | Map `tsx` to `'tsx'` and `jsx` to `'javascript'`. Type the values as `GrammarName` plus `'json' \\| 'toml' \\| 'yaml'`, and derive both sets from that type. |",
         "owner": "`config/checks/language/markdown.ts:20` `FENCE_PARSERS`, `:3-4` `STRUCTURED_PARSERS`, `TREE_PARSERS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/types/parsers/markdown.ts",
+            "packages/cli/src/parsers/markdown.ts",
+            "tests/cli/checks/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "TSX and JSX select their actual grammars, JSONC retains its comment-aware parser, and FenceParser lives in the Markdown type owner. The obsolete structured/tree sets and grammar casts are gone. Valid JSX examples pass and unclosed JSX reports the authored fence line.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/009",
@@ -113,10 +147,19 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/database.ts:30` `MIGRATION_VERSION` | Bug. The version is captured as a string. `checks/database/postgres/history.ts:73,99` compares versions with `<` and `<=`, and `migrations.ts:64` sorts by name. With unpadded numbers, `10` sorts before `9`. As a result, a new `10_b.sql` is reported as out of order after a committed `9_a.sql`, and `frozen_through = \"9\"` freezes migration 10. | Compare versions as numbers (`BigInt`), and sort the same way. |",
         "owner": "`config/checks/database.ts:30` `MIGRATION_VERSION`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/database/postgres/migrations.ts",
+            "packages/cli/src/checks/database/postgres/history.ts",
+            "tests/cli/checks/database/postgres/history.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Migration ordering, new-versus-committed comparisons, and frozen_through comparisons use BigInt versions. Tests prove 9, 10, and 11 ordering, report an earlier 8, and keep 10 outside a freeze through 9.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/010",
@@ -125,10 +168,19 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/language/sql.ts:5` `POSTGRES_DIALECTS` | The set includes `ansi`, which is the default `tools.sqlfluff.dialect` (`kits/language/sql/manifest.toml:94`). As a result, every SQL repository that keeps the default, such as MySQL or SQLite, is parsed by the Postgres parser and gets Postgres syntax errors at level recommended. | Keep `postgres` alone. The postgres kit already sets the dialect in its `[defaults]`. |",
         "owner": "`config/checks/language/sql.ts:5` `POSTGRES_DIALECTS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/language/sql.ts",
+            "packages/cli/src/checks/language/sql.ts",
+            "tests/cli/checks/language/sql.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Only the explicit postgres dialect selects PostgreSQL syntax and function parsing. The default ANSI dialect leaves dialect-specific validation to SQLFluff. Tests preserve source bytes, pass both internal engines for ANSI, and report malformed SQL after selecting postgres.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/011",
@@ -137,10 +189,19 @@
         "section": "The Config Constants",
         "finding": "| `config/parsers/parsers.ts:9` `PATH_TOKEN_SKIPS` | Three of the six entries never match. `TOKEN_SEPARATORS` (`:5`) splits on `:`, and `PATH_CHARS` (`:4`) has no `:`, so `^https?:` and `^[a-z]+:\\/\\/` never see a token. `^\\/dev\\/` is covered by `^\\/`. | Keep `[/^\\.\\.?\\/?$/u, /^\\d+\\/\\d+$/u, /^\\//u]`. |",
         "owner": "`config/parsers/parsers.ts:9` `PATH_TOKEN_SKIPS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/parsers/markdown.ts",
+            "tests/cli/checks/general/docs"
+        ],
+        "status": "closed",
+        "outcome": "PATH_TOKEN_SKIPS contains only relative-directory markers, numeric fractions, and absolute paths. Colon-separated schemes cannot reach the path-character filter, and /dev paths are covered by the absolute-path rule. Existing stale-path regressions still pass.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/012",
@@ -173,10 +234,21 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/docs.ts:18` `LICENSE_NAMES` | `readme-present` accepts only `LICENSE`, `LICENSE.md`, and `LICENSE.txt` (`docs/readme.ts:70`). It reports a missing license for `COPYING`, the British spelling of `LICENSE`, `LICENSE-MIT`, `LICENSE-APACHE`, or `LICENSE.rst`. `LICENSE_FILE` (`config/repository/repository.ts:166`) already matches these. | Delete `LICENSE_NAMES`. Share one license regex without `NOTICE`. |",
         "owner": "`config/checks/general/docs.ts:18` `LICENSE_NAMES`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/repository/inventory.ts",
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/checks/general/docs.ts",
+            "tests/cli/checks/general/docs/readme-shape.test.ts",
+            "tests/cli/repository/kinds.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "README license detection shares LICENSE_FILE with inventory and accepts COPYING, LICENCE, LICENSE-MIT, LICENSE-APACHE, and LICENSE.rst. NOTICE has its own inventory pattern and remains vendored legal text without satisfying the root license requirement. The fixed filename list is deleted.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/014",
@@ -360,7 +432,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": null,
         "status": "open",
@@ -444,10 +516,21 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/naming.ts:48,58,69,79` `SQL_LABELS`, `PYTHON_LABELS`, `SWIFT_LABELS`, `TYPESCRIPT_LABELS` | Four tables give the same singular label for the same category. Each is read only as `LABELS[category] ?? category`. | Keep one `CATEGORY_LABELS` in `naming/identifiers.ts`. |",
         "owner": "`config/checks/general/naming.ts:48,58,69,79` `SQL_LABELS`, `PYTHON_LABELS`, `SWIFT_LABELS`, `TYPESCRIPT_LABELS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/parsers/naming.ts",
+            "packages/cli/src/parsers/naming/identifiers.ts",
+            "packages/cli/src/types/parsers/naming.ts",
+            "packages/cli/src/parsers/naming",
+            "packages/cli/src/checks/general/naming/paths.ts"
+        ],
+        "status": "closed",
+        "outcome": "All naming readers use one CATEGORY_LABELS table through the existing shared identifier builder. The four duplicate language tables and per-caller labels are deleted. Static data stays in config/parsers/naming.ts, honoring the user decision to retain config/ and types/.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/033",
@@ -550,10 +633,20 @@
         "section": "The Config Constants",
         "finding": "| `config/commands/check.ts:2` `CHANGED_SHOWN` | `check/content.ts:29-30` rebuilds `codeList` (`platform/text.ts:34`, also limited to 8), but ends with `...` instead of `and N more`. | Call `codeList`, and delete the constant. |",
         "owner": "`config/commands/check.ts:2` `CHANGED_SHOWN`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/check/tree.ts",
+            "packages/cli/src/config/commands/check.ts",
+            "tests/cli/commands/check/feedback.test.ts",
+            "tests/config/cli/commands/correction-feedback.ts"
+        ],
+        "status": "closed",
+        "outcome": "Fix reporting calls the existing codeList calculation; CHANGED_SHOWN and the duplicated ellipsis formatter are deleted. A public CLI test changes ten files, reports eight paths and the exact remaining count, and preserves dry-run and unrelated bytes. config/commands/check.ts retains its independently used HOOKS declaration.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/041",
@@ -598,10 +691,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/files.ts:14`, `config/checks/general/dependencies.ts:20`, `config/repository/repository.ts:198`, `config/checks/general/prose.ts:3` | Comment problems. \"The files the environment reads are searched in.\" is garbled. Three doc comments sit on one constant but describe two. | Rewrite it as \"The extensions of the files searched for environment reads.\" Put one comment on each constant. |",
         "owner": "`config/checks/general/files.ts:14`, `config/checks/general/dependencies.ts:20`, `config/repository/repository.ts:198`, `config/checks/general/prose.ts:3`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/general/files.ts",
+            "packages/cli/src/config/checks/general/prose.ts",
+            "packages/cli/src/config/checks/general/dependencies.ts",
+            "packages/cli/src/config/repository/inventory.ts"
+        ],
+        "status": "closed",
+        "outcome": "The environment-read extension comment names the files searched. The Vale directive comment describes only its own Markdown pattern. License and notice patterns have separate purpose comments; the dependency and repository constants no longer carry the original comments describing two declarations.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/045",
@@ -646,10 +749,15 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/library.ts:3` `TABLE` | The Drizzle regex misses tables in a named schema (`export const users = auth.table(...)`), so the relations check skips them. The name says nothing. | Use `/export const (?<name>\\w+) = (?:\\w+\\.)?\\w*[tT]able\\s*\\(/gu`, and rename it `DRIZZLE_TABLE`. |",
         "owner": "`config/checks/library.ts:3` `TABLE`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/library/drizzle.ts", "tests/cli/checks/library/schema.test.ts"],
+        "status": "closed",
+        "outcome": "The obsolete table regex is deleted. The current Drizzle relations owner parses variable declarations and actual table/reference calls, including named-schema .table calls. The regression reports a named-schema foreign key with a commented-out relations call, then accepts a real relations declaration.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/048",
@@ -658,9 +766,18 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/dependencies.ts:12` `NON_REGISTRY_VERSION` | `npm:` aliases are registry packages. Exempting them lets `\"x\": \"npm:y@^1.2.0\"` keep a range past the exact-version check. | Drop `npm:` from the exemption, and check the version after the `@`. |",
         "owner": "`config/checks/general/dependencies.ts:12` `NON_REGISTRY_VERSION`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/general/dependencies.ts",
+            "packages/cli/src/checks/general/dependencies/manifests.ts",
+            "tests/cli/checks/general/dependencies/manifest-policy.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "npm: is no longer exempt from registry-version enforcement. Alias versions are checked after the final @, retaining authored alias text in diagnostics. Tests reject scoped and unscoped alias ranges and omitted versions, then accept their exact-version corrections.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     }
 ]

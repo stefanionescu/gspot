@@ -1,5 +1,3 @@
-import type { FENCE_PARSERS } from '#cli/config/parsers/markdown.ts';
-
 /** One Markdown heading's source range, depth, and all-level marker. */
 export type RuleSection = { start: number; end: number; depth: number; all: boolean };
 
@@ -7,7 +5,7 @@ export type RuleSection = { start: number; end: number; depth: number; all: bool
 export type FencedBlock = { line: number; language: string; body: string };
 
 /** One canonical syntax reader selected by the declared fence aliases. */
-export type FenceParser = (typeof FENCE_PARSERS)[string];
+export type FenceParser = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'json' | 'jsonc' | 'toml' | 'yaml';
 
 /** A syntax diagnostic at a one-based line of a code body or Markdown source. */
 export type FenceSyntaxProblem = { line: number; message: string };

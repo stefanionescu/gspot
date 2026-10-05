@@ -99,7 +99,10 @@ export function manifests(input: EngineInput): Finding[] {
         if (isRangeAllowed(path)) return [];
         return DEPENDENCY_TABLES.flatMap((table) =>
             Object.entries(manifest[table] ?? {})
-                .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
+                .filter(([, version]) => {
+                    const declared = version.startsWith('npm:') ? version.slice(version.lastIndexOf('@') + 1) : version;
+                    return !EXACT_VERSION.test(declared) && !NON_REGISTRY_VERSION.test(version);
+                })
                 .map(([name, version]) =>
                     findingAt(
                         input,

@@ -9,7 +9,7 @@ export const ENV_READ_PATTERNS = [
     /os\.getenv\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
 ];
 
-/** The files the environment reads are inspected in. */
+/** The extensions of the files searched for environment reads. */
 export const ENV_READ_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx', '.py'];
 
 /** A key line in an environment file, trimmed: the key before the equals sign. */

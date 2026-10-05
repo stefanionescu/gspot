@@ -1,5 +1,5 @@
-// ANSI is SQLFluff's default dialect; gspot passes those files through the PostgreSQL parser too.
-export const PARSED_DIALECTS = new Set(['postgres', 'ansi']);
+// The PostgreSQL parser accepts only the postgres dialect; SQLFluff checks other dialects.
+export const PARSED_DIALECTS = new Set(['postgres']);
 
 export const BLOCK_COMMENT = '/*';
 

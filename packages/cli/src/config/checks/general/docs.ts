@@ -6,8 +6,6 @@ export const START_WORDS = ['install', 'setup', 'start', 'requirements'];
 
 export const CONTENTS_TITLE = 'contents';
 
-export const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
-
 export const BANNED_HEADINGS = [
     'table of contents',
     'project structure',

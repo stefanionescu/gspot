@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { README, LICENSE } from '#tests/config/samples/docs.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { headings, readmeShape } from '#cli/checks/general/docs.ts';
+import { headings, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
 
 describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {
@@ -82,4 +82,29 @@ test('required repository documents identify a missing license and accept its re
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+});
+
+test.each(['COPYING', 'LICENCE', 'LICENSE-MIT', 'LICENSE-APACHE', 'LICENSE.rst'])(
+    'README presence accepts the repository license filename %s',
+    async (name) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['docs']),
+            'README.md': README,
+            [name]: LICENSE,
+        });
+        expect(readmePresent(buildEngineInput(await openSession(sandbox.path), 'docs/readme-present'))).toStrictEqual(
+            [],
+        );
+    },
+);
+
+test('a NOTICE file does not supply the repository license', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['docs']),
+        'README.md': README,
+        NOTICE: 'Copyright Example',
+    });
+    expect(readmePresent(buildEngineInput(await openSession(sandbox.path), 'docs/readme-present'))).toMatchObject([
+        { file: 'LICENSE', rule: 'missing-license' },
+    ]);
 });

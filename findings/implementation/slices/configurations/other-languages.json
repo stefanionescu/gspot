@@ -605,10 +605,19 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/sql/manifest.toml:59-67`, `packages/cli/src/config/checks/language/sql.ts:5` | `POSTGRES_DIALECTS` includes `ansi`, and `tools.sqlfluff.dialect` defaults to `ansi`. Only the postgres kit sets a dialect. So a MySQL, SQLite, or SQL Server project gets its files parsed by the Postgres parser at `recommended`. | Parse only when the dialect is `postgres`. Treat `ansi` as \"not known\". |",
         "owner": "`packages/cli/kits/language/sql/manifest.toml:59-67`, `packages/cli/src/config/checks/language/sql.ts:5`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/language/sql.ts",
+            "packages/cli/src/checks/language/sql.ts",
+            "tests/cli/checks/language/sql.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Only the explicit postgres dialect selects PostgreSQL syntax and function parsing. The default ANSI dialect leaves dialect-specific validation to SQLFluff. Tests preserve source bytes, pass both internal engines for ANSI, and report malformed SQL after selecting postgres.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/048",

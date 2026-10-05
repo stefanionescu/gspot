@@ -13,4 +13,22 @@ export const FIXER_FEEDBACK_CASES = [
         preview: '2 files would change',
         applied: 'fixers changed 2 files;',
     },
+    {
+        name: 'a truncated list of changed files',
+        paths: [
+            'file-0.txt',
+            'file-1.txt',
+            'file-2.txt',
+            'file-3.txt',
+            'file-4.txt',
+            'file-5.txt',
+            'file-6.txt',
+            'file-7.txt',
+            'file-8.txt',
+            'file-9.txt',
+        ],
+        preview: '10 files would change',
+        applied:
+            'fixers changed 10 files; the changes are in the working tree and are not staged: `file-0.txt`, `file-1.txt`, `file-2.txt`, `file-3.txt`, `file-4.txt`, `file-5.txt`, `file-6.txt`, `file-7.txt` and 2 more',
+    },
 ];

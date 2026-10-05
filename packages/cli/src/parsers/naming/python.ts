@@ -5,7 +5,6 @@ import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 import {
     DUNDER,
     SPLAT_NODES,
-    PYTHON_LABELS,
     EXCEPTION_BASE,
     PYTHON_CONSTANT,
     IMPLICIT_PARAMETERS,
@@ -20,7 +19,7 @@ function add(sink: ExtractSink, node: Node, category: string): void {
             line: node.startPosition.row + 1,
             column: node.startPosition.column + 1,
             category,
-            label: PYTHON_LABELS[category] ?? category,
+
             name,
         }),
     );

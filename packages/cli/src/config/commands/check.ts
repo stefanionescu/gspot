@@ -1,5 +1,3 @@
-export const CHANGED_SHOWN = 8;
-
 /** The hook names accepted by --hook; commit-msg also supplies --message-file. */
 export const HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 

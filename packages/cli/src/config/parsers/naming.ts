@@ -1,4 +1,4 @@
-export const SQL_LABELS: Record<string, string> = {
+export const CATEGORY_LABELS: Record<string, string> = {
     schemas: 'schema',
     tables: 'table',
     columns: 'column',
@@ -7,18 +7,18 @@ export const SQL_LABELS: Record<string, string> = {
     policies: 'policy',
     functions: 'function',
     parameters: 'parameter',
-};
-
-export const PYTHON_LABELS: Record<string, string> = {
     classes: 'class',
     exceptions: 'exception',
-    functions: 'function',
     methods: 'method',
-    parameters: 'parameter',
     variables: 'variable',
     constants: 'constant',
     attributes: 'attribute',
     type_aliases: 'type alias',
+    types: 'type',
+    properties: 'property',
+    enum_cases: 'enum case',
+    files: 'file',
+    directories: 'directory',
 };
 
 export const PYTHON_PARAMETER_NODES = new Set([
@@ -38,33 +38,11 @@ export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
 
 export const EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
 
-export const SWIFT_LABELS: Record<string, string> = {
-    types: 'type',
-    functions: 'function',
-    methods: 'method',
-    parameters: 'parameter',
-    properties: 'property',
-    constants: 'constant',
-    variables: 'variable',
-    enum_cases: 'enum case',
-};
-
 export const SWIFT_TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
 
 export const SWIFT_FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];
 
 export const MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
-
-export const TYPESCRIPT_LABELS: Record<string, string> = {
-    functions: 'function',
-    methods: 'method',
-    classes: 'class',
-    types: 'type',
-    properties: 'property',
-    enum_cases: 'enum case',
-    parameters: 'parameter',
-    variables: 'variable',
-};
 
 export const TYPESCRIPT_PARAMETER_NODES = ['required_parameter', 'optional_parameter'];
 

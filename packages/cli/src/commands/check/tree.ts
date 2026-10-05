@@ -1,5 +1,6 @@
 // Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
 import { CHECKS } from '#cli/checks/registry.ts';
+import { codeList } from '#cli/platform/text.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { executeRun } from '#cli/execution/run.ts';
@@ -7,7 +8,6 @@ import { note, warn } from '#cli/output/messages.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
-import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { Revision } from '#cli/types/execution/snapshot.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
@@ -31,11 +31,8 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
         note('no fixer changed anything');
         return text;
     }
-    const shown = fixes.changed.slice(0, CHANGED_SHOWN).join(' ');
-    const more = count > CHANGED_SHOWN ? ' ...' : '';
-    warn(
-        `fixers changed ${String(count)} ${noun}; the changes are in the working tree and are not staged: ${shown}${more}`,
-    );
+    const shown = codeList(fixes.changed);
+    warn(`fixers changed ${String(count)} ${noun}; the changes are in the working tree and are not staged: ${shown}`);
     return text;
 }
 

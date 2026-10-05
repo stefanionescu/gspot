@@ -903,10 +903,15 @@
         "section": "From the second pass",
         "finding": "**20. `REFUSED_REASONS`.** Every entry is one word, and the two-word minimum already refuses them, so the list decides\nnothing. Recommended: delete it.",
         "owner": "source ownership and commands",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
+        "location": ["packages/cli/src/policy/problems/reasons.ts", "tests/cli/policy/read-policy/recovery.test.ts"],
+        "status": "closed",
+        "outcome": "REFUSED_REASONS is deleted. The existing minimum-word rule determines accepted reasons in its single policy owner. This implements the recommended deletion without adding a new placeholder policy.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ],
         "kind": "decision"
     },
     {
@@ -1295,10 +1300,20 @@
         "section": "Phase 1: fix the bugs",
         "finding": "- Markdown `tsx` fences use the TypeScript grammar, so every JSX fence reports a syntax error.",
         "owner": "source ownership and commands",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
+        "location": [
+            "packages/cli/src/config/parsers/markdown.ts",
+            "packages/cli/src/types/parsers/markdown.ts",
+            "packages/cli/src/parsers/markdown.ts",
+            "tests/cli/checks/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "TSX and JSX select their actual grammars, JSONC retains its comment-aware parser, and FenceParser lives in the Markdown type owner. The obsolete structured/tree sets and grammar casts are gone. Valid JSX examples pass and unclosed JSX reports the authored fence line.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ],
         "kind": "phase finding"
     },
     {

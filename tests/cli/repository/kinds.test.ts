@@ -69,7 +69,7 @@ test('an @generated marker in a comment line makes a file generated, and the bar
 
 test('a license text is vendored, and a source file named like one stays source', async () => {
     await using sandbox = await testdir();
-    const licenses = ['LICENSE', 'LICENSE.md', 'LICENSE-MIT', 'COPYING.txt', 'NOTICE'];
+    const licenses = ['LICENSE', 'LICENSE.md', 'LICENSE-MIT', 'COPYING.txt', 'LICENCE.rst', 'NOTICE', 'NOTICE.txt'];
     const sources = ['license-locks.test.ts', 'license.ts', 'licenses.json', 'notice.py'];
     await createFileTree(sandbox.path, Object.fromEntries([...licenses, ...sources].map((path) => [path, 'x\n'])));
     const repository = await readRepository(sandbox.path, [], [], []);

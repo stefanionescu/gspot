@@ -878,7 +878,7 @@
             "packages/cli/src/config/checks/database/postgres.ts"
         ],
         "status": "closed",
-        "outcome": "Checks read effective manifest values for documentation sections, admin-key paths, nginx image, Supabase function folder, client schemas, freeze boundary and Next.js build flags. Duplicated fallback constants are deleted. DOC_SECTIONS remains the SQL-kind-to-heading classification, and FROZEN_NONE remains an operational sentinel; neither supplies a default. These behavioral constants stay under config according to the agreed repository decision.",
+        "outcome": "Checks read effective manifest values for documentation sections, admin-key paths, nginx image, Supabase function folder, client schemas, freeze boundary and Next.js build flags. Duplicated fallback constants are deleted. MIGRATION_STATEMENTS remains the SQL-kind-to-heading and displayed-word classification, and FROZEN_NONE remains an operational sentinel; neither supplies a default. These behavioral constants stay under config according to the agreed repository decision.",
         "verification": [
             "Combined checkpoint: 82 CLI cases passed; only the child Spectral test expected a nonexistent per-scope ruleset. Its expected path was corrected to the manifest-declared global ruleset. All 10 OpenAPI cases then passed with 48 assertions. Logs: /tmp/gspot-scope-tests-verified.log and /tmp/gspot-scope-openapi-tests-final.log.",
             "The final Supabase checkpoint passed 14 cases with 63 assertions, including two added Deno startup-error cases. Together with the combined checkpoint and OpenAPI correction, all 85 distinct affected cases across 17 files pass: /tmp/gspot-scope-supabase-final.log.",

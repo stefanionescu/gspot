@@ -534,10 +534,15 @@
         "section": "Tests: Check Integration Tests",
         "finding": "| `language/fences.test.ts:39-47`, \"Bash examples report syntax errors, accept corrections, and stop on cancellation\" | The test opens one session over `policyOf([])`. `checkInput` then rewrites `gspot.toml` and opens a second session. The first input takes `inspections` and `view` from the first session, and no comment says why. The second input at line 52 works without them. | Drop the first session and the overrides, or add a comment that names what they are for. |",
         "owner": "`language/fences.test.ts:39-47`, \"Bash examples report syntax errors, accept corrections, and stop on cancellation\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/checks/language/markdown.test.ts"],
+        "status": "closed",
+        "outcome": "The Bash fence test builds each input directly from one current session. No second policy-writing helper or mixed-session view remains. It reports a syntax error, accepts corrected bytes, and asserts cancellation.",
+        "verification": [
+            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
+            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
+            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
+            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
+        ]
     },
     {
         "id": "slices/tests-integration-checks/046",

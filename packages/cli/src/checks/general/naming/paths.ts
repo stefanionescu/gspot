@@ -27,7 +27,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
             line: 1,
             column: 1,
             category: named.category,
-            label: 'file',
+
             name: named.name,
         },
     );
@@ -52,7 +52,7 @@ export function directoryIdentifiers(path: string, language: string): Identifier
                     line: 1,
                     column: 1,
                     category: named.category,
-                    label: 'directory',
+
                     name: named.name,
                     directory,
                 },

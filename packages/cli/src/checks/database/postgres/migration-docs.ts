@@ -11,10 +11,9 @@ import {
     DOC_LABELS,
     LINE_ABOVE,
     BLOCK_REACH,
-    DOC_SECTIONS,
     HEADER_LINES,
     DOC_SEPARATOR,
-    STATEMENT_WORDS,
+    MIGRATION_STATEMENTS,
 } from '#cli/config/checks/database/postgres.ts';
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
@@ -61,10 +60,10 @@ function commentsAbove(lines: string[], line: number): string[] {
 
 function statementProblems(migration: Migration, lines: string[], sections: Set<string>): DocProblem[] {
     return migration.statements.flatMap((statement): DocProblem[] => {
-        const wanted = DOC_SECTIONS[statement.kind];
-        if (wanted === undefined) return [];
+        const layout = MIGRATION_STATEMENTS[statement.kind];
+        if (layout === undefined) return [];
+        const { section: wanted, words } = layout;
         const { line } = positionAt(migration.text, statement.start);
-        const words = STATEMENT_WORDS[statement.kind] ?? statement.kind;
         const problems: DocProblem[] = [];
         const section = sectionAbove(lines, line, sections);
         if (section !== wanted)

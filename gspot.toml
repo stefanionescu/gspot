@@ -168,6 +168,10 @@ reason = "SQLFluff names its rule group capitalisation; the SQL template and its
 word = "IIFEs"
 reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
 
+[[tools.typos.words]]
+word = "LICENCE"
+reason = "The British license filename is required by repository license regression cases."
+
 [[naming.allowed]]
 name = "snapshot"
 reason = "A snapshot is the copy of a revision that gspot checks; the tests name that product concept, not a test fixture."

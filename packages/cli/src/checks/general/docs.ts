@@ -1,7 +1,7 @@
-import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import type { RootContent } from 'mdast';
 import { visit } from 'unist-util-visit';
+import { statSync, readdirSync } from 'node:fs';
 import { toString } from 'mdast-util-to-string';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
@@ -11,16 +11,15 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import { MISE_FILES } from '#cli/config/repository/inventory.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import type { PathIndex } from '#cli/types/checks/general/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 
 import {
     RUN_TOKEN,
     START_WORDS,
-    LICENSE_NAMES,
     SECTION_DEPTH,
     CONTENTS_TITLE,
     FILE_EXTENSION,
@@ -171,7 +170,7 @@ export function readmePresent(input: EngineInput): Finding[] {
     if (
         isLicenseRequired &&
         input.scope === '' &&
-        LICENSE_NAMES.every((name) => statSync(join(input.root, name), { throwIfNoEntry: false }) === undefined)
+        !readdirSync(input.root).some((name) => LICENSE_FILE.test(name) && statSync(join(input.root, name)).isFile())
     )
         findings.push(findingAt(input, { file: 'LICENSE' }, 'missing-license', 'The root has no LICENSE file.'));
     return findings;

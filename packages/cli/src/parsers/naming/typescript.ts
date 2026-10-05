@@ -6,7 +6,6 @@ import {
     NAME_NODES,
     PATTERN_LISTS,
     PATTERN_FIELDS,
-    TYPESCRIPT_LABELS,
     NAMED_DECLARATIONS,
     TYPESCRIPT_METHOD_NODES,
     TYPESCRIPT_FUNCTION_NODES,
@@ -17,13 +16,12 @@ function add(sink: ExtractSink, node: Node | null, category: string): void {
     if (node === null || !NAME_NODES.has(node.type)) return;
     const name = node.type === 'private_property_identifier' ? node.text.slice(1) : node.text;
     if (name === '' || name === '_') return;
-    const label = TYPESCRIPT_LABELS[category] ?? category;
     sink.out.push(
         createIdentifier(sink, {
             line: node.startPosition.row + 1,
             column: node.startPosition.column + 1,
             category,
-            label: label,
+
             name,
         }),
     );
