@@ -1,8 +1,8 @@
 // Build the plugin as Node ESM and CommonJS beside its declaration and license.
-import { format } from 'prettier';
 import plugin from '#plugin/plugin.ts';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
+import { format, resolveConfig } from 'prettier';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { rmSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { JSON_INDENT, BUILD_FORMATS, ALL_RULES_PATH, PLUGIN_DECLARATION } from '#plugin/config/build.ts';
@@ -42,5 +42,12 @@ writeFileSync(allRulesPath, `${JSON.stringify(rules, null, JSON_INDENT)}\n`);
 const presetsPath = join(dirname(allRulesPath), 'eslint-presets.json');
 const presets = eslintPresetsSchema.parse(JSON.parse(readFileSync(presetsPath, 'utf8')));
 presets['gspot'] = captureEslintPreset(packageManifest.name, packageManifest.version, 'configs.recommended', plugin);
-writeFileSync(presetsPath, await format(JSON.stringify(presets), { parser: 'json', tabWidth: JSON_INDENT }));
+writeFileSync(
+    presetsPath,
+    await format(JSON.stringify(presets), {
+        ...(await resolveConfig(presetsPath)),
+        parser: 'json',
+        tabWidth: JSON_INDENT,
+    }),
+);
 console.log('built packages/eslint-plugin/dist/plugin.js and plugin.cjs');

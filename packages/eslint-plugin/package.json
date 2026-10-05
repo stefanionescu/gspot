@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "description": "ESLint rules for private environment reads, duplicate exports, trivial code, and file organization in JavaScript and TypeScript.",
+    "description": "ESLint rules for private environment reads, trivial code, and file organization in JavaScript and TypeScript.",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
@@ -29,7 +29,6 @@
         "dist"
     ],
     "dependencies": {
-        "@typescript-eslint/typescript-estree": "8.70.0",
         "@typescript-eslint/utils": "8.70.0",
         "picomatch": "4.0.7"
     },

@@ -41,7 +41,6 @@
     "gspot/no-reexports",
     "gspot/no-trivial-files",
     "gspot/no-trivial-functions",
-    "gspot/private-before-public",
     "gspot/sort-exports",
     "gspot/sort-imports",
     "i18next/no-literal-string",

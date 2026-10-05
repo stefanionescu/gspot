@@ -43,9 +43,7 @@
                     "jsx-a11y/img-redundant-alt": "error",
                     "jsx-a11y/interactive-supports-focus": [
                         "error",
-                        {
-                            "tabbable": ["button", "checkbox", "link", "searchbox", "spinbutton", "switch", "textbox"]
-                        }
+                        { "tabbable": ["button", "checkbox", "link", "searchbox", "spinbutton", "switch", "textbox"] }
                     ],
                     "jsx-a11y/label-has-associated-control": "error",
                     "jsx-a11y/label-has-for": "off",
@@ -56,10 +54,7 @@
                     "jsx-a11y/no-distracting-elements": "error",
                     "jsx-a11y/no-interactive-element-to-noninteractive-role": [
                         "error",
-                        {
-                            "tr": ["none", "presentation"],
-                            "canvas": ["img"]
-                        }
+                        { "tr": ["none", "presentation"], "canvas": ["img"] }
                     ],
                     "jsx-a11y/no-noninteractive-element-interactions": [
                         "error",
@@ -94,11 +89,7 @@
                     ],
                     "jsx-a11y/no-noninteractive-tabindex": [
                         "error",
-                        {
-                            "tags": [],
-                            "roles": ["tabpanel"],
-                            "allowExpressionValues": true
-                        }
+                        { "tags": [], "roles": ["tabpanel"], "allowExpressionValues": true }
                     ],
                     "jsx-a11y/no-redundant-roles": "error",
                     "jsx-a11y/no-static-element-interactions": [

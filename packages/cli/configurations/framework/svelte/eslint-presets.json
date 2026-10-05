@@ -4,9 +4,7 @@
         "version": "3.23.0",
         "source": "configs.recommended",
         "blocks": [
-            {
-                "parser": false
-            },
+            { "parser": false },
             {
                 "files": ["*.svelte", "**/*.svelte"],
                 "parser": true,
@@ -74,12 +72,7 @@
             {
                 "parser": false,
                 "rules": {
-                    "testing-library/await-async-events": [
-                        "error",
-                        {
-                            "eventModule": ["fireEvent", "userEvent"]
-                        }
-                    ],
+                    "testing-library/await-async-events": ["error", { "eventModule": ["fireEvent", "userEvent"] }],
                     "testing-library/await-async-queries": "error",
                     "testing-library/await-async-utils": "error",
                     "testing-library/no-await-sync-queries": "error",

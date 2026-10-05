@@ -4,16 +4,11 @@
         "version": "10.11.0",
         "source": "configs.flat/recommended",
         "blocks": [
-            {
-                "parser": false
-            },
+            { "parser": false },
             {
                 "files": ["*.vue", "**/*.vue"],
                 "parser": true,
-                "rules": {
-                    "vue/comment-directive": "error",
-                    "vue/jsx-uses-vars": "error"
-                }
+                "rules": { "vue/comment-directive": "error", "vue/jsx-uses-vars": "error" }
             },
             {
                 "parser": false,
@@ -128,13 +123,7 @@
                     "vue/require-prop-types": "warn",
                     "vue/singleline-html-element-content-newline": "warn",
                     "vue/v-bind-style": "warn",
-                    "vue/v-on-event-hyphenation": [
-                        "warn",
-                        "always",
-                        {
-                            "autofix": true
-                        }
-                    ],
+                    "vue/v-on-event-hyphenation": ["warn", "always", { "autofix": true }],
                     "vue/v-on-style": "warn",
                     "vue/v-slot-style": "warn"
                 }
@@ -159,9 +148,7 @@
         "version": "2.6.0",
         "source": "configs.flat/recommended",
         "blocks": [
-            {
-                "parser": false
-            },
+            { "parser": false },
             {
                 "files": ["*.vue", "**/*.vue"],
                 "parser": true,
@@ -198,12 +185,7 @@
             {
                 "parser": false,
                 "rules": {
-                    "testing-library/await-async-events": [
-                        "error",
-                        {
-                            "eventModule": ["fireEvent", "userEvent"]
-                        }
-                    ],
+                    "testing-library/await-async-events": ["error", { "eventModule": ["fireEvent", "userEvent"] }],
                     "testing-library/await-async-queries": "error",
                     "testing-library/await-async-utils": "error",
                     "testing-library/no-await-sync-queries": "error",

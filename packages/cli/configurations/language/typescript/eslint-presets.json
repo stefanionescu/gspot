@@ -4,9 +4,7 @@
         "version": "8.70.0",
         "source": "configs.strictTypeChecked",
         "blocks": [
-            {
-                "parser": true
-            },
+            { "parser": true },
             {
                 "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
                 "parser": false,
@@ -40,12 +38,7 @@
                 "parser": false,
                 "rules": {
                     "@typescript-eslint/await-thenable": "error",
-                    "@typescript-eslint/ban-ts-comment": [
-                        "error",
-                        {
-                            "minimumDescriptionLength": 10
-                        }
-                    ],
+                    "@typescript-eslint/ban-ts-comment": ["error", { "minimumDescriptionLength": 10 }],
                     "no-array-constructor": "off",
                     "@typescript-eslint/no-array-constructor": "error",
                     "@typescript-eslint/no-array-delete": "error",

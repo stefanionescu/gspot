@@ -4,28 +4,10 @@
         "version": "1.7.0",
         "source": "configs.flat/recommended",
         "blocks": [
-            {
-                "parser": false
-            },
-            {
-                "files": ["*.astro", "**/*.astro"],
-                "parser": true,
-                "rules": {}
-            },
-            {
-                "files": ["**/*.astro/*.js", "*.astro/*.js"],
-                "parser": false,
-                "rules": {
-                    "prettier/prettier": "off"
-                }
-            },
-            {
-                "files": ["**/*.astro/*.ts", "*.astro/*.ts"],
-                "parser": true,
-                "rules": {
-                    "prettier/prettier": "off"
-                }
-            },
+            { "parser": false },
+            { "files": ["*.astro", "**/*.astro"], "parser": true, "rules": {} },
+            { "files": ["**/*.astro/*.js", "*.astro/*.js"], "parser": false, "rules": { "prettier/prettier": "off" } },
+            { "files": ["**/*.astro/*.ts", "*.astro/*.ts"], "parser": true, "rules": { "prettier/prettier": "off" } },
             {
                 "parser": false,
                 "rules": {
@@ -46,28 +28,10 @@
         "version": "1.7.0",
         "source": "configs.flat/jsx-a11y-recommended",
         "blocks": [
-            {
-                "parser": false
-            },
-            {
-                "files": ["*.astro", "**/*.astro"],
-                "parser": true,
-                "rules": {}
-            },
-            {
-                "files": ["**/*.astro/*.js", "*.astro/*.js"],
-                "parser": false,
-                "rules": {
-                    "prettier/prettier": "off"
-                }
-            },
-            {
-                "files": ["**/*.astro/*.ts", "*.astro/*.ts"],
-                "parser": true,
-                "rules": {
-                    "prettier/prettier": "off"
-                }
-            },
+            { "parser": false },
+            { "files": ["*.astro", "**/*.astro"], "parser": true, "rules": {} },
+            { "files": ["**/*.astro/*.js", "*.astro/*.js"], "parser": false, "rules": { "prettier/prettier": "off" } },
+            { "files": ["**/*.astro/*.ts", "*.astro/*.ts"], "parser": true, "rules": { "prettier/prettier": "off" } },
             {
                 "parser": false,
                 "rules": {
@@ -107,9 +71,7 @@
                     "astro/jsx-a11y/img-redundant-alt": "error",
                     "astro/jsx-a11y/interactive-supports-focus": [
                         "error",
-                        {
-                            "tabbable": ["button", "checkbox", "link", "searchbox", "spinbutton", "switch", "textbox"]
-                        }
+                        { "tabbable": ["button", "checkbox", "link", "searchbox", "spinbutton", "switch", "textbox"] }
                     ],
                     "astro/jsx-a11y/label-has-associated-control": "error",
                     "astro/jsx-a11y/label-has-for": "off",
@@ -120,10 +82,7 @@
                     "astro/jsx-a11y/no-distracting-elements": "error",
                     "astro/jsx-a11y/no-interactive-element-to-noninteractive-role": [
                         "error",
-                        {
-                            "tr": ["none", "presentation"],
-                            "canvas": ["img"]
-                        }
+                        { "tr": ["none", "presentation"], "canvas": ["img"] }
                     ],
                     "astro/jsx-a11y/no-noninteractive-element-interactions": [
                         "error",
@@ -158,11 +117,7 @@
                     ],
                     "astro/jsx-a11y/no-noninteractive-tabindex": [
                         "error",
-                        {
-                            "tags": [],
-                            "roles": ["tabpanel"],
-                            "allowExpressionValues": true
-                        }
+                        { "tags": [], "roles": ["tabpanel"], "allowExpressionValues": true }
                     ],
                     "astro/jsx-a11y/no-redundant-roles": "error",
                     "astro/jsx-a11y/no-static-element-interactions": [

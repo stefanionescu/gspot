@@ -40,6 +40,7 @@ test('generated TypeScript configuration reports an interface once through the p
 });
 
 test.each([
+    ['project aliases', 'export * from "@app/first";\nexport * from "@app/second";\n'],
     ['star exports', 'export * from "./first.js";\nexport * from "./second.js";\n'],
     ['a local declaration', 'export { shared } from "./first.js";\nexport const shared = 3;\n'],
     ['nested star exports', 'export * from "./bridge/index.js";\nexport { shared } from "./first.js";\n'],
@@ -61,8 +62,9 @@ test.each([
     expect(reported.filter(({ rule }) => rule === 'gspot/no-reexports')).toStrictEqual([
         { rule: 'gspot/no-reexports', file: 'src/forward.ts', line: 1 },
     ]);
-    expect(reported.filter(({ rule }) => rule === 'gspot/no-duplicate-exports')).toStrictEqual([
-        { rule: 'gspot/no-duplicate-exports', file: 'src/index.ts', line: 2 },
+    expect(reported.filter(({ rule }) => rule === 'import-x/export')).toStrictEqual([
+        { rule: 'import-x/export', file: 'src/index.ts', line: 1 },
+        { rule: 'import-x/export', file: 'src/index.ts', line: 2 },
     ]);
     writeFileSync(
         join(sandbox.path, 'src/index.ts'),
@@ -73,7 +75,7 @@ test.each([
     expect(
         corrected.filter(({ rule, file }) => rule === 'gspot/no-trivial-files' && file === 'src/index.ts'),
     ).toStrictEqual([]);
-    expect(
-        corrected.filter(({ rule }) => rule === 'gspot/no-reexports' || rule === 'gspot/no-duplicate-exports'),
-    ).toStrictEqual([]);
+    expect(corrected.filter(({ rule }) => rule === 'gspot/no-reexports' || rule === 'import-x/export')).toStrictEqual(
+        [],
+    );
 });

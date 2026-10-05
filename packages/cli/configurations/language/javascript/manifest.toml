@@ -348,5 +348,5 @@ help = "Run gspot apply to write the configuration again. A rule the repository 
 "BUN.md" = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}
 
 [required_eslint_rules]
-js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public"]
+js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]
 mjs = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity"]

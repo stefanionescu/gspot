@@ -1,4 +1,4 @@
-import { relative, sep } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import eslint from '@eslint/js';
 import gspot from '@gspothq/eslint-plugin';
@@ -238,6 +238,7 @@ const regexpRules = {
 };
 
 const importRules = {
+    'import-x/export': 'error',
     ...config.importLayoutRules,
     'import-x/no-cycle': ['error', { ignoreExternal: false }],
     'import-x/no-self-import': 'error',

@@ -37,15 +37,7 @@
         "package": "eslint-plugin-react",
         "version": "7.37.5",
         "source": "configs.flat.jsx-runtime",
-        "blocks": [
-            {
-                "parser": false,
-                "rules": {
-                    "react/react-in-jsx-scope": 0,
-                    "react/jsx-uses-react": 0
-                }
-            }
-        ]
+        "blocks": [{ "parser": false, "rules": { "react/react-in-jsx-scope": 0, "react/jsx-uses-react": 0 } }]
     },
     "hooks": {
         "package": "eslint-plugin-react-hooks",
@@ -80,14 +72,7 @@
         "package": "eslint-plugin-react-refresh",
         "version": "0.5.7",
         "source": "configs.recommended",
-        "blocks": [
-            {
-                "parser": false,
-                "rules": {
-                    "react-refresh/only-export-components": ["error", {}]
-                }
-            }
-        ]
+        "blocks": [{ "parser": false, "rules": { "react-refresh/only-export-components": ["error", {}] } }]
     },
     "testing": {
         "package": "eslint-plugin-testing-library",
@@ -97,20 +82,10 @@
             {
                 "parser": false,
                 "rules": {
-                    "testing-library/await-async-events": [
-                        "error",
-                        {
-                            "eventModule": "userEvent"
-                        }
-                    ],
+                    "testing-library/await-async-events": ["error", { "eventModule": "userEvent" }],
                     "testing-library/await-async-queries": "error",
                     "testing-library/await-async-utils": "error",
-                    "testing-library/no-await-sync-events": [
-                        "error",
-                        {
-                            "eventModules": ["fire-event"]
-                        }
-                    ],
+                    "testing-library/no-await-sync-events": ["error", { "eventModules": ["fire-event"] }],
                     "testing-library/no-await-sync-queries": "error",
                     "testing-library/no-container": "error",
                     "testing-library/no-debugging-utils": "warn",

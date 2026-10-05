@@ -27,5 +27,5 @@
             'no-unused-vars': 'off',
             'sonarjs/no-unused-vars': 'off',
 }; %>
-<%~ eslintModule.block({ files: eslintFiles.typescript, rules }, `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: ${json(projects)} })], 'import/resolver': { typescript: { project: ${json(projects)} } } }`) %>,
+<%~ eslintModule.block({ files: eslintFiles.typescript, rules }, `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: ${json(projects)}.map((project) => join(root, project)) })], 'import/resolver': { typescript: { project: ${json(projects)}.map((project) => join(root, project)) } } }`) %>,
 <%~ eslintModule.block({ files: eslintFiles.tests, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } }) %>,

@@ -1,9 +1,9 @@
 // Explicitly refresh shipped preset data from an already installed private tool project.
 import { join } from 'node:path';
-import { format } from 'prettier';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { npmPins } from '#cli/tools/pins.ts';
+import { format, resolveConfig } from 'prettier';
 import { assetPath } from '#cli/platform/assets.ts';
 import { JSON_INDENT } from '#cli/config/generation/templates.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
@@ -40,9 +40,14 @@ const presets = eslintRuleNamesSchema.parse({
     source: 'builtinRules',
     rules: [...eslint.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
 });
+const ruleNamesPath = assetPath(ESLINT_RULE_NAMES_FILE);
 prepared.set(
-    assetPath(ESLINT_RULE_NAMES_FILE),
-    await format(JSON.stringify(presets), { parser: 'json', tabWidth: JSON_INDENT }),
+    ruleNamesPath,
+    await format(JSON.stringify(presets), {
+        ...(await resolveConfig(ruleNamesPath)),
+        parser: 'json',
+        tabWidth: JSON_INDENT,
+    }),
 );
 for (const [configuration, sources] of Object.entries(ESLINT_PRESET_SOURCES)) {
     const manifest = manifests.get(configuration);
@@ -63,9 +68,14 @@ for (const [configuration, sources] of Object.entries(ESLINT_PRESET_SOURCES)) {
             }),
         ),
     );
+    const presetsPath = assetPath(`${manifest.dir}/eslint-presets.json`);
     prepared.set(
-        assetPath(`${manifest.dir}/eslint-presets.json`),
-        await format(JSON.stringify(presetsByName), { parser: 'json', tabWidth: JSON_INDENT }),
+        presetsPath,
+        await format(JSON.stringify(presetsByName), {
+            ...(await resolveConfig(presetsPath)),
+            parser: 'json',
+            tabWidth: JSON_INDENT,
+        }),
     );
 }
 for (const [path, content] of prepared) writeFileSync(path, content);

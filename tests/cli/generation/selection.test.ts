@@ -49,9 +49,9 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
         filePath: 'src/order.js',
     });
     expect(result?.fatalErrorCount).toBe(0);
-    const layout = result!.messages.filter((diagnostic) => diagnostic.ruleId === 'gspot/private-before-public');
+    const layout = result!.messages.filter((diagnostic) => diagnostic.ruleId === 'import-x/exports-last');
     // The layout rule belongs to the all level alone.
-    expect(layout).toMatchObject(level === 'recommended' ? [] : [{ ruleId: 'gspot/private-before-public', line: 2 }]);
+    expect(layout).toMatchObject(level === 'recommended' ? [] : [{ ruleId: 'import-x/exports-last', line: 1 }]);
 });
 
 test('license configuration retains scoped exceptions and inherited license allowances', async () => {

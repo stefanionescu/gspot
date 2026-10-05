@@ -123,7 +123,6 @@
       "name": "@gspothq/eslint-plugin",
       "version": "0.1.0",
       "dependencies": {
-        "@typescript-eslint/typescript-estree": "8.70.0",
         "@typescript-eslint/utils": "8.70.0",
         "picomatch": "4.0.7",
       },

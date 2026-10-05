@@ -72,7 +72,7 @@ why = "One tsconfig that drops strict lets untyped code back in for that whole s
 help = "Enable the reported compiler option in the authored TypeScript configuration."
 
 [required_eslint_rules]
-ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
+ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
 tsx = ["eqeqeq", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
 
 [set]

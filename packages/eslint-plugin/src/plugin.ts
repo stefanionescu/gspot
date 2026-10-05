@@ -12,10 +12,8 @@ import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importExtensions } from '#plugin/rules/import-extensions.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
-import { noDuplicateExports } from '#plugin/rules/no-duplicate-exports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 import { instancesInRegistry } from '#plugin/rules/instances-in-registry.ts';
-import { privateBeforePublic } from '#plugin/rules/private-before-public.ts';
 import { noCrossScopeImports } from '#plugin/rules/no-cross-scope-imports.ts';
 import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 import { noHelpersBesideTests } from '#plugin/rules/no-helpers-beside-tests.ts';
@@ -31,13 +29,11 @@ const rules = {
     'no-client-env': noClientEnv,
     'no-cross-folder-imports': noCrossFolderImports,
     'no-cross-scope-imports': noCrossScopeImports,
-    'no-duplicate-exports': noDuplicateExports,
     'no-alias-exports': noAliasExports,
     'no-index-imports': noIndexImports,
     'no-reexports': noReexports,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
-    'private-before-public': privateBeforePublic,
     'instances-in-registry': instancesInRegistry,
     'require-server-only': requireServerOnly,
     'no-helpers-beside-tests': noHelpersBesideTests,

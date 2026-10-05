@@ -998,14 +998,6 @@
         "package": "@gspothq/eslint-plugin",
         "version": "0.1.0",
         "source": "configs.recommended",
-        "blocks": [
-            {
-                "parser": false,
-                "rules": {
-                    "gspot/no-client-env": "error",
-                    "gspot/no-duplicate-exports": "error"
-                }
-            }
-        ]
+        "blocks": [{ "parser": false, "rules": { "gspot/no-client-env": "error" } }]
     }
 }

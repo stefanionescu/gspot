@@ -1,7 +1,7 @@
 # gspot ESLint Plugin
 
-ESLint rules for private environment reads in client code, duplicate barrel exports, trivial
-files and functions, and the layout of imports and files. The
+ESLint rules for private environment reads in client code, trivial files and functions,
+and the layout of imports and files. The
 [gspot](https://github.com/stefanionescu/gspot) CLI sets this plugin up for you. You can also
 use it on its own with Node.js 22 or newer and ESLint 9.38.0 or newer.
 
@@ -35,15 +35,16 @@ import gspot from '@gspothq/eslint-plugin';
 export default [gspot.configs.recommended];
 ```
 
-`recommended` turns on two rules as errors:
+`recommended` turns on `gspot/no-client-env` as an error.
 
-- `gspot/no-client-env`
-- `gspot/no-duplicate-exports`
-
-`gspot.configs.all` adds the rules for imports, layout, declaration order, trivial files, and
+`gspot.configs.all` adds the rules for imports, layout, trivial files, and
 trivial functions. It also forbids re-exports. Select `require-server-only`, `max-barrel-reexports`,
 `import-extensions`, and `instances-in-registry` yourself with the files and options they
 need.
+
+Use `eslint-plugin-import-x` for duplicate exports (`import-x/export`) and declarations
+before exports (`import-x/exports-last`). TypeScript also reports ambiguous star exports
+through compiler error TS2308.
 
 ## Example: a private variable in client code
 

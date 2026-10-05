@@ -18,31 +18,6 @@ function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, re
     });
 }
 
-function getBindingNames(pattern: TSESTree.Node): string[] {
-    switch (pattern.type) {
-        case AST_NODE_TYPES.Identifier: {
-            return [pattern.name];
-        }
-        case AST_NODE_TYPES.ArrayPattern: {
-            return pattern.elements.flatMap((element) => (element === null ? [] : getBindingNames(element)));
-        }
-        case AST_NODE_TYPES.ObjectPattern: {
-            return pattern.properties.flatMap((property) =>
-                getBindingNames(property.type === AST_NODE_TYPES.RestElement ? property.argument : property.value),
-            );
-        }
-        case AST_NODE_TYPES.AssignmentPattern: {
-            return getBindingNames(pattern.left);
-        }
-        case AST_NODE_TYPES.RestElement: {
-            return getBindingNames(pattern.argument);
-        }
-        default: {
-            return [];
-        }
-    }
-}
-
 /**
  * Count the executable statements under a node, those of the functions written inside it included. An expression
  * body counts as one statement.
@@ -87,17 +62,4 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
     while (value !== null && WRAPPERS.has(value.type)) value = (value as ValueOperand).expression;
     return value;
-}
-
-/**
- * Read the names introduced by a declaration, including destructured variable bindings.
- * @param declaration the declaration, or null for an export list
- * @returns declared identifier names in source order
- */
-export function getDeclarationNames(declaration: TSESTree.Node | null): string[] {
-    if (!declaration) return [];
-    if ('id' in declaration && declaration.id?.type === AST_NODE_TYPES.Identifier) return [declaration.id.name];
-    if (declaration.type === AST_NODE_TYPES.VariableDeclaration)
-        return declaration.declarations.flatMap((entry) => getBindingNames(entry.id));
-    return [];
 }

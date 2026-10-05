@@ -17,5 +17,3 @@ export const FILE_SCHEME = 'file://';
 export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
 
 export const INTERNAL_PREFIXES = ['./', '../', '@/', '#'];
-
-export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
