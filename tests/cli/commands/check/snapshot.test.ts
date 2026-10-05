@@ -1,10 +1,10 @@
 // Bun check fixtures read indexed snapshots and preserve working-tree bytes and outputs.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { git, gitOutput } from '#tests/harness/git.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -12,22 +12,6 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: RUNNING_VERSION } = packageManifest;
-
-// Both report formats identify index content and preserve literal source paths.
-async function expectIndexReport(root: string, args: string[], report: RunReport): Promise<void> {
-    expect(report.comparison?.content).toBe('index');
-    expect(report.checks[0]?.reproduce).toContain('--staged');
-    const text = await runGspot(
-        root,
-        args.filter((argument) => argument !== '--json'),
-    );
-    expect(text.stdout).toContain('Checked the staged files.');
-    expect(text.stdout).not.toContain('Checked the working tree.');
-    expect(report.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
-        'script with spaces.sh',
-        'script with spaces.sh',
-    ]);
-}
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
@@ -42,7 +26,12 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const failed = await runGspot(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = JSON.parse(failed.stdout) as RunReport;
-    await expectIndexReport(directory.path, args, failedReport);
+    expect(failedReport.comparison?.content).toBe('index');
+    expect(failedReport.checks[0]?.reproduce).toContain('--staged');
+    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
+        'script with spaces.sh',
+        'script with spaces.sh',
+    ]);
     expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe(
@@ -57,9 +46,22 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     expect(passedReport.checks[0]?.status).toBe('passed');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
+});
+
+test('staged checks read an indexed file when its working file is missing', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'script with spaces.sh': 'echo indexed\n',
+    });
+    gitOutput(directory.path, ['init', '-q']);
+    gitOutput(directory.path, ['add', '-A']);
+    const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     unlinkSync(join(directory.path, 'script with spaces.sh'));
     const ran = await runGspot(directory.path, args);
-    expect(ran.code).toBe(0);
+    expect(ran.code, ran.stdout + ran.stderr).toBe(0);
+    expect((JSON.parse(ran.stdout) as RunReport).checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
+    expect(existsSync(join(directory.path, 'script with spaces.sh'))).toBe(false);
 });
 
 test('staged checks validate the index version pin instead of the working pin', async () => {

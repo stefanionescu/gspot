@@ -194,10 +194,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/selectors.test.ts:16-29` `expectIndexReport` | The helper has one caller. Its name hides a second CLI run in text mode (line 19). It asserts the caller's file name `script with spaces.sh`. Lines 23-24 pin the text fragments `checked index;` and `checked working tree;`. | Inline it into the test at line 76. Assert the comparison through `--json` only. |",
         "owner": "`cli/commands/selectors.test.ts:16-29` `expectIndexReport`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/check/snapshot.test.ts", "tests/cli/output/reporter.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The single-caller expectIndexReport helper is removed. Its comparison, staged reproduction, and finding-path assertions now appear directly in the owning snapshot case. That case reads comparison content through the public JSON report only; its hidden second text-mode CLI run and two duplicate text-fragment assertions are removed.",
+            "Comparison headers remain covered by the reporter owner, including index and quiet-mode cases. AST comparison preserves all 38 existing outcome assertion sites after normalizing the inlined report parameter and optional failure context. The two removed sites are the duplicate text checks.",
+            "Root TypeScript, affected ESLint, and formatting passed. Snapshot and reporter owners passed 17 tests with 78 assertions across two files. No production output behavior or test timeout changed."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/015",
@@ -206,10 +210,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/selectors.test.ts:104-106`, \"staged checks use index bytes and policy on an unborn branch while preserving unstaged edits\" | The last step deletes the working file and asserts only exit 0. The name does not mention it, and nothing shows that the check read the staged bytes. | Assert `status: 'passed'` and `fileCount: 1`, and name the step. Or delete it. |",
         "owner": "`cli/commands/selectors.test.ts:104-106`, \"staged checks use index bytes and policy on an unborn branch while preserving unstaged edits\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/check/snapshot.test.ts", "tests/cli/output/reporter.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The missing working-file step now has its own named, independently owned fixture. It stages a valid file, deletes its working copy, runs the public staged check, and asserts exit zero with an actual passed check and fileCount one. It also asserts that the working file remains absent, so an empty no-op report or source restoration fails the case.",
+            "The unborn-index case retains its policy, index-byte, reference, and authored-content assertions. The shared report helper is inlined, and all 38 existing outcome assertion sites are preserved; the missing-file status/count and absence assertions replace duplicate text coverage in this batch.",
+            "Root TypeScript, affected ESLint, and formatting passed. Snapshot and reporter owners passed 17 tests with 78 assertions across two files. The new case uses the existing bounded Git and CLI runners with the normal 60-second suite default."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/016",
