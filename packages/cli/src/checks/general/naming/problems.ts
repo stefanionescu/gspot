@@ -1,7 +1,7 @@
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
 import { hasCase, splitParts, repeatedPart } from '#cli/parsers/naming/names.ts';
-import { DIGIT, TEST_GROUP, CALLBACK_VERB, RESERVED_USES, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import { DIGIT, CALLBACK_VERB, RESERVED_USES, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 import type {
     Term,
@@ -45,7 +45,7 @@ function caseProblem(name: string, limits: CategoryLimits, isFileName: boolean):
         const subject = isFileName ? digitless.replace(/\.[^.]*$/u, '') : digitless;
         return subject.split('.').every((segment) => hasCase(segment, caseName));
     });
-    return isMatched ? undefined : { rule: 'case', message: `case is ${limits.caseNames.join(' or ')}` };
+    return isMatched ? undefined : { rule: 'case', message: `expected ${limits.caseNames.join(' or ')} case` };
 }
 
 function digitProblem(name: string, rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
@@ -78,7 +78,7 @@ function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePoli
 function termProblems(identifier: Identifier, parts: string[], context: NamingInputs): NameProblem[] {
     const { policy } = context;
     const problems: NameProblem[] = [];
-    const terms = context.isTestFile ? policy.terms.filter((term) => term.source !== TEST_GROUP) : policy.terms;
+    const terms = context.isTestFile ? policy.terms.filter((term) => term.group !== 'tests') : policy.terms;
     const banned = bannedTerm(parts, terms);
     if (banned !== undefined)
         problems.push({ rule: 'banned-term', message: `"${banned.term}" is banned`, source: banned.source });

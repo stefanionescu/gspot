@@ -178,3 +178,17 @@ export const PRINT_WIDTH_MIN = 40;
 export const PRINT_WIDTH_MAX = 400;
 
 export const STRUCTURED_POLICY_TABLES = new Set(['limits', 'naming', 'format', 'structure', 'architecture', 'prose']);
+
+/** Where a test file lives: in a test folder, or named for a test runner. */
+export const DEFAULT_TEST_PATTERNS = [
+    '**/test/**',
+    '**/tests/**',
+    '**/__tests__/**',
+    '**/*.test.*',
+    '**/*.spec.*',
+    '**/test_*.py',
+    '**/*_test.py',
+    '**/conftest.py',
+    '**/Tests/**',
+    '**/*Tests.swift',
+];

@@ -68,12 +68,12 @@ function shippedCase(table: NamingLanguage | undefined, category: string, parent
 /**
  * Compiles a term list into parts.
  * @param terms the terms as written
- * @param source where they came from, for the finding
+ * @param origin the display source and stable group, when the terms belong to a group
  * @returns the compiled terms, empty ones dropped
  */
-export function compileTerms(terms: string[], source: string): Term[] {
+export function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'group'>): Term[] {
     return terms
-        .map((term) => ({ term: term.trim().toLowerCase(), parts: splitParts(term), source }))
+        .map((term) => ({ term: term.trim().toLowerCase(), parts: splitParts(term), ...origin }))
         .filter((term) => term.parts.length > 0);
 }
 
@@ -108,8 +108,8 @@ export function effectivePolicy(
     const terms = [
         ...Object.entries(shipped.groups)
             .filter(([group]) => !removed.has(group))
-            .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
-        ...compileTerms(naming.banned, 'naming.banned'),
+            .flatMap(([group, { terms }]) => compileTerms(terms, { source: `${group} group`, group })),
+        ...compileTerms(naming.banned, { source: 'naming.banned' }),
     ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [

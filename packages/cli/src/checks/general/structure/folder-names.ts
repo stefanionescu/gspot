@@ -2,7 +2,7 @@ import { directoryOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Engine } from '#cli/types/execution/runtime.ts';
-import { harnessFolders } from '#cli/policy/settings/entries.ts';
+import { repositoryHarnessFolders } from '#cli/policy/settings/entries.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 import { BANNED_FOLDERS, IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 
@@ -16,11 +16,7 @@ export const getDirectories: Engine = (input) => {
     const allowed = pathMatcher(
         input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),
     );
-    const harnesses = new Set(
-        harnessFolders(input.policyFiles.policy, input.scope).map((folder) =>
-            [input.scope, folder].filter(Boolean).join('/'),
-        ),
-    );
+    const harnesses = new Set(repositoryHarnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return files.flatMap((file) => {
         const segments = directoryOf(file.path)

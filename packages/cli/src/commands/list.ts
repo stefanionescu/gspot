@@ -7,10 +7,10 @@ import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/session.ts';
-import { listSettings } from '#cli/policy/settings/entries.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
 import { selectionStatus } from '#cli/execution/planning/skips.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
+import { everyTable, listSettings } from '#cli/policy/settings/entries.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ExtraRow, SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
@@ -108,7 +108,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
  * @returns the rows and the verbatim tables
  */
 function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
-    const scopeExtras = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
+    const extras = everyTable(policy).flatMap(({ table, scope = '' }) =>
         table.tools === undefined ? [] : getExtras(scope, table.tools),
     );
     const rows = scopes.flatMap((selection) => {
@@ -123,7 +123,7 @@ function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsLis
                 scope,
             }));
     });
-    return { rows, extras: [...getExtras('', policy.tools), ...scopeExtras] };
+    return { rows, extras };
 }
 
 function statusLabel(status: ReturnType<typeof selectionStatus>): string {

@@ -44,3 +44,15 @@ export const CASES: FindingCase[] = [
         expected: { file: 'app/client.ts', rule: 'admin-key', line: 1 },
     },
 ];
+
+export const TEST_PATH_POLICY =
+    'configurations = ["supabase"]\ntests = ["qa/**"]\n[[scope]]\npath = "apps/web"\ntests = ["verification/**"]\n';
+
+export const TEST_PATH_FILES = {
+    'qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'tests/default.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/verification/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+};

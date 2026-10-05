@@ -44,10 +44,11 @@ function addParameter(sink: ExtractSink, parameter: Node): void {
 }
 
 function addParameters(sink: ExtractSink, node: Node): void {
-    const parameters = node
-        .descendantsOfType(TYPESCRIPT_PARAMETER_NODES)
-        .filter((parameter) => parameter.parent?.parent?.id === node.id);
-    for (const parameter of parameters) addParameter(sink, parameter);
+    const parameters = node.childForFieldName('parameters')?.namedChildren ?? [];
+    for (const parameter of parameters) {
+        if (TYPESCRIPT_PARAMETER_NODES.includes(parameter.type)) addParameter(sink, parameter);
+        else addPattern(sink, parameter, 'parameters');
+    }
     addPattern(sink, node.childForFieldName('parameter'), 'parameters');
 }
 
@@ -89,7 +90,7 @@ function addEnumCases(sink: ExtractSink, root: Node): void {
  * @param root the tree's root node
  * @param file the file path
  * @param language `typescript` or `javascript`
- * @returns the identifiers in document order
+ * @returns the declarations found in the tree
  */
 export function typescriptIdentifiers(root: Node, file: string, language: string): Identifier[] {
     const sink: ExtractSink = { file, language, out: [] };
@@ -103,5 +104,5 @@ export function typescriptIdentifiers(root: Node, file: string, language: string
         'arrow_function',
     ]);
     for (const node of callables) addParameters(sink, node);
-    return sink.out.toSorted((a, b) => a.line - b.line || a.column - b.column);
+    return sink.out;
 }

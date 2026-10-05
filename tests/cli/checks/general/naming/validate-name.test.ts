@@ -8,7 +8,7 @@ import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 const policy: EffectivePolicy = {
-    terms: compileTerms(['enhanced', 'handler'], 'marketing group'),
+    terms: compileTerms(['enhanced', 'handler'], { source: 'marketing group', group: 'marketing' }),
     reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
     external: new Set(['requestAnimationFrame']),
     allowed: new Map([['enhancedThing', 'a reason']]),
@@ -78,7 +78,10 @@ describe('nameProblems', () => {
     });
 
     test('case follows the category, and file stems are checked by dot segment', () => {
-        expect(nameProblems(identifier('my_type', 'types'), plain)[0]?.rule).toBe('case');
+        expect(nameProblems(identifier('my_type', 'types'), plain)[0]).toMatchObject({
+            rule: 'case',
+            message: 'expected pascal case',
+        });
         expect(
             nameProblems(identifier('bash.test', 'files'), {
                 ...plain,
@@ -119,7 +122,7 @@ describe('nameProblems', () => {
 
 test('the words of the shipped tests group pass in a test file and fail elsewhere', () => {
     const terms = Object.entries(namingTerms().groups).flatMap(([group, { terms: words }]) =>
-        compileTerms(words, `${group} group`),
+        compileTerms(words, { source: `${group} group`, group }),
     );
     const shipped = { ...policy, terms };
     const actual = identifier('actualRoot', 'variables');
@@ -133,4 +136,19 @@ test('an unknown case never matches an identifier or invokes an inherited object
     expect(hasCase('bad_name', '__proto__')).toBe(false);
     expect(hasCase('bad_name', 'camel')).toBe(false);
     expect(hasCase('goodName', 'camel')).toBe(true);
+});
+
+test('test exemptions use the group identity independently of its display label', () => {
+    const grouped = compileTerms(['actual'], { source: 'An independently worded label', group: 'tests' });
+    const authored = compileTerms(['actual'], { source: 'tests group' });
+    const context = { ...plain, isTestFile: true };
+    expect(nameProblems(identifier('actualRoot'), { ...context, policy: { ...policy, terms: grouped } })).toStrictEqual(
+        [],
+    );
+    expect(
+        nameProblems(identifier('actualRoot'), { ...context, policy: { ...policy, terms: authored } }),
+    ).toMatchObject([{ rule: 'banned-term', source: 'tests group' }]);
+    expect(nameProblems(identifier('actualRoot'), { ...plain, policy: { ...policy, terms: grouped } })).toMatchObject([
+        { rule: 'banned-term', source: 'An independently worded label' },
+    ]);
 });

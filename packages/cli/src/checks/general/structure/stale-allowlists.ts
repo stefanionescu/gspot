@@ -2,6 +2,7 @@ import { dirname, basename } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { lockedPackages } from '#cli/parsers/lockfiles.ts';
+import { everyTable } from '#cli/policy/settings/entries.ts';
 import { pathTokens, proseLines } from '#cli/parsers/markdown.ts';
 import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
@@ -78,8 +79,7 @@ function referencedPaths(input: EngineInput): Set<string> {
 function licenseFindings(input: EngineInput): Finding[] {
     const policy = input.policyFiles.policy;
     const locks = new Map<string, Set<string>>();
-    const tables = [['', policy], ...Object.entries(policy.scopeTables)] as const;
-    return tables.flatMap(([scope, table]) => {
+    return everyTable(policy).flatMap(({ scope = '', table }) => {
         const exceptions = (table.configurationSettings?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {

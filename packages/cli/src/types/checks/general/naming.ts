@@ -1,7 +1,7 @@
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /** A banned term split into parts, with where it came from. */
-export type Term = { term: string; parts: string[]; source: string };
+export type Term = { term: string; parts: string[]; source: string; group?: string };
 
 /** One thing wrong with one identifier. */
 export type NameProblem = {

@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
@@ -9,20 +10,17 @@ import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
-import { harnessFolders } from '#cli/policy/settings/entries.ts';
 import { REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
-import { TEST_FILE_GLOBS } from '#cli/config/repository/inventory.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { everyTable, repositoryHarnessFolders } from '#cli/policy/settings/entries.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/paths.ts';
-import type { FileNames, NamingInputs, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
-
-const isTestPath = pathMatcher(TEST_FILE_GLOBS);
+import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 function sourceFiles(input: EngineInput): NamingSource[] {
     const languages = input.selection.selected.filter((manifest) => manifest.configuration.kind === 'language');
@@ -35,10 +33,14 @@ function sourceFiles(input: EngineInput): NamingSource[] {
         .filter((entry): entry is NamingSource => entry.language !== undefined);
 }
 
-function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[], path: string): Finding[] {
-    const context: NamingInputs = { policy, isReactFile: REACT_FILE.test(path), isTestFile: isTestPath(path) };
+function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
+    const isTestFile = pathMatcher(input.view.settings['tests'] as string[]);
     return identifiers.flatMap((identifier) =>
-        nameProblems(identifier, context).map((problem) => {
+        nameProblems(identifier, {
+            policy,
+            isReactFile: REACT_FILE.test(identifier.file),
+            isTestFile: isTestFile(posix.relative(input.scope, identifier.file)),
+        }).map((problem) => {
             const source = problem.source === undefined ? '' : ` (${problem.source})`;
             return findingAt(
                 input,
@@ -55,17 +57,13 @@ async function identifierFindings(input: EngineInput, policy: EffectivePolicy): 
     for (const { file, language } of sourceFiles(input)) {
         const text = readSource(input.root, file.path, input.reads).toString('utf8');
         const identifiers = await identifiersOf(file.path, text, language, input);
-        findings.push(...findingsFor(input, policy, identifiers, file.path));
+        findings.push(...findingsFor(input, policy, identifiers));
     }
     return findings;
 }
 
 function pathIdentifiers(input: EngineInput): Identifier[] {
-    const harnesses = new Set(
-        harnessFolders(input.policyFiles.policy, input.scope).map((folder) =>
-            [input.scope, folder].filter(Boolean).join('/'),
-        ),
-    );
+    const harnesses = new Set(repositoryHarnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
         const all = [fileIdentifier(file.path, language), ...directoryIdentifiers(file.path, language)];
@@ -79,7 +77,7 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     });
 }
 
-async function scopeIdentifiers(input: EngineInput): Promise<FileNames[]> {
+async function declaredNames(input: EngineInput): Promise<FileNames[]> {
     const policy = input.policyFiles.policy;
     const selections = new Map(
         input.scopeEntries.map((scope) => [
@@ -89,7 +87,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<FileNames[]> {
             ),
         ]),
     );
-    const read: FileNames[] = [];
+    const files: FileNames[] = [];
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
         const scope = scopeOf(file.path, input.scopeEntries);
@@ -102,46 +100,46 @@ async function scopeIdentifiers(input: EngineInput): Promise<FileNames[]> {
             name,
             input,
         );
-        read.push({
+        files.push({
             path: file.path,
             names: [fileIdentifier(file.path, name), ...directoryIdentifiers(file.path, name), ...identifiers].map(
                 (identifier) => identifier.name,
             ),
         });
     }
-    return read;
+    return files;
 }
 
-// Validate each authored layer once against the complete snapshot, including nested scopes.
+// Reports root and scope entries in gspot.toml that match no file, name, or removable group.
 async function policyFindings(input: EngineInput): Promise<Finding[]> {
     const policy = input.policyFiles.policy;
-    const read = await scopeIdentifiers(input);
+    const files = await declaredNames(input);
     const removable = new Set(
         Object.entries(namingTerms().groups)
             .filter(([, group]) => group.removable)
             .map(([name]) => name),
     );
-    const layers = [
-        { scope: '', naming: policy.naming },
-        ...Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
-            table.naming === undefined ? [] : [{ scope, naming: table.naming }],
-        ),
-    ];
+    const layers = everyTable(policy).flatMap(({ table, scope = '' }) =>
+        table.naming === undefined ? [] : [{ scope, naming: table.naming }],
+    );
     return layers.flatMap(({ scope, naming }) => {
-        const files = read.filter((file) => isInScope(file.path, scope));
-        const names = new Set(files.flatMap((file) => file.names));
+        const scopeFiles = files.filter((file) => isInScope(file.path, scope));
+        const names = new Set(scopeFiles.flatMap((file) => file.names));
         const unused = naming.allowed
             .filter((entry) => !names.has(entry.name))
             .map((entry) => `naming.allowed names "${entry.name}", which no identifier in this scope carries.`);
         const dead = naming.paths
-            .filter((rule) => files.every((file) => !pathMatcher(rule.paths)(file.path)))
+            .filter((rule) => {
+                const matches = pathMatcher(rule.paths);
+                return scopeFiles.every((file) => !matches(file.path));
+            })
             .map((rule) => `A [[naming.paths]] entry matches no file: ${rule.paths.join(', ')}.`);
         const cases = naming.paths
             .flatMap((rule) => rule.case ?? [])
             .filter((name) => !CASE_NAMES.includes(name))
             .map(
                 (name) =>
-                    `A [[naming.paths]] entry names the case "${name}", which is not one of camel, pascal, pascal-extension, kebab, snake, upper-snake or timestamp-snake.`,
+                    `A [[naming.paths]] entry names the case "${name}", which is not one of ${CASE_NAMES.join(', ')}.`,
             );
         const groups = naming.groups_off
             .filter((entry) => !removable.has(entry.group))
@@ -173,7 +171,7 @@ function namingEngine(
  * @param text the file text
  * @param language the language configuration the file belongs to
  * @param context optional execution reads and their resource owner
- * @returns the identifiers
+ * @returns the identifiers in document order
  */
 export async function identifiersOf(
     file: string,
@@ -186,10 +184,25 @@ export async function identifiersOf(
     if (grammar === undefined) return [];
     const tree = await parseSource(grammar, text, context);
     try {
-        if (grammar === 'bash') return bashIdentifiers(tree.rootNode, file);
-        if (grammar === 'swift') return swiftIdentifiers(tree.rootNode, file);
-        if (grammar === 'python') return pythonIdentifiers(tree.rootNode, file);
-        return typescriptIdentifiers(tree.rootNode, file, language);
+        let identifiers: Identifier[];
+        switch (grammar) {
+            case 'bash': {
+                identifiers = bashIdentifiers(tree.rootNode, file);
+                break;
+            }
+            case 'swift': {
+                identifiers = swiftIdentifiers(tree.rootNode, file);
+                break;
+            }
+            case 'python': {
+                identifiers = pythonIdentifiers(tree.rootNode, file);
+                break;
+            }
+            default: {
+                identifiers = typescriptIdentifiers(tree.rootNode, file, language);
+            }
+        }
+        return identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column);
     } finally {
         tree.delete();
     }
@@ -197,8 +210,6 @@ export async function identifiersOf(
 
 export const namingIdentifiers: Engine = namingEngine(identifierFindings);
 
-export const namingPaths: Engine = namingEngine((input, policy) =>
-    pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
-);
+export const namingPaths: Engine = namingEngine((input, policy) => findingsFor(input, policy, pathIdentifiers(input)));
 
 export const namingPolicy: Engine = namingEngine(policyFindings);

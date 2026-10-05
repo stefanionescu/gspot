@@ -19,7 +19,6 @@ import {
     SHARED_PREFIX,
     MIGRATION_NAME,
     ADMIN_KEY_NAMES,
-    ADMIN_KEY_PATHS,
     CODE_EXTENSIONS,
     SUPABASE_CONFIG,
     FUNCTIONS_DIRECTORY,
@@ -230,13 +229,14 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each line that names the service role key outside supabase.admin_key_files.
+ * Reports service role keys outside supabase.admin_key_files and the effective test paths.
  * @param input the engine input
  * @returns the findings
  */
 export function adminKey(input: EngineInput): Finding[] {
-    const named = input.view.options('supabase')['admin_key_files'] as string[] | undefined;
-    const isAllowed = pathMatcher(named ?? ADMIN_KEY_PATHS);
+    const allowed = input.view.options('supabase')['admin_key_files'] as string[];
+    const tests = input.view.settings['tests'] as string[];
+    const isAllowed = pathMatcher([...allowed, ...tests]);
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&

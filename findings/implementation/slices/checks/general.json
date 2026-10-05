@@ -378,10 +378,17 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:142` | The message spells out the case list by hand. `CASE_NAMES` (`naming/cases.ts:29`) already holds the list. | Use `CASE_NAMES.join(', ')`. |",
         "owner": "`naming/identifiers.ts:142`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/parsers/naming/names.ts"
+        ],
+        "status": "closed",
+        "outcome": "Unknown-case diagnostics derive the complete accepted list from the actual case registry.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/033",
@@ -454,10 +461,19 @@
         "section": "Checks: General",
         "finding": "| `naming/extractors/python.ts:101`, `swift.ts:88` | Python and Swift return identifiers grouped by kind. `bash.ts:49` and `typescript.ts:106` sort them by position. Nothing sorts findings later, so Python and Swift naming findings come out of line order. | Sort once in `identifiersOf` (`naming/identifiers.ts:196-200`) and delete the two extractor sorts. |",
         "owner": "`naming/extractors/python.ts:101`, `swift.ts:88`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/parsers/naming/bash.ts",
+            "packages/cli/src/parsers/naming/typescript.ts",
+            "tests/cli/checks/general/naming/extract.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "identifiersOf sorts parsed declarations once by line and column. Bash and TypeScript omit their duplicate sorts; Python and Swift now produce findings in document order. Tree disposal remains in finally.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/038",
@@ -466,10 +482,14 @@
         "section": "Checks: General",
         "finding": "| `naming/extractors/python.ts:29` suppression reason | \"Two extractors ask which block holds a definition\" is false. Only `python.ts` calls `holderOf`, from `addFunctions` and `bindingCategory`. | Rewrite as \"addFunctions and bindingCategory both ask which block holds a definition.\" |",
         "owner": "`naming/extractors/python.ts:29` suppression reason",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/naming/python.ts"],
+        "status": "closed",
+        "outcome": "The obsolete suppression and false two-extractors reason are absent. holderOf serves addFunctions and bindingCategory inside the Python parser.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/039",
@@ -478,10 +498,14 @@
         "section": "Checks: General",
         "finding": "| `naming/extractors/sql.ts:75` error | \"SQL parse failed at L:C\" does not name the file. `identifierFindings` does not catch the error, so one bad file in a large tree is hard to find. | Prefix the file: `` `${file}:${line}:${column}: SQL parse failed: ${text}` ``. |",
         "owner": "`naming/extractors/sql.ts:75` error",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/parsers/naming/sql.ts", "tests/cli/parsers/naming/sql.test.ts"],
+        "status": "closed",
+        "outcome": "SQL naming parse diagnostics identify the authored file, line and column before the parser message.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/040",
@@ -490,22 +514,34 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:38` `findingsFor(..., path)` | `path` always equals `identifier.file`. Every extractor and `paths.ts` set `file` from that same path. The `naming/paths` engine (`:171-173`) calls `findingsFor` once per identifier only to pass that path. | Drop `path` and test `REACT_FILE` and `isTestPath` per identifier. The engine becomes `findingsFor(input, policy, pathIdentifiers(input))`. |",
         "owner": "`naming/identifiers.ts:38` `findingsFor(..., path)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/identifiers.ts"],
+        "status": "closed",
+        "outcome": "findingsFor derives framework and test context from each identifier.file. Its redundant path argument is deleted; path enforcement processes the full identifier list in one call.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/041",
         "source": "findings/slices/checks-general.md",
         "line": 51,
         "section": "Checks: General",
-        "finding": "| `naming/identifiers.ts:64-68`, `structure/folder-names.ts:18-22` | Both build the same set of scope-prefixed harness folders. | Have `harnessFolders` (`policy/settings.ts:292`) return scope-prefixed paths, or add `scopedHarnessFolders(policy, scope)` there. |",
+        "finding": "| `naming/identifiers.ts:64-68`, `structure/folder-names.ts:18-22` | Both build the same set of scope-prefixed harness folders. | Have `harnessFolders` (`policy/settings.ts:292`) return scope-prefixed paths, or add `repositoryHarnessFolders(policy, scope)` there. |",
         "owner": "`naming/identifiers.ts:64-68`, `structure/folder-names.ts:18-22`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/checks/general/structure/folder-names.ts"
+        ],
+        "status": "closed",
+        "outcome": "repositoryHarnessFolders shares the real scope-prefix calculation between naming and folder-name checks. Required relative harnessFolders consumers in generation retain their contract.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/042",
@@ -514,10 +550,14 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:82` `scopeIdentifiers`; `:90` `read` | The function returns the names each file declares, not identifiers of a scope. `read` holds those per-file entries. | Rename it `declaredNames`, and rename `read` to `files`. |",
         "owner": "`naming/identifiers.ts:82` `scopeIdentifiers`; `:90` `read`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/identifiers.ts"],
+        "status": "closed",
+        "outcome": "declaredNames names the per-file declarations it returns, and its accumulating array is files.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/043",
@@ -526,10 +566,14 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:113` comment | \"Validate each authored layer once against the complete snapshot\" uses jargon. | Rewrite as \"Reports entries in gspot.toml, at the root and in each scope table, that match no file, name, or group.\" |",
         "owner": "`naming/identifiers.ts:113` comment",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/identifiers.ts"],
+        "status": "closed",
+        "outcome": "The policy analysis comment describes root/scope entries that match no file, name or removable group.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/044",
@@ -538,10 +582,14 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:135` | `pathMatcher(rule.paths)` is compiled again for every file inside `every`. | Compile each rule's matcher once, before the loop over files. |",
         "owner": "`naming/identifiers.ts:135`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/checks/general/naming/identifiers.ts"],
+        "status": "closed",
+        "outcome": "Each authored path rule compiles its matcher before iterating candidate files.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/045",
@@ -550,10 +598,23 @@
         "section": "Checks: General",
         "finding": "| `naming/identifiers.ts:122-127`, `structure/stale-allowlists.ts:81` | Both list every policy layer by hand (`['', policy]` plus `Object.entries(policy.scopeTables)`). Five more places outside the slice do the same: `commands/list.ts:101`, `generation/eslint/blocks.ts:29`, `generation/formatting/settings.ts:23`, `generation/templates.ts:42`, and `policy/validate.ts:81`. The scope label differs each time: \"scope x\", \"(scope x)\", \"[[scope]] x\". | Add `allPolicyTables(policy)` beside `policyTables` with one label, and use it everywhere. |",
         "owner": "`naming/identifiers.ts:122-127`, `structure/stale-allowlists.ts:81`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/policy/settings/entries.ts",
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/checks/general/structure/stale-allowlists.ts",
+            "packages/cli/src/commands/list.ts",
+            "packages/cli/src/generation/formatting.ts",
+            "packages/cli/src/generation/eslint/blocks.ts",
+            "packages/cli/src/generation/templates.ts",
+            "packages/cli/src/policy/problems/selection.ts"
+        ],
+        "status": "closed",
+        "outcome": "The existing everyTable owner supplies all authored tables to naming validation, stale license exceptions and list output. Generation formatting/ESLint and policy validation already use it. Template entry files use tablesFor because only applicable ancestors contribute; tablesFor derives its standardized table names from everyTable. No parallel table enumerator is added.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/046",
@@ -658,10 +719,17 @@
         "section": "Checks: General",
         "finding": "| `naming/problems.ts:31` message | \"case is camel\" reaches the user as `typescript function \"Foo\": case is camel.`, which reads as if the name is camel case. | Write `` `expected ${limits.caseNames.join(' or ')} case` ``. |",
         "owner": "`naming/problems.ts:31` message",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "tests/cli/checks/general/naming/validate-name.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Case findings say expected followed by the permitted cases, rather than claiming the invalid name already has that case.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/052",
@@ -670,10 +738,20 @@
         "section": "Checks: General",
         "finding": "| `naming/problems.ts:64`; `config/checks/general/naming.ts:12` `TEST_GROUP` | The test exemption compares `term.source` with the display string `'tests group'`. That string is built at `naming/policy.ts:109` as `` `${group} group` ``, so rewording the label breaks the exemption without warning. | Add a `group` field to `Term` and filter with `term.group !== 'tests'`. |",
         "owner": "`naming/problems.ts:64`; `config/checks/general/naming.ts:12` `TEST_GROUP`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/checks/general/naming.ts",
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "packages/cli/src/config/checks/general/naming.ts",
+            "tests/cli/checks/general/naming/validate-name.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Compiled terms retain their stable group independently of their displayed source. Tests exempt the tests group by group identity; an authored term labeled tests group remains enforced. TEST_GROUP is deleted.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/checks-general/053",

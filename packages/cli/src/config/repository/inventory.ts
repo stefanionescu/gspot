@@ -287,18 +287,6 @@ export const LINT_TOOL_PACKAGE_PREFIXES = [
     'sqlfluff',
 ];
 
-/** Where a test file lives: in a test folder, or named for a test runner. */
-export const TEST_FILE_GLOBS = [
-    '**/test/**',
-    '**/tests/**',
-    '**/__tests__/**',
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/test_*.py',
-    '**/*_test.py',
-    '**/conftest.py',
-];
-
 // In "<runner> run <task>", the task sits two words after the runner.
 export const TASK_AFTER_RUN = 2;
 

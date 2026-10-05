@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { namingLists } from '#cli/parsers/schema/naming.ts';
 import { relativePath } from '#cli/parsers/schema/paths.ts';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
-import { TEST_FILE_GLOBS } from '#cli/config/repository/inventory.ts';
 import { agentRulesSchema } from '#cli/parsers/schema/agent-rules.ts';
 import { reasoned, namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { toolsSchema, licenseSettingsSchema } from '#cli/policy/schema/tools.ts';
@@ -10,7 +9,7 @@ import { configurationSettingSchemas } from '#cli/policy/schema/configurations.t
 import { levelSchema, numberSettingSchema } from '#cli/parsers/schema/settings.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
-import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/config/policy/settings.ts';
+import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 
 const anyTable = z.record(z.string(), z.unknown());
 
@@ -206,7 +205,7 @@ export const rootSettingSchemas = {
         .meta({ description: 'The runner that installs and runs gspot.' }),
     tests: z
         .array(z.string())
-        .default(TEST_FILE_GLOBS)
+        .default(DEFAULT_TEST_PATTERNS)
         .meta({ description: 'Test files where applicable linters relax rules intended for production source.' }),
     exclude: z
         .array(z.string())

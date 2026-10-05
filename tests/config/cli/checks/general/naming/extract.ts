@@ -92,3 +92,30 @@ export const SWIFT_NAMES = {
     constants: ['globalConstant'],
     enum_cases: ['happy', 'sad', 'veryAngry'],
 };
+
+export const SOURCE_ORDER_CASES = [
+    {
+        language: 'python',
+        file: 'source.py',
+        source: 'first_value = 1\ndef load_value(input_value):\n    inner_value = input_value\nclass Book:\n    pass\n',
+        expected: ['first_value', 'load_value', 'input_value', 'inner_value', 'Book'],
+    },
+    {
+        language: 'swift',
+        file: 'source.swift',
+        source: 'let firstValue = 1\nfunc loadValue(inputValue: Int) { let innerValue = inputValue }\nclass Book {}\n',
+        expected: ['firstValue', 'loadValue', 'inputValue', 'innerValue', 'Book'],
+    },
+    {
+        language: 'javascript',
+        file: 'source.js',
+        source: 'const firstValue = 1;\nfunction loadValue(inputValue) { const innerValue = inputValue; }\nclass Book {}\n',
+        expected: ['firstValue', 'loadValue', 'inputValue', 'innerValue', 'Book'],
+    },
+    {
+        language: 'bash',
+        file: 'source.sh',
+        source: 'first_value=1\nload_value() {\n    inner_value=1\n}\n',
+        expected: ['first_value', 'load_value', 'inner_value'],
+    },
+];

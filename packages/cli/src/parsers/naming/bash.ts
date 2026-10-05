@@ -39,12 +39,12 @@ function addDeclarations(sink: ExtractSink, root: Node): void {
  * The functions and variables a parsed shell script declares.
  * @param root the tree's root node
  * @param file the file path
- * @returns the identifiers in document order
+ * @returns the declarations found in the tree
  */
 export function bashIdentifiers(root: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'bash', out: [] };
     addFunctions(sink, root);
     addAssignments(sink, root);
     addDeclarations(sink, root);
-    return sink.out.toSorted((a, b) => a.line - b.line || a.column - b.column);
+    return sink.out;
 }

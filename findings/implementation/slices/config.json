@@ -4,7 +4,7 @@
         "source": "findings/slices/config.md",
         "line": 9,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof … ? … :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
+        "finding": "| `config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`) | These are more dead fallbacks, beyond the seven the first audit lists. Each one repeats a manifest default with the same value. The defaults sit at duplication `manifest.toml:52`, postgres `:133`, security `:111`, docs `:127`, structure `:255` and `:312`, supabase `:131`, python `:395`, swift `:224`, nginx `:63`, xcode `:133`, site `:180,187`, and files `:217`. `mergeForScope` (`policy/merge.ts:89-91`) puts every declared default into the view, and the kit that declares the setting is always selected when its check runs. As a result, the `??` or `typeof \u2026 ? \u2026 :` branch never runs. Also, `checks/language/sql.ts:143` writes `?? 'ansi'` inline. | Delete each constant and its fallback branch. The manifest default is the one source. |",
         "owner": "`config/checks/general/duplication.ts:5` `DUPLICATION_PERCENT`, `config/checks/database.ts:15` `FROZEN_NONE`, `config/checks/general/security.ts:5` `CODEQL_SUITE`, `config/checks/general/docs.ts:16` `CONTENTS_HEADINGS`, `config/checks/general/structure.ts:111` `PREFIX_COLLISIONS`, `config/checks/platform/supabase.ts:4` `FUNCTIONS_DIRECTORY`, `config/checks/language/python.ts:10` `PACKAGE_EXPORTS`, `config/checks/language/bash.ts:10` and `config/checks/language/swift.ts:14` `DUPLICATE_LINES`, `config/checks/tool/nginx.ts:8` `NGINX_IMAGE`, `config/checks/language/swift.ts:28` `XCODE_DESTINATION`, `config/checks/general/site.ts:3,15` `SITE_OUTPUT`, `SITE_BUILD`, `config/repository/repository.ts:226` `ENV_TEMPLATE_NAMES` (as the fallback in `checks/general/files.ts:29`)",
         "location": null,
         "status": "open",
@@ -78,10 +78,21 @@
         "section": "The Config Constants",
         "finding": "| `config/repository/repository.ts:299` `TEST_FILE_GLOBS` | This is the default of the root `tests` setting (`policy/schema.ts:269-273`). But the naming check (`checks/general/naming/identifiers.ts:25`) and `ADMIN_KEY_PATHS` read the constant, not the setting. As a result, a repository that sets `tests` gets one test-file meaning in ESLint, Ruff, and Express, and another in naming. The list also misses Swift tests (`Tests/`, `*Tests.swift`), and the matcher is case-sensitive (`repository/selectors.ts:16`). | Read `input.view.settings['tests']` in naming. Move the list into the schema default. Add `**/Tests/**` and `**/*Tests.swift`. |",
         "owner": "`config/repository/repository.ts:299` `TEST_FILE_GLOBS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/policy/settings.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/checks/general/naming/identifiers.ts",
+            "packages/cli/src/checks/platform/supabase.ts",
+            "tests/config/cli/checks/naming.ts",
+            "tests/cli/checks/platform/supabase/settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Default test patterns live beside policy settings and feed the schema; they include Swift Tests folders and *Tests.swift names. Naming reads effective tests relative to each scope. Supabase reads its validated admin paths plus effective test paths and has no duplicate fallback. Explicit regressions cover root, inherited, scoped and sibling paths while production files still fail. Static data remains under config per the accepted repository decision.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/008",
@@ -349,7 +360,7 @@
         "source": "findings/slices/config.md",
         "line": 34,
         "section": "The Config Constants",
-        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>…)`, and delete `ENV_KEY_GROUP`. |",
+        "finding": "| `config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS` | The patterns miss `import.meta.env.X` (Vite, Astro, SvelteKit) and `Deno.env.get('X')` (Supabase functions). Keys those projects read are never checked against `.env.example`. `ENV_KEY_GROUP = 1` names a positional group. | Add both patterns. Use a named group `(?<key>\u2026)`, and delete `ENV_KEY_GROUP`. |",
         "owner": "`config/checks/general/files.ts:3` `ENV_KEY_GROUP`, `:6` `ENV_READ_PATTERNS`",
         "location": null,
         "status": "open",
@@ -411,10 +422,20 @@
         "section": "The Config Constants",
         "finding": "| `config/checks/general/naming.ts:12` `TEST_GROUP` | Test files are recognized by the display label `\"tests group\"` that `checks/general/naming/policy.ts:109` builds with `` `${group} group` ``. If the label wording changes, test files silently lose their relief. | Keep the group name on the compiled term, and compare `term.group === 'tests'`. |",
         "owner": "`config/checks/general/naming.ts:12` `TEST_GROUP`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/checks/general/naming.ts",
+            "packages/cli/src/checks/general/naming/policy.ts",
+            "packages/cli/src/checks/general/naming/problems.ts",
+            "packages/cli/src/config/checks/general/naming.ts",
+            "tests/cli/checks/general/naming/validate-name.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Compiled terms retain their stable group independently of their displayed source. Tests exempt the tests group by group identity; an authored term labeled tests group remains enforced. TEST_GROUP is deleted.",
+        "verification": [
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/032",

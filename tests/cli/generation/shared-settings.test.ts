@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { TEST_FILE_GLOBS } from '#cli/config/repository/inventory.ts';
+import { DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { KNIP, RUFF, STYLELINT } from '#tests/config/cli/generation/shared-settings.ts';
 
@@ -92,7 +92,7 @@ test('Ruff selects the families the test runner and the framework declare, and i
     const tested = await generatedDocument<TestedRuffConfiguration>(buildPolicy(['python', 'pytest']), RUFF);
     expect(tested.lint.select).toStrictEqual(containingAll(pytest['tools.ruff.select'] as string[]));
     expect(tested.lint['per-file-ignores']).toStrictEqual(
-        Object.fromEntries(TEST_FILE_GLOBS.map((path) => [path, testIgnores])),
+        Object.fromEntries(DEFAULT_TEST_PATTERNS.map((path) => [path, testIgnores])),
     );
     const served = await generatedDocument<RuffConfiguration>(buildPolicy(['python', 'fastapi']), RUFF);
     expect(served.lint.select).toContain('FAST003');

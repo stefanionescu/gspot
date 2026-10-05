@@ -11,8 +11,6 @@ export const RESERVED_USES: Record<string, string[]> = {
 
 export const DIGIT = /\d/u;
 
-export const TEST_GROUP = 'tests group';
-
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
 
 /** The leading verb allowed only in framework callback positions. */

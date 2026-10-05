@@ -39,7 +39,7 @@
         "source": "findings/additional.md",
         "line": 28,
         "section": "Header comments before JavaScript classes",
-        "finding": "The header rule indexes a missing decorators field on classes parsed by ESLint’s default JavaScript parser. An ordinary class, named export, or default export after imports crashes linting. Handle the parser boundary while preserving declaration comments and header fixes.",
+        "finding": "The header rule indexes a missing decorators field on classes parsed by ESLint\u2019s default JavaScript parser. An ordinary class, named export, or default export after imports crashes linting. Handle the parser boundary while preserving declaration comments and header fixes.",
         "owner": "Plugin header comments",
         "location": [
             "packages/eslint-plugin/src/rules/header-first.ts",
@@ -53,6 +53,27 @@
             "The repaired plugin passes all 407 cases, including declaration comments and exact header fixes for all three class forms (/tmp/gspot-header-default-parser-tests.log).",
             "The installed package consumer passes with ordinary JavaScript classes through ESM and CommonJS exports and both presets (/tmp/gspot-header-package-tests.log).",
             "Root and plugin TypeScript targets pass (/tmp/gspot-header-root-types.log and /tmp/gspot-header-plugin-types.log)."
+        ]
+    },
+    {
+        "id": "additional/javascript-parameter-names",
+        "source": "tests/cli/checks/general/naming/extract.test.ts",
+        "line": 76,
+        "section": "JavaScript naming extraction",
+        "finding": "The document-order regression exposed missing JavaScript function parameters. The extractor selected only TypeScript required/optional parameter nodes, omitting ordinary JavaScript identifiers and destructuring under formal parameters.",
+        "owner": "JavaScript naming extraction",
+        "location": [
+            "packages/cli/src/parsers/naming/typescript.ts",
+            "tests/cli/checks/general/naming/extract.test.ts",
+            "tests/config/cli/checks/general/naming/extract.ts"
+        ],
+        "status": "closed",
+        "outcome": "Read direct formal parameter children and distinguish TypeScript wrappers from JavaScript binding patterns. Ordinary, object/array destructured, rest and single-arrow parameters become declarations while property keys remain excluded. Existing TypeScript parameter-property coverage remains passing.",
+        "verification": [
+            "Baseline 71926799 inspected: addParameters reads only TYPESCRIPT_PARAMETER_NODES. The new JavaScript order regression demonstrated the omitted inputValue before the fix.",
+            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
+            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
+            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
         ]
     }
 ]

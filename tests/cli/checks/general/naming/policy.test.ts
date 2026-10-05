@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { SCOPE_POLICY } from '#tests/config/cli/checks/naming.ts';
+import { SCOPE_POLICY, TEST_PATH_FILES, TEST_PATH_POLICY } from '#tests/config/cli/checks/naming.ts';
 
 const MISMATCHED_POLICY = SCOPE_POLICY.replace('name = "remote_record"', 'name = "remoteRecord"');
 
@@ -192,5 +192,19 @@ test('ordinary service and generation names pass the naming checks in code and p
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['naming/identifiers', 'passed'],
         ['naming/paths', 'passed'],
+    ]);
+});
+
+test('naming test exemptions follow authored, inherited and Swift test conventions without reaching sibling production files', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': TEST_PATH_POLICY, ...TEST_PATH_FILES });
+    const result = await runGspot(sandbox.path, ['check', '--only', 'naming/identifiers', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    const report = JSON.parse(result.stdout) as RunReport;
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
+        { file: 'Sources/Service.swift', rule: 'banned-term' },
+        { file: 'src/entry.js', rule: 'banned-term' },
+        { file: 'apps/web/src/entry.js', rule: 'banned-term' },
+        { file: 'apps/api/verification/entry.js', rule: 'banned-term' },
     ]);
 });

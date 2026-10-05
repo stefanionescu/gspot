@@ -273,3 +273,13 @@ export function harnessFolders(policy: Policy, scope: string): string[] {
     const roles = nested?.['test_support'] === undefined ? policy.architecture.roles : nested;
     return rolePaths(roles, 'test_support').map((folder) => folder.replace(/\/(?:\*\*)?$/u, ''));
 }
+
+/**
+ * The test-support folders relative to the repository root.
+ * @param policy the authored role settings
+ * @param scope the scope owning the folders
+ * @returns the scope-prefixed harness folders
+ */
+export function repositoryHarnessFolders(policy: Policy, scope: string): string[] {
+    return harnessFolders(policy, scope).map((folder) => [scope, folder].filter(Boolean).join('/'));
+}

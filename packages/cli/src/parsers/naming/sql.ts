@@ -72,7 +72,7 @@ export async function sqlIdentifiers(file: string, source: string, reads?: ReadC
     const parsed = await parseSqlFile(source, reads);
     if (parsed.error !== undefined)
         throw new Error(
-            `SQL parse failed at ${String(parsed.error.line)}:${String(parsed.error.column)}: ${parsed.error.text}`,
+            `${file}:${String(parsed.error.line)}:${String(parsed.error.column)}: SQL parse failed: ${parsed.error.text}`,
         );
     return parsed.statements.flatMap((statement) => identifiers(file, source, statement, parsed));
 }

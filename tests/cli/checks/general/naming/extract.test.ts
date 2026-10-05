@@ -6,6 +6,7 @@ import {
     SWIFT_NAMES,
     PYTHON_NAMES,
     TYPESCRIPT_NAMES,
+    SOURCE_ORDER_CASES,
     SWIFT_EXTRACTOR_SOURCE,
     PYTHON_EXTRACTOR_SOURCE,
     TYPESCRIPT_EXTRACTOR_SOURCE,
@@ -70,4 +71,29 @@ describe('identifiersOf', () => {
             ),
         ).toStrictEqual(SWIFT_NAMES);
     });
+});
+
+test.each(SOURCE_ORDER_CASES)(
+    '$language declarations arrive in document order, including names on the same line',
+    async ({ file, source, language, expected }) => {
+        const found = await identifiersOf(file, source, language);
+        expect(found.map(({ name }) => name)).toStrictEqual(expected);
+        expect(found.every((identifier) => identifier.file === file && identifier.language === language)).toBe(true);
+    },
+);
+
+test('JavaScript destructured and arrow parameters remain declarations and exclude object keys', async () => {
+    const found = await identifiersOf(
+        'source.js',
+        'function loadValue({ account: localAccount }, [firstValue], ...remainingValues) {}\nconst readValue = inputValue => inputValue;\n',
+        'javascript',
+    );
+    expect(found.map(({ name, category }) => ({ name, category }))).toStrictEqual([
+        { name: 'loadValue', category: 'functions' },
+        { name: 'localAccount', category: 'parameters' },
+        { name: 'firstValue', category: 'parameters' },
+        { name: 'remainingValues', category: 'parameters' },
+        { name: 'readValue', category: 'variables' },
+        { name: 'inputValue', category: 'parameters' },
+    ]);
 });
