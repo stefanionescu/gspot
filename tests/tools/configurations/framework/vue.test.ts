@@ -77,7 +77,7 @@ test(
             files: {
                 'src/build.js': 'export const build = (value) => value + 1;',
                 'src/Greeting.vue':
-                    '<script setup>\ndefineProps({ name: { type: String, required: true } });\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n',
+                    '<script setup>\ndefineProps({ name: { type: String, required: true } });\ndefineEmits(["submitted"]);\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n',
                 'src/Product.svelte': '<script>\n    let { source } = $props();\n</script>\n\n<img src={source} />\n',
             },
         });
@@ -96,6 +96,8 @@ test(
             containing({ rule: 'gspot/no-trivial-functions', file: 'src/SharedPolicy.vue', line: 2 }),
         );
         expect(lint.map(({ rule }) => rule)).not.toContain('@typescript-eslint/no-explicit-any');
+        expect(lint.map(({ rule }) => rule)).not.toContain('vue/define-props-declaration');
+        expect(lint.map(({ rule }) => rule)).not.toContain('vue/define-emits-declaration');
         const result = await spawnGspot(
             sandbox.path,
             ['check', '--json', '--only', 'vue/tsc', 'svelte/check'],

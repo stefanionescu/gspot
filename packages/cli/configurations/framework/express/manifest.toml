@@ -1,7 +1,7 @@
 [configuration]
 title = "Express"
 requires = ["javascript", "openapi"]
-recommends = ["security", "vitest"]
+recommends = ["security"]
 description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
 
 [detect]

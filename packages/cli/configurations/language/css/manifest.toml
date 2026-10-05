@@ -1,7 +1,6 @@
 [configuration]
 title = "CSS"
 requires = ["format"]
-recommends = ["spelling"]
 description = "Stylesheets and the style blocks of Vue and Svelte components: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
 
 [detect]

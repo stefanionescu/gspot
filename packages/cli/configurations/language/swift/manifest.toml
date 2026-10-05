@@ -1,7 +1,7 @@
 [configuration]
 title = "Swift"
 requires = ["format", "structure"]
-recommends = ["naming", "spelling"]
+recommends = ["naming"]
 description = "Swift sources: SwiftLint with the opt-in and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
 
 [detect]

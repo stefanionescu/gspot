@@ -4,7 +4,7 @@ requires = ["javascript"]
 description = "TanStack Query: the query rules of ESLint for dependency lists, stable clients, and query options in order."
 
 [detect]
-dependencies = ["@tanstack/react-query", "@tanstack/query-core"]
+dependencies = ["@tanstack/react-query", "@tanstack/query-core", "@tanstack/vue-query", "@tanstack/svelte-query", "@tanstack/solid-query", "@tanstack/angular-query-experimental"]
 
 [[tool]]
 name = "@tanstack/eslint-plugin-query"

@@ -1,7 +1,6 @@
 [configuration]
 title = "GitHub Actions"
 requires = ["files"]
-recommends = ["spelling"]
 description = "GitHub Actions workflows: actionlint for syntax and expressions, pinact for the commits actions are pinned to, and zizmor for security audits."
 
 [detect]

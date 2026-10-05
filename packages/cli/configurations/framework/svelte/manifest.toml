@@ -1,8 +1,8 @@
 [configuration]
 title = "Svelte"
 requires = ["javascript"]
-recommends = ["typescript", "css", "vitest"]
-description = "Svelte components: ESLint reads the markup and the script together with every recommended rule of the Svelte plugin as an error, and the Testing Library rules read test files."
+recommends = ["typescript", "css"]
+description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels. Testing Library rules check test files."
 
 [detect]
 dependencies = ["svelte"]

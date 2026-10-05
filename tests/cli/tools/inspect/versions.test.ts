@@ -188,3 +188,30 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );
+
+test('the shipped Next.js pin inspects its type-generation floor and accepts a supported release', async () => {
+    await using sandbox = await testdir();
+    const executable = join(sandbox.path, 'next');
+    await createFileTree(sandbox.path, {
+        next: `#!${process.execPath}\nconst version = await Bun.file('next-version.txt').text(); console.log('Next.js v' + version);\n`,
+        'next-version.txt': '15.4.0',
+    });
+    chmodSync(executable, EXECUTABLE_FILE);
+    const which = spyOn(executables, 'sync').mockReturnValue(executable);
+    try {
+        const tool = toolPin(configurationManifests().values(), 'next');
+        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+            state: 'outdated',
+            found: '15.4.0',
+            floor: '15.5.0',
+        });
+        await Bun.write(join(sandbox.path, 'next-version.txt'), '15.5.0');
+        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+            state: 'host',
+            found: '15.5.0',
+            floor: '15.5.0',
+        });
+    } finally {
+        which.mockRestore();
+    }
+});

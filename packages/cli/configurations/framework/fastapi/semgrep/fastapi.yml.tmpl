@@ -43,7 +43,7 @@ const document = {
                     ],
                 },
                 {
-                    'pattern-inside': 'except $TYPE as $ERROR:\n    ...\n',
+                    'pattern-inside': 'try:\n    ...\nexcept $TYPE as $ERROR:\n    ...\n',
                 },
             ],
             message: 'The text of an internal exception goes to the client. Log it, and return a stable message.\n',
@@ -51,27 +51,6 @@ const document = {
             severity: 'ERROR',
             metadata: {
                 cwe: ['CWE-209'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'fastapi-sql-built-from-input',
-            'pattern-either': [
-                {
-                    pattern: '$DB.execute(f"...{$VALUE}...", ...)',
-                },
-                {
-                    pattern: '$DB.execute("..." % $VALUE, ...)',
-                },
-                {
-                    pattern: '$DB.execute("...".format(...), ...)',
-                },
-            ],
-            message: 'A query is built from a value with string formatting. Pass the value as a bound parameter.\n',
-            languages: ['python'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-89'],
                 category: 'security',
             },
         },

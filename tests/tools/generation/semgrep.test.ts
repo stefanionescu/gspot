@@ -1,19 +1,25 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
 
 import {
     APP_SEMGREP,
     SWIFT_DEFECTS,
+    FASTAPI_SOURCE,
     FRAMEWORK_FILES,
     FRAMEWORK_FINDINGS,
     EXPRESS_SOURCE_CASES,
+    SEMGREP_PROJECT_FILES,
     EXPRESS_SOURCE_FINDINGS,
 } from '#tests/config/tools/generation/semgrep.ts';
 
@@ -143,5 +149,80 @@ test.skipIf(!hasToolBuild('semgrep'))(
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    },
+);
+
+test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
+    'every shipped Semgrep file validates with the native parser at level %s',
+    async (level) => {
+        const manifests = [...configurationManifests().values()].filter((manifest) =>
+            manifest.configs.some((config) => config.target.includes('/semgrep/')),
+        );
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...SEMGREP_PROJECT_FILES,
+            'gspot.toml': buildPolicy(['security', ...manifests.map((manifest) => manifest.configuration.name)], {
+                level,
+            }),
+        });
+        const generated = emitAll(await openSession(sandbox.path)).files.filter((file) =>
+            file.path.includes('/semgrep/'),
+        );
+        expect(new Set(generated.map((file) => file.path))).toStrictEqual(
+            new Set(
+                manifests.flatMap((manifest) =>
+                    manifest.configs
+                        .filter((config) => config.target.includes('/semgrep/'))
+                        .map((config) => config.target),
+                ),
+            ),
+        );
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        expect(
+            await Promise.all(generated.map((file) => Bun.file(join(sandbox.path, file.path)).text())),
+        ).toStrictEqual(generated.map((file) => file.content));
+        const environment = await installGeneratedPythonTools(sandbox.path);
+        const validated = await runTestCommand(
+            ['semgrep', 'scan', '--validate', '--config', '.gspot/config/semgrep', '--metrics=off'],
+            { cwd: sandbox.path, env: environment, timeoutMs: 60_000 },
+        );
+        expect(validated.code, validated.stdout + validated.stderr).toBe(0);
+    },
+);
+
+test.skipIf(!hasToolBuild('semgrep'))(
+    'the FastAPI pack reports exception responses and accepts a stable replacement',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['fastapi', 'security']),
+            'pyproject.toml': SEMGREP_PROJECT_FILES['pyproject.toml'],
+            'service.py': FASTAPI_SOURCE,
+            'neighbor.py':
+                'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
+        });
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const environment = await installGeneratedPythonTools(sandbox.path);
+        const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+        const command = ['check', '--only', 'security/semgrep', '--json'];
+        const failed = await spawnGspot(sandbox.path, command, environment);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(
+            (JSON.parse(failed.stdout) as RunReport).checks
+                .flatMap((check) => check.findings)
+                .map(({ file, line, rule }) => ({ file, line, rule })),
+        ).toStrictEqual([{ file: 'service.py', line: 7, rule: 'fastapi-exception-text-in-response' }]);
+        await Bun.write(
+            join(sandbox.path, 'service.py'),
+            FASTAPI_SOURCE.replace('detail=str(error)', 'detail="Unable to load user"'),
+        );
+        const corrected = await spawnGspot(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+        expect(await Bun.file(join(sandbox.path, 'neighbor.py')).text()).toBe(
+            'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
+        );
     },
 );

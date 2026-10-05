@@ -4,7 +4,7 @@ entry = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "scripts
 [configuration]
 title = "JavaScript"
 requires = ["structure"]
-recommends = ["naming", "format", "spelling"]
+recommends = ["naming", "format"]
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
 
 [detect]

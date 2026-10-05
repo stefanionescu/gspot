@@ -41,3 +41,25 @@ export const FRAMEWORK_FINDINGS = [
     { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'express-res-send-raw-input' },
     { scope: 'sibling', file: 'sibling/ignored.js', line: 1, rule: 'node-no-eval' },
 ];
+
+/** An exception response whose correction keeps its cause private. */
+export const FASTAPI_SOURCE = `from fastapi import HTTPException
+
+def lookup():
+    try:
+        return load_user()
+    except ValueError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+`;
+
+/** Project evidence that keeps every selected security configuration after apply. */
+export const SEMGREP_PROJECT_FILES = {
+    'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"express":"5.2.1"}}\n',
+    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
+    'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
+    'src/index.ts': 'export const answer = 42;\n',
+    'script.sh': '#!/usr/bin/env bash\nprintf "%s\\n" "Ready"\n',
+    'Value.swift': 'let answer = 42\n',
+    'wrangler.toml': 'name = "example"\ncompatibility_date = "2026-01-01"\n',
+    'supabase/config.toml': 'project_id = "example"\n',
+};

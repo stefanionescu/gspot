@@ -1,7 +1,7 @@
 [configuration]
 title = "SQL"
 requires = ["format", "structure"]
-recommends = ["naming", "spelling"]
+recommends = ["naming"]
 description = "SQL files: sqlfluff for layout and style, a parse by the Postgres parser, names checked by category, and line comments only."
 
 [detect]

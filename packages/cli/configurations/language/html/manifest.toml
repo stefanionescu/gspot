@@ -1,7 +1,6 @@
 [configuration]
 title = "HTML"
 requires = ["format"]
-recommends = ["spelling"]
 description = "HTML files: html-validate for structure and accessibility, no inline script or handler, and templates that hold placeholders in place of copy."
 
 [detect]

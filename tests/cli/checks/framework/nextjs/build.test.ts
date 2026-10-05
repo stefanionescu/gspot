@@ -1,5 +1,5 @@
 import executables from 'which';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
@@ -31,7 +31,13 @@ function mockNextjsCommands(check: string): NextjsCommands {
     const runBlocking = processes.runBlocking;
     const inspection = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
         if (command[0] === 'git') return runBlocking(command, options);
-        return { code: 0, missing: false, duration: 1, stdout: 'Version 5.9.3', stderr: '' };
+        return {
+            code: 0,
+            missing: false,
+            duration: 1,
+            stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 5.9.3',
+            stderr: '',
+        };
     });
     const run = spyOn(processes, 'run').mockImplementation((command, options) => {
         const cwd = options.cwd;
@@ -110,12 +116,18 @@ test('failed type generation cleans the isolated copy without restoring over sou
         'gspot.toml': buildPolicy(['nextjs']),
         'package.json': '{"private":true}\n',
         'tsconfig.json': '{}\n',
+        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
     });
     const session = await openSession(directory.path);
     const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/tsc')!;
     const input: EngineInput = buildEngineInput(session, spec.name);
     let scratch = '';
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const runBlocking = processes.runBlocking;
+    const inspection = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+        if (basename(command[0] ?? '') !== 'next') return runBlocking(command, options);
+        return { code: 0, missing: false, duration: 1, stdout: 'Next.js v16.3.5', stderr: '' };
+    });
     const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
         scratch = options.cwd;
         writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');
@@ -135,6 +147,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
         expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
         expect(existsSync(join(directory.path, 'next-env.d.ts'))).toBe(false);
     } finally {
+        inspection.mockRestore();
         locate.mockRestore();
         run.mockRestore();
     }
@@ -158,6 +171,7 @@ async function prepareNextjsBuild(root: string, scope: string, check: string): P
         [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',
         [join(scope, '.next/types/routes.d.ts')]: '// Retained route types\n',
         [join(scope, 'src/page.ts')]: 'bad input\n',
+        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
         'unrelated/private.txt': 'Preserve unrelated scope\n',
     });
     commitAll(root);

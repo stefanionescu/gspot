@@ -1,7 +1,7 @@
 [configuration]
 title = "NestJS"
 requires = ["typescript"]
-recommends = ["vitest", "security", "dependencies"]
+recommends = ["security"]
 description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, controllers that reach data through a service, and no circular modules."
 
 [detect]

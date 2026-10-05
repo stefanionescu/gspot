@@ -2,7 +2,6 @@
 title = "Configuration Files"
 always_selected = true
 requires = ["format"]
-recommends = ["spelling"]
 description = "Checks JSON, YAML, TOML, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
 
 [files]

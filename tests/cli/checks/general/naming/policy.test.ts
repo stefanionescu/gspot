@@ -208,3 +208,26 @@ test('naming test exemptions follow authored, inherited and Swift test conventio
         { file: 'apps/api/verification/entry.js', rule: 'banned-term' },
     ]);
 });
+
+test('Next.js Pages Router names preserve an adjacent path finding and accept its correction', async () => {
+    await using sandbox = await testdir();
+    const source = 'export default function Page() { return null; }\n';
+    const pages = ['_app', '_document', '_error', '404', '500'].map((name) => `pages/${name}.tsx`);
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['nextjs', 'naming'], { level: 'all' }),
+        ...Object.fromEntries(pages.map((path) => [path, source])),
+        'pages/about_page.ts': 'export const title = "About";\n',
+    });
+    const command = ['check', '--only', 'naming/paths', '--json'];
+    const failed = await runGspot(sandbox.path, command);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
+        { file: 'pages/about_page.ts', rule: 'case' },
+    ]);
+    renameSync(join(sandbox.path, 'pages/about_page.ts'), join(sandbox.path, 'pages/about-page.ts'));
+    const corrected = await runGspot(sandbox.path, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(await Promise.all(pages.map((path) => Bun.file(join(sandbox.path, path)).text()))).toStrictEqual(
+        pages.map(() => source),
+    );
+});

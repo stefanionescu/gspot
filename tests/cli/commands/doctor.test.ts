@@ -140,3 +140,26 @@ test.each([
     expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(code === 0 ? 'ok' : 'outdated');
     expect(result.exitCode).toBe(code);
 });
+
+test('doctor detects installed test frameworks instead of recommending a different runner', async () => {
+    await using sandbox = await testdir();
+    const policy = buildPolicy(['nestjs']);
+    const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policy,
+        'package.json': JSON.stringify({ name: 'service', private: true, dependencies }),
+        'src/server.ts': 'export const port = 3000;\n',
+    });
+    const currentResult = await doctorCommand(sandbox.path);
+    const current = currentResult.json as DoctorReport;
+    expect(current.suggestions.recommended.map((row) => row.configuration)).not.toContain('vitest');
+    expect(current.suggestions.detected.map((row) => row.configuration)).toContain('jest');
+    await Bun.write(
+        join(sandbox.path, 'package.json'),
+        JSON.stringify({ name: 'service', private: true, dependencies: { ...dependencies, vitest: '4.1.11' } }),
+    );
+    const changedResult = await doctorCommand(sandbox.path);
+    const changed = changedResult.json as DoctorReport;
+    expect(changed.suggestions.detected.map((row) => row.configuration)).toContain('vitest');
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+});

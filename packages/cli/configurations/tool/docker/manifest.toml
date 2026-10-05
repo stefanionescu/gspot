@@ -1,7 +1,6 @@
 [configuration]
 title = "Docker"
 requires = ["files"]
-recommends = ["spelling"]
 description = "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
 
 [detect]

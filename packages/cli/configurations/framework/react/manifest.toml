@@ -1,7 +1,7 @@
 [configuration]
 title = "React"
 requires = ["javascript"]
-recommends = ["typescript", "css", "vitest", "react-dom"]
+recommends = ["typescript", "css", "react-dom"]
 description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload, and the Testing Library rules over test files."
 
 [detect]

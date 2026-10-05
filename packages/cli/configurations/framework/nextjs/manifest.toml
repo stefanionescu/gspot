@@ -1,8 +1,8 @@
 [configuration]
 title = "Next.js"
 requires = ["typescript", "react"]
-recommends = ["css", "files", "i18n"]
-description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse."
+recommends = ["css", "i18n"]
+description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, and the configuration turns no build check off."
 
 [detect]
 dependencies = ["next"]
@@ -14,6 +14,8 @@ kinds = ["source"]
 [[tool]]
 name = "next"
 system = true
+min_version = "15.5.0"
+version_command = ["--version"]
 
 [[tool]]
 name = "@next/eslint-plugin-next"
@@ -105,7 +107,7 @@ summary = "The flags next build runs with, such as --webpack for an app that doe
 [[naming.paths]]
 paths = ["**/app/**", "**/pages/**"]
 categories = ["files"]
-names = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon"]
+names = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 skip = true
 reason = "Next.js names these files."
 

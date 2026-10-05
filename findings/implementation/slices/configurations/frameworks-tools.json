@@ -18,10 +18,16 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/svelte/manifest.toml:5`, `framework/vue/manifest.toml:5` | Svelte says \"every recommended rule of the Svelte plugin as an error\". At level recommended, the table turns off three of those rules: `no-at-html-tags`, `no-dom-manipulating`, and `require-event-dispatcher-types`. Vue says \"the recommended Vue … rules as errors\". The table turns off 15 rules of `flat/recommended`, including `no-v-html`, `multi-word-component-names`, and `require-default-prop`. | After the previous row, rewrite both descriptions to say which preset rules wait for level `all`. |",
         "owner": "`framework/svelte/manifest.toml:5`, `framework/vue/manifest.toml:5`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/framework/svelte/manifest.toml",
+            "packages/cli/configurations/framework/vue/manifest.toml"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Descriptions distinguish recommended behavior from rules delayed until all; checked against each shipped preset and the authoritative JavaScript all-rule list.",
+            "Affected generation tests and the native Vue configuration suite pass; the generated documentation builds with valid local links."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/003",
@@ -54,10 +60,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/express/semgrep/express.yml.tmpl:2-18` `express-raw-query-interpolation` | `$DB(...)` matches any call. In a sample scan, `logger.info(\\`user ${req.body.name}\\`)` is reported as \"SQL injection risk\". | Limit the callee to database calls such as `$X.query`, `$X.execute`, `$X.raw`, and `$X.$queryRawUnsafe`. Or delete the rule and rely on Semgrep's registry rules for Express. |",
         "owner": "`framework/express/semgrep/express.yml.tmpl:2-18` `express-raw-query-interpolation`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/express/semgrep/express.yml.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The rule restricts database method names to query, execute, raw, and $queryRawUnsafe.",
+            "The native Express security case reports interpolated query/execute calls, preserves logger and parameterized-query positive cases, then passes after correction: /tmp/gspot-framework-native.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/006",
@@ -66,10 +75,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/express/semgrep/express.yml.tmpl:38-51` `express-res-send-raw-input` | The rule reports `res.send(req.query)`, which Express sends as JSON. It misses `res.send(req.query.name)`, which is the reflected XSS. A sample scan confirmed both. | Match `res.send(req.$SRC.$FIELD)` and template strings that contain it. Drop the whole-object patterns. |",
         "owner": "`framework/express/semgrep/express.yml.tmpl:38-51` `express-res-send-raw-input`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/express/semgrep/express.yml.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Raw response matching targets request fields and interpolated response strings rather than whole request objects.",
+            "The native Express case reports reflected fields and templates, accepts whole-object JSON and res.json, then passes after correction: /tmp/gspot-framework-native.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/007",
@@ -105,10 +117,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/fastapi/semgrep/fastapi.yml.tmpl:24-38` `fastapi-exception-text-in-response` | `semgrep --validate` fails with \"Invalid pattern for Python: `except $TYPE as $ERROR: ...`\". `security/semgrep` runs `semgrep scan --strict --config .gspot/config/<scope>/semgrep` (`general/security/manifest.toml:65`). This one rule therefore fails the whole Semgrep check in every scope that selects fastapi and security. | Use `pattern-inside: \\| try: ... except $TYPE as $ERROR: ...`. Add a test that runs `semgrep --validate` over every shipped Semgrep file. |",
         "owner": "`framework/fastapi/semgrep/fastapi.yml.tmpl:24-38` `fastapi-exception-text-in-response`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/fastapi/semgrep/fastapi.yml.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The exception pattern includes a complete try/except statement. Every generated Semgrep pack survives public apply and passes native validation at both levels.",
+            "The native FastAPI case reports service.py line 7, accepts the stable response correction, and preserves the neighboring source and applied policy: /tmp/gspot-framework-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/010",
@@ -117,10 +132,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/fastapi/semgrep/fastapi.yml.tmpl:40-51` `fastapi-sql-built-from-input` | The rule repeats Ruff's `S608`, which the Python base list turns on for every Python project (`language/python/ruff.toml.tmpl:1`). Nothing in it is specific to FastAPI. | Delete. |",
         "owner": "`framework/fastapi/semgrep/fastapi.yml.tmpl:40-51` `fastapi-sql-built-from-input`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/fastapi/semgrep/fastapi.yml.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the FastAPI SQL interpolation rule; the generic Python Ruff S608 rule remains the existing owner.",
+            "Every shipped Semgrep file validates at both levels and the remaining FastAPI exception rule reports and accepts correction: /tmp/gspot-framework-native-repaired.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/011",
@@ -129,10 +147,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/fastapi/manifest.toml:5` | The description credits this kit with \"the FastAPI and async rules of Ruff\". The kit adds no Ruff rule. `FAST001`–`003` and every `ASYNC` rule sit in the Python base list for all projects. | Once `FAST` moves here (FINDINGS row 63), describe that. Drop \"async\", or move the `ASYNC` rules here as well. |",
         "owner": "`framework/fastapi/manifest.toml:5`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/fastapi/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The description names actual Ruff route checks, optional security rules, and the OpenAPI requirement. It no longer promises async handling, schemas, or general request validation.",
+            "Generation shared-settings tests prove FAST selection requires FastAPI while generic Python ASYNC selection retains its owner; affected CLI generation and documentation build pass."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/012",
@@ -141,10 +162,24 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/nestjs/manifest.toml:4`, `framework/express/manifest.toml:4`, `framework/react/manifest.toml:4`, `framework/svelte/manifest.toml:4`, `framework/vue/manifest.toml:4`, plus `files` in `nextjs:4`, `cloudflare:4`, `supabase:4`, `dependencies` in `nestjs:4`, `spelling` in `actions:4`, `docker:4` | `gspot doctor` lists every recommended kit that is not selected as \"gspot add <kit>\", with no detection (`src/commands/doctor/changes.ts:21-32`). A Nest app on Jest, which the Nest CLI sets up by default, is told to add vitest. `files`, `dependencies`, and `spelling` are `auto` kits, so recommending them does nothing. | Remove test runners from `recommends`; the test kits detect themselves. Remove the `auto` kits from `recommends`. |",
         "owner": "`framework/nestjs/manifest.toml:4`, `framework/express/manifest.toml:4`, `framework/react/manifest.toml:4`, `framework/svelte/manifest.toml:4`, `framework/vue/manifest.toml:4`, plus `files` in `nextjs:4`, `cloudflare:4`, `supabase:4`, `dependencies` in `nestjs:4`, `spelling` in `actions:4`, `docker:4`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/framework/nestjs/manifest.toml",
+            "packages/cli/configurations/framework/express/manifest.toml",
+            "packages/cli/configurations/framework/react/manifest.toml",
+            "packages/cli/configurations/framework/svelte/manifest.toml",
+            "packages/cli/configurations/framework/vue/manifest.toml",
+            "packages/cli/configurations/framework/nextjs/manifest.toml",
+            "packages/cli/configurations/platform/cloudflare/manifest.toml",
+            "packages/cli/configurations/platform/supabase/manifest.toml",
+            "packages/cli/configurations/tool/actions/manifest.toml",
+            "packages/cli/configurations/tool/docker/manifest.toml"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed framework recommendations for Jest, Vitest, and pytest and recommendations for configurations already always selected. Actual dependencies and test configuration files retain detection ownership.",
+            "Doctor detects the installed Jest runner without recommending Vitest, then detects Vitest when its dependency is added while preserving policy bytes. Initialization and configuration detection cases pass: /tmp/gspot-framework-cli.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/013",
@@ -153,10 +188,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/nextjs/manifest.toml:14-16,30-40` | `nextjs/tsc` first runs `next typegen` (`src/checks/framework/nextjs/build.ts:24`), which Next.js added in 15.5. The `next` tool has no `floor`. On an older Next.js the check fails with \"The next typegen command failed\" instead of a version message. | Set `floor = \"15.5.0\"` on the `next` tool, or skip `typegen` below 15.5. |",
         "owner": "`framework/nextjs/manifest.toml:14-16,30-40`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/nextjs/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The Next.js host tool declares min_version 15.5.0 and an explicit --version command so host inspection enforces the type-generation floor.",
+            "The real executable protocol regression rejects 15.4.0 and accepts 15.5.0. Disposable build regressions retain their original 57 assertions; native Next.js checks pass: /tmp/gspot-framework-cli.log, /tmp/gspot-framework-next-resolved.log, /tmp/gspot-framework-native.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/014",
@@ -177,10 +215,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/nextjs/manifest.toml:5` | \"Message files parse\" describes the i18n kit's `locales` check. The Next.js kit has no such check. | Delete the clause. |",
         "owner": "`framework/nextjs/manifest.toml:5`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/nextjs/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the message-file parsing promise from the Next.js description; locale checking remains owned by i18n.",
+            "Affected Next.js and generation tests pass, including dependency and explicit-choice locale selection. Generated reference pages and local links pass: /tmp/gspot-framework-cli.log, /tmp/gspot-framework-docs.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/016",
@@ -189,10 +230,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/nextjs/manifest.toml:102-107` | The naming exemptions list only App Router file names. The Pages Router files `_app`, `_document`, `_error`, `404`, and `500` fail the kebab-case file rule. `paths.ts:28` treats a leading `_` as a wrapper only for folders. | Add those five names to `names`. |",
         "owner": "`framework/nextjs/manifest.toml:102-107`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/nextjs/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Next.js naming exemptions include _app, _document, _error, 404, and 500.",
+            "A public naming check preserves the five framework entry files, reports the adjacent about_page.ts path, and passes after its rename: /tmp/gspot-framework-cli.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/017",
@@ -232,10 +276,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `framework/vue/eslint.fragment.js.tmpl:15-16` | `vue/define-props-declaration` and `vue/define-emits-declaration` default to type-based declarations, which need TypeScript. A JavaScript Vue project at level `all` gets findings it cannot fix. | Set both rules only when `typed`. |",
         "owner": "`framework/vue/eslint.fragment.js.tmpl:15-16`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/framework/vue/eslint.fragment.js.tmpl"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Type-based define-props-declaration and define-emits-declaration rules are emitted only for typed Vue components.",
+            "The native JavaScript Vue case at all accepts runtime props/emits declarations while retaining neighboring shared-rule findings and Svelte warnings. TypeScript Vue error/correction cases also pass: /tmp/gspot-framework-native.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/020",
@@ -304,10 +351,13 @@
         "section": "Kits: Frameworks, Libraries, Platforms, Tools, and Postgres",
         "finding": "| `library/tanstack-query/manifest.toml:6-7` | Detection names only `@tanstack/react-query` and `@tanstack/query-core`. Projects on the Vue, Svelte, Solid, or Angular adapters are never detected. | Add `@tanstack/vue-query`, `@tanstack/svelte-query`, `@tanstack/solid-query`, and `@tanstack/angular-query-experimental`. |",
         "owner": "`library/tanstack-query/manifest.toml:6-7`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/library/tanstack-query/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Detection includes Vue, Svelte, Solid, and experimental Angular adapters as well as React and query-core.",
+            "Four actual project-dependency cases propose gspot add tanstack-query and drop that evidence after the adapter dependency is removed: /tmp/gspot-framework-cli.log."
+        ]
     },
     {
         "id": "slices/kits-frameworks-tools/026",

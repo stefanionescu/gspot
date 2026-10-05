@@ -1,8 +1,8 @@
 [configuration]
 title = "Vue"
 requires = ["javascript"]
-recommends = ["typescript", "css", "vitest"]
-description = "Vue single-file components: ESLint reads the template and the script together, with the recommended Vue and accessibility rules as errors, and the Testing Library rules read test files."
+recommends = ["typescript", "css"]
+description = "ESLint checks Vue templates, scripts, and accessibility. Attribute spelling, component names, declarations, ordering, and default props wait for level all. HTML injection checks run at both levels, and Testing Library rules follow the selected level."
 
 [detect]
 dependencies = ["vue"]
