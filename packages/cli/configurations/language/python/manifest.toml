@@ -6,7 +6,6 @@ description = "Python sources: Ruff for lint and layout, basedpyright for types,
 
 [detect]
 extensions = [".py"]
-filenames = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 project_files = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 shebangs = ["python", "python3"]
 
@@ -85,6 +84,7 @@ version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 [[config]]
 target = ".gspot/config/ruff.toml"
 tool = "ruff"
+stub_file = {path = "ruff.toml", body = 'extend = "{target}"'}
 scoped = true
 rule_keys = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
@@ -106,7 +106,7 @@ exit_codes = [1]
 fix = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
 files = {extensions = [".py", ".pyi"]}
 output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
-summary = "Lints every Python file with the shipped Ruff families, the security family included."
+summary = "Lints every Python file with the Ruff rules for the level, security rules included."
 why = "Ruff holds the rules of a dozen older tools in one pass fast enough to run at every commit."
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason \"<why>\", and add --paths to limit it."
 
@@ -137,7 +137,7 @@ command = ["basedpyright", "--outputjson"]
 exit_codes = [1]
 files = {extensions = [".py", ".pyi"]}
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
-summary = "Type checks the project with stable diagnostics and adds annotation conventions at level `all`."
+summary = "Type checks the project. At level `all`, it also requires annotations."
 why = "A type error found here is a crash that never reaches a user."
 help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
@@ -331,7 +331,7 @@ level = "all"
 stage = "commit"
 runs = "scope"
 files = {extensions = [".py"]}
-summary = "Refuses a module-level attribute hook that makes names appear at run time."
+summary = "Finds a module-level `__getattr__`."
 why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
 help = "Import the names and list them."
 

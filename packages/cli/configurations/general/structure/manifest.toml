@@ -127,7 +127,7 @@ type = "number"
 direction = "ceiling"
 default = 300
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-summary = "The most lines a file may have. Bash counts code lines; the other languages count every line."
+summary = "The most lines a file may have. Python, Bash, and SQL count code lines; Swift skips comment-only lines. JavaScript and TypeScript count every line."
 
 [[setting]]
 name = "limits.function_lines"
@@ -166,7 +166,7 @@ name = "limits.nesting"
 type = "number"
 direction = "ceiling"
 default = 3
-languages = ["typescript", "javascript", "python"]
+languages = ["typescript", "javascript"]
 summary = "How deep blocks may nest inside one function."
 
 [[setting]]
@@ -197,32 +197,8 @@ name = "limits.statements"
 type = "number"
 direction = "ceiling"
 default = 30
-languages = ["typescript", "javascript", "python"]
+languages = ["typescript", "javascript"]
 summary = "The most statements one function may have."
-
-[[setting]]
-name = "limits.locals"
-type = "number"
-direction = "ceiling"
-default = 10
-languages = ["python"]
-summary = "The most local variables one function may declare."
-
-[[setting]]
-name = "limits.boolean_operators"
-type = "number"
-direction = "ceiling"
-default = 4
-languages = ["python"]
-summary = "The most boolean operators in one condition."
-
-[[setting]]
-name = "limits.public_methods"
-type = "number"
-direction = "ceiling"
-default = 12
-languages = ["python"]
-summary = "The most public methods one class may have."
 
 [[setting]]
 name = "limits.callback_nesting"

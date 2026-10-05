@@ -18,10 +18,19 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:85-88` (`[[config]]` ruff, no `pointer`) | Init removes `ruff.toml`, `.ruff.toml`, and `[tool.ruff]` (lines 27-36), and the kit writes no root pointer for Ruff. So the Ruff in a developer's editor uses its defaults: line length 88 instead of gspot's 120, and a different rule set. Format on save and `python/ruff-format` then keep rewriting the same lines. | Write a root `ruff.toml` pointer that holds `extend = \".gspot/config/ruff.toml\"`. The basedpyright pointer already uses `extends` this way. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:85-88` (`[[config]]` ruff, no `pointer`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/manifest.toml",
+            "docs/src/content/docs/guides/existing-repository.md",
+            "tests/tools/generation/ruff.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The Python configuration declares a scoped ruff.toml extend pointer through the existing pointer generator. Root and nested editor discovery consume the same settings as explicit managed configuration commands; contributor-facing takeover guidance explains this behavior.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/003",
@@ -90,10 +99,18 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:40,42,43,46` | `max-bool-expr`, `max-locals`, `max-public-methods`, and `max-nested-blocks` configure PLR0916, PLR0914, PLR0904, and PLR1702. All four are preview rules, and none is selected. So these lines do nothing. The settings `limits.boolean_operators`, `limits.locals`, and `limits.public_methods`, and `limits.nesting` for Python, have no effect. | Delete the four lines and the three Python-only settings. Remove `python` from the `languages` list of `limits.nesting`. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:40,42,43,46`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "packages/cli/configurations/general/structure/manifest.toml"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the four options for inactive Ruff preview rules, the unused locals, boolean_operators and public_methods settings, and Python from the nesting languages. No replacements or compatibility settings were added.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/009",
@@ -102,10 +119,19 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:14,15-18,35` | Several lines do nothing. At `all`, `ignore` adds COM812, D203, and D213, but no list selects them. `fixable = [\"ALL\"]`, `unfixable = []`, and `preview = false` repeat Ruff's defaults. `explicit-preview-rules` matters only when preview is on. The four names in `extend-ignore-names` are already in Ruff's default `ignore-names`. | Delete these lines. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:14,15-18,35`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "tests/cli/generation/level-contract.test.ts",
+            "tests/types/generation/configuration-files.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed unselected ignore codes, repeated native fixability and preview defaults, the inactive explicit-preview option, and native naming exemptions already present in Ruff defaults. Generated configurations select only stable rule codes at both levels.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/010",
@@ -114,10 +140,20 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:1` (`baseline`), `basedpyrightconfig.json.tmpl:18` | The level text that gspot ships says complexity and conventions apply only at `all` (`packages/cli/src/rules/instructions.ts:51`). Even so, the `recommended` list holds C901 (complexity), PLR2004 (magic values), ERA001 (commented-out code), and T201 and T203 (`print`). T201 reports every `print` in a script or command-line tool. `reportImportCycles`, an architecture rule, is an error at `recommended`. | Move C901, PLR2004, ERA001, T201, and T203 to `conventions`. Turn on `reportImportCycles` only at `all`. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:1` (`baseline`), `basedpyrightconfig.json.tmpl:18`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "packages/cli/configurations/language/python/basedpyrightconfig.json.tmpl",
+            "tests/cli/generation/level-contract.test.ts",
+            "tests/tools/generation/ruff.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "C901, PLR2004, ERA001, T201 and T203 are selected only at all. Basedpyright reportImportCycles is none at recommended and error at all. Correctness diagnostics remain active at both levels, as demonstrated by actual F821 findings and accepted corrections.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/011",
@@ -174,10 +210,19 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:252-262`, `packages/cli/kits/general/structure/manifest.toml:130` | At `all`, two checks limit the size of one Python function: `python/function-lines` (60 code lines) and Ruff PLR0915 (30 statements). Separately, the `limits.file_lines` summary says only Bash counts code lines. The Python and SQL checks also skip blank and comment lines. | Keep one function-size limit for Python. Correct the `limits.file_lines` summary. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:252-262`, `packages/cli/kits/general/structure/manifest.toml:130`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "packages/cli/configurations/general/structure/manifest.toml",
+            "tests/tools/generation/ruff.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Python function-lines remains the single size check. Removed PLR0915, its max-statements option and Python from the statements languages. A forty-statement function below sixty lines passes both actual Ruff and the public function-lines check. The file-line summary names Python, Bash and SQL as counting code lines, Swift as skipping comment-only lines, and JavaScript/TypeScript as counting every line.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/016",
@@ -186,10 +231,19 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:9-10`, `packages/cli/kits/language/swift/manifest.toml:9-10` (`[detect] filenames`) | Detection looks at `project_files` first, and that list holds the same patterns (`packages/cli/src/kits/detect.ts:93`). So `filenames` never adds evidence. | Delete `filenames` from both `[detect]` tables. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:9-10`, `packages/cli/kits/language/swift/manifest.toml:9-10` (`[detect] filenames`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/manifest.toml",
+            "packages/cli/configurations/language/swift/manifest.toml",
+            "tests/cli/configurations/detect.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed duplicate detect.filenames declarations from Python and Swift. Both retain their existing project_files evidence, and root and nested Python manifest detection and Swift source evidence retain the selected language without unrelated configuration-file evidence. Dedicated final detection and initialization cases pass: /tmp/gspot-python-defaults-detection-final.log.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/017",
@@ -198,10 +252,15 @@
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:107,138,332` | The wording is wrong or unclear in three places. \"the shipped Ruff families\": the template selects single rule codes, not families. \"with stable diagnostics and adds annotation conventions at all\" reads badly. \"Refuses a module-level attribute hook\" is jargon. | Change them to \"Lints every Python file with the Ruff rules for the level, security rules included\", \"Type checks the project. At level all, it also requires annotations\", and \"Finds a module-level `__getattr__`\". |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:107,138,332`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/configurations/language/python/manifest.toml"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The Python manifest summaries now describe selected Ruff rules, annotations at all, and module-level __getattr__ directly. Authoritative reference generation and its built-site link checks pass.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "slices/kits-other-languages/018",

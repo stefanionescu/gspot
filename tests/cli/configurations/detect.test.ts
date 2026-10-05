@@ -51,12 +51,25 @@ test.each([
     ['cloudflare', 'apps/api/functions/_middleware.ts'],
     ['supabase', 'supabase/config.toml'],
     ['supabase', 'apps/api/supabase/config.toml'],
-])('%s detects the supported project path %s without unrelated file evidence', (configuration, path) => {
-    const manifests = configurationManifests();
-    expect(detectConfigurations([buildTrackedFile(path)], manifests, []).map((row) => row.configuration)).toContain(
-        configuration,
-    );
-    expect(
-        detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
-    ).not.toContain(configuration);
-});
+    ['python', 'pyproject.toml'],
+    ['python', 'apps/api/pyproject.toml'],
+    ['python', 'requirements.txt'],
+    ['python', 'apps/api/requirements-dev.txt'],
+    ['python', 'Pipfile'],
+    ['python', 'apps/api/Pipfile'],
+    ['swift', 'Package.swift', '1 .swift file'],
+    ['swift', 'apps/api/Package.swift', '1 .swift file'],
+])(
+    '%s detects the supported project path %s without unrelated file evidence',
+    (configuration, path, evidence = path) => {
+        const manifests = configurationManifests();
+        expect(
+            detectConfigurations([buildTrackedFile(path)], manifests, []).find(
+                (row) => row.configuration === configuration,
+            ),
+        ).toMatchObject({ configuration, evidence });
+        expect(
+            detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
+        ).not.toContain(configuration);
+    },
+);

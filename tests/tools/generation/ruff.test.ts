@@ -3,12 +3,16 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import type { RuffFinding } from '#tests/types/tools/generation/ruff.ts';
+import { RULE_SOURCE, FORMAT_CASES, FUNCTION_SOURCE } from '#tests/config/tools/generation/ruff.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
@@ -22,7 +26,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     });
     const session = await openSession(sandbox.path);
     const rendered = emitAll(session);
-    const configs = rendered.files.filter(({ path }) => path.endsWith('/ruff.toml'));
+    const configs = rendered.files.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
@@ -56,4 +60,106 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     expect(JSON.parse(rootAssertion.stdout)).toMatchObject([{ code: 'S101' }]);
     const testAssertion = run('.gspot/config/app/ruff.toml', 'app/tests/test_example.py');
     expect(testAssertion.code, testAssertion.stderr).toBe(0);
+});
+
+test.each(['recommended', 'all'] as const)(
+    'Ruff keeps correctness at %s and runs print conventions only at all',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['python'], { level }),
+            'sample.py': RULE_SOURCE,
+        });
+        const session = await openSession(sandbox.path);
+        using log = openOwnership(sandbox.path);
+        writeOutputs(session, log);
+        const result = runTestCommandBlocking(
+            [
+                'ruff',
+                'check',
+                '--config',
+                '.gspot/config/ruff.toml',
+                '--no-cache',
+                '--output-format',
+                'json',
+                'sample.py',
+            ],
+            { cwd: sandbox.path },
+        );
+        expect(result.code, result.stdout + result.stderr).toBe(1);
+        const findings = JSON.parse(result.stdout) as RuffFinding[];
+        expect(
+            findings
+                .filter(({ code }) => ['F821', 'T201'].includes(code))
+                .map(({ code, location }) => [code, location.row]),
+        ).toStrictEqual(
+            level === 'all'
+                ? [
+                      ['F821', 1],
+                      ['T201', 2],
+                  ]
+                : [['F821', 1]],
+        );
+        await Bun.write(join(sandbox.path, 'sample.py'), '"""An arithmetic example."""\n\nanswer = 42\n');
+        const corrected = runTestCommandBlocking(
+            [
+                'ruff',
+                'check',
+                '--config',
+                '.gspot/config/ruff.toml',
+                '--no-cache',
+                '--output-format',
+                'json',
+                'sample.py',
+            ],
+            { cwd: sandbox.path },
+        );
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
+    },
+);
+
+test('Python uses one function-size ceiling without a second statement-count finding', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['python'], { level: 'all' }),
+        'sample.py': FUNCTION_SOURCE,
+    });
+    const session = await openSession(sandbox.path);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log);
+    const checked = runTestCommandBlocking(
+        ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--no-cache', '--output-format', 'json', 'sample.py'],
+        { cwd: sandbox.path },
+    );
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(JSON.parse(checked.stdout)).toStrictEqual([]);
+    const sized = await spawnGspot(sandbox.path, ['check', '--only', 'python/function-lines', '--json']);
+    expect(sized.code, sized.stdout + sized.stderr).toBe(0);
+    expect((JSON.parse(sized.stdout) as RunReport).checks).toMatchObject([
+        { check: 'python/function-lines', status: 'passed', findings: [] },
+    ]);
+});
+
+test('Ruff editor discovery and explicit formatting agree on root and nested policy', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['python'], {
+            tables: '[format]\nquotes = "single"\nline_ending = "crlf"\n[[scope]]\npath = "app"\n[scope.format]\nquotes = "double"\nline_ending = "lf"\n',
+        }),
+        'sample.py': 'VALUE = "example"\n',
+        'app/sample.py': 'VALUE = "example"\n',
+    });
+    const session = await openSession(sandbox.path);
+    using log = openOwnership(sandbox.path);
+    writeOutputs(session, log);
+    for (const { file, config, formatted } of FORMAT_CASES) {
+        const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], {
+            cwd: sandbox.path,
+        });
+        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
+        const editor = runTestCommandBlocking(['ruff', 'format', '--check', '--no-cache', file], {
+            cwd: sandbox.path,
+        });
+        expect(editor.code, editor.stdout + editor.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
+    }
 });

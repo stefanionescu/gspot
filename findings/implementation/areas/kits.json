@@ -718,10 +718,20 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:1`, `packages/cli/kits/tool/pytest/manifest.toml:42` | The base Python list turns on framework families: `AIR` (Airflow), `DJ` (Django), `FAST` (FastAPI), `NPY` (NumPy), and `PT` (pytest). The pytest kit then adds `PT` rules that are already on. | Move `FAST` to fastapi and `PT` to pytest. Drop `AIR`, `DJ`, and `NPY` while no kit owns them. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:1`, `packages/cli/kits/tool/pytest/manifest.toml:42`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "packages/cli/configurations/framework/fastapi/manifest.toml",
+            "packages/cli/configurations/tool/pytest/manifest.toml",
+            "tests/cli/generation/shared-settings.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Python owns only general Ruff rules. FastAPI declares FAST001-003 in its existing set table, pytest retains its authoritative per-level PT declarations, and unowned Airflow, Django, and NumPy rules are deleted. The previous assertions that checked only bare family names now reject every prefixed rule code.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "areas/kits/056",
@@ -742,10 +752,18 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:9-10` | `quote-style = \"double\"` and `line-ending = \"lf\"` ignore `format.quotes` and `format.line_ending`. | Fill both from `[format]`, or say in the `format.quotes` summary that Python always uses double quotes. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:9-10`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/python/ruff.toml.tmpl",
+            "tests/tools/generation/ruff.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Ruff quote style follows format.quotes and line endings follow format.line_ending, translating crlf to the native cr-lf value. Actual formatting and automatic editor discovery agree for distinct root and nested settings.",
+            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
+            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
+            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
+        ]
     },
     {
         "id": "areas/kits/058",

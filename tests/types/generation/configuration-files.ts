@@ -1,7 +1,6 @@
 /** Ruff options whose generation is asserted across levels and scoped policies. */
 export type RuffConfiguration = {
-    lint: { select: string[]; preview: boolean; 'per-file-ignores'?: Record<string, string[]> };
-    format: { preview: boolean };
+    lint: { select: string[]; 'per-file-ignores'?: Record<string, string[]> };
 };
 /** Knip entries associated with the root and detected package workspaces. */
 export type KnipConfiguration = { entry: string[]; workspaces: Record<string, { entry: string[] }> };

@@ -24,6 +24,9 @@ Each configuration knows the configuration files of its tools, such as `.eslintr
 `ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. Init replaces these files: it deletes them and writes its own configuration instead. It does not read settings out of them. Move the
 settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 
+For Python, init writes a root `ruff.toml` that extends the generated Ruff configuration.
+Editor formatting follows the same settings as `gspot check --fix`.
+
 Init refuses uncommitted changes, so Git history keeps every file it replaces. To get one
 back, check it out from the commit before init.
 

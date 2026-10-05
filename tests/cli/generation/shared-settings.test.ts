@@ -86,8 +86,7 @@ test.each([
 
 test('Ruff selects the families the test runner and the framework declare, and ignores test rules only with a runner', async () => {
     const plain = await generatedDocument<RuffConfiguration>(python, RUFF);
-    expect(plain.lint.select).not.toContain('PT');
-    expect(plain.lint.select).not.toContain('FAST');
+    expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(plain.lint['per-file-ignores']).toBeUndefined();
     const tested = await generatedDocument<TestedRuffConfiguration>(buildPolicy(['python', 'pytest']), RUFF);
     expect(tested.lint.select).toStrictEqual(containingAll(pytest['tools.ruff.select'] as string[]));

@@ -37,10 +37,15 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
         },
     );
     const config = parseToml(text) as RuffConfiguration;
-    expect(config.lint.preview).toBe(false);
-    expect(config.format.preview).toBe(false);
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
     expect(config.lint.select.includes('N802')).toBe(level === 'all');
+    for (const code of ['C901', 'PLR2004', 'ERA001', 'T201', 'T203'])
+        expect(config.lint.select.includes(code), code).toBe(level === 'all');
+    expect(config.lint.select).not.toContain('PLR0915');
+    const types = await emitFile(buildPolicy(['python'], { level }), '.gspot/config/basedpyrightconfig.json', {
+        'sample.py': 'value = 1',
+    });
+    expect(JSON.parse(types)).toHaveProperty('reportImportCycles', level === 'all' ? 'error' : 'none');
 });
 
 test('experimental activation is refused before generation', () => {
