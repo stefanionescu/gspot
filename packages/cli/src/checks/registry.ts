@@ -97,8 +97,8 @@ import {
 import {
     syntax as sqlSyntax,
     fileLines as sqlFileLines,
-    functions as sqlFunctions,
     blockComments as sqlBlockComments,
+    trivialFunctions as sqlTrivialFunctions,
 } from '#cli/checks/language/sql.ts';
 import {
     headers as cloudflareHeaders,
@@ -233,7 +233,7 @@ export const CHECKS: CheckRegistry = {
     'postgres/migration-order': { engine: migrationOrder },
     'postgres/migrations-frozen': { engine: migrationsFrozen },
     'postgres/migration-docs': { engine: migrationDocs },
-    'sql/functions': { engine: sqlFunctions },
+    'sql/trivial-functions': { engine: sqlTrivialFunctions },
     'sql/syntax': { engine: sqlSyntax },
     'sql/block-comments': { engine: sqlBlockComments },
     'sql/file-lines': { engine: sqlFileLines },

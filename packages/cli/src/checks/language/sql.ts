@@ -198,11 +198,11 @@ export function fileLines(input: EngineInput): Finding[] {
 }
 
 /**
- * Check implemented PostgreSQL functions and their declared input parameters.
+ * Report trivial PostgreSQL functions and excessive declared input parameters.
  * @param input the engine input
  * @returns the findings
  */
-export async function functions(input: EngineInput): Promise<Finding[]> {
+export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
     const sqlfluff = input.view.options('tools.sqlfluff');
     const dialect = sqlfluff['dialect'] as string;
     if (!PARSED_DIALECTS.has(dialect)) return [];

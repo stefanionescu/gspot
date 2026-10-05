@@ -2,7 +2,7 @@
 title = "SQL"
 requires = ["format", "structure"]
 recommends = ["naming"]
-description = "SQL files: sqlfluff for layout and style, a parse by the Postgres parser, names checked by category, and line comments only."
+description = "SQLFluff checks layout and style in the project dialect. The PostgreSQL parser checks postgres syntax. At all, SQL checks line comments, file length, and PostgreSQL function structure."
 
 [detect]
 extensions = [".sql", ".pgsql", ".psql"]
@@ -68,7 +68,7 @@ title = "Check SQL syntax"
 example = "The statement `SELECT FROM;` lacks a valid select expression and reports a parser error. Replace it with the intended valid query, such as `SELECT 1;`."
 level = "recommended"
 stage = "commit"
-summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
+summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres."
 why = "A migration that does not parse fails at deploy, halfway through a release."
 help = "Correct the statement at the line and column the message names."
 
@@ -79,7 +79,7 @@ example = "The SQL comment `/* Explains the table. */` reports a block-comment f
 level = "all"
 stage = "commit"
 summary = "Refuses block comments in SQL, so every comment is a line comment."
-why = "The prose and spelling checks read line comments, and a block comment hides text and dead code from them."
+why = "Vale reads SQL line comments. Use line comments so Vale can check their prose."
 help = "Rewrite the block as line comments that start with two dashes."
 
 [[check]]
@@ -119,11 +119,11 @@ default = 400
 summary = "The most code lines a SQL file may have."
 
 [[check]]
-name = "functions"
-title = "Check SQL function size and parameters"
+name = "trivial-functions"
+title = "Check trivial SQL functions and parameters"
 example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, record that with `gspot ignore` and a reason."
 level = "all"
 stage = "commit"
-summary = "Reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
+summary = "For the postgres dialect, reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
 why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
-help = "Inline unnecessary functions. for one a required API needs, run `gspot ignore sql/functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."
+help = "Inline unnecessary functions. If a required API needs one, run `gspot ignore sql/trivial-functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."

@@ -1,6 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { validateAgainstSurface } from '#cli/policy/problems/keys.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
@@ -128,6 +129,22 @@ describe('setting defaults and declarations', () => {
         expect(specFor(surface, 'limits.python.file_lines')?.language).toBe('python');
         expect(specFor(surface, 'naming.python.parameters.max_words')?.category).toBe('parameters');
         expect(specFor(surface, 'limits.nope')).toBeUndefined();
+    });
+
+    test('refuses SQL function line and Bash cyclomatic limits without native consumers', () => {
+        const settings = knownSettings(selectConfigurations(['sql', 'bash'], configurationManifests()));
+        expect(specFor(settings, 'limits.sql.function_lines')).toBeUndefined();
+        expect(specFor(settings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
+        expect(specFor(settings, 'limits.sql.function_parameters')?.spec.name).toBe('limits.function_parameters');
+        const problems = policyProblems(
+            buildPolicy(['sql', 'bash'], {
+                tables: '[limits.sql]\nfunction_lines = 60\n[limits.bash]\ncyclomatic_complexity = 8\n',
+            }),
+        );
+        expect(problems).toContainEqual(textContaining('`limits.sql.function_lines` is not a limit any check reads.'));
+        expect(problems).toContainEqual(
+            textContaining('`limits.bash.cyclomatic_complexity` is not a limit any check reads.'),
+        );
     });
 });
 

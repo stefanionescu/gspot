@@ -8,6 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { FOREIGN_DIALECT_CASES } from '#tests/config/cli/checks/language/sql.ts';
 import { SQL_FUNCTION_SOURCE } from '#tests/config/tools/generation/sqlfluff.ts';
 
 test('SQLFluff honors root and nested dialect settings over the database default', async () => {
@@ -64,6 +65,29 @@ test('SQLFluff honors root and nested dialect settings over the database default
     expect(wrongChild.code, `${wrongChild.stdout}${wrongChild.stderr}`).toBe(1);
     expect(wrongChild.stdout).toContain('PRS');
 });
+
+test.each(FOREIGN_DIALECT_CASES)(
+    'SQLFluff parses the $dialect fixture that PostgreSQL rejects',
+    async ({ dialect, source }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['sql'], { tables: `[tools.sqlfluff]\ndialect = "${dialect}"\n` }),
+            'query.sql': source,
+        });
+        const session = await openSession(sandbox.path);
+        const rendered = emitAll(session);
+        const config = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        using log = openOwnership(sandbox.path);
+        writeOutputs(session, log, undefined, rendered);
+        const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
+        const options = { cwd: sandbox.path };
+        const native = await runTestCommand([...lint, 'query.sql'], options);
+        expect(native.code, native.stdout + native.stderr).toBe(0);
+        const postgres = await runTestCommand([...lint, '--dialect', 'postgres', 'query.sql'], options);
+        expect(postgres.code, postgres.stdout + postgres.stderr).toBe(1);
+        expect(postgres.stdout).toContain('PRS');
+    },
+);
 
 test.each(['recommended', 'all'] as const)(
     'SQLFluff at %s keeps function definitions and calls lowercase',

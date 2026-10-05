@@ -877,9 +877,15 @@
         "finding": "| `packages/cli/kits/language/sql/manifest.toml:111-119`, `packages/cli/src/checks/language/sql.ts:200-210` (`sql/functions`) | The engine does not check the dialect. A parse failure throws, so at `all` any non-Postgres SQL file makes the check error. The title says \"function size\", but the check reports functions that are too small and lists of too many parameters. | Skip unless the dialect is `postgres`. Rename the check to `trivial-functions`, as in python, swift, and bash, and report parameters under their own rule name. |",
         "owner": "`packages/cli/kits/language/sql/manifest.toml:111-119`, `packages/cli/src/checks/language/sql.ts:200-210` (`sql/functions`)",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The PostgreSQL-only guard and reasoned SQLFluff exclusions apply to syntax and trivial-functions. The manifest and registry now name sql/trivial-functions; excessive input parameters retain the separate function-parameters rule. ANSI and three foreign dialects bypass PostgreSQL parsing. Native SQLFluff proves that the foreign fixtures are valid in their own dialect and rejected by postgres. Coverage changes directly with recommended/all.",
+        "verification": [
+            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
+            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
+            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
+            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
+            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
+        ]
     },
     {
         "id": "slices/kits-other-languages/049",
@@ -889,9 +895,15 @@
         "finding": "| `packages/cli/kits/general/structure/manifest.toml:133-137,157-161,316-319` | Nothing reads `limits.sql.function_lines`. The SQL engine reads `file_lines`, `trivial_statements`, and `function_parameters`. `limits.function_lines` lists `sql`, and `limits.cyclomatic_complexity` lists `bash`, but no code reads either for those languages. | Delete `limits.sql.function_lines`. Remove `sql` and `bash` from those `languages` lists. |",
         "owner": "`packages/cli/kits/general/structure/manifest.toml:133-137,157-161,316-319`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "Removed the unread limits.sql.function_lines declaration, sql from shared function_lines metadata, and bash from cyclomatic_complexity metadata. Public policy validation now refuses both unconsumed language overrides while preserving SQL function_parameters.",
+        "verification": [
+            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
+            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
+            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
+            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
+            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
+        ]
     },
     {
         "id": "slices/kits-other-languages/050",
@@ -941,9 +953,15 @@
         "finding": "| `packages/cli/kits/language/sql/manifest.toml:5,76` | The `why` of `block-comments` says the spelling checks read only line comments. typos reads the whole file, block comments included. Only Vale skips block comments, because gspot maps SQL to Vale's Lua format (`packages/cli/src/config/generation/generation.ts:103-105`). The kit description claims \"names checked by category\", but no SQL check does that. The naming kit does. | Name Vale as the reason, or map SQL to a format in which Vale reads both comment styles and delete the check. Remove the naming claim from the description. |",
         "owner": "`packages/cli/kits/language/sql/manifest.toml:5,76`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "The SQL description describes only owned checks, names PostgreSQL-only parsing, and no longer claims category naming. The block-comments rationale names Vale specifically; typos is not described as skipping block comments. The generated prose mapping retains SQL to Vale Lua format.",
+        "verification": [
+            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
+            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
+            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
+            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
+            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
+        ]
     },
     {
         "id": "slices/kits-other-languages/053",

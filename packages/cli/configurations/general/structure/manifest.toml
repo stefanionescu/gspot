@@ -134,7 +134,7 @@ name = "limits.function_lines"
 type = "number"
 direction = "ceiling"
 default = 60
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+languages = ["typescript", "javascript", "python", "swift", "bash"]
 summary = "The most lines one function may have."
 
 [[setting]]
@@ -158,7 +158,7 @@ name = "limits.cyclomatic_complexity"
 type = "number"
 direction = "ceiling"
 default = 8
-languages = ["typescript", "javascript", "python", "swift", "bash"]
+languages = ["typescript", "javascript", "python", "swift"]
 summary = "How many paths run through one function."
 
 [[setting]]
@@ -292,13 +292,6 @@ type = "number"
 direction = "ceiling"
 default = 3
 summary = "The fewest lines two shell functions must share before they count as duplicates."
-
-[[setting]]
-name = "limits.sql.function_lines"
-type = "number"
-direction = "ceiling"
-default = 60
-summary = "The most lines one SQL function body may have."
 
 [[setting]]
 name = "limits.swift.type_lines"

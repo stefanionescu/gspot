@@ -1447,7 +1447,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [
+            "SQL naming portion is resolved as sql/trivial-functions by the second-pass correction slices/kits-other-languages/048; function-size would misdescribe this check. The remaining Bash, HTML, and XCTest naming portions stay open."
+        ]
     },
     {
         "id": "areas/kits/110",

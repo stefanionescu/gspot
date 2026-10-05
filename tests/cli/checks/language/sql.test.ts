@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { FOREIGN_DIALECT_CASES } from '#tests/config/cli/checks/language/sql.ts';
 
 test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', async () => {
     const threshold = 2;
@@ -23,10 +24,13 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
             'CREATE FUNCTION eight(a int,b int,c int,d int,e int,f int,g int,h int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
         ].join('\n'),
     });
-    const result = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['sql/functions'] }));
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['sql/trivial-functions'] }),
+    );
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(1);
-    expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'failed' }]);
+    expect(result.report.checks).toMatchObject([{ check: 'sql/trivial-functions', status: 'failed' }]);
     expect(
         findings
             .filter((finding) => finding.rule === 'trivial-function')
@@ -39,7 +43,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
         })),
     );
     expect(findings.filter((finding) => finding.rule === 'function-parameters')).toMatchObject([
-        { check: 'sql/functions', file: 'functions.sql', line: 7, rule: 'function-parameters' },
+        { check: 'sql/trivial-functions', file: 'functions.sql', line: 7, rule: 'function-parameters' },
     ]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
@@ -48,9 +52,12 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
             level: 'all',
         }),
     );
-    const overridden = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['sql/functions'] }));
+    const overridden = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['sql/trivial-functions'] }),
+    );
     expect(overridden.report.exitCode).toBe(1);
-    expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'failed' }]);
+    expect(overridden.report.checks).toMatchObject([{ check: 'sql/trivial-functions', status: 'failed' }]);
     expect(
         overridden.report.checks
             .flatMap((check) => check.findings)
@@ -66,7 +73,10 @@ test('SQL atomic bodies count each statement and reject files containing only tr
             'CREATE FUNCTION substantial() RETURNS int LANGUAGE SQL BEGIN ATOMIC SELECT 1; SELECT 2; SELECT 3; END;',
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
     });
-    const result = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['sql/functions'] }));
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['sql/trivial-functions'] }),
+    );
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.filter(({ file }) => file === 'owner.sql')).toStrictEqual([]);
     expect(
@@ -84,7 +94,7 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
         'gspot.toml': buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
         'functions.sql': source,
     });
-    const options = buildRunOptions({ only: ['sql/functions'] });
+    const options = buildRunOptions({ only: ['sql/trivial-functions'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.checks[0]?.status).toBe('error');
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);
@@ -109,7 +119,7 @@ test('the default ANSI dialect leaves PostgreSQL syntax and function parsing to 
         'gspot.toml': buildPolicy(['sql'], { level: 'all' }),
         'query.sql': source,
     });
-    const options = buildRunOptions({ only: ['sql/syntax', 'sql/functions'] });
+    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
     const delegated = await executeRun(await openSession(sandbox.path), options);
     expect(delegated.report.checks.map((check) => check.status)).toStrictEqual(['passed', 'passed']);
     expect(delegated.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
@@ -123,4 +133,62 @@ test('the default ANSI dialect leaves PostgreSQL syntax and function parsing to 
         findings: [{ file: 'query.sql', rule: 'syntax' }],
     });
     expect(await Bun.file(`${sandbox.path}/query.sql`).text()).toBe(source);
+});
+
+test.each(FOREIGN_DIALECT_CASES)('the $dialect dialect bypasses PostgreSQL parsing', async ({ dialect, source }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['sql'], {
+            tables: `[tools.sqlfluff]\ndialect = "${dialect}"\n`,
+            level: 'all',
+        }),
+        'query.sql': source,
+    });
+    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
+    const delegated = await executeRun(await openSession(sandbox.path), options);
+    expect(delegated.report.exitCode).toBe(0);
+    expect(delegated.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
+        { check: 'sql/syntax', status: 'passed', findings: [] },
+        { check: 'sql/trivial-functions', status: 'passed', findings: [] },
+    ]);
+    await Bun.write(
+        `${sandbox.path}/gspot.toml`,
+        buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
+    );
+    const postgres = await executeRun(await openSession(sandbox.path), options);
+    expect(postgres.report.exitCode).toBe(1);
+    expect(postgres.report.checks.find(({ check }) => check === 'sql/syntax')).toMatchObject({
+        status: 'failed',
+        findings: [{ file: 'query.sql', rule: 'syntax' }],
+    });
+});
+
+test('SQL function structure follows the coverage level and preserves reasoned parser exclusions', async () => {
+    await using sandbox = await testdir();
+    const tables =
+        '[tools.sqlfluff]\ndialect = "postgres"\nexclude = [{paths = ["template.sql"], reason = "The migration runner replaces these placeholders."}]\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['sql'], { tables, level: 'recommended' }),
+        'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE sql RETURN 1;\n',
+        'template.sql': 'CREATE TABLE {{table}};\n',
+    });
+    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
+    const recommended = await executeRun(await openSession(sandbox.path), options);
+    expect(recommended.report.exitCode).toBe(0);
+    expect(recommended.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'sql/syntax', status: 'passed' },
+    ]);
+    await Bun.write(`${sandbox.path}/gspot.toml`, buildPolicy(['sql'], { tables, level: 'all' }));
+    const strict = await executeRun(await openSession(sandbox.path), options);
+    expect(strict.report.exitCode).toBe(1);
+    expect(
+        strict.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
+    ).toStrictEqual([
+        { file: 'wrapper.sql', rule: 'trivial-function' },
+        { file: 'wrapper.sql', rule: 'trivial-file' },
+    ]);
+    expect(strict.report.checks.find(({ check }) => check === 'sql/syntax')).toMatchObject({
+        status: 'passed',
+        findings: [],
+    });
 });

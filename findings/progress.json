@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user\u2019s implementation plan in this conversation",
+                "The user’s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -13131,7 +13131,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema \u2192 toolProjectSchema",
+            "name": "packageSchema → toolProjectSchema",
             "type": false
         },
         {
@@ -13149,7 +13149,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
+            "name": "PackageManagerIdentity → PackageClientIdentity",
             "type": true
         },
         {
@@ -18492,6 +18492,40 @@
                 "Full CLI/plugin verification: /tmp/gspot-bash-safety-full-cli-plugin.log; the stale registry classification is corrected and passes its focused replay.",
                 "/tmp/gspot-registry-contract-full-cli-plugin.log (exact ./cli and ./plugin directories, declared 60-second test limit: 2818 passes, three platform skips, no failures/errors, 9977 assertions, 341 files).",
                 "/tmp/gspot-registry-contract-staged.json (53 passes, seven skips, no findings/errors)."
+            ],
+            "remaining": [
+                "Normal hook-enabled commit and push.",
+                "Continue remaining implementation batches and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Registry ownership delivery",
+            "outcome": "Commit 1d858e40 is pushed normally to origin/main with hooks enabled and a clean tree. All 967 open findings remain represented.",
+            "evidence": [
+                "/tmp/gspot-registry-contract-commit.log (34 pre-commit passes, two skips, and commit-message validation).",
+                "/tmp/gspot-registry-contract-push.log (53 pre-push passes, seven skips; main -> main).",
+                "Final exact CLI/plugin suite: 2818 passes, three platform skips, no failures/errors, 9977 assertions across 341 files."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "SQL dialect and declared check contracts",
+            "rows": [
+                "slices/kits-other-languages/048",
+                "slices/kits-other-languages/049",
+                "slices/kits-other-languages/052",
+                "main/091"
+            ],
+            "outcome": "SQL check naming, dialect explanations, unconsumed limits, and Vale rationale now match native behavior. Four records close with source and regression evidence; all IDs remain retained.",
+            "evidence": [
+                "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
+                "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
+                "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
+                "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
+                "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each).",
+                "Final CLI replay: /tmp/gspot-sql-contract-cli-ready.log (106 passes, 262 assertions, nine files).",
+                "Final native replay: /tmp/gspot-sql-contract-native-ready.log (seven passes, 36 assertions, two files).",
+                "Actual gspot check --staged: /tmp/gspot-sql-contract-staged.json ({'passed': 71, 'skipped': 7}, no findings/errors)."
             ],
             "remaining": [
                 "Normal hook-enabled commit and push.",

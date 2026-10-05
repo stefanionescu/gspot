@@ -976,7 +976,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            "SQL dialect/exclusion subfinding is resolved by slices/kits-other-languages/048 and main/091. Other aggregate subfindings remain open."
+        ],
         "kind": "phase aggregate",
         "decisionEvidence": [
             "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
@@ -1350,10 +1352,17 @@
         "finding": "- `sql/functions` ignores the dialect and the sqlfluff excludes, and errors on any SQL that is not Postgres.",
         "owner": "source ownership and commands",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "kind": "phase finding"
+        "status": "closed",
+        "outcome": "The PostgreSQL-only guard and reasoned SQLFluff exclusions apply to syntax and trivial-functions. The manifest and registry now name sql/trivial-functions; excessive input parameters retain the separate function-parameters rule. ANSI and three foreign dialects bypass PostgreSQL parsing. Native SQLFluff proves that the foreign fixtures are valid in their own dialect and rejected by postgres. Coverage changes directly with recommended/all.",
+        "verification": [
+            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
+            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
+            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
+            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
+            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
+        ],
+        "kind": "phase finding",
+        "sharedFix": "slices/kits-other-languages/048"
     },
     {
         "id": "main/092",
