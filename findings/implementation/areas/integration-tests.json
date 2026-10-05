@@ -1005,10 +1005,14 @@
         "section": "Findings",
         "finding": "| `cli/repository/tracked/discovery.test.ts:54`, \"repository file discovery > reads only the requested prefix...\" | The test asserts the third argument of the first `readSync` call, which is the call shape, not the result. | Drop the spy. The returned bytes already prove the prefix. |",
         "owner": "`cli/repository/tracked/discovery.test.ts:54`, \"repository file discovery > reads only the requested prefix...\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/repository/tracked/discovery.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The prefix-read case asserts the exact returned prefix and the ENOENT refusal without spying on readSync argument positions. The Windows inventory case likewise keeps exact executable outcomes without counting private process-wrapper calls.",
+            "All 35 outcome assertion sites and every discovery scenario name remain unchanged. Git setup now uses the throwing, budget-bounded harness; missing Git and failed index reads are simulated at native spawnSync so the real wrapper and repository classification execute.",
+            "Root TypeScript, affected ESLint, and formatting passed. The affected parser, inventory, execution, and snapshot owners passed 67 cases with 198 assertions. After the final spy-disposal adjustment, discovery passed all 16 cases with 38 assertions on macOS."
+        ]
     },
     {
         "id": "areas/integration-tests/082",

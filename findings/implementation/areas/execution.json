@@ -500,10 +500,19 @@
         "section": "Findings",
         "finding": "| `repository/tracked.ts:45,208`, `execution/checkout/revision.ts:125` | `git ls-files --stage -z` runs and is parsed twice in `tracked.ts`. On Windows, one `trackedEntries` call runs it twice. `revision.ts` parses the same output a third way. | One stage-listing reader that returns mode and path, used by all three. |",
         "owner": "`repository/tracked.ts:45,208`, `execution/checkout/revision.ts:125`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/tracked.ts",
+            "packages/cli/src/parsers/git.ts",
+            "packages/cli/src/repository/revisions/objects.ts",
+            "tests/cli/repository/tracked/discovery.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Working-tree inventory reads stage entries once and passes that same index to gitlink selection and Windows executable-mode selection. indexedPaths uses the same reader. Both working and immutable revision entries use parseIndexEntries for validated modes, complete identities, paths, and stages.",
+            "AST inspection confirms one readIndexEntries call in trackedEntries, one inventory Git listing boundary, and the shared parser. The async immutable-revision reader retains binary output and cancellation, and rejects unresolved stages; working inventory retains those stages. These distinct I/O contracts do not need a forwarding reader or duplicate parser.",
+            "The affected parser, inventory, execution, and snapshot owners passed 67 cases with 198 assertions, including SHA-1/SHA-256, binary blobs, unmerged stages, gitlinks, indexed modes, corrupt metadata, missing Git, and failed index reads. Root TypeScript, affected ESLint, and formatting passed. The final discovery owner passed 16 cases with 38 assertions on macOS; its Windows branch was exercised through the existing platform fixture."
+        ]
     },
     {
         "id": "areas/execution/023",
@@ -512,10 +521,18 @@
         "section": "Findings",
         "finding": "| `repository/tracked.ts:145-219` | The same block appears four times: exit 0 splits on NUL, outside Git returns nothing, else throw \"Git X failed in root\". It is in `listedPaths`, `indexedPaths`, `submodulePaths` and `isGitRepository`. | One helper. |",
         "owner": "`repository/tracked.ts:145-219`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/tracked.ts",
+            "packages/cli/src/repository/root.ts",
+            "tests/cli/repository/tracked/discovery.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "listGitFiles owns success, genuinely absent work-tree classification, and failed-listing diagnostics for all working-tree inventory queries. Submodules are selected from the shared index instead of issuing their own query.",
+            "Root discovery shares inspectWorkTree and isOutsideGit. Outside-Git classification requires the stable-locale diagnostic plus absent ancestor metadata, so missing executables and broken metadata cannot become successful directory walks. Root discovery retains its separate root-selection result and diagnostic.",
+            "The affected parser, inventory, execution, and snapshot owners passed 67 cases with 198 assertions, including SHA-1/SHA-256, binary blobs, unmerged stages, gitlinks, indexed modes, corrupt metadata, missing Git, and failed index reads. Root TypeScript, affected ESLint, and formatting passed. The final discovery owner passed 16 cases with 38 assertions on macOS; its Windows branch was exercised through the existing platform fixture."
+        ]
     },
     {
         "id": "areas/execution/024",
