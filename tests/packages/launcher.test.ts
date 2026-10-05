@@ -98,6 +98,8 @@ test(
         const initialized = await initializeConsumer(release, fixture);
         expectTakeover(root, initialized.stdout);
         expect(initialized.stdout).not.toContain('formatter stdout');
+        const dependencies = await runTestCommand([...fixture.command, 'add', 'dependencies'], fixture.onlineOptions);
+        expect(dependencies.code, dependencies.stdout + dependencies.stderr).toBe(0);
         const checked = await runTestCommand(
             [...fixture.command, 'check', '--skip', 'dependencies/osv', '--json'],
             fixture.offlineOptions,

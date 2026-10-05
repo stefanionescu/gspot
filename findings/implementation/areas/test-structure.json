@@ -738,10 +738,22 @@
         "section": "Findings",
         "finding": "| `harness/tools/install.ts:42-56`, `tools/cli/flags.test.ts:23-25` | `toolsPath` reads this repository's own `gspot.toml` and its installed tools to decide what goes on a sandbox `PATH`. Sandbox behavior depends on the repository's own policy, which is why CI runs `mise run install` before the tests. | See the last question below. |",
         "owner": "`harness/tools/install.ts:42-56`, `tools/cli/flags.test.ts:23-25`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/harness/install.ts",
+            "tests/cli/tools/inspect/installations.test.ts",
+            "tests/cli/tools/inspect/placement.test.ts",
+            "tests/packages/launcher.test.ts",
+            ".github/workflows/ci.yml",
+            "CONTRIBUTING.md"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Native test discovery no longer reads the checkout policy or inspects its private tool trees. The test environment explicitly uses mise; declared native pins resolve through mise which --tool at their manifest versions. Host and workspace commands remain on the inherited and workspace PATH. Private packages are installed by each fixture. Every lookup is bounded by the existing inspection limit and remaining test budget.",
+            "Removed install:checks from CLI/plugin, native-tools, and delivered-package CI jobs. The repository check job retains its own installation. Contributor instructions describe setup and native fixture ownership.",
+            "A fresh detached verification worktree has no .gspot/node_modules or .gspot/.venv. After only mise run setup, the complete CLI/plugin suite and affected real native consumers pass there. All delivered-package cases pass across the full suite and the focused rerun of its repaired launcher fixture. The fixture explicitly selects dependency checks before asserting their results. Evidence: /tmp/gspot-native-discovery-independent-setup.log, /tmp/gspot-native-discovery-independent-cli.log, /tmp/gspot-native-discovery-independent-native.log, and /tmp/gspot-native-discovery-independent-package.log and /tmp/gspot-native-discovery-independent-package-final.log.",
+            "Boundary scenarios verify the declared mise requirement, resolved PATH, and missing-tool error. The production inspection/version contracts are unchanged. All four TypeScript targets, repository ESLint scopes, and staged CI checks pass: /tmp/gspot-native-discovery-cli-focused.log, /tmp/gspot-native-discovery-types-final.log, /tmp/gspot-native-discovery-lint.json, and /tmp/gspot-native-discovery-staged.json."
+        ]
     },
     {
         "id": "areas/test-structure/041",

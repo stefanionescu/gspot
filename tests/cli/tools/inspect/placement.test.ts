@@ -122,3 +122,22 @@ test('a snapshot finds a missing native tool missing, through the private tools 
     const context = { root, inspections: new Map(), installedRoot: working };
     expect(inspectTool(context, buildBinaryPin('absent-native-tool', '1.0.0')).state).toBe('missing');
 });
+
+test('library inspection accepts an internal package-directory link and refuses an external target', async () => {
+    await using sandbox = await testdir();
+    await using outside = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gspot/node_modules/.store/globals/package.json': '{"name":"globals","version":"17.12.0"}',
+    });
+    await createFileTree(outside.path, { 'package.json': '{"name":"globals","version":"17.12.0"}' });
+    const link = join(sandbox.path, '.gspot/node_modules/globals');
+    symlinkSync('.store/globals', link);
+    const context = { root: sandbox.path, inspections: new Map() };
+    const tool = buildLibraryPin('globals', '17.12.0');
+    expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '17.12.0' });
+    unlinkSync(link);
+    symlinkSync(outside.path, link);
+    context.inspections.clear();
+    expect(() => inspectTool(context, tool)).toThrow('Source link leaves the repository');
+    expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"globals","version":"17.12.0"}');
+});

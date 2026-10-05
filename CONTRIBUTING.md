@@ -139,6 +139,10 @@ The tests check the Bun version against `package.json` at startup. A plain `bun 
 | `mise run test:package`    | The two npm packages, built, published to a local registry, and installed. |
 | `mise exec -- gspot check` | The checks of this repository, run from source.                            |
 
+Tests use workspace dependencies and do not require installing this checkout's checks.
+Run `mise run setup` to prepare dependencies, parsers, and the plugin. Each native fixture
+installs its own private tool projects through the public commands.
+
 The tool suite needs the full set of tools declared in `mise.test.toml`.
 Install them with `MISE_ENV=test mise install`. This suite can download packages. The tool runner serves the plugin built by `setup` from a local
 registry, which it removes when the run ends. Rebuild the plugin after changing its source.

@@ -102,8 +102,6 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            - name: Install the repository checks
-              run: mise run install:checks
             - name: Test the packages
               run: mise run test:package
     binary:
@@ -167,8 +165,6 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            - name: Install the repository checks
-              run: mise run install:checks
             - name: Run the CLI and plugin tests
               run: mise run test
     tools:
@@ -212,8 +208,5 @@ jobs:
               if: runner.os == 'Windows'
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
-            - name: Install the repository checks
-              id: install
-              run: mise run install:checks
             - name: Run this shard of the tool tests
               run: mise run test:tools -- "--shard=${SHARD}"

@@ -5,6 +5,7 @@ import { toolPin } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { locateCandidates } from '#cli/tools/locate.ts';
@@ -263,46 +264,32 @@ test.skipIf(!isPosix).each([0, 1])(
     },
 );
 
-test.skipIf(!isPosix).each(['99.0.0', '1.0.0'])(
-    'sandbox tool discovery accepts a newer native version and diagnoses an old one: %s',
-    async (version) => {
+test.each(['installed', 'missing'] as const)(
+    'sandbox discovery uses the declared mise pin when the native tool is %s',
+    async (state) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            typos: `#!${process.execPath}\nconsole.log('typos ${version}');\n`,
+        const executable = join(sandbox.path, 'bin', 'typos');
+        const pin = toolPin(configurationManifests().values(), 'typos');
+        const calls: string[][] = [];
+        const lookup = spyOn(processes, 'runBlocking').mockImplementation((command) => {
+            calls.push(command);
+            return {
+                code: state === 'installed' ? 0 : 1,
+                stdout: state === 'installed' ? `${executable}\n` : '',
+                stderr: state === 'installed' ? '' : 'Fixture pinned mise tool unavailable',
+                duration: 1,
+                missing: false,
+            };
         });
-        const executable = join(sandbox.path, 'typos');
-        chmodSync(executable, EXECUTABLE_FILE);
-        const which = spyOn(executables, 'sync').mockReturnValue(executable);
         try {
-            if (version === '99.0.0') {
-                expect(buildToolsPath(['typos'])).toStartWith(sandbox.path);
-            } else {
-                expect(() => buildToolsPath(['typos'])).toThrow('Required tool typos is outdated.');
-                expect(() => buildToolsPath(['typos'])).toThrow(`path: ${executable}`);
-                expect(() => buildToolsPath(['typos'])).toThrow('found: 1.0.0');
-                expect(() => buildToolsPath(['typos'])).toThrow('expected:');
-            }
+            if (state === 'installed') expect(buildToolsPath(['typos'])).toStartWith(join(sandbox.path, 'bin'));
+            else
+                expect(() => buildToolsPath(['typos'])).toThrow(
+                    `Required test tool typos is unavailable. Run mise install typos@${pin.version!}. Fixture pinned mise tool unavailable`,
+                );
+            expect(calls).toStrictEqual([['mise', 'which', 'typos', '--tool', `typos@${pin.version!}`]]);
         } finally {
-            which.mockRestore();
+            lookup.mockRestore();
         }
     },
 );
-
-test('library inspection accepts an internal package-directory link and refuses an external target', async () => {
-    await using sandbox = await testdir();
-    await using outside = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/.store/globals/package.json': '{"name":"globals","version":"17.12.0"}',
-    });
-    await createFileTree(outside.path, { 'package.json': '{"name":"globals","version":"17.12.0"}' });
-    const link = join(sandbox.path, '.gspot/node_modules/globals');
-    symlinkSync('.store/globals', link);
-    const context = { root: sandbox.path, inspections: new Map() };
-    const tool = buildLibraryPin('globals', '17.12.0');
-    expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '17.12.0' });
-    unlinkSync(link);
-    symlinkSync(outside.path, link);
-    context.inspections.clear();
-    expect(() => inspectTool(context, tool)).toThrow('Source link leaves the repository');
-    expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"globals","version":"17.12.0"}');
-});
