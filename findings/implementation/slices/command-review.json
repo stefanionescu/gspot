@@ -381,10 +381,15 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/apply.ts:31-34, 51, 55` | The `apply --dry-run` output says \"every generated file matches its plan\", which is jargon. After a preview, it advises \"Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside before regenerating.\" The next step is to run apply, not to change policy. It also prints `version 1.2.0 -> 1.2.0` when nothing changes. | Write \"every generated file is up to date\" and \"Run gspot apply to write these files. apply keeps a generated file you edited; move it aside to get the new version.\" Print the version line only when the versions differ. |",
         "owner": "`commands/apply.ts:31-34, 51, 55`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/commands/apply.ts", "tests/cli/commands/apply.test.ts"],
+        "status": "closed",
+        "outcome": "Apply previews say that generated files are up to date, give gspot apply as the next step when files drift, and print a version transition only when the pin differs from the session version.",
+        "verification": [
+            "The real CLI cases cover the exact unchanged and changed version banners, matching JSON pins, empty drift, empty diagnostic streams, and unchanged complete repository trees after both previews. The missing-output case covers the exact actionable apply instruction.",
+            "The existing initialization case verifies its human version banner against the version pin written by the command. Source inspection traces both command values to the single session version owner.",
+            "Restoring the old preview wording and unconditional version line, plus an obsolete initialization banner, made all four selected cases fail. Both source files were restored byte for byte.",
+            "Apply, initialization refusals, rule previews, and recorded rule diffs passed 46 cases and 228 assertions. After the test formatting fix, the changed owner passed all 12 cases and 72 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/024",
@@ -902,10 +907,20 @@
         "section": "Commands and the Entry Point",
         "finding": "| `apply.ts:53`, `init/write.ts:100` | Two of the five `RUNNING_VERSION` copies that FINDINGS counts need no new export. Both files already hold a session, and `session.version` is that value (`execution/session.ts:62`). | Use `session.version`, and delete both copies. |",
         "owner": "`apply.ts:53`, `init/write.ts:100`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/apply.ts",
+            "packages/cli/src/commands/init/write.ts",
+            "packages/cli/src/execution/session.ts",
+            "tests/cli/commands/apply.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Apply preview pins and the successful initialization banner consume session.version. Both command owners have no RUNNING_VERSION import or copied version constant.",
+        "verification": [
+            "The real CLI cases cover the exact unchanged and changed version banners, matching JSON pins, empty drift, empty diagnostic streams, and unchanged complete repository trees after both previews. The missing-output case covers the exact actionable apply instruction.",
+            "The existing initialization case verifies its human version banner against the version pin written by the command. Source inspection traces both command values to the single session version owner.",
+            "Restoring the old preview wording and unconditional version line, plus an obsolete initialization banner, made all four selected cases fail. Both source files were restored byte for byte.",
+            "Apply, initialization refusals, rule previews, and recorded rule diffs passed 46 cases and 228 assertions. After the test formatting fix, the changed owner passed all 12 cases and 72 assertions. Root TypeScript, affected ESLint, and formatting passed."
+        ]
     },
     {
         "id": "slices/commands/051",

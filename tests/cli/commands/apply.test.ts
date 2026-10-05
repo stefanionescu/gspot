@@ -21,6 +21,9 @@ test('init deletes a replaced file, and apply preserves later edits and unowned 
     commitAll(directory.path);
     const initialized = await runGspot(directory.path, INIT);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(initialized.stdout.split('\n')).toContain(
+        `gspot ${readFileSync(join(directory.path, '.gspot/version'), 'utf8').trim()}`,
+    );
     expect(existsSync(join(directory.path, '.shellcheckrc'))).toBe(false);
     const generated = join(directory.path, '.gspot/config/shellcheckrc');
     const edited = `${readFileSync(generated, 'utf8')}# Authored after installation.\n`;
@@ -51,6 +54,14 @@ test('apply previews missing outputs without writing', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
+    const before = readTree(directory.path);
+    const human = await runGspot(directory.path, ['apply', '--dry-run']);
+    expect(human.code, human.stdout + human.stderr).toBe(0);
+    expect(human.stderr).toBe('');
+    expect(human.stdout).toContain(
+        'Run gspot apply to write these files. apply keeps a generated file you edited; move it aside to get the new version.\n',
+    );
+    expect(readTree(directory.path)).toStrictEqual(before);
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as ApplyPreviewJson;
@@ -58,7 +69,37 @@ test('apply previews missing outputs without writing', async () => {
     expect(result.drift).toContainEqual(containing({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);
+    expect(readTree(directory.path)).toStrictEqual(before);
 });
+
+test.each([false, true])(
+    'apply previews only a changed version pin (changed: %s) without writing',
+    async (isChanged) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, {
+            'gspot.toml': buildPolicy([], { tables: 'run_with = "mise"\n[agent_rules]\nenabled = false\n' }),
+            'control.txt': 'preserve this source\n',
+        });
+        const applied = await runGspot(directory.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const version = readFileSync(join(directory.path, '.gspot/version'), 'utf8').trim();
+        if (isChanged) writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
+        const before = readTree(directory.path);
+        const preview = await runGspot(directory.path, ['apply', '--dry-run']);
+        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+        expect(preview.stderr).toBe('');
+        const banner = isChanged ? `version 0.0.0 -> ${version}\n` : '';
+        expect(preview.stdout).toBe(`${banner}every generated file is up to date\n`);
+        expect(readTree(directory.path)).toStrictEqual(before);
+        const structured = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
+        expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+        expect(structured.stderr).toBe('');
+        const result = JSON.parse(structured.stdout) as ApplyPreviewJson;
+        expect(result.pin).toStrictEqual({ from: isChanged ? '0.0.0' : version, to: version });
+        expect(result.drift).toStrictEqual([]);
+        expect(readTree(directory.path)).toStrictEqual(before);
+    },
+);
 
 test('malformed authored blocks refuse apply before generated files change', async () => {
     await using directory = await testdir();
