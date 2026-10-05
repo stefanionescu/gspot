@@ -3,6 +3,7 @@ import { parse as parseYaml } from 'yaml';
 import { readText } from '#cli/platform/source.ts';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
@@ -18,7 +19,6 @@ import {
     LINT_WORDS,
     MISE_FILES,
     AGENT_FILES,
-    RUNNER_LOCKS,
     TASK_AFTER_RUN,
     FOREIGN_CI_FILES,
     LINT_DIRECTORIES,
@@ -67,9 +67,10 @@ function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['h
 function detectRunner(paths: Set<string>): RunnerSelection {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
-    const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
-    if (lock === undefined) return { runner: 'none' };
-    return { runner: lock.runner, runnerFile: 'package.json' };
+    const lock = LOCKFILES.filter((entry) => 'runner' in entry).find(({ file }) => paths.has(file));
+    if (lock === undefined)
+        return paths.has('package.json') ? { runner: 'npm', runnerFile: 'package.json' } : { runner: 'none' };
+    return { runner: lock.client, runnerFile: 'package.json' };
 }
 
 function jobCommands(job: object): string[] {

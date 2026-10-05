@@ -5,7 +5,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { LOCKS } from '#cli/config/parsers/lockfiles.ts';
+import { packageLockFile } from '#cli/parsers/packages.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
@@ -59,7 +59,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
         });
         const read = await openSession(root);
         expect(computeDrift(read.root, read.policyFiles.policy, emitAll(read))).toContainEqual({
-            path: `.gspot/${LOCKS[installer]}`,
+            path: `.gspot/${packageLockFile(installer)}`,
             kind: 'changed',
         });
         const installed = await spawnGspot(root, ['install', '--json']);
@@ -68,7 +68,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
         expect(readFileSync(lockPath)).toStrictEqual(lock);
         const repaired = await openSession(root);
         expect(computeDrift(root, repaired.policyFiles.policy, emitAll(repaired))).not.toContainEqual({
-            path: `.gspot/${LOCKS[installer]}`,
+            path: `.gspot/${packageLockFile(installer)}`,
             kind: 'changed',
         });
     },
@@ -100,7 +100,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
             using log = openOwnership(root);
             repaired = writeOutputs(await openSession(root), log);
         }
-        expect(repaired.written).not.toContain(`.gspot/${LOCKS[installer]}`);
+        expect(repaired.written).not.toContain(`.gspot/${packageLockFile(installer)}`);
         expect(readFileSync(lockPath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -15,14 +15,6 @@ export const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
     yarn: /Your lockfile needs to be updated|YN0028|lockfile would have been modified/u,
 };
 
-export const FROZEN_INSTALLS: Record<string, string[]> = {
-    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
-    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
-    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
-    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
-    'uv.lock': ['uv', 'lock', '--check'],
-};
-
 export const NPM_MANIFEST = 'package.json';
 
 export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;

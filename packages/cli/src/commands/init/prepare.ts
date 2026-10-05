@@ -11,6 +11,7 @@ import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getReplaced } from '#cli/commands/init/replaced.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { npmToolNames } from '#cli/configurations/declarations.ts';
@@ -109,7 +110,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const templateTables = options.template?.tables as TomlTable | undefined;
     const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
     const policy = parseStrictPolicy(policyText, root);
-    const session = await openSession(root, { policy, text: policyText, path: 'gspot.toml', problems: [] });
+    const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
     return {
         plan: buildInitPlan(planning, policy, policyText, applicableManifests(session)),
         policyText,

@@ -1,7 +1,6 @@
 import type { OwnedCheck } from '#cli/types/configurations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { ResolvedSetting } from '#cli/types/policy/settings.ts';
+import type { ResolvedSetting, RepositoryDefinition } from '#cli/types/policy/settings.ts';
 
 export type Explanation = {
     kind: 'check' | 'tool-rule' | 'configuration' | 'setting' | 'path';
@@ -40,9 +39,7 @@ export type ConfigurationExplanation = {
     proposed: boolean;
 };
 
-export type DeclaredCheck = Session['policyFiles']['policy']['checks'][number];
-
-export type Found = OwnedCheck | { check: DeclaredCheck; configuration: undefined };
+export type Found = OwnedCheck | { check: RepositoryDefinition; configuration: undefined };
 
 export type CheckFacts = { source: string; settings: string[]; guides: string[]; crashPattern: string | undefined };
 

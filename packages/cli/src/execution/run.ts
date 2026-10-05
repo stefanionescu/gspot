@@ -11,6 +11,7 @@ import { getCheckRunner } from '#cli/execution/engines.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import type { Session } from '#cli/types/execution/session.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { IgnoreEntry } from '#cli/types/policy/settings.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { planRun, isActive } from '#cli/execution/planning/plan.ts';
@@ -36,7 +37,7 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
     if (problems.length === 0) return undefined;
     const findings = problems.map((problem) => ({
         check: POLICY_CHECK,
-        file: 'gspot.toml',
+        file: POLICY_FILE,
         message: problemText(problem),
         fixable: false,
     }));

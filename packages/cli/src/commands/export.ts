@@ -7,6 +7,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/output/messages.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
@@ -29,7 +30,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     // Refuse a template that cannot parse back before writing its destination.
     parseTemplate(saved.text, file);
     using log = openOwnership(root);
-    if (log.files.read('gspot.toml')?.bytes.toString('utf8') !== policyFile.text)
+    if (log.files.read(POLICY_FILE)?.bytes.toString('utf8') !== policyFile.text)
         throw new GspotError('policy', ['The policy changed while the template was prepared. Retry the export.']);
     const owned = log.state.files.find((entry) => entry.path === path);
     if (owned !== undefined && owned.kind !== 'export')

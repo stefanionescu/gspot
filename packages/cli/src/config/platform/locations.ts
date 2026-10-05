@@ -24,8 +24,6 @@ export const YARN_SETTINGS = '.gspot/.yarnrc.yml';
 
 export const GITLEAKS_BASELINE = '.gspot/gitleaks-baseline.json';
 
-// The paths gspot writes under `.gspot`, each named once.
-
 /** The folder gspot writes for a repository; every path below sits inside it. */
 export const DOT_GSPOT = '.gspot';
 

@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
+import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
-import { LOCKFILE_CLIENTS } from '#cli/config/repository/inventory.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
@@ -60,7 +60,7 @@ function packageClientFindings(input: EngineInput, manifests: Map<string, Packag
 function lockfileFindings(input: EngineInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
-        const kind = LOCKFILE_CLIENTS[posix.basename(file.path)];
+        const kind = lockfileEntry(posix.basename(file.path))?.client;
         if (kind !== undefined && JAVASCRIPT_CLIENTS.has(kind) && !kinds.has(kind)) kinds.set(kind, file.path);
     }
     if (kinds.size <= 1) return [];

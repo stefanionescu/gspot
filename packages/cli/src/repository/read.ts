@@ -3,6 +3,7 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { buildScope } from '#cli/repository/scopes.ts';
 import { isGitRepository } from '#cli/repository/root.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { kindOf, readAttributes } from '#cli/repository/kind.ts';
 import { readPrefix, readSource } from '#cli/platform/source.ts';
 import { tagEntry, swiftSourceTags } from '#cli/repository/tags.ts';
@@ -81,7 +82,7 @@ export async function readRepository(
                     buildScope({
                         path: entry.path,
                         configurations: entry.configurations,
-                        source: 'gspot.toml',
+                        source: POLICY_FILE,
                     }),
                 ),
         ],

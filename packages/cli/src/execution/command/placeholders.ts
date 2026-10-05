@@ -5,7 +5,6 @@ import { readText } from '#cli/platform/source.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 import type { CommandPart, Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
@@ -15,10 +14,11 @@ import {
     FILE_PLACEHOLDER,
     WORKSPACE_PREFIX,
     FILES_PLACEHOLDER,
+    CONFIG_PLACEHOLDER,
     POINTER_PLACEHOLDER,
+    SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
-    COMMAND_CONFIG_PLACEHOLDER,
-} from '#cli/config/execution/command.ts';
+} from '#cli/config/parsers/command.ts';
 
 /**
  * Expands an each part, or returns undefined when the part is something else.
@@ -124,7 +124,7 @@ export function commandConfigurations(
         ...new Set([
             ...nestedConfigurations(session, planned),
             ...parts.flatMap((part) => {
-                const configured = [...part.matchAll(COMMAND_CONFIG_PLACEHOLDER)]
+                const configured = [...part.matchAll(CONFIG_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) => configurationPath(session, planned, name));
@@ -181,7 +181,7 @@ export function substituteValue(
                 ? String(found)
                 : '';
         })
-        .replaceAll(COMMAND_CONFIG_PLACEHOLDER, (_match, name: string) =>
+        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(posix.join(substitutions.scope, name)))

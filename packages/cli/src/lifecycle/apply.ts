@@ -19,7 +19,7 @@ import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.
 import type { Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/output.ts';
 import { proposeBlock, proposeMerge, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { VALE_CONFIG, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
+import { POLICY_FILE, VALE_CONFIG, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 // Both writing and pruning report preserved files through the same ownership result.
 function recordPreserved(report: ApplyReport, plans: Planned[]): void {
@@ -101,7 +101,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
 }
 
 function assertPolicyUnchanged(log: Log, session: Session): void {
-    if (log.files.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
+    if (log.files.read(POLICY_FILE)?.bytes.toString('utf8') !== session.policyFiles.text)
         throw new Error('The gspot.toml file changed while gspot was running. Run the command again.');
 }
 

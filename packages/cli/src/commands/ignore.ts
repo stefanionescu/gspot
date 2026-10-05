@@ -9,6 +9,7 @@ import type { CommandResult } from '#cli/types/output.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { knownChecks } from '#cli/configurations/manifests.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { readPolicy, parseTomlText } from '#cli/policy/read.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
@@ -121,7 +122,7 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
         requireReason(options.reason, `gspot ignore ${options.check}`, buildReasonHint(options));
     if (options.remove) {
         // Effective policy omits invalid ignores; removal can repair the authored entries too.
-        const ignores = (parseTomlText(text, 'gspot.toml', 'policy')['ignore'] as TomlTable[] | undefined) ?? [];
+        const ignores = (parseTomlText(text, POLICY_FILE, 'policy')['ignore'] as TomlTable[] | undefined) ?? [];
         return await deleteIgnore(root, options, ignores);
     }
     const entry = buildIgnore(options);

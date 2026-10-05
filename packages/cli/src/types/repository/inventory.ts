@@ -1,6 +1,8 @@
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
+import type { runnerSchema } from '#cli/parsers/schema/settings.ts';
+import type { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { fileKindSchema, vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
@@ -40,7 +42,7 @@ export type FileDeclaration =
 export type Verdict = { kind: FileKind; source: string; producedBy?: string };
 
 /** The runners that install and run gspot. */
-export type Runner = 'mise' | 'npm' | 'bun' | 'pnpm' | 'yarn';
+export type Runner = z.infer<typeof runnerSchema>;
 
 export type Tooling = {
     configs: ToolFile[];
@@ -62,7 +64,7 @@ export type ScopeEntry = {
     name: string;
     path: string;
     configurations: string[];
-    source: 'root' | 'gspot.toml' | 'project' | 'flag';
+    source: 'root' | typeof POLICY_FILE | 'project' | 'flag';
 };
 
 export type ToolFile = {
@@ -84,8 +86,6 @@ export type ContentPrefix = { isBinary: boolean; firstLine: string };
 export type DirectoryContents = { entries: Dirent[]; rules: PathIgnore[] };
 /** A directory waiting to be read with its inherited ignore rules. */
 export type PendingDirectory = { directory: string; rules: PathIgnore[] };
-/** A lock file that declares the repository's package manager. */
-export type RunnerLock = { file: string; runner: Exclude<Runner, 'mise'> };
 
 /** Captured content and location for classifying one inventory entry. */
 export type FileClassification = { root: string; entry: RawEntry; prefix: Buffer; isBinary: boolean };

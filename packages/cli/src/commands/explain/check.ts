@@ -10,8 +10,9 @@ import { allChecks } from '#cli/configurations/declarations.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
+import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { Found, CheckFacts, Explanation, DeclaredCheck, RuleSummarizer } from '#cli/types/commands/explain.ts';
+import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';
 import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 
 const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {
@@ -92,7 +93,7 @@ function getFacts(check: CheckSpec, configuration: Found['configuration']): Chec
 // The lines about this repository: a [[check]] entry's command and paths, or whether the configuration is selected.
 function repositoryLines(
     session: Session | undefined,
-    declared: DeclaredCheck | undefined,
+    declared: RepositoryDefinition | undefined,
     configuration: Found['configuration'],
 ): string[] {
     const lines: string[] = [];
@@ -113,7 +114,7 @@ function repositoryLines(
 function describeCheck(
     session: Session | undefined,
     found: Found,
-    declared: DeclaredCheck | undefined,
+    declared: RepositoryDefinition | undefined,
     facts: CheckFacts,
 ): string {
     const { check, configuration } = found;

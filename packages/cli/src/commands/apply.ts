@@ -9,6 +9,7 @@ import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { Drift, ApplyReport } from '#cli/types/lifecycle/output.ts';
@@ -99,7 +100,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const session = await openSession(root, {
         policy: proposal.policy,
         text: proposal.text,
-        path: join(root, 'gspot.toml'),
+        path: join(root, POLICY_FILE),
         problems: [],
     });
     if (options.isDryRun) {

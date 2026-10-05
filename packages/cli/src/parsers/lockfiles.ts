@@ -3,8 +3,10 @@ import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/parsers/jsonc.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
-import type { LockName, Dependencies, LockFileName } from '#cli/types/parsers/lockfiles.ts';
+import type { DependencyMap } from '#cli/types/parsers/packages.ts';
+import type { LockName, Lockfile, LockFileName } from '#cli/types/parsers/lockfiles.ts';
 
 import {
     bunLockSchema,
@@ -150,7 +152,7 @@ export function parseLockfile(filename: LockFileName, text: string): unknown {
  * @param content the complete lockfile source
  * @returns root dependency names and their declared specifiers
  */
-export function rootLockDependencies(name: Exclude<LockName, 'yarn'>, content: string): Dependencies {
+export function rootLockDependencies(name: Exclude<LockName, 'yarn'>, content: string): DependencyMap {
     if (name === 'npm')
         return npmLockSchema.parse(parseLockfile('package-lock.json', content)).packages['']?.devDependencies ?? {};
     if (name === 'bun')
@@ -173,4 +175,13 @@ export function lockedPackages(filename: string, text: string): Set<string> {
             `Cannot read packages from ${filename}. gspot reads uv.lock, poetry.lock, pdm.lock, package-lock.json, bun.lock, pnpm-lock.yaml, and yarn.lock.`,
         );
     return read(text);
+}
+
+/**
+ * Read the declared consumers of one repository lockfile.
+ * @param filename the file basename
+ * @returns its metadata, or undefined for an unsupported filename
+ */
+export function lockfileEntry(filename: string): Lockfile | undefined {
+    return LOCKFILES.find((entry) => entry.file === filename);
 }

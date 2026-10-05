@@ -9,10 +9,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import type { Session } from '#cli/types/execution/session.ts';
-import type { Revision } from '#cli/types/execution/snapshot.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
+import type { RevisionSource } from '#cli/types/execution/snapshot.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/selection.ts';
 import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
@@ -37,7 +37,7 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
 }
 
 // Warns when the configured hooks are not installed in the clone the report is published to.
-function warnAboutHooks(session: Session, revision: Revision | undefined): void {
+function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
     const hooks = hookStatus({
         policy: session.policyFiles.policy,
@@ -54,7 +54,7 @@ async function changedSet(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
-    revision: Revision | undefined,
+    revision: RevisionSource | undefined,
 ): Promise<ChangedPaths | undefined> {
     if (revision?.content === 'commit' && session.policyFiles.policy.hooks?.push_files === 'all') return undefined;
     if (revision?.changed !== undefined) return { reference: revision.reference, paths: revision.changed };
@@ -66,7 +66,7 @@ async function stagedSet(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
-    revision: Revision | undefined,
+    revision: RevisionSource | undefined,
 ): Promise<Selections['staging']> {
     if (revision?.staged !== undefined) return revision.staged;
     return options.staged ? getStaged(session.root, signal) : { staged: undefined, unstaged: 0 };
@@ -89,7 +89,7 @@ async function selectionsFor(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
-    revision: Revision | undefined,
+    revision: RevisionSource | undefined,
 ): Promise<Selections> {
     const changed = await changedSet(session, options, signal, revision);
     const staging = await stagedSet(session, options, signal, revision);
@@ -103,7 +103,7 @@ async function runSelected(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
-    revision: Revision | undefined,
+    revision: RevisionSource | undefined,
     selections: Selections,
 ): Promise<CheckCommandResult> {
     const { changed, staging, stage, paths } = selections;
@@ -147,7 +147,7 @@ export async function checkTree(
     root: string,
     options: CheckOptions,
     signal: AbortSignal,
-    revision?: Revision,
+    revision?: RevisionSource,
 ): Promise<CheckCommandResult> {
     assertVersionPin(root);
     const session = await openSession(root);

@@ -1,5 +1,6 @@
 import { isReasoned } from '#cli/policy/schema/fields.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { compact, valueAt, isRecord } from '#cli/platform/objects.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
@@ -159,7 +160,7 @@ export function tablesFor(policy: Policy, scope: string | undefined): PolicyTabl
         .map(({ table, scope: path = '' }) => ({
             table,
             path,
-            name: path === '' ? 'gspot.toml' : `[[scope]] ${path}`,
+            name: path === '' ? POLICY_FILE : `[[scope]] ${path}`,
         }));
 }
 

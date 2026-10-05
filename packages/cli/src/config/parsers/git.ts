@@ -1,8 +1,6 @@
 /** Git separates a batch object's header and body with one newline each. */
 export const FRAME_NEWLINES = 2;
 
-export const LINE_FEED = 10;
-
 export const UNSUPPORTED_ENTRY =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 

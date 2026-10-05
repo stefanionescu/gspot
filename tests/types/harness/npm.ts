@@ -1,5 +1,5 @@
 import type { ToolPin } from '#cli/types/configurations.ts';
-import type { LOCKS } from '#cli/config/parsers/lockfiles.ts';
+import type { LockName } from '#cli/types/parsers/lockfiles.ts';
 import type { PackageRegistry } from '#automation/types/registry.ts';
 
 /** A package project in a sandbox: the project, its local registry, and the files the install reads. */
@@ -19,7 +19,7 @@ export type PackageProjectOptions = {
     root: string;
     artifacts: string;
     registry: PackageRegistry;
-    installer: keyof typeof LOCKS;
+    installer: LockName;
     projectPath: string;
     runner: 'mise' | 'none';
 };

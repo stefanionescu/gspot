@@ -4,7 +4,6 @@ export const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
 
 export const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
 
-// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys, and indexes.
 export const PUBLIC_SCHEMA = 'public';
 
 export const FROZEN_NONE = 'none';

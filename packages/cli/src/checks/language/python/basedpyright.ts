@@ -1,7 +1,7 @@
 // The exclusions of the basedpyright type check, each of which must still match a tracked file.
-
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
@@ -22,7 +22,7 @@ export function staleExclusions(input: EngineInput): Finding[] {
     return stale.map((pattern) =>
         findingAt(
             input,
-            { file: 'gspot.toml', line: 1 },
+            { file: POLICY_FILE, line: 1 },
             'stale-exclusion',
             `tools.basedpyright.exclude names ${pattern}, which matches no tracked file.`,
         ),

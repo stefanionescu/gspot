@@ -1,5 +1,5 @@
+import type { Verdict } from '#cli/types/repository/inventory.ts';
 import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { Verdict, RunnerLock } from '#cli/types/repository/inventory.ts';
 
 export const DEPENDENCY_FOLDERS = [
     'node_modules',
@@ -122,24 +122,6 @@ export const SHEBANG_INTERPRETERS: Record<string, string> = {
     tsx: 'node',
 };
 
-/** Every lockfile gspot knows, with the package client that writes it. */
-export const LOCKFILE_CLIENTS: Record<string, string> = {
-    'bun.lock': 'bun',
-    'bun.lockb': 'bun',
-    'package-lock.json': 'npm',
-    'npm-shrinkwrap.json': 'npm',
-    'pnpm-lock.yaml': 'pnpm',
-    'yarn.lock': 'yarn',
-    'uv.lock': 'uv',
-    'poetry.lock': 'poetry',
-    'pdm.lock': 'pdm',
-    'Cargo.lock': 'cargo',
-    'go.sum': 'go',
-    'Gemfile.lock': 'bundler',
-    'Package.resolved': 'swift',
-    'Podfile.lock': 'cocoapods',
-};
-
 export const BINARY_EXTENSIONS = [
     '.png',
     '.jpg',
@@ -250,15 +232,6 @@ export const MISE_FILES = [
     '.config/mise/config.toml',
     'mise/config.toml',
     '.mise.local.toml',
-];
-
-export const RUNNER_LOCKS: RunnerLock[] = [
-    { file: 'bun.lock', runner: 'bun' },
-    { file: 'bun.lockb', runner: 'bun' },
-    { file: 'pnpm-lock.yaml', runner: 'pnpm' },
-    { file: 'yarn.lock', runner: 'yarn' },
-    { file: 'package-lock.json', runner: 'npm' },
-    { file: 'package.json', runner: 'npm' },
 ];
 
 // In "<runner> run <task>", the task sits two words after the runner.

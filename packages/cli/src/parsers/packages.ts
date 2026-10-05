@@ -1,8 +1,9 @@
 import semver from 'semver';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { LOCKS } from '#cli/config/parsers/lockfiles.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { LockName, PrivateLockFileName } from '#cli/types/parsers/lockfiles.ts';
 
 import {
     RUNTIME_COMMAND,
@@ -213,7 +214,7 @@ export function declaredPackageInstaller(manifest: PackageManifest): PackageInst
 export function parseToolProject(text: string): ToolProject {
     const parsed = toolProjectSchema.parse(JSON.parse(text));
     const installer = parsePackageInstaller(parsed.packageManager);
-    const lock = LOCKS[installer.name];
+    const lock = packageLockFile(installer.name);
     return { installer, dependencies: parsed.devDependencies, lock, lockPath: `${DOT_GSPOT}/${lock}` };
 }
 
@@ -272,4 +273,14 @@ export function manifestParser(path: string): ManifestParser | undefined {
     const reader = base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: The callback binds the selected manifest path to its text parser without reading unsupported files.
     return reader === undefined ? undefined : (text) => reader(path, text);
+}
+
+/**
+ * Select the native lockfile of a private npm tool project's manager.
+ * @param installer the validated package manager
+ * @returns the lockfile basename declared by its registry entry
+ */
+export function packageLockFile(installer: LockName): PrivateLockFileName {
+    for (const entry of LOCKFILES) if ('private' in entry && entry.client === installer) return entry.file;
+    throw new Error(`The lockfile registry declares no private lock for ${installer}.`);
 }

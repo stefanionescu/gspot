@@ -3,7 +3,7 @@ import { resolve, relative } from 'node:path';
 import { codePoints } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { LINE_FEED } from '#cli/config/parsers/output.ts';
+import { LINE_FEED } from '#cli/config/parsers/source.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/execution/runtime.ts';
 import type { TypoEntry, EslintReport, EslintDiagnostic, MarkdownlintEntry } from '#cli/types/parsers/output.ts';

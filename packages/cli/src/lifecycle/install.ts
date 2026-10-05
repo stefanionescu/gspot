@@ -3,19 +3,20 @@ import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { rootView } from '#cli/policy/settings/view.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
-import { pythonPins, collectPins } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import type { LockPreparation } from '#cli/types/tools/install.ts';
+import { toolPin, pythonPins, collectPins } from '#cli/tools/pins.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
-import { hasValePackages, installProsePackages } from '#cli/tools/vale.ts';
+import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
@@ -28,6 +29,7 @@ import type {
     InstallationContext,
 } from '#cli/types/lifecycle/install.ts';
 import {
+    POLICY_FILE,
     VALE_CONFIG,
     YARN_SETTINGS,
     MISE_CONFIG_PATH,
@@ -72,7 +74,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             const { log, inputs, refreshLocks } = context;
             if (pythonPins(manifests).length > 0) await session.pythonInstaller();
             const generated = emitAll(session);
-            for (const path of ['gspot.toml', TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS])
+            for (const path of [POLICY_FILE, TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS])
                 inputs.read(path);
             await preparePackageProject(session.root, generated.files, inputs, { refreshLocks });
             await preparePythonProject(session, generated.files, inputs, { refreshLocks });
@@ -148,7 +150,18 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             const version = semver.coerce(read.stdout);
             if (read.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
                 throw new GspotError('tool', `Install mise ${MISE_MIN_VERSION} or newer to read ${MISE_CONFIG_PATH}.`);
-            return runInstall(session.root, preview.steps);
+            const notes: string[] = [];
+            const env = await registryEnvironment(session.root);
+            for (const command of preview.steps) {
+                const result = await runTool(command, { cwd: session.root, env });
+                const shown = command.join(' ');
+                if (result.code !== 0) {
+                    const failure = `The installation command ${shown} failed (exit ${String(result.code)}): check the package manager and registry settings.`;
+                    throw new GspotError('installation', failure);
+                }
+                notes.push(`ran ${shown}`);
+            }
+            return notes.join('; ');
         },
     },
     {
@@ -176,14 +189,19 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     ? [['vale', '--config', VALE_CONFIG, 'sync']]
                     : [],
         }),
-        run: async (session) => {
-            const installed = await installProsePackages(session);
-            if (installed?.problem !== undefined)
-                throw new GspotError(
-                    'installation',
-                    `Vale package installation failed: ${installed.problem}. Run: gspot install`,
-                );
-            return installed === undefined ? '' : 'installed Vale packages in .gspot/config/vale/styles';
+        run: async (session, manifests) => {
+            if (hasValePackages(session.root)) return '';
+            const problem = await installValePackages({
+                search: session,
+                tool: toolPin(manifests, 'vale'),
+                timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
+                cancelSignal: session.cancelSignal,
+            });
+            if (problem !== undefined) {
+                const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
+                throw new GspotError('installation', failure);
+            }
+            return 'installed Vale packages in .gspot/config/vale/styles';
         },
     },
     {
@@ -207,22 +225,6 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
     },
 ];
 
-async function runInstall(root: string, commands: string[][]): Promise<string> {
-    const notes: string[] = [];
-    const env = await registryEnvironment(root);
-    for (const command of commands) {
-        const result = await runTool(command, { cwd: root, env });
-        const shown = command.join(' ');
-        if (result.code !== 0)
-            throw new GspotError(
-                'installation',
-                `The installation command ${shown} failed (exit ${String(result.code)}): check the package manager and registry settings.`,
-            );
-        notes.push(`ran ${shown}`);
-    }
-    return notes.join('; ');
-}
-
 async function runInstallationPhases(session: Session, context: InstallationContext): Promise<string[]> {
     const manifests = applicableManifests(session);
     const notes: string[] = [];
@@ -237,12 +239,10 @@ async function runInstallationPhases(session: Session, context: InstallationCont
             failures.push(error);
         }
     }
-    const summaries = notes.filter((note) => note !== '');
     if (failures.length > 0) throw new AggregateError(failures, failures.map((error) => error.message).join('\n'));
-    return summaries;
+    return notes.filter((note) => note !== '');
 }
 
-// Acquisition failures can be repaired by install; unexpected failures stop later phases immediately.
 function isInstallationFailure(error: unknown): error is GspotError {
     return error instanceof GspotError && (error.code === 'tool' || error.code === 'installation');
 }

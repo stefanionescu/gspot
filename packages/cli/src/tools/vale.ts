@@ -1,20 +1,16 @@
 // Inspect and synchronize configured Vale style packages in managed storage.
 import { join, dirname } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
-import { toolPin } from '#cli/tools/pins.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Root } from '#cli/types/platform/root.ts';
-import { rootView } from '#cli/policy/settings/view.ts';
 import { parseValePackages } from '#cli/parsers/vale.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import type { ValeInstallation } from '#cli/types/tools/install.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
-import type { AssetInstallation } from '#cli/types/tools/install.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Read package names only from the private Vale configuration managed by this repository.
@@ -121,22 +117,22 @@ export function removeValePackages(root: string): void {
 
 /**
  * Downloads the upstream packages the config names, and replaces the installed ones with them. Needs the network.
- * @param session the command session holding tool declarations and inspections
+ * @param request the tool search, selected Vale pin, deadline, and cancellation
  * @returns what went wrong, or undefined when the packages are in place
  */
-export async function installValePackages(session: Session): Promise<string | undefined> {
-    const { root } = session;
-    const inspection = inspectTool(session, toolPin(session.manifests.values(), 'vale'));
+export async function installValePackages(request: ValeInstallation): Promise<string | undefined> {
+    const { search, tool, timeoutSeconds, cancelSignal } = request;
+    const { root } = search;
+    const inspection = inspectTool(search, tool);
     if (!isToolAvailable(inspection))
         return inspection.note ?? `Vale is ${inspection.state}. ${inspection.hint ?? 'Run: gspot install'}`;
     using workFolder = scratchFolder('gspot-vale-');
     const work = workFolder.path;
     using files = openRoot(root);
     stageInputs(files, work);
-    const timeoutSeconds = Number(rootView(session.scopes).settings['tool_timeout_seconds']);
     const result = await runTool([inspection.path, '--config', join(work, VALE_CONFIG), 'sync'], {
         cwd: work,
-        cancelSignal: session.cancelSignal,
+        cancelSignal,
         timeoutSeconds,
     });
     if (result.isCanceled === true) return 'Vale package sync was canceled.';
@@ -144,19 +140,4 @@ export async function installValePackages(session: Session): Promise<string | un
     if (result.code !== 0) return installationDiagnostics(result, []);
     replacePackages(files, work);
     return undefined;
-}
-
-/**
- * Install configured Vale packages when an applicable check needs Vale and any package is missing.
- * A clone gets the untracked packages from install.
- * @param session the open session
- * @returns undefined when nothing was needed, an empty result after the install, or the problem when it failed
- */
-export async function installProsePackages(session: Session): Promise<AssetInstallation | undefined> {
-    const isProse = applicableManifests(session).some((manifest) =>
-        manifest.tools.some((tool) => tool.name === 'vale'),
-    );
-    if (!isProse || hasValePackages(session.root)) return undefined;
-    const problem = await installValePackages(session);
-    return problem === undefined ? {} : { problem };
 }

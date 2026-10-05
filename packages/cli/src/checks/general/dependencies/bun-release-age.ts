@@ -3,11 +3,11 @@ import { join, posix } from 'node:path';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation/bunfig.ts';
 import { parseBunInstallSettings } from '#cli/parsers/packages.ts';
 import { BUNFIG } from '#cli/config/checks/general/dependencies.ts';
-import { LOCKFILE_CLIENTS } from '#cli/config/repository/inventory.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
@@ -53,7 +53,8 @@ function scannerFindings(input: EngineInput, table: Record<string, unknown>, sca
  */
 export function bunReleaseAge(input: EngineInput): Finding[] {
     const isBun = input.files.some(
-        (file) => !file.path.split('/').includes(DOT_GSPOT) && LOCKFILE_CLIENTS[posix.basename(file.path)] === 'bun',
+        (file) =>
+            !file.path.split('/').includes(DOT_GSPOT) && lockfileEntry(posix.basename(file.path))?.client === 'bun',
     );
     if (!isBun) return [];
     const { settings } = input.view;

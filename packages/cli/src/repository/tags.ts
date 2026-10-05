@@ -2,6 +2,7 @@
 import { posix } from 'node:path';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { parseShebang } from '#cli/parsers/shebang.ts';
+import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import type { Tagged, RawEntry, ContentPrefix } from '#cli/types/repository/inventory.ts';
@@ -12,7 +13,6 @@ import {
     SHEBANG_TAGS,
     FILENAME_TAGS,
     EXTENSION_TAGS,
-    LOCKFILE_CLIENTS,
     BINARY_EXTENSIONS,
     SHEBANG_INTERPRETERS,
 } from '#cli/config/repository/inventory.ts';
@@ -63,7 +63,7 @@ export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],
-        [Object.hasOwn(LOCKFILE_CLIENTS, base), 'lockfile'],
+        [lockfileEntry(base) !== undefined, 'lockfile'],
         [base.startsWith('Dockerfile') || extension === '.dockerfile', 'dockerfile'],
         [base.startsWith('.env'), 'dotenv'],
         [entry.executable, 'executable'],

@@ -5,9 +5,10 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import { testPlanSchema } from '#cli/parsers/schema/xcode.ts';
 import { readPbxproj, testTargets } from '#cli/parsers/xcode.ts';
+import { SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { getBlobs, getCachedEntries } from '#cli/repository/revisions/objects.ts';
-import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 

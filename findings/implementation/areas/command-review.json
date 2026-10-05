@@ -659,10 +659,21 @@
         "section": "Findings",
         "finding": "| `apply.ts:39`, `outputs.ts:84, 98`, `generation/kits.ts:81, 119, 141` | A `Generated` value is called `plan`, `rendered`, `out`, or `outputs`, while \"plan\" also means `Planned`, `MergePlan`, `InitPlan`, and `ReplacePlan`. | Name every `Generated` value `generated`. |",
         "owner": "`apply.ts:39`, `outputs.ts:84, 98`, `generation/kits.ts:81, 119, 141`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/apply.ts",
+            "packages/cli/src/generation/outputs.ts",
+            "packages/cli/src/generation/configurations.ts",
+            "packages/cli/src/lifecycle/apply.ts"
+        ],
+        "status": "closed",
+        "outcome": "Generated values are consistently named generated in apply, output assembly, configuration emission, and lifecycle publication. Plan names remain only for actual lifecycle and command plans. Source inspection and the generation, command, and lifecycle regression cohort verify the distinction.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/commands/034",

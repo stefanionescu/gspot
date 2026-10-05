@@ -14,7 +14,5 @@ export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
 export const DEFAULT_OUTPUT_FORMAT: OutputSpec = { format: 'regex', pattern: DEFAULT_PATTERN };
 
-export const LINE_FEED = 10;
-
 export const ESLINT_WARN = 1;
 export const ESLINT_ERROR = 2;

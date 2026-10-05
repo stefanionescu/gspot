@@ -29,10 +29,20 @@
         "section": "Findings",
         "finding": "| `src/config/**`, `src/types/**` | Measured ceremony: 520 of 616 exported constants and 195 of 374 exported types have exactly one user file. Private helpers became public just to cross a folder, for example `SelectionWalk`, `CheckRule`, and `Layout` (`types/kits.ts`), and `PolicyScopeLayer` and `SettingState` (`types/policy/policy.ts`). The convention is not even applied consistently. `SYMLINK_MODE = '120000'` sits in `config/checks/tool/xcode.ts:6`, but `execution/checkout/revision.ts:41,72-73` writes `'120000'` inline. `POLICY_FILE` (`config/checks/general/structure.ts:7`) exists, yet the literal `'gspot.toml'` appears 35 times in 22 files. The word \"config\" already means `.gspot/config`, a kit `[[config]]`, the `{config:name}` placeholder, and `architecture.roles.config`. | Move single-user names into the user file, unexported. Keep a shared module only for real shared contracts. |",
         "owner": "`src/config/**`, `src/types/**`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/platform/locations.ts",
+            "packages/cli/src/config/repository/revisions.ts",
+            "packages/cli/src/types/configurations.ts"
+        ],
+        "status": "closed",
+        "outcome": "Retained config/ and types/ under the explicit repository instructions, with declarations grouped by their behavioral consumers. The shared policy filename now supplies all 19 operational copies and the scope source type; Xcode and revision materialization share the Git symlink mode. The blanket request to inline module-level constants and types is superseded by the approved folder contract.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/003",
@@ -41,10 +51,16 @@
         "section": "Findings",
         "finding": "| 67 of 68 `config/` files, 56 of 56 `types/` files | Each file opens with a boilerplate line that says nothing: \"The literal values X reads: names, patterns, limits, and tables.\" or \"The types of X in this package.\" Copy-paste left wrong headers: `config/execution/checkout.ts:4` and `types/execution/checkout.ts:3` name repository/revisions, and `config/execution/tool.ts:4` repeats line 1. | Delete these lines during the move. |",
         "owner": "67 of 68 `config/` files, 56 of 56 `types/` files",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/config", "packages/cli/src/types"],
+        "status": "closed",
+        "outcome": "The repeated literal-values and types-of-this-package headers are absent throughout both declaration trees. Removed the remaining misleading each-named-once comment from platform locations. Meaningful comments describing actual contracts remain.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/004",
@@ -53,10 +69,20 @@
         "section": "Findings",
         "finding": "| `config/checks/database.ts:34`, `config/repository/repository.ts:11`, `config/checks/language/bash.ts:45-46` and `:74,:77`, `types/lifecycle/preview.ts:3,7` | Comments orphaned when code moved. One sits above an unrelated constant, one has nothing under it, two doc comments are stacked on one constant, one doc comment is repeated on two constants, and two comments describe `vale.ts` and `shellcheck.ts`. | Delete them. They return to sense once the constants sit beside their code. |",
         "owner": "`config/checks/database.ts:34`, `config/repository/repository.ts:11`, `config/checks/language/bash.ts:45-46` and `:74,:77`, `types/lifecycle/preview.ts:3,7`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/checks/database/postgres.ts",
+            "packages/cli/src/config/checks/language/bash.ts",
+            "packages/cli/src/config/repository/inventory.ts"
+        ],
+        "status": "closed",
+        "outcome": "Removed the orphaned migration-summary comment above PUBLIC_SCHEMA. The other reported comments disappeared with their superseded declaration bags; current Bash comments describe the constants immediately below them, and obsolete lifecycle preview types no longer exist.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/005",
@@ -65,10 +91,21 @@
         "section": "Findings",
         "finding": "| `types/policy/policy.ts:5`, `config/policy/policy.ts:3`, `types/kits.ts:4`, `config/generation/generation.ts:4`, `types/generation/generation.ts:3` | Circular type imports created by the split. `types/policy/policy.ts` imports `typeof policySchema` from `policy/schema.ts`. That module imports `config/policy/policy.ts`, which imports `types/policy/policy.ts`. `types/kits.ts` and `kits/schema.ts` form the same loop. `HOOK_FILES` (config) and `HookName` (types) import each other. | Declare `z.infer` types in the schema file, and `HookName` beside `HOOK_FILES`. |",
         "owner": "`types/policy/policy.ts:5`, `config/policy/policy.ts:3`, `types/kits.ts:4`, `config/generation/generation.ts:4`, `types/generation/generation.ts:3`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/types/generation/hooks.ts",
+            "packages/cli/src/types/policy/settings.ts",
+            "packages/cli/src/types/configurations.ts"
+        ],
+        "status": "closed",
+        "outcome": "The approved types/ contract retains schema-derived aliases there. The cited cross-references are type-only and produce no runtime initialization cycle. HookName derives from the authoritative hook keys without duplicating their union. Current runtime imports, all four compiler targets, and repository dependency checks verify this arrangement.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/006",
@@ -1040,10 +1077,20 @@
         "section": "Findings",
         "finding": "| `config/checks/language/python.ts:8-9`, `config/checks/language/language.ts:4`, `config/checks/language/sql.ts:4`, `config/checks/general/dependencies.ts:8`, `config/generation/generation.ts:46`, `config/generation/eslint.ts:10` | Setting defaults are repeated as dead code fallbacks. `FILE_LINES`, `FUNCTION_LINES`, `TRIVIAL_STATEMENTS`, and `FUNCTION_PARAMETERS` repeat limit defaults from the structure manifest (`:125-137`, `:259`), and the python, sql, swift, and bash kits all require structure. `RELEASE_AGE_DAYS` and `DEFAULT_RELEASE_AGE_DAYS` repeat `install.min_release_age_days = 7`. `DEFAULT_NODE_VERSION` repeats `tools.eslint.node_version`. Each fallback is a second source for the same number. | Delete the fallbacks. The manifest default is the one source. |",
         "owner": "`config/checks/language/python.ts:8-9`, `config/checks/language/language.ts:4`, `config/checks/language/sql.ts:4`, `config/checks/general/dependencies.ts:8`, `config/generation/generation.ts:46`, `config/generation/eslint.ts:10`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "packages/cli/src/checks/general/dependencies",
+            "packages/cli/src/checks/language"
+        ],
+        "status": "closed",
+        "outcome": "The reported file, function, statement, parameter, release-age, and Node-version fallback constants are absent. Readers use the resolved scope settings supplied by their owning manifests; the affected generation, parser, and check regressions pass.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/050",
@@ -1066,10 +1113,21 @@
         "section": "Findings",
         "finding": "| `config/generation/generation.ts` (135 lines, 28 importers) | A grab bag of CI action pins, hook arguments, runner commands, managed-block markers, a Vale grammar map, and mise paths. `.gspot/rules/code/CONFIGURATION.md:23` says to group constants by domain, not in one bag. | Split by owner: CI pins into `generation/ci.ts`, hooks into `generation/hooks.ts`, markers into `generation/markers.ts`, and `PROSE_GRAMMARS` into `generation/vale-styles.ts`. |",
         "owner": "`config/generation/generation.ts` (135 lines, 28 importers)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/generation/ci.ts",
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/config/generation/prose.ts",
+            "packages/cli/src/config/platform/managed-blocks.ts"
+        ],
+        "status": "closed",
+        "outcome": "The generation grab bag is gone. Action pins and runner images belong to CI, hook commands to hooks, block markers to managed blocks, and Vale grammars to prose generation. The old generation/generation.ts paths and imports are absent.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/052",
@@ -1109,10 +1167,21 @@
         "section": "Findings",
         "finding": "| `config/execution/checkout.ts:14`, `config/tools/packages.ts:41`, `config/repository/repository.ts:43,209`, `config/checks/general/dependencies.ts:16,30` | Two exports named `LOCKS` have different shapes (an array and a map). `LOCKFILE_CLIENTS`, `RUNNER_LOCKS`, `LOCKFILES`, and `FROZEN_INSTALLS` cover the same files again. | Keep one lockfile table in `repository/lockfiles.ts`, with the client, the runner, and the frozen command for each file. |",
         "owner": "`config/execution/checkout.ts:14`, `config/tools/packages.ts:41`, `config/repository/repository.ts:43,209`, `config/checks/general/dependencies.ts:16,30`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/parsers/lockfiles.ts",
+            "packages/cli/src/parsers/lockfiles.ts",
+            "packages/cli/src/parsers/packages.ts",
+            "packages/cli/src/execution/snapshot/installed.ts"
+        ],
+        "status": "closed",
+        "outcome": "One literal lockfile registry declares clients, runner priority, private lock identities, parsed formats, frozen validation commands, and snapshot inputs. Detection, inventory tags, dependency checks, native private installs, and snapshots consume it. Removed both LOCKS tables, LOCKFILE_CLIENTS, RUNNER_LOCKS, FROZEN_INSTALLS, PACKAGE_INPUTS, and RunnerLock. Native installation flags remain in their own protocol owner because private immutable acquisition and repository dry-run validation are different operations.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/054",
@@ -1145,10 +1214,21 @@
         "section": "Findings",
         "finding": "| `types/tools/tools.ts:12,17,63`, `types/tools/packages.ts:22,26`, `types/repository/repository.ts:44,63` | `InstallationKind` and `PrivateKind` are the same union in one file. `Session.packageClient` repeats the `z.infer` that `PackageTool` already names. `DependencyMap` equals `Dependencies`. `Runner` repeats the runner enum of `policy/schema.ts:266` and is used only inside `types/`. | Keep one of each, and derive `Runner` from the schema. |",
         "owner": "`types/tools/tools.ts:12,17,63`, `types/tools/packages.ts:22,26`, `types/repository/repository.ts:44,63`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/tools/install.ts",
+            "packages/cli/src/types/parsers/packages.ts",
+            "packages/cli/src/types/parsers/lockfiles.ts",
+            "packages/cli/src/types/repository/inventory.ts"
+        ],
+        "status": "closed",
+        "outcome": "InstallationKind derives from the installation kinds; PrivateKind is absent. Package installation uses the schema-derived PackageInstaller contract. Removed the duplicate Dependencies alias and updated lock readers to DependencyMap. Runner now derives directly from runnerSchema.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/057",
@@ -1157,10 +1237,21 @@
         "section": "Findings",
         "finding": "| `types/generation/generation.ts:10,95,108,110`, `types/execution/checkout.ts:4`, `types/commands/check.ts:16`, `types/commands/explain.ts:27` | `Pointer` and `PointerSpec` are identical. `BlockOutput.style` repeats `BlockStyle`. Two unrelated types are both named `Revision`. `DeclaredCheck` derives `RepositoryCheck` again through `Session`. | Delete the duplicates, and rename one `Revision`, for example to `CheckoutSource`. |",
         "owner": "`types/generation/generation.ts:10,95,108,110`, `types/execution/checkout.ts:4`, `types/commands/check.ts:16`, `types/commands/explain.ts:27`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/generation/output.ts",
+            "packages/cli/src/types/execution/snapshot.ts",
+            "packages/cli/src/types/repository/revisions.ts",
+            "packages/cli/src/types/policy/settings.ts"
+        ],
+        "status": "closed",
+        "outcome": "PointerSpec and DeclaredCheck are absent; generated blocks use the shared BlockStyle. Renamed the execution metadata type to RevisionSource and updated its check consumers, leaving Revision for the Git object selection. The remaining declarations have distinct consumers and contracts.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     },
     {
         "id": "areas/policy/058",
@@ -1169,9 +1260,22 @@
         "section": "Findings",
         "finding": "| `types/tools/tools.ts:14` `Session` (40 importers), `types/kits.ts:19` `GeneratedFile` | `execution/session.ts` opens the session, but `Session` is declared among the tools types. The reason is that `tools/*` takes the whole session and the tools layer may not import execution. `GeneratedFile` is a generation output declared in kits for the same reason. | Let tools functions take the narrow `ToolSearch` they read, then declare `Session` in `execution/session.ts` and `GeneratedFile` in generation. |",
         "owner": "`types/tools/tools.ts:14` `Session` (40 importers), `types/kits.ts:19` `GeneratedFile`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/types/execution/session.ts",
+            "packages/cli/src/types/generation/output.ts",
+            "packages/cli/src/types/tools/install.ts",
+            "packages/cli/src/tools/vale.ts",
+            "packages/cli/src/lifecycle/install.ts",
+            "packages/cli/src/types/tools/python.ts"
+        ],
+        "status": "closed",
+        "outcome": "Session belongs to execution, and GeneratedFile belongs to generation. Removed the remaining Session dependency and planning imports from tools/vale.ts. Its native acquisition takes only ToolSearch, a selected pin, deadline, and cancellation. Folded the one-caller prose orchestration into the lifecycle phase and removed AssetInstallation; native synchronization, package replacement, and disposal remain in the tool owner. PythonPreparation owns the installer callback contract directly; Session composes that contract without a reverse dependency from tool types to execution.",
+        "verification": [
+            "CLI regression cohort: /tmp/gspot-owner-registry-cli.log, 1,207 passing cases and 4,892 assertions across 172 files.",
+            "Native package-manager and Vale cohort: /tmp/gspot-owner-registry-native.log, 27 passing cases and 296 assertions across six files, covering repair, authentication, refusal, clone replacement, pruning, and preservation.",
+            "All four TypeScript targets: /tmp/gspot-owner-registry-types-complete.log. Repository ESLint: /tmp/gspot-owner-registry-repository-lint.json, all five scopes passed; final changed-file ESLint: /tmp/gspot-owner-registry-lint-complete.log.",
+            "Canonical apply: /tmp/gspot-owner-registry-apply-first.json and /tmp/gspot-owner-registry-apply-second.json, both 137 unchanged outputs and no writes.",
+            "Final explain, Python preparation, and Vale consumer regressions: /tmp/gspot-owner-registry-final-consumers.log. Staged check: /tmp/gspot-owner-registry-staged.json."
+        ]
     }
 ]

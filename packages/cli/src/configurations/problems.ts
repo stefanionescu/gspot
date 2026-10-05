@@ -6,13 +6,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { listAssets } from '#cli/platform/assets.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
 import { allChecks, configurationName } from '#cli/configurations/declarations.ts';
+import { CONFIG_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/parsers/command.ts';
+import { SETTING_DEFAULT_FIELDS, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
-import {
-    SETTING_PLACEHOLDER,
-    SETTING_DEFAULT_FIELDS,
-    CONFIGURATION_RULES_FOLDER,
-    MANIFEST_CONFIG_PLACEHOLDER,
-} from '#cli/config/configurations.ts';
 import type {
     ToolPin,
     Manifest,
@@ -68,7 +64,7 @@ function configurationReaders(checks: RawCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
         for (const argument of [...(check.command ?? []), ...(check.fix ?? []), ...Object.values(check.env ?? {})])
-            for (const match of argument.matchAll(MANIFEST_CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
+            for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
 

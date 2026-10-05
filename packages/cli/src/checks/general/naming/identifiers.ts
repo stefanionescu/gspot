@@ -9,6 +9,7 @@ import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
 import { REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
@@ -145,7 +146,7 @@ async function policyFindings(input: EngineInput): Promise<Finding[]> {
             .filter((entry) => !removable.has(entry.group))
             .map((entry) => `naming.groups_off names "${entry.group}", which is not a removable group.`);
         return [...unused, ...dead, ...groups, ...cases].map((text) =>
-            findingAt(input, { file: 'gspot.toml' }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
+            findingAt(input, { file: POLICY_FILE }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
         );
     });
 }

@@ -14,7 +14,7 @@ export type WorktreeCopy = {
 };
 
 /** What a snapshot stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
-export type Revision = {
+export type RevisionSource = {
     commits?: string[];
     historyComplete?: boolean;
     content: 'index' | 'commit';

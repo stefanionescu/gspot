@@ -8,6 +8,7 @@ import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
 import { preparePackageProject } from '#cli/tools/npm/project.ts';
@@ -75,7 +76,7 @@ export async function writeSetup(
     const session = await openSession(root, {
         policy: parseStrictPolicy(prepared.policyText, root),
         text: prepared.policyText,
-        path: 'gspot.toml',
+        path: POLICY_FILE,
         problems: [],
     });
     const generated = emitAll(session);
@@ -87,7 +88,7 @@ export async function writeSetup(
     applyPlan(
         log,
         proposeReplacement(log, {
-            path: 'gspot.toml',
+            path: POLICY_FILE,
             next: { bytes: Buffer.from(prepared.policyText), mode: OWNER_WRITABLE_FILE },
             kind: 'policy',
             canReplace: true,

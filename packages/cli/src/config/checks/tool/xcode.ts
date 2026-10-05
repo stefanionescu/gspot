@@ -1,7 +1,5 @@
 export const XCODE_PROJECT_FILE = '.xcodeproj/project.pbxproj';
 
-export const SYMLINK_MODE = '120000';
-
 export const NOT_WORD = /[^A-Za-z\d]/u;
 
 export const IMAGE_SET = '.imageset/Contents.json';

@@ -15,6 +15,7 @@ import { CI_SETUP, HOOKS_ROW, COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } fr
 
 import {
     DOT_GSPOT,
+    POLICY_FILE,
     MISE_CONFIG_PATH,
     TOOL_PYTHON_PROJECT,
     TOOL_PACKAGE_PROJECT,
@@ -154,7 +155,7 @@ export function buildInitPlan(
             checks: manifest.checks.length,
         })),
         write: [
-            { path: 'gspot.toml', note: `your policy, ${String(policyText.split('\n').length)} lines` },
+            { path: POLICY_FILE, note: `your policy, ${String(policyText.split('\n').length)} lines` },
             { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
             ...everySelected
                 .flatMap((manifest) => manifest.configs)

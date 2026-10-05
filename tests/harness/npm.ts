@@ -5,9 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { LOCKS } from '#cli/config/parsers/lockfiles.ts';
+import { packageLockFile } from '#cli/parsers/packages.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createPackageRegistry } from '#registry/packages.ts';
+import type { LockName } from '#cli/types/parsers/lockfiles.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -77,8 +78,8 @@ async function prepareToolProject(root: string): Promise<void> {
 }
 
 /** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
-export function readPackageInputs(root: string, installer: keyof typeof LOCKS): PackageInputs {
-    const lockPath = join(root, '.gspot', LOCKS[installer]);
+export function readPackageInputs(root: string, installer: LockName): PackageInputs {
+    const lockPath = join(root, '.gspot', packageLockFile(installer));
     const ownershipPath = join(root, '.gspot/state/ownership.json');
     return {
         manifest: readFileSync(join(root, '.gspot/package.json')),
@@ -92,7 +93,7 @@ export function readPackageInputs(root: string, installer: keyof typeof LOCKS): 
 
 /** Creates an authenticated registry and an authored project for a native package manager. */
 export async function createPackageProject(
-    installer: keyof typeof LOCKS,
+    installer: LockName,
     projectPath: string,
     runner: 'mise' | 'none',
 ): Promise<PackageProject> {

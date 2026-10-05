@@ -5,8 +5,6 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
-import { isYarnBerry } from '#cli/parsers/packages.ts';
-import { LOCKS } from '#cli/config/parsers/lockfiles.ts';
 import { executableNames } from '#cli/platform/paths.ts';
 import { toolVersionState } from '#cli/tools/inspect.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
@@ -17,6 +15,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
+import { isYarnBerry, packageLockFile } from '#cli/parsers/packages.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
 import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/locks.ts';
 import { addEnvironmentReference, assertCredentialFreeLock } from '#cli/tools/credentials.ts';
@@ -102,7 +101,7 @@ function packageFailure(result: PackageRun['result'], credentials: string[]): st
 
 // Validate native lock output before it enters managed ownership.
 function credentialFreeLock(execution: PackageExecution, credentials: string[]): string {
-    const lock = readFileSync(join(execution.work, LOCKS[execution.installer.name]), 'utf8');
+    const lock = readFileSync(join(execution.work, packageLockFile(execution.installer.name)), 'utf8');
     assertCredentialFreeLock(
         lock,
         credentials,
@@ -117,7 +116,7 @@ function credentialFreeLock(execution: PackageExecution, credentials: string[]):
 // Private registry routing stays in the installation environment, out of portable locks.
 function stripRegistryUrls(execution: PackageExecution, lock: string): void {
     const { installer, work, env } = execution;
-    const lockPath = join(work, LOCKS[installer.name]);
+    const lockPath = join(work, packageLockFile(installer.name));
     if (installer.name === 'bun') writeFileSync(lockPath, stripBunRegistryUrls(lock, env));
     if (installer.name !== 'yarn' || isYarnBerry(installer)) return;
     const registry = env['npm_config_registry'];

@@ -4,10 +4,6 @@ import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 /** The rule assets within each shipped configuration. */
 export const CONFIGURATION_RULES_FOLDER = 'rules';
 
-export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
-
-export const MANIFEST_CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
-
 /** The fields two configurations may set differently when both declare one setting. */
 export const SETTING_DEFAULT_FIELDS = new Set(['default', 'default_all']);
 

@@ -4,7 +4,7 @@ import { memo } from '#cli/platform/memo.ts';
 import { wasmPath } from '#cli/platform/assets.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
-import { DECLARATION_FILE } from '#cli/config/parsers/source.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 
 import type {
     ParseReads,
@@ -102,7 +102,7 @@ export async function visitParsedSources(
  * @returns the grammar, or undefined for declaration files and languages without a grammar
  */
 export function grammarFor(path: string, language: string): GrammarName | undefined {
-    if (DECLARATION_FILE.test(path)) return undefined;
+    if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
     if (language === 'bash') return 'bash';
     if (language === 'swift') return 'swift';
     if (language === 'python') return 'python';

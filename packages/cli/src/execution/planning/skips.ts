@@ -3,6 +3,7 @@ import ignore from 'ignore';
 import { toolName } from '#cli/tools/pins.ts';
 import { readText } from '#cli/platform/source.ts';
 import type { Session } from '#cli/types/execution/session.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
@@ -126,7 +127,7 @@ export function restrictIgnoredPaths(session: Session, check: PlannedCheck): Pla
                 ? [pathMatcher(entry.paths)]
                 : [],
         );
-    const owners = ignored.length === 0 ? [] : ['gspot.toml'];
+    const owners = ignored.length === 0 ? [] : [POLICY_FILE];
     const native = nativeIgnore(session, check);
     if (native !== undefined) {
         ignored.push(native.matches);

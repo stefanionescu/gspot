@@ -12,6 +12,7 @@ import type { CommandResult } from '#cli/types/output.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 import { reasonDiagnostic } from '#cli/policy/problems/reasons.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
@@ -26,7 +27,7 @@ import type { PreparedPolicy, PolicyPreviewJson, PolicyCommitResult } from '#cli
  */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     using files = openRoot(root);
-    const original = files.read('gspot.toml');
+    const original = files.read(POLICY_FILE);
     if (original === undefined)
         throw new GspotError('policy', [`There is no gspot.toml here. Run \`gspot init\` to create one.`]);
     const text = decodeUtf8(original.bytes);
@@ -59,7 +60,7 @@ export function previewPolicy(root: string, mutation: Mutation, summary: string)
  */
 export function writePolicy(log: Log, plan: PreparedPolicy): Proposal {
     if (plan.changed) {
-        const previous = log.files.read('gspot.toml');
+        const previous = log.files.read(POLICY_FILE);
         if (!isDeepStrictEqual(previous, plan.original))
             throw new GspotError('policy', [
                 'The gspot.toml file changed while gspot was running. Run the command again.',
@@ -67,7 +68,7 @@ export function writePolicy(log: Log, plan: PreparedPolicy): Proposal {
         applyPlan(
             log,
             proposeReplacement(log, {
-                path: 'gspot.toml',
+                path: POLICY_FILE,
                 next: { bytes: Buffer.from(plan.text), mode: plan.original.mode },
                 kind: 'policy',
                 canReplace: true,
@@ -101,7 +102,7 @@ export async function commitPolicy(
     const session = await openSession(root, {
         policy: result.policy,
         text: result.text,
-        path: join(root, 'gspot.toml'),
+        path: join(root, POLICY_FILE),
         problems: [],
     });
     let generated;

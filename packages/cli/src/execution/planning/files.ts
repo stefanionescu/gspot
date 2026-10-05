@@ -4,13 +4,13 @@ import { kindOf } from '#cli/repository/kind.ts';
 import { tagEntry } from '#cli/repository/tags.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import { configurationName } from '#cli/configurations/declarations.ts';
+import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { PlanEntry, PlanInputs } from '#cli/types/execution/planning.ts';
 import { isInScope, pathMatcher, isOutsideChildren, isPrivateToolPath } from '#cli/repository/selectors.ts';
 
@@ -68,7 +68,7 @@ function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): 
     const { narrow } = context;
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
-    const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith(`${DOT_GSPOT}/`));
+    const isTouched = narrow.has(POLICY_FILE) || narrow.values().some((path) => path.startsWith(`${DOT_GSPOT}/`));
     if (inNarrowed.length > 0) return entry.spec.runs === 'files' ? inNarrowed : files;
     if (!isTouched) return [];
     if (entry.spec.runs !== 'files') return files;

@@ -1,23 +1,20 @@
 import { join, posix, dirname } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { STALE_LOCK_DIAGNOSTICS, LOCKFILE_DIAGNOSTIC_LINES } from '#cli/config/checks/general/dependencies.ts';
 
-import {
-    FROZEN_INSTALLS,
-    STALE_LOCK_DIAGNOSTICS,
-    LOCKFILE_DIAGNOSTIC_LINES,
-} from '#cli/config/checks/general/dependencies.ts';
-
-// A yarn.lock with __metadata comes from Yarn 2 or later and takes --immutable. Every other lockfile takes its command from FROZEN_INSTALLS.
+// Yarn 2 and later use --immutable; other formats use the native command declared in the lockfile registry.
 function frozenCommand(input: EngineInput, path: string): string[] | undefined {
     const filename = posix.basename(path);
     if (filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, path, input.reads).toString('utf8')))
         return ['yarn', 'install', '--immutable'];
-    return FROZEN_INSTALLS[filename];
+    const lock = lockfileEntry(filename);
+    return lock !== undefined && 'frozen' in lock ? [...lock.frozen] : undefined;
 }
 
 // A frozen-installation failure is a finding only when the package manager identifies stale inputs.

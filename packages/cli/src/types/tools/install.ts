@@ -77,5 +77,10 @@ export type LocateOptions = {
     installedRoot?: string | undefined;
 };
 
-/** A requested asset acquisition that completed or returned a diagnostic. */
-export type AssetInstallation = { problem?: string };
+/** The tool search, selected pin, and process limits of Vale package acquisition. */
+export type ValeInstallation = {
+    search: ToolSearch;
+    tool: ToolPin;
+    timeoutSeconds: number;
+    cancelSignal?: AbortSignal | undefined;
+};

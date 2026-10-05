@@ -1,17 +1,10 @@
 // Parse Git index and tree listings, and validate binary object stream framing.
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { LINE_FEED } from '#cli/config/parsers/source.ts';
 import { gitEntrySchema } from '#cli/parsers/schema/git.ts';
 import type { GitEntry, GitFrame, GitIndexEntry } from '#cli/types/parsers/git.ts';
-
-import {
-    LINE_FEED,
-    TREE_ENTRY,
-    BLOB_HEADER,
-    INDEX_ENTRY,
-    FRAME_NEWLINES,
-    UNSUPPORTED_ENTRY,
-} from '#cli/config/parsers/git.ts';
+import { TREE_ENTRY, BLOB_HEADER, INDEX_ENTRY, FRAME_NEWLINES, UNSUPPORTED_ENTRY } from '#cli/config/parsers/git.ts';
 
 function parseFrame(output: Buffer, cursor: number, hash: string): GitFrame {
     const end = output.indexOf(LINE_FEED, cursor);
