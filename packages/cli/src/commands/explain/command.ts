@@ -12,9 +12,10 @@ import { explainPath } from '#cli/commands/explain/path.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
+import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
+import { checkStageSchema } from '#cli/parsers/schema/command.ts';
 import { readEslintRuleNames } from '#cli/generation/eslint/presets.ts';
 import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
-import { STAGES, DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/check.ts';
 import { knownChecks, configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Explanation, SettingScope, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
@@ -56,7 +57,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
         ...(files.eslint_plugins ? ['Files: the file types of the selected ESLint plugins'] : []),
         ...formatList('Requires', row.requires),
         ...formatList('Tools it pins', row.tools),
-        ...STAGES.flatMap((stage) =>
+        ...checkStageSchema.options.flatMap((stage) =>
             formatList(
                 `Checks at ${stage}`,
                 row.checks.filter((check) => check.stage === stage).map((check) => check.check),
@@ -106,7 +107,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         '',
         first.spec.summary,
         '',
-        `Direction: ${DIRECTION_TEXTS[first.spec.direction] ?? first.spec.direction}`,
+        `Direction: ${DIRECTION_TEXTS[first.spec.direction]}`,
         ...scopes.flatMap((entry) => scopeLines(key, first.spec, entry)),
     ];
     return {

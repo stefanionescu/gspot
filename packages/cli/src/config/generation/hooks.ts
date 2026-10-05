@@ -1,3 +1,6 @@
+import type { Policy } from '#cli/types/policy/settings.ts';
+import type { HookRunner } from '#cli/types/generation/hooks.ts';
+
 export const HOOK_ARGS = {
     'pre-commit': 'check --hook pre-commit',
     'pre-push': 'check --hook pre-push -- "$@"',
@@ -12,4 +15,4 @@ export const HOOK_RUNNERS = {
     npm: { command: 'npm exec --no -- gspot', acquisition: 'Install Node.js and npm, then run: npm install.' },
     pnpm: { command: 'pnpm exec gspot', acquisition: 'Install pnpm, then run: pnpm install.' },
     yarn: { command: 'yarn exec gspot', acquisition: 'Install Yarn, then run: yarn install.' },
-};
+} satisfies Record<NonNullable<Policy['run_with']> | 'gspot', HookRunner>;

@@ -1,7 +1,7 @@
 // The header init prints: what it found in the repository, one row per kind.
-
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
-import { KIND_ROWS, DETECTION_GAP, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
+import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
+import { DETECTION_GAP, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
 function row(label: string, items: string[]): string | undefined {
     return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(DETECTION_GAP)}`;
@@ -53,19 +53,21 @@ export function detectionText(summary: DetectionSummary): string {
         )
         .map((evidence) => `${evidence.configuration} ${evidence.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
-        row('languages', languages),
-        ...KIND_ROWS.map(({ label, kind }) =>
-            row(
-                label,
-                summary.detected
-                    .filter(
-                        (evidence) =>
-                            evidence.kind === kind &&
-                            summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
-                    )
-                    .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
+        row(CONFIGURATION_LABELS.language.toLowerCase(), languages),
+        ...Object.entries(CONFIGURATION_LABELS)
+            .filter(([kind]) => kind !== 'language' && kind !== 'general')
+            .map(([kind, label]) =>
+                row(
+                    label.toLowerCase(),
+                    summary.detected
+                        .filter(
+                            (evidence) =>
+                                evidence.kind === kind &&
+                                summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
+                        )
+                        .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
+                ),
             ),
-        ),
         scopesRow(summary),
         ...toolingRows(summary),
     ].filter((line) => line !== undefined);

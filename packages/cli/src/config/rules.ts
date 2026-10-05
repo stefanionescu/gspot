@@ -4,17 +4,6 @@ export const FRONT_MATTER = /^---\n[\s\S]*?\n---\n/u;
 /** The files the managed block tells the reader to open first; they cannot be left out. */
 export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/engineering/prose/WRITING.md'];
 
-/** The heading of each group of the index: a base folder, or the category of a configuration. */
-export const RULE_AREAS: Record<string, string> = {
-    general: 'Repository',
-    language: 'Languages',
-    framework: 'Frameworks',
-    library: 'Libraries',
-    tool: 'Tools',
-    platform: 'Platforms',
-    database: 'Databases',
-};
-
 export const CHECKS_INSTALLED =
     'Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
 

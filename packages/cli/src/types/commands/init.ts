@@ -100,7 +100,6 @@ export type DetectionSummary = {
 };
 
 /** A detected configuration family printed as one initialization section. */
-export type ConfigurationKindRow = { label: string; kind: string };
 
 /** A file initialization writes, removes, or preserves, with its explanation. */
 export type InitFileRow = { path: string; note: string };

@@ -1,8 +1,9 @@
+import type { Manifest } from '#cli/types/configurations.ts';
+import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
 import type { RuleFile, RuleSettings, InstructionInputs } from '#cli/types/rules.ts';
 
 import {
     FIRST_READ,
-    RULE_AREAS,
     RULES_ALONE,
     LEVEL_SUMMARY,
     CHECKS_INSTALLED,
@@ -13,8 +14,9 @@ import {
 function rulesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
-        const category = file.path.split('/', 1)[0] ?? '';
-        const area = RULE_AREAS[category] ?? category;
+        // configurationFiles prefixes every rule path with its validated manifest kind.
+        const category = file.path.split('/', 1)[0] as Manifest['configuration']['kind'];
+        const area = CONFIGURATION_LABELS[category];
         const list = rows.get(area) ?? [];
         list.push(`\`${file.target}\``);
         rows.set(area, list);

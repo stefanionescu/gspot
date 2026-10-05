@@ -4,6 +4,9 @@ import type { SettingSpec } from '#cli/types/configurations.ts';
 /** The public policy and check levels. Preview rules have no supported level. */
 export const levelSchema = z.enum(['recommended', 'all']);
 
+/** Package and task runners supported by the public run_with setting. */
+export const runnerSchema = z.enum(['mise', 'npm', 'bun', 'pnpm', 'yarn']);
+
 /** Constraints declared by a setting's owning configuration. */
 export const settingValidationSchema = z.strictObject({
     enum: z

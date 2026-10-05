@@ -7,8 +7,8 @@ import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
 import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { toolSchema } from '#cli/parsers/schema/configurations/tool.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 import { levelSchema, settingValidationSchema } from '#cli/parsers/schema/settings.ts';
+import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -108,7 +108,7 @@ const checkFields = z.strictObject({
     // The name inside the configuration; the check's ID is the configuration's name, a slash, and this, as python/ruff.
     name: z.string().regex(/^[a-z0-9-]+$/),
     level: levelSchema,
-    stage: z.enum(['commit', 'push', 'manual', 'message']),
+    stage: checkStageSchema,
     runs: z.enum(['files', 'scope', 'once']).default('files'),
     command: commandSchema.optional(),
     run_in_copy: z.boolean().optional(),

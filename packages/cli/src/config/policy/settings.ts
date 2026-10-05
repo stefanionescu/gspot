@@ -1,4 +1,4 @@
-import type { SettingSpec } from '#cli/types/configurations.ts';
+import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 
 export const ISO_DATE_LENGTH = 10;
 
@@ -23,7 +23,12 @@ export const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'm
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
-export const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library', 'database']);
+export const OVERRIDING_KINDS = new Set<Manifest['configuration']['kind']>([
+    'framework',
+    'platform',
+    'library',
+    'database',
+]);
 
 // Rule stability from Ruff 0.16.8 rule --all --output-format json.
 export const RUFF_PREVIEW_RULES = new Set([

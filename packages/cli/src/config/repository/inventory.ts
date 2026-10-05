@@ -232,8 +232,6 @@ export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 // Two-word lint commands, and the package managers whose lint task counts.
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
 
-export const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
-
 export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',

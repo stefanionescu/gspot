@@ -1,6 +1,6 @@
+import type { Choice, InitAnswers } from '#cli/types/commands/init.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
-import type { Choice, InitAnswers, ConfigurationKindRow } from '#cli/types/commands/init.ts';
 
 export const COLUMN_GAP = 2;
 
@@ -46,14 +46,6 @@ export const DETECTION_LABEL_WIDTH = 20;
 
 // eslint-disable-next-line unicorn/prefer-string-repeat -- reason: Configuration modules own literal display data; rendering performs calculations.
 export const DETECTION_GAP = '   ';
-
-export const KIND_ROWS: ConfigurationKindRow[] = [
-    { label: 'frameworks', kind: 'framework' },
-    { label: 'platforms', kind: 'platform' },
-    { label: 'databases', kind: 'database' },
-    { label: 'tools', kind: 'tool' },
-    { label: 'libraries', kind: 'library' },
-];
 
 export const PREFACE = `${SCHEMA_LINE}
 

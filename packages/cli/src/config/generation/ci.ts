@@ -1,3 +1,4 @@
+import type { Policy } from '#cli/types/policy/settings.ts';
 import type { ActionPin } from '#cli/types/generation/ci.ts';
 
 // The paths the job caches between runs: the package caches and the installed tools.
@@ -38,7 +39,11 @@ export const SETUP_NODE_ACTION: ActionPin = {
 /** The Node major the generated CI installs gspot with. */
 export const NODE_VERSION = '22';
 
-export const RUNNERS: Record<string, string> = { linux: 'ubuntu-24.04', macos: 'macos-15', windows: 'windows-2025' };
+export const RUNNERS: Record<NonNullable<Policy['ci']>['platforms'][number], string> = {
+    linux: 'ubuntu-24.04',
+    macos: 'macos-15',
+    windows: 'windows-2025',
+};
 export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
 export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';

@@ -395,10 +395,20 @@
         "section": "The Config Constants",
         "finding": "| `config/rules.ts:18` `AREA_BY_LAYER`, `config/commands/init.ts:30` `KIND_ROWS`, `config/policy/policy.ts:173` `OVERRIDING_KINDS` | Three tables restate the kit `kind` enum (`kits/schema.ts:207`) as untyped strings, two of them with the same plural labels. A new kind compiles, but is missing from the index and from init. | Export the kind enum. Keep one `Record<KitKind, string>` of plural labels. Type `OVERRIDING_KINDS` as `Set<KitKind>`. |",
         "owner": "`config/rules.ts:18` `AREA_BY_LAYER`, `config/commands/init.ts:30` `KIND_ROWS`, `config/policy/policy.ts:173` `OVERRIDING_KINDS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/config/configurations.ts",
+            "packages/cli/src/config/policy/settings.ts",
+            "packages/cli/src/commands/init/detection.ts",
+            "packages/cli/src/rules/instructions.ts",
+            "packages/cli/src/types/configurations.ts"
+        ],
+        "status": "closed",
+        "outcome": "CONFIGURATION_LABELS is one exhaustive Record keyed by the validated Manifest configuration-kind union already exported by the types owner. Initialization derives its label rows from that record, preserving the existing display order and language treatment; managed rule indexes read the same labels. KIND_ROWS, ConfigurationKindRow, and RULE_AREAS are deleted. OVERRIDING_KINDS is a Set of that same closed union. The exported type contract provides exhaustiveness without a second enum or a compatibility export.",
+        "verification": [
+            "727 CLI cases pass with 2852 assertions across 91 files: /tmp/gspot-enums-tests.log. The final runner set passes 22 runner/init cases with 234 assertions and the existing tooling reader cases: /tmp/gspot-enums-survey-tests.log and /tmp/gspot-enums-tooling-verified.log.",
+            "All four TypeScript targets pass after repairing the widened membership input: /tmp/gspot-enums-types-final-0.log, /tmp/gspot-enums-types-final-1.log, /tmp/gspot-enums-types-final-2.log, /tmp/gspot-enums-types-final-3.log.",
+            "Affected ESLint passes: /tmp/gspot-enums-lint-frozen.log and /tmp/gspot-enums-survey-lint.log. Canonical generation applies twice with all 142 outputs unchanged: /tmp/gspot-enums-apply.json and /tmp/gspot-enums-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/022",
@@ -407,10 +417,20 @@
         "section": "The Config Constants",
         "finding": "| `config/commands/explain.ts:3` `STAGES`, `:4` `DIRECTION_TEXTS` | `STAGES` copies the `stage` enum (`kits/schema.ts:100`). `DIRECTION_TEXTS` has exactly the `direction` enum keys (`kits/schema.ts:161`), but its type is `Record<string, string>`, so `explain/subjects.ts:108` adds a fallback. | Use the enum's `.options`. Type the texts as `Record<Direction, string>`, and drop the fallback. |",
         "owner": "`config/commands/explain.ts:3` `STAGES`, `:4` `DIRECTION_TEXTS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/command.ts",
+            "packages/cli/src/parsers/schema/configurations/manifest.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/config/commands/explain.ts",
+            "packages/cli/src/commands/explain/command.ts"
+        ],
+        "status": "closed",
+        "outcome": "Built-in checks validate their stage with checkStageSchema, and explanation iterates that schema's options instead of an independent STAGES list. Custom commands reuse it while explicitly excluding their unsupported message stage. DIRECTION_TEXTS is an exhaustive Record of SettingSpec direction, and explain no longer falls back to an unrecognized direction.",
+        "verification": [
+            "727 CLI cases pass with 2852 assertions across 91 files: /tmp/gspot-enums-tests.log. The final runner set passes 22 runner/init cases with 234 assertions and the existing tooling reader cases: /tmp/gspot-enums-survey-tests.log and /tmp/gspot-enums-tooling-verified.log.",
+            "All four TypeScript targets pass after repairing the widened membership input: /tmp/gspot-enums-types-final-0.log, /tmp/gspot-enums-types-final-1.log, /tmp/gspot-enums-types-final-2.log, /tmp/gspot-enums-types-final-3.log.",
+            "Affected ESLint passes: /tmp/gspot-enums-lint-frozen.log and /tmp/gspot-enums-survey-lint.log. Canonical generation applies twice with all 142 outputs unchanged: /tmp/gspot-enums-apply.json and /tmp/gspot-enums-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/023",
@@ -419,10 +439,23 @@
         "section": "The Config Constants",
         "finding": "| `config/repository/repository.ts:200` `TASK_RUNNERS`, `config/checks/general/docs.ts:3` `RUN_TOKEN`, `config/generation/generation.ts:75` `RUNNER_EXEC` | The runner set (mise, bun, npm, pnpm, yarn) is written three times, and a fourth time as the zod enum (`policy/schema.ts:266`). `generation/ci.ts:69` writes `mise exec -- gspot` again. | Keep the zod enum. Type `RUNNER_EXEC` as `Record<Runner, string>`. Build `RUN_TOKEN` and `TASK_RUNNERS` from it. Use `RUNNER_EXEC.mise` in `ci.ts`. |",
         "owner": "`config/repository/repository.ts:200` `TASK_RUNNERS`, `config/checks/general/docs.ts:3` `RUN_TOKEN`, `config/generation/generation.ts:75` `RUNNER_EXEC`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/parsers/schema/settings.ts",
+            "packages/cli/src/policy/schema/policy.ts",
+            "packages/cli/src/repository/survey.ts",
+            "packages/cli/src/checks/general/docs.ts",
+            "packages/cli/src/config/generation/hooks.ts",
+            "packages/cli/src/config/generation/ci.ts",
+            "packages/cli/src/types/generation/ci.ts",
+            "packages/cli/src/generation/ci.ts"
+        ],
+        "status": "closed",
+        "outcome": "runnerSchema is the single supported runner enum consumed by policy validation, CI-job discovery, and documentation run tokens. TASK_RUNNERS and RUN_TOKEN are deleted from static config; their source readers derive the set and pattern from the enum. HOOK_RUNNERS is checked against the validated Policy runner union and stores both command and acquisition text; GitHub and GitLab generation reuse its command fields rather than spelling mise commands again. RUNNERS and Pipeline platforms also use the validated CI platform union, removing the impossible missing-runner branch.",
+        "verification": [
+            "727 CLI cases pass with 2852 assertions across 91 files: /tmp/gspot-enums-tests.log. The final runner set passes 22 runner/init cases with 234 assertions and the existing tooling reader cases: /tmp/gspot-enums-survey-tests.log and /tmp/gspot-enums-tooling-verified.log.",
+            "All four TypeScript targets pass after repairing the widened membership input: /tmp/gspot-enums-types-final-0.log, /tmp/gspot-enums-types-final-1.log, /tmp/gspot-enums-types-final-2.log, /tmp/gspot-enums-types-final-3.log.",
+            "Affected ESLint passes: /tmp/gspot-enums-lint-frozen.log and /tmp/gspot-enums-survey-lint.log. Canonical generation applies twice with all 142 outputs unchanged: /tmp/gspot-enums-apply.json and /tmp/gspot-enums-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/024",

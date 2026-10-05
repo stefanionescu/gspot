@@ -6,9 +6,9 @@ import { agentRulesSchema } from '#cli/parsers/schema/agent-rules.ts';
 import { reasoned, namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { toolsSchema, licenseSettingsSchema } from '#cli/policy/schema/tools.ts';
 import { configurationSettingSchemas } from '#cli/policy/schema/configurations.ts';
-import { levelSchema, numberSettingSchema } from '#cli/parsers/schema/settings.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
+import { levelSchema, runnerSchema, numberSettingSchema } from '#cli/parsers/schema/settings.ts';
+import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 
 const anyTable = z.record(z.string(), z.unknown());
@@ -94,7 +94,7 @@ const checkSchema = z.strictObject({
         .array(z.string().min(1))
         .min(1)
         .meta({ description: 'Repository-relative glob patterns selecting inputs.' }),
-    stage: z.enum(['commit', 'push', 'manual']).meta({ description: 'The earliest stage that runs this check.' }),
+    stage: checkStageSchema.exclude(['message']).meta({ description: 'The earliest stage that runs this check.' }),
     ignore_file: z
         .string()
         .optional()
@@ -199,10 +199,7 @@ export const rootSettingSchemas = {
         .array(z.string())
         .default([])
         .meta({ description: 'Checks at level all to run individually at level recommended.' }),
-    run_with: z
-        .enum(['mise', 'npm', 'bun', 'pnpm', 'yarn'])
-        .optional()
-        .meta({ description: 'The runner that installs and runs gspot.' }),
+    run_with: runnerSchema.optional().meta({ description: 'The runner that installs and runs gspot.' }),
     tests: z
         .array(z.string())
         .default(DEFAULT_TEST_PATTERNS)

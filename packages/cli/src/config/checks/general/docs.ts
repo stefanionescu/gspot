@@ -1,5 +1,3 @@
-export const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
-
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 
 export const START_WORDS = ['install', 'setup', 'start', 'requirements'];

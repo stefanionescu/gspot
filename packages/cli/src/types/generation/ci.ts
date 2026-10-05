@@ -6,7 +6,7 @@ export type ActionPin = { name: string; sha: string; version: string };
 export type Pipeline = {
     version: string;
     run?: NonNullable<Policy['ci']>['files'];
-    platforms: string[];
+    platforms: NonNullable<Policy['ci']>['platforms'];
     /** Whether a selected scope includes Swift. */
     hasSwift: boolean;
     isMise: boolean;

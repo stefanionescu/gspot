@@ -1,6 +1,6 @@
-export const STAGES = ['commit', 'push', 'manual', 'message'];
+import type { SettingSpec } from '#cli/types/configurations.ts';
 
-export const DIRECTION_TEXTS: Record<string, string> = {
+export const DIRECTION_TEXTS: Record<SettingSpec['direction'], string> = {
     ceiling: 'a ceiling: raising it needs a reason',
     floor: 'a floor: lowering it needs a reason',
     loosening: 'a loosening: setting it needs a reason',

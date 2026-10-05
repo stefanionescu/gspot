@@ -1,6 +1,7 @@
 // Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
@@ -35,8 +36,8 @@ function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
     if (pipeline.isMise)
         return [
             { uses: pinned(MISE_ACTION), with: { version: MISE_MIN_VERSION, cache: false } },
-            { run: 'mise exec -- gspot install' },
-            { run: 'mise exec -- gspot doctor' },
+            { run: `${HOOK_RUNNERS.mise.command} install` },
+            { run: `${HOOK_RUNNERS.mise.command} doctor` },
         ];
     return [
         { uses: pinned(SETUP_NODE_ACTION), with: { 'node-version': NODE_VERSION } },
@@ -64,9 +65,12 @@ function buildCheckScript(command: string, isFull: boolean): string {
     ].join('\n');
 }
 
-function buildJob(pipeline: Pipeline, platform: string, check: GithubCheck): Record<string, unknown> {
+function buildJob(
+    pipeline: Pipeline,
+    platform: Pipeline['platforms'][number],
+    check: GithubCheck,
+): Record<string, unknown> {
     const runner = RUNNERS[platform];
-    if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
     const cacheFiles = [
         TOOL_PACKAGE_PROJECT,
         `${DOT_GSPOT}/*lock*`,
@@ -103,7 +107,7 @@ function buildJob(pipeline: Pipeline, platform: string, check: GithubCheck): Rec
  * @returns the GitHub workflow file
  */
 export function githubFile(pipeline: Pipeline): GeneratedFile {
-    const command = pipeline.isMise ? 'mise exec -- gspot check' : 'gspot check';
+    const command = `${HOOK_RUNNERS[pipeline.isMise ? 'mise' : 'gspot'].command} check`;
     const check: GithubCheck = {
         step: {
             name: 'Check',
@@ -119,7 +123,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
             "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         step: { name: 'Check', run: `${command} --only ${pipeline.manualChecks.join(' ')}\n` },
     };
-    const platforms = [...new Set([...pipeline.platforms, ...(pipeline.hasSwift ? ['macos'] : [])])];
+    const platforms = [...new Set([...pipeline.platforms, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
     const workflow = new Document({
         name: 'gspot',
         on: ['push', 'pull_request', 'merge_group'],
@@ -150,7 +154,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
  * @returns the GitLab include file
  */
 export function gitlabFile(pipeline: Pipeline): GeneratedFile {
-    const command = pipeline.isMise ? 'mise exec -- gspot' : 'gspot';
+    const command = HOOK_RUNNERS[pipeline.isMise ? 'mise' : 'gspot'].command;
     const setup = pipeline.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
         : [`npm install --global @gspothq/cli@${pipeline.version}`];

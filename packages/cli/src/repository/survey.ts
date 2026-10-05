@@ -4,6 +4,7 @@ import { readText } from '#cli/platform/source.ts';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
@@ -18,7 +19,6 @@ import {
     MISE_FILES,
     AGENT_FILES,
     RUNNER_LOCKS,
-    TASK_RUNNERS,
     TASK_AFTER_RUN,
     FOREIGN_CI_FILES,
     LINT_DIRECTORIES,
@@ -27,12 +27,13 @@ import {
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function isLintCommand(command: string): boolean {
+    const runners = new Set<string>(runnerSchema.options);
     const words = command.split(/[\s;&|]+/u).filter((word) => word !== '');
     return words.some((word, index) => {
         if (word === 'eslint') return true;
         const next = words[index + 1];
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
-        if (!TASK_RUNNERS.has(word)) return false;
+        if (!runners.has(word)) return false;
         const task = next === 'run' ? words[index + TASK_AFTER_RUN] : next;
         return task === 'lint';
     });

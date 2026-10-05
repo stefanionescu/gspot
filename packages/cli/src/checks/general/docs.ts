@@ -9,6 +9,7 @@ import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
+import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
@@ -18,7 +19,6 @@ import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 
 import {
-    RUN_TOKEN,
     START_WORDS,
     SECTION_DEPTH,
     CONTENTS_TITLE,
@@ -73,8 +73,9 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
         .map((token) =>
             findingAt(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
         );
+    const runToken = new RegExp(String.raw`\b(?<runner>${runnerSchema.options.join('|')}) run (?<task>[\w:.-]+)`, 'gu');
     const runs = line
-        .matchAll(RUN_TOKEN)
+        .matchAll(runToken)
         .filter((match) => !index.tasks.has(match.groups?.['task'] ?? ''))
         .map((match) =>
             findingAt(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
