@@ -1,12 +1,14 @@
-// File arguments, stages, and scope paths select the checks a run executes.
+// Bun fixtures exercise file, stage, and scope selection through the public CLI.
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { git, commitAll } from '#tests/harness/git.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 
 // A sandbox with three commit checks that report every file they receive.
 async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -186,4 +188,24 @@ configurations = ["javascript", "naming"]
     expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(
         report.checks.flatMap((check) => check.findings),
     );
+});
+
+test('a staged change to only gspot.toml rechecks every file a configuration check owns', async () => {
+    const loose = buildPolicy(['sql'], {
+        tables: '[agent_rules]\nenabled = false\n[limits.sql]\nfile_lines = 100\n',
+        level: 'all',
+    });
+    const body = Array.from({ length: 12 }, (_, index) => `SELECT ${String(index)};`).join('\n');
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': loose,
+        'db/report.sql': `${body}\n`,
+    });
+    commitAll(sandbox.path);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), loose.replace('file_lines = 100', 'file_lines = 5'));
+    gitOutput(sandbox.path, ['add', 'gspot.toml']);
+    const checked = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sql/file-lines', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = JSON.parse(checked.stdout) as RunReport;
+    expect(report.checks[0]?.findings).toContainEqual(containing({ file: 'db/report.sql' }));
 });

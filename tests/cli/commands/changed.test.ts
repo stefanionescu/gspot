@@ -1,11 +1,9 @@
+// Bun comparisons use Git history to distinguish committed and working-tree inputs.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { buildPolicy } from '#tests/harness/policy.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
@@ -102,24 +100,4 @@ test('a shallow comparison failure explains how to fetch the missing history', a
     const result = await runGspot(join(sandbox.path, 'checkout'), ['check', '--changed', '--base', base, '--json']);
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
-});
-
-test('a commit that changes only gspot.toml rechecks every file a configuration check owns', async () => {
-    const loose = buildPolicy(['sql'], {
-        tables: '[agent_rules]\nenabled = false\n[limits.sql]\nfile_lines = 100\n',
-        level: 'all',
-    });
-    const body = Array.from({ length: 12 }, (_, index) => `SELECT ${String(index)};`).join('\n');
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': loose,
-        'db/report.sql': `${body}\n`,
-    });
-    commitAll(sandbox.path);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), loose.replace('file_lines = 100', 'file_lines = 5'));
-    gitOutput(sandbox.path, ['add', 'gspot.toml']);
-    const checked = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sql/file-lines', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.checks[0]?.findings).toContainEqual(containing({ file: 'db/report.sql' }));
 });

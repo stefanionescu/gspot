@@ -98,10 +98,14 @@
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/changed.test.ts:106`, \"a commit that changes only gspot.toml rechecks every file a kit check owns\" | The test runs `check --staged` and never commits. It sits in the file for `--changed`, and its name says \"a commit\". | Move it to `check/selection.test.ts` and rename it \"a staged change to only gspot.toml rechecks every file a kit check owns\". |",
         "owner": "`cli/commands/changed.test.ts:106`, \"a commit that changes only gspot.toml rechecks every file a kit check owns\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/commands/changed.test.ts", "tests/cli/commands/check/selection.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The policy-only staged case now lives in the check-selection owner. Its name states that only gspot.toml is staged; the changed-selection owner keeps only working-tree/history comparisons. Required imports moved with the case and unused imports were removed.",
+            "AST comparison across both owners proves identical non-import syntax after normalizing the single corrected test name. All 42 assertion sites remain unchanged; no production behavior, fixture body, or timeout changed.",
+            "Root TypeScript, affected ESLint, and formatting passed. Both owners passed all 12 runtime cases with 45 assertions across two files."
+        ]
     },
     {
         "id": "slices/tests-integration-commands/008",
