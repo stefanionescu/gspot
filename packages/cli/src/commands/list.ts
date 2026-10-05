@@ -34,13 +34,15 @@ function getExtras(scope: string, tools: Policy['tools']): ExtraRow[] {
 
 function buildSettingsResult(session: Session): CommandResult {
     const { rows, extras } = buildSettingRows(session.policyFiles.policy, session.scopes);
-    const width = Math.max(...rows.map((row) => row.key.length)) + KEY_GAP;
-    const lines = rows.map((row) => {
-        const value = (row.value === undefined ? 'unset' : JSON.stringify(row.value)).padEnd(VALUE_WIDTH);
-        return `${row.key.padEnd(width)}${value} ${row.direction}  ${row.source}${scopeTag(row.scope)}`;
+    const displayed = rows.filter((row) => row.scope === '' || row.source.startsWith(`[[scope]] ${row.scope}`));
+    const width = Math.max(...displayed.map((row) => row.key.length)) + KEY_GAP;
+    const lines = displayed.map((row) => {
+        const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
+        const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.direction}  ${row.source}${scopeTag(row.scope)}`;
     });
     if (extras.length > 0) {
-        lines.push('', 'custom tool options');
+        lines.push('', 'extra tables gspot does not check');
         for (const verbatim of extras)
             lines.push(
                 `  tools.${verbatim.tool}.verbatim  ${verbatim.keys.join(', ')}  ${verbatim.reason ?? ''}${scopeTag(verbatim.scope)}`,
@@ -82,8 +84,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
     const lines = ['selected'];
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
-        for (const check of configuration.checks)
-            lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
+        for (const [name, checks] of Map.groupBy(configuration.checks, (check) => check.name)) {
+            const states = checks.map((check) => `${check.scope === '' ? 'root' : check.scope}: ${check.state}`);
+            lines.push(`    ${name}  ${states.join(', ')}`);
+        }
     }
     lines.push('', 'detected, not selected');
     for (const configuration of detected)
@@ -136,7 +140,7 @@ export function registerList(program: Program): void {
         .command('list')
         .summary('List configurations, checks, and settings')
         .description(
-            'List the selected, detected, and available configurations with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.',
+            'List the selected, detected, and available configurations. Each check has one row with its state in each scope that selects its configuration. gspot list settings shows root values and the settings each scope changes. Long values are shortened; --json retains complete values and inherited settings. list changes nothing and runs no check.',
         )
         .addHelpText(
             'after',

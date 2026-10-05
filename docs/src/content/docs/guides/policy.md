@@ -13,8 +13,10 @@ gspot list
 gspot list settings
 ```
 
-`gspot list` shows the configurations and the state of each check. `gspot list settings` shows each
-setting, its value, and where the value comes from. The [settings reference](/reference/settings/)
+`gspot list` shows the configurations and one row per check with its state in each scope that selects its configuration.
+`gspot list settings` shows root values and the settings each scope changes, with their sources.
+Long values are shortened. Add `--json` to read complete values and inherited settings.
+The [settings reference](/reference/settings/)
 lists every setting with its accepted values and defaults.
 
 ## Configurations and the level

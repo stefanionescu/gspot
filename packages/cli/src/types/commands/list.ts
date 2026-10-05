@@ -3,7 +3,7 @@ export type SettingRow = {
     value: unknown;
     source: string;
     direction: string;
-    scope?: string;
+    scope: string;
 };
 
 /** One `[tools.<tool>.verbatim]` table: the keys it sets and why. */

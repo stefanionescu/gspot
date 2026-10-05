@@ -578,10 +578,20 @@
         "section": "Findings",
         "finding": "| `commands/list.ts` (output checked on this repo) | `gspot list` prints every check once per scope: all nine `structure/*` checks appear twice here. `list settings` repeats every root row for every scope and prints whole JSON arrays, which breaks the `VALUE_WIDTH` columns. The heading \"not a slot\" (`list.ts:42`) is jargon. `list [kind]` has only one choice. The variables are named `configuration` (`list.ts:81-90`). | Print one row per check with its scopes. Show a scope row only where the scope sets the value, and shorten long values. Rename the heading to \"extra tables gspot does not check\". Accept `list kits` and `list settings`. |",
         "owner": "`commands/list.ts` (output checked on this repo)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/list.ts",
+            "packages/cli/src/types/commands/list.ts",
+            "tests/cli/commands/list.test.ts",
+            "docs/src/content/docs/guides/policy.md"
+        ],
+        "status": "closed",
+        "outcome": "Human configuration listings emit one row per check with its scope states. Human settings show root rows and authored scope overrides, shorten values to the declared column width, and name extra native tables clearly. JSON preserves complete values, inherited rows, and separate check scope entries. The public configurations argument and terminology follow the user’s decision to preserve existing product vocabulary.",
+        "verification": [
+            "Three real CLI cases verify grouped root and nested-scope check states, unique rows for every selected check, authored scope overrides, full inherited JSON values, shortened human values, complete JSON arrays, extra-table labels and reasons, empty diagnostic streams, and unchanged complete repository trees.",
+            "Running the final three cases against the original listing implementation failed all three. Restoring the final implementation passed all 29 cases and 163 assertions across list, nested scopes, and both explanation owners.",
+            "A read-only TypeScript syntax comparison proved that both original listing tests and every assertion remain unchanged, as do the JSON returns, selection data producers, setting-row builder, status labels, and extra-table producer.",
+            "Every setting-row producer already emits a scope path; the declaration now makes that field required. Root TypeScript, affected ESLint, and formatting passed. The command help and policy guide describe the human and JSON behavior."
+        ]
     },
     {
         "id": "areas/commands/030",
