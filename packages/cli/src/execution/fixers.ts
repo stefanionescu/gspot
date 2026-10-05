@@ -11,10 +11,10 @@ import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
+import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
 import { scratchCopy, createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
-import { FIX_PASSES, FIX_DIFF_CONTEXT, FINDING_EXIT_CODES } from '#cli/config/execution/runtime.ts';
 import type { FixReport, FixResult, FixOptions, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
@@ -46,8 +46,7 @@ function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefi
     if (failure !== undefined) return failure.note;
     // A code the check declares for findings means findings remain after the fix.
     const { spec } = planned;
-    const findingCodes = [spec.exit_codes, FINDING_EXIT_CODES.get(spec.output?.format)].flat();
-    if ((result.code === 0 || findingCodes.includes(result.code)) && !hasToolError(spec, planned.tool, result))
+    if (!hasToolError(spec, planned.tool, result) && (result.code === 0 || spec.exit_codes !== undefined))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
     return [`${planned.spec.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');

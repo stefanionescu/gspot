@@ -40,6 +40,7 @@ stage = "commit"
 runs = "files"
 command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
 fix = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+exit_codes = [2]
 output = {format = "typos"}
 summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."

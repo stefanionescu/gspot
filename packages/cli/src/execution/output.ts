@@ -5,14 +5,13 @@ import { toolPath } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import { FILELESS_FORMATS } from '#cli/config/execution/output.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/execution/command.ts';
-import { FINDING_EXIT_CODES } from '#cli/config/execution/runtime.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import type { CommandInvocation } from '#cli/types/execution/command.ts';
 import type { OutputSpec, OutputPaths } from '#cli/types/parsers/output.ts';
 import type { Finding, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
-import { FILELESS_FORMATS, TRUFFLEHOG_FINDINGS_EXIT } from '#cli/config/execution/output.ts';
 import type { OutputCheck, CommandRunState, InvocationOutput } from '#cli/types/execution/output.ts';
 
 function prefixScope(findings: Finding[], scopePath: string): void {
@@ -81,10 +80,10 @@ function isOnDisk(file: string, roots: string[]): boolean {
 }
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
-    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS_EXIT) || broken)
+    if ((result.code !== 0 && spec.exit_codes?.includes(result.code) !== true) || broken)
         throw new GspotError('output', `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
     const findings = parseOutput(spec, result.stdout, result.stderr, paths);
-    if (result.code === TRUFFLEHOG_FINDINGS_EXIT && findings.length === 0)
+    if (result.code !== 0 && findings.length === 0)
         throw new GspotError(
             'output',
             'TruffleHog reported findings without valid structured data; raw output was withheld.',
@@ -148,13 +147,10 @@ export function recordInvocation(planned: PlannedCheck, output: InvocationOutput
  */
 export function checkedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { spec } = planned;
-    const specificCodes = FINDING_EXIT_CODES.get(spec.output?.format);
-    const accepted = [spec.exit_codes, specificCodes];
-    const broken =
-        (result.code !== 0 && accepted.some((codes) => codes !== undefined && !codes.includes(result.code))) ||
-        hasToolError(spec, planned.tool, result);
+    const broken = hasToolError(spec, planned.tool, result);
     const parsed = parsedFindings(spec, result, paths, broken);
-    const verifyFiles = planned.manifest !== undefined || specificCodes !== undefined;
+    const verifyFiles =
+        planned.manifest !== undefined || spec.output?.format === 'typos' || spec.output?.format === 'markdownlint';
     if (broken || (verifyFiles && isToolBroken(spec, result, parsed, paths))) outputFailure(planned, result);
     return parsed;
 }

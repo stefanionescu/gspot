@@ -99,10 +99,25 @@
         "section": "The Config Constants",
         "finding": "| `config/execution/execution.ts:15` `FINDING_EXIT_CODES` (and the private `TYPOS_FINDINGS`), `config/execution/tool.ts:22` `TRUFFLEHOG_FINDINGS` | The exit codes that mean \"findings\" are kept in TypeScript, keyed by output format. Yet every check already has a manifest field for them, `exit_codes` (`kits/schema.ts:107`). `fixers.ts:60` and `tool/findings.ts:238` merge the two sources. | Write `exit_codes = [2]` on the typos check, `[1]` on markdownlint, and `[183]` on trufflehog. Delete the table and both constants. |",
         "owner": "`config/execution/execution.ts:15` `FINDING_EXIT_CODES` (and the private `TYPOS_FINDINGS`), `config/execution/tool.ts:22` `TRUFFLEHOG_FINDINGS`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/general/spelling/manifest.toml",
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/general/secrets/manifest.toml",
+            "packages/cli/src/execution/command/failures.ts",
+            "packages/cli/src/execution/output.ts",
+            "packages/cli/src/execution/fixers.ts",
+            "tests/cli/execution/tool-runner/exit-contracts.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Typos, Markdownlint, and TruffleHog declare findings exits 2, 1, and 183 in their owning manifests. The format-keyed exit table and both numeric constants are deleted. Checks and corrections share declared exit rejection through the existing process-failure owner. Custom checks can declare a different findings exit without an output parser overriding it. Corrections reject the native default when it is outside their declaration, even when the subsequent check passes. TruffleHog still withholds raw crash output and rejects findings exits without valid structured findings.",
+        "verification": [
+            "179 affected CLI cases verified across 27 files: /tmp/gspot-exits-tests.log records 178 passes and one fixture error; after repairing only the success payload of that fixture, all seven cases of its file pass with 58 assertions in /tmp/gspot-exits-tests-repaired.log.",
+            "New CLI regressions exercise alternate declared Typos and Markdownlint statuses, fatal exits, failed corrections with passing checks, corrected success, and byte preservation.",
+            "Seven native cases pass with 73 assertions across Markdownlint/Typos structured reports, pushed-secret redaction, and spelling corrections: /tmp/gspot-exits-native.log.",
+            "All four TypeScript targets pass: /tmp/gspot-exits-types-0.log through /tmp/gspot-exits-types-3.log.",
+            "Affected formatting and lint pass: /tmp/gspot-exits-format-lint-final-verified.log and /tmp/gspot-exits-fixture-lint.log.",
+            "Canonical generation and a second apply each leave all 142 outputs unchanged: /tmp/gspot-exits-apply.json and /tmp/gspot-exits-second-apply.json."
+        ]
     },
     {
         "id": "slices/config/007",

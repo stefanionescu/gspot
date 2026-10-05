@@ -2,17 +2,9 @@ import type { CheckStatus } from '#cli/types/execution/runtime.ts';
 
 export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'missing', 'error']);
 
-export const TYPOS_FINDINGS = 2;
-
 export const FIX_PASSES = 3;
 
 export const FIX_DIFF_CONTEXT = 3;
-
-/** Native structured reporters reserve these nonzero exit codes for findings. */
-export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
-    ['typos', [TYPOS_FINDINGS]],
-    ['markdownlint', [1]],
-]);
 
 export const RAN_STATUSES = new Set<CheckStatus>(['passed', 'failed']);
 

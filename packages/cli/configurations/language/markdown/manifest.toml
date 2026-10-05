@@ -71,6 +71,7 @@ stage = "commit"
 runs = "files"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
+exit_codes = [1]
 output = {format = "markdownlint"}
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."

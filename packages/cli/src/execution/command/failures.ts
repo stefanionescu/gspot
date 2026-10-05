@@ -30,13 +30,14 @@ export function executionFailure(
 }
 
 /**
- * Match declared fatal diagnostics from a check or its tool during checks and corrections.
- * @param spec the check, whose own pattern comes first.
+ * Reject exits outside a declared contract and match fatal diagnostics during checks and corrections.
+ * @param spec the findings exits and the check pattern that takes precedence over the tool pattern.
  * @param tool the tool the check runs, with the pattern every check of it shares.
  * @param result the completed process.
- * @returns true when the output says the tool fell over.
+ * @returns true when an exit violates the declared contract or output reports a crash.
  */
 export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
+    if (result.code !== 0 && spec.exit_codes !== undefined && !spec.exit_codes.includes(result.code)) return true;
     const pattern = spec.crash_pattern ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
