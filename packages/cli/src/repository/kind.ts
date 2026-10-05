@@ -60,10 +60,14 @@ function isLicenseFile(path: string): boolean {
     return LICENSE_FILE.test(name) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
 
-// gspot writes everything under its folder; the Vale packages it fetches there are another party's text.
-function managedKind(path: string): Verdict | undefined {
+// Tool paths and banners identify generated files; downloaded Vale styles are another party's text.
+function classifyToolFile(path: string, prefix: Buffer): Verdict | undefined {
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
-    return path.startsWith(`${DOT_GSPOT}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
+    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', source: 'gspot' };
+    const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
+    if (hasHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
+        return { kind: 'generated', source: 'banner' };
+    return undefined;
 }
 
 // Higher-priority kinds are resolved; only a wholly managed instruction document makes remaining content generated.
@@ -95,13 +99,11 @@ export function kindOf(file: FileClassification, rules: FileClassificationRules)
     const { path } = entry;
     const declared = declaredKind(path, rules);
     if (declared) return declared;
-    if (isBinary) return { kind: 'binary', source: 'content' };
+    // Explicit text attributes override binary content and extension hints.
+    if (isBinary && rules.attributes.get(path)?.['text'] !== 'set') return { kind: 'binary', source: 'content' };
     if (isLicenseFile(path)) return { kind: 'vendored', source: 'license' };
-    const managed = managedKind(path);
+    const managed = classifyToolFile(path, prefix);
     if (managed) return managed;
-    const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    if (hasHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
-        return { kind: 'generated', source: 'banner' };
     if (
         path
             .split('/')

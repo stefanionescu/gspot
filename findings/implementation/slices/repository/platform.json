@@ -456,10 +456,19 @@
         "section": "Repository and Platform",
         "finding": "| `repository/kind.ts:99` `kindOf`, `:47` `attributeKind` | The code collects every attribute from every matching `.gitattributes` line, so a later line cannot unset an earlier one. Take `*.pb.go linguist-generated` followed by `api/*.pb.go -linguist-generated`: Git treats `api/x.pb.go` as not generated, but gspot calls it generated. Likewise, `*.dat binary` followed by `notes.dat text` stays binary. | Resolve each attribute last-match-wins: set, unset (`-x`), `x=false`, and unspecified (`!x`). Then test the final values. Or ask Git once: `git check-attr --stdin -z linguist-generated linguist-vendored binary text` (this also fixes the next row). |",
         "owner": "`repository/kind.ts:99` `kindOf`, `:47` `attributeKind`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/parsers/attributes.ts",
+            "tests/cli/repository/kinds.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Attribute resolution now follows later declarations, nested files and Git-native precedence. Explicit text overrides binary content and extension hints; text=auto retains those hints. Existing generated, vendored, managed and license precedence remains intact.",
+        "verification": [
+            "Before the fix, both new folder and Git-backed regressions failed only for notes.dat: its later text attribute was still overridden by the binary extension hint. The corrected kindOf condition honors the effective text=set value.",
+            "The three added inventory cases verify set, unset, false and unspecified generated attributes, vendored overrides, binary macros, explicit text, text=auto, nested overrides, removal and correction, generated banners under text, and preservation of every unrelated fixture byte.",
+            "Verified per-attribute override and text semantics against the primary Git documentation: https://git-scm.com/docs/gitattributes. No broadening of text=auto or string-valued text attributes was introduced.",
+            "All four TypeScript targets, affected ESLint and Prettier checks passed. Repository and attribute-generation regressions passed on macOS: 180 cases, 502 assertions, 22 files. Existing test bodies remain unchanged; the production AST reconstruction isolates the binary-text condition as the only behavior change."
+        ]
     },
     {
         "id": "slices/repository-platform/024",
@@ -468,10 +477,18 @@
         "section": "Repository and Platform",
         "finding": "| `repository/kind.ts:122` `readAttributes` | The function reads only the root `.gitattributes`. Git also applies `.gitattributes` files in subfolders and `.git/info/attributes`. A `sub/.gitattributes` that marks files generated or vendored is ignored. | Use `git check-attr` (row above). Or read every tracked `.gitattributes`, with each file's patterns relative to its folder. |",
         "owner": "`repository/kind.ts:122` `readAttributes`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/parsers/attributes.ts",
+            "tests/cli/repository/kinds.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Git repositories resolve attributes with one NUL-delimited check-attr query over the inventoried paths. Folder walks read each nested .gitattributes relative to its directory. Git info attributes take precedence, and removing them exposes the tracked declaration again.",
+        "verification": [
+            "Inspected readAttributes and its sole repository-read caller: it receives the inventoried paths, checks authored attribute sources through readText, and uses check-attr --stdin -z for Git. The non-Git branch applies ordered parsed declarations relative to their folders.",
+            "Both new backend cases require a nested unset declaration to defeat the root generated rule. The real Git info-attributes case requires source and vendored overrides, then removes the info file and requires both files to become generated without modifying their bytes.",
+            "All four TypeScript targets, affected ESLint and Prettier checks passed. Repository and attribute-generation regressions passed on macOS: 180 cases, 502 assertions, 22 files. Existing test bodies remain unchanged; the production AST reconstruction isolates the binary-text condition as the only behavior change."
+        ]
     },
     {
         "id": "slices/repository-platform/025",
@@ -480,10 +497,18 @@
         "section": "Repository and Platform",
         "finding": "| `repository/kind.ts:92` `kindOf(path, declarations, isBinary, prefix, attributes)` | The function takes five positional parameters, one of them a boolean. It has one caller (`tree.ts:87`). | Change the signature to `kindOf(file: { path, isBinary, prefix }, rules: { declarations, attributes })`. |",
         "owner": "`repository/kind.ts:92` `kindOf(path, declarations, isBinary, prefix, attributes)`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/repository/kind.ts",
+            "packages/cli/src/repository/read.ts",
+            "packages/cli/src/types/repository/inventory.ts"
+        ],
+        "status": "closed",
+        "outcome": "kindOf accepts the captured FileClassification and FileClassificationRules objects. The repository reader constructs both, including the root needed to verify whole managed documents. The five positional arguments and positional boolean are gone.",
+        "verification": [
+            "Traced the sole kindOf caller in readRepository. FileClassification owns root, entry, isBinary and prefix; FileClassificationRules owns declarations and attributes. No compatibility signature or forwarding module remains.",
+            "All four TypeScript targets and 180 actual repository/generation cases validate the current caller contract.",
+            "All four TypeScript targets, affected ESLint and Prettier checks passed. Repository and attribute-generation regressions passed on macOS: 180 cases, 502 assertions, 22 files. Existing test bodies remain unchanged; the production AST reconstruction isolates the binary-text condition as the only behavior change."
+        ]
     },
     {
         "id": "slices/repository-platform/026",
@@ -492,10 +517,14 @@
         "section": "Repository and Platform",
         "finding": "| `repository/kind.ts:58-71` `isLicenseFile`, `managedKind` | `managedKind` returns license files as vendored, though gspot does not manage them. Its comment covers only the `.gspot` folder and Vale. The comment on `isLicenseFile` names a test file (`license-locks.test.ts`), which `COMMENTS.md` forbids. | Call `isLicenseFile` from `kindOf`, before `managedKind`. Rewrite the comment as \"A license text is another party's text. A code file whose name looks like a license stays source.\" |",
         "owner": "`repository/kind.ts:58-71` `isLicenseFile`, `managedKind`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["packages/cli/src/repository/kind.ts", "tests/cli/repository/kinds.test.ts"],
+        "status": "closed",
+        "outcome": "License classification belongs in kindOf before tool-produced files. The license comment states why third-party text is vendored and why a source filename stays source. The tool classifier describes managed paths, fetched Vale styles and generated banners.",
+        "verification": [
+            "The current license case requires LICENSE, LICENSE.md, LICENSE-MIT, COPYING.txt and NOTICE to be vendored while license-locks.test.ts, license.ts, licenses.json and notice.py remain source. It passed in the affected run.",
+            "To keep the new text condition within the declared complexity ceiling, existing managed-path and banner checks now share classifyToolFile. A checked reconstruction of the production AST proves their order and all unrelated executable syntax remain unchanged. The original seven test declarations and 18 assertion sites are preserved.",
+            "All four TypeScript targets, affected ESLint and Prettier checks passed. Repository and attribute-generation regressions passed on macOS: 180 cases, 502 assertions, 22 files. Existing test bodies remain unchanged; the production AST reconstruction isolates the binary-text condition as the only behavior change."
+        ]
     },
     {
         "id": "slices/repository-platform/027",
