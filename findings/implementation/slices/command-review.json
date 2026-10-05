@@ -41,10 +41,18 @@
         "section": "Commands and the Entry Point",
         "finding": "| `commands/ignore.ts:49-63` `deleteIgnore`, `ignore.ts:31-47` `buildIgnore` | Bug. `addIgnore` (`policy/mutations.ts:72-90`) merges new paths into an existing entry that has the same check, rule, and reason. `--remove` matches the whole `paths` list with `isDeepStrictEqual`. So `gspot ignore X --paths b --remove` cannot undo `gspot ignore X --paths b` once the paths were merged, and it prints \"no matching ignore entry\". The `[[ignore]]` lines that `buildIgnore` prints describe a new entry even after a merge. | With `--remove --paths`, delete those paths from each matching entry, and delete an entry that has no paths left. Print the entry as written. |",
         "owner": "`commands/ignore.ts:49-63` `deleteIgnore`, `ignore.ts:31-47` `buildIgnore`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/ignore.ts",
+            "tests/cli/commands/ignores.test.ts",
+            "tests/cli/commands/ignore-feedback.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Merged ignores print the actual saved entry. Requested removal paths are deleted from every matching authored entry; remaining paths survive, empty entries are deleted, and a pathless entry remains during path-specific removal.",
+        "verification": [
+            "Current source prints the list entry found after addIgnore has merged paths, and mutation keeps remaining paths rather than comparing entire path lists. Existing merged-path, reason, expiry and scope-wide command cases remain unchanged and pass.",
+            "The added public-command control removes one requested path plus an absent path from two entries with different reasons and expiry, reports exactly two changed entries, preserves the other paths and rule, then removes only the matching global entry and reports one. All three source files retain their exact bytes.",
+            "Affected ignore, set and apply suites passed 31 cases and 187 assertions across four files. Root TypeScript, affected ESLint and formatting passed. This closure records source and command behavior, not the repository moves alone."
+        ]
     },
     {
         "id": "slices/commands/004",

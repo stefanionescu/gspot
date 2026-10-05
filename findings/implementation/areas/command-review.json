@@ -6,10 +6,19 @@
         "section": "Findings",
         "finding": "| `commands/ignore.ts:49-70` (`deleteIgnore`) | Bug. `--remove` replaces the whole text that `commitPolicy` returns with \"removed N ignore entries\". When apply fails after the write, the user sees a success line, exit code 2, and no reason. Any apply notes are lost too. The `counter` out-parameter exists only to build this text. | Count the matching entries in `policy.ignores` before the commit. Pass the finished description to `commitPolicy`. Delete the `counter` argument of `removeMatching`. |",
         "owner": "`commands/ignore.ts:49-70` (`deleteIgnore`)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/src/commands/ignore.ts",
+            "packages/cli/src/commands/policy-edit.ts",
+            "tests/cli/commands/ignore-feedback.test.ts",
+            "tests/cli/commands/ignores.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "Ignore removal prepares its count and description before committing, and returns successful apply notes and failure diagnostics intact. Only an unchanged successful result uses the no-match description. Counting uses the authored entries because effective policy excludes invalid ignores; removal retains its existing ability to repair them.",
+        "verification": [
+            "Three feedback cases fail against the original implementation: a removed entry drops a successful CLAUDE.md migration note, an empty authored list drops that note, and a failed apply omits the removal summary. All five new cases pass after the change, with invalid-entry repair and multi-entry partial removal as controls.",
+            "Affected ignore, set and apply suites passed 31 cases and 187 assertions across four files. Root TypeScript, affected ESLint and formatting passed. Existing ignore, set and apply test files remain unchanged.",
+            "Actual filesystem and public-command cases verify summary counts, successful migration notes, preserved edited shellcheck output and source bytes, retry instructions, no-match repeat bytes, invalid-policy refusal, repair of an invalid authored entry, retained partial paths, reasons, expiry and other rules. The shared matching callback has two real callers: counting and mutation."
+        ]
     },
     {
         "id": "areas/commands/002",

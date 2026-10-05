@@ -39,3 +39,13 @@ export const IGNORE_CASES = [
         'no matching ignore entry',
     ],
 ] as const;
+
+/** Removal must retain apply feedback even when it only deletes an empty authored list. */
+export const IGNORE_FEEDBACK_CASES = [
+    [
+        'an authored entry',
+        '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\n',
+        'removed 1 ignore entry for bash/shellcheck',
+    ] as const,
+    ['an empty authored list', 'ignore = []\n', 'no matching ignore entry'] as const,
+];

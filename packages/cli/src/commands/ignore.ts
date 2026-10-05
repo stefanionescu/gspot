@@ -1,6 +1,5 @@
 import { resolve } from 'node:path';
 import { stringify } from 'smol-toml';
-import { readPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/output/messages.ts';
@@ -12,6 +11,7 @@ import { compact, isRecord } from '#cli/platform/objects.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { knownChecks } from '#cli/configurations/manifests.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { readPolicy, parseTomlText } from '#cli/policy/read.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import type { Policy, TomlTable } from '#cli/types/policy/settings.ts';
@@ -69,46 +69,50 @@ function buildIgnore(options: IgnoreOptions): TomlTable {
     return entry;
 }
 
-async function deleteIgnore(root: string, log: Log, options: IgnoreOptions): Promise<CommandResult> {
-    let removedCount = 0;
+async function deleteIgnore(
+    root: string,
+    log: Log,
+    options: IgnoreOptions,
+    ignores: TomlTable[],
+): Promise<CommandResult> {
     const selector = {
         check: options.check,
         rule: options.rule,
         ...compact({ reason: options.reason, until: options.until }),
     };
+    const removed = new Set(options.paths);
+    const hasMatchingRemoval = (entry: TomlTable): boolean => {
+        if (!Object.entries(selector).every(([key, value]) => entry[key] === value)) return false;
+        const paths = entry['paths'] as string[] | undefined;
+        return removed.size === 0
+            ? paths === undefined || paths.length === 0
+            : paths?.some((path) => removed.has(path)) === true;
+    };
+    const removedCount = ignores.filter((entry) => hasMatchingRemoval(entry)).length;
+    const noun = removedCount === 1 ? 'entry' : 'entries';
+    const summary =
+        removedCount === 0
+            ? 'no matching ignore entry'
+            : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
     const committed = await commitPolicy(
         root,
         log,
         (raw) => {
             const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
             const kept = list.filter((entry) => {
-                if (!Object.entries(selector).every(([key, value]) => entry[key] === value)) return true;
-                const paths = entry['paths'] as string[] | undefined;
-                if (options.paths === undefined || options.paths.length === 0) {
-                    if (paths !== undefined && paths.length > 0) return true;
-                    removedCount += 1;
-                    return false;
-                }
-                if (paths === undefined) return true;
-                const removed = new Set(options.paths);
+                if (!hasMatchingRemoval(entry)) return true;
+                if (removed.size === 0) return false;
+                const paths = entry['paths'] as string[];
                 const remaining = paths.filter((path) => !removed.has(path));
-                if (remaining.length === paths.length) return true;
-                removedCount += 1;
                 entry['paths'] = remaining;
                 return remaining.length > 0;
             });
             if (kept.length === 0) Reflect.deleteProperty(raw, 'ignore');
             else raw['ignore'] = kept;
         },
-        '',
+        summary,
     );
-    if (committed.exitCode !== 0) return committed;
-    const noun = removedCount === 1 ? 'entry' : 'entries';
-    const text =
-        removedCount === 0
-            ? 'no matching ignore entry'
-            : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
-    return { ...committed, text: `${text}\n` };
+    return !committed.json.changed && committed.exitCode === 0 ? { ...committed, text: `${summary}\n` } : committed;
 }
 
 /**
@@ -119,12 +123,16 @@ async function deleteIgnore(root: string, log: Log, options: IgnoreOptions): Pro
 async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     assertVersionPin(root);
-    const { policy } = readPolicy(root);
+    const { policy, text } = readPolicy(root);
     assertKnownCheck(options.check, policy);
     if (!options.remove && policy.require_reasons)
         requireReason(options.reason, `gspot ignore ${options.check}`, buildReasonHint(options));
     using log = openOwnership(root);
-    if (options.remove) return await deleteIgnore(root, log, options);
+    if (options.remove) {
+        // Effective policy omits invalid ignores; removal can repair the authored entries too.
+        const ignores = (parseTomlText(text, 'gspot.toml', 'policy')['ignore'] as TomlTable[] | undefined) ?? [];
+        return await deleteIgnore(root, log, options, ignores);
+    }
     const entry = buildIgnore(options);
     let written = '';
     const result = await commitPolicy(
