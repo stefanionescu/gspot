@@ -47,6 +47,21 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
     assert.deepEqual(corrected[0].messages, []);
     const server = await browser.lintText(privateRead, { filePath: 'server/settings.js' });
     assert.deepEqual(server[0].messages, []);
+    const boundaries = new ESLint({ overrideConfigFile: true, overrideConfig: [{
+        plugins: { gspot: published },
+        rules: { 'gspot/import-boundaries': ['error', {
+            folders: ['api', 'supabase'],
+            aliases: { '@db/': 'supabase/' },
+        }] },
+    }] });
+    const crossing = await boundaries.lintText("import { a } from '../../supabase/a.js';\n", { filePath: 'api/src/task.js' });
+    assert.deepEqual(crossing[0].messages.map(({ ruleId, messageId, fix }) => ({ ruleId, messageId, fix: fix.text })), [{ ruleId: 'gspot/import-boundaries', messageId: 'alias', fix: "'@db/a.js'" }]);
+    const packageImport = await boundaries.lintText("import { a } from '@db/a.js';\n", { filePath: 'api/src/task.js' });
+    assert.deepEqual(packageImport[0].messages, []);
+    const within = await boundaries.lintText("import { a } from '../types/a.js';\n", { filePath: 'api/src/task.js' });
+    assert.deepEqual(within[0].messages, []);
+    const escape = await boundaries.lintText("export * from '../../quality/a.js';\n", { filePath: 'api/src/task.js' });
+    assert.deepEqual(escape[0].messages.map(({ ruleId, messageId }) => ({ ruleId, messageId })), [{ ruleId: 'gspot/import-boundaries', messageId: 'escape' }]);
 }
 `;
 
@@ -54,6 +69,6 @@ export const DECLARATIONS = `
 import plugin from '@gspothq/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';
 const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugin.configs.all];
-const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['no-trivial-functions'];
+const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['import-boundaries'];
 console.log(configs, rule);
 `;

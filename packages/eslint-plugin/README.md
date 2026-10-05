@@ -124,7 +124,7 @@ its own. Without options they report nothing:
   runtime files.
 - `env-owner` takes `owners`: the files that may read `process.env` or `import.meta.env`.
 - `no-helpers-beside-tests` takes `harness`: the folder the shared test helpers move to.
-- `no-cross-scope-imports` takes `scopes`: the project folders that do not import each other.
+- `import-boundaries` takes `folders`: boundary folders or folder globs, relative to the repository root. It defaults to `*/*`, which selects folders such as `src/turn` or `packages/cli`. The nearest matching ancestor owns each file. Set `aliases` to map import prefixes to repository folders for automatic fixes.
 
 These paths start at `settings.gspot.root`, or at the working directory of ESLint when you omit
 the setting. To set the root explicitly, add this block to your configuration:

@@ -109,10 +109,8 @@ export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
         owners: 'File patterns allowed to read environment variables.',
         allowed: 'Environment variable names allowed outside those files.',
     },
-    'no-cross-scope-imports': {
-        scopes: 'Project folders that must not import one another.',
-    },
-    'no-cross-folder-imports': {
+    'import-boundaries': {
+        folders: 'Boundary folders or folder globs. The nearest matching ancestor owns each file. Defaults to */*.',
         aliases: 'Import alias prefixes mapped to folders for fixes.',
     },
     'instances-in-registry': { files: 'File patterns allowed to export new instances.' },
@@ -126,12 +124,7 @@ export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
 };
 
 /** Rules that need project-owned selectors before they can report findings. */
-export const PLUGIN_REQUIRES_OPTIONS = [
-    'env-owner',
-    'import-direction',
-    'no-helpers-beside-tests',
-    'no-cross-scope-imports',
-];
+export const PLUGIN_REQUIRES_OPTIONS = ['env-owner', 'import-direction', 'no-helpers-beside-tests'];
 
 /** Configuration details that explain interactions between tools. */
 export const CONFIGURATION_NOTES: Record<string, string> = {

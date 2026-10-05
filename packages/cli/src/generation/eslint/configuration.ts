@@ -11,9 +11,15 @@ import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import type { Policy, ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
 import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
-import { ESLINT_LIMITS, DIRECTION_ROLES, ESLINT_CODE_FILES, ESLINT_JAVASCRIPT_LIMITS } from '#cli/config/eslint.ts';
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
+import {
+    ESLINT_LIMITS,
+    DIRECTION_ROLES,
+    ESLINT_CODE_FILES,
+    ESLINT_BOUNDARY_FOLDERS,
+    ESLINT_JAVASCRIPT_LIMITS,
+} from '#cli/config/eslint.ts';
 import {
     eslintModule,
     eslintErrorRules,
@@ -42,17 +48,20 @@ function directionRoles(architecture: ArchitectureSettings, harness: string[]): 
 function scopeBlocks(context: EslintContext): EslintBlock[] {
     const { root, policy, scopes } = context;
     if (policy.level !== 'all') return [];
+    const folders = [
+        ...ESLINT_BOUNDARY_FOLDERS,
+        ...scopes.map((entry) => entry.scope.path).filter((path) => path !== ''),
+    ];
     return scopes
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
             const path = entry.scope.path;
             const aliases = aliasesFor(root, path);
             const roles = directionRoles(policy.architecture, harnessFolders(policy, path));
-            const crossFolder = { 'gspot/no-cross-folder-imports': ['error', { aliases }] };
             return {
                 files: [`${path}/${ESLINT_CODE_FILES}`],
                 rules: {
-                    ...(Object.keys(aliases).length === 0 ? {} : crossFolder),
+                    'gspot/import-boundaries': ['error', { folders, aliases }],
                     'gspot/import-direction': ['error', { roles, aliases, scope: path }],
                 },
             };
@@ -100,8 +109,7 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
         'gspot/header-first': 'error',
         'gspot/sort-imports': 'error',
         'gspot/sort-exports': 'error',
-        'gspot/no-cross-folder-imports': ['error', { aliases }],
-        'gspot/no-cross-scope-imports': ['error', { scopes: scopePaths }],
+        'gspot/import-boundaries': ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }],
         'import-x/exports-last': 'error',
         'gspot/import-direction': ['error', { roles, aliases }],
         'gspot/env-owner': ['error', { owners: roles['env'] }],

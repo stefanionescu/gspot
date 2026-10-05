@@ -801,10 +801,23 @@
         "section": "The ESLint Plugin",
         "finding": "| `src/rules/no-cross-folder-imports.ts`, `src/rules/no-cross-scope-imports.ts` | Both rules resolve a relative import against the linted file (`posix.join(posix.dirname(relative), source)`, then normalize) and report when the target leaves a folder. One derives the folders from a root. The other takes them as `scopes`. They share the listeners too. | Merge them into one rule whose option lists the boundary folders. The default is each top-level folder under each root. Keep the alias fix. |",
         "owner": "`src/rules/no-cross-folder-imports.ts`, `src/rules/no-cross-scope-imports.ts`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/import-boundaries.ts",
+            "packages/eslint-plugin/src/types/boundaries.ts",
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "tests/plugin/rules/import-boundaries.test.ts",
+            "tests/cli/generation/import-boundaries.test.ts",
+            "tests/config/packages/plugin.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Replaced both relative-import boundary rules with import-boundaries. Its folders option selects literal project folders or folder globs; the default */* preserves source-folder boundaries. The nearest matching ancestor owns each file. One shared containment calculation handles root and nested folders. Alias fixes retain the original quote.",
+            "Source comparison preserves all 24 original code, filename, option, and output cases with their multiplicity. Ten added cases cover nested boundaries, constant dynamic imports, named exports, empty selections, bare folder imports, and repository-root boundaries. All 34 RuleTester cases pass.",
+            "The generated-configuration regression reports one cross-project finding, checks a nested project alias fix against repository-relative targets, and accepts corrected alias and within-project imports. Plugin and generation suites pass 626 tests with no failures; all four TypeScript targets pass.",
+            "The installed plugin consumer checks both ESM and CommonJS exports with explicit project folders and aliases. Cross-project paths report once, aliases fix exactly, and corrected aliases and within-project imports pass. The 317-page documentation build and local link validation pass. Canonical apply rewrites the selected rule IDs, and a second apply reports all 142 files unchanged.",
+            "Twelve native JavaScript, TypeScript, and scoped-command cases pass with no failures. Searches of active package, test, script, and documentation sources find neither retired rule ID."
+        ]
     },
     {
         "id": "slices/eslint-plugin/045",

@@ -9,6 +9,9 @@ export const ESLINT_CODE_FILES = '**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}';
 export const ESLINT_TYPESCRIPT_FILES = '**/*.{ts,tsx,mts,cts}';
 export const ESLINT_JAVASCRIPT_FILES = '**/*.{js,mjs,cjs,jsx}';
 
+/** Default folder boundaries selected by all-level repository policy. */
+export const ESLINT_BOUNDARY_FOLDERS = ['*/*'];
+
 // The limits the generated ESLint configuration reads, by the name it gives each one.
 export const ESLINT_LIMITS: Record<string, string> = {
     fileLines: 'file_lines',

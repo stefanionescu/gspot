@@ -9,13 +9,12 @@ import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { importDirection } from '#plugin/rules/import-direction.ts';
+import { importBoundaries } from '#plugin/rules/import-boundaries.ts';
 import { importExtensions } from '#plugin/rules/import-extensions.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 import { instancesInRegistry } from '#plugin/rules/instances-in-registry.ts';
-import { noCrossScopeImports } from '#plugin/rules/no-cross-scope-imports.ts';
-import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 import { noHelpersBesideTests } from '#plugin/rules/no-helpers-beside-tests.ts';
 
 const rules = {
@@ -27,8 +26,7 @@ const rules = {
     'import-extensions': importExtensions,
     'max-barrel-reexports': maxBarrelReexports,
     'no-client-env': noClientEnv,
-    'no-cross-folder-imports': noCrossFolderImports,
-    'no-cross-scope-imports': noCrossScopeImports,
+    'import-boundaries': importBoundaries,
     'no-alias-exports': noAliasExports,
     'no-index-imports': noIndexImports,
     'no-reexports': noReexports,
