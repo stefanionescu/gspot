@@ -22,3 +22,14 @@ The broad unit/integration run observed an empty JSON marker after its fixture o
 but before it wrote the data. The observer treated existence as readiness. Publish the fixture
 marker by rename after a complete write, and enclose readiness assertions in graceful child
 cleanup so an early failure still lets the source command remove its registry.
+
+## Header comments before JavaScript classes
+
+The default ESLint JavaScript parser omits the `decorators` field on class declarations.
+The header rule indexed that field while identifying the statement after an import block.
+An ordinary class, named export, or default export therefore crashed linting.
+
+Read decorator positions only when the parser supplies them. Preserve comments attached to
+classes and keep the import-header fix. The three default-parser regressions fail on the
+previous implementation and pass after the repair. The installed package also lints a class
+through both module exports and both presets.

@@ -1,5 +1,28 @@
+import { Linter } from 'eslint';
+import plugin from '#plugin/plugin.ts';
+import { test, expect } from 'bun:test';
 import { headerFirst } from '#plugin/rules/header-first.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
+
+test.each(['class Sample {}', 'export class Sample {}', 'export default class Sample {}'])(
+    'the default JavaScript parser preserves declaration comments and fixes import headers before %s',
+    (declaration) => {
+        const linter = new Linter({ configType: 'flat' });
+        const config: object = { plugins: { gspot: plugin }, rules: { 'gspot/header-first': 'error' } };
+        const valid = `import './first.js';\n// Explains the class.\n${declaration}`;
+        const messages = linter.verify(valid, config);
+        const fixed = linter.verifyAndFix(
+            `import './first.js';\n// The file header.\nimport './second.js';\n${declaration}`,
+            config,
+        );
+        expect(messages).toStrictEqual([]);
+        expect(fixed).toStrictEqual({
+            fixed: true,
+            messages: [],
+            output: `// The file header.\nimport './first.js';\nimport './second.js';\n${declaration}`,
+        });
+    },
+);
 
 createRuleTester().run('header-first', headerFirst, {
     valid: [

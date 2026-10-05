@@ -40,7 +40,10 @@ function startOf(node: TSESTree.Node): StatementStart {
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
             ? node.declaration
             : node;
-    const decorator = declared?.type === AST_NODE_TYPES.ClassDeclaration ? declared.decorators[0] : undefined;
+    const decorator =
+        declared?.type === AST_NODE_TYPES.ClassDeclaration && 'decorators' in declared
+            ? declared.decorators[0]
+            : undefined;
     return decorator !== undefined && decorator.range[0] < node.range[0]
         ? { offset: decorator.range[0], line: decorator.loc.start.line }
         : { offset: node.range[0], line: node.loc.start.line };

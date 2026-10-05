@@ -25,6 +25,9 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
         assert.deepEqual(alias[0].messages.map(({ ruleId, line }) => ({ ruleId, line })), level === 'recommended' ? [] : [{ ruleId: 'gspot/no-alias-exports', line: 2 }]);
         const corrected = await eslint.lintText('export const source = 1;\n', { filePath: 'example.js' });
         assert.deepEqual(corrected[0].messages, []);
+        const declaration = await eslint.lintText('import "polyfill";\nexport class Task { constructor() { this.ready = true; } }\n', { filePath: 'task.js' });
+        assert.equal(declaration[0].fatalErrorCount, 0);
+        assert.deepEqual(declaration[0].messages, []);
     }
 }
 `;

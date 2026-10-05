@@ -33,5 +33,26 @@
             "Fixture publication uses prepared-file write followed by rename; readiness and marker reading are inside try/finally, which sends SIGTERM and waits before the capture disposable can use SIGKILL.",
             "The cancellation scenario and repaired parser/check follow-up passed all 54 cases (/tmp/gspot-generated-header-repaired-tests.log); changed-owner ESLint and all TypeScript targets passed."
         ]
+    },
+    {
+        "id": "additional/header-first-default-parser",
+        "source": "findings/additional.md",
+        "line": 28,
+        "section": "Header comments before JavaScript classes",
+        "finding": "The header rule indexes a missing decorators field on classes parsed by ESLint’s default JavaScript parser. An ordinary class, named export, or default export after imports crashes linting. Handle the parser boundary while preserving declaration comments and header fixes.",
+        "owner": "Plugin header comments",
+        "location": [
+            "packages/eslint-plugin/src/rules/header-first.ts",
+            "tests/plugin/rules/header-first.test.ts",
+            "tests/config/packages/plugin.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All three default-parser regression cases fail against the previous implementation (/tmp/gspot-header-default-parser-before.log).",
+            "The repaired plugin passes all 407 cases, including declaration comments and exact header fixes for all three class forms (/tmp/gspot-header-default-parser-tests.log).",
+            "The installed package consumer passes with ordinary JavaScript classes through ESM and CommonJS exports and both presets (/tmp/gspot-header-package-tests.log).",
+            "Root and plugin TypeScript targets pass (/tmp/gspot-header-root-types.log and /tmp/gspot-header-plugin-types.log)."
+        ]
     }
 ]
