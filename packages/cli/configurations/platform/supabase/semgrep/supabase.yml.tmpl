@@ -2,7 +2,7 @@
 const document = {
     rules: [
         {
-            id: 'supabase-postgrest-filter-interpolation',
+            id: 'gspot.supabase.postgrest-filter-interpolation',
             patterns: [
                 {
                     'pattern-either': [
@@ -24,7 +24,7 @@ const document = {
             },
         },
         {
-            id: 'supabase-edge-cors-wildcard-with-credentials',
+            id: 'gspot.supabase.edge-cors-wildcard-with-credentials',
             pattern: '{..., "Access-Control-Allow-Origin": "*", ..., "Access-Control-Allow-Credentials": "true", ...}',
             message: 'Wildcard origins cannot be used with credentialed requests. List the permitted origins.\n',
             languages: ['typescript', 'javascript'],
@@ -38,7 +38,7 @@ const document = {
             },
         },
         {
-            id: 'supabase-edge-unvalidated-json-body',
+            id: 'gspot.supabase.edge-unvalidated-json-body',
             patterns: [
                 {
                     pattern: 'await req.json()',
@@ -63,7 +63,7 @@ const document = {
             },
         },
         {
-            id: 'supabase-no-console-log-secrets',
+            id: 'gspot.supabase.no-console-log-secrets',
             patterns: [
                 {
                     pattern: 'console.log(Deno.env.get($VAR))',

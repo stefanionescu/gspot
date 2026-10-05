@@ -2,7 +2,7 @@
 const document = {
     rules: [
         {
-            id: 'workers-no-user-controlled-fetch',
+            id: 'gspot.cloudflare.no-user-controlled-fetch',
             pattern: 'fetch($URL.searchParams.get(...), ...)',
             message: 'SSRF risk. Validate and allowlist outbound fetch targets.',
             languages: ['javascript', 'typescript'],
@@ -16,7 +16,7 @@ const document = {
             },
         },
         {
-            id: 'workers-no-dom-html-sinks',
+            id: 'gspot.cloudflare.no-dom-html-sinks',
             'pattern-either': [
                 {
                     pattern: '$ELEMENT.innerHTML = $VALUE',
@@ -41,7 +41,7 @@ const document = {
         ...(isAll
             ? [
                   {
-                      id: 'workers-no-wildcard-cors-origin',
+                      id: 'gspot.cloudflare.no-wildcard-cors-origin',
                       'pattern-either': [
                           {
                               pattern: '"Access-Control-Allow-Origin": "*"\n',

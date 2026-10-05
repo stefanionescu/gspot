@@ -95,8 +95,8 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
     expect(
         (JSON.parse(recommended.stdout) as RunReport).checks
             .flatMap((check) => check.findings)
-            .flatMap(({ rule }) => (rule?.startsWith('ios-') === true ? [rule] : [])),
-    ).toStrictEqual(['ios-keychain-accessible-always']);
+            .flatMap(({ rule }) => (rule?.startsWith('gspot.swift.') === true ? [rule] : [])),
+    ).toStrictEqual(['gspot.swift.keychain-accessible-always']);
     await Bun.write(
         join(root, 'gspot.toml'),
         buildPolicy(['bash', 'swift', 'security'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
@@ -110,8 +110,8 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         containingAll([
             containing({ file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' }),
             containing({ file: 'script.sh', line: 3, rule: 'gspot.bash.eval' }),
-            containing({ file: 'Value.swift', line: 1, rule: 'ios-keychain-accessible-always' }),
-            containing({ file: 'Value.swift', line: 2, rule: 'ios-unsafe-pointer-cast' }),
+            containing({ file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' }),
+            containing({ file: 'Value.swift', line: 2, rule: 'gspot.swift.unsafe-pointer-cast' }),
         ]),
     );
     expect(await Bun.file(join(root, 'script.sh')).text()).toBe(script);
@@ -216,7 +216,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
             (JSON.parse(failed.stdout) as RunReport).checks
                 .flatMap((check) => check.findings)
                 .map(({ file, line, rule }) => ({ file, line, rule })),
-        ).toStrictEqual([{ file: 'service.py', line: 7, rule: 'fastapi-exception-text-in-response' }]);
+        ).toStrictEqual([{ file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' }]);
         await Bun.write(
             join(sandbox.path, 'service.py'),
             FASTAPI_SOURCE.replace('detail=str(error)', 'detail="Unable to load user"'),
@@ -257,8 +257,8 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
             .map(({ file, rule, line }) => ({ file, rule, line }));
         expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
             PLATFORM_SOURCE_FINDINGS.map((finding) =>
-                level === 'all' && finding.rule === 'node-no-interpolated-exec'
-                    ? { ...finding, rule: 'node-no-child-process-exec' }
+                level === 'all' && finding.rule === 'gspot.javascript.no-interpolated-exec'
+                    ? { ...finding, rule: 'gspot.javascript.no-child-process-exec' }
                     : finding,
             ),
         );

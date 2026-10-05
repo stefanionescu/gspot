@@ -29,17 +29,17 @@ export const EXPRESS_SOURCE_CASES = {
 };
 
 export const EXPRESS_SOURCE_FINDINGS = [
-    { file: 'execute-template.js', rule: 'express-raw-query-interpolation', line: 1 },
-    { file: 'field.js', rule: 'express-res-send-raw-input', line: 1 },
-    { file: 'query-template.js', rule: 'express-raw-query-interpolation', line: 1 },
-    { file: 'response-template.js', rule: 'express-res-send-raw-input', line: 1 },
+    { file: 'execute-template.js', rule: 'gspot.express.raw-query-interpolation', line: 1 },
+    { file: 'field.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
+    { file: 'query-template.js', rule: 'gspot.express.raw-query-interpolation', line: 1 },
+    { file: 'response-template.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
 ];
 
 /** Exact source ownership for the three findings in inherited framework scopes. */
 export const FRAMEWORK_FINDINGS = [
-    { scope: 'app', file: 'app/source.js', line: 1, rule: 'express-res-send-raw-input' },
-    { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'express-res-send-raw-input' },
-    { scope: 'sibling', file: 'sibling/ignored.js', line: 1, rule: 'node-no-eval' },
+    { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
+    { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
+    { scope: 'sibling', file: 'sibling/ignored.js', line: 1, rule: 'gspot.javascript.no-eval' },
 ];
 
 /** An exception response whose correction keeps its cause private. */
@@ -94,15 +94,15 @@ export const PLATFORM_SOURCE_CASES = {
 };
 
 export const PLATFORM_SOURCE_FINDINGS = [
-    { file: 'functions/input.js', rule: 'workers-no-user-controlled-fetch', line: 1 },
+    { file: 'functions/input.js', rule: 'gspot.cloudflare.no-user-controlled-fetch', line: 1 },
     { file: 'Info.plist', rule: 'arbitrary-loads', line: 1 },
-    { file: 'scripts/inject.js', rule: 'node-no-interpolated-exec', line: 1 },
-    { file: 'src/filter.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
-    { file: 'src/list.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
-    { file: 'src/search.js', rule: 'supabase-postgrest-filter-interpolation', line: 1 },
-    { file: 'supabase/functions/cors/index.ts', rule: 'supabase-edge-cors-wildcard-with-credentials', line: 1 },
-    { file: 'supabase/functions/eval/index.ts', rule: 'node-no-eval', line: 1 },
-    { file: 'supabase/functions/remote/index.ts', rule: 'node-no-configured-require', line: 1 },
+    { file: 'scripts/inject.js', rule: 'gspot.javascript.no-interpolated-exec', line: 1 },
+    { file: 'src/filter.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
+    { file: 'src/list.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
+    { file: 'src/search.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
+    { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
+    { file: 'supabase/functions/eval/index.ts', rule: 'gspot.javascript.no-eval', line: 1 },
+    { file: 'supabase/functions/remote/index.ts', rule: 'gspot.javascript.no-dynamic-require', line: 1 },
 ];
 
 export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {

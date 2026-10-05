@@ -663,7 +663,7 @@ reason = "A permissive license with no conditions; it arrives through a test too
 
 [[ignore]]
 check = "security/semgrep"
-rule = "node-no-configured-require"
+rule = "gspot.javascript.no-dynamic-require"
 paths = [
     "packages/cli/src/tools/eslint/worker.ts",
 ]
@@ -858,7 +858,7 @@ reason = "Astro prerender externalizes this native Markdown loader in astro.conf
 
 [[ignore]]
 check = "security/semgrep"
-rule = "node-no-configured-require"
+rule = "gspot.javascript.no-dynamic-require"
 paths = ["scripts/eslint-presets.ts"]
 reason = "This explicit maintenance command imports the selected installed preset exports after validating each package name and exact manifest pin. Loading those local tool exports is its required behavior, not an application import of untrusted code."
 

@@ -35,7 +35,7 @@ test(
         const found = await spawnGspot(sandbox.path, command, environment);
         // Semgrep ships no Windows build, so the check is skipped there and the run passes.
         const isWindows = process.platform === 'win32';
-        const evaluated: Finding = containing({ rule: 'node-no-eval', file: 'src/run.ts', line: 3 });
+        const evaluated: Finding = containing({ rule: 'gspot.javascript.no-eval', file: 'src/run.ts', line: 3 });
         expect(found.code, found.stdout + found.stderr).toBe(isWindows ? 0 : 1);
         expect((JSON.parse(found.stdout) as RunReport).checks).toMatchObject([
             isWindows

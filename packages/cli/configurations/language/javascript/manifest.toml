@@ -191,6 +191,14 @@ version = "5.9.3"
 npm = "typescript"
 
 [[config]]
+template = "semgrep/javascript.yml.tmpl"
+target = ".gspot/config/semgrep/javascript.yml"
+tool = "semgrep"
+rule_keys = ["rules"]
+when = {configuration = "security"}
+scoped = true
+
+[[config]]
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]

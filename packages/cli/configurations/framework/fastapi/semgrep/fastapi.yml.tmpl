@@ -2,7 +2,7 @@
 const document = {
     rules: [
         {
-            id: 'fastapi-cors-wildcard-with-credentials',
+            id: 'gspot.fastapi.cors-wildcard-with-credentials',
             patterns: [
                 {
                     pattern:
@@ -19,7 +19,7 @@ const document = {
             },
         },
         {
-            id: 'fastapi-debug-enabled',
+            id: 'gspot.fastapi.debug-enabled',
             pattern: 'FastAPI(..., debug=True, ...)',
             message: 'Debug mode returns tracebacks to the client. Read the flag from configuration, off by default.\n',
             languages: ['python'],
@@ -30,7 +30,7 @@ const document = {
             },
         },
         {
-            id: 'fastapi-exception-text-in-response',
+            id: 'gspot.fastapi.exception-text-in-response',
             patterns: [
                 {
                     'pattern-either': [

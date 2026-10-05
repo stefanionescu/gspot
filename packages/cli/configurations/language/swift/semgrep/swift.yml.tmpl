@@ -2,7 +2,7 @@
 const document = {
     rules: [
         {
-            id: 'ios-keychain-accessible-always',
+            id: 'gspot.swift.keychain-accessible-always',
             'pattern-either': [
                 {
                     pattern: 'kSecAttrAccessibleAlways',
@@ -21,7 +21,7 @@ const document = {
             },
         },
         {
-            id: 'ios-no-secrets-in-userdefaults',
+            id: 'gspot.swift.no-secrets-in-userdefaults',
             patterns: [
                 {
                     pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)',
@@ -43,7 +43,7 @@ const document = {
             },
         },
         {
-            id: 'ios-no-secrets-in-plist',
+            id: 'gspot.swift.no-secrets-in-plist',
             patterns: [
                 {
                     'pattern-either': [
@@ -72,7 +72,7 @@ const document = {
             },
         },
         {
-            id: 'ios-hardcoded-url-with-credentials',
+            id: 'gspot.swift.hardcoded-url-with-credentials',
             'pattern-regex': 'https?://[a-zA-Z0-9._-]+:[^@]+@[a-zA-Z0-9._-]+',
             message: 'URL with embedded credentials. Use a credential store instead of embedding user:pass in URLs.\n',
             languages: ['swift'],
@@ -83,7 +83,7 @@ const document = {
             },
         },
         {
-            id: 'ios-insecure-http-url',
+            id: 'gspot.swift.insecure-http-url',
             'pattern-regex': 'http://(?!(?:localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\])(?=[:/\\"\\s]|$))',
             message: 'Insecure HTTP URL detected. Use HTTPS for all network communication.\n',
             languages: ['swift'],
@@ -96,7 +96,7 @@ const document = {
         ...(isAll
             ? [
                   {
-                      id: 'ios-unsafe-pointer-cast',
+                      id: 'gspot.swift.unsafe-pointer-cast',
                       'pattern-either': [
                           {
                               pattern: 'UnsafeRawPointer(...)',
@@ -120,7 +120,7 @@ const document = {
               ]
             : []),
         {
-            id: 'ios-weak-hash-algorithm',
+            id: 'gspot.swift.weak-hash-algorithm',
             'pattern-either': [
                 {
                     pattern: 'Insecure.MD5',
@@ -144,7 +144,7 @@ const document = {
             },
         },
         {
-            id: 'ios-no-uiwebview',
+            id: 'gspot.swift.no-uiwebview',
             pattern: 'UIWebView(...)',
             message: 'UIWebView is deprecated and insecure. Use WKWebView instead.\n',
             languages: ['swift'],
@@ -157,7 +157,7 @@ const document = {
         ...(isAll
             ? [
                   {
-                      id: 'ios-wkwebview-javascript-enabled',
+                      id: 'gspot.swift.wkwebview-javascript-enabled',
                       pattern: '$CONFIG.preferences.javaScriptEnabled = true\n',
                       message:
                           'WKWebView with JavaScript enabled. Ensure content is trusted or implement proper CSP and input validation.\n',
@@ -171,7 +171,7 @@ const document = {
               ]
             : []),
         {
-            id: 'ios-log-sensitive-data',
+            id: 'gspot.swift.log-sensitive-data',
             patterns: [
                 {
                     'pattern-either': [

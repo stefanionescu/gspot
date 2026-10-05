@@ -2,7 +2,7 @@
 const document = {
     rules: [
         {
-            id: 'node-no-eval',
+            id: 'gspot.javascript.no-eval',
             'pattern-either': [
                 {
                     pattern: 'eval(...)',
@@ -26,7 +26,7 @@ const document = {
         ...(isAll
             ? [
                   {
-                      id: 'node-no-child-process-exec',
+                      id: 'gspot.javascript.no-child-process-exec',
                       patterns: [
                           {
                               'pattern-either': [
@@ -51,7 +51,7 @@ const document = {
               ]
             : []),
         {
-            id: 'node-no-configured-require',
+            id: 'gspot.javascript.no-dynamic-require',
             patterns: [
                 {
                     'pattern-either': [
@@ -80,7 +80,7 @@ const document = {
             },
         },
         {
-            id: 'node-ssrf-web-request-user-input',
+            id: 'gspot.javascript.ssrf-web-request-user-input',
             patterns: [
                 {
                     'pattern-either': [
@@ -112,7 +112,7 @@ const document = {
             },
         },
         {
-            id: 'node-no-secret-in-log',
+            id: 'gspot.javascript.no-secret-in-log',
             patterns: [
                 {
                     'pattern-either': [
@@ -161,7 +161,7 @@ const document = {
             },
         },
         {
-            id: 'node-jwt-no-algorithm-none',
+            id: 'gspot.javascript.jwt-no-algorithm-none',
             patterns: [
                 {
                     pattern: 'jwt.verify($TOKEN, $SECRET)',
@@ -180,7 +180,7 @@ const document = {
             },
         },
         {
-            id: 'node-jwt-no-decode-without-verify',
+            id: 'gspot.javascript.jwt-no-decode-without-verify',
             pattern: 'jwt.decode(...)',
             message: 'jwt.decode() does not verify signatures. Use jwt.verify() instead.\n',
             languages: ['typescript', 'javascript'],
@@ -191,7 +191,7 @@ const document = {
             },
         },
         {
-            id: 'node-no-stack-trace-in-response',
+            id: 'gspot.javascript.no-stack-trace-in-response',
             patterns: [
                 {
                     'pattern-either': [
@@ -223,7 +223,7 @@ const document = {
             ? []
             : [
                   {
-                      id: 'node-no-interpolated-exec',
+                      id: 'gspot.javascript.no-interpolated-exec',
                       pattern: 'execSync(`...${$VAR}...`)',
                       message:
                           'Template literal interpolation in execSync() is a command injection vector. Use execFileSync() with an argument array instead.\n',

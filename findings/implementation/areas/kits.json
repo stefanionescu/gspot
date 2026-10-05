@@ -323,10 +323,15 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/semgrep/node.yml.tmpl:35` | The rule ID `node-no-configured-require` says \"configured\", but the rule is about a dynamic path. | Rename it to `node-no-dynamic-require`. |",
         "owner": "`packages/cli/kits/general/security/semgrep/node.yml.tmpl:35`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/semgrep/javascript.yml.tmpl",
+            "tests/config/tools/generation/semgrep.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The dynamic import/require rule is named gspot.javascript.no-dynamic-require. The native scan reports that exact ID for a computed import, preserves a literal import, and passes after correction at both levels: /tmp/gspot-semgrep-names-native.log."
+        ]
     },
     {
         "id": "areas/kits/028",
@@ -335,10 +340,17 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/security/manifest.toml:39-43` | A JavaScript-only rule file named `node` lives in the language-neutral security kit. | Move it to the javascript kit as `semgrep/javascript.yml`. |",
         "owner": "`packages/cli/kits/general/security/manifest.toml:39-43`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/manifest.toml",
+            "packages/cli/configurations/language/javascript/semgrep/javascript.yml.tmpl",
+            "tests/packages/security.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "JavaScript owns its conditional security pack; the general security configuration no longer declares or ships node.yml. Canonical apply removes five old paths, emits five javascript.yml paths, and its second run changes nothing: /tmp/gspot-semgrep-names-apply.json and /tmp/gspot-semgrep-names-second-apply.json.",
+            "The installed archive loads and applies the JavaScript and Swift assets without checkout dependencies or obsolete paths: /tmp/gspot-semgrep-names-package.log."
+        ]
     },
     {
         "id": "areas/kits/029",
@@ -347,10 +359,18 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:2`, `packages/cli/kits/general/security/semgrep/node.yml.tmpl:2`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2`, `packages/cli/kits/framework/express/semgrep/express.yml.tmpl:2` | Semgrep rule IDs use four schemes: `gspot.bash.*`, `node-*`, `ios-*`, `express-*`. Users type these IDs in `gspot ignore --rule`. | Use `gspot.<kit>.<rule>` everywhere. |",
         "owner": "`packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:2`, `packages/cli/kits/general/security/semgrep/node.yml.tmpl:2`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2`, `packages/cli/kits/framework/express/semgrep/express.yml.tmpl:2`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/semgrep/javascript.yml.tmpl",
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "packages/cli/configurations/framework/express/semgrep/express.yml.tmpl",
+            "gspot.toml",
+            "tests/tools/generation/semgrep.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All shipped Semgrep IDs use gspot.<configuration>.<rule>; updated every actual source, test expectation and authored ignore, with no aliases. Native parsing validates every selected pack at both levels, and public scans assert exact renamed finding IDs, corrections and preserved neighbors: /tmp/gspot-semgrep-names-native.log."
+        ]
     },
     {
         "id": "areas/kits/030",
@@ -782,10 +802,16 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/swift/manifest.toml:66-71`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl` | The file `ios.yml` and the `ios-` prefix cover all Swift code, including macOS and server Swift. | Rename the file to `swift.yml` and the IDs to `gspot.swift.*`. |",
         "owner": "`packages/cli/kits/language/swift/manifest.toml:66-71`, `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/swift/manifest.toml",
+            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
+            "tests/packages/security.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Swift emits swift.yml with gspot.swift.* IDs; the ios.yml asset and ios-* identifiers are removed. Native Swift level selection reports the renamed keychain and pointer IDs and accepts corrections; both complete native rule sets validate. The installed package emits swift.yml and no ios.yml: /tmp/gspot-semgrep-names-native.log and /tmp/gspot-semgrep-names-package.log."
+        ]
     },
     {
         "id": "areas/kits/063",

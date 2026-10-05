@@ -37,13 +37,6 @@ platforms = ["macos", "linux-x64", "windows"]
 query_packs = {actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7", java = "1.10.8", javascript = "2.3.3", python = "1.7.8", ruby = "1.5.8", rust = "0.1.28", swift = "1.2.17"}
 
 [[config]]
-template = "semgrep/node.yml.tmpl"
-target = ".gspot/config/semgrep/node.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-scoped = true
-
-[[config]]
 template = "semgrepignore.tmpl"
 target = ".semgrepignore"
 tool = "semgrep"
