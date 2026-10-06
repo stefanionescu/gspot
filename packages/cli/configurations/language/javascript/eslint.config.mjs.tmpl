@@ -78,6 +78,8 @@ const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
 const sonarRules = {
+    // regexp owns exponential and polynomial backtracking, including constructor patterns.
+    'sonarjs/slow-regex': 'off',
     // Core and TypeScript unused-variable rules cover bindings and imports, including intentional ignores.
     'sonarjs/no-unused-vars': 'off',
     'sonarjs/unused-import': 'off',
@@ -127,7 +129,8 @@ const securityRules = {
     'security/detect-non-literal-require': 'error',
     'security/detect-possible-timing-attacks': 'error',
     'security/detect-pseudoRandomBytes': 'error',
-    'security/detect-unsafe-regex': 'error',
+    // regexp analyzes backtracking instead of treating nested repetition as an unsafe pattern.
+    'security/detect-unsafe-regex': 'off',
     // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
     // variable; neither names a defect a linter of file paths can avoid.
     'security/detect-object-injection': 'off',

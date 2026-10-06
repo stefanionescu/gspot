@@ -14,7 +14,7 @@ import {
     mkdirSync,
     rmdirSync,
     fchmodSync,
-    // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
+    // eslint-disable-next-line n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
     lchmodSync,
     renameSync,
     unlinkSync,
@@ -148,7 +148,7 @@ export function writeLink(path: string, target: string | Buffer, mode: number): 
     symlinkSync(target, path);
     if (process.platform !== 'darwin') return;
     try {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
         lchmodSync(path, mode);
     } catch (error) {
         unlinkSync(path);
