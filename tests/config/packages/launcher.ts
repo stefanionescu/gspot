@@ -30,3 +30,6 @@ export const EXPECTED_SKIPS: RunReport['skips'] = [
     { check: 'secrets/gitleaks-history', cause: 'condition' },
     { check: 'secrets/trufflehog', cause: 'condition' },
 ];
+
+/** Runtime prerequisites reported during execution. */
+export const EXPECTED_RUNTIME_SKIPS = ['secrets/env-template'];

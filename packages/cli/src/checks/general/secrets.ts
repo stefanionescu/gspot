@@ -1,4 +1,5 @@
 import { join, posix } from 'node:path';
+import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -18,6 +19,7 @@ import { statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
+import type { EnvironmentSettings } from '#cli/types/policy/settings.ts';
 import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
 import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
@@ -113,13 +115,6 @@ async function scanCommits(session: Session, planned: PlannedCheck, commits: str
             '--no-update',
         ],
     });
-}
-
-function envReadPatterns(input: EngineInput): RegExp[] {
-    const accessor = input.view.options('dotenv')['accessor'];
-    if (typeof accessor !== 'string' || accessor === '') return ENV_READ_PATTERNS;
-    const escaped = escapeRegExp(accessor);
-    return [...ENV_READ_PATTERNS, new RegExp(String.raw`\b${escaped}\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]`, 'gu')];
 }
 
 /**
@@ -260,16 +255,20 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
 }
 
 /**
- * Reports each environment key the code reads that no template lists. Reports nothing when the scope has no template.
+ * Reports supported environment reads missing from project templates, or the absent template prerequisite.
  * @param input the engine input
  * @returns the findings
  */
-export function envExample(input: EngineInput): Finding[] {
-    const names = input.view.options('dotenv')['templates'] as string[];
+export function envTemplate(input: EngineInput): Finding[] {
+    const { templates: names, reader_functions: readers } = input.view.options('env') as EnvironmentSettings;
     // The owned files are configuration; the reads are in code, so the whole scope is inspected.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope));
     const templates = inScope.filter((file) => names.includes(posix.basename(file.path)));
-    if (templates.length === 0) return [];
+    if (templates.length === 0)
+        throw new GspotError(
+            'skip',
+            `No environment template exists in ${input.scope === '' ? 'the repository root' : input.scope}. Declare the project templates under env.templates.`,
+        );
     const known = new Set(
         templates.flatMap((file) => {
             const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
@@ -279,7 +278,16 @@ export function envExample(input: EngineInput): Finding[] {
             });
         }),
     );
-    const patterns = envReadPatterns(input);
+    const patterns = [
+        ...ENV_READ_PATTERNS,
+        ...readers.map(
+            (reader) =>
+                new RegExp(
+                    String.raw`(?<![\p{ID_Continue}$.])${escapeRegExp(reader)}\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]`,
+                    'gu',
+                ),
+        ),
+    ];
     const extensions = extensionsTagged('javascript', 'typescript', 'python', 'vue', 'svelte', 'astro');
     const candidates = inScope.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),

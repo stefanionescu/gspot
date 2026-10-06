@@ -2,11 +2,14 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
-import { envExample } from '#cli/checks/general/secrets.ts';
+import { envTemplate } from '#cli/checks/general/secrets.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 test('environment templates preserve first missing reads per file and escaped custom accessors', async () => {
     await using sandbox = await testdir();
@@ -23,27 +26,45 @@ test('environment templates preserve first missing reads per file and escaped cu
         stringify({
             level: 'all',
             configurations: ['files'],
-            dotenv: { templates: ['example.env'], accessor: 'config.$env' },
+            env: { templates: ['example.env'], reader_functions: ['config.$env'] },
         }),
     );
-    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', {
+    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-template', {
         paths: Object.keys(source),
     });
-    expect(envExample(input).map(({ file, line, message: diagnostic }) => ({ file, line, diagnostic }))).toStrictEqual([
-        { file: 'src/first.ts', line: 1, diagnostic: 'MISSING is read here and appears in no environment template.' },
-        { file: 'src/first.ts', line: 2, diagnostic: 'CUSTOM is read here and appears in no environment template.' },
-        { file: 'src/second.py', line: 1, diagnostic: 'MISSING is read here and appears in no environment template.' },
-        { file: 'src/second.py', line: 1, diagnostic: 'OTHER is read here and appears in no environment template.' },
-    ]);
+    expect(envTemplate(input).map(({ file, line, message: diagnostic }) => ({ file, line, diagnostic }))).toStrictEqual(
+        [
+            {
+                file: 'src/first.ts',
+                line: 1,
+                diagnostic: 'MISSING is read here and appears in no environment template.',
+            },
+            {
+                file: 'src/first.ts',
+                line: 2,
+                diagnostic: 'CUSTOM is read here and appears in no environment template.',
+            },
+            {
+                file: 'src/second.py',
+                line: 1,
+                diagnostic: 'MISSING is read here and appears in no environment template.',
+            },
+            {
+                file: 'src/second.py',
+                line: 1,
+                diagnostic: 'OTHER is read here and appears in no environment template.',
+            },
+        ],
+    );
     await Bun.write(`${sandbox.path}/config/example.env`, 'KNOWN=value\nMISSING=value\nCUSTOM=value\nOTHER=value\n');
     expect(
-        envExample(
-            buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', { paths: Object.keys(source) }),
+        envTemplate(
+            buildEngineInput(await openSession(sandbox.path), 'secrets/env-template', { paths: Object.keys(source) }),
         ),
     ).toStrictEqual([]);
 });
 
-test('environment reads without a template in their scope remain unchecked', async () => {
+test('environment reads without a template in their scope report the unmet prerequisite', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         '.env.example': 'KNOWN=value\n',
@@ -56,11 +77,28 @@ test('environment reads without a template in their scope remain unchecked', asy
             tables: '[[scope]]\npath = "app"\nconfigurations = ["files"]\n',
         }),
     );
-    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', {
+    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-template', {
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
-    expect(envExample(input)).toStrictEqual([]);
+    expect(() => envTemplate(input)).toThrow('env.templates');
+    const checked = await runGspot(sandbox.path, [
+        'check',
+        'app/source.ts',
+        '--only',
+        'secrets/env-template',
+        '--json',
+    ]);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        {
+            check: 'secrets/env-template',
+            scope: 'app',
+            status: 'skipped',
+            findings: [],
+            note: textContaining('env.templates'),
+        },
+    ]);
 });
 
 test('modern environment accessors in component and module files require matching template keys', async () => {
@@ -78,7 +116,7 @@ test('modern environment accessors in component and module files require matchin
         'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.env.example': 'KNOWN=example\n', ...sources });
-    const rejected = envExample(buildEngineInput(await openSession(sandbox.path), 'secrets/env-example'));
+    const rejected = envTemplate(buildEngineInput(await openSession(sandbox.path), 'secrets/env-template'));
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'app.astro', line: 2, rule: 'missing-key' },
         { file: 'app.svelte', line: 1, rule: 'missing-key' },
@@ -92,7 +130,7 @@ test('modern environment accessors in component and module files require matchin
         join(sandbox.path, '.env.example'),
         'KNOWN=example\nVITE_API=example\nSVELTE_API=example\nVUE_API=example\nDENO_API=example\nMODULE_API=example\nCOMMON_API=example\nLEGACY_API=example\n',
     );
-    expect(envExample(buildEngineInput(await openSession(sandbox.path), 'secrets/env-example'))).toStrictEqual([]);
+    expect(envTemplate(buildEngineInput(await openSession(sandbox.path), 'secrets/env-template'))).toStrictEqual([]);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     for (const [path, text] of Object.entries(sources))
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);

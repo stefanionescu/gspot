@@ -11,7 +11,26 @@ import {
     DISABLED_RULES,
     REMOVED_STYLELINT_SETTING,
     REMOVED_FRAMEWORK_CONTROLS,
+    INVALID_ENVIRONMENT_SETTINGS,
 } from '#tests/config/cli/policy/read/settings.ts';
+
+test.each(['recommended', 'all'] as const)(
+    '%s validates environment declarations in root and scope tables',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const prefix = scope === '' ? '' : 'scope.';
+            for (const { table, value, diagnostic } of INVALID_ENVIRONMENT_SETTINGS) {
+                const source = buildPolicy([], { level, tables: `${scope}[${prefix}${table}]\n${value}\n` });
+                expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
+            }
+            const source = buildPolicy([], {
+                level,
+                tables: `${scope}[${prefix}env]\nreader_functions = { value = ["config.$env", "read_env"], reason = "These project functions own environment reads." }\ntemplates = { value = ["example.env"], reason = "This project declares its template filename." }\n`,
+            });
+            expect(policyProblems(source)).toStrictEqual([]);
+        }
+    },
+);
 
 describe('policy value normalization', () => {
     test('normalizes reasoned limits into value and reason', () => {

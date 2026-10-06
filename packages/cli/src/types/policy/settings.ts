@@ -7,6 +7,7 @@ import type { namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
 import type { Manifest, CheckSpec, SettingSpec } from '#cli/types/configurations.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
+import type { environmentSettingsSchema } from '#cli/policy/schema/configurations.ts';
 
 export type RawArchitecture = NonNullable<RawPolicy['architecture']>;
 
@@ -35,6 +36,14 @@ export type PolicyFile = {
 export type PolicyProblem = { path: KeyPath; message: string };
 
 export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
+
+/** Environment declarations after defaults and authored reason wrappers are resolved. */
+export type EnvironmentSettings = {
+    [Key in keyof z.infer<typeof environmentSettingsSchema>]-?: Exclude<
+        z.infer<typeof environmentSettingsSchema>[Key],
+        Reasoned<string[]> | undefined
+    >;
+};
 
 export type ScopeView = {
     configurations: string[];

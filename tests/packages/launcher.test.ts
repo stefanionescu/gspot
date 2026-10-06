@@ -6,14 +6,20 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { containingAll } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { containingAll, textContaining } from '#tests/harness/expectations.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
-import { EXPECTED_SKIPS, LAUNCHER_FILES, EXPECTED_FAILURES } from '#tests/config/packages/launcher.ts';
+
+import {
+    EXPECTED_SKIPS,
+    LAUNCHER_FILES,
+    EXPECTED_FAILURES,
+    EXPECTED_RUNTIME_SKIPS,
+} from '#tests/config/packages/launcher.ts';
 
 const release = getPublishedRelease();
 
@@ -113,8 +119,13 @@ test(
                 .toSorted((left, right) => left.localeCompare(right)),
         }).toStrictEqual({
             errors: [],
-            skipped: EXPECTED_SKIPS.map(({ check }) => check),
+            skipped: [...EXPECTED_SKIPS.map(({ check }) => check), ...EXPECTED_RUNTIME_SKIPS],
             failed: EXPECTED_FAILURES,
+        });
+        expect(checks.find(({ check }) => check === 'secrets/env-template')).toMatchObject({
+            status: 'skipped',
+            findings: [],
+            note: textContaining('env.templates'),
         });
         // The throwaway registry serves HTTP archives, which the consumer lockfile must report.
         const lockHosts = checks.find(({ check }) => check === 'dependencies/lockfile-hosts')!.findings;

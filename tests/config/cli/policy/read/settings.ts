@@ -16,6 +16,16 @@ export const DISABLED_RULES = [
     },
 ];
 
+export const INVALID_ENVIRONMENT_SETTINGS = [
+    { table: 'dotenv', value: 'accessor = "read_env"', diagnostic: 'dotenv' },
+    { table: 'env', value: 'accessor = "read_env"', diagnostic: 'accessor' },
+    { table: 'env', value: 'enabled = false', diagnostic: 'enabled' },
+    { table: 'env', value: 'reader_functions = "read_env"', diagnostic: 'reader_functions' },
+    { table: 'env', value: 'reader_functions = [false]', diagnostic: 'reader_functions' },
+    { table: 'env', value: 'reader_functions = [""]', diagnostic: 'reader_functions' },
+    { table: 'env', value: 'templates = [false]', diagnostic: 'templates' },
+];
+
 /** Framework coverage follows the level and declared dependencies, with no extra switches. */
 export const REMOVED_FRAMEWORK_CONTROLS = [
     {

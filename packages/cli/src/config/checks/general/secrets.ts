@@ -24,6 +24,8 @@ export const RAW_CHANGE_FIELDS = 2;
 
 /** Environment reads expose the key through the same named capture in each supported form. */
 export const ENV_READ_PATTERNS = [
+    /\bBun\.env\.(?<key>[A-Z][A-Z0-9_]*)/gu,
+    /\bBun\.env\[['"](?<key>[A-Z][A-Z0-9_]*)['"]\]/gu,
     /import\.meta\.env\.(?<key>[A-Z][A-Z0-9_]*)/gu,
     /import\.meta\.env\[['"](?<key>[A-Z][A-Z0-9_]*)['"]\]/gu,
     /Deno\.env\.get\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]/gu,

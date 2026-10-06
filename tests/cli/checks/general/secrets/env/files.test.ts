@@ -8,7 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { envFiles } from '#cli/checks/general/secrets.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env-files.ts';
+import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
 test('tracked-file checks distinguish environment files from templates in nested folders', async () => {
     await using directory = await testdir();

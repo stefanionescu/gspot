@@ -76,8 +76,8 @@ import { importComments as pythonImportComments } from '#cli/checks/language/pyt
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { sleeps, disabled, recording, xctestCoverage, xctestReferences } from '#cli/checks/tool/xctest.ts';
 import { sitemap, purgecss, siteSize, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
-import { envFiles, envExample, trufflehog, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
+import { envFiles, trufflehog, envTemplate, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
 import { nextBuild, nextTypes, versionPairs, routeSegments, nextConfiguration } from '#cli/checks/framework/nextjs.ts';
 
@@ -146,7 +146,7 @@ export const CHECKS: CheckRegistry = {
     'docs/readme-shape': { engine: readmeShape },
     'markdown/fences': { engine: fences },
     'duplication/jscpd': { engine: jscpd },
-    'secrets/env-example': { engine: envExample },
+    'secrets/env-template': { engine: envTemplate },
     'secrets/env-files': { engine: envFiles },
     'security/codeql': { engine: codeql },
     'secrets/gitleaks-baseline': { engine: gitleaksBaseline },

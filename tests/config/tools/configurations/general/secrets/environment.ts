@@ -20,7 +20,7 @@ export const CASES: FindingCase[] = [
         corrected: { files: { '.env.example': 'PORT=3000\n' } },
     },
     {
-        check: 'secrets/env-example',
+        check: 'secrets/env-template',
         files: { '.env.example': 'PORT=3000\n', 'src/server.js': ENV_SOURCE },
         expected: { file: 'src/server.js', line: 1, rule: 'missing-key' },
         corrected: { files: { '.env.example': 'PORT=3000\nHOST=localhost\n', 'src/server.js': ENV_SOURCE } },

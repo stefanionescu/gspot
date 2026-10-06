@@ -18822,10 +18822,33 @@
                 "Documentation: /tmp/gspot-env-ownership-docs-final.log builds 316 pages and validates every local link and fragment after the final owner descriptions. Both /tmp/gspot-env-ownership-apply-first.json and apply-second.json report 140 unchanged outputs, zero writes/updates/removals, no preserved output and no notes. All generated content changes only through apply.",
                 "Final canonical replay: apply-final-first.json and apply-final-second.json each report 140 unchanged outputs and zero writes, updates, removals, preserved output or notes.",
                 "The actual first staged gate rejects two shared-prefix groups in the newly moved fixtures. CLI environment examples/files now live under secrets/env; native environment/pushed facts live under config/tools/configurations/general/secrets. Every consumer is updated; no prefix exception or product gate is added. /tmp/gspot-env-ownership-grouping-cli.log has 12 passes, zero failures and 60 assertions (1.67 seconds). /tmp/gspot-env-ownership-grouping-native.log has seven passes, zero failures and 52 assertions (26.24 seconds), including all moved environment cases and real pushed/verified-secret history, redaction, crash and recovery cases. Final grouped sources pass ESLint and all four TypeScript targets in /tmp/gspot-env-ownership-grouping-types.log (9.73 seconds).",
-                "Actual final gspot check --staged: /tmp/gspot-env-ownership-staged-final.json reports 136 passed checks, 6 existing skips, zero findings and zero execution errors (72.613 seconds). Normal Semgrep, OSV and Taplo pass. All original IDs, quotations and source fields remain unchanged; only the two linked ownership records close."
+                "Actual final gspot check --staged: /tmp/gspot-env-ownership-staged-final.json reports 136 passed checks, 6 existing skips, zero findings and zero execution errors (72.613 seconds). Normal Semgrep, OSV and Taplo pass. All original IDs, quotations and source fields remain unchanged; only the two linked ownership records close.",
+                "Delivery: hook-enabled commit 208cf0e7bb3e9131239939d050d11a2bfb1b381e succeeds in /tmp/gspot-env-ownership-commit.log. Normal origin/main push succeeds in /tmp/gspot-env-ownership-push.log (136 passes, six existing skips, zero findings; 75.1 seconds). The tree is clean and HEAD equals origin/main before the environment reader batch."
             ],
             "remaining": [
                 "Continue 929 original implementation records; environment reader naming/behavior and broader test-quality records remain separate. Publication and deployment retain their authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "Environment reader declarations and prerequisites",
+            "rows": ["areas/kits/121", "slices/kits-general/022"],
+            "outcome": "Two original reader-contract records close with IDs and original findings preserved. Recommended and all run built-in and declared reads without an enabling flag; missing templates remain explicit prerequisites. 927 original implementation records remain open.",
+            "evidence": [
+                "Source: configurations/general/secrets/manifest.toml declares env.templates and env.reader_functions as neutral project lists. The check and registry now use secrets/env-template. The old dotenv namespace, accessor scalar, engine name and public check ID are removed without aliases. Native dotenv-linter keeps its legitimate tool name and the common secrets configuration remains automatic.",
+                "Reader ownership: checks/general/secrets.ts uses normalized EnvironmentSettings from types/policy/settings.ts. Built-in readers stay active when the declared reader list is empty. Multiple escaped names support dotted and dollar-prefixed functions while rejecting suffix matches. config/checks/general/secrets.ts adds direct and bracket Bun.env reads. Template keys union within each project, per-file first occurrences remain positioned, and shared planning isolates child scopes.",
+                "Prerequisite: absence of an owned template uses the existing GspotError skip contract, produces a public skipped check with an actionable env.templates note and exits zero. The summary names static uppercase keys, supported readers, component files and the required project template instead of promising every environment variable.",
+                "Typed declarations: policy/schema/configurations.ts owns strict env tables in root and scope. Both levels refuse obsolete dotenv/accessor controls, enabled flags, scalar reader names, non-string entries and empty reader names. Reasoned reader/template lists remain valid project declarations; no coverage control is introduced. Manifest defaults remain authoritative.",
+                "Affected CLI: /tmp/gspot-env-readers-contracts-final.log has 98 passes, zero failures and 300 assertions across 11 files (1.85 seconds). Both levels prove multiple declared functions, built-in Bun reads without declarations, duplicate suppression, escaped names, project template corrections and root/app/sibling isolation. All original environment/component assertions remain. /tmp/gspot-env-readers-public-contracts.log has 77 passes, zero failures and 305 assertions across list, explain and published-schema owners (1.78 seconds).",
+                "Native: /tmp/gspot-env-readers-native.log has three passes, zero failures and 14 assertions (11.92 seconds). The packaged check reports a positioned missing key, preserves the reading source through its template correction, and passes; the pinned dotenv tool and fixer retain their unique findings and exact corrected bytes.",
+                "Four TypeScript targets pass in /tmp/gspot-env-readers-types-final.log (8.28 seconds). Changed source/test ESLint passes in /tmp/gspot-env-readers-eslint-final.log, scoped assertions pass lint, and actual Taplo manifest formatting passes. The initial example assertion exposed unsafe-any from a direct matcher; the existing typed textContaining helper corrects it without suppressions.",
+                "Documentation: /tmp/gspot-env-readers-docs.log builds 316 pages and validates every local link and fragment. Inspection confirms the new check route exists, the old route does not, generated settings use both env declarations, and the published strict schema contains only templates and reader_functions under env with no dotenv root. Apply-first and apply-second each report 140 unchanged outputs, zero writes, updates, removals, preserved outputs or notes.",
+                "Delivered packages: /tmp/gspot-env-readers-packages.log passes standalone archives, both installed-tool cases and launcher cancellation. The launcher consumer correctly adds a runtime environment-template skip beyond its planned Git/network/legal skips, exposing its obsolete expectation. The fixture now separates planned skips from runtime prerequisites and asserts the actionable env.templates diagnostic. /tmp/gspot-env-readers-launcher-final.log passes both launcher cases; all original takeover, native failure, scope, preservation, redaction and process-cancellation assertions remain. Final launcher lint passes and all four TypeScript targets pass in /tmp/gspot-env-readers-types-delivery.log (9.26 seconds).",
+                "Final gate corrections: the first staged run finds a calculation in config/packages/launcher.ts, the handwritten reader_functions type key and three banned fixture names. Runtime skip concatenation now lives in the test, its config holds only literals, and project reader fixture names describe their contents. EnvironmentSettings now derives keys and normalized values from the owned strict environment schema, with no naming exception. Schema declarations export at their definitions and remain last; a comment now directly describes runtime prerequisite reporting. No product gate or policy rule is disabled.",
+                "Final contracts: /tmp/gspot-env-readers-schema-final.log has 86 passes, zero failures and 269 assertions across five environment, policy and published-schema files (2.35 seconds). All four TypeScript targets pass in /tmp/gspot-env-readers-types-complete.log (9.98 seconds). Final schema lint passes in /tmp/gspot-env-readers-schema-export-eslint-final.log. /tmp/gspot-env-readers-launcher-gate-final.log passes both delivered launcher cases with 331 assertions (53.17 seconds); native and standalone/tool cases retain their earlier positive evidence.",
+                "Actual final gspot check --staged: /tmp/gspot-env-readers-staged-complete.json reports 68 passed checks, nine skips, zero findings and zero execution errors (42.508 seconds). The three newly explicit skips are absent environment templates in the repository root, CLI and tests scopes; their actionable prerequisites replace false passes. Normal Semgrep, OSV and Taplo pass. All 2,939 original records, quotations and owners remain; the original 990-record batch mapping is unchanged. Two linked reader records close and 927 remain open."
+            ],
+            "remaining": [
+                "Continue 927 original implementation records. Broader typed-setting and platform ownership records remain open; publication and deployment retain their authorization boundaries."
             ]
         }
     ],
@@ -22120,6 +22143,19 @@
                     "packages/cli/src/checks/registry.ts",
                     "tests/cli/checks/general/secrets/env/example.test.ts",
                     "tests/tools/configurations/general/secrets/environment.test.ts"
+                ]
+            },
+            {
+                "id": "environment-reader-declarations-and-prerequisites",
+                "records": ["areas/kits/121", "slices/kits-general/022"],
+                "owners": [
+                    "packages/cli/configurations/general/secrets/manifest.toml",
+                    "packages/cli/src/checks/general/secrets.ts",
+                    "packages/cli/src/config/checks/general/secrets.ts",
+                    "packages/cli/src/policy/schema/configurations.ts",
+                    "packages/cli/src/types/policy/settings.ts",
+                    "tests/cli/checks/general/secrets/env/readers.test.ts",
+                    "tests/cli/policy/read-policy/settings.test.ts"
                 ]
             }
         ]
