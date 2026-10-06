@@ -2,6 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { patchToml } from '#cli/parsers/toml/patch.ts';
 import { stringify as stringifyToml } from 'smol-toml';
+import { isReasoned } from '#cli/policy/schema/fields.ts';
 import { policyIndent } from '#cli/policy/settings/known.ts';
 import { valueAt, isRecord } from '#cli/platform/objects.ts';
 import { wrapLongArrays } from '#cli/parsers/toml/layout.ts';
@@ -9,7 +10,7 @@ import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { POLICY_LINE_WIDTH } from '#cli/config/parsers/toml.ts';
 import { normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 import { parseTomlText, parseStrictPolicy } from '#cli/policy/read.ts';
-import type { Mutation, Proposal, PolicyKey, TomlTable } from '#cli/types/policy/settings.ts';
+import type { Mutation, Proposal, Reasoned, PolicyKey, TomlTable } from '#cli/types/policy/settings.ts';
 
 function splitKey(key: string): PolicyKey {
     const path = key.split('.');
@@ -101,38 +102,46 @@ export function deleteKey(raw: TomlTable, key: string): void {
  * Appends entries to a list key, deduplicated, creating the list.
  * @param raw the table being edited
  * @param key the dotted key of the list
- * @param entries the entries to append
+ * @param entries the entries to append and their optional list reason
  */
-export function addToList(raw: TomlTable, key: string, entries: unknown[]): void {
+export function addToList(raw: TomlTable, key: string, entries: Reasoned<unknown[]>): void {
     const { path, name } = splitKey(key);
     const table = createTable(raw, path);
     if (!table) throw new Error(`\`${key}\` runs through a value that is not a table.`);
-    const list = [...((table[name] as unknown[] | undefined) ?? [])];
-    for (const entry of entries) {
+    const authored = table[name];
+    const current: Reasoned<unknown> = isReasoned(authored) ? authored : { value: authored };
+    const existing = current.value;
+    const list = [...((existing as unknown[] | undefined) ?? [])];
+    for (const entry of entries.value) {
         const value = normalizeTomlTables(entry);
         if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
     }
-    table[name] = list;
+    const reason = entries.reason ?? current.reason;
+    table[name] = reason === undefined ? list : { value: list, reason };
 }
 
 /**
  * Removes entries from a list key; an entry with a `name` field matches by that name too.
  * @param raw the table being edited
  * @param key the dotted key of the list
- * @param entries the entries to remove
+ * @param entries the entries to remove and their optional list reason
  */
-export function removeFromList(raw: TomlTable, key: string, entries: unknown[]): void {
+export function removeFromList(raw: TomlTable, key: string, entries: Reasoned<unknown[]>): void {
     const { path, name } = splitKey(key);
     const value = valueAt(raw, path);
     const table = isRecord(value) ? value : undefined;
-    const existing = table?.[name];
+    const authored = table?.[name];
+    const current: Reasoned<unknown> = isReasoned(authored) ? authored : { value: authored };
+    const existing = current.value;
     if (!table || !Array.isArray(existing)) return;
-    const gone = new Set(entries.map((value) => JSON.stringify(value)));
-    table[name] = (existing as unknown[]).filter((item) => {
+    const gone = new Set(entries.value.map((value) => JSON.stringify(value)));
+    const kept = (existing as unknown[]).filter((item) => {
         const isNamed = typeof item === 'object' && item !== null && 'name' in item;
         const identity = JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
         return !gone.has(identity) && !gone.has(JSON.stringify(item));
     });
+    const reason = entries.reason ?? current.reason;
+    table[name] = reason === undefined ? kept : { value: kept, reason };
 }
 
 /**

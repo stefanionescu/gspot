@@ -134,7 +134,7 @@ test.each(['recommended', 'all'] as const)(
     },
 );
 
-test.each(POLICY_PATHS)('a change to %s retains repository-wide inputs and tool exclusions', async (path) => {
+test.each(POLICY_PATHS)('a change to %s retains project inputs and tool exclusions', async (path) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': LINK_POLICY,
@@ -150,7 +150,10 @@ test.each(POLICY_PATHS)('a change to %s retains repository-wide inputs and tool 
             scope: entry.scope.scope.path,
             files: entry.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
         })),
-    ).toStrictEqual([{ scope: '', files: ['api/guide.md', 'README.md'] }]);
+    ).toStrictEqual([
+        { scope: '', files: ['README.md'] },
+        { scope: 'api', files: ['api/guide.md'] },
+    ]);
 });
 
 test.each(COMPONENTS)('reconciliation retains CSS tooling for embedded styles in $path', async ({ path, source }) => {

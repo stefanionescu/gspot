@@ -78,9 +78,11 @@ const formatSchema = formatFields.extend({ overrides: z.array(formatOverride).op
 const dependenciesSchema = z.strictObject({
     min_release_age_days: reasonedNumber.optional(),
     scanner: z.string().optional(),
+    registry_hosts: reasoned(z.array(z.string().min(1))).optional(),
+    ranges_allowed: z.array(reasonedPaths).optional(),
 });
 
-const proseSchema = z.strictObject({ vocabulary: z.array(z.string()).default([]) });
+const proseSchema = z.strictObject({ vocabulary: reasoned(z.array(z.string())).default([]) });
 
 const ignoreSchema = z.strictObject({
     check: z.string(),

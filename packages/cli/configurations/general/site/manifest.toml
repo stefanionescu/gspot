@@ -211,7 +211,7 @@ summary = "Weight ceilings: the output paths, and the most kilobytes they may we
 [[setting]]
 name = "site.sitemap_exclude"
 type = "list"
-direction = "neutral"
+direction = "loosening"
 default = ["404.html"]
 summary = "Built pages the sitemap leaves out on purpose."
 

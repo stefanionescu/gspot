@@ -18955,10 +18955,31 @@
                 "Initial fixture corrections: Swift parameter case belongs to SwiftLint, so the custom naming boundary asserts its actual banned-word diagnostic. The pytest boundary fixture replaces the independently banned word details with columns. No product check is weakened. Changed-source ESLint passes after removing one nested template literal; /tmp/gspot-naming-ownership-eslint-corrected.log and module-eslint.log exit 0. Native Taplo formatting and Prettier pass.",
                 "Type and documentation evidence: /tmp/gspot-naming-ownership-types.log passes all four TypeScript targets (9.02 seconds). The added module-filename case also passes the affected root target in test-types.log. /tmp/gspot-naming-ownership-docs.log builds 316 pages, with every local link and fragment valid. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero writes, updates, removals, preserved files or notes; no managed file is edited manually.",
                 "Delivered native evidence: /tmp/gspot-naming-ownership-packages.log passes both standalone and installed-consumer cases with 55 assertions (224.84 seconds). The archive preserves its assets, checksum and source diagnostics without Node.js or Bun on PATH. The installed candidate reports pinned prose/Python/Bash defects and accepts their corrections; its shipped Swift grammar and SQL parser work without checkout dependencies. All child operations remain bounded by the 900-second test budget; the local registry closes and no external publication occurs.",
-                "Staged gate: /tmp/gspot-naming-ownership-staged-final.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.642 seconds). Normal native checks remain enabled. The initial gate correctly reports a missing Oxford comma and the test constant SHELL_NAMES violating the repository-authored banned term shell. The comment now includes the comma and the constant is BASH_NAMES throughout its consumers. Corrected lint, the root TypeScript target and all eight ownership regressions pass (41 assertions, 0.923 seconds); no product policy is changed to pass the gate."
+                "Staged gate: /tmp/gspot-naming-ownership-staged-final.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.642 seconds). Normal native checks remain enabled. The initial gate correctly reports a missing Oxford comma and the test constant SHELL_NAMES violating the repository-authored banned term shell. The comment now includes the comma and the constant is BASH_NAMES throughout its consumers. Corrected lint, the root TypeScript target and all eight ownership regressions pass (41 assertions, 0.923 seconds); no product policy is changed to pass the gate.",
+                "Delivery: commit 2c9d1984b4321591af755ea7387404171a72de2d completed with hooks enabled (45 pre-commit passes, two existing skips, commit-message pass). Normal push to origin/main passed 68 checks with nine explicit skips and zero findings (41.6 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-naming-ownership-commit.log and /tmp/gspot-naming-ownership-push.log."
             ],
             "remaining": [
                 "Continue 901 original implementation records. Broader naming exception validation and framework route/callback behavior remain open; external publication and deployment still require authorization."
+            ]
+        },
+        {
+            "subsystem": "Saved exception lists and scoped dependency hosts",
+            "rows": ["areas/kits/065", "slices/kits-general/028", "slices/kits-general/029", "slices/kits-general/060"],
+            "outcome": "Four original records close with IDs and source quotations intact. 897 original implementation records remain open.",
+            "evidence": [
+                "Dependency host defaults: general/dependencies/manifest.toml removes github.com and codeload.github.com, retaining registry.npmjs.org and registry.yarnpkg.com. Its public summary names npm, pnpm, Yarn and text Bun downloads, and the ranges_allowed summary names paths and reason. Registry and range allowances belong to the existing dependencies namespace and are accepted by its strict parser. No coverage flag, bundle, profile or opt-in setting is introduced; manual language/framework overrides remain available.",
+                "Reason ownership: site.sitemap_exclude and dependencies.registry_hosts declare loosening; tools.prettier.exclude already declares it. The shared loosening calculation requires reasons for new allowance entries, not empty lists or shipped primitive defaults. docs.license declares a boolean floor at true: false weakens the existing LICENSE-file requirement and needs a reason, whereas true restores it and needs none. This corrects the source recommendation to mark that boolean unconditionally loosening; the functional distinction is proven by its public refusal, saved reason, absent LICENSE finding and restored requirement. It does not enroll or switch license audits.",
+                "Saved lists: the existing value/reason form is accepted for formatter and link exclusions, dependency hosts and prose vocabulary. Set writes primitive-list reasons, preserves them through append/remove, and retains structured-entry reasons, named-entry removal and deduplication. Every addToList/removeFromList caller uses the new reasoned payload. The strict saved-policy parser rejects missing and meaningless primitive-list reasons when require_reasons is true, while preserving spelling identity shorthand. Vale generation reads resolved vocabulary from the root view instead of spreading a reason wrapper.",
+                "Scope isolation: lockfile-hosts now runs over each project scope, with explicit npm/pnpm/Yarn/text Bun lockfile ownership. Existing orchestration supplies disjoint project files and inherited settings. Public root/child/sibling regressions prove a scoped host allowance never authorizes root or sibling downloads, named child inputs retain only that check, and removing the scoped value restores inherited defaults. Authored list replacements preserve the existing append/deduplication of shipped defaults and ancestor lists; documentation states that contract.",
+                "CLI/schema regressions: /tmp/gspot-exception-reasons-cli-complete.log passes 337 tests with 1441 assertions across 26 files (11.39 seconds), covering policy, set, levels, dependencies, docs, planning, published schema and Vale generation. Runtime and published schemas agree on root/scoped formatter exclusions, registry hosts, range paths and root vocabulary. /tmp/gspot-exception-reasons-preview-regressions.log separately passes all nine saved-list cases with 99 assertions (4.03 seconds), including exact preview policy, dryRun and unchanged files. /tmp/gspot-exception-reasons-vocabulary-final.log passes the generated-word regression with 11 assertions (0.929 seconds). Existing assertions are retained.",
+                "Consumer verification: /tmp/gspot-exception-reasons-consumers.log passes 63 formatter/site/configuration/ignore cases with 234 assertions (8.19 seconds). /tmp/gspot-exception-reasons-manifest-final.log passes 97 dependency/schema cases with 241 assertions (1.85 seconds). /tmp/gspot-exception-reasons-native.log passes the pinned Prettier scenario with 23 assertions (45.06 seconds), adding ordered exclusion/negation and remove/fix verification to its original scenario with one installation. Excluded bytes stay unchanged; included files fail and accept native correction.",
+                "Failure corrections: the first CLI/type runs exposed three list helper callers, spelling identity shorthand, permissive list inspection and inherited-list expectations; corrected without weakening product checks. The expanded planning cohort exposed two stale link-check expectations: it now asserts both project partitions and the original exclusion. Schema refusal cases name the actual paths field. ESLint had changed a deliberately insecure URL literal to HTTPS; the test now sets URL.protocol to http: explicitly. The first package run exposed prose.vocabulary rejecting saved reasons; its typed schema and resolved Vale consumer are fixed. Only final clean logs support closures.",
+                "Type/format/docs/canonical verification: /tmp/gspot-exception-reasons-types-complete.log passes all four TypeScript targets (9.21 seconds). Affected ESLint, Prettier and native Taplo passes are retained in all-eslint, vocabulary-eslint-final, schema-eslint, prettier-final and final-toml logs. /tmp/gspot-exception-reasons-docs-complete.log builds 316 pages with every local link and fragment valid. Both apply-complete-first.json and apply-complete-second.json report 140 unchanged outputs and zero writes, updates, removals, preserved files or notes. Managed outputs are generated through apply.",
+                "Delivered native verification: /tmp/gspot-exception-reasons-packages-complete.log passes the standalone archive and installed language consumer, including shipped assets/checksum/source diagnostics without Node.js or Bun on PATH, pinned prose/Python/Bash defect/correction paths, Swift naming and packaged SQL parsing. The isolated local registry closes. External publication and deployment are not performed.",
+                "Staged verification: /tmp/gspot-exception-reasons-staged-final.json records the actual gspot --json check --staged at exit 0: 92 passed checks, ten explicit skips, 82 selection skips and zero findings (55.796 seconds). The first gate correctly rejected executable fixture setup in config/, a smart quote, banned with/scoped names and the new set/ prefix collision. Fixtures are now literal data; the helper is settingReasonValue; the result is childValues; the test title uses plain punctuation. Only the new regression files move into the existing commands owner as exceptions.test.ts and vocabulary.test.ts; no existing file is mechanically relocated. All 135 affected cases pass with 830 assertions (7.30 seconds), affected lint and the root TypeScript target pass in gate-corrections logs, and no product policy is weakened. Corrected package verification passes both delivered cases with 55 assertions (230.78 seconds)."
+            ],
+            "remaining": [
+                "Continue 897 original records. General typed namespace validation, scoped manifest range consumption, wider suppression/ignore ownership and full final suite families remain open. External publication and deployment still require separate authorization."
             ]
         }
     ],
@@ -22349,6 +22370,31 @@
                     "packages/cli/src/parsers/naming/python.ts",
                     "tests/cli/checks/general/naming/ownership.test.ts",
                     "tests/config/cli/checks/general/naming/ownership.ts"
+                ]
+            },
+            {
+                "id": "saved-exception-lists-and-scoped-host-policy",
+                "records": [
+                    "areas/kits/065",
+                    "slices/kits-general/028",
+                    "slices/kits-general/029",
+                    "slices/kits-general/060"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/dependencies/manifest.toml",
+                    "packages/cli/configurations/general/site/manifest.toml",
+                    "packages/cli/configurations/general/docs/manifest.toml",
+                    "packages/cli/src/policy/schema/policy.ts",
+                    "packages/cli/src/policy/schema/tools.ts",
+                    "packages/cli/src/policy/problems/reasons.ts",
+                    "packages/cli/src/policy/problems/keys.ts",
+                    "packages/cli/src/policy/edit.ts",
+                    "packages/cli/src/commands/set.ts",
+                    "packages/cli/src/generation/vale-styles.ts",
+                    "tests/cli/commands/exceptions.test.ts",
+                    "tests/cli/commands/vocabulary.test.ts",
+                    "tests/config/cli/docs/exceptions.ts",
+                    "tests/tools/configurations/general/format.test.ts"
                 ]
             }
         ]

@@ -44,7 +44,8 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
     const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt`)
         .trim()
         .split(/\r?\n/u);
-    const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
+    const authored = view.options('prose')['vocabulary'] as string[];
+    const vocabulary = [...new Set([...shipped, ...authored])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [
         ...rules,

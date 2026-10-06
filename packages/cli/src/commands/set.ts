@@ -1,7 +1,6 @@
 // Preview or publish setting changes with the same validation and mutation.
 import { resolve } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { Option } from '@commander-js/extra-typings';
@@ -9,8 +8,10 @@ import { printResult } from '#cli/output/messages.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { CommandResult } from '#cli/types/output.ts';
+import { isReasoned } from '#cli/policy/schema/fields.ts';
 import type { SetOptions } from '#cli/types/commands/set.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import { compact, isRecord } from '#cli/platform/objects.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { isLoosening } from '#cli/policy/problems/reasons.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -20,9 +21,9 @@ import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
 import { unknownSettingDiagnostic } from '#cli/policy/problems/keys.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/options.ts';
-import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { commitPolicy, previewPolicy, requireReason } from '#cli/commands/policy-edit.ts';
 import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/edit.ts';
+import type { Mutation, Reasoned, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -73,27 +74,23 @@ function isPathList(key: string, value: unknown): value is string[] {
     );
 }
 
-// The reason given on the command line goes into every table item that has none.
-function fillReasons(value: unknown, reason: string | undefined): unknown {
-    if (reason === undefined || !Array.isArray(value)) return value;
-    return (value as unknown[]).map((item) =>
-        item !== null && typeof item === 'object' && !('reason' in item) ? { ...item, reason } : item,
-    );
+// Structured entries keep their own reasons; primitive lists save one reason with the whole value.
+function settingReasonValue(value: unknown, spec: SettingSpec, reason: string | undefined): unknown {
+    if (reason === undefined) return value;
+    if (spec.type !== 'list') return { value, reason };
+    const entries = value as unknown[];
+    if (entries.some((item) => isRecord(item)))
+        return entries.map((item) => (isRecord(item) && !('reason' in item) ? { ...item, reason } : item));
+    return spec.direction === 'loosening' ? { value, reason } : value;
 }
 
 function isReasonOwed(spec: SettingSpec, options: SetOptions, value: unknown, shipped: unknown): boolean {
     if (spec.type !== 'list') return isLoosening(spec, value, shipped);
     if (options.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
-    const items: unknown[] = Array.isArray(value) ? value : [];
-    if (
-        items.length > 0 &&
-        items.every(
-            (item) => item !== null && typeof item === 'object' && 'reason' in item && typeof item.reason === 'string',
-        )
-    )
-        return false;
-    return options.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
+    const items = value as unknown[];
+    if (items.length > 0 && items.every((item) => isRecord(item) && typeof item['reason'] === 'string')) return false;
+    return (options.replace && spec.direction === 'tightening') || isLoosening(spec, value, shipped);
 }
 
 // What set did: the new value, or the items it added to or removed from a list.
@@ -166,12 +163,11 @@ async function changeSetting(
         options.items.map((item) => parseItem(item)),
         isList,
     );
-    const value = fillReasons(
-        isPathList(options.key, parsed) && !options.remove ? [{ paths: parsed }] : parsed,
-        isList ? options.reason : undefined,
-    );
+    const entries = isPathList(options.key, parsed) && !options.remove ? [{ paths: parsed }] : parsed;
+    const written = settingReasonValue(entries, spec, options.reason);
+    const change = isReasoned(written) ? written : { value: written };
+    const value = change.value;
     assertReason(session, selection, options, spec, value);
-    const written = !isList && options.reason !== undefined ? { value, reason: options.reason } : value;
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         if (options.remove && isPathList(options.key, value)) {
@@ -179,8 +175,8 @@ async function changeSetting(
             holder[options.key] = entries
                 .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
                 .filter((entry) => entry.paths.length > 0);
-        } else if (isList && options.remove) removeFromList(holder, options.key, value as unknown[]);
-        else if (isList && !options.replace) addToList(holder, options.key, value as unknown[]);
+        } else if (isList && options.remove) removeFromList(holder, options.key, change as Reasoned<unknown[]>);
+        else if (isList && !options.replace) addToList(holder, options.key, change as Reasoned<unknown[]>);
         else setKey(holder, options.key, written);
     };
     const summary = describeSet(session, selection, options, shown, value, isList);

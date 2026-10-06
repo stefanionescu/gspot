@@ -112,7 +112,10 @@ export const toolsSchema = z
             .optional(),
         yamllint: z.strictObject({ rules: yamlRules.optional() }).optional(),
         lychee: z
-            .strictObject({ exclude: z.array(z.unknown()).optional(), exclude_urls: z.array(z.unknown()).optional() })
+            .strictObject({
+                exclude: reasoned(z.array(z.unknown())).optional(),
+                exclude_urls: reasoned(z.array(z.unknown())).optional(),
+            })
             .optional(),
         markdownlint: z
             .strictObject({
@@ -140,6 +143,6 @@ export const toolsSchema = z
                 globals_module: z.string().min(1).optional(),
             })
             .optional(),
-        prettier: toolTable.extend({ exclude: z.array(z.string()).optional() }).optional(),
+        prettier: toolTable.extend({ exclude: reasoned(z.array(z.string())).optional() }).optional(),
     })
     .catchall(toolTable);

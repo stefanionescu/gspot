@@ -118,7 +118,7 @@ summary = "Headings this repository bans beyond the shipped list."
 [[setting]]
 name = "docs.license"
 type = "boolean"
-direction = "neutral"
+direction = "floor"
 default = true
 summary = "Whether the root must carry a LICENSE file."
 

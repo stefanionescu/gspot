@@ -44,6 +44,7 @@ function listProblems(
     written: Reasoned<unknown>,
     match: SpecMatch,
     requireReasons: boolean,
+    shipped: unknown,
 ): PolicyProblem[] {
     if (!Array.isArray(written.value)) return [];
     const items = written.value as unknown[];
@@ -71,7 +72,12 @@ function listProblems(
             const diagnostic = reasonDiagnostic(where, authored);
             return diagnostic === undefined ? [] : [{ path, message: diagnostic }];
         });
-    return [...quoted, ...reasons];
+    const primitive = items.some((item) => !isRecord(item));
+    const needsReason =
+        primitive && match.spec.reason_identity === undefined && isLoosening(match.spec, written.value, shipped);
+    const diagnostic = written.reason !== undefined || needsReason ? reasonDiagnostic(key, written.reason) : undefined;
+    const listReason = diagnostic === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message: diagnostic }];
+    return [...quoted, ...reasons, ...listReason];
 }
 
 // The problem of a written scalar that loosens the shipped default without an accepted reason.
@@ -111,7 +117,8 @@ function keyProblems(
                 message: `The setting ${key}: ${validated.error.issues.map((issue) => issue.message).join('; ')}`,
             },
         ];
-    if (match.spec.type === 'list') return listProblems(key, written, match, requireReasons);
+    if (match.spec.type === 'list')
+        return listProblems(key, written, match, requireReasons, surface.defaults.get(match.spec.name)?.value);
     return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
 }
 

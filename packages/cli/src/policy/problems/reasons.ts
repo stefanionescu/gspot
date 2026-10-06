@@ -1,4 +1,5 @@
 // Exception reasons, unconditional policy restrictions, and declared scope paths.
+import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -102,9 +103,13 @@ function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
     return problems;
 }
 
-function isNumberLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
-    if (typeof value !== 'number' || typeof shipped !== 'number') return false;
-    return direction === 'ceiling' ? value > shipped : value < shipped;
+function isThresholdLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
+    if (
+        (typeof value !== 'number' && typeof value !== 'boolean') ||
+        (typeof shipped !== 'number' && typeof shipped !== 'boolean')
+    )
+        return false;
+    return direction === 'ceiling' ? Number(value) > Number(shipped) : Number(value) < Number(shipped);
 }
 
 /**
@@ -214,8 +219,11 @@ export function isReasonAccepted(reason: string | undefined): boolean {
  * @returns whether a reason is needed
  */
 export function isLoosening(spec: SettingSpec, value: unknown, shipped: unknown): boolean {
-    if (spec.direction === 'loosening') return true;
+    if (spec.direction === 'loosening')
+        return Array.isArray(value)
+            ? value.some((item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)))
+            : true;
     if (spec.direction === 'ceiling' || spec.direction === 'floor')
-        return isNumberLoosening(spec.direction, value, shipped);
+        return isThresholdLoosening(spec.direction, value, shipped);
     return false;
 }

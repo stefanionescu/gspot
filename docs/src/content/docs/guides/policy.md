@@ -107,7 +107,18 @@ More ways to write a setting:
 
 - `--scope api` writes the setting in the scope `api`.
 - `--default` removes your value, so the inherited or default value applies.
-- For a list, `--replace` replaces the whole list, and `--remove` removes items from it.
+- For a list, `--replace` replaces the list authored at that scope, and `--remove` removes items from it. Inherited lists and shipped defaults still apply.
+
+With `require_reasons = true`, adding formatter exclusions, sitemap exclusions, registry
+hosts, or project vocabulary needs a reason. `set` saves a list of strings in a table with `value` and `reason`.
+Appending or removing items preserves that saved form. Replacing an exception list with an
+empty list tightens the policy and needs no reason. Turning `docs.license` off also needs a
+reason; turning the license-file requirement back on does not.
+
+Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by default. Add another
+reviewed host with `gspot set dependencies.registry_hosts <HOST> --reason "<WHY>"`.
+Registry allowances apply to their project scope and its descendants. A sibling keeps its own
+allowances. Every download must still use HTTPS.
 
 ## Edit the file by hand
 

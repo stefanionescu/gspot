@@ -83,14 +83,14 @@ test('writePolicy > deduplicates list values and named entries with reordered ke
     await createFileTree(sandbox.path, { 'gspot.toml': AUTHORED_POLICY });
     {
         const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'naming.banned', ['dispatcher', 'orchestrator']);
+            addToList(raw, 'naming.banned', { value: ['dispatcher', 'orchestrator'] });
         });
         using log = openOwnership(sandbox.path);
         writePolicy(log, plan);
     }
     {
         const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'naming.banned', ['dispatcher']);
+            addToList(raw, 'naming.banned', { value: ['dispatcher'] });
         });
         using log = openOwnership(sandbox.path);
         writePolicy(log, plan);
@@ -103,7 +103,7 @@ test('writePolicy > deduplicates list values and named entries with reordered ke
         { reason: 'A domain term.', name: 'Ledger' },
     ]) {
         const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'naming.allowed', [entry]);
+            addToList(raw, 'naming.allowed', { value: [entry] });
         });
         using log = openOwnership(sandbox.path);
         writePolicy(log, plan);
