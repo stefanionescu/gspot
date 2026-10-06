@@ -13,9 +13,9 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PROJECT_FILES } from '#tests/config/cli/generation/every-template.ts';
 
 const PARSERS: Record<string, (text: string, path: string) => void> = {
-    '.json': parseJson,
+    '.json': (text) => void JSON.parse(text),
     '.jsonc': parseJson,
-    '.webmanifest': parseJson,
+    '.webmanifest': (text) => void JSON.parse(text),
     '.toml': (text) => {
         parseToml(text);
     },
@@ -57,13 +57,13 @@ test.each(['recommended', 'all'])(
         const session = await openSession(sandbox.path);
         const output = emitAll(session);
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
-        const written = new Set(
+        const selected = new Set(
             session.scopes
                 .flatMap((scope) => scope.selected)
                 .filter((manifest) => configurations.includes(manifest.configuration.name))
                 .map((manifest) => manifest.configuration.name),
         );
-        expect(written).toStrictEqual(new Set(configurations));
+        expect(selected).toStrictEqual(new Set(configurations));
         expect(generated.length).toBeGreaterThan(configurations.length);
         for (const file of generated) {
             const parser = PARSERS[extname(file.path)];

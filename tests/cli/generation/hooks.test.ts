@@ -8,10 +8,11 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { RUNNER_CASES } from '#tests/config/cli/generation/hooks.ts';
 
-test.each([undefined, 'npm', 'mise'])(
-    'the hook scripts under the %s runner parse and run one check each',
-    async (runner) => {
+test.each(RUNNER_CASES)(
+    'the hook scripts under the %s runner parse and select one check each',
+    async (_label, runner) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'configurations = []\n' });
         gitOutput(sandbox.path, ['init', '-q']);

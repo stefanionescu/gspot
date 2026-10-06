@@ -9,8 +9,9 @@ import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { AGE_CASES, TWO_WEEKS_SECONDS } from '#tests/config/cli/generation/bunfig.ts';
 
-test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
+test('Bun safeguards preserve stricter age and unrelated fields across ownership merge and restoration', async () => {
     await using repository = await testdir();
     const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
     await createFileTree(repository.path, {
@@ -28,7 +29,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     expect(Bun.TOML.parse(installed)).toStrictEqual({
         install: {
             exact: true,
-            minimumReleaseAge: 1_209_600,
+            minimumReleaseAge: TWO_WEEKS_SECONDS,
             security: { scanner: '@socketsecurity/bun-security-scanner' },
         },
     });
@@ -37,6 +38,23 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     expect(applyPlan(log, proposeRestoration(log, 'bunfig.toml'))).toBe('changed');
     log[Symbol.dispose]();
     expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
+});
+
+test.each([...AGE_CASES])('Bun generation sets the required age with $name authored settings', async (entry) => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'gspot.toml': buildPolicy(['dependencies'], {
+            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n[agent_rules]\nenabled = false\n',
+        }),
+        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+        ...(entry.source === undefined ? {} : { 'bunfig.toml': entry.source }),
+    });
+    const session = await openSession(repository.path);
+    const generated = emitAll(session).configurations.find((output) => output.path === 'bunfig.toml')!;
+    expect(generated.changes).toStrictEqual([
+        { path: ['install', 'minimumReleaseAge'], value: entry.expected },
+        { path: ['install', 'security', 'scanner'], value: '@socketsecurity/bun-security-scanner' },
+    ]);
 });
 
 test.each(['', 'apps/api/'])(

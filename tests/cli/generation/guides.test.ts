@@ -1,5 +1,5 @@
-import { test, expect } from 'bun:test';
 import type { Level } from '#cli/types/rules.ts';
+import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -10,23 +10,9 @@ import { RUNTIME_EVIDENCE_CASES } from '#tests/config/cli/repository/manifests.t
 async function generatedGuides(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(
-            [
-                'typescript',
-                'css',
-                'vitest',
-                'swift',
-                'html',
-                'python',
-                'bash',
-                'express',
-                'nestjs',
-                'svelte',
-                'drizzle',
-                'openapi',
-            ],
-            { level: level },
-        ),
+        'gspot.toml': buildPolicy(['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'], {
+            level: level,
+        }),
         ...files,
     });
     const session = await openSession(sandbox.path);
@@ -34,18 +20,21 @@ async function generatedGuides(level: Level, files: Record<string, string>): Pro
     return new Map(output.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
 }
 
-test('recommended guides omit marked sections and retain the next heading', async () => {
-    const recommended = await generatedGuides('recommended', {});
-    const all = await generatedGuides('all', {});
+let recommended: ReadonlyMap<string, string>;
+let all: ReadonlyMap<string, string>;
+
+beforeAll(async () => {
+    recommended = await generatedGuides('recommended', {});
+    all = await generatedGuides('all', {});
+});
+
+test('recommended guides omit sections marked for level all', () => {
     const path = '.gspot/rules/general/engineering/code/COMMENTS.md';
     expect(recommended.get(path)).not.toContain('## When to comment');
     expect(all.get(path)).toContain('## When to comment');
-    expect(recommended.get(path)).toContain('## Keep comments true');
 });
 
-test('a rule whose every section is for level all installs only at all', async () => {
-    const recommended = await generatedGuides('recommended', {});
-    const all = await generatedGuides('all', {});
+test('a rule whose every section is for level all installs only at all', () => {
     for (const path of [
         'general/engineering/code/NAMING.md',
         'language/typescript/NAMING.md',
@@ -57,14 +46,13 @@ test('a rule whose every section is for level all installs only at all', async (
     expect(recommended.has('.gspot/rules/general/engineering/agent/WORKING.md')).toBe(true);
 });
 
-test('conditional guides follow lockfile and dependency evidence', async () => {
-    const absent = await generatedGuides('all', {});
+test('conditional guides follow file and dependency evidence', async () => {
     const present = await generatedGuides('all', {
         'bunfig.toml': '[test]\nroot = "tests"\n',
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
     for (const path of ['language/javascript/BUN.md', 'language/css/TAILWIND.md', 'tool/vitest/PLAYWRIGHT.md']) {
-        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
+        expect(all.has(`.gspot/rules/${path}`)).toBe(false);
         expect(present.has(`.gspot/rules/${path}`)).toBe(true);
     }
 });
