@@ -441,7 +441,7 @@
         "outcome": "implemented",
         "verification": [
             "No consumer registry file convention is imposed: the singleton rule defaults to an empty project file list and reports nothing without project-owned paths. All supplies the rule; authored native option arrays declare its files without a severity or enabling flag. Recommended leaves it inactive even with those options.",
-            "Decision evidence: recommended-and-all and manual-configuration-overrides retain legitimate project prerequisites while prohibiting a second coverage selection step. The finding\u2019s suggestion to manually enable the rule is superseded; its project ownership requirement is implemented.",
+            "Decision evidence: recommended-and-all and manual-configuration-overrides retain legitimate project prerequisites while prohibiting a second coverage selection step. The finding’s suggestion to manually enable the rule is superseded; its project ownership requirement is implemented.",
             "Source: packages/eslint-plugin/src/rules/instances-in-registry.ts; packages/cli/src/generation/eslint/configuration.ts; tests/plugin/rules/instances-in-registry.test.ts; tests/plugin/configuration.test.ts; tests/cli/generation/level-contract.test.ts.",
             "Focused native ESLint API and plugin contracts pass 87 tests, 615 assertions across five files, /tmp/gspot-eslint-options-contracts-final.log. All four TypeScript targets pass, /tmp/gspot-eslint-options-types-ready-final.log; documentation builds 316 pages with all links and fragments valid, /tmp/gspot-eslint-options-docs.log. Canonical second apply changes nothing: /tmp/gspot-eslint-options-apply-second.json (136 unchanged outputs, no notes)."
         ]
@@ -628,10 +628,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/markdown/manifest.toml:5` `description` | It says the kit includes \"the docs and prose checks\". The kit only recommends `docs`, and it neither requires nor recommends `prose`. | \"Markdown files: markdownlint, Prettier, and fenced code blocks that must parse.\" |",
         "owner": "`kits/language/markdown/manifest.toml:5` `description`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl",
+            "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/tools/configurations/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The manifest description now names only Markdown-owned checks: markdownlint, Prettier and parseable fenced code blocks. It no longer claims docs and prose checks are shipped by the Markdown configuration.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/048",
@@ -640,10 +651,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/markdown/manifest.toml:61` `markdownlint` `example` | The example uses MD025. MD025 is off at level `recommended`, the check's own level (`src/generation/templates.ts:135`). | Use a rule that is on at `recommended`, such as MD001 (heading levels go up one at a time) or MD040 (a fenced block needs a language). |",
         "owner": "`kits/language/markdown/manifest.toml:61` `markdownlint` `example`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl",
+            "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/tools/configurations/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The example now uses MD001, enabled at recommended. The pinned native skipped-heading case reports MD001 and accepts its correction.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/049",
@@ -652,10 +674,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/markdown/manifest.toml:37-52`, `kits/language/markdown/markdownlint.jsonc.tmpl:1` | No code and no pointer reads `.gspot/config/markdownlint.jsonc`, because `markdownlint-cli2.mjs` includes the rules itself. Editors look for `.markdownlint*` only next to a file or in its parent folders. Takeover deletes the user's `.markdownlint.jsonc`, so editor linting falls back to the defaults, with MD013 line length on. | Write a root pointer `.markdownlint-cli2.mjs` that re-exports the generated file, as ESLint does. Delete the `markdownlint.jsonc` target. |",
         "owner": "`kits/language/markdown/manifest.toml:37-52`, `kits/language/markdown/markdownlint.jsonc.tmpl:1`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl",
+            "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/tools/configurations/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The root and nested .markdownlint-cli2.mjs pointers re-export generated CLI configuration, which actually extends the generated markdownlint.jsonc. Native discovery retains the shipped long-line exemption and scoped options. The old claim that markdownlint.jsonc has no reader is disproved by the native extends consumer; deleting this actively read asset would break native execution.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/050",
@@ -664,10 +697,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `src/generation/templates.ts:134` (the rules both Markdown templates emit) | `MD045` (image alt text) is off at both levels. The html kit requires alt text (`wcag/h37`). The Vale `alt-text` style matches only HTML `img` tags, and only when the prose kit is selected. As a result, no check reports a Markdown image without alt text. | Turn MD045 on. |",
         "owner": "`src/generation/templates.ts:134` (the rules both Markdown templates emit)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl",
+            "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/tools/configurations/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "MD045 is selected at both levels. A missing Markdown image alternative reports the authored line and its correction passes. Native HTML-image MD045 also preserves Unicode filename/column and fixability contracts without an authored enabling flag.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/051",
@@ -676,10 +720,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/markdown/manifest.toml:84-88` `tools.markdownlint.rules` | It is the only setting in this slice with no `default`. When the table holds a `default` key, every shipped option (MD007 indent, MD013 off, MD033 off, and the others) is dropped (`src/generation/templates.ts:125-142`). The summary does not say so. | Declare `default = {}`. Merge the shipped options under a user `default`, or state in the summary that `default` replaces them. |",
         "owner": "`kits/language/markdown/manifest.toml:84-88` `tools.markdownlint.rules`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/markdown/manifest.toml",
+            "packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl",
+            "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/tools/configurations/language/markdown.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The setting declares default = {}. Shipped native rules are selected explicitly with default false; option objects merge only into active rules and preserve their shipped options. User decision recommended-and-all supersedes the recommendation to merge under an authored native default or document it as replacement: a default key or authored enablement value is refused, preventing a second coverage selection mechanism.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/052",

@@ -3,7 +3,7 @@ entry = [".markdownlint-cli2.mjs"]
 [configuration]
 title = "Markdown"
 requires = ["format"]
-description = "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
+description = "Markdown files: markdownlint, Prettier, and fenced code blocks that must parse."
 
 [detect]
 extensions = [".md", ".mdx"]
@@ -62,7 +62,7 @@ stub_file = {path = ".markdownlint-cli2.mjs", body = "export { default } from {t
 [[check]]
 name = "markdownlint"
 title = "Lint Markdown files"
-example = "A Markdown document with two top-level headings can report MD025. Keep one document title and change the later section heading to level two."
+example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
 run_in_copy = true
 path_prefix = ":"
 level = "recommended"
@@ -90,5 +90,5 @@ help = "Fix the code in the block, or tag the block text when it is not code."
 name = "tools.markdownlint.rules"
 type = "table"
 direction = "rule-options"
-off_values = [false]
-summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
+default = {}
+summary = "Native option tables by Markdown rule ID, such as MD024. Coverage comes from recommended or all; accept a finding with gspot ignore markdown/markdownlint --rule <rule> --reason <why>."

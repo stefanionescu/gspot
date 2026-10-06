@@ -11,7 +11,12 @@ import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitFile, createEslint } from '#tests/harness/generated.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
-import { RUFF_PREVIEW_RULES, ESLINT_REJECTED_SELECTIONS } from '#tests/config/cli/generation/level-contract.ts';
+
+import {
+    RUFF_PREVIEW_RULES,
+    ESLINT_REJECTED_SELECTIONS,
+    MARKDOWNLINT_REJECTED_SELECTIONS,
+} from '#tests/config/cli/generation/level-contract.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {
     await using sandbox = await testdir();
@@ -241,5 +246,31 @@ test.each(['recommended', 'all'] as const)(
         expect(findings.map(({ messageId: diagnosticId }) => diagnosticId)).toStrictEqual(
             level === 'all' ? ['registry'] : [],
         );
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s refuses authored Markdown coverage choices in root and scoped settings',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            for (const selection of MARKDOWNLINT_REJECTED_SELECTIONS)
+                expect(() =>
+                    parseStrictPolicy(
+                        buildPolicy(['markdown'], {
+                            level,
+                            tables: `${scope}[${table}.markdownlint.rules]\n${selection}\n`,
+                        }),
+                    ),
+                ).toThrow('Markdownlint rule selection');
+            expect(() =>
+                parseStrictPolicy(
+                    buildPolicy(['markdown'], {
+                        level,
+                        tables: `${scope}[${table}.markdownlint.verbatim]\ndefault = true\nreason = "Project preference"\n`,
+                    }),
+                ),
+            ).toThrow('verbatim');
+        }
     },
 );

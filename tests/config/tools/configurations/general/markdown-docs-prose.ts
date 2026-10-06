@@ -10,6 +10,12 @@ export const CORRECTIONS: Record<string, string> = {
 export const CASES: FindingCase[] = [
     {
         check: 'markdown/markdownlint',
+        files: { 'docs/image.md': '# A page\n\n![](diagram.png)\n' },
+        expected: { file: 'docs/image.md', line: 3, rule: 'MD045' },
+        corrected: { files: { 'docs/image.md': '# A page\n\n![Request flow](diagram.png)\n' } },
+    },
+    {
+        check: 'markdown/markdownlint',
         files: { 'docs/titles.md': '# First title\n\n# Second title\n' },
         expected: { file: 'docs/titles.md', line: 3, rule: 'MD025' },
         corrected: { files: { 'docs/titles.md': '# First title\n\n## Second heading\n' } },
@@ -33,7 +39,7 @@ export const CASES: FindingCase[] = [
 
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
-    configurations: ['markdown', 'prose'],
+    configurations: ['markdown', 'docs', 'prose'],
     without: [],
     tools: ['vale', 'lychee', 'markdownlint-cli2'],
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },

@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user\u2019s implementation plan in this conversation",
+                "The user’s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -13131,7 +13131,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema \u2192 toolProjectSchema",
+            "name": "packageSchema → toolProjectSchema",
             "type": false
         },
         {
@@ -13149,7 +13149,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
+            "name": "PackageManagerIdentity → PackageClientIdentity",
             "type": true
         },
         {
@@ -18580,7 +18580,34 @@
                 "Final affected delivered-package replay after TOML ownership repairs: /tmp/gspot-eslint-options-ownership-packages.log (five passes, 382 assertions across three files; launchers, standalone binary, installation, formatting and native diagnostics; isolated registry closes). The earlier complete nine-case package replay remains valid for unchanged language/plugin consumers.",
                 "All four final TypeScript targets: /tmp/gspot-eslint-options-toml-types-ready.log. Final source/test lint: /tmp/gspot-eslint-options-toml-ownership-lint.log and /tmp/gspot-eslint-options-toml-test-lint-ready.log.",
                 "Actual final gspot check --staged: /tmp/gspot-eslint-options-staged-ready.json (132 passes, seven legitimate skips, no findings/errors; 98.069 seconds).",
-                "Final canonical applies after TOML ownership repairs: /tmp/gspot-eslint-options-ready-apply-first.json and /tmp/gspot-eslint-options-ready-apply-second.json (136 unchanged outputs, zero writes or notes each)."
+                "Final canonical applies after TOML ownership repairs: /tmp/gspot-eslint-options-ready-apply-first.json and /tmp/gspot-eslint-options-ready-apply-second.json (136 unchanged outputs, zero writes or notes each).",
+                "Hook-enabled commit ca47f8a72f374d9f67e739f4eb6a20d7193dcbed and normal push to origin/main: /tmp/gspot-eslint-options-commit.log (87 passes, two skips, valid commit message) and /tmp/gspot-eslint-options-push.log (132 passes, seven legitimate skips, zero findings/errors). Clean tree and HEAD == origin/main confirmed before the Markdown batch."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Markdown coverage, native options and configuration discovery",
+            "rows": [
+                "slices/kits-web-languages/047",
+                "slices/kits-web-languages/048",
+                "slices/kits-web-languages/049",
+                "slices/kits-web-languages/050",
+                "slices/kits-web-languages/051",
+                "slices/tests-acceptance/037"
+            ],
+            "outcome": "Native option objects configure only rules already selected by recommended or all. Shipped defaults cannot be replaced by native selection values. Both levels enforce image alt text. Five Markdown review records and one native fixture record close with IDs and original findings retained; 954 review records remain open.",
+            "evidence": [
+                "Source: packages/cli/configurations/language/markdown/manifest.toml; packages/cli/configurations/language/markdown/markdownlint.jsonc.tmpl; packages/cli/configurations/language/markdown/markdownlint-cli2.mjs.tmpl; packages/cli/src/policy/schema/tools.ts; tests/tools/configurations/language/markdown.test.ts.",
+                "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+                "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+                "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid).",
+                "Full CLI/plugin suite: /tmp/gspot-markdown-coverage-full-cli-plugin.log (2834 passes, three existing platform skips, zero failures/errors, 10090 assertions across 341 files; 229.40 seconds).",
+                "Affected delivered-package suite: /tmp/gspot-markdown-coverage-packages.log (five passes, 382 assertions across three files; launcher, native tools and standalone assets/diagnostics without Node.js or Bun; isolated registry closes).",
+                "Native negative control: /tmp/gspot-markdown-coverage-native-negative-control.json proves the exact authored fixture reports MD013, MD033 and MD060 under explicit native activation. Generated Gspot coverage keeps them inactive despite authored option tables. The first ad hoc probe lacked the repository tool PATH in its temporary working directory; the final probe uses the pinned runtime PATH without changing the environment grant or product configuration.",
+                "Initial actual staged gate: /tmp/gspot-markdown-coverage-staged-initial.json (129 passes, three failures, seven legitimate skips). Computed fixture text is replaced with a static literal; a comment is clarified; the large native callback is split by level/ignore behavior and native discovery. Policy limits and gate checks remain unchanged. The first focused tests-scope ESLint run also reports the remaining statement count: /tmp/gspot-markdown-coverage-test-lint.log. The log was initially read before completion; its final result is retained and the ignore case is separated before the final replay.",
+                "Canonical generation: /tmp/gspot-markdown-coverage-apply-first.json (four writes, 132 unchanged) and /tmp/gspot-markdown-coverage-apply-second.json (136 unchanged, zero writes or notes).",
+                "Second actual staged replay: /tmp/gspot-markdown-coverage-staged-ready.json (131 passes, one statement-count failure, seven legitimate skips). The first focused ESLint result was read before completion; the final result confirmed this remaining failure. The ignore regression is now separate. Final exact-file ESLint passes: /tmp/gspot-markdown-coverage-test-lint-ready.log.",
+                "Final actual gspot check --staged: /tmp/gspot-markdown-coverage-staged-complete.json (132 passes, seven legitimate skips, zero findings/errors; 71.829 seconds). Final native cases pass twelve tests, 90 assertions in three files, /tmp/gspot-markdown-coverage-native-complete.log. Final four TypeScript targets pass, /tmp/gspot-markdown-coverage-types-complete.log."
             ],
             "remaining": [
                 "Hook-enabled commit and normal push.",

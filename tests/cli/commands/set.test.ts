@@ -42,7 +42,7 @@ test.each([
     [
         'a tool rule turned off',
         ['set', 'tools.markdownlint.rules', '{"MD013": false}'],
-        'gspot ignore markdown/markdownlint --rule MD013 --reason',
+        'gspot ignore markdown/markdownlint --rule <rule> --reason',
     ],
     ['a key without a value', ['set', 'limits.file_lines'], 'needs a value'],
     [

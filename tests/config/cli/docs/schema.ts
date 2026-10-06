@@ -6,6 +6,32 @@ export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
+        name: 'native Markdown options without coverage selection',
+        input: {
+            configurations: ['markdown'],
+            tools: { markdownlint: { rules: { MD024: { siblings_only: false } } } },
+        },
+        valid: true,
+    },
+    {
+        name: 'an authored Markdown rule activation',
+        input: { configurations: ['markdown'], tools: { markdownlint: { rules: { MD041: true } } } },
+        valid: false,
+        key: 'tools.markdownlint.rules.MD041',
+    },
+    {
+        name: 'an authored Markdown rule disabling',
+        input: { configurations: ['markdown'], tools: { markdownlint: { rules: { MD045: false } } } },
+        valid: false,
+        key: 'tools.markdownlint.rules.MD045',
+    },
+    {
+        name: 'an authored Markdown native default',
+        input: { configurations: ['markdown'], tools: { markdownlint: { rules: { default: {} } } } },
+        valid: false,
+        key: 'tools.markdownlint.rules.default',
+    },
+    {
         name: 'native ESLint option arrays without severities',
         input: { configurations: ['javascript'], tools: { eslint: { rules: { eqeqeq: ['smart'] } } } },
         valid: true,

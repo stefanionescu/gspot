@@ -153,6 +153,19 @@ Option arrays omit the native severity. The selected level decides which rules r
 apply only where that level enables the rule. This allows text inside `ThemedText`. The rule still reports bare text inside a `View`.
 Set the option in the native project's scope when other projects use different components.
 
+## Markdown rule options
+
+Markdown rule settings hold native option tables, without an enable/disable value or a `default` key:
+
+```toml
+[tools.markdownlint.rules]
+MD024 = { siblings_only = false }
+```
+
+This reports repeated headings throughout a document, rather than only under the same parent heading.
+The selected level decides which rules run. Options cannot enable a rule outside that level.
+Both levels check image alt text. Accept a specific finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.
+
 ## Settings for one integration
 
 - [Tests and coverage](/guides/testing/): Jest, Vitest, pytest, and Swift tests.

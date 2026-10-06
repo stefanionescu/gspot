@@ -8,6 +8,9 @@ export const ESLINT_OPTION_STRING = /^(?!(?:off|warn|error)$)[\s\S]*$/u;
 export const ESLINT_OPTIONS_HELP =
     'ESLint rule selection comes from level recommended or all. Write only native options in an array, without a severity. Accept a finding with gspot ignore javascript/eslint --rule <rule> --reason "<why>".';
 
+export const MARKDOWNLINT_OPTIONS_HELP =
+    'Markdownlint rule selection comes from level recommended or all. Write only native option tables by Markdown rule ID, such as MD024. Accept a finding with gspot ignore markdown/markdownlint --rule <rule> --reason "<why>".';
+
 // A category key has two parts after the language: naming.<language>.<category>.<setting>.
 export const CATEGORY_KEY_PARTS = 2;
 

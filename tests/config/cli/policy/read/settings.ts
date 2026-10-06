@@ -7,6 +7,5 @@ export const DISABLED_RULES = [
         value: [0, 'always', 'sentence-case'],
         check: 'commits/commitlint',
     },
-    { tool: 'markdownlint', configuration: 'markdown', rule: 'MD044', value: false, check: 'markdown/markdownlint' },
     { tool: 'yamllint', configuration: 'files', rule: 'line-length', value: 'disable', check: 'files/yamllint' },
 ];

@@ -82,9 +82,9 @@ describe('policy setting refusals', () => {
     test('a verbatim table needs a reason', () => {
         expect(
             policyProblems(
-                `${buildPolicy(['bash'])}require_reasons = true\n[tools.markdownlint.verbatim]\nMD044 = false\nreason = ""\n`,
+                `${buildPolicy(['bash'])}require_reasons = true\n[tools.prettier.verbatim]\nuseTabs = false\nreason = ""\n`,
             )[0],
-        ).toContain('[tools.markdownlint.verbatim] needs a `reason`');
+        ).toContain('[tools.prettier.verbatim] needs a `reason`');
     });
 });
 

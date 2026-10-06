@@ -446,10 +446,18 @@
         "section": "Tests: Acceptance",
         "finding": "| `tests/acceptance/kits/general/documents.test.ts` (file name), `:68` | \"documents\" is not a kit. The table covers three kits (markdown, docs, and prose) and selects only markdown and prose. | Split the file by kit after the moves the first audit lists, or name the file and the describe after the kits. |",
         "owner": "`tests/acceptance/kits/general/documents.test.ts` (file name), `:68`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "tests/tools/configurations/general/markdown-docs-prose.test.ts",
+            "tests/config/tools/configurations/general/markdown-docs-prose.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The native file and describe are named for Markdown, docs and prose. Its scenario now explicitly selects all three configurations; the previously unselected docs/lychee check runs and reports its intended defect, then accepts the correction. The first replay exposed the selection failure instead of falsely passing it.",
+            "Pinned native regression: /tmp/gspot-markdown-coverage-native-complete.log (twelve passes, 90 assertions across three files). Coverage switches recommended/all/recommended; root and scope options stay isolated; inactive rule options add no coverage; MD045 defects/corrections and exact native filename positions pass; root and nested native discovery read the generated configuration; a reasoned ignore remains effective.",
+            "Published/runtime schema and level contracts: /tmp/gspot-markdown-coverage-schema.log (67 passes, 635 assertions across two files). Both levels and root/scoped settings reject authored booleans, severities, default and alias selection; legitimate native option objects pass.",
+            "All four TypeScript targets: /tmp/gspot-markdown-coverage-types-complete.log. Documentation: /tmp/gspot-markdown-coverage-docs.log (316 pages; all built-site links and fragments valid)."
+        ]
     },
     {
         "id": "slices/tests-acceptance/038",

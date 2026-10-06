@@ -153,3 +153,14 @@ export const ESLINT_REJECTED_SELECTIONS = [
     '["warn", "always"]',
     '["error", {}]',
 ];
+
+/** Markdown rule tables hold native options. Coverage comes from the selected level. */
+export const MARKDOWNLINT_REJECTED_SELECTIONS = [
+    'MD041 = true',
+    'MD045 = false',
+    'MD025 = 1',
+    'MD001 = "error"',
+    'MD024 = [true, {}]',
+    'default = {}',
+    '"heading-increment" = {}',
+];

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { reasoned } from '#cli/policy/schema/fields.ts';
 import { licenseExceptionSchema } from '#cli/parsers/schema/licenses.ts';
-import { ESLINT_OPTIONS_HELP, ESLINT_OPTION_STRING } from '#cli/config/policy/settings.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/runtime-names.json' with { type: 'json' };
+import { ESLINT_OPTIONS_HELP, ESLINT_OPTION_STRING, MARKDOWNLINT_OPTIONS_HELP } from '#cli/config/policy/settings.ts';
 
 const extraTable = z.object({ reason: z.string().optional() }).catchall(z.unknown());
 
@@ -45,6 +45,17 @@ export const licenseSettingsSchema = toolTable.extend({
 export const toolsSchema = z
     .object({
         eslint: eslintTable.optional(),
+        markdownlint: z
+            .strictObject({
+                rules: z
+                    .record(
+                        z.string().regex(/^MD\d{3}$/u, { error: MARKDOWNLINT_OPTIONS_HELP }),
+                        z.record(z.string(), z.json(), { error: MARKDOWNLINT_OPTIONS_HELP }),
+                        { error: MARKDOWNLINT_OPTIONS_HELP },
+                    )
+                    .optional(),
+            })
+            .optional(),
         stylelint: toolTable.extend({ rules: stylelintRules.optional() }).optional(),
         squawk: toolTable.extend({ assume_in_transaction: reasoned(z.boolean()).optional() }).optional(),
         jest: toolTable

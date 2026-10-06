@@ -21,10 +21,9 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['markdown'], {
-            tables: '[tools.markdownlint.rules]\nMD009 = true\nMD033 = true\nMD041 = true\n',
             level: 'all',
         }),
-        ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
+        ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
     });
     const session = await openSession(sandbox.path);
     const generated = emitAll(session);
@@ -47,7 +46,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         cwd: sandbox.path,
     });
     for (const file of paths) {
-        expect(findings).toContainEqual(containing({ file, line: 1, column: 6, rule: 'MD033', fixable: false }));
+        expect(findings).toContainEqual(containing({ file, line: 1, column: 6, rule: 'MD045', fixable: false }));
         expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD009', fixable: true }));
         expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD041', fixable: false }));
     }

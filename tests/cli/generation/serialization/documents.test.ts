@@ -35,12 +35,14 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     });
     const session = await openSession(sandbox.path);
     const output = emitAll(session);
-    for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json', '.gspot/config/markdownlint.jsonc']) {
+    for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json']) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();
         const parsed: unknown = parseJsonc(file!.content);
         expect(parsed).toMatchObject({ [KEY]: VALUE });
     }
+    const markdownRules = output.files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
+    expect(parseJsonc(markdownRules.content)).toMatchObject({ MD044: { names: [KEY, VALUE] } });
     const markdownCli = output.files.find((entry) => entry.path === '.gspot/config/markdownlint-cli2.mjs')!;
     const markdownPath = join(sandbox.path, markdownCli.path);
     await Bun.write(markdownPath, markdownCli.content);
