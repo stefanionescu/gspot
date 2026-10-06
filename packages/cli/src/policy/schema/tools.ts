@@ -7,6 +7,7 @@ import {
     ESLINT_OPTIONS_HELP,
     ESLINT_OPTION_STRING,
     STYLELINT_OPTIONS_HELP,
+    COMMITLINT_OPTIONS_HELP,
     MARKDOWNLINT_OPTIONS_HELP,
 } from '#cli/config/policy/settings.ts';
 
@@ -28,6 +29,19 @@ const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOp
 });
 
 const eslintRules = z.record(z.string(), eslintOptions);
+
+// Zod includes the authored rule key before a tuple's numeric option index.
+function commitlintDiagnostic(issue: z.core.$ZodRawIssue): string {
+    const rule = issue.path?.findLast((part) => typeof part === 'string');
+    return COMMITLINT_OPTIONS_HELP.replace('<rule>', String(rule));
+}
+
+const commitlintRules = z.record(
+    z.string().min(1),
+    z.tuple([z.enum(['always', 'never'], { error: commitlintDiagnostic }), z.json().optional()], {
+        error: commitlintDiagnostic,
+    }),
+);
 
 const stylelintOptions = z
     .object({ severity: z.literal('error', { error: STYLELINT_OPTIONS_HELP }).optional() })
@@ -57,6 +71,13 @@ export const licenseSettingsSchema = toolTable.extend({
 export const toolsSchema = z
     .object({
         eslint: eslintTable.optional(),
+        commitlint: z
+            .strictObject({
+                types: z.array(z.string().min(1)).optional(),
+                scopes: z.array(z.string().min(1)).optional(),
+                rules: commitlintRules.optional(),
+            })
+            .optional(),
         markdownlint: z
             .strictObject({
                 rules: z

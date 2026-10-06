@@ -1,7 +1,7 @@
 <%
 const types = settings['tools.commitlint.types'];
 const named = settings['tools.commitlint.scopes'];
-const derived = scopes.map((entry) => entry.path.split('/').at(-1)).concat(['root', 'hooks', 'deps']);
+const derived = scopes.map((entry) => entry.path.split('/').at(-1));
 const allowed = named.length > 0 ? named : scopes.length > 0 ? derived : [];
 const off = rulesOff('commits/commitlint');
 const rules = {
@@ -19,10 +19,12 @@ const rules = {
 };
 if (allowed.length > 0) {
     rules['scope-enum'] = [2, 'always', allowed];
-    rules['scope-empty'] = [2, 'never'];
+    // The exact enum owns case, including Pascal-case project folder names.
+    rules['scope-case'] = [0];
 }
 const custom = options('tools.commitlint').rules;
-if (custom && typeof custom === 'object') for (const [name, value] of Object.entries(custom)) rules[name] = value;
+for (const [name, value] of Object.entries(custom))
+    if (rules[name] !== undefined && rules[name][0] !== 0) rules[name] = [2, ...value];
 for (const name of off) rules[name] = [0];
 const document = { rules };
 recordRules(document);

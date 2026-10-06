@@ -500,9 +500,14 @@
         "finding": "| `tests/acceptance/cli/commits.test.ts:30,95` | Line 95 (`toContain('write')`) passes for almost any init output. Line 30 (`toContain('commits/commitlint')`) passes when the check passes, because the check name is printed either way. | Use `--json` and assert the `type-empty` finding. Delete the \"write\" check. |",
         "owner": "`tests/acceptance/cli/commits.test.ts:30,95`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The real hook journey asserts the JSON failed status and exact type-empty, subject-empty and subject-full-stop diagnostics for its invalid message. The incidental write-output assertion is absent. Valid message, bypassed-history rejection, distinct pushed-message selection and shallow-history assertions remain.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "areas/tool-tests/039",

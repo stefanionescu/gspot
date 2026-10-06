@@ -18716,10 +18716,38 @@
                 "Final delivered packages: /tmp/gspot-automatic-general-packages-delivery-final.log has five passes, zero failures and 381 assertions (94.35 seconds). Exact launcher findings retain seven source/lock/security defects; exact skips report network, empty legal-policy and Git prerequisites. Cancellation, standalone archives, immutable private tool installation and native TOML/whitespace corrections pass. No publication leaves the throwaway local registry.",
                 "Final pinned source-parser replay: /tmp/gspot-automatic-general-native-source-parser-final.log has one pass and eight assertions (21.10 seconds). It proves positioned malformed-source finding, clean correction, invalid authored YAML execution error with its actual diagnostic, and valid authored-rule recovery.",
                 "Final four-target TypeScript verification: /tmp/gspot-automatic-general-types-prerequisites-final.log passes after the delivered prerequisite fixture explicitly adopts the owned RunReport skip contract.",
-                "Complete final-index gate: /tmp/gspot-automatic-general-staged-complete-corrected.json has 132 passes, six existing justified skips, zero findings and zero execution errors. Root policy is included. Earlier complete-index gate rejected only an import inserted after exports; reordered that import, verified ESLint and repeated the real staged gate. Normal Semgrep and OSV both pass."
+                "Complete final-index gate: /tmp/gspot-automatic-general-staged-complete-corrected.json has 132 passes, six existing justified skips, zero findings and zero execution errors. Root policy is included. Earlier complete-index gate rejected only an import inserted after exports; reordered that import, verified ESLint and repeated the real staged gate. Normal Semgrep and OSV both pass.",
+                "Delivery: hook-enabled commit e8dc1104 succeeds in /tmp/gspot-automatic-general-commit-corrected.log (87 pre-commit passes, two justified skips; commit message pass). Normal origin/main push succeeds in /tmp/gspot-automatic-general-push.log with 132 passes, six justified skips and no findings. HEAD and origin/main match and the tree is clean before the next implementation batch. The first commit attempt was correctly rejected for unwrapped body text; wrapped the message and reran all hooks without bypass."
             ],
             "remaining": [
-                "Hook-enabled commit and normal push of this verified batch; then continue the remaining 946 original implementation records. Publication and deployment remain separate authorization boundaries."
+                "Continue 946 original implementation records; publication and deployment remain separate authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "Native commit-message ownership",
+            "rows": [
+                "areas/kits/066",
+                "slices/kits-general/031",
+                "slices/kits-general/032",
+                "slices/kits-general/033",
+                "slices/kits-general/034",
+                "slices/kits-general/035",
+                "areas/tool-tests/038"
+            ],
+            "outcome": "Seven original records close with their IDs and source quotations preserved. Exact project scope names stay optional, conventional type defaults include style/revert, and help describes the whole header and actual pushed range. Native options adjust only active rule payloads and cannot change severity or enable inactive rules. 939 original records remain open.",
+            "evidence": [
+                "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+                "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+                "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained.",
+                "Initial native/generation failures are retained in /tmp/gspot-commit-rule-ownership-native.log, native-corrected.log, native-final.log and generation-policy-final.log. Declared an empty rule-options default in its manifest owner; repaired real hook fixture LICENSE/title inputs; retained exact diagnostics instead of assuming one finding. No product check, hook or prerequisite is disabled.",
+                "Four TypeScript targets pass in /tmp/gspot-commit-rule-ownership-types-delivery.log. Changed ESLint passes in /tmp/gspot-commit-rule-ownership-eslint-delivery.log; native TOML formatting passes in /tmp/gspot-commit-rule-ownership-toml.log.",
+                "Documentation builds 316 pages and validates every local link and fragment in /tmp/gspot-commit-rule-ownership-docs.log. Canonical apply-first writes the one changed native configuration with 135 other outputs unchanged; apply-second reports 136 unchanged outputs, zero writes/updates/removals and no notes. Generated .gspot content changes only through apply.",
+                "Delivered packages pass: /tmp/gspot-commit-rule-ownership-packages.log has five passes, zero failures and 381 assertions (91.95 seconds), covering launcher diagnostics/cancellation, standalone archives and private/native tool consumers.",
+                "Initial actual staged gate /tmp/gspot-commit-rule-ownership-staged.json has 130 passes, six justified skips and only two repository-policy failures: computed boundary values inside a constants module and a reserved helper-name word. Replaced the computed strings with identical literals and renamed the shared assertion helper; native input/output assertions are unchanged. Changed ESLint passes in /tmp/gspot-commit-rule-ownership-eslint-staged-correction.log. All original review quotations/IDs/owners are verified unchanged.",
+                "Final actual staged gate /tmp/gspot-commit-rule-ownership-staged-final.json has 132 passes, six existing justified skips, zero findings and zero execution errors (71.335 seconds). Semgrep and normal OSV remain enabled. The static native boundary inputs are confirmed to remain exactly 72 and 73 characters after replacing their calculations with literals."
+            ],
+            "remaining": [
+                "Hook-enabled commit and normal push; then continue 939 original implementation records and separately authorized publication/deployment."
             ]
         }
     ],
@@ -21950,6 +21978,24 @@
                     "packages/cli/src/commands/configurations.ts",
                     "packages/cli/src/execution/planning/skips.ts",
                     "packages/cli/configurations/general/licenses/manifest.toml"
+                ]
+            },
+            {
+                "id": "native-commit-message-ownership",
+                "records": [
+                    "areas/kits/066",
+                    "slices/kits-general/031",
+                    "slices/kits-general/032",
+                    "slices/kits-general/033",
+                    "slices/kits-general/034",
+                    "slices/kits-general/035",
+                    "areas/tool-tests/038"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/commits/manifest.toml",
+                    "packages/cli/configurations/general/commits/commitlint.config.cjs.tmpl",
+                    "packages/cli/src/policy/schema/tools.ts",
+                    "tests/tools/configurations/general/commits.test.ts"
                 ]
             }
         ]

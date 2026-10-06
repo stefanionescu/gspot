@@ -13,7 +13,9 @@ module.exports = {
                 "test",
                 "build",
                 "ci",
-                "chore"
+                "chore",
+                "style",
+                "revert"
             ]
         ],
         "type-case": [
@@ -26,9 +28,7 @@ module.exports = {
             "never"
         ],
         "scope-case": [
-            2,
-            "always",
-            "kebab-case"
+            0
         ],
         "subject-empty": [
             2,
@@ -77,10 +77,6 @@ module.exports = {
                 "hooks",
                 "deps"
             ]
-        ],
-        "scope-empty": [
-            2,
-            "never"
         ]
     }
 };

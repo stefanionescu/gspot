@@ -408,9 +408,14 @@
         "finding": "| `general/commits/manifest.toml:62` `commits/commitlint` help | \"A subject under 72 characters\" is wrong. `header-max-length` limits the whole `type(scope): subject` line. | Say \"a first line of 72 characters or fewer\". |",
         "owner": "`general/commits/manifest.toml:62` `commits/commitlint` help",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The manifest description, summary and help describe the whole first line, with an inclusive 72-character limit. Native regression accepts exactly 72 and rejects 73; a custom 40-character limit rejects a header whose subject alone is only 35 characters.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "slices/kits-general/032",
@@ -420,9 +425,14 @@
         "finding": "| `general/commits/manifest.toml:73` `commits/commitlint-range` summary | \"The supplied pushed commit sets\" is unclear. | Say \"Checks the message of every commit the push sends; run by hand, every commit from the upstream merge base to HEAD\". |",
         "owner": "`general/commits/manifest.toml:73` `commits/commitlint-range` summary",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The range summary identifies every commit sent by a push, and the upstream merge-base-to-HEAD range used by a manual run. Existing native distinct-ref/tree and shallow-history regressions preserve actual commit selection.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "slices/kits-general/033",
@@ -432,9 +442,14 @@
         "finding": "| `general/commits/commitlint.config.cjs.tmpl:4,11,20-23` | Derived scopes are folder names, but `scope-case` requires kebab-case. A folder named in Pascal case, as the Swift naming policy requires (`Packages/Core`), gives a scope that `scope-case` rejects, so no message can pass. | Lowercase derived scopes, or drop `scope-case` when the scopes are derived. |",
         "owner": "`general/commits/commitlint.config.cjs.tmpl:4,11,20-23`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Exact allowed scope names own their case through scope-enum, avoiding conflicting scope-case enforcement for Pascal-case project folders. Native Core passes while core fails; authored native options cannot reactivate the redundant scope-case rule.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "slices/kits-general/034",
@@ -444,9 +459,14 @@
         "finding": "| `general/commits/manifest.toml:89`, `general/commits/commitlint.config.cjs.tmpl:22` `tools.commitlint.scopes` | When scopes exist, `scope-empty: never` makes a scope required on every commit. Neither the setting summary nor the check summary says so. | State it in the summary, or leave the scope optional. |",
         "owner": "`general/commits/manifest.toml:89`, `general/commits/commitlint.config.cjs.tmpl:22` `tools.commitlint.scopes`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Scopes are optional. The generated configuration omits scope-empty rather than requiring a scope whenever an enum exists, and the setting/check descriptions explain this. Both fix(Core) and fix without a scope pass natively; native options cannot add the omitted coverage rule.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "slices/kits-general/035",
@@ -456,9 +476,14 @@
         "finding": "| `general/commits/manifest.toml:81` `tools.commitlint.types` | The default omits `style` and `revert` from the Conventional Commits list that `@commitlint/config-conventional` ships. A repository's existing `style:` commits fail. | Add `style` and `revert`. |",
         "owner": "`general/commits/manifest.toml:81` `tools.commitlint.types`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The authoritative manifest defaults include style and revert. Both types pass through pinned native commitlint with the generated configuration.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "slices/kits-general/036",

@@ -908,9 +908,14 @@
         "finding": "| `packages/cli/kits/general/commits/manifest.toml:89`, `packages/cli/kits/general/commits/commitlint.config.cjs.tmpl:4` | Derived commit scopes always add `root`, `hooks`, and `deps`, which are gspot's own scope names. | Derive scopes from scope paths only. |",
         "owner": "`packages/cli/kits/general/commits/manifest.toml:89`, `packages/cli/kits/general/commits/commitlint.config.cjs.tmpl:4`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Derived scopes use only the exact final segments of authored project scope paths. The second-pass correction is retained: derivation occurs only when project scopes exist and no explicit list overrides them; unscoped repositories get no enum. Root/hooks/deps remain accepted only when the project explicitly names them.",
+            "Source: packages/cli/configurations/general/commits/manifest.toml and commitlint.config.cjs.tmpl; policy/schema/tools.ts owns severity-free tuples and per-rule refusal diagnostics; config/policy/settings.ts owns the help text. Manual types/scopes stay legitimate project settings.",
+            "Native: /tmp/gspot-commit-rule-ownership-native-delivery.log: 3 passes, 0 failures, 83 assertions (64.25 seconds), including 72/73 boundaries, exact Pascal-case scopes, optional scopes, style/revert, active options, inactive-rule protection, recommended/all/recommended generation, actual commit hooks and shallow pushed history.",
+            "Affected generation/policy: /tmp/gspot-commit-rule-ownership-generation-policy-delivery.log: 388 passes, 0 failures, 1,818 assertions across 52 files (38.88 seconds). Schema-invalid severity tuples are refused consistently by strict and execution policy readers with the actual rule-specific ignore command; the remaining valid-shape Yamllint recovery assertion is retained."
+        ]
     },
     {
         "id": "areas/kits/067",

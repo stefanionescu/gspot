@@ -1,19 +1,23 @@
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { git } from '#tests/harness/git.ts';
 import { join, delimiter } from 'node:path';
 import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { git, commitAll } from '#tests/harness/git.ts';
+import { LICENSE } from '#tests/config/samples/docs.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { gspot, spawnGspot } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { COMMITS_INIT } from '#tests/config/tools/commands/commits.ts';
 import { buildToolsPath, installPrivateTools } from '#tests/harness/install.ts';
+import { COMMIT_MESSAGES, DERIVED_SCOPE_POLICY } from '#tests/config/tools/configurations/general/commits.ts';
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {
@@ -21,14 +25,21 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     await Bun.write(draft, 'Fixed stuff.\n');
     const refused = await spawnGspot(
         root,
-        ['check', '--only', 'commits/commitlint', '--message-file', draft],
+        ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'],
         environment,
     );
     expect(refused.code).toBe(1);
-    expect(refused.stdout).toContain('commits/commitlint');
+    expect((JSON.parse(refused.stdout) as RunReport).checks).toMatchObject([
+        { check: 'commits/commitlint', status: 'failed' },
+    ]);
+    expect((JSON.parse(refused.stdout) as RunReport).checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
+        'type-empty',
+        'subject-empty',
+        'subject-full-stop',
+    ]);
     const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
     expect(accepted.code).toBe(0);
-    await Bun.write(join(root, 'more.md'), '# more\n');
+    await Bun.write(join(root, 'more.md'), '# More\n');
     git(root, ['add', '-A']);
     git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
     const range = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
@@ -70,6 +81,76 @@ function expectCompleteHistory(output: string, commits: string[]): void {
     expect(report.revisions[0]?.report.checks[0]?.status).toBe('passed');
 }
 
+// Every message scenario asserts the public native exit and diagnostic contract.
+async function expectDraftCheck(root: string, draft: string, rule?: string): Promise<void> {
+    const checked = await spawnGspot(root, [
+        'check',
+        '--only',
+        'commits/commitlint',
+        '--message-file',
+        draft,
+        '--json',
+    ]);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        {
+            check: 'commits/commitlint',
+            status: rule === undefined ? 'passed' : 'failed',
+            findings: rule === undefined ? [] : [containing({ rule })],
+        },
+    ]);
+}
+
+test(
+    'native commitlint keeps exact project scopes optional and restores coverage across level changes',
+    async () => {
+        await using sandbox = await testdir();
+        const policyPath = join(sandbox.path, 'gspot.toml');
+        const policy = buildPolicy([], { level: 'all', tables: DERIVED_SCOPE_POLICY });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            'Packages/Core/source.sh': CLEAN_BASH_SCRIPT,
+        });
+        commitAll(sandbox.path);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await installPrivateTools(sandbox.path);
+        const draft = join(sandbox.path, 'draft.txt');
+        const command = ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'];
+        for (const { message, rule } of COMMIT_MESSAGES) {
+            await Bun.write(draft, `${message}\n`);
+            await expectDraftCheck(sandbox.path, draft, rule);
+        }
+        await Bun.write(
+            policyPath,
+            `${policy}\n[tools.commitlint.rules]\nheader-max-length = ["always", 40]\nscope-case = ["always", "lower-case"]\nscope-empty = ["never"]\n`,
+        );
+        const configured = await spawnGspot(sandbox.path, ['apply']);
+        expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+        await Bun.write(draft, `fix(Core): ${'x'.repeat(35)}\n`);
+        await expectDraftCheck(sandbox.path, draft, 'header-max-length');
+        for (const message of ['fix(Core): repair source', 'fix: repair source']) {
+            await Bun.write(draft, `${message}\n`);
+            await expectDraftCheck(sandbox.path, draft);
+        }
+        for (const level of ['recommended', 'all', 'recommended']) {
+            const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
+            expect(switched.code, switched.stdout + switched.stderr).toBe(0);
+            expect(await Bun.file(join(sandbox.path, '.gspot/config/commitlint.config.cjs')).exists()).toBe(
+                level === 'all',
+            );
+            const checked = await spawnGspot(sandbox.path, command);
+            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+            const report = JSON.parse(checked.stdout) as RunReport;
+            expect(report.checks).toMatchObject(
+                level === 'all' ? [{ check: 'commits/commitlint', status: 'passed', findings: [] }] : [],
+            );
+            expect(report.skips).toStrictEqual([]);
+        }
+    },
+    NATIVE_TEST_TIMEOUT_MS,
+);
+
 test(
     'the commits configuration > the commit-msg hook refuses a free-form message and takes a conventional one',
     async () => {
@@ -82,7 +163,7 @@ process.exit(child.exitCode);
 `,
         });
         chmodSync(join(launcher.path, 'gspot'), 0o755);
-        await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# test\n' });
+        await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# Test\n', LICENSE });
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
@@ -92,7 +173,7 @@ process.exit(child.exitCode);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        await Bun.write(join(sandbox.path, 'notes.md'), '# notes\n');
+        await Bun.write(join(sandbox.path, 'notes.md'), '# Notes\n');
         git(sandbox.path, ['add', '-A']);
         const environment = {
             NO_COLOR: '1',

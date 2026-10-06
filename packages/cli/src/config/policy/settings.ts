@@ -14,6 +14,9 @@ export const MARKDOWNLINT_OPTIONS_HELP =
 export const STYLELINT_OPTIONS_HELP =
     'Stylelint rule selection comes from level recommended or all. Write native options only for active rules. Severity remains error; accept a finding with gspot ignore css/stylelint --rule <rule> --reason "<why>".';
 
+export const COMMITLINT_OPTIONS_HELP =
+    'Commitlint rule selection comes from level recommended or all. Write native options as ["always" or "never", optional value], without a severity. Accept a finding with gspot ignore commits/commitlint --rule <rule> --reason "<why>".';
+
 // A category key has two parts after the language: naming.<language>.<category>.<setting>.
 export const CATEGORY_KEY_PARTS = 2;
 
