@@ -2713,10 +2713,32 @@
                 "Restored-batch verification: /tmp/gspot-shared-prose-cli-restored.log passes 64 cases with 334 assertions across six affected owners, including the moved Vale engine tests (2.79 seconds). /tmp/gspot-shared-prose-native-restored.log passes 25 pinned cases with 80 assertions across Markdown/MDX suppression comparisons, actual emitted SQLFluff settings and Vale (8.38 seconds). /tmp/gspot-shared-prose-types-restored.log passes all four TypeScript targets (9.85 seconds). Affected ESLint, Prettier and native Taplo formatting pass. Canonical apply writes only the managed suppression instructions; the second restored apply has 139 unchanged outputs and zero writes, updates or removals. No dependency, installation, timeout, platform prerequisite, manual override or external publication/deployment is changed.",
                 "First staged gate /tmp/gspot-shared-prose-staged.json refused the two lone-file folders and two arguments_ identifiers. Mechanical preparation commit 8d1fe7c180d0d403608f3b55ac5b93cedb68fbb7 moves the engines and tests separately, with statement/comment proof and passing gates. Restoring the saved behavior now deletes the relocated hidden.ts and hidden.test.ts, preserving every legacy assertion under shared suppression tests. The new local variables are command and parseArguments. No ignore, naming exception or weakened check is introduced.",
                 "Restored documentation verification: /tmp/gspot-shared-prose-docs-restored.log builds 314 pages and validates every local link and fragment. Historical review IDs and quotes remain; runtime imports, check IDs and constants of both deleted bans have no consumers.",
-                "Completed staged verification: /tmp/gspot-shared-prose-staged-restored.json records the actual gspot --json check --staged at exit 0: {'passed': 130, 'skipped': 11}, zero failures/errors, duration 71950 ms. All previous failures are resolved without suppressions or policy changes. Normal Semgrep, OSV, Taplo and native startup gates run."
+                "Completed staged verification: /tmp/gspot-shared-prose-staged-restored.json records the actual gspot --json check --staged at exit 0: {'passed': 130, 'skipped': 11}, zero failures/errors, duration 71950 ms. All previous failures are resolved without suppressions or policy changes. Normal Semgrep, OSV, Taplo and native startup gates run.",
+                "Delivery: commit 31e57cf5c395b59dec9dd52d3645d8a48ebfcf39 completed with hooks enabled: 90 pre-commit checks passed, two existing skips, zero findings (12.4 seconds), and message validation passed. Normal push to origin/main passed 130 checks with 11 explicit skips and zero findings (70.8 seconds). HEAD and origin/main matched with a clean tree before this prose notation batch. Logs: /tmp/gspot-shared-prose-commit.log and /tmp/gspot-shared-prose-push.log."
             ],
             "remaining": [
                 "Finish remaining portable prose rules and actual SQL block-comment prose coverage, complete shared policy/execution work, the remaining 845 records, final suite/platform/package checks and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Portable prose notation and native deferred-comment ownership",
+            "rows": [
+                "slices/kits-general/046",
+                "slices/kits-general/050",
+                "slices/kits-general/051",
+                "slices/kits-general/052"
+            ],
+            "outcome": "Four records close; 841 original implementation records remain open.",
+            "evidence": [
+                "Pinned prior behavior: /tmp/gspot-prose-notation-before.json runs the exact four sources against shipped assets from HEAD with Vale 3.21.0. The file-path style misses .tsx, .css, .go and .rs; the since style flags both @since and ordinary causal prose; the future style flags both todo as a noun and TODO alongside an actual future promise; placeholder findings ask for UPPER_SNAKE_CASE while the generator comment and CLI help use kebab-case.",
+                "Portable path coverage: replace the fixed extension list with one to five lowercase letters. The native regression now reports prose paths with tsx, css, go and rs on exact lines 3, 5, 7 and 9 while leaving the inline-code path unreported. Existing path shape and scope remain. No language selector or extra coverage control is added.",
+                "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
+                "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
+                "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
+                "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+            ],
+            "remaining": [
+                "Finish portable acronym vocabulary, complete typed/shared policy and scope execution, remaining framework/platform/language/testing/repository/installation records, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6346,6 +6368,24 @@
                     "tests/cli/checks/general/structure/suppressions.test.ts",
                     "tests/tools/checks/suppression-comments.test.ts",
                     "tests/tools/generation/sqlfluff.test.ts"
+                ]
+            },
+            {
+                "id": "portable-prose-notation",
+                "records": [
+                    "slices/kits-general/046",
+                    "slices/kits-general/050",
+                    "slices/kits-general/051",
+                    "slices/kits-general/052"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/prose/styles/gspot/file-paths.yml",
+                    "packages/cli/configurations/general/prose/styles/gspot/since.yml",
+                    "packages/cli/configurations/general/prose/styles/gspot/future.yml",
+                    "packages/cli/configurations/general/prose/styles/gspot/placeholders.yml",
+                    "tests/config/tools/vale.ts",
+                    "tests/tools/execution/vale.test.ts",
+                    "tests/cli/generation/eslint/levels.test.ts"
                 ]
             }
         ]

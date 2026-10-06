@@ -893,9 +893,16 @@
         "finding": "| `general/prose/vale.ini.tmpl:96`, `general/prose/styles/gspot/placeholders.yml:2` | The vale.ini comment says `placeholders are written <kebab-case>`, but the style's message asks for `<UPPER_SNAKE_CASE>`. The help texts of gspot use `<rule>` and `<id>`. | Pick one form, and use it in the message, the comment, and the help texts. |",
         "owner": "`general/prose/vale.ini.tmpl:96`, `general/prose/styles/gspot/placeholders.yml:2`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pinned prior behavior: /tmp/gspot-prose-notation-before.json runs the exact four sources against shipped assets from HEAD with Vale 3.21.0. The file-path style misses .tsx, .css, .go and .rs; the since style flags both @since and ordinary causal prose; the future style flags both todo as a noun and TODO alongside an actual future promise; placeholder findings ask for UPPER_SNAKE_CASE while the generator comment and CLI help use kebab-case.",
+            "Portable path coverage: replace the fixed extension list with one to five lowercase letters. The native regression now reports prose paths with tsx, css, go and rs on exact lines 3, 5, 7 and 9 while leaving the inline-code path unreported. Existing path shape and scope remain. No language selector or extra coverage control is added.",
+            "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
+            "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
+            "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
+            "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+        ]
     },
     {
         "id": "slices/kits-general/047",
@@ -964,9 +971,16 @@
         "finding": "| `general/prose/styles/gspot/file-paths.yml:7` | The extension list (`ts`, `js`, `py`, `swift`, `sh`, `sql`, `md`, `json`, `toml`, `yml`, `yaml`) is the language set of gspot. It misses `tsx`, `css`, `go`, `rs`, and the rest. | Match any extension of 1 to 5 letters. |",
         "owner": "`general/prose/styles/gspot/file-paths.yml:7`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pinned prior behavior: /tmp/gspot-prose-notation-before.json runs the exact four sources against shipped assets from HEAD with Vale 3.21.0. The file-path style misses .tsx, .css, .go and .rs; the since style flags both @since and ordinary causal prose; the future style flags both todo as a noun and TODO alongside an actual future promise; placeholder findings ask for UPPER_SNAKE_CASE while the generator comment and CLI help use kebab-case.",
+            "Portable path coverage: replace the fixed extension list with one to five lowercase letters. The native regression now reports prose paths with tsx, css, go and rs on exact lines 3, 5, 7 and 9 while leaving the inline-code path unreported. Existing path shape and scope remain. No language selector or extra coverage control is added.",
+            "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
+            "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
+            "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
+            "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+        ]
     },
     {
         "id": "slices/kits-general/051",
@@ -976,9 +990,16 @@
         "finding": "| `general/prose/styles/gspot/since.yml:6` | `\\bsince\\b` reports the JSDoc `@since` tag, which `TOKEN_IGNORES` does not exclude. | Use `(?<!@)\\bsince\\b`. |",
         "owner": "`general/prose/styles/gspot/since.yml:6`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pinned prior behavior: /tmp/gspot-prose-notation-before.json runs the exact four sources against shipped assets from HEAD with Vale 3.21.0. The file-path style misses .tsx, .css, .go and .rs; the since style flags both @since and ordinary causal prose; the future style flags both todo as a noun and TODO alongside an actual future promise; placeholder findings ask for UPPER_SNAKE_CASE while the generator comment and CLI help use kebab-case.",
+            "Portable path coverage: replace the fixed extension list with one to five lowercase letters. The native regression now reports prose paths with tsx, css, go and rs on exact lines 3, 5, 7 and 9 while leaving the inline-code path unreported. Existing path shape and scope remain. No language selector or extra coverage control is added.",
+            "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
+            "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
+            "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
+            "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+        ]
     },
     {
         "id": "slices/kits-general/052",
@@ -988,9 +1009,16 @@
         "finding": "| `general/prose/styles/gspot/future.yml:4,18` `TODO` | With `ignorecase: true`, `todo` in a to-do app is a finding. In JavaScript, `sonarjs/todo-tag` and `unicorn/expiring-todo-comments` already report `TODO` comments. | Delete `TODO` from the style. |",
         "owner": "`general/prose/styles/gspot/future.yml:4,18` `TODO`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Pinned prior behavior: /tmp/gspot-prose-notation-before.json runs the exact four sources against shipped assets from HEAD with Vale 3.21.0. The file-path style misses .tsx, .css, .go and .rs; the since style flags both @since and ordinary causal prose; the future style flags both todo as a noun and TODO alongside an actual future promise; placeholder findings ask for UPPER_SNAKE_CASE while the generator comment and CLI help use kebab-case.",
+            "Portable path coverage: replace the fixed extension list with one to five lowercase letters. The native regression now reports prose paths with tsx, css, go and rs on exact lines 3, 5, 7 and 9 while leaving the inline-code path unreported. Existing path shape and scope remain. No language selector or extra coverage control is added.",
+            "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
+            "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
+            "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
+            "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+        ]
     },
     {
         "id": "slices/kits-general/053",

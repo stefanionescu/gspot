@@ -54,6 +54,40 @@ test('all retains the effective recommended rules for the same applicable React 
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
 });
 
+test('all keeps native deferred-comment checks after prose stops treating todo as a promise', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'source.js': '',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const defect = await eslint.lintText('// TODO: finish the feature.\nexport const feature = 1;\n', {
+        filePath: 'source.js',
+    });
+    expect(
+        defect
+            .flatMap(({ messages }) => messages)
+            .flatMap(({ ruleId, line, severity }) =>
+                ruleId === 'sonarjs/todo-tag' || ruleId === 'unicorn/expiring-todo-comments'
+                    ? [{ ruleId, line, severity }]
+                    : [],
+            )
+            .toSorted((left, right) => left.ruleId.localeCompare(right.ruleId)),
+    ).toStrictEqual([
+        { ruleId: 'sonarjs/todo-tag', line: 1, severity: 2 },
+        { ruleId: 'unicorn/expiring-todo-comments', line: 1, severity: 2 },
+    ]);
+    const corrected = await eslint.lintText('// The feature lists tasks.\nexport const feature = 1;\n', {
+        filePath: 'source.js',
+    });
+    expect(
+        corrected
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ['sonarjs/todo-tag', 'unicorn/expiring-todo-comments'].includes(ruleId ?? '')),
+    ).toStrictEqual([]);
+});
+
 test.each(['recommended', 'all'] as const)(
     '%s preserves generated script and test exclusions while applying native options',
     async (level) => {

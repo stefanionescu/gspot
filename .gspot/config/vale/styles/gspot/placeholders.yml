@@ -1,5 +1,5 @@
 extends: existence
-message: "Placeholder style '%s'. Use <UPPER_SNAKE_CASE> in angle brackets."
+message: "Placeholder style '%s'. Use <kebab-case> in angle brackets."
 level: error
 nonword: true
 tokens:

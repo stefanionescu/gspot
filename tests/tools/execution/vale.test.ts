@@ -14,10 +14,10 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { CURRENCY_CASES } from '#tests/config/tools/vale.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { TOKEN_IGNORES } from '#cli/config/generation/templates.ts';
+import { STYLE_CASES, CURRENCY_CASES } from '#tests/config/tools/vale.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -220,4 +220,27 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     const corrected = await runEngineCheck(session, vale, planned!);
     expect(corrected.status, corrected.note).toBe('passed');
     expect(corrected.findings).toStrictEqual([]);
+});
+
+test.each([...STYLE_CASES])('Vale $rule checks report prose defects and accept source notation', async (entry) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        '.vale.ini': 'StylesPath = styles\n[formats]\nts = md\n[*]\nBasedOnStyles = gspot\n',
+        [`styles/gspot/${entry.rule}.yml`]: readAsset(`configurations/general/prose/styles/gspot/${entry.rule}.yml`),
+        [entry.path]: entry.source,
+    });
+    const native = await runTestCommand(
+        ['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', entry.path],
+        { cwd: directory.path },
+    );
+    expect(native.code, native.stdout + native.stderr).toBe(0);
+    const alerts = parseAlerts(native.stdout);
+    expect(alerts.map(({ line, check }) => ({ line, check }))).toStrictEqual(
+        entry.lines.map((line) => ({ line, check: `gspot.${entry.rule}` })),
+    );
+    if (entry.rule === 'placeholders')
+        expect(alerts.map(({ message }) => message)).toStrictEqual([
+            "Placeholder style 'YOUR_TOKEN'. Use <kebab-case> in angle brackets.",
+            "Placeholder style '{{token}}'. Use <kebab-case> in angle brackets.",
+        ]);
 });
