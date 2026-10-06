@@ -24,7 +24,7 @@ export const CASES: FindingCase[] = [
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['swift', 'naming'],
     modules: false,
-    without: ['spelling'],
+
     tools: ['swiftlint', 'swiftformat'],
     files: { 'Sources/App/Greeting.swift': CLEAN_SWIFT },
 };

@@ -19,6 +19,7 @@ test.each(NON_ERROR_FAILURES)(
         const outcome = await executeRun(
             await openSession(sandbox.path),
             buildRunOptions({
+                only: ['project/source'],
                 checks: {
                     'project/source': {
                         engine: () => {

@@ -66,7 +66,7 @@ function attributeFile(parsed: Finding[], invocation: CommandInvocation, spec: C
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputSpec | undefined): boolean {
-    if (output === undefined || ['eslint', 'typos', 'markdownlint'].includes(output.format)) return true;
+    if (output === undefined || ['eslint', 'semgrep', 'typos', 'markdownlint'].includes(output.format)) return true;
     if (FILELESS_FORMATS.has(output.format) || (output.file_type ?? 'path') !== 'path') return false;
     if (output.pattern !== undefined) return output.pattern.includes('(?<file>');
     return output.fields?.file !== undefined;

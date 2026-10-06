@@ -45,6 +45,7 @@ test('completion callbacks publish filtered results before the remaining check f
         await openSession(sandbox.path),
         buildRunOptions({
             isDryRun: true,
+            only: ['project/fast', 'project/waiting'],
             onResult: (entry) => {
                 completed.push(entry);
                 if (entry.check === 'project/fast') writeFileSync(join(sandbox.path, 'completed'), 'ready');

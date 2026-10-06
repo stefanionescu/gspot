@@ -13,20 +13,19 @@ import type { Host, Skip, PlanOptions, NativeIgnore, SelectionStatus } from '#cl
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
-    const { configuration, git } = check.spec.when ?? {};
+    const { configuration, git } = { ...check.manifest?.configuration.when, ...check.spec.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
-    if (git === true && !hasGit)
-        return {
-            cause: 'condition',
-            note: 'This folder is not a Git repository, so the check has no history to read.',
-        };
-    if (git === false && hasGit)
-        return { cause: 'condition', note: 'The secrets/gitleaks check scans the files of this Git repository.' };
-    return undefined;
+    if (git === undefined || git === hasGit) return undefined;
+    return {
+        cause: 'condition',
+        note: git
+            ? 'This folder is not a Git repository, so the check has no history to read.'
+            : 'The secrets/gitleaks check scans the files of this Git repository.',
+    };
 }
 
 // The skip an ignore entry without a rule or paths imposes, which disables the whole check.

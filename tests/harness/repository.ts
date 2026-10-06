@@ -28,7 +28,7 @@ async function installTools(root: string, sandbox: RepositorySetup): Promise<Rec
     const environment = { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]) };
     const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, ...(sandbox.init ?? QUIET_INIT)];
     await install(root, argv, environment, {
-        without: sandbox.without ?? ['naming', 'spelling'],
+        without: sandbox.without ?? [],
         level: sandbox.level ?? 'all',
     });
     return environment;

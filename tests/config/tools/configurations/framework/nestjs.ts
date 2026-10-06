@@ -34,7 +34,6 @@ export const REPOSITORY: RepositoryScenario = {
         'src/greeting.controller.ts': CONTROLLER,
         'src/greeting.module.ts': NESTJS_MODULE,
     },
-    without: ['naming', 'spelling', 'security', 'dependencies'],
 };
 
 export const MISMATCHED =

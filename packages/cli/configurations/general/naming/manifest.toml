@@ -1,5 +1,6 @@
 [configuration]
 title = "Naming"
+always_selected = true
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
 [files]

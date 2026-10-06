@@ -6,7 +6,7 @@ export const CLEAN_MODULE =
 /** A JavaScript repository with no TypeScript source or compiler config file. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['javascript'],
-    without: [],
+
     files: {
         'package.json': '{"name":"example","version":"1.0.0","private":true,"type":"module"}\n',
         'src/main.js': CLEAN_MODULE,

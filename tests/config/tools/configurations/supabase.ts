@@ -14,7 +14,7 @@ export const GREET = 'Deno.serve(() => new Response("hello"));\n';
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['supabase'],
     modules: false,
-    without: ['naming', 'spelling', 'typescript', 'security'],
+    without: ['typescript'],
     tools: ['deno', 'squawk', 'sqlfluff'],
     files: {
         'supabase/config.toml': SUPABASE_CONFIG,

@@ -13,7 +13,7 @@ export const PAIR = '/// The size of a pair.\npublic func pairSize(of count: Int
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['swift', 'naming'],
     modules: false,
-    without: ['spelling'],
+
     tools: ['swiftlint', 'swiftformat', 'periphery'],
     files: { '.gitignore': '.build\n', 'Package.swift': SWIFT_PACKAGE, 'Sources/App/Greeting.swift': LIBRARY },
 };

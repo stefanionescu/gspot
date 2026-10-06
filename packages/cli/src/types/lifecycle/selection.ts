@@ -23,7 +23,6 @@ export type InitOptions = {
     runner?: RunnerChoice;
     from?: string;
     template?: Template;
-    isListExact?: boolean;
     install: boolean;
 };
 

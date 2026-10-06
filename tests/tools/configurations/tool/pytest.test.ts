@@ -29,7 +29,6 @@ test(
             sandbox.path,
             ['init', '--yes', '--configurations', 'python', 'pytest', 'naming', ...QUIET_INIT],
             environment,
-            { without: ['spelling', 'dependencies'] },
         );
         for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
             const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);

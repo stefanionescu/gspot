@@ -7,7 +7,7 @@ export const CLEAN =
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['bash'],
     modules: false,
-    without: [],
+
     tools: ['shellcheck', 'shfmt'],
     files: { 'scripts/build.sh': CLEAN },
 };

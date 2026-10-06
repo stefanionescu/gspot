@@ -40,7 +40,7 @@ export const CASES: FindingCase[] = [
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['markdown', 'docs', 'prose'],
-    without: [],
+
     tools: ['vale', 'lychee', 'markdownlint-cli2'],
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 };

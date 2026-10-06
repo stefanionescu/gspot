@@ -31,7 +31,7 @@ paths:
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['openapi'],
     modules: false,
-    without: ['naming', 'spelling', 'security', 'vitest'],
+    without: ['vitest'],
     files: {
         'package.json': '{"name":"example","private":true,"type":"module"}\n',
         'openapi.yaml': DOCUMENT,

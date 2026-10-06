@@ -7,7 +7,7 @@ export const COMMAND = ['check', '--only', 'site/svgo', '--json'];
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['site'],
-    without: ['spelling', 'naming'],
+
     files: STATIC_SITE_FILES,
 };
 

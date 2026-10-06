@@ -13,7 +13,7 @@ ignored = [
 
 [configuration]
 title = "Prose"
-requires = ["markdown"]
+always_selected = true
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
 
 [files]

@@ -6,7 +6,7 @@ export const CLEAN = `<!doctype html>\n<html lang="en">\n    <head>\n        <me
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['html'],
-    without: ['spelling'],
+
     files: {
         'package.json': '{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true\n}\n',
         'pages/home.html': CLEAN,

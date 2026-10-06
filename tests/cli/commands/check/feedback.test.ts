@@ -36,12 +36,12 @@ test.each(FIXER_FEEDBACK_CASES)(
             'control.md': '# Preserve this file\n',
             ...Object.fromEntries(paths.map((path) => [path, 'original\n'])),
         });
-        const planned = await runGspot(sandbox.path, ['check', '--fix', '--dry-run']);
+        const planned = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix', '--dry-run']);
         expect(planned.code, planned.stdout + planned.stderr).toBe(0);
         expect(planned.stdout).toContain(`${preview}\n`);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
         expect(readFileSync(join(sandbox.path, 'other.txt'), 'utf8')).toBe('original\n');
-        const corrected = await runGspot(sandbox.path, ['check', '--fix']);
+        const corrected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.stderr).toContain(applied);
         expect(corrected.stdout).not.toContain(applied);

@@ -8,7 +8,7 @@ import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
 import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
-import { CLEAN, SHELLED, ANSIBLE_INIT, ANSIBLE_LEFT_OUT } from '#tests/config/tools/configurations/tool/ansible.ts';
+import { CLEAN, SHELLED, ANSIBLE_INIT } from '#tests/config/tools/configurations/tool/ansible.ts';
 
 describe('the ansible configuration', () => {
     test(
@@ -21,7 +21,7 @@ describe('the ansible configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: buildToolsPath(['ansible-lint', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await install(sandbox.path, ANSIBLE_INIT, environment, { level: 'all', without: ANSIBLE_LEFT_OUT });
+            await install(sandbox.path, ANSIBLE_INIT, environment, { level: 'all' });
             const outcome = await runCheckCase(
                 sandbox.path,
                 {

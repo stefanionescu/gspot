@@ -13,7 +13,7 @@ import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
-import { LAUNCHER_FILES, EXPECTED_FAILURES } from '#tests/config/packages/launcher.ts';
+import { EXPECTED_SKIPS, LAUNCHER_FILES, EXPECTED_FAILURES } from '#tests/config/packages/launcher.ts';
 
 const release = getPublishedRelease();
 
@@ -47,7 +47,7 @@ test.skipIf(!isPosix)(
         const tool = [
             'node',
             '-e',
-            `require('node:fs').writeFileSync(${JSON.stringify(marker)}, String(process.pid)); setTimeout(() => {}, 60000);`,
+            `const fs = require('node:fs'); fs.writeFileSync(${JSON.stringify(marker + '.tmp')}, String(process.pid)); fs.renameSync(${JSON.stringify(marker + '.tmp')}, ${JSON.stringify(marker)}); setTimeout(() => {}, 60000);`,
         ];
         writeFileSync(
             join(cancellation, 'gspot.toml'),
@@ -55,7 +55,7 @@ test.skipIf(!isPosix)(
                 tables: `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
             }),
         );
-        const command = [...fixture.command, 'check', '--json'];
+        const command = [...fixture.command, 'check', '--only', 'project/slow', '--json'];
         const prepared = prepareTestCommand(
             command,
             {
@@ -98,8 +98,6 @@ test(
         const initialized = await initializeConsumer(release, fixture);
         expectTakeover(root, initialized.stdout);
         expect(initialized.stdout).not.toContain('formatter stdout');
-        const dependencies = await runTestCommand([...fixture.command, 'add', 'dependencies'], fixture.onlineOptions);
-        expect(dependencies.code, dependencies.stdout + dependencies.stderr).toBe(0);
         const checked = await runTestCommand(
             [...fixture.command, 'check', '--skip', 'dependencies/osv', '--json'],
             fixture.offlineOptions,
@@ -115,7 +113,7 @@ test(
                 .toSorted((left, right) => left.localeCompare(right)),
         }).toStrictEqual({
             errors: [],
-            skipped: ['dependencies/osv'],
+            skipped: EXPECTED_SKIPS.map(({ check }) => check),
             failed: EXPECTED_FAILURES,
         });
         // The throwaway registry serves HTTP archives, which the consumer lockfile must report.
@@ -141,7 +139,7 @@ test(
                 { check: 'python/ruff', cause: 'inputs' },
                 { check: 'swift/build', cause: swiftCause },
                 { check: 'swift/periphery', cause: swiftCause },
-                { check: 'dependencies/osv', cause: 'flag' },
+                ...EXPECTED_SKIPS,
             ]),
         );
         expect(checks.filter(({ check }) => check.startsWith('python/') || check === 'swift/swiftlint')).toStrictEqual(

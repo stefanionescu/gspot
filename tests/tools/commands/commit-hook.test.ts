@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
+import { buildSandboxPath } from '#tests/harness/install.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { buildSandboxPath, removeConfigurations } from '#tests/harness/install.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -54,7 +54,6 @@ test(
             '--no-install',
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        await removeConfigurations(sandbox.path, ['format'], {});
         const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');

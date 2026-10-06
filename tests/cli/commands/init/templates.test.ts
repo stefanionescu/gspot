@@ -11,6 +11,7 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
 
 test('templates > init validates a template in a dry run without changing the repository', async () => {
     await using sandbox = await testdir();
@@ -57,7 +58,12 @@ test.each(['exact', 'detect'])('an empty %s template controls root detection wit
     const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
     const policy = parseStrictPolicy(report.policy);
     expect(policy.configurations.includes('javascript')).toBe(selection === 'detect');
-    if (selection === 'exact') expect(policy.configurations).toStrictEqual([]);
+    for (const configuration of AUTOMATIC_GENERAL_CONFIGURATIONS)
+        expect(policy.configurations).toContain(configuration);
+    if (selection === 'exact')
+        expect(policy.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+            AUTOMATIC_GENERAL_CONFIGURATIONS.toSorted((left, right) => left.localeCompare(right)),
+        );
     expect(report.plan.template).toMatchObject({ name: 'team', selection });
     expect(readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -91,5 +97,7 @@ test('templates > a template with a wrong value, an unknown configuration and a 
     const corrected = await runGspot(sandbox.path, ['init', '--yes', '--from', 'bad.template.toml', '--no-install']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const read = Bun.TOML.parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as Record<string, unknown>;
-    expect(read['configurations']).toStrictEqual(['bash']);
+    expect(read['configurations']).toStrictEqual(
+        expect.arrayContaining([...AUTOMATIC_GENERAL_CONFIGURATIONS, 'bash', 'commits']),
+    );
 });

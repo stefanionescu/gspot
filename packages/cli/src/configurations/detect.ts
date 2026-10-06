@@ -190,7 +190,7 @@ export function detectUnselected(
     const selected = new Set(configured.map((manifest) => manifest.configuration.name));
     const projectManifests = readManifests(root, files);
     return detectConfigurations(files, manifests, projectManifests)
-        .filter((detection) => !selected.has(detection.configuration))
+        .filter((detection) => detection.kind !== 'general' && !selected.has(detection.configuration))
         .map((detection) => ({
             configuration: detection.configuration,
             evidence: detection.evidence,

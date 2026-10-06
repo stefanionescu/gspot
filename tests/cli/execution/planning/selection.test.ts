@@ -14,12 +14,15 @@ import { preparePolicy } from '#cli/commands/policy-edit.ts';
 import type { RawPolicy } from '#cli/types/policy/settings.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
 
 import {
     COMPONENTS,
     LINK_POLICY,
     POLICY_PATHS,
+    AUTOMATIC_CHECKS,
     NEXT_BUILD_FILES,
+    MANUAL_SELECTIONS,
     NEXT_BUILD_ROUTES,
     NEXT_BUILD_TABLES,
     NODE_REQUIREMENTS,
@@ -41,63 +44,65 @@ test('a check version prerequisite cannot lower its tool-wide requirement', asyn
     expect(higher[0]?.tool?.min_version).toBe('0.10.0');
 });
 
-test('automatic configurations use only the level to select checks and their required tools', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'package.json': '{"name":"example","private":true,"type":"module"}\n',
-        'source.js': 'export const port = 8080;\n',
-        'app/package.json': '{"name":"app","private":true,"type":"module"}\n',
-        'app/source.js': 'export const port = 3000;\n',
-    });
-    const interactive = await prepare(sandbox.path, buildInitOptions(sandbox.path, { yes: false, isDryRun: true }));
-    const accepted = await prepare(sandbox.path, buildInitOptions(sandbox.path, { isDryRun: true }));
-    expect(interactive.policyText).toBe(accepted.policyText);
-    expect(interactive.plan).toStrictEqual(accepted.plan);
-    const policy = parse(accepted.policyText) as RawPolicy;
-    for (const configuration of ['security', 'duplication', 'licenses'])
-        expect(policy.configurations).toContain(configuration);
-    await Bun.write(join(sandbox.path, 'gspot.toml'), accepted.policyText);
-    for (const level of ['recommended', 'all', 'recommended'] as const) {
-        const changed = await runGspot(sandbox.path, ['set', 'level', level]);
-        expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-        const session = await openSession(sandbox.path);
-        const checks = planRun(session, {
-            stage: 'all',
-            skips: [],
-            includeUnsupported: true,
-            only: [
-                'security/semgrep',
-                'security/semgrep-registry',
-                'security/codeql',
-                'duplication/jscpd',
-                'licenses/packages',
-            ],
+test.each(MANUAL_SELECTIONS)(
+    'manual configurations %j retain automatic checks and level-dependent tools',
+    async ({ configurations }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'package.json': '{"name":"example","private":true,"type":"module"}\n',
+            'source.js': 'export const port = 8080;\n',
+            'app/package.json': '{"name":"app","private":true,"type":"module"}\n',
+            'app/source.js': 'export const port = 3000;\n',
         });
-        const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
+        const options = {
+            isDryRun: true,
+            ...(configurations === undefined ? {} : { configurations: [...configurations] }),
+            scopes: ['app=javascript'],
+        };
+        const interactive = await prepare(sandbox.path, buildInitOptions(sandbox.path, { ...options, yes: false }));
+        const accepted = await prepare(sandbox.path, buildInitOptions(sandbox.path, options));
+        expect(interactive.policyText).toBe(accepted.policyText);
+        expect(interactive.plan).toStrictEqual(accepted.plan);
+        const policy = parse(accepted.policyText) as RawPolicy;
+        for (const configuration of [...AUTOMATIC_GENERAL_CONFIGURATIONS, 'licenses'])
+            expect(policy.configurations).toContain(configuration);
+        await Bun.write(join(sandbox.path, 'gspot.toml'), accepted.policyText);
+        for (const level of ['recommended', 'all', 'recommended'] as const) {
+            const changed = await runGspot(sandbox.path, ['set', 'level', level]);
+            expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+            const session = await openSession(sandbox.path);
+            const checks = planRun(session, {
+                stage: 'all',
+                skips: [],
+                includeUnsupported: true,
+                only: AUTOMATIC_CHECKS,
+            });
+            const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
+            expect(
+                checks.filter((check) => check.spec.name === 'security/semgrep').map((check) => check.skip),
+            ).toStrictEqual([undefined, undefined]);
+            expect(
+                checks.filter((check) => check.spec.name === 'duplication/jscpd').map((check) => check.skip?.cause),
+            ).toStrictEqual(level === 'all' ? [undefined, undefined] : []);
+            expect(
+                checks.filter((check) => check.spec.name === 'licenses/packages').map((check) => check.skip?.cause),
+            ).toStrictEqual(['setting', 'setting']);
+            expect(names).toContain('semgrep');
+            expect(names.includes('jscpd')).toBe(level === 'all');
+            expect(names).not.toContain('license-checker-rseidelsohn');
+            expect(names).not.toContain('codeql');
+        }
+        const allowed = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
+        expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
+        const configured = await openSession(sandbox.path);
         expect(
-            checks.filter((check) => check.spec.name === 'security/semgrep').map((check) => check.skip),
+            planRun(configured, { stage: 'all', skips: [], only: ['licenses/packages'] }).map((check) => check.skip),
         ).toStrictEqual([undefined, undefined]);
         expect(
-            checks.filter((check) => check.spec.name === 'duplication/jscpd').map((check) => check.skip?.cause),
-        ).toStrictEqual(level === 'all' ? [undefined, undefined] : []);
-        expect(
-            checks.filter((check) => check.spec.name === 'licenses/packages').map((check) => check.skip?.cause),
-        ).toStrictEqual(['setting', 'setting']);
-        expect(names).toContain('semgrep');
-        expect(names.includes('jscpd')).toBe(level === 'all');
-        expect(names).not.toContain('license-checker-rseidelsohn');
-        expect(names).not.toContain('codeql');
-    }
-    const allowed = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
-    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
-    const configured = await openSession(sandbox.path);
-    expect(
-        planRun(configured, { stage: 'all', skips: [], only: ['licenses/packages'] }).map((check) => check.skip),
-    ).toStrictEqual([undefined, undefined]);
-    expect(applicableManifests(configured).flatMap((manifest) => manifest.tools.map((tool) => tool.name))).toContain(
-        'license-checker-rseidelsohn',
-    );
-});
+            applicableManifests(configured).flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
+        ).toContain('license-checker-rseidelsohn');
+    },
+);
 
 test.each(['recommended', 'all'] as const)(
     '%s reports manual security project prerequisites explicitly',

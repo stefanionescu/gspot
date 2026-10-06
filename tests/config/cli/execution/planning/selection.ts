@@ -65,3 +65,19 @@ configurations = ["nextjs"]
 
 /** Next.js accepts either router at the project root or under src. */
 export const NEXT_BUILD_ROUTES = ['app/page.tsx', 'src/app/page.tsx', 'pages/index.tsx', 'src/pages/index.tsx'];
+
+/** Coverage choices stay constant while language selections and the level change. */
+export const AUTOMATIC_CHECKS = [
+    'security/semgrep',
+    'security/semgrep-registry',
+    'security/codeql',
+    'duplication/jscpd',
+    'licenses/packages',
+];
+
+/** Empty and named manual language lists both retain common checks. */
+export const MANUAL_SELECTIONS = [
+    { configurations: undefined },
+    { configurations: [] },
+    { configurations: ['python'] },
+];

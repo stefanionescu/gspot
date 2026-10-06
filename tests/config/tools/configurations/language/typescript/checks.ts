@@ -18,7 +18,7 @@ import {
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript'],
     modules: false,
-    without: [],
+
     files: {
         'package.json': TYPESCRIPT_PACKAGE,
         'tsconfig.json':

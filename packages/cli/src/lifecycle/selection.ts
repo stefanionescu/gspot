@@ -61,12 +61,13 @@ function rootSelection(
     hasScopes: boolean,
 ): string[] {
     const named = context.options.configurations?.filter((id) => id !== NO_CONFIGURATIONS);
-    if (named && context.options.template?.tables.selection !== 'detect') return named;
     const detectedConfigurations = detected
         .filter((evidence) => {
             const manifest = getCandidate(context, evidence.configuration);
             if (!manifest) return false;
             const { kind } = manifest.configuration;
+            if (named !== undefined && context.options.template?.tables.selection !== 'detect')
+                return kind === 'general';
             return !hasScopes || kind === 'general' || kind === 'language';
         })
         .map((evidence) => evidence.configuration);
@@ -112,20 +113,24 @@ function assertKnown(
     if (unknown.length > 0) throw new GspotError('selection', unknown);
 }
 
-// Exact selections retain their list. Other selections gain one level of detected recommendations.
+// Exact templates retain language and framework choices; general checks still follow the level.
 function listedConfigurations(
     options: InitInputs['options'],
     ids: string[],
     manifests: Map<string, Manifest>,
     detected: Set<string>,
 ): string[] {
-    if (options.template?.tables.selection === 'exact' || options.isListExact === true) return ids;
     const recommended = ids.flatMap((id) => manifests.get(id)?.configuration.recommends ?? []);
     return [
         ...new Set([
             ...ids,
             ...recommended.filter((id) => {
                 const manifest = manifests.get(id);
+                if (
+                    options.template?.tables.selection === 'exact' &&
+                    ['language', 'framework'].includes(manifest?.configuration.kind ?? '')
+                )
+                    return false;
                 // A recommendation without detection criteria does not require a source match.
                 const hasDetection =
                     manifest !== undefined && Object.values(manifest.detect).some((list) => list.length > 0);

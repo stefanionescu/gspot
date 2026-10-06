@@ -11,7 +11,7 @@ export type RepositorySetup = {
     files: Record<string, string>;
     /** Static TypeScript project data serialized when the fixture is prepared. */
     tsconfig?: Record<string, unknown>;
-    /** Recommended configurations left out; naming and spelling when a fixture says nothing. */
+    /** Manual language and framework removals applied after initialization. */
     without?: string[];
     /** The init flags after the configurations; no runner, hooks, CI, agent rules, or install unless a sandbox says otherwise. */
     init?: string[];

@@ -54,7 +54,6 @@ test('init refuses an unsafe output ancestor before attempting installation', as
         initCommand(
             buildInitOptions(sandbox.path, {
                 configurations: ['spelling'],
-                isListExact: true,
                 hooks: false,
                 ci: 'none',
                 runner: 'mise',
@@ -80,7 +79,6 @@ test('init retains old configuration when a conflicting replacement cannot be pu
             initCommand(
                 buildInitOptions(sandbox.path, {
                     configurations: ['spelling'],
-                    isListExact: true,
                     hooks: false,
                     ci: 'none',
                     runner: 'none',

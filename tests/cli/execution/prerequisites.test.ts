@@ -90,7 +90,10 @@ test('a check runner that throws errors that check alone, and the other checks k
         'source.txt': 'input\n',
     });
     const checks = { ...CHECKS, 'sandbox/broken': { run: brokenRunner } };
-    const outcome = await executeRun(await openSession(sandbox.path), buildRunOptions({ checks }));
+    const outcome = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ checks, only: ['sandbox/broken', 'sandbox/kept'] }),
+    );
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.checks).toMatchObject([
         { check: 'sandbox/broken', status: 'error', note: textContaining('The runner broke') },

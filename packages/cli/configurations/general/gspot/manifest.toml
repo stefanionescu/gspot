@@ -1,5 +1,6 @@
 [configuration]
 title = "gspot"
+always_selected = true
 description = "The checks gspot runs on its own output: every generated file matches what gspot writes from the policy."
 
 [[tool]]

@@ -24,7 +24,7 @@ test('a check keeps its name in the report and in its findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, buildRunOptions());
+    const outcome = await executeRun(session, buildRunOptions({ only: ['sandbox/identity'] }));
     expect(session.policyFiles.policy.checks[0]?.name).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
@@ -40,7 +40,7 @@ test('counted failures survive final filtering without diagnostic locations', as
         'source.txt': 'original',
     });
     const session = await openSession(sandbox.path);
-    const options = buildRunOptions();
+    const options = buildRunOptions({ only: ['sandbox/identity'] });
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'failed', findings: [] });

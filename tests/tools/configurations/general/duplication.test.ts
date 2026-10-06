@@ -8,13 +8,7 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildSandboxPath } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-
-import {
-    STEPS,
-    METADATA,
-    DUPLICATION_INIT,
-    DUPLICATION_LEFT_OUT,
-} from '#tests/config/tools/configurations/general/duplication.ts';
+import { STEPS, METADATA, DUPLICATION_INIT } from '#tests/config/tools/configurations/general/duplication.ts';
 
 describe('the duplication configuration', () => {
     test(
@@ -30,7 +24,7 @@ describe('the duplication configuration', () => {
             const environment = {
                 PATH: buildSandboxPath(['typos', 'ec']),
             };
-            await install(sandbox.path, DUPLICATION_INIT, environment, { level: 'all', without: DUPLICATION_LEFT_OUT });
+            await install(sandbox.path, DUPLICATION_INIT, environment, { level: 'all' });
             const clean = await spawnGspot(
                 sandbox.path,
                 ['check', '--only', 'duplication/jscpd', '--json'],

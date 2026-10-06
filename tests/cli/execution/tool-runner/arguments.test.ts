@@ -52,7 +52,7 @@ stage = "commit"
         'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [] });
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['sandbox/arguments'] });
     const planned = plans[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'binary', env: { TOOL_RELEASE: 'v3.4.0' } };
     const prepared = prepareCommand(session, planned, planned.spec.command!, commandEnvironment(session, planned));
@@ -90,7 +90,10 @@ test('a repository command receives a declared empty argument without changing i
         }),
         'source.txt': 'source input',
     });
-    const result = await executeRun(await openSession(sandbox.path), buildRunOptions({ isDryRun: true }));
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ isDryRun: true, only: ['project/arguments'] }),
+    );
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'passed' }]);
 });
@@ -122,7 +125,7 @@ test('per-file failures name the selected file when expanded arguments follow it
             'const fs = require("node:fs"); process.exitCode = fs.readFileSync(process.argv[4], "utf8") === "valid" ? 0 : 1;',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [] });
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['project/file-result'] });
     const planned = plans[0]!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
     const failed = await runCommandCheck(session, planned);
@@ -148,7 +151,7 @@ test.skipIf(!isPosix)('a signaled per-file process is an execution error rather 
         'source.txt': 'valid source',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [] });
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['project/termination'] });
     const planned = plans[0]!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
     const failed = await runCommandCheck(session, planned);
@@ -183,7 +186,7 @@ test.skipIf(!isPosix)(
         });
         for (const path of ['native/shellcheck', 'inactive/shellcheck']) chmodSync(join(sandbox.path, path), 0o755);
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, { stage: 'commit', skips: [] })[0]!;
+        const planned = planRun(session, { stage: 'commit', skips: [], only: ['project/companion'] })[0]!;
         planned.spec.other_tools = ['shellcheck'];
         planned.spec.env = { PATH: join(sandbox.path, 'inactive') };
         const which = spyOn(executables, 'sync').mockReturnValue(join(sandbox.path, 'native/shellcheck'));

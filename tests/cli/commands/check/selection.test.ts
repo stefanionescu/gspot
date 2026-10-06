@@ -56,6 +56,10 @@ test('file and folder arguments intersect check lists, and --skip leaves the oth
     const skipped = await runGspot(sandbox.path, [
         'check',
         'src/selected.ts',
+        '--only',
+        'sandbox/one',
+        'sandbox/two',
+        'sandbox/three',
         '--skip',
         'sandbox/one',
         'sandbox/two',
@@ -129,14 +133,29 @@ stage = "${name}"
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'source.txt'), 'staged input');
     expect(git(sandbox.path, ['add', 'source.txt']).code).toBe(0);
-    const staged = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    const staged = await runGspot(sandbox.path, [
+        'check',
+        '--only',
+        'sandbox/commit',
+        'sandbox/push',
+        '--staged',
+        '--json',
+    ]);
     expect(staged.code, staged.stdout + staged.stderr).toBe(0);
     const stagedReport = JSON.parse(staged.stdout) as RunReport;
     expect(stagedReport.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/commit', 'passed'],
         ['sandbox/push', 'passed'],
     ]);
-    const checked = await runGspot(sandbox.path, ['check', '--hook', 'pre-commit', '--json']);
+    const checked = await runGspot(sandbox.path, [
+        'check',
+        '--only',
+        'sandbox/commit',
+        'sandbox/push',
+        '--hook',
+        'pre-commit',
+        '--json',
+    ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/commit', 'passed']]);
@@ -156,8 +175,10 @@ stage = "manual"
         'source.txt': 'input',
     });
     const plain = await runGspot(sandbox.path, ['check', '--json']);
-    expect(plain.code, plain.stdout + plain.stderr).toBe(0);
-    expect((JSON.parse(plain.stdout) as RunReport).checks).toStrictEqual([]);
+    expect(plain.code, plain.stdout + plain.stderr).toBe(2);
+    const initial = JSON.parse(plain.stdout) as RunReport;
+    expect(initial.checks.map((check) => check.check)).not.toContain('sandbox/manual');
+    expect(initial.checks.some((check) => check.status === 'missing')).toBe(true);
     const named = await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']);
     expect(named.code, named.stdout + named.stderr).toBe(0);
     const report = JSON.parse(named.stdout) as RunReport;

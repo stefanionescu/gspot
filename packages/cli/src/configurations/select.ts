@@ -84,8 +84,22 @@ export function selectForScope(
     scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {
+    const automatic = manifests
+        .values()
+        .filter(
+            (manifest) =>
+                manifest.configuration.kind === 'general' &&
+                manifest.configuration.always_selected &&
+                manifest.configuration.when === undefined,
+        )
+        .map((manifest) => manifest.configuration.name)
+        .toArray();
     return selectConfigurations(
-        [...policy.configurations, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.configurations)],
+        [
+            ...policy.configurations,
+            ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.configurations),
+            ...automatic,
+        ],
         manifests,
     );
 }

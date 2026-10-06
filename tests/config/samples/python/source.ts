@@ -7,7 +7,4 @@ export const MODULE_PATH = 'example/math.py';
 export const PYPROJECT =
     '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
 
-/** The configurations the Python structure sandbox leaves out after init. */
-export const EXCLUDED_CONFIGURATIONS = ['naming', 'spelling', 'dependencies'];
-
 export const PYTHON_MODULE_HEADER = '"""A test module."""\n\n\n';

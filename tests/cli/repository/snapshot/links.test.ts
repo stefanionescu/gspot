@@ -48,7 +48,7 @@ test('a staged check with tracked links of every kind exits by its findings alon
     stageLinks(sandbox.path);
     await Bun.write(`${sandbox.path}/src/source.ts`, 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/source.ts']);
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/report', 'failed']]);
@@ -65,7 +65,7 @@ test('a push of a commit with tracked links of every kind exits by its findings 
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const result = await spawnGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
+        ['check', '--only', 'sandbox/report', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
         {},
         {
             stdin: `refs/heads/main ${head} refs/heads/main ${base}\n`,

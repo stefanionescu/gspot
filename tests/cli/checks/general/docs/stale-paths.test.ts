@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { rmSync, mkdirSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -118,16 +119,24 @@ test.each([
     ['mise.toml', '[tasks'],
 ])('malformed %s reports its read failure instead of a missing task', async (path, text) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'a.md': 'Run `bun run build`.\n', [path]: text });
+    await createFileTree(sandbox.path, {
+        'a.md': 'Run `bun run build`.\n',
+        [path]: path === 'package.json' ? '{}' : '',
+    });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const selected = buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
+    const session = await openSession(sandbox.path);
+    await Bun.write(join(sandbox.path, path), text);
+    const selected = buildEngineInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow(`Cannot read task definitions from ${path}.`);
 });
 
 test('a directory at a task configuration path is an error, not absent configuration', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'a.md': 'Run `bun run build`.\n', 'package.json': {} });
+    await createFileTree(sandbox.path, { 'a.md': 'Run `bun run build`.\n', 'package.json': '{}' });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const selected = buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
+    const session = await openSession(sandbox.path);
+    rmSync(join(sandbox.path, 'package.json'));
+    mkdirSync(join(sandbox.path, 'package.json'));
+    const selected = buildEngineInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow('Cannot read task definitions from package.json.');
 });

@@ -1,6 +1,6 @@
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 
-export const SECURITY_INIT = ['init', '--yes', '--configurations', 'typescript', 'security', ...QUIET_INIT];
+export const SECURITY_INIT = ['init', '--yes', '--configurations', 'typescript', ...QUIET_INIT];
 
 export const SECURITY_CLEAN = 'export function double(value: number): number {\n    return value * 2;\n}\n';
 
@@ -9,6 +9,9 @@ export const EVALUATED =
 
 export const OWN_RULE =
     'rules:\n    - id: test-no-double\n      pattern: double(...)\n      message: The test rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
+
+export const OWN_BASH_RULE =
+    'rules:\n    - id: test-no-eval\n      pattern: eval ...\n      message: The test rule rejects dynamic shell evaluation.\n      languages: [bash]\n      severity: ERROR\n';
 
 /** Configuration owned by Bearer, which Semgrep must preserve at initialization. */
 export const BEARER_FILES = {

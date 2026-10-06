@@ -20,6 +20,8 @@ configurations = [
     "files",
     "markdown",
     "format",
+    "gspot",
+    "structure",
 ]
 run_with = "mise"
 dependencies.scanner = "@socketsecurity/bun-security-scanner"

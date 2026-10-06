@@ -84,13 +84,13 @@ test.each(['\n', '\r\n'])('configuration errors name the key path in text and JS
     const text = await runGspot(sandbox.path, ['check']);
     expect(text.code).toBe(2);
     expect(text.stdout + text.stderr).toContain('gspot.toml: require_reasons:');
-    const json = await runGspot(sandbox.path, ['check', '--json']);
+    const json = await runGspot(sandbox.path, ['check', '--only', 'naming/policy', '--json']);
     expect(json.code).toBe(2);
     expect(JSON.parse(json.stdout)).toMatchObject({
         error: 'policy',
         message: textContaining('gspot.toml: require_reasons:'),
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));
-    const corrected = await runGspot(sandbox.path, ['check', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'naming/policy', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

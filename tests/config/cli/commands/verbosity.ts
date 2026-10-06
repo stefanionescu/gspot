@@ -6,3 +6,6 @@ export const VERBOSITY_CASES = [
     { name: 'quiet before verbose', flags: ['--quiet', '--verbose'], verbosity: 'quiet' },
     { name: 'verbose before quiet', flags: ['--verbose', '--quiet'], verbosity: 'quiet' },
 ] as const;
+
+/** The output fixture exercises only its declared failure and successful neighbor. */
+export const VERBOSITY_ARGS = ['check', '--only', 'example/findings', 'example/passing', '--base', 'HEAD'];

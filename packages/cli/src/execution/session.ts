@@ -3,13 +3,17 @@ import { npmPins } from '#cli/tools/pins.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 import { acquirePythonInstaller } from '#cli/tools/python/installer.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
@@ -35,13 +39,33 @@ function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<st
  */
 export async function openSession(root: string, policyFiles: PolicyFile = readPolicy(root)): Promise<Session> {
     const manifests = configurationManifests();
-    const repository = await readRepository(
-        root,
-        policyFiles.policy.declarations,
-        policyFiles.policy.scopes,
-        policyFiles.policy.exclude,
+    const { policy } = policyFiles;
+    const repository = await readRepository(root, policy.declarations, policy.scopes, policy.exclude);
+    // Init plans native configuration before the policy becomes a tracked file.
+    if (!repository.files.some((file) => file.path === POLICY_FILE) && !pathMatcher(policy.exclude)(POLICY_FILE)) {
+        const bytes = Buffer.from(policyFiles.text);
+        repository.files.push({
+            path: POLICY_FILE,
+            prefix: bytes.subarray(0, FILE_PREFIX_BYTES),
+            kind: 'source',
+            kindSource: 'policy',
+            tags: [],
+            executable: false,
+            size: bytes.length,
+        });
+    }
+    const automatic = detectConfigurations(repository.files, manifests, [])
+        .filter(
+            ({ configuration, kind }) =>
+                kind === 'general' &&
+                (manifests.get(configuration)?.configuration.when?.git !== true || repository.hasGit),
+        )
+        .map(({ configuration }) => configuration);
+    const scopes = scopeSelections(
+        { ...policy, configurations: [...new Set([...policy.configurations, ...automatic])] },
+        repository.scopes,
+        manifests,
     );
-    const scopes = scopeSelections(policyFiles.policy, repository.scopes, manifests);
     let resolved: PackageInstaller | undefined;
     let resolvedPython: Promise<string> | undefined;
     const session: Session = {

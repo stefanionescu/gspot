@@ -173,9 +173,9 @@ test('init previews only applicable private projects and duplicate pins for the 
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: '5 pinned Python tools; matching uv.lock and private environment',
+        note: '6 pinned Python tools; matching uv.lock and private environment',
     });
-    expect(plan.change).toContainEqual({ path: '.gspot/package.json', note: '1 pinned npm tools; matching lockfile' });
+    expect(plan.change).toContainEqual({ path: '.gspot/package.json', note: '3 pinned npm tools; matching lockfile' });
     expect(plan.noLongerRuns).toStrictEqual([
         { path: 'mise.toml', note: '1 pin gspot also pins (gspot doctor lists them)' },
     ]);
@@ -189,5 +189,5 @@ test('init previews only applicable private projects and duplicate pins for the 
     ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const installed = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
-    expect(Object.keys(installed.dependencies)).toStrictEqual(['editorconfig-checker']);
+    expect(Object.keys(installed.dependencies)).toStrictEqual(['ajv', 'editorconfig-checker', 'v8r']);
 });

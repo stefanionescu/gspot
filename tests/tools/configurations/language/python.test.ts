@@ -13,9 +13,9 @@ import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.ts';
 import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
 import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { MODULE_PATH, CLEAN_MODULE, EXCLUDED_CONFIGURATIONS } from '#tests/config/samples/python/source.ts';
 
 import {
     CASES,
@@ -127,7 +127,7 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-        await install(sandbox.path, buildInitArguments(['python']), environment, { without: EXCLUDED_CONFIGURATIONS });
+        await install(sandbox.path, buildInitArguments(['python']), environment, {});
         // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
         const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
         expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');

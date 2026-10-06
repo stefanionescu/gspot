@@ -18,7 +18,7 @@ export const CONFIGS_INIT = [
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['files'],
     modules: false,
-    without: [],
+
     init: [...QUIET_INIT],
     tools: ['taplo', 'yamllint', 'dotenv-linter'],
     files: { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'settings/clean.toml': 'a = 1\n' },

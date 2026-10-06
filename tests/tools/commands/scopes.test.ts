@@ -10,8 +10,8 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { install, buildSandboxPath } from '#tests/harness/install.ts';
+import { SCOPES_SOURCE } from '#tests/config/tools/commands/scopes.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
-import { SCOPES_SOURCE, ROOT_CONFIGURATIONS } from '#tests/config/tools/commands/scopes.ts';
 
 test(
     'typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none',
@@ -34,8 +34,7 @@ test(
             PATH: buildSandboxPath(['typos', 'ec', 'ast-grep']),
         };
         const argv = ['init', '--yes', '--scope-configurations', 'api=typescript', ...QUIET_INIT];
-        // The root configurations init selects in every repository install tools the ESLint check never runs.
-        await install(sandbox.path, argv, environment, { level: 'all', without: ROOT_CONFIGURATIONS });
+        await install(sandbox.path, argv, environment, { level: 'all' });
         const command = ['check', '--only', 'javascript/eslint', '--json'];
         const lint = await spawnGspot(sandbox.path, command, environment);
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);

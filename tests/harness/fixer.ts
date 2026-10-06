@@ -11,7 +11,7 @@ import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
  * @returns the planned check
  */
 export function planFixer(session: Session, script: string): PlannedCheck {
-    const [planned] = planRun(session, { stage: 'all', skips: [] });
+    const [planned] = planRun(session, { stage: 'all', skips: [], only: ['sandbox/fixer'] });
     if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
     return { ...planned, spec: { ...planned.spec, fix: [process.execPath, '-e', script] } };
 }

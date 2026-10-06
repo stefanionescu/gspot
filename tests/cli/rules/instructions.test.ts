@@ -9,7 +9,7 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 
 describe('the managed block', () => {
-    test('with no check selected it says nothing about gspot check', async () => {
+    test('an empty manual language list retains general check instructions', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]) });
         const session = await openSession(sandbox.path);
@@ -22,7 +22,7 @@ describe('the managed block', () => {
             hasChecks: allChecks(selected).size > 0,
         });
         expect(block).toContain('agent/WORKING.md');
-        expect(block).not.toContain('gspot check');
+        expect(block).toContain('Run `gspot check --staged` before committing');
         expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
     });
 

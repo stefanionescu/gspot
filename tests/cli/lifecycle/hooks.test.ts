@@ -37,7 +37,11 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     expect(preview.json).toMatchObject({
         dryRun: true,
         hooks: `${prefix}.gspot/hooks`,
-        steps: [['git', 'config', 'core.hooksPath', `${prefix}.gspot/hooks`]],
+        steps: [
+            ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
+            ['git', 'config', 'core.hooksPath', `${prefix}.gspot/hooks`],
+            ['npm', 'ci', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
+        ],
     });
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
     const installed = await installCommand({ cwd: root, isDryRun: false });
@@ -117,8 +121,13 @@ test('a commit in a linked worktree runs the staged checks and blocks a defect',
         using log = openOwnership(main);
         writeOutputs(await openSession(main), log);
     }
-    gitOutput(main, ['add', '-A']);
-    gitOutput(main, ['commit', '-qm', 'Generated files']);
+    const applied = await runGspot(main, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const formatted = await runGspot(main, ['check', '--only', 'files/taplo-format', '--fix']);
+    expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
+    const prepared = await runGspot(main, ['install']);
+    expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    commitAll(main);
     gitOutput(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
     const installed = await runGspot(linked, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -158,9 +167,13 @@ command = ${JSON.stringify([process.execPath, '-e', 'if ((await Bun.file("source
         using log = openOwnership(project);
         writeOutputs(await openSession(project), log);
     }
-    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+    const applied = await runGspot(project, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const formatted = await runGspot(project, ['check', '--only', 'files/taplo-format', '--fix']);
+    expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     const installed = await runGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
     await Bun.write(join(project, 'source.txt'), 'corrected working tree\n');
     const environment = { PATH: `${sourceLauncherDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}` };
     const rejected = git(sandbox.path, ['hook', 'run', 'pre-commit'], environment);

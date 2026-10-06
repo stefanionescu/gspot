@@ -122,6 +122,10 @@ async function removeCommand(options: RemoveOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     assertVersionPin(root);
     const manifests = configurationManifests();
+    if (manifests.get(options.configuration)?.configuration.kind === 'general')
+        throw new GspotError('policy', [
+            `The ${options.configuration} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
+        ]);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         const list = (holder['configurations'] as string[] | undefined) ?? [];

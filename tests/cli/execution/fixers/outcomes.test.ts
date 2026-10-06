@@ -133,7 +133,7 @@ test('fails the run when a correction exits nonzero even though its check passes
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, buildRunOptions({ fix: true }));
+    const outcome = await executeRun(session, buildRunOptions({ fix: true, only: ['sandbox/fixer'] }));
     expect(outcome.report.checks[0]?.status).toBe('passed');
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/fixer');
@@ -147,7 +147,7 @@ test('check --fix --dry-run prints the diff of a correction and leaves the file 
         'gspot.toml': `configurations = []\n[[check]]\nname = "sandbox/format"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["source.txt"]\nstage = "commit"\n`,
         'source.txt': 'original\n',
     });
-    const preview = await runGspot(sandbox.path, ['check', '--fix', '--dry-run']);
+    const preview = await runGspot(sandbox.path, ['check', '--only', 'sandbox/format', '--fix', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stdout).toContain('-original');
     expect(preview.stdout).toContain('+corrected');

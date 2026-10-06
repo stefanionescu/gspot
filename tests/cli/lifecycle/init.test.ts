@@ -49,7 +49,6 @@ test('init replaces a nested spelling configuration and deletes the original', a
     const options = buildInitOptions(directory.path, {
         isDryRun: true,
         configurations: ['spelling'],
-        isListExact: true,
         hooks: false,
         runner: 'none',
         ci: 'none',

@@ -40,7 +40,7 @@ test.each(['{file}', '{files}'])(
                 'const fs = require("node:fs"); const file = process.argv[2]; const status = Number(fs.readFileSync(file, "utf8")); if (status !== 0) console.log(`${file}:1: Located defect before exit`); process.exitCode = status;',
         });
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'all', skips: [] });
+        const plans = planRun(session, { stage: 'all', skips: [], only: ['project/exit-contract'] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
         const finding = await runCommandCheck(session, planned);

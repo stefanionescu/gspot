@@ -34,14 +34,14 @@ async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     writeFileSync(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/changed.ts']);
-    const staged = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    const staged = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
     const stagedReport = JSON.parse(staged.stdout) as RunReport;
     gitOutput(sandbox.path, ['commit', '-qm', 'change']);
     const head = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const pushed = await spawnGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
+        ['check', '--only', 'sandbox/report', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
         {},
         {
             stdin: `refs/heads/main ${head} refs/heads/main ${base}\n`,

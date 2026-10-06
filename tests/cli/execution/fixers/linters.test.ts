@@ -67,13 +67,13 @@ test.each([
     });
     const source = readFileSync(join(sandbox.path, entry.path), 'utf8');
     writeFileSync(join(sandbox.path, entry.config), entry.invalidConfiguration);
-    const invalid = await executeRun(await openSession(sandbox.path), buildRunOptions());
+    const invalid = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
     expect(invalid.report.exitCode).toBe(2);
     expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
     expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, entry.config), entry.nativeConfiguration);
     const session = await openSession(sandbox.path);
-    const options: RunOptions = buildRunOptions({ fix: true });
+    const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);

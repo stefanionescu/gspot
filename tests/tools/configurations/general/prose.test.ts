@@ -10,7 +10,7 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
-    const policy = buildPolicy(['prose'], { tables: '[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'guide.md': '# Schedule\n\nRelease on 03/04/2026.\n',

@@ -2,12 +2,10 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { git, gitOutput } from '#tests/harness/git.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { gspot, runGspot } from '#tests/harness/gspot.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CiProject, CiInstallation } from '#tests/types/cli/commands/output.ts';
@@ -47,15 +45,18 @@ paths = ["*.sh"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 `;
     await createFileTree(root, {
-        'gspot.toml': policy,
         [pipelinePath]: pipeline,
         'changed.sh': 'echo valid\n',
         'legacy.sh': 'if then\n',
     });
-    {
-        using log = openOwnership(root);
-        writeOutputs(await openSession(root), log);
-    }
+    commitCiSource(root, 'Authored inputs');
+    const initialized = await runGspot(root, ['init', '--yes', '--configurations', 'none', ...QUIET_INIT]);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    writeFileSync(join(root, 'gspot.toml'), policy);
+    const applied = await runGspot(root, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const installed = await runGspot(root, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const base = commitCiSource(root, 'base');
     writeFileSync(join(root, 'changed.sh'), 'if then\n');
     commitCiSource(root, 'invalid change');
@@ -66,6 +67,8 @@ command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 
 /** A fake npm on the job's PATH: its global install of gspot writes a launcher of the source CLI, or fails on request. */
 function createCiInstall(directory: string): CiInstallation {
+    const nativeNpm = Bun.which('npm');
+    if (nativeNpm === null) throw new Error('The CI fixture requires the pinned npm executable.');
     const launcher = `#!/usr/bin/env bun
 const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
 process.exit(child.exitCode);
@@ -80,7 +83,10 @@ if (existsSync(${JSON.stringify(failure)})) {
     console.error('npm error 404 Not Found - GET https://registry.npmjs.org/gspot');
     process.exit(1);
 }
-if (command !== 'install' || flag !== '--global' || !spec?.startsWith('@gspothq/cli@')) process.exit(2);
+if (command !== 'install' || flag !== '--global' || !spec?.startsWith('@gspothq/cli@')) {
+    const child = Bun.spawnSync([${JSON.stringify(nativeNpm)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
+    process.exit(child.exitCode);
+}
 writeFileSync(${JSON.stringify(join(directory, 'gspot'))}, ${JSON.stringify(launcher)}, { mode: 0o755 });
 `,
     );
@@ -123,13 +129,14 @@ async function runCiJob(
     });
 }
 
-// Whether the GitHub manual job alone runs the manual check, by name.
-function runsManualStageAlone(generated: GithubWorkflow): boolean {
+// The GitHub manual job names the authored check; the ordinary job retains default coverage.
+function runsManualStage(generated: GithubWorkflow): boolean {
     const check = generated.jobs['check-linux']!.steps;
     const manual = generated.jobs['manual-linux']!.steps;
     return (
-        manual.some((step) => step.run?.includes('--only project/audit') === true) &&
-        !check.some((step) => step.run?.includes('--only') === true)
+        manual.some(
+            (step) => step.run?.includes('--only ') === true && step.run.split(/\s+/u).includes('project/audit'),
+        ) && !check.some((step) => step.run?.includes('--only') === true)
     );
 }
 
@@ -145,16 +152,16 @@ test.each(['gitlab', 'github'] as const)(
         expect(invalid.stdout).toContain('project/syntax');
         expect(invalid.stdout).toContain('changed.sh');
         expect(invalid.stdout).not.toContain('legacy.sh');
-        expect('gspot' in generated || runsManualStageAlone(generated)).toBe(true);
+        expect('gspot' in generated || runsManualStage(generated)).toBe(true);
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
         commitCiSource(repository.path, 'correct syntax');
         const valid = await runCiJob(repository.path, generated, install.directory, base);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-        const firstPush = await runCiJob(repository.path, generated, install.directory, '0'.repeat(40));
+        const firstPush = await runCiJob(repository.path, generated, install.directory, '0'.repeat(base.length));
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
         expect(firstPush.stdout).toContain('legacy.sh');
     },
-    120_000,
+    60_000,
 );
 
 test.each(['gitlab', 'github'] as const)(
@@ -170,7 +177,7 @@ test.each(['gitlab', 'github'] as const)(
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
         expect(malformed.stderr).toContain('GSPOT_CI_BASE is not a commit SHA: $(touch injected)\n');
         expect(existsSync(join(repository.path, 'injected'))).toBe(false);
-        const missing = await runCiJob(repository.path, generated, install.directory, 'f'.repeat(40));
+        const missing = await runCiJob(repository.path, generated, install.directory, 'f'.repeat(base.length));
         expect(missing.code).not.toBe(0);
         install.refuse();
         const refused = await runCiJob(repository.path, generated, install.directory, base);
@@ -182,7 +189,7 @@ test.each(['gitlab', 'github'] as const)(
         const corrected = await runCiJob(repository.path, generated, install.directory, base);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
-    120_000,
+    60_000,
 );
 
 test.each(['gitlab', 'github'] as const)(
@@ -209,7 +216,7 @@ test.each(['gitlab', 'github'] as const)(
         expect(readFileSync(join(repository.path, pipelinePath), 'utf8')).toBe(pipeline);
         expect(readFileSync(join(repository.path, 'changed.sh'), 'utf8')).toBe('echo corrected\n');
     },
-    120_000,
+    60_000,
 );
 
 // Each row names the provider init proposes and the note or file its plan must carry.

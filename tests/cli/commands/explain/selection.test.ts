@@ -6,8 +6,9 @@ import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import type { PathExplanation } from '#cli/types/commands/explain.ts';
 import { EXPLAIN_POLICY } from '#tests/config/cli/commands/explain.ts';
-import { containingAll, textContaining } from '#tests/harness/expectations.ts';
+import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
     await using sandbox = await testdir();
@@ -66,15 +67,13 @@ stage = "manual"
     const ignored = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(ignored.code).toBe(0);
     expect(JSON.parse(ignored.stdout)).toMatchObject({
-        checks: [],
-        unchecked: 'no enabled check owns this file',
         ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toMatchObject({
-        checks: [{ check: 'project/syntax', stage: 'manual' }],
+        checks: containingAll([containing({ check: 'project/syntax', stage: 'manual' })]),
         ignores: [],
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
@@ -87,6 +86,9 @@ stage = "manual"
         command: ['bash', '-n', '{files}'],
         paths: ['**/*.sh'],
     });
+    const remaining = (JSON.parse(ignored.stdout) as PathExplanation).checks;
+    expect(remaining.map((entry) => entry.check)).not.toContain('project/syntax');
+    expect(remaining.map((entry) => entry.check)).toContain('format/editorconfig-checker');
 });
 test('explain > a recognized name keeps its meaning, and a tracked or explicit path selects a colliding file', async () => {
     await using sandbox = await testdir();

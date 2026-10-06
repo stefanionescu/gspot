@@ -654,7 +654,7 @@
         "outcome": "implemented",
         "verification": [
             "Source: framework/vue/stylelint.fragment.json.tmpl and framework/svelte/stylelint.fragment.json.tmpl own their component parsers and dialect rules. The CSS template has no unconditional component syntax or theme exemption. Tailwind directives and theme() follow the nearest declaring npm project. Vue alone accepts v-bind() with case-sensitive variables; Svelte retains only its own global selector exemption.",
-            "Source consumers: config.required_tools is validated against declared tools and requires a consuming tool/check. execution/planning/requirements.ts calculates configuration companions once for installation and actual command/engine environments. The command runner reports unavailable companions before startup. The single pinned postcss-html declaration remains, while plain CSS no longer requests it.",
+            "Source consumers: config.required_tools is validated against declared tools and requires a consuming tool/check. execution/planning/requirements.ts uses one shared configuration companion calculation for installation and actual command/engine environments. The command runner reports unavailable companions before startup. The single pinned postcss-html declaration remains, while plain CSS no longer requests it.",
             "Native CSS/Svelte: /tmp/gspot-css-framework-ownership-native-final.log passes all 12 CSS/Svelte cases, including both levels, Tailwind root/child/sibling boundaries, ordinary invalid colors within the Tailwind project, editor discovery and refusal of Vue v-bind() in Svelte. Its one Vue correction failure exposed camelCase variable lowercasing; the final Vue-owned native option fixes that without disabling keyword casing.",
             "Final native Vue: /tmp/gspot-css-framework-ownership-native-vue-final.log passes all six cases with 30 assertions. The invalid hexadecimal color still fails beside an accepted v-bind(themeColor); RED fails keyword casing and red passes with the same case-sensitive binding. Compiler, shared ESLint and takeover assertions remain. Direct pinned-tool proof: /tmp/gspot-css-framework-ownership-vue-value-case-proof.log.",
             "Generation, schema, policy and execution consumers: /tmp/gspot-css-framework-ownership-cli-final.log has 89 passes, 361 assertions across ten files. Plain CSS and unconsumed frameworks install no HTML parser; Vue/Svelte style consumers do. Root, Vue, Svelte and mixed-framework scopes preserve their exact dialect boundaries at both levels. No new developer-facing coverage choice or enabling setting is added."
@@ -1102,9 +1102,17 @@
         "finding": "| `packages/cli/kits/general/licenses/manifest.toml:51` | At level `all`, gspot picks a license allowlist for the project, including `CC-BY-3.0` and `Python-2.0`. That is a legal decision. | Leave it empty at both levels. Ask at `gspot init`. |",
         "owner": "`packages/cli/kits/general/licenses/manifest.toml:51`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "overridden by an agreed decision",
+        "verification": [
+            "Source: packages/cli/configurations/general/licenses/manifest.toml defaults licenses.allowed to [] at both levels. No all-level allowlist, extra enabling flag, or automatic legal choice remains.",
+            "User plan retains genuine project-setting prerequisites and requires explicit reporting. Initialization selects the applicable licenses configuration automatically; planning reports requires project setting licenses.allowed until the project supplies its legal policy instead of choosing licenses for the project.",
+            "Regressions: tests/cli/execution/planning/selection.test.ts covers interactive/noninteractive parity, absent and empty manual lists, root and child npm projects, recommended/all/recommended transitions, identical explicit prerequisite skips, and no license tool installation before licenses.allowed is supplied. Setting MIT activates both scope checks and their required tool. Final verification and delivery are recorded in findings/progress.json."
+        ],
+        "decisionEvidence": [
+            "User plan: recommended and all are the only developer-facing check-coverage levels; preserve legitimate project-setting prerequisites and report unmet prerequisites explicitly.",
+            "The suggested initialization prompt is superseded by explicit unmet-prerequisite reporting. The project retains ownership of licenses.allowed, and automatic applicability never supplies a legal allowlist."
+        ]
     },
     {
         "id": "areas/kits/081",

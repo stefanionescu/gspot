@@ -12,7 +12,7 @@ export const IGNORES = '.git\nnode_modules\n.env*\n';
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['docker'],
     modules: false,
-    without: [],
+
     tools: ['hadolint', 'trivy', 'taplo', 'yamllint'],
     files: {
         'api/Dockerfile': DOCKER_CLEAN,

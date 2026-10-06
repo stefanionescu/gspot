@@ -7,6 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { installPrivateTools } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
@@ -25,6 +26,7 @@ test('an edited generated file and one holding merge markers are drift findings,
         using log = openOwnership(sandbox.path);
         writeOutputs(await openSession(sandbox.path), log);
     }
+    await installPrivateTools(sandbox.path);
     const clean = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
     expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'passed', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');

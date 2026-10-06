@@ -11,7 +11,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import type { LicenseAllowlist } from '#cli/types/checks/general/licenses.ts';
 
-test('security output follows the selected security configuration', async () => {
+test('manual language choices include security output without selecting security separately', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash']),
@@ -20,12 +20,12 @@ test('security output follows the selected security configuration', async () => 
     const target = '.gspot/config/semgrep/bash.yml';
     const plainSession = await openSession(sandbox.path);
     const plainOutput = emitAll(plainSession);
-    expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
+    expect(plainOutput.files.find((file) => file.path === target)?.content).toContain('rules:');
     writeFileSync(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
-    expect(generated?.content).toContain('rules:');
+    expect(generated?.content).toBe(plainOutput.files.find((file) => file.path === target)?.content);
 });
 
 test.each(['recommended', 'all'])('generated %s ESLint configuration selects layout by level', async (level) => {

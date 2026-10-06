@@ -116,7 +116,7 @@ test.skipIf(!isPosix)('a reused session runs a replaced executable and reads its
     });
     chmodSync(executable, 0o755);
     const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ stage: 'commit' });
+    const options = buildRunOptions({ stage: 'commit', only: ['project/checker'] });
     const executed = await executeRun(session, options);
     expect(executed.report.exitCode).toBe(0);
     const repeated = await executeRun(session, options);

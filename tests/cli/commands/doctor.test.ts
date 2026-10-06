@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as inspect from '#cli/tools/inspect.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -52,8 +52,10 @@ test('doctor fails hooks this clone does not run and accepts them once installed
     const missing = await doctorCommand(sandbox.path);
     expect(missing.exitCode).toBe(1);
     expect(missing.text).toContain('not installed; run gspot install');
-    const session = await openSession(sandbox.path);
-    installHooks({ policy: session.policyFiles.policy, repository: session.repository });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const installed = await runGspot(sandbox.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const diagnosed = await doctorCommand(sandbox.path);
     expect(diagnosed.exitCode, diagnosed.text).toBe(0);
     expect(diagnosed.text).toContain('.gspot/hooks: installed');
@@ -71,7 +73,7 @@ test('doctor excludes private tool manifests from language detection and detects
     const detected = (privateOnly.json as DoctorReport).suggestions.detected.map(({ configuration }) => configuration);
     expect(detected).not.toContain('python');
     expect(detected).not.toContain('react');
-    expect(detected).toContain('files');
+    expect(detected).not.toContain('files');
     writeFileSync(join(sandbox.path, 'pyproject.toml'), python);
     const authored = await doctorCommand(sandbox.path);
     expect(authored.json).toMatchObject({

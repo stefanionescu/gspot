@@ -66,7 +66,7 @@ command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'
 fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
     });
-    const options = buildRunOptions({ stage: 'commit', fix: true });
+    const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/format', 'project/codemod'] });
     const outcome = await executeRun(await openSession(sandbox.path), options);
     expect(outcome.report.exitCode, JSON.stringify(outcome.report.checks)).toBe(0);
     expect(outcome.fixes?.results).toMatchObject([
@@ -88,7 +88,15 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         'second.txt': 'original\n',
         'third.txt': 'original\n',
     });
-    const fixed = await runGspot(sandbox.path, ['check', '--fix', '--json']);
+    const fixed = await runGspot(sandbox.path, [
+        'check',
+        '--only',
+        'sandbox/first',
+        'sandbox/second',
+        'sandbox/third',
+        '--fix',
+        '--json',
+    ]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
     expect((JSON.parse(fixed.stdout) as RunReport).failed).toStrictEqual(['sandbox/first']);
     // A second pass reruns the fixers whose files the first pass changed; the failed fixer does not run again.
@@ -111,7 +119,7 @@ fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "c
 `,
     });
     const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ stage: 'commit', fix: true });
+    const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/inventory'] });
     const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.fileCount).toBe(2);

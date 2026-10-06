@@ -18,7 +18,7 @@ export const ACTIONS_INIT = [
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['actions'],
     modules: false,
-    without: [],
+
     init: [...QUIET_INIT],
     tools: ['actionlint', 'zizmor'],
     files: { '.github/workflows/build.yml': `${WORKFLOW_HEAD}            - run: echo built\n` },

@@ -12,7 +12,7 @@ export const PSQL =
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['sql', 'naming'],
     modules: false,
-    without: [],
+
     tools: ['sqlfluff'],
     files: {
         'db/accounts.sql': SQL_CLEAN,

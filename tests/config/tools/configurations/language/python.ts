@@ -19,7 +19,7 @@ export const TOOLS_PROJECT =
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['python'],
     modules: false,
-    without: ['naming', 'spelling', 'dependencies'],
+
     tools: ['ruff', 'basedpyright'],
     files: {
         'pyproject.toml': TOOLS_PROJECT,

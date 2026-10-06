@@ -121,3 +121,17 @@ test('an unexpected installer process error reaches the program failure handler'
     expect(existsSync(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
     expect(readTree(sandbox.path)).toStrictEqual(before);
 });
+
+test.each(['security', 'duplication', 'licenses', 'prose', 'naming', 'structure', 'gspot'])(
+    'removing automatic %s coverage refuses before writing policy or generated files',
+    async (configuration) => {
+        await using sandbox = await testdir({ 'gspot.toml': 'configurations = []\n', 'source.py': 'PORT = 8080\n' });
+        const before = readTree(sandbox.path);
+        for (const flags of [[], ['--dry-run'], ['--json'], ['--dry-run', '--json']]) {
+            const result = await runGspot(sandbox.path, ['remove', configuration, ...flags]);
+            expect(result.code, result.stdout + result.stderr).toBe(2);
+            expect(result.stdout + result.stderr).toContain('Change coverage with gspot set level');
+            expect(readTree(sandbox.path)).toStrictEqual(before);
+        }
+    },
+);

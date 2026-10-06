@@ -13,6 +13,7 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
+import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { INSTALLATION_FAILURES } from '#tests/config/cli/lifecycle/installer-failures.ts';
 
@@ -54,7 +55,7 @@ test.each([...INSTALLATION_FAILURES])(
             expect(result.text).toContain('Run: gspot install');
             expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
             const session = await openSession(sandbox.path);
-            expect(session.policyFiles.policy.configurations).toStrictEqual([]);
+            expect(session.policyFiles.policy.configurations).toStrictEqual(AUTOMATIC_GENERAL_CONFIGURATIONS);
             expect(readFileSync(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
             const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
             expect(retry.exitCode).toBe(2);
@@ -96,7 +97,6 @@ test('init does not report success when required Python lock resolution cannot r
                 initCommand(
                     buildInitOptions(sandbox.path, {
                         configurations: ['python'],
-                        isListExact: true,
                         hooks: false,
                         ci: 'none',
                         runner: 'mise',
@@ -122,6 +122,10 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     });
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
     expect(processes.runBlocking(['git', 'config', 'core.hooksPath', '.githooks'], { cwd: sandbox.path }).code).toBe(0);
+    {
+        using log = openOwnership(sandbox.path);
+        writeOutputs(await openSession(sandbox.path), log);
+    }
     const read: string[][] = [];
     const run = processes.run;
     const installer = spyOn(processes, 'run').mockImplementation((command, options) => {

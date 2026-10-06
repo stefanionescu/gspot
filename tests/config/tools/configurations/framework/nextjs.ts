@@ -24,7 +24,7 @@ export const REPOSITORY: RepositoryScenario = {
         },
         include: ['app'],
     },
-    without: ['naming', 'spelling', 'css', 'files'],
+    without: ['css'],
     files: {
         '.gitignore': 'node_modules\n.next\n',
         'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "description": "A test Next.js app for the tests.",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,

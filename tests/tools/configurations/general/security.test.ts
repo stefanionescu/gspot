@@ -4,15 +4,17 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
 import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
-import { containing, containingAll } from '#tests/harness/expectations.ts';
+import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 import {
     OWN_RULE,
     EVALUATED,
     BEARER_FILES,
+    OWN_BASH_RULE,
     SECURITY_INIT,
     SECURITY_CLEAN,
 } from '#tests/config/tools/configurations/general/security.ts';
@@ -75,6 +77,51 @@ test(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'security/semgrep', status: isWindows ? 'skipped' : 'passed', findings: [] },
+        ]);
+    },
+    NATIVE_TEST_TIMEOUT_MS,
+);
+
+test.skipIf(process.platform === 'win32')(
+    'Semgrep reports malformed source as a finding and invalid rules as an execution error',
+    async () => {
+        await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
+        commitAll(sandbox.path);
+        await install(sandbox.path, buildInitArguments(['bash']), {});
+        const command = ['check', '--only', 'security/semgrep', '--json'];
+        const malformed = await spawnGspot(sandbox.path, command);
+        expect(malformed.code, malformed.stdout + malformed.stderr).toBe(1);
+        expect((JSON.parse(malformed.stdout) as RunReport).checks).toMatchObject([
+            {
+                check: 'security/semgrep',
+                status: 'failed',
+                findings: [{ file: 'scripts/café build.sh', line: 1, column: 1, rule: 'parse-error' }],
+            },
+        ]);
+        await Bun.write(join(sandbox.path, 'scripts/café build.sh'), 'printf "%s\\n" ready\n');
+        const corrected = await spawnGspot(sandbox.path, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'security/semgrep', status: 'passed', findings: [] },
+        ]);
+        const policy = join(sandbox.path, 'gspot.toml');
+        await Bun.write(policy, `${await Bun.file(policy).text()}\n[semgrep]\nrule_files = ["security/own.yml"]\n`);
+        await Bun.write(join(sandbox.path, 'security/own.yml'), 'rules: [broken\n');
+        const invalid = await spawnGspot(sandbox.path, command);
+        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
+        expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
+            {
+                check: 'security/semgrep',
+                status: 'error',
+                findings: [],
+                note: textContaining('Invalid YAML file'),
+            },
+        ]);
+        await Bun.write(join(sandbox.path, 'security/own.yml'), OWN_BASH_RULE);
+        const restored = await spawnGspot(sandbox.path, command);
+        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+        expect((JSON.parse(restored.stdout) as RunReport).checks).toMatchObject([
+            { check: 'security/semgrep', status: 'passed', findings: [] },
         ]);
     },
     NATIVE_TEST_TIMEOUT_MS,

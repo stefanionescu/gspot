@@ -23,7 +23,11 @@ selection = "exact"
 configurations = ["typescript", "markdown"]
 ```
 
-`exact` uses the template's configurations as the initial selection. Change `selection` to `detect` in the template to add configurations detected in the destination. Both modes control initialization; later `apply` reconciles repository changes.
+`exact` keeps the template's language and framework choices during initialization. Change
+`selection` to `detect` to add project configurations detected in the destination. Both
+selections include automatic general checks at the chosen level. An empty exact list omits
+language and framework choices; it still includes general checks. Later `apply` reconciles
+repository changes and retains manual language and framework overrides.
 
 ## Initialize another repository
 
@@ -51,4 +55,6 @@ gspot install
 gspot export python.gspot.template.toml
 ```
 
-`apply` deactivates language and framework configurations whose evidence is absent, even when they came from an exact template. Python and shared-file checks remain when their inputs exist. Saved stack-specific settings become active if that stack returns. Review the second export's omission report before sharing it.
+`apply` updates automatically detected configurations when their evidence changes. It keeps
+manual language and framework choices from the template. Saved stack-specific settings become
+active if that stack returns. Review the second export's omission report before sharing it.

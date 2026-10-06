@@ -115,7 +115,7 @@ export function registerInit(program: Program): void {
         .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo')
         .option(
             '--configurations <configurations...>',
-            'Use these configurations at the root instead of the detected ones',
+            'Override detected project configurations at the root; general checks remain automatic',
         )
         .option(
             '--scope-configurations <path=configurations...>',

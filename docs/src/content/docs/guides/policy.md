@@ -29,8 +29,10 @@ level = "recommended"
 require_reasons = true
 ```
 
-A configuration is a bundle of checks, tool configuration, and agent rules for one language, framework,
-or concern. To add or remove one, run `gspot add <configuration>` or `gspot remove <configuration>`.
+A configuration groups checks, tool configuration, and agent rules for a language, framework,
+or concern. General checks are selected automatically, including with a manually authored
+configuration list. To override a language or framework, run `gspot add <configuration>` or
+`gspot remove <configuration>`. Change general check coverage with the level or a reasoned ignore.
 
 `apply` updates automatically detected language and framework selections when repository files or
 dependencies change. It keeps manual language and framework additions and removals at the root
@@ -122,7 +124,7 @@ files also show a file diff, so you can see the authored change alongside the pr
 
 ## Reconcile project changes
 
-After adding or removing a stack, run `gspot apply --dry-run`, then `gspot apply` and `gspot install`. `apply` adds applicable configurations and deactivates language and framework configurations whose evidence disappeared, including manually added configurations. It preserves settings, custom checks, ignores, reasons, and authored scope policy for returning projects.
+After adding or removing a stack, run `gspot apply --dry-run`, then `gspot apply` and `gspot install`. `apply` adds applicable configurations and deactivates language and framework configurations whose evidence disappeared, while retaining manual language and framework overrides. It preserves settings, custom checks, ignores, reasons, and authored scope policy for returning projects.
 
 Shared-file configurations stay applicable while their inputs exist. An edited managed output is reported instead of overwritten. `check` and `doctor` report stale setup and do not reconcile it.
 

@@ -75,7 +75,8 @@ test('initialization distinguishes retained CI jobs from tool settings that gene
     expect(readTree(sandbox.path)).toStrictEqual(before);
     const empty = await runGspot(sandbox.path, [...buildInitArguments(['none']), '--dry-run']);
     expect(empty.code, empty.stdout + empty.stderr).toBe(0);
-    expect(empty.stdout).toContain('\nconfigurations\n  none\n');
+    expect(empty.stdout).toMatch(/^ {2}security\s+detected\s/mu);
+    expect(empty.stdout).not.toMatch(/^ {2}sql\s+/mu);
     expect(empty.stdout).not.toContain('the rules install alone');
     expect(readTree(sandbox.path)).toStrictEqual(before);
 });

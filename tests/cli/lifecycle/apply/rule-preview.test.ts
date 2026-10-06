@@ -54,6 +54,7 @@ test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful wri
     const tables = 'run_with = "mise"\n[agent_rules]\nenabled = false\n';
     const base = buildPolicy(entry.configurations, { level: entry.initialLevel, tables: tables + entry.initialTables });
     await createFileTree(sandbox.path, { 'gspot.toml': base, ...entry.source });
+    commitAll(sandbox.path);
     const initialized = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(initialized.exitCode, initialized.text).toBe(0);
     const path = join(sandbox.path, entry.file);

@@ -64,7 +64,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
 });
 
 test.each(['root', 'nested', 'combined'])(
-    'license selection %s runs its referenced integrity check once without adding structure',
+    'license selection %s runs its shared integrity check once with automatic structure coverage',
     async (selection) => {
         await using repository = await testdir();
         const root = repository.path;
@@ -87,7 +87,7 @@ test.each(['root', 'nested', 'combined'])(
         const selectsStructure = session.scopes
             .flatMap((scope) => scope.selected)
             .some((manifest) => manifest.configuration.name === 'structure');
-        expect(selectsStructure).toBe(selection === 'combined');
+        expect(selectsStructure).toBe(true);
         const options = buildRunOptions({ only: ['structure/stale-allowlists'] });
         const result = await executeRun(session, options);
         expect(result.report.exitCode).toBe(1);

@@ -10,12 +10,12 @@ import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { gspot, spawnGspot, startGspot } from '#tests/harness/gspot.ts';
-import { CHILD_OPTIONS } from '#tests/config/cli/commands/cancellation.ts';
 import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { READY_POLL_MS, READY_TIMEOUT_MS } from '#tests/config/harness/process.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { SnapshotMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
+import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
 async function waitForJson(path: string): Promise<unknown> {
@@ -58,11 +58,11 @@ test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([], {
-                tables: `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
+                tables: `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', SLOW_TOOL_PROGRAM])}\n`,
             }),
             'source.txt': 'input\n',
         });
-        const child = startGspot(sandbox.path, ['check', '--json'], {}, { timeoutMs: CHILD_OPTIONS.timeout });
+        const child = startGspot(sandbox.path, SLOW_CHECK, {}, { timeoutMs: CHILD_OPTIONS.timeout });
         await using capture = captureChild(child);
         const { output, errors } = capture;
         const started = join(sandbox.path, 'started.pid');

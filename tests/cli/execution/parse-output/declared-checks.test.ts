@@ -227,7 +227,7 @@ rule = "code"
 message = "text"
 `,
     });
-    const result = await runGspot(sandbox.path, ['check', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
     expect(result.code).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'failed' }]);
@@ -242,7 +242,7 @@ message = "text"
         },
     ]);
     await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
-    const corrected = await runGspot(sandbox.path, ['check', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'sandbox/json', status: 'passed', findings: [] },
