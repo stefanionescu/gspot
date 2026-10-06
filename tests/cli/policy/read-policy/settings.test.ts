@@ -9,6 +9,7 @@ import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.
 
 import {
     DISABLED_RULES,
+    MALFORMED_REASON_CASES,
     REMOVED_STYLELINT_SETTING,
     REMOVED_FRAMEWORK_CONTROLS,
     INVALID_ENVIRONMENT_SETTINGS,
@@ -29,6 +30,30 @@ test.each(['recommended', 'all'] as const)(
             });
             expect(policyProblems(source)).toStrictEqual([]);
         }
+    },
+);
+
+test.each(
+    MALFORMED_REASON_CASES.flatMap((entry) => [
+        { ...entry, scoped: false, requireReasons: false },
+        { ...entry, scoped: false, requireReasons: true },
+        { ...entry, scoped: true, requireReasons: false },
+        { ...entry, scoped: true, requireReasons: true },
+    ]),
+)(
+    'a $name wrapper reason is refused before normalization with scoped=$scoped and require_reasons=$requireReasons',
+    (entry) => {
+        const site = { build: { value: 'npm run build', reason: entry.reason } };
+        const document = {
+            configurations: ['site'],
+            require_reasons: entry.requireReasons,
+            ...(entry.scoped ? { scope: [{ path: 'app', site }] } : { site }),
+        };
+        const source = stringify(document);
+        const path = entry.scoped ? 'scope.0.site.build.reason' : 'site.build.reason';
+        const diagnostic = `gspot.toml: ${path}: Invalid input: expected string, received ${entry.received}`;
+        expect(policyProblems(source)).toStrictEqual([diagnostic]);
+        expect(() => readPolicyText(source)).toThrow(diagnostic);
     },
 );
 

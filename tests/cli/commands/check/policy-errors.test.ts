@@ -1,13 +1,13 @@
 // Policy errors name their gspot.toml key path and accept the suggested correction.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each([
     { scope: 'root', policy: buildPolicy(['bas']), where: 'configurations.0' },
@@ -93,4 +93,21 @@ test.each(['\n', '\r\n'])('configuration errors name the key path in text and JS
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'naming/policy', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+test('a malformed wrapper reason reports a policy error and apply preserves the authored policy', async () => {
+    await using sandbox = await testdir();
+    const source = buildPolicy(['site'], {
+        tables: 'require_reasons = true\n[site]\nbuild = { value = "npm run build", reason = 42 }\n',
+    });
+    await createFileTree(sandbox.path, { 'gspot.toml': source });
+    const diagnostic = 'gspot.toml: site.build.reason: Invalid input: expected string, received number';
+    const checked = await runGspot(sandbox.path, ['check', '--only', 'naming/policy', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(2);
+    expect(JSON.parse(checked.stdout)).toStrictEqual({ error: 'policy', message: diagnostic });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(2);
+    expect(applied.stdout + applied.stderr).toContain(diagnostic);
+    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
+    expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
 });

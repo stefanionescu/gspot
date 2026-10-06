@@ -38,3 +38,11 @@ export const REMOVED_FRAMEWORK_CONTROLS = [
 
 /** Native Stylelint options own at-rule exceptions. */
 export const REMOVED_STYLELINT_SETTING = '[tools.stylelint]\nignore_at_rules = ["container"]\n';
+
+/** Malformed wrapper reasons are document-shape errors, independent of exception enforcement. */
+export const MALFORMED_REASON_CASES = [
+    { name: 'numeric', reason: 42, received: 'number' },
+    { name: 'boolean', reason: false, received: 'boolean' },
+    { name: 'array', reason: [], received: 'array' },
+    { name: 'table', reason: {}, received: 'object' },
+] as const;

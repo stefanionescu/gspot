@@ -6,6 +6,39 @@ export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
+        name: 'a numeric wrapper reason in the root namespace',
+        input: {
+            configurations: ['site'],
+            require_reasons: false,
+            site: { build: { value: 'npm run build', reason: 42 } },
+        },
+        valid: false,
+        diagnostic: 'gspot.toml: site.build.reason: Invalid input: expected string, received number',
+    },
+    {
+        name: 'a scoped list wrapper with a boolean reason',
+        input: {
+            configurations: ['site'],
+            scope: [{ path: 'app', site: { sitemap_exclude: { value: ['404.html'], reason: false } } }],
+        },
+        valid: false,
+        diagnostic: 'gspot.toml: scope.0.site.sitemap_exclude.reason: Invalid input: expected string, received boolean',
+    },
+    {
+        name: 'a namespace wrapper with a substantive reason',
+        input: {
+            configurations: ['site'],
+            require_reasons: true,
+            site: { build: { value: 'npm run build', reason: 'The project owns its build command.' } },
+        },
+        valid: true,
+    },
+    {
+        name: 'a namespace value wrapper with no required reason',
+        input: { configurations: ['site'], site: { build: { value: 'npm run build' } } },
+        valid: true,
+    },
+    {
         name: 'native Stylelint zero-valued options at error severity',
         input: {
             configurations: ['css'],

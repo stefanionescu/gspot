@@ -9,7 +9,10 @@ import type { Reasoned, ReasonedSchema } from '#cli/types/policy/settings.ts';
  */
 export function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (
-        isRecord(value) && 'value' in value && Object.keys(value).every((key) => key === 'value' || key === 'reason')
+        isRecord(value) &&
+        'value' in value &&
+        Object.keys(value).every((key) => key === 'value' || key === 'reason') &&
+        (value['reason'] === undefined || typeof value['reason'] === 'string')
     );
 }
 

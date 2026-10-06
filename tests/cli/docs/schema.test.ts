@@ -9,6 +9,7 @@ import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/docs/exceptions.ts';
+import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/docs/policy-fields.ts';
 import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/docs/schema.ts';
 
 const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
@@ -30,7 +31,7 @@ describe('the JSON schema of gspot.toml', () => {
     });
 });
 
-test.each([...RUNTIME_SCHEMA_CASES, ...NAMING_SCHEMA_CASES, ...EXCEPTION_SCHEMA_CASES])(
+test.each([...RUNTIME_SCHEMA_CASES, ...POLICY_FIELD_SCHEMA_CASES, ...NAMING_SCHEMA_CASES, ...EXCEPTION_SCHEMA_CASES])(
     'runtime and published schemas agree on $name',
     ({ input, valid, diagnostic }) => {
         const document = { ...input };
