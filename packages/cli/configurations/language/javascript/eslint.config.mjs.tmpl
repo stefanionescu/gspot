@@ -158,16 +158,10 @@ const jsdocRules = {
     'jsdoc/require-param': 'error',
     'jsdoc/require-param-description': 'error',
     'jsdoc/require-param-name': 'error',
-    // TypeScript owns the types, so JSDoc carries none.
-    'jsdoc/require-param-type': 'off',
     'jsdoc/require-returns': 'error',
     'jsdoc/require-returns-description': 'error',
-    'jsdoc/require-returns-type': 'off',
     'jsdoc/check-param-names': 'error',
     'jsdoc/check-tag-names': 'error',
-    'jsdoc/check-types': 'off',
-    'jsdoc/no-undefined-types': 'off',
-    'jsdoc/valid-types': 'off',
     'jsdoc/no-types': 'off',
 };
 
@@ -250,6 +244,7 @@ export default [
 <% } %>
     <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root } }`) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
+    <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'jsdoc/require-param-type': 'error', 'jsdoc/require-returns-type': 'error', 'jsdoc/check-types': 'error', 'jsdoc/no-undefined-types': 'error', 'jsdoc/valid-types': 'error' } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
     <%~ eslintModule.block(data, settings === undefined ? '' : `settings: ${json(settings)}`) %>,
 <% } if (RESTRICTED.length > 0) { %>

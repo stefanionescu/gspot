@@ -1,6 +1,12 @@
 <% const presets = eslintPresets('typescript'); for (const [index, { parser, ...block }] of presets.strict.blocks.entries()) { %>
 <%~ eslintModule.block({ ...block, files: parser ? eslintFiles.typescriptSource : eslintFiles.typescript }, `...tseslint.configs.strictTypeChecked[${index}]`) %>,
 <% } const projects = ['tsconfig.json', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/tsconfig.json`)]; const rules = {
+            // TypeScript owns the types, so JSDoc carries none.
+            'jsdoc/require-param-type': 'off',
+            'jsdoc/require-returns-type': 'off',
+            'jsdoc/check-types': 'off',
+            'jsdoc/no-undefined-types': 'off',
+            'jsdoc/valid-types': 'off',
             'jsdoc/no-types': 'error',
 ...(!isAll ? {} : {            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
