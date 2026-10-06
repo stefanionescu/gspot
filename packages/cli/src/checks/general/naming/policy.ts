@@ -45,17 +45,17 @@ function buildLimitsFor(
         const parent = CATEGORY_PARENTS[category] ?? category;
         const prefix = `naming.${language}`;
 
-        const ceiling = (slot: string, defaultLimit: number | undefined): number => {
+        const ceiling = (slot: string): number => {
             const found = [`${prefix}.${parent}.${slot}`, `${prefix}.${slot}`]
                 .map((key) => settingValue(surface, policy, key, scope)?.value)
                 .find((value): value is number => typeof value === 'number');
-            return found ?? defaultLimit ?? 0;
+            return found ?? 0;
         };
         const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
         return {
             caseNames: Array.isArray(cases) ? (cases as string[]) : shippedCase(table, category, parent),
-            maxChars: ceiling('max_chars', table?.max_chars),
-            maxWords: ceiling('max_words', table?.max_words),
+            maxChars: ceiling('max_chars'),
+            maxWords: ceiling('max_words'),
         };
     };
 }

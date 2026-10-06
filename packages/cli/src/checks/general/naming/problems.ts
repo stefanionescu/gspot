@@ -1,4 +1,5 @@
 import type { Identifier } from '#cli/types/parsers/naming.ts';
+import { NUMBER_PART, NUMERIC_WORDS } from '#cli/config/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
 import { hasCase, splitParts, repeatedPart } from '#cli/parsers/naming/names.ts';
 import { DIGIT, CALLBACK_VERB, RESERVED_USES, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
@@ -48,8 +49,13 @@ function caseProblem(name: string, limits: CategoryLimits, isFileName: boolean):
     return isMatched ? undefined : { rule: 'case', message: `expected ${limits.caseNames.join(' or ')} case` };
 }
 
-function digitProblem(name: string, rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
-    if (!policy.isDigitsBanned || !DIGIT.test(name) || rules.some((rule) => rule.isDigitsAllowed)) return undefined;
+function digitProblem(parts: string[], rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
+    if (
+        !policy.isDigitsBanned ||
+        !parts.some((part) => DIGIT.test(part) && !NUMERIC_WORDS.has(part)) ||
+        rules.some((rule) => rule.isDigitsAllowed)
+    )
+        return undefined;
     return { rule: 'digits', message: 'a digit is not a word' };
 }
 
@@ -137,11 +143,11 @@ export function nameProblems(identifier: Identifier, context: NamingInputs): Nam
     const limits = ruleLimits(policy, identifier, rules);
     const name = stripped(identifier.name, rules);
     const parts = splitParts(name);
-    const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGIT.test(part));
+    const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !NUMBER_PART.test(part));
     const isFileName = identifier.category === 'files';
     const problems = [
         caseProblem(name, limits, isFileName),
-        digitProblem(name, rules, policy),
+        digitProblem(parts, rules, policy),
         lengthProblem(name, limits),
         wordsProblem(words, limits),
         repeatProblem(words, rules, policy),

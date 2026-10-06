@@ -29,14 +29,8 @@ test('external property allowances retain adjacent local signature findings thro
         report.checks.flatMap(({ findings }) =>
             findings.map(({ file, line, column, rule }) => ({ file, line, column, rule })),
         ),
-    ).toStrictEqual([
-        { file: 'source.ts', line: 3, column: 5, rule: 'case' },
-        { file: 'source.ts', line: 4, column: 5, rule: 'case' },
-    ]);
-    await Bun.write(
-        join(sandbox.path, 'source.ts'),
-        source.replace('user_name', 'userName').replace('USER_COUNT', 'userCount'),
-    );
+    ).toStrictEqual([{ file: 'source.ts', line: 3, column: 5, rule: 'case' }]);
+    await Bun.write(join(sandbox.path, 'source.ts'), source.replace('user_name', 'userName'));
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'source.ts')).text()).toContain('external_key: string');

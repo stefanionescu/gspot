@@ -9,7 +9,7 @@ languages = true
 [[check]]
 name = "identifiers"
 title = "Check identifier names"
-example = "With the JavaScript and naming configurations at level `all`, `export const shellCommand = 1;` reports the banned term `shell`. Rename the declaration to `command` and update its references. A legitimate required name needs an exact allowance with a reason."
+example = "With the JavaScript and naming configurations at level `all`, `export const userHelper = 1;` reports the banned term `helper`. Rename the declaration to `command` and update its references. A legitimate required name needs an exact allowance with a reason."
 level = "all"
 stage = "commit"
 alternatives_checked = ["eslint-plugin-unicorn prevent-abbreviations", "ls-lint", "ruff N", "swiftlint identifier_name"]
@@ -20,7 +20,7 @@ help = "Rename after what the thing is or does. Set naming.allowed to an entry w
 [[check]]
 name = "paths"
 title = "Check file and folder names"
-example = "With the JavaScript and naming configurations at level `all`, `shell.js` and `shell/port.js` report the banned term `shell`. Rename the file to `entry.js` and the folder to `app`, then update imports and other references."
+example = "With the JavaScript and naming configurations at level `all`, `utils/format.js` reports the banned term `utils`. Rename the folder to `app`, then update imports and other references."
 level = "all"
 stage = "commit"
 alternatives_checked = ["ls-lint", "eslint-plugin-unicorn filename-case"]
@@ -79,7 +79,7 @@ name = "naming.max_chars"
 type = "number"
 direction = "ceiling"
 default = 35
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+languages = ["typescript", "javascript", "python", "bash"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most characters one identifier may have."
 
@@ -88,7 +88,7 @@ name = "naming.max_words"
 type = "number"
 direction = "ceiling"
 default = 4
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+languages = ["typescript", "javascript", "python", "bash"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most words one identifier may have."
 
@@ -105,6 +105,8 @@ name = "naming.swift.max_chars"
 type = "number"
 direction = "ceiling"
 default = 40
+languages = ["swift"]
+categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most characters one Swift identifier may have."
 
 [[setting]]
@@ -112,6 +114,8 @@ name = "naming.swift.max_words"
 type = "number"
 direction = "ceiling"
 default = 5
+languages = ["swift"]
+categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most words one Swift identifier may have."
 
 [[setting]]
@@ -119,6 +123,8 @@ name = "naming.sql.max_chars"
 type = "number"
 direction = "ceiling"
 default = 55
+languages = ["sql"]
+categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most characters one SQL identifier may have."
 
 [[setting]]
@@ -126,4 +132,6 @@ name = "naming.sql.max_words"
 type = "number"
 direction = "ceiling"
 default = 7
+languages = ["sql"]
+categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
 summary = "The most words one SQL identifier may have."

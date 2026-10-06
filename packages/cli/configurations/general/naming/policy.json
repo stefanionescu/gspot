@@ -20,7 +20,6 @@
                 "details",
                 "info",
                 "object",
-                "taxonomy",
                 "tmp",
                 "temp"
             ]
@@ -99,17 +98,7 @@
         },
         "tests": {
             "removable": true,
-            "terms": [
-                "test case",
-                "testcase",
-                "under test",
-                "undertest",
-                "edge case",
-                "edge cases",
-                "snapshot",
-                "snapshots",
-                "actual"
-            ]
+            "terms": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases"]
         }
     },
     "reserved": [
@@ -141,8 +130,6 @@
     ],
     "languages": {
         "typescript": {
-            "max_chars": 35,
-            "max_words": 4,
             "acronyms": "word",
             "categories": {
                 "files": {
@@ -173,7 +160,7 @@
                     "case": ["camel", "upper-snake"]
                 },
                 "properties": {
-                    "case": ["camel"]
+                    "case": ["camel", "upper-snake"]
                 },
                 "routes": {
                     "case": ["kebab"]
@@ -190,8 +177,6 @@
             }
         },
         "javascript": {
-            "max_chars": 35,
-            "max_words": 4,
             "acronyms": "word",
             "categories": {
                 "files": {
@@ -230,8 +215,6 @@
             }
         },
         "python": {
-            "max_chars": 35,
-            "max_words": 4,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -267,8 +250,6 @@
             }
         },
         "swift": {
-            "max_chars": 40,
-            "max_words": 5,
             "acronyms": "initialism",
             "categories": {
                 "files": {
@@ -286,8 +267,6 @@
             }
         },
         "bash": {
-            "max_chars": 35,
-            "max_words": 4,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -308,8 +287,6 @@
             }
         },
         "sql": {
-            "max_chars": 55,
-            "max_words": 7,
             "acronyms": "lower",
             "categories": {
                 "files": {
@@ -538,13 +515,6 @@
             "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
             "categories": ["files"],
             "ignored_prefix": "^\\d{2}-"
-        },
-        {
-            "paths": ["**"],
-            "categories": ["directories", "files"],
-            "names": ["i18n", "I18N", "l10n", "L10N", "a11y", "A11Y"],
-            "reason": "Numeronyms are words.",
-            "skip": true
         },
         {
             "paths": ["**/ADVANCED.md"],

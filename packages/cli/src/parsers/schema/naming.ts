@@ -49,8 +49,6 @@ export const shippedNamingSchema = z.strictObject({
     languages: z.record(
         z.string(),
         z.strictObject({
-            max_chars: z.number(),
-            max_words: z.number(),
             acronyms: z.enum(['word', 'initialism', 'lower']),
             categories: z.record(z.string(), z.strictObject({ case: z.array(z.string()) })),
         }),

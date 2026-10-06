@@ -125,9 +125,9 @@ test('the words of the shipped tests group pass in a test file and fail elsewher
         compileTerms(words, { source: `${group} group`, group }),
     );
     const shipped = { ...policy, terms };
-    const actual = identifier('actualRoot', 'variables');
-    expect(nameProblems(actual, { policy: shipped, isReactFile: false, isTestFile: true })).toStrictEqual([]);
-    expect(nameProblems(actual, { policy: shipped, isReactFile: false, isTestFile: false })[0]?.rule).toBe(
+    const specimen = identifier('testcaseCount', 'variables');
+    expect(nameProblems(specimen, { policy: shipped, isReactFile: false, isTestFile: true })).toStrictEqual([]);
+    expect(nameProblems(specimen, { policy: shipped, isReactFile: false, isTestFile: false })[0]?.rule).toBe(
         'banned-term',
     );
 });

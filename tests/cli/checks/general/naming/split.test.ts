@@ -9,6 +9,10 @@ describe('splitParts', () => {
         expect(splitParts('edge-case.test')).toStrictEqual(['edge', 'case', 'test']);
         expect(splitParts('handlerV2')).toStrictEqual(['handler', 'v', '2']);
         expect(splitParts('user2')).toStrictEqual(['user', '2']);
+        expect(splitParts('decodeBase64')).toStrictEqual(['decode', 'base64']);
+        expect(splitParts('s3Client')).toStrictEqual(['s3', 'client']);
+        expect(splitParts('I18N')).toStrictEqual(['i18n']);
+        expect(splitParts('sha256_user')).toStrictEqual(['sha256', 'user']);
     });
 
     test('finds the first repeated part', () => {

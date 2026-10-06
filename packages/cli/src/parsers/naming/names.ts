@@ -7,6 +7,7 @@ import {
     SEPARATORS,
     UPPER_WORD,
     PASCAL_WORD,
+    NUMERIC_WORDS,
     MIGRATION_DIGITS,
 } from '#cli/config/parsers/naming.ts';
 
@@ -42,7 +43,7 @@ export function hasCase(name: string, caseName: string): boolean {
 }
 
 /**
- * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`.
+ * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
  * @param name the identifier
  * @returns the parts
  */
@@ -51,7 +52,9 @@ export function splitParts(name: string): string[] {
         .split(SEPARATORS)
         .filter((segment) => segment !== '')
         .flatMap((segment) => splitByCase(segment))
-        .flatMap((part) => part.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/u))
+        .flatMap((part) =>
+            NUMERIC_WORDS.has(part.toLowerCase()) ? [part] : part.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/u),
+        )
         .map((part) => part.toLowerCase())
         .filter((part) => part !== '');
 }

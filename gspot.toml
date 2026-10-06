@@ -174,10 +174,6 @@ reason = "ESLint's max-lines-per-function option and the unicorn rule descriptio
 word = "LICENCE"
 reason = "The British license filename is required by repository license regression cases."
 
-[[naming.allowed]]
-name = "snapshot"
-reason = "A snapshot is the copy of a revision that gspot checks; the tests name that product concept, not a test fixture."
-
 [[naming.fixed_keys]]
 file = "packages/cli/src/types/policy/settings.ts"
 names = ["imports_allowed", "tool_timeout_seconds", "run_with", "require_reasons"]
@@ -766,18 +762,6 @@ reason = "This audit ledger quotes the British spellings of proposed command nam
 paths = ["findings/implementation/**"]
 reason = "These audit ledgers reproduce the original findings and their verification records. Repeated record fields preserve the required audit evidence rather than executable behavior."
 
-[[naming.allowed]]
-name = "decodeUtf8"
-reason = "UTF-8 is the standardized text encoding decoded by this boundary function."
-
-[[naming.allowed]]
-name = "SHA1"
-reason = "SHA-1 is the Git object identifier algorithm represented by this parser test value."
-
-[[naming.allowed]]
-name = "SHA256"
-reason = "SHA-256 is the Git object identifier algorithm represented by this parser test value."
-
 
 [[naming.fixed_keys]]
 file = "tests/types/generation/configuration-files.ts"
@@ -809,10 +793,6 @@ reason = "This filename identifies the published ESLint rule no-helpers-beside-t
 [[naming.allowed]]
 name = "no-helpers-beside-tests.test"
 reason = "This test filename identifies its published ESLint rule no-helpers-beside-tests."
-
-[[naming.allowed]]
-name = "Snapshot"
-reason = "Snapshot records file bytes and mode, or a symbolic link target. It names filesystem state rather than a testing snapshot."
 
 [[structure.lone_files_allowed]]
 paths = [

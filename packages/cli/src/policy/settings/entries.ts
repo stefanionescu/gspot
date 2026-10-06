@@ -55,7 +55,7 @@ function groupedSpec(
 }
 
 function categorySpec(surface: KnownSettings, language: string, category: string, name: string): SpecMatch | undefined {
-    const base = surface.specs.get(`naming.${name}`);
+    const base = surface.specs.get(`naming.${language}.${name}`) ?? surface.specs.get(`naming.${name}`);
     if (!base) return undefined;
     const isCovered = (base.languages ?? []).includes(language) && (base.categories ?? []).includes(category);
     return isCovered ? { spec: base, language, category } : undefined;
@@ -221,7 +221,16 @@ export function settingValue(
         source: shipped ? `configuration ${shipped.configuration}` : 'unset',
         reason: undefined,
     };
-    const candidates = match.language === undefined ? [key] : [spec.name, key];
+    const candidates =
+        match.language === undefined
+            ? [key]
+            : [
+                  spec.name,
+                  ...(match.category === undefined
+                      ? []
+                      : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
+                  key,
+              ];
     let current = start;
     for (const layer of layers) current = applyLayer(spec, key, current, layer, candidates);
     const { value, source, reason } = current;
