@@ -858,9 +858,11 @@
         "finding": "| `kits/language/html/html-validate-templates.json.tmpl:10`, `kits/language/html/html-validate-built.json.tmpl:5` | Both configs turn off `no-autoplay` with no reason. It is an accessibility rule in `html-validate:recommended` (audio and video that start playing on their own). The check's summary promises accessibility checks. `wcag/h37` and `element-required-attributes` repeat the preset. | Keep `no-autoplay` on. Delete the two repeated lines. |",
         "owner": "`kits/language/html/html-validate-templates.json.tmpl:10`, `kits/language/html/html-validate-built.json.tmpl:5`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Batch 63: restore the pinned recommended no-autoplay rule for audio and video at both coverage levels in source templates and built pages. Remove the three exact redundant h37/required-attributes declarations; eighteen complete native configurations differ only in the intended autoplay restoration. Four new public-CLI native regressions report both media defects and accept explicit corrections, while every preceding sibling-scope assertion is retained. Evidence: findings/progress.json, Native HTML media accessibility and preset ownership."
+        ]
     },
     {
         "id": "slices/kits-web-languages/046",

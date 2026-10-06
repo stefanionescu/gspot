@@ -56,9 +56,19 @@ for (const repository of SITE_HTML_REPOSITORIES)
             ]);
             expect(existsSync(join(sandbox.path, '.gspot/config/html-validate-built.json'))).toBe(false);
             for (const [scope, severity] of SITE_HTML_RULE_SCOPES) {
-                const document = JSON.parse(
-                    readFileSync(join(sandbox.path, `.gspot/config/${scope}/html-validate-built.json`), 'utf8'),
-                ) as HtmlValidationConfiguration;
+                const native = await runTestCommand(
+                    [
+                        'node',
+                        '.gspot/node_modules/html-validate/bin/html-validate.mjs',
+                        '--config',
+                        `.gspot/config/${scope}/html-validate-built.json`,
+                        '--print-config',
+                        `${scope}/page.html`,
+                    ],
+                    { cwd: sandbox.path },
+                );
+                expect(native.code, native.stdout + native.stderr).toBe(0);
+                const document = JSON.parse(native.stdout) as HtmlValidationConfiguration;
                 expect(document.rules['wcag/h37']).toBe(severity);
             }
             writeFileSync(join(sandbox.path, 'other/page.html'), SITE_HTML_CORRECTED);
