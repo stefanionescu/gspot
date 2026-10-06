@@ -88,7 +88,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            "Shared filesystem evidence: native-posix-path-boundaries implements canonicalization and explicit existing-path runtime prerequisites in the root read owner for its two real callers. Preserve confinement and all other read/mutation calculations. Native and CLI regressions, source evidence and remaining contracts are recorded in findings/progress.json. This addresses only one shared read boundary; the broader file/Git/runner orchestration finding remains open."
+        ],
         "kind": "numbered finding"
     },
     {

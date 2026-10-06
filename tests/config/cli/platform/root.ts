@@ -18,3 +18,7 @@ export const LINK_TARGET_REFUSALS = [
     { target: 'target\u0000outside', refusal: 'Unsafe lifecycle link target: tool' },
     { target: String.raw`C:\outside`, refusal: 'Unsafe lifecycle link target: tool' },
 ];
+
+/** These legal POSIX names expose the pinned Bun runtime's verified macOS canonicalization prerequisite. */
+export const POSIX_CANONICAL_ROOT = String.raw`project\files`;
+export const POSIX_CANONICAL_SOURCE = String.raw`source\name`;

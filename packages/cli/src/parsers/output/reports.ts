@@ -1,9 +1,9 @@
 // Findings from validated structured reports produced by named tools.
-import { resolve, relative } from 'node:path';
 import { codePoints } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
+import { resolve, relative, isAbsolute } from 'node:path';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/execution/runtime.ts';
 import type { TypoEntry, EslintReport, EslintDiagnostic, MarkdownlintEntry } from '#cli/types/parsers/output.ts';
@@ -124,9 +124,10 @@ export function eslintFindings(check: string, text: string, help: string): Findi
     } catch (error) {
         throw new GspotError('output', 'ESLint returned invalid structured findings.', { cause: error });
     }
-    return files.flatMap((file) =>
-        file.messages.map((entry) => eslintFinding(check, toolPath(file.filePath), entry, help)),
-    );
+    return files.flatMap((file) => {
+        const path = isAbsolute(file.filePath) ? toPosix(file.filePath) : toolPath(file.filePath);
+        return file.messages.map((entry) => eslintFinding(check, path, entry, help));
+    });
 }
 
 /**

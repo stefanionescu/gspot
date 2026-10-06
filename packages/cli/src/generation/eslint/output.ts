@@ -179,5 +179,5 @@ export function eslintSourcePattern(...languages: string[]): string {
 export function eslintNodePatterns(paths: string[], scope: string): string[] {
     return paths
         .filter((path) => isInScope(path, scope))
-        .map((path) => path.replaceAll(/[?*[\]{}()!]/gu, String.raw`\$&`));
+        .map((path) => path.replaceAll(/[\\?*[\]{}()!]/gu, String.raw`\$&`));
 }

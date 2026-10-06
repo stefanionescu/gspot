@@ -1,12 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
-import { isPosix } from '#tests/config/harness/platforms.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 import { fileMode, portableSegments } from '#cli/platform/root/rules.ts';
-import { UNSAFE_DESTINATIONS, LINK_TARGET_REFUSALS } from '#tests/config/cli/platform/root.ts';
+
+import {
+    UNSAFE_DESTINATIONS,
+    LINK_TARGET_REFUSALS,
+    POSIX_CANONICAL_ROOT,
+    POSIX_CANONICAL_SOURCE,
+} from '#tests/config/cli/platform/root.ts';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
@@ -240,4 +247,58 @@ test('empty-directory removal bounds parents and preserves nonempty directories'
     } finally {
         files.close();
     }
+});
+
+test.skipIf(!isMacos)(
+    'an existing macOS root reports an unmet runtime prerequisite instead of a missing policy',
+    async () => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, POSIX_CANONICAL_ROOT);
+        await createFileTree(root, { 'gspot.toml': 'configurations = []\n' });
+        const failure: unknown = await Promise.resolve()
+            .then(() => openRoot(root, 'native'))
+            .catch((error: unknown) => error);
+        expect(failure).toMatchObject({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: `The runtime cannot resolve this existing filesystem path: ${root}. Check runtime support for this path.`,
+            cause: { code: 'ENOENT' },
+        });
+        const diagnostic = await runGspot(root, ['list', '--json']);
+        expect(diagnostic.code, diagnostic.stdout + diagnostic.stderr).toBe(2);
+        const report: unknown = JSON.parse(diagnostic.stdout);
+        expect(report).toStrictEqual({
+            error: 'filesystem',
+            message: `The runtime cannot resolve this existing filesystem path: ${root}. Check runtime support for this path.`,
+        });
+    },
+);
+
+test.skipIf(!isMacos)(
+    'an existing macOS source reports the native runtime prerequisite without being treated as absent',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { [POSIX_CANONICAL_SOURCE]: 'present\n' });
+        using root = openRoot(sandbox.path, 'native');
+        const path = join(sandbox.path, POSIX_CANONICAL_SOURCE);
+        const failure: unknown = await Promise.resolve()
+            .then(() => root.realPath(POSIX_CANONICAL_SOURCE))
+            .catch((error: unknown) => error);
+        expect(failure).toMatchObject({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: `The runtime cannot resolve this existing filesystem path: ${path}. Check runtime support for this path.`,
+            cause: { code: 'ENOENT' },
+        });
+    },
+);
+
+test('a genuinely absent root retains its filesystem error rather than a runtime prerequisite', async () => {
+    await using sandbox = await testdir();
+    const failure: unknown = await Promise.resolve()
+        .then(() => openRoot(join(sandbox.path, 'missing')))
+        .catch((error: unknown) => error);
+    expect(failure).toMatchObject({
+        code: 'ENOENT',
+    });
 });

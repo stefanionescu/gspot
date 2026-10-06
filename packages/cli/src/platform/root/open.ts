@@ -6,23 +6,20 @@ import { join, posix, relative } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import { writeLink, acquireLock, replaceEntry } from '#cli/platform/root/writes.ts';
 import type { Root, Bounds, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
-import { boundsOf, readEntry, checkedPath, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
+import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, renameSync, unlinkSync, readdirSync } from 'node:fs';
 
 import {
-    rmSync,
-    chmodSync,
-    lstatSync,
-    mkdirSync,
-    rmdirSync,
-    renameSync,
-    unlinkSync,
-    readdirSync,
-    realpathSync,
-} from 'node:fs';
+    boundsOf,
+    readEntry,
+    checkedPath,
+    preparedPath,
+    validateRead,
+    canonicalPath,
+} from '#cli/platform/root/reads.ts';
 
 // The real path of an entry, refusing a resolved destination outside the root.
 function sourceOf(bounds: Bounds, path: string): string {
-    const target = realpathSync(join(bounds.canonical, ...bounds.partsOf(path)));
+    const target = canonicalPath(join(bounds.canonical, ...bounds.partsOf(path)));
     const local = relative(bounds.canonical, target);
     if (!isInside(local)) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
@@ -107,7 +104,7 @@ function releaseLocks(bounds: Bounds): void {
  * @returns the root reader and writer, which the caller disposes, as `using` does.
  */
 export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Root {
-    const bounds = boundsOf(realpathSync(root), pathFormat);
+    const bounds = boundsOf(canonicalPath(root), pathFormat);
     return {
         rmdir: (path) => {
             rmdirSync(checkedPath(bounds, path));

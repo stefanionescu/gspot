@@ -57,13 +57,14 @@ function_parameters = 2
 function_parameters = 5
 `;
 
-export const NODE_SCRIPT_LINT_SOURCE = String.raw`import { ESLint } from 'eslint';
+export const NODE_SCRIPT_LINT_SOURCE = `import { ESLint } from 'eslint';
+import { sep } from 'node:path';
 const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
 const [paths, controls] = JSON.parse(process.argv[1]);
 const results = await eslint.lintFiles(paths);
 const configurations = await Promise.all(controls.map(async (file) => ({ file, matched: await eslint.calculateConfigForFile(file) !== undefined })));
 process.stdout.write(JSON.stringify({ results: results.map(({ filePath, messages }) => ({
-    file: filePath.slice(process.cwd().length + 1).replaceAll('\\', '/'),
+    file: filePath.slice(process.cwd().length + 1).split(sep).join('/'),
     findings: messages.filter(({ ruleId }) => ruleId === null || ['no-unused-vars', '@typescript-eslint/no-unused-vars',
         'sonarjs/no-unused-vars', 'n/no-process-exit', 'unicorn/no-process-exit', 'no-console'].includes(ruleId))
         .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
@@ -71,11 +72,12 @@ process.stdout.write(JSON.stringify({ results: results.map(({ filePath, messages
 })), configurations }));
 `;
 
-export const NODE_SCRIPT_CONTRACT_SOURCE = String.raw`import { ESLint } from 'eslint';
+export const NODE_SCRIPT_CONTRACT_SOURCE = `import { ESLint } from 'eslint';
+import { sep } from 'node:path';
 const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
 const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
 process.stdout.write(JSON.stringify(results.map(({ filePath, messages }) => ({
-    file: filePath.slice(process.cwd().length + 1).replaceAll('\\', '/'),
+    file: filePath.slice(process.cwd().length + 1).split(sep).join('/'),
     findings: messages.filter(({ ruleId }) => ruleId === null || ['no-undef', 'max-params', 'gspot/no-trivial-functions',
         'n/no-unsupported-features/es-builtins', 'gspot/import-extensions'].includes(ruleId))
         .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
@@ -142,3 +144,21 @@ export const NODE_SCRIPT_CONTRACTS = [
         strict: [],
     },
 ];
+
+/** Raw native reports retain every diagnostic and the host's filename spelling. */
+export const NODE_SCRIPT_REPORT_SOURCE = `import { createRequire } from 'node:module';
+const { ESLint } = createRequire(process.argv[3])('eslint');
+const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: JSON.parse(process.argv[2]) });
+const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
+process.stdout.write(JSON.stringify(results));
+`;
+
+/** Native configuration applicability exposes unintended neighboring filename matches. */
+export const NODE_SCRIPT_PATH_COVERAGE = `import { createRequire } from 'node:module';
+const { ESLint } = createRequire(process.argv[3])('eslint');
+const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: JSON.parse(process.argv[2]) });
+process.stdout.write(JSON.stringify(await eslint.calculateConfigForFile(process.argv[1]) !== undefined));
+`;
+
+/** POSIX report roots exercise filename normalization with and without literal backslashes. */
+export const NODE_SCRIPT_NATIVE_ROOTS = ['project', String.raw`project\files`];

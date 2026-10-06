@@ -166,12 +166,13 @@ function relativeTo(root: string, file: string): string {
  */
 export function parseOutput(spec: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
+    const nativeRoot = isAbsolute(root) ? toPosix(root) : toolPath(root);
     const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
         fixable: spec.fix !== undefined && finding.fixable,
-        file: relativeTo(toolPath(root), toPosix(finding.file)),
+        file: relativeTo(nativeRoot, toPosix(finding.file)),
     }));
 }

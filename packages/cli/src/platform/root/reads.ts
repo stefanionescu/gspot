@@ -1,9 +1,11 @@
 // Resolving and reading paths inside one root: every parent must be a real directory and every file private.
+import type { Stats } from 'node:fs';
 import { join, posix } from 'node:path';
+import { GspotError } from '#cli/platform/errors.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
-import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
 import type { Bounds, Proposed, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
+import { lstatSync, mkdirSync, existsSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
 import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
 
 // A missing parent is created; a competing creator may finish before this one does.
@@ -143,4 +145,24 @@ export function validateRead(bounds: Bounds, path: string, value: Snapshot, prop
         throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
     assertLinkDestination(bounds, path, destination, proposed);
     return target;
+}
+
+/**
+ * Resolve a native path and distinguish an unavailable runtime operation from a missing file.
+ * @param path the native filesystem path to resolve
+ * @returns its canonical native spelling
+ * @throws when the runtime cannot resolve an existing path, or the filesystem operation fails
+ */
+export function canonicalPath(path: string): string {
+    try {
+        return realpathSync(path);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && existsSync(path))
+            throw new GspotError(
+                'filesystem',
+                `The runtime cannot resolve this existing filesystem path: ${path}. Check runtime support for this path.`,
+                { cause: error },
+            );
+        throw error;
+    }
 }
