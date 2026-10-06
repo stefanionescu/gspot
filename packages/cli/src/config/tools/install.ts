@@ -15,6 +15,7 @@ export const SETUP = 'Run: gspot apply, then gspot install';
 export const VERSION_TIMEOUT_MS = 15_000;
 
 export const HOST_HINTS: Record<string, string> = {
+    tsc: 'Run: npm install --save-dev typescript',
     'drizzle-kit': 'Run: npm install --save-dev drizzle-kit',
     wrangler: 'Run: npm install --save-dev wrangler',
     vitest: 'Run: npm install --save-dev vitest',

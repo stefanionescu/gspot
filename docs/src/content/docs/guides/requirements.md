@@ -21,6 +21,8 @@ When ESLint checks apply, install Node.js even if you run gspot from a standalon
 
 mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.toml`. Initialization proposes mise when it is available. An explicit runner choice takes precedence. The generated mise configuration requires mise 2026.8.8 or newer. It acquires the standalone CLI archive through the GitHub backend.
 
+JavaScript and TypeScript checks use the project's TypeScript compiler when it is installed. If the project has none, gspot prefers its pinned private compiler over a global compiler. Run `gspot install` to install that compiler. An interrupted private installation reports an error; it does not block an available project compiler.
+
 ## Platform limits
 
 SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage require macOS with Xcode selected by `xcode-select`. Container checks can require a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) states its platforms and external requirements.

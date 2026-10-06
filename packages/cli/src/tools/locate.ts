@@ -104,6 +104,18 @@ export function installedPackage(files: Root | undefined, root: string, manifest
 }
 
 /**
+ * Executables owned by the repository or its selected private installation, without PATH tools.
+ * @param root the repository root
+ * @param name the executable name
+ * @param options the search folders and installation ownership
+ * @returns repository candidates in preference order
+ */
+export function locateRepositoryCandidates(root: string, name: string, options: LocateOptions): string[] {
+    if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
+    return repositoryCandidates(root, searchDirectories(root, options), executableNames(name));
+}
+
+/**
  * Every executable of the name, in the order gspot prefers them.
  * @param root the repository root.
  * @param name the executable name.
@@ -111,12 +123,9 @@ export function installedPackage(files: Root | undefined, root: string, manifest
  * @returns the paths that exist.
  */
 export function locateCandidates(root: string, name: string, options: LocateOptions): string[] {
-    // An absolute executable names exactly one file.
-    if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
-    const names = executableNames(name);
-    const found = repositoryCandidates(root, searchDirectories(root, options), names);
-    if (options.privateKind !== undefined) return found;
-    return [...found, ...hostCandidates(options.installedRoot ?? root, name, names)];
+    const found = locateRepositoryCandidates(root, name, options);
+    if (isAbsolute(name) || options.privateKind !== undefined) return found;
+    return [...found, ...hostCandidates(options.installedRoot ?? root, name, executableNames(name))];
 }
 
 /**

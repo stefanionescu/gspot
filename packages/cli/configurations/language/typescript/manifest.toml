@@ -14,12 +14,6 @@ extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
 [[tool]]
-name = "tsc"
-suppression = {marker = "@ts-(?:ignore|expect-error)\\b", reason = "@ts-(?:ignore|expect-error):?\\s+(?<reason>\\S.*)"}
-system = true
-version_command = ["--version"]
-
-[[tool]]
 name = "typescript-eslint"
 eslint = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 rule_url = "https://typescript-eslint.io/rules/{rule}"

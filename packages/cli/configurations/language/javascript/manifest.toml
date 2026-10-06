@@ -199,6 +199,14 @@ file = "knip.config.ts"
 
 
 [[tool]]
+name = "tsc"
+suppression = {marker = "@ts-(?:ignore|expect-error|nocheck)\\b", reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)"}
+system = true
+version = "5.9.3"
+npm = "typescript"
+version_command = ["--version"]
+
+[[tool]]
 name = "typescript"
 kind = "library"
 version = "5.9.3"

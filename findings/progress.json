@@ -2966,10 +2966,29 @@
                 "/tmp/gspot-required-rules-baseline-proof.json restores the five production owners to 451889e797aadd45b82fc3153dc3751db9f3b545 and restores every current byte afterward. All four new native regressions fail against the previous implementation (0 passed, 4 failed, 9.31 seconds), proving the fixtures detect the omitted coverage.",
                 "/tmp/gspot-required-rules-cli.log passes 160 affected CLI and generation cases with 935 assertions across 31 files (29.52 seconds). All four TypeScript targets pass in types.log (10.92 seconds). Affected ESLint and Prettier pass. Both canonical applies leave all 139 outputs unchanged, with no writes, updates, removals or conflicts. CLI/plugin limits remain 60 seconds and tools/packages remain 900 seconds, with children bounded by their remaining test budget.",
                 "/tmp/gspot-required-rules-tools.log passes all 18 native rule-audit, Node-script and JavaScript compiler cases with 117 assertions across three files (41.69 seconds). Native startup and affected Taplo gates succeed; no product checks are weakened or bypassed.",
-                "Actual staged verification: /tmp/gspot-required-rules-staged.json exits 0 with 67 passed checks, nine explicit input/platform/ignore skips, zero failures or errors and duration 42694 milliseconds. The first gate required literal-only fixture data; fixture-before.json and fixture-after.json prove every exported fixture value is identical after replacing its construction with literals. All 2939 original IDs and source fields and the starting 990-record map remain intact; 818 records remain open."
+                "Actual staged verification: /tmp/gspot-required-rules-staged.json exits 0 with 67 passed checks, nine explicit input/platform/ignore skips, zero failures or errors and duration 42694 milliseconds. The first gate required literal-only fixture data; fixture-before.json and fixture-after.json prove every exported fixture value is identical after replacing its construction with literals. All 2939 original IDs and source fields and the starting 990-record map remain intact; 818 records remain open.",
+                "Batch 52 delivery: hook-enabled commit 50d25704ea3fb5f4b1057c38150b297592ff1600 and normal push to origin/main succeed. Commit hooks pass 44 checks with two explicit skips and zero findings (9.4 seconds), plus commit-message validation (0.5 seconds). Push hooks pass 67 checks with nine explicit skips and zero findings (46.6 seconds). /tmp/gspot-required-rules-commit.log and push.log retain evidence. The tree is clean and HEAD, origin/main and the remote main reference match before this compiler ownership batch."
             ],
             "remaining": [
                 "Finish compiler and suppression ownership, remaining language/framework/platform/policy/test/repository/installation findings, final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Project compiler ownership and JavaScript suppression auditing",
+            "rows": ["slices/kits-web-languages/003", "slices/kits-web-languages/004"],
+            "outcome": "Two original findings implemented; 816 records remain open.",
+            "evidence": [
+                "Move the tsc declaration into its JavaScript owner, inherited by TypeScript. Declare the existing private typescript 5.9.3 package as its owned installation while preserving system/project preference and version inspection. Keep the separately needed TypeScript library pin for native ESLint peers; both declarations resolve to the same package and version, so no second package, extra pin upgrade or new installation is introduced. HOST_HINTS.tsc names npm install --save-dev typescript; managed compiler acquisition names gspot install.",
+                "Share repository-only executable discovery between the normal resolver and project compiler inspection. Prefer scope/root project compilers, including the original installed scope/root for snapshots. If absent, inspect the declared private compiler before global PATH tools. Preserve project-native version/failure handling and private installation boundaries. Report pending npm installations explicitly when the private compiler is needed; keep available project compilers usable. Include pending state in the inspection cache key, so a cached compiler cannot hide an interrupted installation. Unrelated Python work does not block it. Preserve the ordinary native tool, mise, library and private Python resolver contracts.",
+                "Extend the existing tsc suppression marker and reason syntax to ignore, expect-error and nocheck for both JavaScript and TypeScript source. Keep shared source ownership, real-comment parsing, scope selection, explicit reason policy and accepted reasons. Reasoned whole-file directives remain permitted by .gspot/rules/general/engineering/agent/SUPPRESSIONS.md, which states that a file-wide suppression needs a reason true of the whole file. No blanket suppression ban, optional check bundle, new developer-facing enablement flag or native syntax selection mechanism is added.",
+                "Eight new native cases use real TypeScript 5.9.3 and the actual project compiler from already installed packages. Copy only the compiler packages needed by each isolated repository, without installations or registry startup. Both levels report the exact JavaScript type error through the public CLI, record the private executable path and clear after source correction. Project/snapshot tests preserve project preference, private pending diagnostics and cached installation transitions. Native directive cases prove actual compiler suppression, exact detected comment inventory and positions, quoted marker exclusion, missing-reason diagnostics, accepted reasons retaining their native effect, unchanged source bytes and correction. POSIX executable-link fixtures record explicit Windows skips; source/directive native cases remain cross-platform.",
+                "Meaningful regression proof: compiler-ownership-baseline-proof.json restores all six production owners to 50d25704ea3fb5f4b1057c38150b297592ff1600 and restores every current byte afterward. The eight new native cases fail against the previous implementation (0 passed, 8 failed, 1.85 seconds). Existing CLI and native compiler/suppression cases and every original assertion remain unchanged.",
+                "Verification: /tmp/gspot-compiler-ownership-cli.log passes 237 affected CLI tool, installation, selection, doctor, compiler and suppression cases with 667 assertions across 25 files (14.49 seconds). tools-verified.log passes 22 native compiler, source-layout/build-boundary, JavaScript and suppression cases with 139 assertions across four files (78.64 seconds). All four TypeScript targets pass in types-final.log (10.87 seconds). Affected ESLint, Prettier and git diff --check pass. Documentation builds 314 pages and validates all local links and fragments. Both canonical applies leave all 139 outputs unchanged with zero writes, updates, removals or conflicts. Preserve CLI/plugin 60-second and tools/packages 900-second limits and remaining child budgets. Manual language/framework overrides remain available; recommended/all remain the only coverage choices and experimental rules remain disabled.",
+                "Final strengthened native fixture: compiler-ownership-native-final.log passes all eight cases with 46 assertions (5.97 seconds). The project/snapshot fixture contains both the actual project compiler and the real private 5.9.3 package, proving precedence with both installations present. compiler-ownership-baseline-final-proof.json repeats the regression proof over the exact final fixture and restores every current production byte: zero passes and eight failures (1.89 seconds).",
+                "Actual staged verification: /tmp/gspot-compiler-ownership-staged.json exits 0 with 91 passed checks, ten explicit input/platform/ignore skips, zero failures or errors and duration 58896 milliseconds. Native Taplo, Semgrep and OSV startup and applicable gates succeed without bypasses or weakened checks. All 2939 original IDs, source quotations and owners and the 990-record starting map remain intact; 816 original records remain open."
+            ],
+            "remaining": [
+                "Complete remaining compiler source-layout/module-resolution/detection contracts, all remaining language/framework/platform/policy/test/repository/installation findings, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6790,6 +6809,21 @@
                     "packages/cli/src/types/checks/language/javascript.ts",
                     "tests/config/tools/checks/javascript-rules.ts",
                     "tests/tools/checks/javascript-rules.test.ts"
+                ]
+            },
+            {
+                "id": "project-compiler-and-suppression-ownership",
+                "records": ["slices/kits-web-languages/003", "slices/kits-web-languages/004"],
+                "owners": [
+                    "docs/src/content/docs/guides/requirements.md",
+                    "packages/cli/configurations/language/javascript/manifest.toml",
+                    "packages/cli/configurations/language/typescript/manifest.toml",
+                    "packages/cli/src/config/tools/install.ts",
+                    "packages/cli/src/tools/inspect.ts",
+                    "packages/cli/src/tools/installation.ts",
+                    "packages/cli/src/tools/locate.ts",
+                    "tests/config/tools/checks/compiler-ownership.ts",
+                    "tests/tools/checks/compiler-ownership.test.ts"
                 ]
             }
         ]

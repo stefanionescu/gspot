@@ -1,7 +1,7 @@
 // Locate declared tools, inspect their versions, and report an actionable installation command.
 
 import semver from 'semver';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { misePin } from '#cli/tools/mise.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -12,8 +12,14 @@ import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { miseVersion, packageVersion, installedPackage, locateCandidates } from '#cli/tools/locate.ts';
 
+import {
+    miseVersion,
+    packageVersion,
+    installedPackage,
+    locateCandidates,
+    locateRepositoryCandidates,
+} from '#cli/tools/locate.ts';
 import type {
     Inspected,
     ToolSearch,
@@ -29,7 +35,7 @@ import type {
  * @returns the hint
  */
 function installHint(tool: ToolPin, runner?: string): string {
-    if (tool.system !== true && (runner === 'mise' || privateToolInstallation(tool, runner) !== undefined))
+    if (privateToolInstallation(tool, runner) !== undefined || (tool.system !== true && runner === 'mise'))
         return 'Run: gspot install';
     const [command] = OPERATING_SYSTEMS.filter(({ node }) => node === process.platform).flatMap((system) =>
         system.installers.flatMap(({ installer, command }) => {
@@ -112,21 +118,63 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
+// Project compilers keep their native ownership; a declared private package supplies the compiler when absent.
+function inspectProjectExecutable(
+    context: ToolSearch,
+    cwd: string,
+    tool: ToolPin,
+    runner?: string,
+): ToolInspection | undefined {
+    if (tool.system !== true) return undefined;
+    const installation = privateToolInstallation(tool, runner);
+    if (installation === undefined) return undefined;
+    const { root } = context;
+    const hint = installHint(tool, runner);
+    const [project] = locateRepositoryCandidates(root, tool.name, {
+        searchFolders: [cwd, root].flatMap((folder) =>
+            context.installedRoot === undefined
+                ? [folder]
+                : [folder, join(context.installedRoot, relative(root, folder))],
+        ),
+        installedRoot: context.installedRoot,
+    });
+    if (project !== undefined) return executableInspection({ root, cwd, tool, path: project, hint });
+    if (isInstallationPending(context, tool, runner)) return pendingInspection(tool);
+    const [privatePath] = locateCandidates(root, tool.name, {
+        searchFolders: [cwd, root],
+        privateKind: installation.kind,
+        installedRoot: context.installedRoot,
+    });
+    if (privatePath !== undefined)
+        return pinnedInspection({ root, cwd, tool, path: privatePath, hint }, tool.version ?? installation.version);
+    return undefined;
+}
+
+// Both project lookup and ordinary executable discovery apply the same host/pin classification.
+function executableInspection(inspected: Inspected): ToolInspection {
+    const { tool } = inspected;
+    return tool.system === true || tool.version === undefined
+        ? hostInspection(inspected)
+        : pinnedInspection(inspected, tool.version);
+}
+
 function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
+    const project = inspectProjectExecutable(context, cwd, tool, runner);
+    if (project !== undefined) return project;
     const { root } = context;
     const isExternal = tool.system === true || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const searchFolders = isExternal ? [cwd, root] : [join(root, DOT_GSPOT), cwd, root];
-    const kind = privateToolInstallation(tool, runner)?.kind;
+    const installation = privateToolInstallation(tool, runner);
+    const kind = installation?.kind;
+    const hint = installHint(tool, runner);
     const [path] = locateCandidates(root, tool.name, {
         searchFolders,
-        privateKind: kind,
+        privateKind: tool.system === true ? undefined : kind,
         installedRoot: context.installedRoot,
     });
-    const hint = installHint(tool, runner);
     if (path === undefined) return missingInspection(tool, hint);
     const inspected: Inspected = { root, cwd, tool, path, hint };
-    if (tool.system === true || tool.version === undefined) return hostInspection(inspected);
-    return pinnedInspection(inspected, tool.version);
+    return executableInspection(inspected);
 }
 
 // Only the selected private installation can make its tool unavailable while installation is pending.
@@ -138,6 +186,16 @@ function isInstallationPending(
     const installation = privateToolInstallation(tool, runner);
     const pending = search.getPendingInstallations?.(search.installedRoot ?? search.root);
     return installation !== undefined && pending?.includes(installation.kind) === true;
+}
+
+// Incomplete private installations block their tools, including a compiler selected after project lookup.
+function pendingInspection(tool: ToolPin): ToolInspection {
+    return {
+        name: tool.name,
+        state: 'error',
+        hint: 'Run: gspot install',
+        note: 'Tool installation is incomplete. Run: gspot install',
+    };
 }
 
 // The accepted floor applies equally to host tools and pinned private tools.
@@ -180,15 +238,10 @@ export function toolVersionState(found: string, want: string, floor: string): To
 export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
     const runner = context.policyFiles?.policy.run_with;
-    if (isInstallationPending(context, tool, runner))
-        return {
-            name: tool.name,
-            state: 'error',
-            hint: 'Run: gspot install',
-            note: 'Tool installation is incomplete. Run: gspot install',
-        };
+    const pending = isInstallationPending(context, tool, runner);
+    if (tool.system !== true && pending) return pendingInspection(tool);
     const cwd = context.cwd ?? root;
-    const key = JSON.stringify([root, cwd, tool, runner]);
+    const key = JSON.stringify([root, cwd, tool, runner, pending]);
     const cached = inspections.get(key);
     if (cached) return cached;
     const inspection =
