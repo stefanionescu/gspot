@@ -2948,10 +2948,28 @@
                 "Explicit prerequisite reporting: the existing root/reads.ts owner now performs canonicalPath for both root initialization and source resolution. When native canonicalization returns ENOENT for a path that exists, report GspotError filesystem with an actionable runtime-support message and preserve its cause. Genuinely absent paths and other filesystem errors retain their original failures. Preserve every confinement, link, mutation, permission and lock calculation. Add the filesystem error to its module-level ErrorCode owner and document how to address it in the requirements guide. The new verified macOS cases assert the root/source prerequisites, original cause and exact public CLI JSON error with exit 2. All other platforms retain their existing native filesystem cases; the measured Bun defect is not asserted on unverified platforms.",
                 "Meaningful regressions against 5b6061087c90297efe6b866ba119779448e69602: native-path-baseline-proof.json restores each of the three native generator/report/root-normalization owners separately and restores every current byte afterward. The glob baseline fails both new cases, the ESLint path baseline fails both, and the root-normalization baseline passes the ordinary-root case while failing the literal-root case. native-path-root-baseline-proof.json restores the three shared filesystem/error owners together; both new runtime-prerequisite cases fail and the genuine-missing-root control passes. All ten original root test bodies and the four original Node test bodies remain byte-identical.",
                 "Verification: /tmp/gspot-native-path-tools-complete.log passes all 16 native Node/JavaScript/scoped-engine cases with 121 assertions across three files (31.86 seconds). /tmp/gspot-native-path-cli-verified.log passes 252 affected cases with one explicit platform skip and 1346 assertions across 40 files (32.43 seconds). All four TypeScript targets pass in types-complete.log (10.73 seconds). Affected ESLint, Prettier and git diff --check pass. Documentation builds 314 pages and validates every local link and fragment. Both canonical apply runs report all 139 outputs unchanged with zero writes, updates, removals or conflicts. CLI/plugin limits remain 60 seconds and tools/packages remain 900 seconds, with children bounded by the remaining test budget. Manual language/framework overrides remain available, recommended/all remain the only coverage choices, and experimental rules remain disabled.",
-                "Actual staged verification: /tmp/gspot-native-path-staged.json exits 0 with 89 passed checks, 10 explicit input/platform/ignore skips, zero failures or errors and duration 60336 milliseconds. Native startup and applicable gates run without bypasses or weakened product checks. All original 2939 IDs, source quotations, owners and the 990-record starting map remain intact; 819 original records remain open."
+                "Actual staged verification: /tmp/gspot-native-path-staged.json exits 0 with 89 passed checks, 10 explicit input/platform/ignore skips, zero failures or errors and duration 60336 milliseconds. Native startup and applicable gates run without bypasses or weakened product checks. All original 2939 IDs, source quotations, owners and the 990-record starting map remain intact; 819 original records remain open.",
+                "Batch 51 delivery: hook-enabled commit 451889e797aadd45b82fc3153dc3751db9f3b545 and normal push to origin/main succeed. Commit hooks pass 57 checks with two explicit skips and zero findings (9.2 seconds), plus commit-message validation (0.4 seconds). Push hooks pass 89 checks with ten explicit skips and zero findings (55.8 seconds). /tmp/gspot-native-path-commit-final.log and push.log retain evidence. HEAD, origin/main and remote main match with a clean tree before this required-rule batch."
             ],
             "remaining": [
                 "Finish the other shared execution/read/orchestration contracts in main/006 and all remaining compiler/language/framework/platform/policy/test/repository/installation findings. Complete final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Required ESLint language coverage and native script audit",
+            "rows": ["slices/kits-web-languages/015"],
+            "outcome": "One original finding implemented; 818 records remain open.",
+            "evidence": [
+                "Consolidate JavaScript required rules into one js declaration and TypeScript additions into one ts declaration. Expand those language contracts with authoritative extension inventory metadata, so JavaScript shared requirements cover js/mjs/cjs/jsx/ts/tsx/mts/cts, and TypeScript adds its two requirements to ts/tsx/mts/cts. Detected Node script tags cover extensionless and custom-suffix sources. Exact framework declarations retain their existing keys; shared calculations still merge rule owners and group affected paths. Native import-x/exports-last remains the previously verified replacement for the obsolete custom declaration-order rule.",
+                "Keep recommended/all filtering against native strict-rule metadata, source-kind and nearest-scope isolation, cancellation, one worker invocation, accepted reasoned rule exceptions and actionable native configuration diagnostics. No configuration-selection mechanism, enabling flag, native tool installation, pin or preparation is added. Manual language/framework overrides remain available and experimental rules remain disabled.",
+                "Four meaningful native regressions use the pinned ESLint worker and generated configuration with already installed packages. Assert normal coverage, exact disabled-rule diagnostics over all eight source extensions and two detected Node filename forms, child-scope isolation, framework requirements, level-dependent additional checks, accepted equality exceptions and correction clearing the audit. Bash and Markdown remain controls. Existing CLI audit tests retain every assertion unchanged.",
+                "/tmp/gspot-required-rules-baseline-proof.json restores the five production owners to 451889e797aadd45b82fc3153dc3751db9f3b545 and restores every current byte afterward. All four new native regressions fail against the previous implementation (0 passed, 4 failed, 9.31 seconds), proving the fixtures detect the omitted coverage.",
+                "/tmp/gspot-required-rules-cli.log passes 160 affected CLI and generation cases with 935 assertions across 31 files (29.52 seconds). All four TypeScript targets pass in types.log (10.92 seconds). Affected ESLint and Prettier pass. Both canonical applies leave all 139 outputs unchanged, with no writes, updates, removals or conflicts. CLI/plugin limits remain 60 seconds and tools/packages remain 900 seconds, with children bounded by their remaining test budget.",
+                "/tmp/gspot-required-rules-tools.log passes all 18 native rule-audit, Node-script and JavaScript compiler cases with 117 assertions across three files (41.69 seconds). Native startup and affected Taplo gates succeed; no product checks are weakened or bypassed.",
+                "Actual staged verification: /tmp/gspot-required-rules-staged.json exits 0 with 67 passed checks, nine explicit input/platform/ignore skips, zero failures or errors and duration 42694 milliseconds. The first gate required literal-only fixture data; fixture-before.json and fixture-after.json prove every exported fixture value is identical after replacing its construction with literals. All 2939 original IDs and source fields and the starting 990-record map remain intact; 818 records remain open."
+            ],
+            "remaining": [
+                "Finish compiler and suppression ownership, remaining language/framework/platform/policy/test/repository/installation findings, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6760,6 +6778,19 @@
                     "tests/tools/generation/node-scripts.test.ts"
                 ],
                 "status": "Native generator/output boundaries and explicit prerequisites implemented; unrelated parts of main/006 remain open."
+            },
+            {
+                "id": "required-eslint-language-coverage",
+                "records": ["slices/kits-web-languages/015"],
+                "owners": [
+                    "packages/cli/configurations/language/javascript/manifest.toml",
+                    "packages/cli/configurations/language/typescript/manifest.toml",
+                    "packages/cli/src/checks/language/javascript/rules-off.ts",
+                    "packages/cli/src/config/checks/language/javascript.ts",
+                    "packages/cli/src/types/checks/language/javascript.ts",
+                    "tests/config/tools/checks/javascript-rules.ts",
+                    "tests/tools/checks/javascript-rules.test.ts"
+                ]
             }
         ]
     }

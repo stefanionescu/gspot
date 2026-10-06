@@ -2,24 +2,36 @@ import { posix } from 'node:path';
 import { LINT_CHECK } from '#cli/config/eslint.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { extensionsTagged } from '#cli/repository/tags.ts';
 import { ESLINT_FILE } from '#cli/config/platform/locations.ts';
 import { readEslintCoverage } from '#cli/tools/eslint/client.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
-import { RULE_OFF_PATHS } from '#cli/config/checks/language/javascript.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { eslintAllRulesSchema, eslintCoverageResponseSchema } from '#cli/parsers/schema/eslint.ts';
 import type { MissingEslintRule, RequiredEslintRules } from '#cli/types/checks/language/javascript.ts';
+import { RULE_OFF_PATHS, REQUIRED_ESLINT_LANGUAGE_CONTRACTS } from '#cli/config/checks/language/javascript.ts';
 import ESLINT_ALL_RULES from '../../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
-// The rules the selected configurations require, for each file ending they name.
+// Expand language contracts through inventory metadata; framework requirements retain their exact endings.
 function getRequiredRules(input: EngineInput): RequiredEslintRules {
     const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
     const selected = input.selection.selected;
     const required: RequiredEslintRules = new Map();
     for (const manifest of selected) {
-        for (const [ending, rules] of Object.entries(manifest.required_eslint_rules)) {
+        const language = REQUIRED_ESLINT_LANGUAGE_CONTRACTS[manifest.configuration.name];
+        const declarations = Object.entries(manifest.required_eslint_rules).flatMap(([ending, rules]) => {
+            const endings =
+                ending === language?.ending
+                    ? [
+                          ...extensionsTagged(...language.languages).map((extension) => extension.slice(1)),
+                          ...manifest.files.tags,
+                      ]
+                    : [ending];
+            return endings.map((key) => ({ ending: key, rules }));
+        });
+        for (const { ending, rules } of declarations) {
             const owners = required.get(ending) ?? new Map<string, Set<string>>();
             const applicable = rules.filter((rule) => input.policyFiles.policy.level === 'all' || !allRules.has(rule));
             for (const rule of applicable) {
@@ -33,6 +45,13 @@ function getRequiredRules(input: EngineInput): RequiredEslintRules {
     return required;
 }
 
+// Source extensions take precedence; detected script tags cover names without a recognized language ending.
+function fileRules(required: RequiredEslintRules, file: TrackedFile): Map<string, Set<string>> | undefined {
+    const ending = posix.extname(file.path).slice(1);
+    const tag = file.tags.find((entry) => required.has(entry));
+    return required.get(ending) ?? (tag === undefined ? undefined : required.get(tag));
+}
+
 // Count each missing rule once while preserving affected paths and declaration owners.
 function getMissingRules(
     required: RequiredEslintRules,
@@ -42,9 +61,8 @@ function getMissingRules(
 ): Map<string, MissingEslintRule> {
     const missing = new Map<string, MissingEslintRule>();
     for (const file of files) {
-        const ending = posix.extname(file.path).slice(1);
         const enabled = new Set(resolved[file.path]);
-        for (const [rule, owners] of required.get(ending) ?? []) {
+        for (const [rule, owners] of fileRules(required, file) ?? []) {
             if (decided.has(rule) || enabled.has(rule)) continue;
             const entry = missing.get(rule) ?? { files: new Set<string>(), configurations: new Set<string>() };
             entry.files.add(file.path);
@@ -67,7 +85,7 @@ export async function rulesOff(input: EngineInput): Promise<Finding[]> {
         (file) =>
             file.kind === 'source' &&
             scopeOf(file.path, input.scopeEntries).path === input.scope &&
-            required.has(posix.extname(file.path).slice(1)),
+            fileRules(required, file) !== undefined,
     );
     if (files.length === 0) return [];
     const resolved = eslintCoverageResponseSchema.parse(

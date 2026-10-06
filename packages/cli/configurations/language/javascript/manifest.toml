@@ -369,4 +369,3 @@ help = "Remove the configuration entry that turns the rule off, or accept the fi
 
 [required_eslint_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]
-mjs = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity"]
