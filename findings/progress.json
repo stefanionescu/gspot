@@ -2894,10 +2894,28 @@
             "evidence": [
                 "Replace three same-type positional arguments with named components, tests and scripts fields in the existing types/generation/eslint.ts owner. Update both real generation callers without an alias or wrapper. /tmp/gspot-eslint-file-inputs-proof.json proves the complete calculation body remains byte-identical after input destructuring; generated native behavior is unchanged.",
                 "Verification: all four TypeScript targets pass (10.91 seconds); the 101 affected generated ESLint cases pass with 796 assertions across 25 files (24.93 seconds). The existing eight native JavaScript generation cases pass with 57 assertions (14.27 seconds). ESLint and Prettier pass. Canonical apply succeeds twice with all 139 outputs unchanged. Logs: /tmp/gspot-eslint-file-inputs-types.log, cli.log, native.log, lint-fixed.log, apply.json and apply-second.json. No coverage selector or generated behavior changes in this preparation.",
-                "Actual staged verification: /tmp/gspot-eslint-file-inputs-staged.json passes 51 checks with 3 explicit skips, zero failures or errors, exitCode 0 and duration 47215 milliseconds. No gate is bypassed or weakened."
+                "Actual staged verification: /tmp/gspot-eslint-file-inputs-staged.json passes 51 checks with 3 explicit skips, zero failures or errors, exitCode 0 and duration 47215 milliseconds. No gate is bypassed or weakened.",
+                "Batch 48 delivery: hook-enabled commit b7b4774c2da3042feca4711941018d4cd1c9453d and normal push to origin/main succeed. Commit hooks pass 33 checks with one explicit skip and zero findings (6.9 seconds), plus commit-message validation (0.5 seconds). Push hooks pass 51 checks with three explicit skips and zero findings (47.9 seconds). /tmp/gspot-eslint-file-inputs-commit.log and push.log retain evidence. The tree is clean and local HEAD matches origin/main before this separate behavior batch."
             ],
             "remaining": [
                 "Add detected extensionless Node paths through all native ESLint selectors and prove both coverage levels with native before/after regressions."
+            ]
+        },
+        {
+            "subsystem": "Native tagged Node file coverage",
+            "rows": ["slices/kits-web-languages/002"],
+            "outcome": "One original finding closes; 822 records remain open.",
+            "evidence": [
+                "Native coverage: derive authored shebang:node paths from the repository inventory. Generate escaped literal file patterns in the existing ESLint output owner; share them across base and JavaScript rules, framework rendering, native options, imports, scope boundaries and structural limits. Retain the check tag, existing TypeScript and component parser ownership, and generated/vendored exclusions. No extra check selection, tool flag, profile or enabling step is introduced. Recommended retains routine engineering checks and all adds strict checks.",
+                "Pinned ESLint 9.39.5 regressions: tests/tools/generation/node-scripts.test.ts owns four native cases at recommended and all. Native Node subprocesses lint extensionless paths, a custom extension, bracket/brace filenames and a typed shebang file; assert exact rule IDs, lines and severity, one unused-variable owner, authored script exceptions, and six unmatched/excluded controls whose bytes remain unchanged. Separate contracts assert fatal parsing, unavailable browser globals, scoped Node engines, JavaScript parameter limits, imports and root/child structural ceilings. Every corrected source clears the asserted diagnostics without another selection step.",
+                "Meaningful baseline: /tmp/gspot-node-scripts-baseline-proof.json temporarily restores all five production owners at b7b4774c2da3042feca4711941018d4cd1c9453d and restores every current byte afterward. All four new native cases fail against that baseline (0 pass, 4 fail, 4.52 seconds). /tmp/gspot-node-scripts-native-complete.log passes all 14 cases across the new Node, existing JavaScript and scoped engine owners with 107 assertions (29.32 seconds). /tmp/gspot-node-scripts-cli.log passes all 101 affected generated ESLint cases with 796 assertions across 25 files (24.72 seconds). All four TypeScript targets pass in types-verified.log (11.10 seconds). Affected ESLint, Prettier and git diff --check pass.",
+                "Required source launcher: the actual gspot --json check --only javascript/eslint -- scripts/gspot now selects and lints the repository launcher. /tmp/gspot-node-scripts-entrypoint.json proves the previously hidden gspot/no-trivial-files report. Preserve the required source entry import and executable mode with one next-line suppression explaining its entry-point contract. /tmp/gspot-node-scripts-entrypoint-verified.json passes with one input and no findings. No gate or product rule is disabled elsewhere.",
+                "Canonical generation: the first apply writes only the generated native ESLint configuration. /tmp/gspot-node-scripts-apply-second.json records all 139 outputs unchanged with zero writes, removals, updates or conflicts. CLI/plugin defaults remain 60 seconds and tools/packages remain 900 seconds, with child operations bounded by the remaining test budget. Manual language/framework overrides remain available. Publication/deployment authorization boundaries and unrelated findings remain open.",
+                "Staged corrections: the first actual gate passes 68 checks with nine skips and reports only the unstaged, canonically generated ESLint consumer and the banned fixture binding common. Stage the generated asset produced by gspot apply; rename that fixture field and binding to routine. /tmp/gspot-node-scripts-fixture-proof.json proves all eight contract cases and every other fixture value remain identical after the field rename. No source assertion, product check or gate is weakened.",
+                "Final verification: /tmp/gspot-node-scripts-native-final.log passes all four new native cases with 28 assertions (9.09 seconds). The actual gspot --json check --staged in /tmp/gspot-node-scripts-staged-final.json exits 0 with 130 passed checks, 11 explicit skips, zero failures or errors and duration 72934 milliseconds. All original 2939 IDs, quotations, owners and the 990-record starting map remain intact. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+            ],
+            "remaining": [
+                "Finish compiler and suppression ownership, remaining JavaScript/framework/native ownership and all other open records, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6651,12 +6669,16 @@
             {
                 "id": "native-extensionless-javascript",
                 "records": ["slices/kits-web-languages/002"],
-                "status": "Named shared inputs prepared; the coverage finding remains open.",
+                "status": "Implemented with native before/after/corrected coverage at both levels.",
                 "owners": [
-                    "packages/cli/src/types/generation/eslint.ts",
-                    "packages/cli/src/generation/eslint/output.ts",
+                    "packages/cli/src/generation/eslint/blocks.ts",
                     "packages/cli/src/generation/eslint/configuration.ts",
-                    "packages/cli/src/generation/fragments.ts"
+                    "packages/cli/src/generation/eslint/output.ts",
+                    "packages/cli/src/generation/fragments.ts",
+                    "packages/cli/src/types/generation/eslint.ts",
+                    "tests/config/tools/generation/node-scripts.ts",
+                    "tests/tools/generation/node-scripts.test.ts",
+                    "scripts/gspot"
                 ]
             }
         ]

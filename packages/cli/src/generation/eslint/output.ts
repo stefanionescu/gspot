@@ -1,4 +1,5 @@
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 
 import type {
     EslintFiles,
@@ -17,19 +18,25 @@ function selectorSource(selector: EslintFileSelector): string {
 
 /**
  * Calculate the exact file sets shared by base blocks and every framework fragment.
- * @param input selected component patterns and authored test or script patterns
+ * @param input selected components, detected Node files, and authored test or script patterns
  * @returns code patterns and intersections that exclude non-code files
  */
 export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
-    const { components, tests, scripts } = input;
-    const code = [eslintSourcePattern('javascript', 'typescript'), ...components];
+    const { components, tests, scripts, nodeFiles } = input;
+    const source = eslintSourcePattern('javascript', 'typescript');
+    const covered = pathMatcher([source, ...components]);
+    const node = eslintNodePatterns(
+        nodeFiles.filter((path) => !covered(path)),
+        '',
+    );
+    const code = [source, ...components, ...node];
     const typescript = eslintSourcePattern('typescript');
     const javascript = eslintSourcePattern('javascript');
     return {
         code,
         typescriptSource: [typescript],
         typescript: [typescript, ...components],
-        javascript: [javascript],
+        javascript: [javascript, ...node],
         tests: tests.flatMap((test) => code.map((pattern) => [test, pattern])),
         scripts: scripts.flatMap((script) => code.map((pattern) => [script, pattern])),
     };
@@ -161,4 +168,16 @@ export function eslintSourcePattern(...languages: string[]): string {
     return `**/*.{${extensionsTagged(...languages)
         .map((extension) => extension.slice(1))
         .join(',')}}`;
+}
+
+/**
+ * Escape detected Node paths for native glob selectors within one project scope.
+ * @param paths the repository-relative authored Node file paths
+ * @param scope the scope whose authored files are being selected
+ * @returns literal native file patterns that cannot select neighboring filenames
+ */
+export function eslintNodePatterns(paths: string[], scope: string): string[] {
+    return paths
+        .filter((path) => isInScope(path, scope))
+        .map((path) => path.replaceAll(/[?*[\]{}()!]/gu, String.raw`\$&`));
 }

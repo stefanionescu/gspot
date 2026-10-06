@@ -6,8 +6,8 @@ import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import type { Manifest, ConfigurationFile } from '#cli/types/configurations.ts';
+import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/output.ts';
 import { eslintRuleOptions, fragmentSelectorGroups } from '#cli/generation/eslint/blocks.ts';
-import { eslintModule, eslintFilePatterns, eslintSourcePattern } from '#cli/generation/eslint/output.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
@@ -39,7 +39,7 @@ function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes
             const template = eslintModule({
                 allRules: inputs.eslintAllRules,
                 isAll: inputs.isAll,
-                codeFiles: [eslintSourcePattern('javascript', 'typescript'), ...inputs.fragmentFiles],
+                codeFiles: inputs.eslintFiles.code,
                 ruleOptions: eslintRuleOptions(inputs.policy),
                 scope: { path: scope, excluded: children.map((path) => `${path}/**`) },
             });
@@ -91,7 +91,12 @@ export function fragmentInputs(
     const eslintFiles =
         config === undefined
             ? inputs.eslintFiles
-            : eslintFilePatterns({ components: fragmentFiles, tests: config.testFiles, scripts: config.scriptFiles });
+            : eslintFilePatterns({
+                  components: fragmentFiles,
+                  tests: config.testFiles,
+                  scripts: config.scriptFiles,
+                  nodeFiles: config.nodeFiles,
+              });
     const eslintFragmentBlocks: TemplateInputs['eslintFragmentBlocks'] = [];
     const rendered = renderedFragments(
         fragments,
@@ -111,7 +116,7 @@ export function fragmentInputs(
         eslintModule: eslintModule({
             allRules: inputs.eslintAllRules,
             isAll: inputs.isAll,
-            codeFiles: [eslintSourcePattern('javascript', 'typescript'), ...fragmentFiles],
+            codeFiles: eslintFiles.code,
             ruleOptions: eslintRuleOptions(inputs.policy),
         }),
         fragmentSelectors: fragmentSelectorGroups(scopes, fragments, inputs.isAll),

@@ -35,12 +35,19 @@ export type EslintBlock = {
     rules?: Record<string, unknown>;
 };
 
-/** What the ESLint configuration reads: the repository root, the policy, every scope, and the scope being rendered. */
-export type EslintContext = { root: string; policy: Policy; scopes: ScopeSelection[]; selection: ScopeSelection };
+/** Repository policy, resolved scopes, and authored Node paths used by native ESLint generation. */
+export type EslintContext = {
+    root: string;
+    policy: Policy;
+    scopes: ScopeSelection[];
+    selection: ScopeSelection;
+    nodeFiles: string[];
+};
 
 /** The parts of the ESLint configuration that the policy and the rendered scope decide. */
 export type EslintConfiguration = {
     aliases: Record<string, string>;
+    nodeFiles: string[];
     testFiles: string[];
     scriptFiles: string[];
     limits: Record<string, number | undefined>;
@@ -87,8 +94,8 @@ export type EslintModule = {
     block: (block: EslintSettingsBlock, runtime?: string) => string;
 };
 
-/** Selected component patterns and authored test or script patterns. */
-export type EslintFileInputs = { components: string[]; tests: string[]; scripts: string[] };
+/** Selected component patterns, detected Node files, and authored test or script patterns. */
+export type EslintFileInputs = { components: string[]; tests: string[]; scripts: string[]; nodeFiles: string[] };
 
 /** Shared file patterns for code, type-aware parsing, and test or script intersections. */
 export type EslintFiles = {

@@ -4,12 +4,14 @@ import { isDeepStrictEqual } from 'node:util';
 import { LINT_CHECK } from '#cli/config/eslint.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { activeIgnores } from '#cli/policy/settings/ignores.ts';
+import { eslintNodePatterns } from '#cli/generation/eslint/output.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/entries.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Fragment, ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/selectors.ts';
 
 import type {
+    EslintContext,
     SelectorGroup,
     EslintRuleBlock,
     EslintRuleOptions,
@@ -79,11 +81,11 @@ export function eslintIgnoreBlocks(policy: Policy): EslintRuleBlock[] {
 
 /**
  * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
- * @param scopes the resolved scopes, in any order.
- * @param policy the policy selecting structural rules and scoped exceptions.
+ * @param input the resolved scopes, structural policy, and detected authored Node paths
  * @returns disabled rules at recommended, otherwise one block per scope and language, shallowest first
  */
-export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
+export function structuralRuleBlocks(input: Pick<EslintContext, 'scopes' | 'policy' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { scopes, policy, nodeFiles } = input;
     const blocks: EslintRuleBlock[] = [];
     if (policy.level !== 'all')
         return [
@@ -94,15 +96,15 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
             },
         ];
     for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
-        for (const [language, pattern] of [
-            ['javascript', '**/*.{js,mjs,cjs,jsx}'],
-            ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte,astro}'],
+        for (const [language, patterns] of [
+            ['javascript', ['**/*.{js,mjs,cjs,jsx}', ...eslintNodePatterns(nodeFiles, selection.scope.path)]],
+            ['typescript', ['**/*.{ts,tsx,mts,cts,vue,svelte,astro}']],
         ] as const) {
             const maxStatements = selection.view.limit('min_function_statements', language);
             const options = maxStatements === undefined ? {} : { maxStatements };
             blocks.push({
                 scope: selection.scope.path,
-                ...pathExpressions([pattern]),
+                ...pathExpressions([...patterns]),
                 rules: {
                     'gspot/no-trivial-files': [
                         'error',

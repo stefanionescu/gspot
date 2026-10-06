@@ -5,11 +5,12 @@ import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
+import type { ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
-import type { Policy, ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 import {
@@ -28,6 +29,7 @@ import {
     eslintModule,
     eslintErrorRules,
     eslintFilePatterns,
+    eslintNodePatterns,
     eslintRuleSettings,
     eslintSourcePattern,
 } from '#cli/generation/eslint/output.ts';
@@ -50,7 +52,7 @@ function directionRoles(architecture: ArchitectureSettings, harness: string[]): 
 
 // Each nested scope resolves imports against its own aliases and harness folders.
 function scopeBlocks(context: EslintContext): EslintBlock[] {
-    const { root, policy, scopes } = context;
+    const { root, policy, scopes, nodeFiles } = context;
     if (policy.level !== 'all') return [];
     const folders = [
         ...ESLINT_BOUNDARY_FOLDERS,
@@ -63,7 +65,13 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
             const aliases = aliasesFor(root, path);
             const roles = directionRoles(policy.architecture, harnessFolders(policy, path));
             return {
-                files: [`${path}/${eslintSourcePattern('javascript', 'typescript')}`],
+                files: [
+                    `${path}/${eslintSourcePattern('javascript', 'typescript')}`,
+                    ...eslintNodePatterns(
+                        nodeFiles.filter((file) => isInScope(file, path)),
+                        '',
+                    ),
+                ],
                 rules: {
                     'gspot/import-boundaries': ['error', { folders, aliases }],
                     'gspot/import-direction': ['error', { roles, aliases, scope: path }],
@@ -74,7 +82,8 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
 
 // One boundaries block for each scope whose own architecture table declares elements. Element paths are relative to
 // the scope that names them, so a nested scope never takes the elements of the root.
-function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[] {
+function boundaryBlocks(context: EslintContext): EslintBlock[] {
+    const { policy, scopes, nodeFiles } = context;
     return scopes.flatMap(({ scope, view }): EslintBlock[] => {
         const { path } = scope;
         const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
@@ -91,7 +100,13 @@ function boundaryBlocks(policy: Policy, scopes: ScopeSelection[]): EslintBlock[]
         }));
         return [
             {
-                files: [`${prefix}${eslintSourcePattern('javascript', 'typescript')}`],
+                files: [
+                    `${prefix}${eslintSourcePattern('javascript', 'typescript')}`,
+                    ...eslintNodePatterns(
+                        nodeFiles.filter((file) => isInScope(file, path)),
+                        '',
+                    ),
+                ],
                 settings: {
                     'boundaries/files': categories,
                     'boundaries/ignore': (view.settings['tests'] as string[]).map((pattern) => `${prefix}${pattern}`),
@@ -166,11 +181,11 @@ function extraBlock(context: EslintContext): EslintConfiguration['verbatim'] {
 
 /**
  * The parts of the ESLint configuration the policy decides: limits, rule options, file sets, and override blocks.
- * @param context the repository root, the policy, every scope, and the scope being rendered
+ * @param context the repository policy, resolved scopes, and authored Node file paths
  * @returns the values, ready to serialize into the configuration
  */
 export function eslintConfiguration(context: EslintContext): EslintConfiguration {
-    const { root, policy, scopes, selection } = context;
+    const { root, policy, scopes, selection, nodeFiles } = context;
     const { view } = selection;
     const tool = view.options('tools.eslint');
     const aliases = aliasesFor(root, '');
@@ -179,6 +194,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
     const importStyle = (tool['import_extensions'] ?? {}) as Record<string, string>;
     return {
         aliases,
+        nodeFiles,
         ...eslintSettings(view),
         limits,
         javascriptLimits: limitsOf(view, 'javascript', ESLINT_JAVASCRIPT_LIMITS),
@@ -192,11 +208,13 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                 : {},
         commentLevel: policy.require_reasons ? 'error' : 'off',
         importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
-            files: [[glob, eslintSourcePattern('javascript', 'typescript')]],
+            files: [eslintSourcePattern('javascript', 'typescript'), ...eslintNodePatterns(nodeFiles, '')].map(
+                (pattern) => [glob, pattern],
+            ),
             rules: { 'gspot/import-extensions': ['error', { style, internalPrefixes }] },
         })),
         runtimes: runtimeBlocks(scopes),
-        boundaryBlocks: boundaryBlocks(policy, scopes),
+        boundaryBlocks: boundaryBlocks(context),
         scopeBlocks: scopeBlocks(context),
         ignoredPaths: generatedIgnores(
             policy.declarations.flatMap((entry) => entry.paths),
@@ -227,18 +245,26 @@ export function eslintInputs(
     | 'eslintErrorRules'
     | 'eslintPresets'
 > {
-    const {
-        root,
-        scopes,
-        policyFiles: { policy },
-    } = session;
+    const { root, scopes, policyFiles, repository } = session;
+    const { policy } = policyFiles;
     const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
     const presets = new Map<string, EslintPresets>();
+    const recognized = pathMatcher([eslintSourcePattern('javascript', 'typescript')]);
+    const nodeFiles = repository.files
+        .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes('shebang:node'))
+        .map((file) => file.path);
+    const eslintFiles = eslintFilePatterns({
+        components: [],
+        nodeFiles,
+        tests: (selection.view.settings['tests'] ?? []) as string[],
+        scripts: (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
+    });
+    const context = { root, policy, scopes, selection, nodeFiles };
     let configuration: EslintConfiguration | undefined;
     return {
-        eslint: () => (configuration ??= eslintConfiguration({ root, policy, scopes, selection })),
+        eslint: () => (configuration ??= eslintConfiguration(context)),
         eslintPolicy: () => [
-            ...structuralRuleBlocks(scopes, policy),
+            ...structuralRuleBlocks(context),
             ...manifestRuleBlocks(scopes, policy),
             ...eslintIgnoreBlocks(policy),
         ],
@@ -246,14 +272,10 @@ export function eslintInputs(
         eslintModule: eslintModule({
             allRules,
             isAll: policy.level === 'all',
-            codeFiles: [eslintSourcePattern('javascript', 'typescript')],
+            codeFiles: eslintFiles.code,
             ruleOptions: eslintRuleOptions(policy),
         }),
-        eslintFiles: eslintFilePatterns({
-            components: [],
-            tests: (selection.view.settings['tests'] ?? []) as string[],
-            scripts: (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
-        }),
+        eslintFiles,
         eslintFragmentBlocks: [],
         eslintRuleSettings: eslintRuleSettings,
         eslintErrorRules,
