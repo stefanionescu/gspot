@@ -121,13 +121,9 @@ export const eta = new Eta(ETA_OPTIONS);
  * @returns the template inputs, with empty fragment parts the generator fills per target.
  */
 export function templateInputs(session: Session, selection: ScopeSelection, manifests: Manifest[]): TemplateInputs {
-    const {
-        root,
-        policyFiles: { policy },
-        repository: { files: sourceFiles },
-        scopes,
-        version,
-    } = session;
+    const { root, scopes, version } = session;
+    const { policy } = session.policyFiles;
+    const sourceFiles = session.repository.files;
     const { view } = selection;
     const files = (extension: string): string[] =>
         sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
@@ -138,6 +134,9 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
             buildJsconfig({
                 root,
                 declarationPaths: policy.declarations.flatMap((entry) => entry.paths),
+                files: sourceFiles,
+                scopeEntries: scopes.map((entry) => entry.scope),
+                importStyles: view.options('tools.eslint')['import_extensions'] as Record<string, string>,
                 target,
                 scope: selection.scope.path,
             }),

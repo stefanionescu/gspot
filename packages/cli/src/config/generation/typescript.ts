@@ -6,6 +6,7 @@ export const JAVASCRIPT_IMPORTS = {
     target: 'ES2022',
     module: 'NodeNext',
     moduleResolution: 'NodeNext',
+    jsx: 'preserve',
     skipLibCheck: true,
     resolveJsonModule: true,
 };
@@ -23,3 +24,6 @@ export const TYPESCRIPT_DEFAULTS = {
     resolveJsonModule: true,
     noEmit: true,
 };
+
+/** Bundled JavaScript resolves imports without requiring emitted Node suffixes. */
+export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' };

@@ -25,6 +25,8 @@ JavaScript and TypeScript checks use the project's TypeScript compiler when it i
 
 TypeScript source files or an authored `tsconfig.json` select TypeScript checks. A TypeScript tool dependency or declaration files alone do not. When a scope has no authored configuration, gspot generates a standalone compiler project for its source files and declarations. The project excludes generated files, vendored files, and child scopes. An authored configuration keeps its project settings and receives the strict options required by the selected level.
 
+JavaScript checks inherit an authored `jsconfig.json` first and `tsconfig.json` otherwise. The TypeScript fallback keeps compiler settings and declarations while selecting JavaScript sources for this check. An authored JSX setting remains in force; otherwise the generated project uses `jsx: "preserve"`. Scopes without either project file use Bundler resolution when an extensionless import style matches a JavaScript source file. Ambient types come from the source project, including authored custom roots.
+
 ## Platform limits
 
 SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage require macOS with Xcode selected by `xcode-select`. Container checks can require a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) states its platforms and external requirements.

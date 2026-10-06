@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -8,11 +7,13 @@ import type { Root } from '#cli/types/platform/root.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
+import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -32,11 +33,11 @@ function assertOutputsInside(root: string, config: ts.ParsedCommandLine, files: 
 // Incremental checks write metadata only inside their disposable copy.
 function appendBuildMetadata(
     command: string[],
-    config: ts.ParsedCommandLine | undefined,
+    options: ts.CompilerOptions | undefined,
     scratch: string,
     name: string,
 ): void {
-    if (config?.options.incremental !== true && config?.options.composite !== true) return;
+    if (options?.incremental !== true && options?.composite !== true) return;
     command.push('--tsBuildInfoFile', join(scratch, DOT_GSPOT, name));
 }
 
@@ -51,17 +52,24 @@ function assertBuildInside(root: string, path: string, visited = new Set<string>
         assertBuildInside(root, ts.resolveProjectReferencePath(reference), visited);
 }
 
-// Rewrites the disposable copy of the generated JavaScript project to the scope's files, and counts them.
-function writeScopeProject(session: Session, scratch: string, planned: PlannedCheck, target: string): number {
-    if (ownedInputs(session, planned).length === 0) return 0;
+// Restrict the disposable JavaScript project to its scope and ambient roots, and retain its effective options.
+function writeScopeProject(
+    session: Session,
+    scratch: string,
+    planned: PlannedCheck,
+    target: string,
+): ts.CompilerOptions | undefined {
+    if (ownedInputs(session, planned).length === 0) return undefined;
     const scope = planned.scope.scope.path;
     const generatedPath = join(scratch, target);
     const generated = getTsconfig(scratch, generatedPath);
     if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
     const scopeFiles = generated.fileNames.filter(
-        (path) => scopeOf(toPosix(relative(scratch, path)), session.repository.scopes).path === scope,
+        (path) =>
+            DECLARATION_EXTENSIONS.includes(extensionOf(path)) ||
+            scopeOf(toPosix(relative(scratch, path)), session.repository.scopes).path === scope,
     );
-    if (scopeFiles.length === 0) return 0;
+    if (scopeFiles.length === 0) return undefined;
     const authored = parseJsonRecord(readFileSync(generatedPath, 'utf8'));
     // Managed configurations are read-only; only the disposable copy is rewritten.
     chmodSync(generatedPath, PRIVATE_FILE);
@@ -69,12 +77,20 @@ function writeScopeProject(session: Session, scratch: string, planned: PlannedCh
         generatedPath,
         JSON.stringify({
             ...authored,
+            compilerOptions: {
+                ...(authored['compilerOptions'] as Record<string, unknown>),
+                typeRoots:
+                    ts.getEffectiveTypeRoots(
+                        { ...generated.options, configFilePath: join(scratch, scope, 'jsconfig.json') },
+                        {},
+                    ) ?? [],
+            },
             files: scopeFiles.map((path) => toPosix(relative(dirname(generatedPath), path))),
             include: [],
             exclude: [],
         }),
     );
-    return scopeFiles.length;
+    return generated.options;
 }
 
 // Restore every scratch path in the recorded invocation while retaining a result with no launched command.
@@ -102,7 +118,7 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
     );
     const scratch = scratchFolder.path;
     if (hasReferences) assertBuildInside(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-    else appendBuildMetadata(command, config, scratch, 'tsconfig.tsbuildinfo');
+    else appendBuildMetadata(command, config?.options, scratch, 'tsconfig.tsbuildinfo');
     const result = await runCommandCheck(session, planned, { command: command, workspace: scratch });
     return restoreCommandPaths(result, scratch, session.root);
 }
@@ -127,15 +143,12 @@ export async function checkjs(session: Session, planned: PlannedCheck): Promise<
         session.repository.scopes.map((entry) => entry.path),
     );
     const scratch = scratchFolder.path;
-    const directory = join(scratch, scope);
-    const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
+    const options = writeScopeProject(session, scratch, planned, target);
     // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
-    if (writeScopeProject(session, scratch, planned, target) === 0)
+    if (options === undefined)
         return { check: planned.spec.name, scope, status: 'passed', fileCount: 0, findings: [], duration: 0 };
-    const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
     const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
-    if (roots !== undefined) command.push('--typeRoots', roots.join(','));
-    appendBuildMetadata(command, config, scratch, 'jsconfig.check.tsbuildinfo');
+    appendBuildMetadata(command, options, scratch, 'jsconfig.check.tsbuildinfo');
     const result = await runCommandCheck(session, planned, { command: command, workspace: scratch });
     return restoreCommandPaths(result, scratch, session.root);
 }
