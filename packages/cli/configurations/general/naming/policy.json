@@ -4,8 +4,6 @@
         "whole_parts": true,
         "case_insensitive": true
     },
-    "ban_digits": true,
-    "ban_repeats": true,
     "groups": {
         "containers": {
             "removable": true,
@@ -54,15 +52,7 @@
                 "ultimate",
                 "comprehensive",
                 "optimized",
-                "reusable",
-                "custom",
-                "final",
-                "latest",
-                "old",
-                "new",
-                "legacy",
-                "plus",
-                "combined"
+                "reusable"
             ]
         },
         "defensive": {
@@ -71,7 +61,6 @@
                 "ensure",
                 "maybe",
                 "likely",
-                "should",
                 "if needed",
                 "ifneeded",
                 "if available",
@@ -84,9 +73,7 @@
                 "orthrow",
                 "waitfor",
                 "with retries",
-                "transient",
                 "belt and suspenders",
-                "fallback",
                 "load bearing",
                 "load-bearing",
                 "loadbearing"
@@ -99,33 +86,31 @@
         "tests": {
             "removable": true,
             "terms": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases"]
+        },
+        "time": {
+            "removable": true,
+            "terms": ["new", "old", "latest", "legacy", "final"]
+        },
+        "conditions": {
+            "removable": true,
+            "terms": ["fallback", "should", "transient"]
         }
     },
     "reserved": [
         {
-            "term": "data",
-            "uses": ["API success envelope field"]
-        },
-        {
-            "term": "message",
-            "uses": ["API client message field"]
-        },
-        {
-            "term": "id",
-            "uses": ["identifier word"]
-        },
-        {
             "term": "config",
             "uses": [
-                "configuration directory",
-                "configuration file stem",
-                "configuration variable",
-                "configuration property"
+                "directories",
+                "packages",
+                "files",
+                "modules",
+                "variables",
+                "constants",
+                "parameters",
+                "properties",
+                "attributes",
+                "enum_cases"
             ]
-        },
-        {
-            "term": "values",
-            "uses": ["SQL VALUES clause"]
         }
     ],
     "languages": {
@@ -459,18 +444,7 @@
         {
             "paths": ["**"],
             "categories": ["directories"],
-            "names": [
-                ".githooks",
-                ".mise",
-                ".github",
-                ".gspot",
-                ".vscode",
-                ".claude",
-                "node_modules",
-                "__pycache__",
-                "__tests__",
-                "__mocks__"
-            ],
+            "names": ["node_modules", "__pycache__", "__tests__", "__mocks__"],
             "reason": "Tools name these directories.",
             "skip": true
         },
@@ -512,23 +486,13 @@
             "allow_digits": true
         },
         {
-            "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
-            "categories": ["files"],
-            "ignored_prefix": "^\\d{2}-"
-        },
-        {
-            "paths": ["**/ADVANCED.md"],
-            "categories": ["files"],
-            "names": ["ADVANCED"],
-            "reason": "The docs template names the advanced guide.",
-            "skip": true
-        },
-        {
             "paths": ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"],
             "languages": ["python"],
             "categories": ["functions", "methods"],
             "ignored_prefix": "^test_",
             "reason": "The test runner finds a test by this prefix."
         }
-    ]
+    ],
+    "allow_digits": false,
+    "allow_repeated_words": false
 }

@@ -18903,10 +18903,43 @@
                 "Types and formatting: /tmp/gspot-naming-contracts-types.log passes all four TypeScript targets (10.02 seconds). /tmp/gspot-naming-contracts-eslint-final.log and the corrected public assertion lint pass. Native TOML formatting passes in /tmp/gspot-naming-contracts-toml.log; Prettier formats the changed TS, shipped JSON and ledger.",
                 "Documentation and generation: /tmp/gspot-naming-contracts-docs.log builds 316 pages and validates all local links and fragments. Both /tmp/gspot-naming-contracts-apply-first.json and apply-second.json report 140 unchanged outputs, zero writes/updates/removals/preserved outputs and zero notes. No generated asset is edited manually.",
                 "Staged correction: the first gate reports only the repository-specific banned word in SCOPED_CEILINGS. The fixture is renamed SCOPE_CEILINGS; /tmp/gspot-naming-contracts-final-naming-eslint.log passes and /tmp/gspot-naming-contracts-final-naming-cli.log passes all 12 contract cases with 396 assertions (452 milliseconds). No allowance or check suppression is added.",
-                "Actual final gspot check --staged: /tmp/gspot-naming-contracts-staged-final.json reports 131 passed checks, 11 explicit prerequisite/policy skips, zero failed/error checks, zero findings and exit 0 (72.006 seconds). Normal Semgrep, OSV and Taplo remain active. All 2,939 original record identities, source quotations and owners and the original 990-record mapping remain unchanged."
+                "Actual final gspot check --staged: /tmp/gspot-naming-contracts-staged-final.json reports 131 passed checks, 11 explicit prerequisite/policy skips, zero failed/error checks, zero findings and exit 0 (72.006 seconds). Normal Semgrep, OSV and Taplo remain active. All 2,939 original record identities, source quotations and owners and the original 990-record mapping remain unchanged.",
+                "Delivery: hook-enabled commit 65927b452cca281c9383cae81af7a983c3753705 succeeds in /tmp/gspot-naming-contracts-commit.log with 91 pre-commit passes, two existing skips and a commit-message pass. Normal origin/main push succeeds in /tmp/gspot-naming-contracts-push.log with 131 passes, 11 explicit prerequisite/policy skips, zero failures or findings (72.0 seconds). The tree is clean and HEAD equals origin/main before the reserved-category and shared vocabulary batch."
             ],
             "remaining": [
                 "Continue 916 original implementation records. Language/framework exemption ownership, project-specific vocabulary and remaining naming-policy fields remain open; publication and deployment retain their authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "Reserved naming categories and shared vocabulary",
+            "rows": [
+                "areas/kits/001",
+                "areas/kits/004",
+                "areas/kits/005",
+                "areas/kits/006",
+                "areas/kits/007",
+                "areas/kits/008",
+                "areas/kits/009",
+                "areas/kits/010",
+                "areas/kits/011",
+                "areas/kits/012",
+                "areas/kits/087",
+                "areas/kits/088"
+            ],
+            "outcome": "Twelve original records close with IDs and source quotations intact. 904 original implementation records remain open.",
+            "evidence": [
+                "Reserved terms: general/naming/policy.json removes application-specific data/message envelopes, the ineffective values exception and the unrestricted id reservation. Config retains the exact identifier categories its former uses actually permitted. The owned reserved-use schema validates a nonempty enum from the parsing owner’s category labels. problems.ts compares the actual category directly; the hidden free-text suffix dictionary and its redundant forwarding function are deleted. Borrowed module/package/path-parameter labels have one parsing owner.",
+                "Exact-name ownership: EffectivePolicy has one allowed-name map combining shipped names and authored names/reasons. The external set and duplicate membership branch are removed. Public naming.allowed remains the sole exact-name declaration; groups_off and fixed_keys remain their descriptive fields. HF_TOKEN and CUDA_MODULE_LOADING are already absent from the current shipped asset and have no active shared consumer; this batch records source evidence for the original deletion finding. Broader framework/platform exemption records stay open.",
+                "Vocabulary: marketing moves new, old, latest, legacy and final into the removable time group, deletes custom/combined and leaves plus only in conjunctions. Fallback, should and transient move into the removable conditions group. Required core marketing/defensive groups remain active. These use the existing reasoned word-policy exceptions; no coverage selection, profile, opt-in check or enabling flag is introduced.",
+                "Path ownership: the unused per-tool dot-folder names are removed while node_modules, __pycache__, __tests__ and __mocks__ remain. directoryIdentifiers already skips every dot folder, so no duplicate regex mechanism is added. The project-specific numbered-task prefix and ADVANCED.md exceptions are deleted. Public regressions preserve hidden-folder filename findings, require an authored numbered-prefix declaration and report the ordinary vocabulary rule on the advanced guide.",
+                "Naming data: shipped defaults and per-path declarations use the same positive allow_digits/allow_repeated_words names. The private compiled booleans follow those positive meanings; the old repeated-word key has no alias or compatibility parser. Native case names are pascal-extension/timestamp-snake, and the setting summary now gives String+Format.swift and 20260103120000_create_users.sql examples.",
+                "CLI and schema: /tmp/gspot-naming-vocabulary-cli-final.log passes 395 tests with 2,533 assertions across 35 files (19.41 seconds). Public cases prove exact root/child/sibling category contracts, neighboring violations, reasoned word-group exceptions, hidden paths, authored prefixes, guide corrections and exact repeated-word matching. Runtime and published schemas accept category declarations and refuse free-text/inherited-object/empty uses and former naming fields. The first three unknown-key assertions expected the wrong diagnostic shape; literal diagnostics now preserve the actual parent-table error without changing production output. Original schema cases are preserved in the same runner; naming inputs have their own documentation data owner.",
+                "Native and package delivery: /tmp/gspot-naming-vocabulary-packages.log passes the standalone archive and installed language consumer with 55 assertions (237.12 seconds). Real pinned prose/Python/Bash defects accept independent corrections; installed Swift naming and packaged SQL rejection/correction succeed with the renamed shipped schema fields. The standalone archive preserves assets/checksum/source diagnostics without Node.js or Bun on PATH. The throwaway local registry closes; external publication is not performed.",
+                "Types and generation: /tmp/gspot-naming-vocabulary-types-final.log passes all four targets (10.26 seconds). Changed-source lint and /tmp/gspot-naming-vocabulary-diagnostics-eslint.log pass; the schema fixture exceeds its cap only before its new naming cases are placed under their behavioral owner. Native TOML formatting and Prettier pass. /tmp/gspot-naming-vocabulary-docs.log builds 316 pages with all local links/fragments valid. Both apply-first.json and apply-second.json report 140 unchanged outputs, zero writes/updates/removals/preserved outputs and zero notes; no generated asset is edited manually.",
+                "Staged gate: /tmp/gspot-naming-vocabulary-staged.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.338 seconds). All complete owned changes are staged; native Taplo, normal Semgrep and OSV remain enabled where applicable. The initial invocation used the unsupported --format option and exited before running checks; it was corrected to the documented global --json flag."
+            ],
+            "remaining": [
+                "Continue 904 original implementation records. Framework/language exemption ownership, broader per-path reason semantics and policy validation remain open; publication and deployment retain their authorization boundaries."
             ]
         }
     ],
@@ -22253,6 +22286,34 @@
                     "packages/cli/src/config/parsers/naming.ts",
                     "packages/cli/src/checks/general/naming/problems.ts",
                     "tests/cli/checks/general/naming/contracts.test.ts"
+                ]
+            },
+            {
+                "id": "reserved-category-contracts-and-shared-vocabulary",
+                "records": [
+                    "areas/kits/001",
+                    "areas/kits/004",
+                    "areas/kits/005",
+                    "areas/kits/006",
+                    "areas/kits/007",
+                    "areas/kits/008",
+                    "areas/kits/009",
+                    "areas/kits/010",
+                    "areas/kits/011",
+                    "areas/kits/012",
+                    "areas/kits/087",
+                    "areas/kits/088"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/naming/policy.json",
+                    "packages/cli/configurations/general/naming/manifest.toml",
+                    "packages/cli/src/parsers/schema/naming.ts",
+                    "packages/cli/src/checks/general/naming/problems.ts",
+                    "packages/cli/src/checks/general/naming/policy.ts",
+                    "packages/cli/src/config/parsers/naming.ts",
+                    "tests/cli/checks/general/naming/vocabulary.test.ts",
+                    "tests/config/cli/docs/naming.ts",
+                    "tests/cli/docs/schema.test.ts"
                 ]
             }
         ]

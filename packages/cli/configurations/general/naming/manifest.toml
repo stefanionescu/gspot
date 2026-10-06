@@ -58,7 +58,7 @@ name = "naming.reserved"
 type = "list"
 direction = "tightening"
 default = []
-summary = "Terms banned except in the named uses."
+summary = "Terms restricted to identifier categories, such as properties or directories."
 
 [[setting]]
 name = "naming.groups_off"
@@ -98,7 +98,7 @@ type = "list"
 direction = "loosening"
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension. Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; these settings choose the case for every other category."
+summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift) and timestamp-snake (20260103120000_create_users.sql). Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; these settings choose the case for every other category."
 
 [[setting]]
 name = "naming.swift.max_chars"

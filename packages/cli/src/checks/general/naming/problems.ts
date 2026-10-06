@@ -2,7 +2,7 @@ import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { NUMBER_PART, NUMERIC_WORDS } from '#cli/config/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
 import { hasCase, splitParts, repeatedPart } from '#cli/parsers/naming/names.ts';
-import { DIGIT, CALLBACK_VERB, RESERVED_USES, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import { DIGIT, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 import type {
     Term,
@@ -27,7 +27,7 @@ function isConsecutive(parts: string[], termParts: string[]): boolean {
  * @returns whether no naming check applies
  */
 function isExempt(policy: EffectivePolicy, identifier: Identifier): boolean {
-    if (policy.external.has(identifier.name) || policy.allowed.has(identifier.name)) return true;
+    if (policy.allowed.has(identifier.name)) return true;
     return policy.fixedKeys.get(identifier.file)?.has(identifier.name) ?? false;
 }
 
@@ -51,7 +51,7 @@ function caseProblem(name: string, limits: CategoryLimits, isFileName: boolean):
 
 function digitProblem(parts: string[], rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
     if (
-        !policy.isDigitsBanned ||
+        policy.isDigitsAllowed ||
         !parts.some((part) => DIGIT.test(part) && !NUMERIC_WORDS.has(part)) ||
         rules.some((rule) => rule.isDigitsAllowed)
     )
@@ -76,7 +76,7 @@ function wordsProblem(words: string[], limits: CategoryLimits): NameProblem | un
 }
 
 function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
-    if (!policy.isRepeatBanned || rules.some((rule) => rule.isRepeatAllowed)) return undefined;
+    if (policy.isRepeatAllowed || rules.some((rule) => rule.isRepeatAllowed)) return undefined;
     const repeated = repeatedPart(words);
     return repeated === undefined ? undefined : { rule: 'duplicate-words', message: `"${repeated}" repeats` };
 }
@@ -89,7 +89,7 @@ function termProblems(identifier: Identifier, parts: string[], context: NamingIn
     if (banned !== undefined)
         problems.push({ rule: 'banned-term', message: `"${banned.term}" is banned`, source: banned.source });
     for (const [term, allowedFor] of policy.reserved) {
-        if (!parts.includes(term) || isUseAllowed(allowedFor, identifier.category)) continue;
+        if (!parts.includes(term) || allowedFor.includes(identifier.category)) continue;
         problems.push({
             rule: 'reserved-term',
             message: `"${term}" is reserved for ${allowedFor.join(', ')}; this is a ${identifier.kind}`,
@@ -114,19 +114,6 @@ function callbackProblem(identifier: Identifier, parts: string[], isReactFile: b
  */
 export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
     return terms.find((term) => isConsecutive(parts, term.parts));
-}
-
-/**
- * True when a reserved term is allowed for an identifier's category.
- * @param allowedFor the uses the policy allows the term for
- * @param category the identifier's category
- * @returns whether the policy allows the term for this category
- */
-export function isUseAllowed(allowedFor: string[], category: string): boolean {
-    return allowedFor.some((use) => {
-        const categories = Object.entries(RESERVED_USES).find(([suffix]) => use.endsWith(suffix))?.[1] ?? [];
-        return categories.includes('*') || categories.includes(category);
-    });
 }
 
 /**

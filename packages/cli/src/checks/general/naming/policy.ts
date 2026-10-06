@@ -21,7 +21,7 @@ function compileRule(rule: NamingTermRule, source: string): PathRule {
         names: toSet(rule.names),
         excludes: rule.skip === true,
         isDigitsAllowed: rule.allow_digits === true,
-        isRepeatAllowed: rule.allow_duplicate_words === true,
+        isRepeatAllowed: rule.allow_repeated_words === true,
         structuralPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
         caseNames: rule.case,
         source,
@@ -124,13 +124,15 @@ export function effectivePolicy(
     return {
         terms,
         reserved: reservedTerms(shipped, naming),
-        external: new Set([...shipped.allowed, ...naming.allowed.map((entry) => entry.name)]),
-        allowed: new Map(naming.allowed.map((entry) => [entry.name, entry.reason])),
+        allowed: new Map([
+            ...shipped.allowed.map((name) => [name, undefined] as const),
+            ...naming.allowed.map((entry) => [entry.name, entry.reason] as const),
+        ]),
         fixedKeys: new Map(naming.fixed_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         limitsFor: buildLimitsFor(shipped, surface, policy, scope),
-        isDigitsBanned: shipped.ban_digits,
-        isRepeatBanned: shipped.ban_repeats,
+        isDigitsAllowed: shipped.allow_digits,
+        isRepeatAllowed: shipped.allow_repeated_words,
     };
 }
 

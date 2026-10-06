@@ -4,6 +4,7 @@ import { test, expect, describe } from 'bun:test';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
+import { NAMING_SCHEMA_CASES } from '#tests/config/cli/docs/naming.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
@@ -28,14 +29,17 @@ describe('the JSON schema of gspot.toml', () => {
     });
 });
 
-test.each(RUNTIME_SCHEMA_CASES)('runtime and published schemas agree on $name', ({ input, valid, key }) => {
-    const document = { ...input };
-    const text = stringify(document);
-    const problems = policyProblems(text);
-    if (valid) expect(problems).toStrictEqual([]);
-    else expect(problems).toContainEqual(textContaining(`gspot.toml: ${key}:`));
-    expect(validate(document)).toBe(valid);
-});
+test.each([...RUNTIME_SCHEMA_CASES, ...NAMING_SCHEMA_CASES])(
+    'runtime and published schemas agree on $name',
+    ({ input, valid, diagnostic }) => {
+        const document = { ...input };
+        const text = stringify(document);
+        const problems = policyProblems(text);
+        if (valid) expect(problems).toStrictEqual([]);
+        else expect(problems).toContainEqual(textContaining(diagnostic));
+        expect(validate(document)).toBe(valid);
+    },
+);
 
 test.each(LOCALE_SCHEMA_CASES)('manifest settings validate $name', ({ scoped: nested, locales, valid }) => {
     const settings = { i18n: { locales } };

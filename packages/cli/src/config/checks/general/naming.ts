@@ -1,14 +1,5 @@
 import type { PathContainer } from '#cli/types/checks/general/naming.ts';
 
-export const RESERVED_USES: Record<string, string[]> = {
-    directory: ['directories', 'packages'],
-    'file stem': ['files', 'modules'],
-    variable: ['variables', 'constants', 'parameters'],
-    property: ['properties', 'attributes', 'enum_cases'],
-    field: ['properties', 'attributes'],
-    'identifier word': ['*'],
-};
-
 export const DIGIT = /\d/u;
 
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);

@@ -42,13 +42,12 @@ export type CategoryLimits = { caseNames: string[]; maxChars: number; maxWords: 
 export type EffectivePolicy = {
     terms: Term[];
     reserved: Map<string, string[]>;
-    external: Set<string>;
     allowed: Map<string, string | undefined>;
     fixedKeys: Map<string, Set<string>>;
     rules: PathRule[];
     limitsFor: (language: string, category: string) => CategoryLimits;
-    isDigitsBanned: boolean;
-    isRepeatBanned: boolean;
+    isDigitsAllowed: boolean;
+    isRepeatAllowed: boolean;
 };
 
 /** Framework punctuation removed before a path segment's name is checked. */

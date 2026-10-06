@@ -19,6 +19,9 @@ export const CATEGORY_LABELS: Record<string, string> = {
     enum_cases: 'enum case',
     files: 'file',
     directories: 'directory',
+    modules: 'module',
+    packages: 'package',
+    path_parameters: 'path parameter',
 };
 
 export const PYTHON_PARAMETER_NODES = new Set([

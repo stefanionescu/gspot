@@ -9,9 +9,11 @@ import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 const policy: EffectivePolicy = {
     terms: compileTerms(['enhanced', 'handler'], { source: 'marketing group', group: 'marketing' }),
-    reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
-    external: new Set(['requestAnimationFrame']),
-    allowed: new Map([['enhancedThing', 'a reason']]),
+    reserved: new Map([['config', ['directories', 'variables']]]),
+    allowed: new Map<string, string | undefined>([
+        ['requestAnimationFrame', undefined],
+        ['enhancedThing', 'a reason'],
+    ]),
     fixedKeys: new Map([['api/route.ts', new Set(['Content-Type'])]]),
     rules: [
         {
@@ -56,8 +58,8 @@ const policy: EffectivePolicy = {
         maxChars: 20,
         maxWords: 3,
     }),
-    isDigitsBanned: true,
-    isRepeatBanned: true,
+    isDigitsAllowed: false,
+    isRepeatAllowed: false,
 };
 
 const plain = { policy, isReactFile: false, isTestFile: false };
@@ -109,6 +111,7 @@ describe('nameProblems', () => {
 
     test('a reserved term is allowed only in its named uses', () => {
         expect(nameProblems(identifier('config', 'variables'), plain)).toStrictEqual([]);
+        expect(nameProblems(identifier('config', 'directories'), plain)).toStrictEqual([]);
         expect(nameProblems(identifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
     });
 

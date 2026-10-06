@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
+import { bannedTerm } from '#cli/checks/general/naming/problems.ts';
 import { compileTerms } from '#cli/checks/general/naming/policy.ts';
-import { bannedTerm, isUseAllowed } from '#cli/checks/general/naming/problems.ts';
 
 const TERMS = compileTerms(['common', 'edge case', 'load-bearing'], { source: 'test' });
 
@@ -11,13 +11,5 @@ describe('bannedTerm', () => {
         expect(bannedTerm(['an', 'edge', 'case'], TERMS)?.term).toBe('edge case');
         expect(bannedTerm(['edge', 'of', 'case'], TERMS)).toBeUndefined();
         expect(bannedTerm(['load', 'bearing', 'wall'], TERMS)?.term).toBe('load-bearing');
-    });
-});
-
-describe('isUseAllowed', () => {
-    test('a reserved use names a category class', () => {
-        expect(isUseAllowed(['configuration directory'], 'directories')).toBe(true);
-        expect(isUseAllowed(['configuration directory'], 'functions')).toBe(false);
-        expect(isUseAllowed(['identifier word'], 'functions')).toBe(true);
     });
 });
