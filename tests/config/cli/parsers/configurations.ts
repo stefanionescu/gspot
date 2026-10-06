@@ -22,3 +22,14 @@ export const SYSTEM_TOOL_DECLARATION = `[[tool]]
 name = "example"
 system = true
 `;
+
+/** A fragment selector retains its file selection and reasoned path allowance without another coverage field. */
+export const SYNTAX_SELECTOR_DECLARATION = `[[config]]
+target = ".gspot/config/eslint.config.mjs"
+fragment = true
+[[config.selectors]]
+selector = "CallExpression[callee.name='query']"
+message = "Use the declared query contract."
+files = ["**/*.ts"]
+allowed = "drizzle.raw_sql_allowed"
+`;

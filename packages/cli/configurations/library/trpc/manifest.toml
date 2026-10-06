@@ -12,7 +12,6 @@ tool = "eslint"
 fragment = true
 
 [[config.selectors]]
-level = "all"
 selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
 message = "Give the procedure an input schema before its resolver, even when the input is nothing."
 files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]

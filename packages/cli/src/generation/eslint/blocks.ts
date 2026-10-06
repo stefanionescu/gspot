@@ -196,20 +196,19 @@ export function fragmentSelectorGroups(
     fragments: Fragment[],
     isAll: boolean,
 ): SelectorGroup[] {
+    if (!isAll) return [];
     return scopes.flatMap((scope) => {
         const resolved = fragments
             .filter(({ manifest }) => scope.selected.includes(manifest))
             .flatMap(({ config }) =>
-                config.selectors
-                    .filter((entry) => isAll || entry.level === 'recommended')
-                    .map(
-                        (entry): ResolvedSelector => ({
-                            selector: entry.selector,
-                            message: entry.message,
-                            ...(entry.files === undefined ? {} : { files: entry.files }),
-                            ...(entry.allowed === undefined ? {} : { except: allowedPaths(scope, entry.allowed) }),
-                        }),
-                    ),
+                config.selectors.map(
+                    (entry): ResolvedSelector => ({
+                        selector: entry.selector,
+                        message: entry.message,
+                        ...(entry.files === undefined ? {} : { files: entry.files }),
+                        ...(entry.allowed === undefined ? {} : { except: allowedPaths(scope, entry.allowed) }),
+                    }),
+                ),
             );
         return selectorGroups(resolved).map((group) => ({
             ...group,

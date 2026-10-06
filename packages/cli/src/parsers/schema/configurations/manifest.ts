@@ -42,9 +42,8 @@ const pointerSchema = z
         'Directory pointers require a body without a template.',
     );
 
-// A syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
+// An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
 const selectorSchema = z.strictObject({
-    level: levelSchema,
     selector: z.string().min(1),
     message: z.string().min(1),
     files: z.array(z.string().min(1)).min(1).optional(),

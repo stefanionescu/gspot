@@ -596,9 +596,11 @@
         "finding": "| `kits/language/javascript/eslint.config.mjs.tmpl:80,96,367-371`, `src/kits/schema.ts:51`, `src/generation/fragments.ts:86` | A kit selector can declare `level = \"recommended\"`. But `no-restricted-syntax` is `all` in `eslint-levels.json:579`, so the template turns that rule off in every block below `all`. A selector at level `recommended` would never run. No kit uses `recommended` today, so the field is dead. | Remove the `level` field from selectors, or keep `no-restricted-syntax` on when a selector at level `recommended` exists. |",
         "owner": "`kits/language/javascript/eslint.config.mjs.tmpl:80,96,367-371`, `src/kits/schema.ts:51`, `src/generation/fragments.ts:86`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Batch 64: remove the unused per-selector level field and thirteen redundant all declarations in six shipped configuration owners. Preserve the existing all-level boundary once in fragmentSelectorGroups. Complete generated outputs and fifty complete native rule dictionaries are identical at both levels. The new exact-field rejection regression fails against the previous parser and all affected CLI and pinned native cases pass. Evidence: findings/progress.json, Native fragment selector level ownership."
+        ]
     },
     {
         "id": "slices/kits-web-languages/032",

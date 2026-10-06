@@ -29,7 +29,6 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[config.selectors]]
-level = "all"
 selector = "TaggedTemplateExpression[tag.name='sql']"
 message = "Raw SQL skips the types of the schema. Use the query builder, or allow the path under drizzle.raw_sql_allowed with a reason."
 allowed = "drizzle.raw_sql_allowed"

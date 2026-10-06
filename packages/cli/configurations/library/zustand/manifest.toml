@@ -13,7 +13,6 @@ tool = "eslint"
 fragment = true
 
 [[config.selectors]]
-level = "all"
 selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]"
 message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
 

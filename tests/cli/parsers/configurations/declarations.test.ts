@@ -9,6 +9,7 @@ import {
     SELECTOR_DECLARATION,
     SUPPRESSION_DECLARATION,
     SYSTEM_TOOL_DECLARATION,
+    SYNTAX_SELECTOR_DECLARATION,
 } from '#tests/config/cli/parsers/configurations.ts';
 
 test('the folder gives a configuration its name and kind, and the [configuration] table cannot repeat them', () => {
@@ -176,4 +177,23 @@ test('companion tools refuse a configuration with no consuming tool or check', (
             tables: '[[config]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');
+});
+
+test('syntax selector coverage has no separate level declaration and retains its file and allowance fields', () => {
+    for (const level of ['recommended', 'all'])
+        expect(() =>
+            parseConfigurationManifest('example', {
+                tables: `${SYNTAX_SELECTOR_DECLARATION}level = "${level}"\n`,
+            }),
+        ).toThrow('config.0.selectors.0: Unrecognized key: "level"');
+    expect(
+        parseConfigurationManifest('example', { tables: SYNTAX_SELECTOR_DECLARATION }).configs[0]?.selectors,
+    ).toStrictEqual([
+        {
+            selector: "CallExpression[callee.name='query']",
+            message: 'Use the declared query contract.',
+            files: ['**/*.ts'],
+            allowed: 'drizzle.raw_sql_allowed',
+        },
+    ]);
 });
