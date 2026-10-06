@@ -71,7 +71,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
 // The lines about one scope: its default, its current value and source, and how to change it.
 function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string[] {
     const { scope, shipped, effective } = entry;
-    const { value, source = 'unset', reason } = effective ?? {};
+    const { value, source = 'unset', reason } = effective === undefined ? {} : effective;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
     return [

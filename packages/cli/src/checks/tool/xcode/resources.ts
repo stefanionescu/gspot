@@ -62,8 +62,12 @@ export function xcstrings(input: EngineInput): Finding[] {
         const at = { file: path, line: 1 };
         if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
         const strings = read.data;
-        const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
-        const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));
+        const entries = (strings.strings === undefined ? [] : Object.entries(strings.strings)).filter(
+            ([, entry]) => entry.shouldTranslate !== false,
+        );
+        const locales = new Set(
+            entries.flatMap(([, entry]) => (entry.localizations === undefined ? [] : Object.keys(entry.localizations))),
+        );
         locales.delete(strings.sourceLanguage ?? 'en');
         return entries.flatMap(([key, entry]) => {
             const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);

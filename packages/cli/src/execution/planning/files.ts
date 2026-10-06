@@ -125,7 +125,7 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
  */
 export function runsAtRoot(manifest: Manifest, spec: CheckSpec): boolean {
     if (manifest.configuration.kind !== 'general' || manifest.files.languages || spec.runs === 'scope') return false;
-    const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
+    const command = [...(spec.command ?? []), ...(spec.env === undefined ? [] : Object.values(spec.env))];
     return !manifest.configs.some(
         (config) =>
             config.scoped &&

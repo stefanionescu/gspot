@@ -45,10 +45,9 @@ function allowedPaths(selection: ScopeSelection, setting: string): string[] {
  */
 export function eslintRuleOptions(policy: Policy): EslintRuleOptions[] {
     const tables = everyTable(policy).toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''));
-    const settings = tables.map<ScopeEslintSettings>(({ scope = '', table }) => ({
-        scope,
-        settings: table.tools?.['eslint'] ?? {},
-    }));
+    const settings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
+        table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
+    );
     const base = settings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
         settings.rules === undefined ? [] : [{ scope, ...pathExpressions(['**/*']), rules: settings.rules }],
     );

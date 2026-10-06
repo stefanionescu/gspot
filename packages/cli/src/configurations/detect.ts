@@ -42,7 +42,7 @@ function layout(files: TrackedFile[], projectManifests: ProjectManifest[], scope
                 .filter((tag) => tag.startsWith(RUNTIME_TAG))
                 .map((tag) => [tag.slice(RUNTIME_TAG.length), `${file.path} shebang`] as const),
         ),
-        ...scopeSummaries.flatMap((fact) => Object.entries(fact.runtimes ?? {})),
+        ...scopeSummaries.flatMap((fact) => (fact.runtimes === undefined ? [] : Object.entries(fact.runtimes))),
     ]);
     for (const file of candidates) {
         const extension = extensionOf(file.path);

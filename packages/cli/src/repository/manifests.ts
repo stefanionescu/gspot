@@ -19,7 +19,8 @@ export function getProjectDependencies(manifests: ProjectManifest[], scope: stri
                 isInScope(scope, manifest.path === 'package.json' ? '' : posix.dirname(manifest.path)),
         )
         .toSorted((first, second) => second.path.length - first.path.length)[0];
-    return owner?.dependencies ?? {};
+    if (owner === undefined) return {};
+    return owner.dependencies;
 }
 
 /**

@@ -118,7 +118,7 @@ export function commandConfigurations(
     planned: PlannedCheck,
     command = planned.spec.command ?? [],
 ): string[] {
-    const parts = [...command, ...Object.values(planned.spec.env ?? {})];
+    const parts = [...command, ...(planned.spec.env === undefined ? [] : Object.values(planned.spec.env))];
     const scope = planned.scope.scope.path;
     return [
         ...new Set([

@@ -37,7 +37,7 @@ function reconcileChoices(session: Session, detected: InitSelection): Configurat
             ...policy.scopes.map((scope): [string, string[]] => [scope.path, scope.configurations]),
         ]),
         manifests,
-        previous: getOwnership(root).selections ?? {},
+        previous: getOwnership(root).selections,
     });
     const rootIds = mergeConfigurationChoices(manifests, {
         saved: policy.configurations,

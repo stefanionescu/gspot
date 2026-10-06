@@ -45,8 +45,10 @@ function requirementName(spec: string): string | undefined {
 
 function poetryDependencies(poetry: PoetrySettings): DependencyMap {
     const poetryGroups = [
-        poetry?.dependencies ?? {},
-        ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {}),
+        ...(poetry?.dependencies === undefined ? [] : [poetry.dependencies]),
+        ...(poetry?.group === undefined ? [] : Object.values(poetry.group)).flatMap((entry) =>
+            entry.dependencies === undefined ? [] : [entry.dependencies],
+        ),
     ];
     const poetryEntries = poetryGroups
         .flatMap((group) => Object.entries(group))
@@ -59,11 +61,14 @@ function poetryDependencies(poetry: PoetrySettings): DependencyMap {
 }
 
 function pythonDependencies(parsed: PythonManifest): DependencyMap {
-    const project = parsed.project ?? {};
+    const { project = {} } = parsed;
     const groups = [
         ...(project.dependencies ?? []),
-        ...Object.values(project['optional-dependencies'] ?? {}).flat(),
-        ...Object.values(parsed['dependency-groups'] ?? {})
+        ...(project['optional-dependencies'] === undefined
+            ? []
+            : Object.values(project['optional-dependencies'])
+        ).flat(),
+        ...(parsed['dependency-groups'] === undefined ? [] : Object.values(parsed['dependency-groups']))
             .flat()
             .filter((entry) => typeof entry === 'string'),
     ];
@@ -109,7 +114,7 @@ function packageRuntimes(path: string, manifest: PackageManifest): Record<string
     const runtimes: Record<string, string> = {};
     for (const runtime of JAVASCRIPT_RUNTIMES)
         if (manifest.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
-    for (const [name, command] of Object.entries(manifest.scripts ?? {})) {
+    for (const [name, command] of manifest.scripts === undefined ? [] : Object.entries(manifest.scripts)) {
         const runtime = RUNTIME_COMMAND.exec(command)?.[1];
         if (runtime !== undefined) runtimes[runtime] = `${path} script ${name}`;
     }

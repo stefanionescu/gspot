@@ -55,7 +55,7 @@ function npmDependencyTree(parsed: unknown): Set<string> {
         identities.add(
             entry.version.startsWith('npm:') ? entry.version.slice('npm:'.length) : `${name}@${entry.version}`,
         );
-        pending.push(...Object.entries(entry.dependencies ?? {}));
+        pending.push(...(entry.dependencies === undefined ? [] : Object.entries(entry.dependencies)));
     }
     return identities;
 }
@@ -153,10 +153,14 @@ export function parseLockfile(filename: LockFileName, text: string): unknown {
  * @returns root dependency names and their declared specifiers
  */
 export function rootLockDependencies(name: Exclude<LockName, 'yarn'>, content: string): DependencyMap {
-    if (name === 'npm')
-        return npmLockSchema.parse(parseLockfile('package-lock.json', content)).packages['']?.devDependencies ?? {};
-    if (name === 'bun')
-        return bunLockSchema.parse(parseLockfile('bun.lock', content)).workspaces['']?.devDependencies ?? {};
+    if (name === 'npm' || name === 'bun') {
+        const root =
+            name === 'npm'
+                ? npmLockSchema.parse(parseLockfile('package-lock.json', content)).packages['']
+                : bunLockSchema.parse(parseLockfile('bun.lock', content)).workspaces[''];
+        if (root?.devDependencies === undefined) return {};
+        return root.devDependencies;
+    }
     const pinned = pnpmLockSchema.parse(parseLockfile('pnpm-lock.yaml', content)).importers['.']?.devDependencies;
     const entries = pnpmSpecifiersSchema.parse(pinned);
     return Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));

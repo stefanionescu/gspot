@@ -124,9 +124,9 @@ function keyProblems(
 
 function extraDuplicateProblems(surface: KnownSettings, table: Partial<Policy>): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
-    const tools = table.tools ?? {};
+    const { tools = {} } = table;
     for (const [tool, toolTable] of Object.entries(tools)) {
-        const verbatim = toolTable.verbatim ?? {};
+        const { verbatim = {} } = toolTable;
         for (const key of Object.keys(verbatim)) {
             if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
                 problems.push({
@@ -201,14 +201,14 @@ function isKeyGroup(surface: KnownSettings, key: string, value: unknown): value 
  */
 function writtenKeys(policy: Partial<Policy>, surface: KnownSettings): string[] {
     const keys: string[] = [];
-    const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
+    const pending = (policy.tools === undefined ? [] : Object.entries(policy.tools)).flatMap(([tool, table]) =>
         Object.entries(table)
             .filter(([slot]) => slot !== 'verbatim')
             .map(([slot, value]) => ({ key: `tools.${tool}.${slot}`, value })),
     );
     pending.push(
-        ...Object.entries(policy.configurationSettings ?? {}).flatMap(([name, table]) =>
-            Object.entries(table).map(([slot, value]) => ({ key: `${name}.${slot}`, value })),
+        ...(policy.configurationSettings === undefined ? [] : Object.entries(policy.configurationSettings)).flatMap(
+            ([name, table]) => Object.entries(table).map(([slot, value]) => ({ key: `${name}.${slot}`, value })),
         ),
     );
     for (const { key, value } of pending) {
@@ -216,7 +216,7 @@ function writtenKeys(policy: Partial<Policy>, surface: KnownSettings): string[] 
             pending.push(...Object.entries(value).map(([slot, child]) => ({ key: `${key}.${slot}`, value: child })));
         else keys.push(key);
     }
-    const format = Object.keys(policy.format ?? {}).map((key) => `format.${key}`);
+    const format = (policy.format === undefined ? [] : Object.keys(policy.format)).map((key) => `format.${key}`);
     const known = [...surface.specs.keys()].filter((key) => policyValue(policy, key) !== undefined);
     return [...new Set([...known, ...limitKeys(policy), ...namingKeys(policy), ...keys, ...format])];
 }

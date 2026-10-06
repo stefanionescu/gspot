@@ -63,7 +63,11 @@ const CHECK_RULES: CheckRule[] = [
 function configurationReaders(checks: RawCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
-        for (const argument of [...(check.command ?? []), ...(check.fix ?? []), ...Object.values(check.env ?? {})])
+        for (const argument of [
+            ...(check.command ?? []),
+            ...(check.fix ?? []),
+            ...(check.env === undefined ? [] : Object.values(check.env)),
+        ])
             for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
@@ -216,7 +220,7 @@ function assertConfigurationConsumers(
     );
     const versionProblems = manifest.checks.flatMap((check) => {
         const required = new Set([check.tool ?? check.command?.[0], ...(check.other_tools ?? [])]);
-        return Object.keys(check.min_versions ?? {}).flatMap((name) => {
+        return (check.min_versions === undefined ? [] : Object.keys(check.min_versions)).flatMap((name) => {
             if (!required.has(name))
                 return [`check ${check.name} sets a version floor for ${name}, which it does not use.`];
             const pin = manifest.tools.find((tool) => tool.name === name) ?? tools.get(name);

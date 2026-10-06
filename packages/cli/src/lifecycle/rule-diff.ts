@@ -11,16 +11,21 @@ import type { RuleSettings } from '#cli/types/generation/rules.ts';
 export function compareRules(previous: RuleSettings, proposed: RuleSettings): NonNullable<Drift['rules']> {
     const paths = new Set([...Object.keys(previous), ...Object.keys(proposed)]);
     return [...paths].flatMap((path) => {
-        const before = previous[path] ?? {};
-        const next = proposed[path] ?? {};
-        const added = Object.keys(next)
-            .filter((rule) => !Object.hasOwn(before, rule))
+        const before = previous[path];
+        const next = proposed[path];
+        const added = (next === undefined ? [] : Object.keys(next))
+            .filter((rule) => before === undefined || !Object.hasOwn(before, rule))
             .toSorted((left, right) => left.localeCompare(right));
-        const removed = Object.keys(before)
-            .filter((rule) => !Object.hasOwn(next, rule))
+        const removed = (before === undefined ? [] : Object.keys(before))
+            .filter((rule) => next === undefined || !Object.hasOwn(next, rule))
             .toSorted((left, right) => left.localeCompare(right));
-        const changed = Object.keys(next)
-            .filter((rule) => Object.hasOwn(before, rule) && !isDeepStrictEqual(before[rule], next[rule]))
+        const changed = (next === undefined ? [] : Object.keys(next))
+            .filter(
+                (rule) =>
+                    before !== undefined &&
+                    Object.hasOwn(before, rule) &&
+                    !isDeepStrictEqual(before[rule], next?.[rule]),
+            )
             .toSorted((left, right) => left.localeCompare(right));
         return added.length + removed.length + changed.length === 0 ? [] : [{ path, added, removed, changed }];
     });

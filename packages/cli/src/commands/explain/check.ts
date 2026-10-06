@@ -88,7 +88,7 @@ function getFacts(check: CheckSpec, configuration: Found['configuration']): Chec
         guides,
         crashPattern,
         minVersions: check.min_versions,
-        versionRequirements: Object.entries(check.min_versions ?? {}).map(
+        versionRequirements: (check.min_versions === undefined ? [] : Object.entries(check.min_versions)).map(
             ([name, floor]) => `Required native version: ${name} >= ${floor}`,
         ),
     };

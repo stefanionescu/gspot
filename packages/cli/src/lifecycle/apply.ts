@@ -180,7 +180,7 @@ export function writeOutputs(
     const rules = Object.fromEntries(
         generated.files.flatMap((file) => (file.ruleData === undefined ? [] : [[file.path, file.ruleData]])),
     );
-    if (!isDeepStrictEqual(log.state.rules ?? {}, rules)) {
+    if (!isDeepStrictEqual(log.state.rules === undefined ? {} : log.state.rules, rules)) {
         if (Object.keys(rules).length === 0) delete log.state.rules;
         else log.state.rules = rules;
         log.save();

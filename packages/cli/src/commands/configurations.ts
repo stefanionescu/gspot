@@ -36,7 +36,7 @@ function prepareOverrides(log: Log, input: ConfigurationOverrideUpdate): void {
             ...policy.scopes.map((scope): [string, string[]] => [scope.path, scope.configurations]),
         ]),
         manifests,
-        previous: log.state.selections ?? {},
+        previous: log.state.selections,
     });
     const { path, added, removed } = overrides;
     const entry = (Object.hasOwn(selections, path) ? selections[path] : undefined) ?? {

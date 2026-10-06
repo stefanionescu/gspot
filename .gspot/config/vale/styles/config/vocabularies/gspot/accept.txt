@@ -1,3 +1,6 @@
+(?-i:\bEXIT\b)
+(?-i:\bRUN\b)
+(?-i:\bSHELL\b)
 ABC
 ACME
 actionlint
@@ -53,7 +56,6 @@ EOL
 ERR
 ESLint
 ESM
-EXIT
 FAST
 GET
 GIF
@@ -154,7 +156,6 @@ RSA
 RSC
 RTL
 Ruff
-RUN
 SARIF
 SAST
 SCSS
@@ -163,7 +164,6 @@ Semgrep
 SEO
 SGID
 SHA
-SHELL
 ShellCheck
 shfmt
 SIM

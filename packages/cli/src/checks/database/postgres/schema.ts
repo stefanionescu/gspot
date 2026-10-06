@@ -10,7 +10,8 @@ import {
 } from '#cli/config/checks/database/postgres.ts';
 
 function qualifyRelation(relation: unknown): string {
-    const node = (relation ?? {}) as SqlNode;
+    if (relation === undefined || relation === null) return `${PUBLIC_SCHEMA}.`;
+    const node = relation as SqlNode;
     return `${textOf(node['schemaname']) || PUBLIC_SCHEMA}.${textOf(node['relname'])}`;
 }
 

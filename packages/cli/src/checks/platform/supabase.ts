@@ -129,7 +129,9 @@ export function supabaseConfiguration(input: EngineInput): Finding[] {
     if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
     const { config } = read;
     const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
-    const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
+    const missing = (config.functions === undefined ? [] : Object.keys(config.functions)).filter(
+        (name) => !folders.has(name),
+    );
     return missing.map((name) =>
         findingAt(
             input,
@@ -154,7 +156,7 @@ export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
     const policed = migrations
         .map((migration) => migration.text)
         .filter((text) => /policy/iu.test(text) && text.includes('storage.objects'));
-    return Object.keys(config.storage?.buckets ?? {})
+    return (config.storage?.buckets === undefined ? [] : Object.keys(config.storage.buckets))
         .filter((bucket) => policed.every((text) => !text.includes(`'${bucket}'`)))
         .map((bucket) =>
             findingAt(

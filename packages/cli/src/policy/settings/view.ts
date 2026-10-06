@@ -72,11 +72,12 @@ export function scopeView(surface: KnownSettings, policy: Policy, selected: Mani
         options: (name) =>
             optionSlots(
                 settings,
-                tablesFor(policy, scope).map(({ table }) =>
-                    name.startsWith('tools.')
-                        ? (table.tools?.[name.slice('tools.'.length)] ?? {})
-                        : (table.configurationSettings?.[name] ?? {}),
-                ),
+                tablesFor(policy, scope).flatMap(({ table }) => {
+                    const options = name.startsWith('tools.')
+                        ? table.tools?.[name.slice('tools.'.length)]
+                        : table.configurationSettings?.[name];
+                    return options === undefined ? [] : [options];
+                }),
                 name,
             ),
         ignoresFor: (check: string): IgnoreEntry[] => ignores.filter((entry) => entry.check === check),
@@ -90,8 +91,7 @@ export function scopeView(surface: KnownSettings, policy: Policy, selected: Mani
                 .filter((rule) => rule !== undefined),
         verbatim: (name) => {
             const found = tablesFor(policy, scope)
-                .map(({ table }) => table.tools?.[name] ?? {})
-                .map((table) => table['verbatim'])
+                .map(({ table }) => table.tools?.[name]?.['verbatim'])
                 .filter((value): value is Record<string, unknown> => typeof value === 'object');
             if (found.length === 0) return undefined;
             const options = Object.assign({}, ...found) as Record<string, unknown>;

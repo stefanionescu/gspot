@@ -80,9 +80,9 @@ function toReasoned<T>(value: T | Required<Reasoned<T>>): Reasoned<T> {
  * @param raw the table as written, if any
  * @returns the limits
  */
-function normalizeLimits(raw: RawLimits | undefined): Limits {
+function normalizeLimits(raw: RawLimits = {}): Limits {
     const limits: Limits = { root: {}, groups: {} };
-    const entries = Object.entries(raw ?? {});
+    const entries = Object.entries(raw);
     for (const [key, value] of entries) {
         if (!isRecord(value) || isReasoned(value)) {
             limits.root[key] = toReasoned(value as number | Required<Reasoned<number>>);
@@ -100,14 +100,14 @@ function normalizeLimits(raw: RawLimits | undefined): Limits {
  * @param raw the table as written, if any
  * @returns the naming configuration
  */
-function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
-    const lists = namingLists.parse(raw ?? {});
+function normalizeNaming(raw: RawNaming = {}): NamingSettings {
+    const lists = namingLists.parse(raw);
     const naming: NamingSettings = {
         ...lists,
         paths: lists.paths.map((entry) => compact(entry)),
         languages: {},
     };
-    const entries = Object.entries(raw ?? {});
+    const entries = Object.entries(raw);
     for (const [key, value] of entries)
         if (!Object.hasOwn(namingLists.shape, key) && isRecord(value)) naming.languages[key] = normalizeLanguage(value);
     return naming;
@@ -119,7 +119,7 @@ function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @returns the architecture configuration
  */
 function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
-    const filled = policySchema.shape.architecture.unwrap().parse(raw ?? {});
+    const filled = policySchema.shape.architecture.unwrap().prefault({}).parse(raw);
     return compact({ ...filled, imports_allowed: filled.imports_allowed.map((entry) => compact(entry)) });
 }
 
@@ -169,9 +169,9 @@ export function buildPolicy(raw: RawPolicy): Policy {
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
         architecture: normalizeArchitecture(raw.architecture),
-        structure: policySchema.shape.structure.unwrap().parse(raw.structure ?? {}),
+        structure: policySchema.shape.structure.unwrap().prefault({}).parse(raw.structure),
         format: compact({ ...raw.format }),
-        prose: policySchema.shape.prose.unwrap().parse(raw.prose ?? {}),
+        prose: policySchema.shape.prose.unwrap().prefault({}).parse(raw.prose),
         tools: { ...raw.tools } as Policy['tools'],
         tests: raw.tests,
         ignores: (raw.ignore ?? []).map((entry) => compact(entry)),

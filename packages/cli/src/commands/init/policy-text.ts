@@ -32,7 +32,7 @@ function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
 
 // Repository settings override the same template setting, without dropping other settings of that tool.
 function mergeTemplate(document: TomlTable, tables: TomlTable | undefined): void {
-    const entries = Object.entries(tables ?? {}).filter(([key]) => !TEMPLATE_HEAD.has(key));
+    const entries = (tables === undefined ? [] : Object.entries(tables)).filter(([key]) => !TEMPLATE_HEAD.has(key));
     for (const [key, value] of entries) {
         const existing = document[key];
         if (key === 'tools') {

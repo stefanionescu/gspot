@@ -134,7 +134,7 @@ export function reasonDiagnostic(where: string, reason: string | undefined, comm
  */
 export function reasonProblems(policy: Policy): PolicyProblem[] {
     const tools = everyTable(policy).flatMap(({ table: layer, path }) =>
-        Object.entries(layer.tools ?? {}).flatMap(([tool, table]) =>
+        (layer.tools === undefined ? [] : Object.entries(layer.tools)).flatMap(([tool, table]) =>
             toolReasonProblems(tool, table, policy.require_reasons, [...path, 'tools', tool]),
         ),
     );
@@ -148,7 +148,7 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
  */
 export function restrictionProblems(policy: Policy): PolicyProblem[] {
     const rules = everyTable(policy).flatMap(({ table: layer, path }) =>
-        Object.entries(layer.tools ?? {}).flatMap(([tool, table]) => {
+        (layer.tools === undefined ? [] : Object.entries(layer.tools)).flatMap(([tool, table]) => {
             const location = [...path, 'tools', tool];
             const overrides = Array.isArray(table['overrides']) ? table['overrides'] : [];
             return [

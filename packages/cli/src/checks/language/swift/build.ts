@@ -26,7 +26,8 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, de
         .map((groups): Finding => {
             // SwiftLint appends the rule ID in parentheses; compiler diagnostics do not.
             const text = groups['text'] ?? '';
-            const suffix = RULE_SUFFIX.exec(text)?.groups ?? {};
+            const suffix = RULE_SUFFIX.exec(text)?.groups;
+            const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
             const normalized = withoutPrivatePrefix(file);
             return findingAt(
@@ -36,8 +37,8 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, de
                     line: Number(groups['line']),
                     column: Number(groups['column']),
                 },
-                suffix['rule'] ?? defaultRule,
-                suffix['text'] ?? text,
+                rule,
+                message,
             );
         });
 }

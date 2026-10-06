@@ -53,7 +53,7 @@ function policyPatterns(input: EngineInput): PathPattern[] {
         })),
         ...listedPaths(naming.paths).map((pattern) => ({ pattern, where: '[[naming.paths]]' })),
         ...settingPatterns(policy.tools, 'tools.'),
-        ...settingPatterns(policy.configurationSettings ?? {}, ''),
+        ...(policy.configurationSettings === undefined ? [] : settingPatterns(policy.configurationSettings, '')),
     ];
 }
 

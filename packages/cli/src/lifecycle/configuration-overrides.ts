@@ -15,7 +15,7 @@ import type {
  * @returns the override history with the current choices as its baseline
  */
 export function updateConfigurationOverrides(input: SelectionUpdate): ConfigurationSelections {
-    const { choices, manifests, previous } = input;
+    const { choices, manifests, previous = {} } = input;
     return Object.fromEntries(
         choices.entries().map(([path, ids]) => {
             const configurations = ids.filter((id) => {
@@ -54,7 +54,7 @@ export function recordConfigurationOverrides(session: Session, log: Log): void {
             ...policy.scopes.map((scope): [string, string[]] => [scope.path, scope.configurations]),
         ]),
         manifests: session.manifests,
-        previous: log.state.selections ?? {},
+        previous: log.state.selections,
     });
     log.state.selections = selections;
     log.save();

@@ -14,7 +14,7 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
     const path = `${prefix}package.json`;
     const manifest = readPackageManifest(root, path);
-    const imports = Object.entries(manifest?.imports ?? {});
+    const imports = manifest?.imports === undefined ? [] : Object.entries(manifest.imports);
     for (const [pattern, target] of imports) {
         const found = importTarget(target);
         if (found === undefined) continue;
@@ -38,7 +38,7 @@ export function aliasesFor(root: string, scope: string): Record<string, string> 
     const config = getTsconfig(root, path);
     if (config === undefined) return aliases;
     const options = config.options;
-    const paths = Object.entries(options.paths ?? {});
+    const paths = options.paths === undefined ? [] : Object.entries(options.paths);
     const inheritedBase = options['pathsBasePath'];
     const base = options.baseUrl ?? (typeof inheritedBase === 'string' ? inheritedBase : dirname(path));
     for (const [pattern, targets] of paths) {

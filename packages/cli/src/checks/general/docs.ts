@@ -51,7 +51,7 @@ function miseTasks(input: EngineInput, file: string): string[] {
 function packageScripts(input: EngineInput, file: string): string[] | undefined {
     try {
         const manifest = parsePackageManifest(readSource(input.root, file, input.reads).toString('utf8'));
-        return Object.keys(manifest.scripts ?? {});
+        return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });

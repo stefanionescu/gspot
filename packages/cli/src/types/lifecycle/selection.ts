@@ -68,7 +68,7 @@ export type ConfigurationSelections = NonNullable<Ownership['selections']>;
 export type SelectionUpdate = {
     choices: ReadonlyMap<string, string[]>;
     manifests: Map<string, Manifest>;
-    previous: ConfigurationSelections;
+    previous: ConfigurationSelections | undefined;
 };
 
 /** Existing and detected choices with a scope's recorded overrides. */

@@ -56,7 +56,8 @@ export function gitAttributes(text: string): Map<string, Record<string, string>>
     const attributes = new Map<string, Record<string, string>>();
     for (let index = 0; index + ATTRIBUTE_FIELDS <= fields.length; index += ATTRIBUTE_FIELDS) {
         const [path, name, value] = fields.slice(index, index + ATTRIBUTE_FIELDS) as [string, string, string];
-        const table = attributes.get(path) ?? {};
+        let table = attributes.get(path);
+        if (table === undefined) table = {};
         table[name] = value;
         attributes.set(path, table);
     }

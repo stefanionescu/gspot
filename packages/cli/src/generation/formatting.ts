@@ -63,7 +63,7 @@ function literalGlob(path: string): string {
 function formatEntries(policy: Policy): ScopeFormat[] {
     const tables = everyTable(policy)
         .toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''))
-        .map(({ scope = '', table }) => ({ scope, format: table.format ?? {} }));
+        .flatMap(({ scope = '', table }) => (table.format === undefined ? [] : [{ scope, format: table.format }]));
     const base = tables.flatMap(({ scope, format: { overrides: _overrides, ...format } }) =>
         scope === '' || Object.keys(format).length === 0 ? [] : [{ scope, paths: ['**/*'], format }],
     );
@@ -136,7 +136,7 @@ export function prettierConfiguration(input: PrettierInput): Record<string, unkn
     const { policy, format, targetPath, verbatim, plugins } = input;
     const prefix = toPosix(relative(dirname(targetPath), '.'));
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
-    const { overrides: nativeOverrides = [], ...extras } = verbatim ?? {};
+    const { overrides: nativeOverrides = [], ...extras } = verbatim === undefined ? {} : verbatim;
     const overrides = [
         ...plugins.flatMap((plugin) => plugin.overrides),
         ...policyOverrides(policy, fromConfig),

@@ -3,15 +3,18 @@ import { test, expect } from 'bun:test';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { lockArgv } from '#cli/tools/npm/install.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { installPrivateTools } from '#tests/harness/install.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
+import { parseToolProject } from '#cli/parsers/packages.ts';
+import { UV_LOCK_ARGUMENTS } from '#cli/config/tools/python.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { GENERATED } from '#tests/config/cli/checks/generated-drift.ts';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const GENERATED_DRIFT_OPTIONS = buildRunOptions({ only: ['gspot/drift'] });
 
@@ -26,7 +29,13 @@ test('an edited generated file and one holding merge markers are drift findings,
         using log = openOwnership(sandbox.path);
         writeOutputs(await openSession(sandbox.path), log);
     }
-    await installPrivateTools(sandbox.path);
+    const project = parseToolProject(readFileSync(join(sandbox.path, '.gspot/package.json'), 'utf8'));
+    for (const command of [lockArgv(project.installer), ['uv', ...UV_LOCK_ARGUMENTS, '--no-python-downloads']]) {
+        const prepared = await runTestCommand(command, { cwd: join(sandbox.path, '.gspot') });
+        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    }
+    expect(existsSync(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/.venv'))).toBe(false);
     const clean = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
     expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'passed', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');

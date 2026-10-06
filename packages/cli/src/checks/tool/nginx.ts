@@ -47,7 +47,8 @@ function syntaxOutcome(
     configurations: Map<string, Mount>,
     diagnostic: string,
 ): EngineOutcome {
-    const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(diagnostic)?.groups ?? {};
+    const location = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(diagnostic)?.groups;
+    const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = configurations.get(target)?.path ?? path;
     return {
         findings: [{ check, file, line: Number(line), rule: 'syntax', message: diagnostic, fixable: false }],

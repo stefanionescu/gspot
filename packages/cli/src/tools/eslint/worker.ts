@@ -36,7 +36,7 @@ async function readActiveRules(request: EslintCoverageRequest): Promise<EslintCo
     for (const path of request.paths) {
         const config = eslintResolvedConfigurationSchema.parse(await eslint.calculateConfigForFile(path));
         if (config === undefined) throw new Error(`ESLint did not resolve a configuration for ${path}.`);
-        result[path] = Object.entries(config.rules ?? {}).flatMap(([name, entry]) => {
+        result[path] = (config.rules === undefined ? [] : Object.entries(config.rules)).flatMap(([name, entry]) => {
             const level: unknown = Array.isArray(entry) ? entry[0] : entry;
             return ACTIVE_SEVERITIES.has(level) ? [name] : [];
         });

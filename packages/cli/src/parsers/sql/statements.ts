@@ -11,7 +11,8 @@ const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
 function statementView(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
-    return { kind, fields: (statement.stmt[kind] ?? {}) as SqlNode, start };
+    const fields = statement.stmt[kind];
+    return { kind, fields: fields === undefined ? {} : (fields as SqlNode), start };
 }
 
 /**

@@ -48,7 +48,7 @@ export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
             });
         }
         blocks.push(
-            ...Object.entries(tool.runtimes ?? {}).map(([glob, runtime]) => ({
+            ...(tool.runtimes === undefined ? [] : Object.entries(tool.runtimes)).map(([glob, runtime]) => ({
                 scope,
                 ...version,
                 runtime,

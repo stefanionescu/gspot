@@ -16,7 +16,7 @@ export function miseToolLine(pin: MisePin): string {
     const key = BARE_KEY.test(pin.name) ? pin.name : JSON.stringify(pin.name);
     const fields = [`version = ${JSON.stringify(pin.version)}`];
     if (pin.os !== undefined) fields.push(`os = [${pin.os.map((name) => JSON.stringify(name)).join(', ')}]`);
-    for (const [name, value] of Object.entries(pin.options ?? {}))
+    for (const [name, value] of pin.options === undefined ? [] : Object.entries(pin.options))
         fields.push(`${name} = ${typeof value === 'string' ? JSON.stringify(value) : String(value)}`);
     return fields.length === 1 ? `${key} = ${JSON.stringify(pin.version)}` : `${key} = {${fields.join(', ')}}`;
 }

@@ -31,7 +31,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
 }
 
 function fileDrift(root: string, generated: Generated, ownership: Ownership): Drift[] {
-    const previous = ownership.rules ?? {};
+    const { rules: previous = {} } = ownership;
     using files = openRoot(root);
     return generated.files.flatMap((file): Drift[] => {
         const baseline = previous[file.path];

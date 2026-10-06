@@ -75,7 +75,7 @@ export function eslintModule(input: EslintModuleInput): EslintModule {
         blocks,
         block: (payload, runtime) => {
             const rules: Record<string, unknown> = Object.fromEntries(
-                Object.entries(payload.rules ?? {}).map(([name, value]) => [
+                (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
                     name,
                     !isAll && allRules.has(name) ? 'off' : value,
                 ]),
@@ -151,7 +151,7 @@ export function eslintRuleSettings(blocks: EslintSettingsBlock[]): { rules: Reco
     const rules: Record<string, unknown[]> = {};
     for (const block of blocks) {
         const { rules: entries, ...selectors } = block;
-        for (const [name, setting] of Object.entries(entries ?? {})) {
+        for (const [name, setting] of entries === undefined ? [] : Object.entries(entries)) {
             rules[name] ??= [];
             rules[name].push({ ...selectors, setting });
         }

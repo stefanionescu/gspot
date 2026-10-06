@@ -191,7 +191,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
     const aliases = aliasesFor(root, '');
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
     const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
-    const importStyle = (tool['import_extensions'] ?? {}) as Record<string, string>;
+    const importStyle = tool['import_extensions'] as Record<string, string> | undefined;
     return {
         aliases,
         nodeFiles,
@@ -207,7 +207,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                   }
                 : {},
         commentLevel: policy.require_reasons ? 'error' : 'off',
-        importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
+        importStyleBlocks: (importStyle === undefined ? [] : Object.entries(importStyle)).map(([glob, style]) => ({
             files: [eslintSourcePattern('javascript', 'typescript'), ...eslintNodePatterns(nodeFiles, '')].map(
                 (pattern) => [glob, pattern],
             ),

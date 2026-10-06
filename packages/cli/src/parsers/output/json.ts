@@ -26,10 +26,10 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
     const { check, help, output } = shape;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new Error('The JSON report contains an invalid finding object.');
-    const fields: Record<string, string | undefined> = output.fields ?? {};
+    const fields: Record<string, string | undefined> | undefined = output.fields;
     // A field may name several paths with spaces between them; the values join in that order.
     const read = (name: string): string | undefined => {
-        const found = (fields[name] ?? '')
+        const found = (fields?.[name] ?? '')
             .split(' ')
             .filter((path) => path !== '')
             .map(

@@ -24,7 +24,7 @@ function composeImages(input: EngineInput, path: string): Set<string> {
         throw new Error(`Cannot read Compose service images in ${path}.`, { cause: error });
     }
     return new Set(
-        Object.values(document.services ?? {})
+        (document.services === undefined ? [] : Object.values(document.services))
             .map((service) => service.image)
             .filter((image): image is string => image !== undefined && !image.includes('$')),
     );
