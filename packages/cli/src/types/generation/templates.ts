@@ -63,6 +63,8 @@ export type TemplateInputs = {
     format: ScopeView['format'];
     settings: Record<string, unknown>;
     fragments: string;
+    /** Separately rendered fragments for targets that consume structured configuration. */
+    fragmentParts: string[];
     fragmentImports: string;
     fragmentFiles: string[];
     fragmentSelectors: SelectorGroup[];

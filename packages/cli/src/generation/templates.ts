@@ -156,6 +156,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         },
         version: version,
         fragments: '',
+        fragmentParts: [],
         fragmentImports: '',
         fragmentFiles: [],
         fragmentSelectors: [],

@@ -72,7 +72,7 @@ stub_file = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\
 
 [[check]]
 name = "stylelint"
-tool = ["stylelint", "stylelint-config-standard", "stylelint-config-recommended", "postcss-html"]
+tool = ["stylelint", "stylelint-config-standard", "stylelint-config-recommended"]
 title = "Lint stylesheets"
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 level = "recommended"
@@ -97,13 +97,6 @@ files = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
 help = "Delete the class nobody reads, or define the class the code reads."
-
-[[setting]]
-name = "tools.stylelint.ignore_at_rules"
-type = "list"
-direction = "loosening"
-default = []
-summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
 
 [[setting]]
 name = "tools.stylelint.rules"

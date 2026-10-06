@@ -18,7 +18,7 @@ function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, tar
 }
 
 // The rendered text of every fragment that has a template.
-function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes: ScopeSelection[]): string {
+function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes: ScopeSelection[]): string[] {
     const rendered: string[] = [];
     for (const { manifest, config } of fragments) {
         if (config.template === undefined) continue;
@@ -54,7 +54,7 @@ function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes
             rendered.push(fragment);
         }
     }
-    return rendered.join('\n');
+    return rendered;
 }
 
 /**
@@ -73,6 +73,7 @@ export function fragmentInputs(
 ): Pick<
     TemplateInputs,
     | 'fragments'
+    | 'fragmentParts'
     | 'fragmentImports'
     | 'fragmentFiles'
     | 'fragmentSelectors'
@@ -101,7 +102,8 @@ export function fragmentInputs(
         config.imports === undefined ? [] : readAsset(`${manifest.dir}/${config.imports}`).split('\n'),
     );
     return {
-        fragments: rendered,
+        fragments: rendered.join('\n'),
+        fragmentParts: rendered,
         fragmentImports: [...new Set(imports.filter((line) => line.trim() !== ''))].join('\n'),
         fragmentFiles,
         eslintFiles,

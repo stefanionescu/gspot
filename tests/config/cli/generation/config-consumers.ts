@@ -1,3 +1,5 @@
+import type { StylelintConsumerCase } from '#tests/types/generation/configuration-files.ts';
+
 /** Sibling Python projects with different enabled tools. */
 export const NESTED_PYTHON_POLICY = `configurations = []
 [[ignore]]
@@ -38,3 +40,58 @@ reason = "This fixture uses EditorConfig without Prettier."
 [agent_rules]
 enabled = false
 `;
+
+/** Framework parser packages require an active stylesheet consumer. */
+export const STYLELINT_CONSUMERS: StylelintConsumerCase[] = [
+    { name: 'plain CSS', configurations: ['css'], files: { 'site.css': 'a { color: red; }' }, needsHtmlParser: false },
+    {
+        name: 'Vue styles',
+        configurations: ['css', 'vue'],
+        files: { 'Card.vue': '<template><p>Card</p></template><style>p { color: red; }</style>' },
+        needsHtmlParser: true,
+    },
+    {
+        name: 'Svelte styles',
+        configurations: ['css', 'svelte'],
+        files: { 'Card.svelte': '<p>Card</p><style>p { color: red; }</style>' },
+        needsHtmlParser: true,
+    },
+    {
+        name: 'Vue without Stylelint',
+        configurations: ['vue'],
+        files: { 'Card.vue': '<template><p>Card</p></template>' },
+        needsHtmlParser: false,
+    },
+    {
+        name: 'Svelte without Stylelint',
+        configurations: ['svelte'],
+        files: { 'Card.svelte': '<p>Card</p>' },
+        needsHtmlParser: false,
+    },
+];
+
+/** Each scope owns its component dialect and nearest declared Tailwind dependency. */
+export const STYLELINT_SCOPE_TABLES = `[[scope]]
+path = "vue"
+configurations = ["css", "vue"]
+[[scope]]
+path = "svelte"
+configurations = ["css", "svelte"]
+[[scope]]
+path = "mixed"
+configurations = ["css", "vue", "svelte"]
+[agent_rules]
+enabled = false
+`;
+
+export const STYLELINT_SCOPE_FILES = {
+    'package.json': '{"private":true}',
+    'site.css': 'a { color: red; }',
+    'vue/package.json': '{"private":true,"dependencies":{"vue":"3.5.22","tailwindcss":"4.1.13"}}',
+    'vue/Card.vue': '<template><p>Card</p></template><style>p { color: red; }</style>',
+    'svelte/package.json': '{"private":true,"dependencies":{"svelte":"5.57.0"}}',
+    'svelte/Card.svelte': '<p>Card</p><style>p { color: red; }</style>',
+    'mixed/package.json': '{"private":true,"dependencies":{"vue":"3.5.22","svelte":"5.57.0"}}',
+    'mixed/Card.vue': '<template><p>Card</p></template><style>p { color: red; }</style>',
+    'mixed/Card.svelte': '<p>Card</p><style>p { color: red; }</style>',
+};

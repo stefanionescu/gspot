@@ -19,3 +19,6 @@ export const REMOVED_FRAMEWORK_CONTROLS = [
     },
     { table: 'nestjs', key: 'swagger', diagnostic: '`nestjs` is not a setting gspot knows' },
 ];
+
+/** Native Stylelint options own at-rule exceptions. */
+export const REMOVED_STYLELINT_SETTING = '[tools.stylelint]\nignore_at_rules = ["container"]\n';

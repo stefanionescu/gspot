@@ -1,14 +1,21 @@
 // A tool config and its pointer exist only where an enabled check consumes the tool.
 import { test, expect } from 'bun:test';
+import { npmPins } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
+import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import type { StylelintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
     EDITORCONFIG_POLICY,
+    STYLELINT_CONSUMERS,
     SWIFT_FORMAT_POLICY,
     NESTED_PYTHON_POLICY,
+    STYLELINT_SCOPE_FILES,
+    STYLELINT_SCOPE_TABLES,
 } from '#tests/config/cli/generation/config-consumers.ts';
 
 test('a sibling type checker does not generate its config or pointer in a Ruff-only Python scope', async () => {
@@ -66,3 +73,72 @@ test('EditorConfig can remain active without generating a Prettier config or ign
     expect(paths).not.toContain('.gspot/config/prettier.json');
     expect(paths).not.toContain('.prettierignore');
 });
+
+test.each(STYLELINT_CONSUMERS)('$name installs the HTML parser only for consumed framework styles', async (entry) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(entry.configurations, { tables: '[agent_rules]\nenabled = false\n' }),
+        ...entry.files,
+    });
+    const session = await openSession(sandbox.path);
+    const packages = npmPins(applicableManifests(session), undefined);
+    expect(packages['postcss-html']).toBe(entry.needsHtmlParser ? '2.0.0' : undefined);
+    const stylelint = configuredChecks(session).find((check) => check.spec.name === 'css/stylelint');
+    expect(stylelint !== undefined).toBe(entry.configurations.includes('css'));
+});
+
+test.each(['recommended', 'all'] as const)(
+    '%s keeps framework stylesheet dialects inside their scopes',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['css'], { level, tables: STYLELINT_SCOPE_TABLES }),
+            ...STYLELINT_SCOPE_FILES,
+        });
+        const outputs = emitAll(await openSession(sandbox.path)).files;
+        const documents = Object.fromEntries(
+            ['', 'vue', 'svelte', 'mixed'].map((scope) => {
+                const prefix = scope === '' ? '' : `${scope}/`;
+                const output = outputs.find((file) => file.path === `.gspot/config/${prefix}stylelint.json`)!;
+                return [scope, JSON.parse(output.content) as StylelintConfiguration];
+            }),
+        );
+        expect(documents['']!.overrides).toStrictEqual([]);
+        expect(documents['']!.rules['function-no-unknown']).toBe(true);
+        expect(documents['']!.rules['declaration-property-value-no-unknown']).toBe(true);
+        expect(documents['vue']!.rules['function-no-unknown']).toStrictEqual([true, { ignoreFunctions: ['theme'] }]);
+        expect(documents['vue']!.rules['declaration-property-value-no-unknown']).toStrictEqual([
+            true,
+            { ignoreProperties: { '/.*/': [String.raw`/\btheme\(/`] } },
+        ]);
+        expect(documents['vue']!.overrides).toStrictEqual([
+            {
+                files: ['**/*.vue'],
+                customSyntax: 'postcss-html',
+                rules: {
+                    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['deep', 'global', 'slotted'] }],
+                    'function-no-unknown': [true, { ignoreFunctions: ['v-bind', 'theme'] }],
+                    'value-keyword-case': ['lower', { ignoreFunctions: ['v-bind'] }],
+                    'declaration-property-value-no-unknown': [
+                        true,
+                        { ignoreProperties: { '/.*/': [String.raw`/\bv-bind\(/`, String.raw`/\btheme\(/`] } },
+                    ],
+                },
+            },
+        ]);
+        expect(documents['svelte']!.rules['function-no-unknown']).toBe(true);
+        expect(documents['svelte']!.overrides).toStrictEqual([
+            {
+                files: ['**/*.svelte'],
+                customSyntax: 'postcss-html',
+                rules: {
+                    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global'] }],
+                },
+            },
+        ]);
+        expect(documents['mixed']!.overrides.map((override) => override.files)).toStrictEqual([
+            ['**/*.vue'],
+            ['**/*.svelte'],
+        ]);
+    },
+);

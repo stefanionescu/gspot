@@ -5,7 +5,17 @@ export type RuffConfiguration = {
 /** Knip entries associated with the root and detected package workspaces. */
 export type KnipConfiguration = { entry: string[]; workspaces: Record<string, { entry: string[] }> };
 /** Stylelint rule settings read by shared framework defaults. */
-export type StylelintConfiguration = { rules: Record<string, unknown> };
+export type StylelintConfiguration = {
+    rules: Record<string, unknown>;
+    overrides: { files: string[]; customSyntax: string; rules: Record<string, unknown> }[];
+};
+/** Stylelint parser installation follows the actual framework style consumer. */
+export type StylelintConsumerCase = {
+    name: string;
+    configurations: string[];
+    files: Record<string, string>;
+    needsHtmlParser: boolean;
+};
 /** Markdown list indentation governed by the shared format width. */
 export type MarkdownlintConfiguration = { MD007: { indent: number } };
 /** YAML indentation governed by the shared format width. */

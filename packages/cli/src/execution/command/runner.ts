@@ -14,6 +14,7 @@ import { FILES_PLACEHOLDER } from '#cli/config/parsers/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import { checkCompanions } from '#cli/execution/planning/requirements.ts';
 import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import { checkedFindings, recordInvocation } from '#cli/execution/output.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
@@ -193,7 +194,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
         root === undefined ? environment : commandEnvironment(workspaceSession, planned),
         toolPath,
     );
-    prepared.env = companionEnvironment(session, planned.spec.other_tools, prepared.env);
+    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.spec), prepared.env);
     const result = await runCommands(workspaceSession, planned, tool, prepared, base);
     if (root === undefined) return result;
     const reported = substitute(session, planned, command, environment.substitutions);
@@ -203,7 +204,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
 
 // A declared companion tool must be usable before this command runs.
 function unavailableCompanion(session: Session, planned: PlannedCheck): ExecutionFailure | undefined {
-    for (const name of planned.spec.other_tools ?? []) {
+    for (const name of checkCompanions(planned.scope, planned.spec)) {
         const required = checkToolPin(toolPin(session.manifests.values(), name), planned.spec);
         const availability = toolAvailability(required, inspectTool(session, required));
         if ('status' in availability) return availability;
@@ -316,7 +317,7 @@ export async function runEngineTool(
     const seconds = toolDeadline(input.view);
     const result = await runTool([path, ...command.slice(1)], {
         ...options,
-        env: companionEnvironment(input, input.spec.other_tools, env),
+        env: companionEnvironment(input, checkCompanions(input.selection, input.spec), env),
         timeoutSeconds: seconds,
         cancelSignal: input.cancelSignal,
     });

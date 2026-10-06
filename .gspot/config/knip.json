@@ -51,7 +51,6 @@
         "knip",
         "license-checker-rseidelsohn",
         "markdownlint-cli2",
-        "postcss-html",
         "prettier",
         "prettier-plugin-astro",
         "prettier-plugin-svelte",

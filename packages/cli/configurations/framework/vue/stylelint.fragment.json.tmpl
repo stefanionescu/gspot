@@ -1,0 +1,14 @@
+<%
+const functions = ['v-bind', ...(scopeDependencies.includes('tailwindcss') ? ['theme'] : [])];
+%><%~ json({
+    files: ['**/*.vue'],
+    customSyntax: 'postcss-html',
+    rules: {
+        'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['deep', 'global', 'slotted'] }],
+        'function-no-unknown': [true, { ignoreFunctions: functions }],
+        'value-keyword-case': ['lower', { ignoreFunctions: ['v-bind'] }],
+        'declaration-property-value-no-unknown': [true, {
+            ignoreProperties: { '/.*/': functions.map((name) => `/\\b${name}\\(/`) },
+        }],
+    },
+}) %>

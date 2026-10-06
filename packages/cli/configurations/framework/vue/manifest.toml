@@ -50,6 +50,14 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 component_globs = ["**/*.vue"]
 
+[[config]]
+template = "stylelint.fragment.json.tmpl"
+target = ".gspot/config/stylelint.json"
+tool = "stylelint"
+required_tools = ["postcss-html"]
+fragment = true
+scoped = true
+
 [[check]]
 name = "tsc"
 title = "Check Vue types"

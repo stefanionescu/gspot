@@ -650,9 +650,15 @@
         "finding": "| `packages/cli/kits/language/css/stylelint.json.tmpl:2-3,11,15-21` | The base CSS configuration carries Vue and Svelte syntax (`postcss-html`, `deep`, `global`, `slotted`, `v-bind`) and Tailwind's `theme()`. | Move the component block to the vue and svelte kits, and move `theme` behind the Tailwind dependency. |",
         "owner": "`packages/cli/kits/language/css/stylelint.json.tmpl:2-3,11,15-21`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Source: framework/vue/stylelint.fragment.json.tmpl and framework/svelte/stylelint.fragment.json.tmpl own their component parsers and dialect rules. The CSS template has no unconditional component syntax or theme exemption. Tailwind directives and theme() follow the nearest declaring npm project. Vue alone accepts v-bind() with case-sensitive variables; Svelte retains only its own global selector exemption.",
+            "Source consumers: config.required_tools is validated against declared tools and requires a consuming tool/check. execution/planning/requirements.ts calculates configuration companions once for installation and actual command/engine environments. The command runner reports unavailable companions before startup. The single pinned postcss-html declaration remains, while plain CSS no longer requests it.",
+            "Native CSS/Svelte: /tmp/gspot-css-framework-ownership-native-final.log passes all 12 CSS/Svelte cases, including both levels, Tailwind root/child/sibling boundaries, ordinary invalid colors within the Tailwind project, editor discovery and refusal of Vue v-bind() in Svelte. Its one Vue correction failure exposed camelCase variable lowercasing; the final Vue-owned native option fixes that without disabling keyword casing.",
+            "Final native Vue: /tmp/gspot-css-framework-ownership-native-vue-final.log passes all six cases with 30 assertions. The invalid hexadecimal color still fails beside an accepted v-bind(themeColor); RED fails keyword casing and red passes with the same case-sensitive binding. Compiler, shared ESLint and takeover assertions remain. Direct pinned-tool proof: /tmp/gspot-css-framework-ownership-vue-value-case-proof.log.",
+            "Generation, schema, policy and execution consumers: /tmp/gspot-css-framework-ownership-cli-final.log has 89 passes, 361 assertions across ten files. Plain CSS and unconsumed frameworks install no HTML parser; Vue/Svelte style consumers do. Root, Vue, Svelte and mixed-framework scopes preserve their exact dialect boundaries at both levels. No new developer-facing coverage choice or enabling setting is added."
+        ]
     },
     {
         "id": "areas/kits/049",
@@ -1714,9 +1720,13 @@
         "finding": "| `packages/cli/kits/language/css/manifest.toml:94-99` | `tools.stylelint.ignore_at_rules` duplicates what `tools.stylelint.rules` sets for `at-rule-no-unknown`. | Delete. |",
         "owner": "`packages/cli/kits/language/css/manifest.toml:94-99`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Source: language/css/manifest.toml deletes tools.stylelint.ignore_at_rules. The CSS native template no longer reads it. Authored at-rule options use tools.stylelint.rules.at-rule-no-unknown directly; detected Tailwind syntax remains dependency-owned.",
+            "Policy refuses the removed duplicate setting and accepts the native replacement. Shared settings preserve authored at-rule options. /tmp/gspot-css-framework-ownership-cli-final.log passes all 89 affected cases with 361 assertions, including scoped native settings and command execution.",
+            "Native level/options coverage: /tmp/gspot-css-framework-ownership-native-final.log passes all five CSS cases, including recommended/all native options, framework dependency boundaries, editor discovery and successful source corrections. The original review ID and quotation remain unchanged."
+        ]
     },
     {
         "id": "areas/kits/131",

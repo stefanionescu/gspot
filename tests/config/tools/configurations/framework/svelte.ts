@@ -27,6 +27,12 @@ export const REPOSITORY: RepositoryScenario = {
 /** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
+        check: 'css/stylelint',
+        files: { 'src/Binding.svelte': '<p>Card</p>\n<style>\n.card {\n    color: v-bind(color);\n}\n</style>\n' },
+        expected: { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
+        corrected: { files: { 'src/Binding.svelte': '<p>Card</p>\n<style>\n.card {\n    color: red;\n}\n</style>\n' } },
+    },
+    {
         // The shared TypeScript rules reach the component script.
         check: 'javascript/eslint',
         files: {

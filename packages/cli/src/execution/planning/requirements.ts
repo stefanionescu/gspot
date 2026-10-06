@@ -1,11 +1,29 @@
 // Tool requirements derived from the same applicable check plan used by execution.
 import { toolPin, checkToolPin } from '#cli/tools/pins.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { privateToolInstallation } from '#cli/tools/installation.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+
+/**
+ * Companion tools consumed by a check's command and its selected native configuration.
+ * @param scope the effective configuration selection
+ * @param spec the declared check
+ * @returns each explicit and configuration-owned companion once
+ */
+export function checkCompanions(scope: ScopeSelection, spec: CheckSpec): string[] {
+    const tools = new Set([spec.tool, spec.command?.[0], spec.fix?.[0], ...(spec.other_tools ?? [])]);
+    const companions = scope.selected
+        .flatMap((manifest) => manifest.configs)
+        .filter((config) => config.tool.length === 0 || config.tool.some((name) => tools.has(name)))
+        .filter((config) => config.check.length === 0 || config.check.includes(spec.name))
+        .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
+        .flatMap((config) => config.required_tools);
+    return [...new Set([...(spec.other_tools ?? []), ...companions])];
+}
 
 /**
  * Read executable, fixer, and companion tools consumed by an applicable check.
@@ -15,7 +33,7 @@ import { privateToolInstallation } from '#cli/tools/installation.ts';
  */
 export function requiredToolNames(check: PlannedCheck, runner: string | undefined): string[] {
     const names = new Set(
-        [check.tool?.name, ...(check.spec.other_tools ?? []), check.spec.fix?.[0]].flatMap((name) => {
+        [check.tool?.name, ...checkCompanions(check.scope, check.spec), check.spec.fix?.[0]].flatMap((name) => {
             if (name === undefined) return [];
             // v8r loads Ajv through an optional peer in private installations.
             if (name === 'v8r' && privateToolInstallation(toolPin(check.scope.selected, name), runner)?.kind === 'npm')

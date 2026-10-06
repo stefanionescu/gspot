@@ -205,7 +205,7 @@ function assertConfigurationConsumers(
     checks: Map<string, CheckSpec>,
 ): void {
     const unknownTools = manifest.configs.flatMap((config) =>
-        config.tool
+        [...config.tool, ...config.required_tools]
             .filter((name) => !tools.has(name))
             .map((name) => `config ${config.target} requires undeclared tool ${name}.`),
     );

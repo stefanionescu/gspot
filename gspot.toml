@@ -778,8 +778,8 @@ reason = "SHA-256 is the Git object identifier algorithm represented by this par
 
 [[naming.fixed_keys]]
 file = "tests/types/generation/configuration-files.ts"
-names = ["MD007"]
-reason = "The markdownlint configuration identifies its unordered-list indentation rule by MD007."
+names = ["MD007", "customSyntax"]
+reason = "Markdownlint names its indentation rule MD007. Stylelint names its parser option customSyntax. These native configuration keys retain their exact API spelling."
 
 [[naming.fixed_keys]]
 file = "tests/types/generation/workflow.ts"

@@ -42,33 +42,28 @@ const chosen = Object.fromEntries(Object.entries(settings['tools.stylelint.rules
 const tailwindAtRules = scopeDependencies.includes('tailwindcss')
     ? ['tailwind', 'apply', 'layer', 'theme', 'utility', 'variant', 'custom-variant', 'source', 'plugin', 'config', 'reference']
     : [];
-const ignoreAtRules = [...new Set([...settings['tools.stylelint.ignore_at_rules'], ...tailwindAtRules])];
-const componentRules = Object.fromEntries(
-    Object.entries({
-        'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['deep', 'global', 'slotted'] }],
-        'function-no-unknown': [true, { ignoreFunctions: ['theme', 'v-bind'] }],
-    }).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined),
-);
+const componentOverrides = fragmentParts.map((part) => JSON.parse(part)).map((override) => ({
+    ...override,
+    rules: Object.fromEntries(Object.entries(override.rules).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined)),
+}));
+const tailwindFunctions = scopeDependencies.includes('tailwindcss') ? ['theme'] : [];
 const document = {
     extends: 'stylelint-config-standard',
     rules: Object.assign(
         {
             'no-descending-specificity': true,
-            'at-rule-no-unknown': ignoreAtRules.length > 0 ? [true, { ignoreAtRules: ignoreAtRules }] : true,
-            'function-no-unknown': [true, { ignoreFunctions: ['theme'] }],
+            'at-rule-no-unknown': tailwindAtRules.length > 0 ? [true, { ignoreAtRules: tailwindAtRules }] : true,
+            'function-no-unknown': tailwindFunctions.length > 0 ? [true, { ignoreFunctions: tailwindFunctions }] : true,
+            'declaration-property-value-no-unknown': tailwindFunctions.length > 0
+                ? [true, { ignoreProperties: { '/.*/': ['/\\btheme\\(/'] } }]
+                : true,
             'import-notation': 'string',
         },
         Object.fromEntries((isAll ? [] : allRules).map((rule) => [rule, null])),
         chosen,
         Object.fromEntries(off.map((rule) => [rule, null])),
     ),
-    overrides: [
-        {
-            files: ['*.vue', '*.svelte'],
-            customSyntax: 'postcss-html',
-            rules: componentRules,
-        },
-    ],
+    overrides: componentOverrides,
 };
 recordRules(document);
 %><%~ json(document) %>

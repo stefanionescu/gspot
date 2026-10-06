@@ -6,7 +6,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
-import { DISABLED_RULES, REMOVED_FRAMEWORK_CONTROLS } from '#tests/config/cli/policy/read/settings.ts';
+
+import {
+    DISABLED_RULES,
+    REMOVED_STYLELINT_SETTING,
+    REMOVED_FRAMEWORK_CONTROLS,
+} from '#tests/config/cli/policy/read/settings.ts';
 
 describe('policy value normalization', () => {
     test('normalizes reasoned limits into value and reason', () => {
@@ -198,3 +203,13 @@ test.each(REMOVED_FRAMEWORK_CONTROLS)(
         }
     },
 );
+
+test('at-rule exceptions use native Stylelint options without a duplicate setting', () => {
+    expect(() => parseStrictPolicy(buildPolicy(['css'], { tables: REMOVED_STYLELINT_SETTING }))).toThrow(
+        'No selected configuration has the setting `tools.stylelint.ignore_at_rules`',
+    );
+    const native = buildPolicy(['css'], {
+        tables: '[tools.stylelint.rules]\nat-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]\n',
+    });
+    expect(policyProblems(native)).toStrictEqual([]);
+});

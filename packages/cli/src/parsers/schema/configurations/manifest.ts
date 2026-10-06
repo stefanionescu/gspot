@@ -79,6 +79,8 @@ const configSchema = z
             .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
             .transform((check) => (typeof check === 'string' ? [check] : check))
             .default([]),
+        // Companion tools needed only when an applicable check consumes this configuration.
+        required_tools: z.array(z.string().min(1)).default([]),
         rule_keys: z.array(z.string()).optional(),
         stub_file: pointerSchema.optional(),
         fragment: z.boolean().default(false),
@@ -88,6 +90,10 @@ const configSchema = z
         component_globs: z.array(z.string().min(1)).default([]),
         selectors: z.array(selectorSchema).default([]),
     })
+    .refine(
+        (config) => config.required_tools.length === 0 || config.tool.length > 0 || config.check.length > 0,
+        'Companion tools require a consuming tool or check.',
+    )
     // A config that is not a fragment reads the template named after its target file, unless it names another.
     .transform((config) =>
         config.fragment

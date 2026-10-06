@@ -28,11 +28,11 @@ export const CORRECTED = {
 /** Tailwind syntax follows the declaring package boundary. */
 export const TAILWIND_FILES = {
     'package.json': '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
-    'build/site.css': '@tailwind utilities;\n',
+    'build/site.css': '@tailwind utilities;\n\na {\n    color: theme("colors.brand");\n}\n',
     'app/package.json': '{"private":true,"devDependencies":{"tailwindcss":"4.1.13"}}\n',
-    'app/site.css': '@tailwind utilities;\n',
+    'app/site.css': '@tailwind utilities;\n\na {\n    color: theme("colors.brand");\n}\n',
     'other/package.json': '{"private":true}\n',
-    'other/site.css': '@tailwind utilities;\n',
+    'other/site.css': '@tailwind utilities;\n\na {\n    color: theme("colors.brand");\n}\n',
 };
 
 export const TAILWIND_TABLES = `run_with = "mise"

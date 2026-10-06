@@ -130,8 +130,19 @@ test.each(['recommended', 'all'] as const)(
             containingAll([
                 containing({ file: 'build/site.css', rule: 'at-rule-no-unknown', line: 1 }),
                 containing({ file: 'other/site.css', rule: 'at-rule-no-unknown', line: 1 }),
+                containing({ file: 'build/site.css', rule: 'function-no-unknown', line: 4 }),
+                containing({ file: 'other/site.css', rule: 'function-no-unknown', line: 4 }),
             ]),
         );
+        await Bun.write(join(root, 'app/site.css'), 'a { color: #ggg; }\n');
+        const invalidValue = await spawnGspot(root, ['check', 'app', '--only', 'css/stylelint', '--json']);
+        expect(invalidValue.code, invalidValue.stdout + invalidValue.stderr).toBe(1);
+        expect((JSON.parse(invalidValue.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual(
+            containingAll([
+                containing({ file: 'app/site.css', rule: 'declaration-property-value-no-unknown', line: 1 }),
+            ]),
+        );
+        await Bun.write(join(root, 'app/site.css'), TAILWIND_FILES['app/site.css']);
         await Bun.write(join(root, 'build/site.css'), 'a { color: red; }\n');
         await Bun.write(join(root, 'other/site.css'), 'a { color: red; }\n');
         const corrected = await spawnGspot(root, command);

@@ -45,7 +45,7 @@ export const CASES: FindingCase[] = [
         check: 'css/stylelint',
         files: {
             'src/Card.vue':
-                '<template>\n    <p class="card"><span class="title">card</span></p>\n</template>\n\n<style scoped>\n.card :deep(.title) {\n    color: #ggg;\n}\n</style>\n',
+                '<template>\n    <p class="card"><span class="title">card</span></p>\n</template>\n\n<style scoped>\n.card :deep(.title) {\n    color: #ggg;\n    background-color: v-bind(themeColor);\n}\n</style>\n',
         },
         expected: {
             file: 'src/Card.vue',
@@ -55,7 +55,25 @@ export const CASES: FindingCase[] = [
         corrected: {
             files: {
                 'src/Card.vue':
-                    '<template>\n    <p class="card"><span class="title">card</span></p>\n</template>\n\n<style scoped>\n.card :deep(.title) {\n    color: #abc;\n}\n</style>\n',
+                    '<template>\n    <p class="card"><span class="title">card</span></p>\n</template>\n\n<style scoped>\n.card :deep(.title) {\n    color: #abc;\n    background-color: v-bind(themeColor);\n}\n</style>\n',
+            },
+        },
+    },
+    {
+        check: 'css/stylelint',
+        files: {
+            'src/Keyword.vue':
+                '<style>\na {\n    color: RED;\n    background-color: v-bind(themeColor);\n}\n</style>\n',
+        },
+        expected: {
+            file: 'src/Keyword.vue',
+            rule: 'value-keyword-case',
+            line: 3,
+        },
+        corrected: {
+            files: {
+                'src/Keyword.vue':
+                    '<style>\na {\n    color: red;\n    background-color: v-bind(themeColor);\n}\n</style>\n',
             },
         },
     },

@@ -87,7 +87,9 @@ test.each([
     ],
     [
         'the at-rules the policy adds',
-        buildPolicy(['css'], { tables: '[tools.stylelint]\nignore_at_rules = ["container"]\n' }),
+        buildPolicy(['css'], {
+            tables: '[tools.stylelint.rules]\nat-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]\n',
+        }),
         [true, { ignoreAtRules: ['container'] }],
         {},
     ],

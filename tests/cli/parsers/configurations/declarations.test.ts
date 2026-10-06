@@ -33,6 +33,14 @@ test('a generated config refuses an undeclared consuming tool and accepts a tool
     expect(() => {
         assertManifests(manifests);
     }).not.toThrow();
+    consumer.configs[0]!.required_tools = ['missing-parser'];
+    expect(() => {
+        assertManifests(manifests);
+    }).toThrow('requires undeclared tool missing-parser.');
+    consumer.configs[0]!.required_tools = ['example'];
+    expect(() => {
+        assertManifests(manifests);
+    }).not.toThrow();
     expect(consumer.configs[0]?.tool).toStrictEqual(['example']);
     expect(
         parseConfigurationManifest('consumer', {
@@ -159,4 +167,13 @@ test('tool failure headers validate their pattern and survive manifest parsing',
             tables: `${TOOL_DECLARATION}diagnostic_header_pattern = '('\n`,
         }),
     ).toThrow('regular expression');
+});
+
+test('companion tools refuse a configuration with no consuming tool or check', () => {
+    expect(() =>
+        parseConfigurationManifest('consumer', {
+            kind: 'tool',
+            tables: '[[config]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
+        }),
+    ).toThrow('Companion tools require a consuming tool or check.');
 });
