@@ -10,7 +10,7 @@ export const SERIALIZATION_POLICY = {
         prettier: { verbatim: { reason: 'An upstream option.', [KEY]: VALUE } },
         knip: { verbatim: { reason: 'An upstream option.', [KEY]: VALUE } },
         markdownlint: { rules: { MD044: { names: [KEY, VALUE] } } },
-        yamllint: { rules: { [KEY]: { level: 'warning' }, indentation: { spaces: 2 } } },
+        yamllint: { rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } } },
         xcode: { project: PROJECT, scheme: SCHEME },
         hadolint: { trusted_registries: REGISTRIES },
         trivy: { timeout: '10m', severity: 'HIGH,CRITICAL' },

@@ -123,7 +123,7 @@ test(
         }
         await Bun.write(
             policyPath,
-            `${policy}\n[tools.commitlint.rules]\nheader-max-length = ["always", 40]\nscope-case = ["always", "lower-case"]\nscope-empty = ["never"]\n`,
+            `${policy}\n[tools.commitlint.rules]\nheader-max-length = ["always", 40]\nscope-case = ["always", "lower-case"]\nscope-empty = ["never"]\nconstructor = ["always"]\n`,
         );
         const configured = await spawnGspot(sandbox.path, ['apply']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);

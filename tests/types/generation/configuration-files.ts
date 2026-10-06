@@ -18,8 +18,8 @@ export type StylelintConsumerCase = {
 };
 /** Markdown list indentation governed by the shared format width. */
 export type MarkdownlintConfiguration = { MD007: { indent: number } };
-/** YAML indentation governed by the shared format width. */
-export type YamllintConfiguration = { rules: { indentation: { spaces: number } } };
+/** YAML validates nesting consistency while the formatter owns indentation width. */
+export type YamllintConfiguration = { rules: { indentation: { spaces: 'consistent' } } };
 /** The normalized severity tuples returned by a resolved ESLint configuration. */
 export type ResolvedEslint = { rules: Record<string, [number, ...unknown[]]> };
 

@@ -59,7 +59,7 @@ test('the format width reaches editors and generated tool configurations', async
     const markdownlint = parseJsonc(generated.get('.gspot/config/markdownlint.jsonc')!) as MarkdownlintConfiguration;
     expect(markdownlint.MD007.indent).toBe(width);
     const yamllint = parseYaml(generated.get('.gspot/config/yamllint.yml')!) as YamllintConfiguration;
-    expect(yamllint.rules.indentation.spaces).toBe(width);
+    expect(yamllint.rules.indentation.spaces).toBe('consistent');
     expect(parseToml(generated.get('.gspot/config/ruff.toml')!)['indent-width']).toBe(width);
     expect(parseToml(generated.get('.gspot/config/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },

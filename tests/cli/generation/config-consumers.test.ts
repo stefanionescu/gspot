@@ -142,3 +142,29 @@ test.each(['recommended', 'all'] as const)(
         ]);
     },
 );
+
+test.each(['recommended', 'all'] as const)(
+    '%s generates only consumed formatter assets and tools for Go and Rust sources',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy([], { level, tables: '[agent_rules]\nenabled = false\n' }),
+            'main.go': 'package main\nfunc main() {}\n',
+            'main.rs': 'fn main() {}\n',
+        });
+        const session = await openSession(sandbox.path);
+        const files = emitAll(session).files;
+        const paths = files.map((file) => file.path);
+        expect(paths).toContain('.editorconfig');
+        expect(paths).toContain('.gspot/config/taplo.toml');
+        for (const path of ['.gspot/config/prettier.json', '.prettierrc.json', '.prettierignore'])
+            expect(paths).not.toContain(path);
+        const packages = npmPins(applicableManifests(session), undefined);
+        expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual([
+            'ajv',
+            'editorconfig-checker',
+            'v8r',
+        ]);
+        expect(configuredChecks(session).map((check) => check.spec.name)).not.toContain('format/prettier');
+    },
+);

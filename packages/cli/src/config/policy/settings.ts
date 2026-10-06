@@ -17,6 +17,9 @@ export const STYLELINT_OPTIONS_HELP =
 export const COMMITLINT_OPTIONS_HELP =
     'Commitlint rule selection comes from level recommended or all. Write native options as ["always" or "never", optional value], without a severity. Accept a finding with gspot ignore commits/commitlint --rule <rule> --reason "<why>".';
 
+export const YAML_OPTIONS_HELP =
+    'Yamllint rule selection comes from level recommended or all. Write native option tables for active rules. Severity remains error; record exclusions with gspot ignore. Set indentation width under format. Accept a finding with gspot ignore files/yamllint --rule <rule> --reason "<why>".';
+
 // A category key has two parts after the language: naming.<language>.<category>.<setting>.
 export const CATEGORY_KEY_PARTS = 2;
 

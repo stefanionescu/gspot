@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { reasoned } from '#cli/policy/schema/fields.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import { licenseExceptionSchema } from '#cli/parsers/schema/licenses.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/runtime-names.json' with { type: 'json' };
 
 import {
+    YAML_OPTIONS_HELP,
     ESLINT_OPTIONS_HELP,
     ESLINT_OPTION_STRING,
     STYLELINT_OPTIONS_HELP,
@@ -30,18 +32,48 @@ const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOp
 
 const eslintRules = z.record(z.string(), eslintOptions);
 
-// Zod includes the authored rule key before a tuple's numeric option index.
-function commitlintDiagnostic(issue: z.core.$ZodRawIssue): string {
-    const rule = issue.path?.findLast((part) => typeof part === 'string');
-    return COMMITLINT_OPTIONS_HELP.replace('<rule>', String(rule));
+// Nested native options retain the rule key before any option name or tuple index.
+function nativeDiagnostic(issue: z.core.$ZodRawIssue, help: string): string {
+    const path = issue.path ?? [];
+    const rule = path[path.indexOf('rules') + 1];
+    return help.replace('<rule>', quoteArgument(String(rule)));
 }
 
 const commitlintRules = z.record(
     z.string().min(1),
-    z.tuple([z.enum(['always', 'never'], { error: commitlintDiagnostic }), z.json().optional()], {
-        error: commitlintDiagnostic,
-    }),
+    z.tuple(
+        [
+            z.enum(['always', 'never'], { error: (issue) => nativeDiagnostic(issue, COMMITLINT_OPTIONS_HELP) }),
+            z.json().optional(),
+        ],
+        {
+            error: (issue) => nativeDiagnostic(issue, COMMITLINT_OPTIONS_HELP),
+        },
+    ),
 );
+
+const yamlOptions = z
+    .object(
+        {
+            level: z.literal('error', { error: (issue) => nativeDiagnostic(issue, YAML_OPTIONS_HELP) }).optional(),
+            ignore: z.never({ error: (issue) => nativeDiagnostic(issue, YAML_OPTIONS_HELP) }).optional(),
+            'ignore-from-file': z.never({ error: (issue) => nativeDiagnostic(issue, YAML_OPTIONS_HELP) }).optional(),
+        },
+        { error: (issue) => nativeDiagnostic(issue, YAML_OPTIONS_HELP) },
+    )
+    .catchall(z.json());
+
+const yamlRules = z
+    .object({
+        indentation: yamlOptions
+            .extend({
+                spaces: z
+                    .literal('consistent', { error: (issue) => nativeDiagnostic(issue, YAML_OPTIONS_HELP) })
+                    .optional(),
+            })
+            .optional(),
+    })
+    .catchall(yamlOptions);
 
 const stylelintOptions = z
     .object({ severity: z.literal('error', { error: STYLELINT_OPTIONS_HELP }).optional() })
@@ -78,6 +110,7 @@ export const toolsSchema = z
                 rules: commitlintRules.optional(),
             })
             .optional(),
+        yamllint: z.strictObject({ rules: yamlRules.optional() }).optional(),
         markdownlint: z
             .strictObject({
                 rules: z

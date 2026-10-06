@@ -80,6 +80,7 @@ tool = "taplo"
 [[config]]
 target = ".gspot/config/yamllint.yml"
 tool = "yamllint"
+scoped = true
 rule_keys = ["rules"]
 
 [[config]]
@@ -204,8 +205,8 @@ help = "Fix the line xmllint names."
 name = "tools.yamllint.rules"
 type = "table"
 direction = "rule-options"
-off_values = ["disable"]
-summary = "Options per yamllint rule, by rule name; turning a rule off is gspot ignore --rule."
+default = {}
+summary = "Native option tables for active YAML rules. Coverage comes from recommended or all, and formatting width comes from [format]. Accept a finding with gspot ignore files/yamllint --rule <rule> --reason <why>."
 
 [[setting]]
 name = "tools.taplo.formatting"

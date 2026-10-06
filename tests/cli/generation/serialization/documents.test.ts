@@ -13,6 +13,7 @@ import { bodyPointer } from '#cli/generation/pointers.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { hasFields } from '#cli/lifecycle/merge/document.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
+import { eta, templateInputs } from '#cli/generation/templates.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
@@ -67,9 +68,19 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     expect(yaml.get('.gspot/config/periphery.yml')).toMatchObject({ project: PROJECT, schemes: [SCHEME] });
     expect(yaml.get('.gspot/config/hadolint.yml')).toMatchObject({ trustedRegistries: REGISTRIES });
     expect(yaml.get('.gspot/config/yamllint.yml')).toMatchObject({
-        rules: { [KEY]: { level: 'warning' }, indentation: { spaces: 2 } },
+        rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } },
     });
     expect(yaml.get('.gspot/config/trivy.yml')).toMatchObject({ timeout: '600s', severity: ['HIGH', 'CRITICAL'] });
+});
+
+test('the template YAML binding preserves literal mapping keys and scalar values', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildPolicy([]) });
+    const session = await openSession(sandbox.path);
+    const selection = session.scopes[0]!;
+    const inputs = templateInputs(session, selection, selection.selected);
+    expect(parseYaml(eta.renderString('<%~ yaml(value) %>', { ...inputs, value: { [KEY]: VALUE } }))).toStrictEqual({
+        [KEY]: VALUE,
+    });
 });
 
 test('shared output readers reject external links without changing their targets', async () => {

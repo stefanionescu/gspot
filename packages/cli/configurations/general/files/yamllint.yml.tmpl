@@ -1,17 +1,22 @@
 <%
+// Stable routine checks from pinned Yamllint 1.38.0; native presets do not add coverage.
+const selected = [
+    'anchors', 'braces', 'brackets', 'colons', 'commas', 'comments', 'comments-indentation',
+    'empty-lines', 'hyphens', 'indentation', 'key-duplicates', 'new-line-at-end-of-file',
+    'new-lines', 'trailing-spaces', 'truthy',
+];
 const document = {
-    extends: 'default',
     rules: {
-        'line-length': 'disable',
-        'document-start': 'disable',
+        ...Object.fromEntries(selected.map((rule) => [rule, {}])),
         comments: { 'min-spaces-from-content': 1 },
         truthy: { 'check-keys': false },
         braces: { 'max-spaces-inside': 1 },
         brackets: { 'max-spaces-inside': 1 },
-        indentation: { spaces: format.indent_width, 'indent-sequences': 'consistent' },
-        ...options('tools.yamllint').rules,
-        ...Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])),
+        indentation: { spaces: 'consistent', 'indent-sequences': 'consistent' },
     },
 };
+for (const [rule, chosen] of Object.entries(options('tools.yamllint').rules))
+    if (Object.hasOwn(document.rules, rule)) Object.assign(document.rules[rule], chosen);
+Object.assign(document.rules, Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])));
 recordRules(document);
-%><%~ yaml(document).trimEnd() %>
+%><%~ yaml(document, { version: '1.1' }).trimEnd() %>

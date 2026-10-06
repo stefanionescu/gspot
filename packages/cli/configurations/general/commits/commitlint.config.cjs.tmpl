@@ -24,7 +24,7 @@ if (allowed.length > 0) {
 }
 const custom = options('tools.commitlint').rules;
 for (const [name, value] of Object.entries(custom))
-    if (rules[name] !== undefined && rules[name][0] !== 0) rules[name] = [2, ...value];
+    if (Object.hasOwn(rules, name) && rules[name][0] !== 0) rules[name] = [2, ...value];
 for (const name of off) rules[name] = [0];
 const document = { rules };
 recordRules(document);

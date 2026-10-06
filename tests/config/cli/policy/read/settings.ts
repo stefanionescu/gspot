@@ -6,7 +6,6 @@ export const DISABLED_RULES = [
         rule: 'subject-case',
         value: [0, 'always', 'sentence-case'],
         check: 'commits/commitlint',
-        rejectsShape: true,
     },
     {
         tool: 'yamllint',
@@ -14,7 +13,6 @@ export const DISABLED_RULES = [
         rule: 'line-length',
         value: 'disable',
         check: 'files/yamllint',
-        rejectsShape: false,
     },
 ];
 
